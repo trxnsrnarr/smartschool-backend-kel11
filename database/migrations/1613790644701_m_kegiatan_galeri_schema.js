@@ -1,0 +1,24 @@
+"use strict";
+
+/** @type {import('@adonisjs/lucid/src/Schema')} */
+const Schema = use("Schema");
+
+class MKegiatanGaleriSchema extends Schema {
+  up() {
+    this.create("m_kegiatan_galeri", (table) => {
+      table.increments();
+      table.text("foto");
+      table.string("nama");
+      table.text("deskripsi");
+      table.boolean("dihapus");
+      table.integer("m_kegiatan_id").unsigned();
+      table.timestamps();
+    });
+  }
+
+  down() {
+    this.drop("m_kegiatan_galeri");
+  }
+}
+
+module.exports = MKegiatanGaleriSchema;

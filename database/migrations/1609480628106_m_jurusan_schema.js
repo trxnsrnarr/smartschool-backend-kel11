@@ -1,0 +1,29 @@
+"use strict";
+
+/** @type {import('@adonisjs/lucid/src/Schema')} */
+const Schema = use("Schema");
+
+class MJurusanSchema extends Schema {
+  up() {
+    this.create("m_jurusan", (table) => {
+      table.increments();
+      table.string("nama");
+      table.string("kode");
+      table.integer("spp");
+      table.integer("sumbangan_sarana_pendidikan");
+      table.integer("kegiatan_osis");
+      table.integer("mpls_jas_almamater");
+      table.integer("seragam_sekolah");
+      table.integer("toolkit_praktek");
+      table.integer("m_sekolah_id").unsigned();
+      table.boolean("dihapus");
+      table.timestamps();
+    });
+  }
+
+  down() {
+    this.drop("m_jurusan");
+  }
+}
+
+module.exports = MJurusanSchema;

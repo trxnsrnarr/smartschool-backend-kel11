@@ -1,0 +1,25 @@
+"use strict";
+
+/** @type {import('@adonisjs/lucid/src/Schema')} */
+const Schema = use("Schema");
+
+class MInformasiJurusanSchema extends Schema {
+  up() {
+    this.create("m_informasi_jurusan", (table) => {
+      table.increments();
+      table.text("banner");
+      table.text("sambutan");
+      table.text("deskripsi");
+      table.text("cover");
+      table.text("galeri");
+      table.integer("m_jurusan_id").unsigned();
+      table.timestamps();
+    });
+  }
+
+  down() {
+    this.drop("m_informasi_jurusan");
+  }
+}
+
+module.exports = MInformasiJurusanSchema;
