@@ -11,6 +11,7 @@ class TkJawabanUjianSiswaSchema extends Schema {
       table.string("jawaban_pg");
       table.string("jawaban_esai");
       table.integer("durasi");
+      table.boolean("dinilai");
       table.boolean("ragu");
       table.boolean("dijawab");
       table.integer("m_soal_ujian_id").unsigned();
