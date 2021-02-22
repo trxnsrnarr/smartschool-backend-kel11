@@ -6317,16 +6317,6 @@ class MainController {
       });
     }
 
-    const check = await MInformasiSekolah.query()
-      .where({ m_sekolah_id: sekolah.id })
-      .first();
-
-    if (!check) {
-      await MInformasiSekolah.create({
-        m_sekolah_id: sekolah.id,
-      });
-    }
-
     const informasiSekolah = await MInformasiSekolah.query()
       .where({ m_sekolah_id: sekolah.id })
       .update(updatePayload);
