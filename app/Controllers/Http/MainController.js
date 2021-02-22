@@ -4031,6 +4031,13 @@ class MainController {
                 moment(waktu_saat_ini).format("YYYY-MM-DD")
               ) {
                 timelineData.push({ ...d });
+              } else if (
+                moment(d.tanggal_pembagian).format("YYYY-MM-DD") >
+                moment(waktu_saat_ini).format("YYYY-MM-DD")
+              ) {
+                return;
+              } else {
+                timelineData.push({ ...d });
               }
             } else {
               timelineData.push({ ...d });
