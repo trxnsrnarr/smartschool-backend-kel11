@@ -157,12 +157,12 @@ Route.get(
   "/peserta-ujian/:peserta_ujian_id",
   "MainController.detailPesertaUjian"
 );
-Route.post("/peserta-ujian", "MainController.postPesertaUjian"); 
-Route.put('/peserta-ujian/:peserta_ujian_id', 'MainController.putPesertaUjian')
+Route.post("/peserta-ujian", "MainController.postPesertaUjian");
+Route.put("/peserta-ujian/:peserta_ujian_id", "MainController.putPesertaUjian");
 
 // jawaban siswa
 Route.put(
-  "/jawaban-ujian-siswa/:jawaban_ujian_siswa",
+  "/jawaban-ujian-siswa/:jawaban_ujian_siswa_id",
   "MainController.putJawabanUjianSiswa"
 );
 

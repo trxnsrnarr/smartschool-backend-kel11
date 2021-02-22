@@ -5968,7 +5968,7 @@ class MainController {
     response,
     request,
     auth,
-    params: { jawaban_ujian_siswa },
+    params: { jawaban_ujian_siswa_id },
   }) {
     const domain = request.headers().origin;
 
@@ -5986,23 +5986,27 @@ class MainController {
 
     if (jawaban_esai) {
       jawabanUjianSiswa = await TkJawabanUjianSiswa.query()
-        .where({ id: jawaban_ujian_siswa })
+        .where({ id: jawaban_ujian_siswa_id })
         .update({
           jawaban_esai,
           durasi,
           ragu,
           dijawab: 1,
         });
-    }
-
-    if (jawaban_pg) {
+    } else if (jawaban_pg) {
       jawabanUjianSiswa = await TkJawabanUjianSiswa.query()
-        .where({ id: jawaban_ujian_siswa })
+        .where({ id: jawaban_ujian_siswa_id })
         .update({
           jawaban_pg,
           durasi,
           ragu,
           dijawab: 1,
+        });
+    } else {
+      jawabanUjianSiswa = await TkJawabanUjianSiswa.query()
+        .where({ id: jawaban_ujian_siswa_id })
+        .update({
+          ragu,
         });
     }
 
@@ -6018,7 +6022,7 @@ class MainController {
           builder.where("durasi", ">", 0);
         });
       })
-      .where({ id: jawaban_ujian_siswa })
+      .where({ id: jawaban_ujian_siswa_id })
       .first();
 
     await jadwalUjianReference
