@@ -5807,6 +5807,7 @@ class MainController {
       .with("jawabanSiswa", (builder) => {
         builder.with("soal");
       })
+      .with("user")
       .where({ id: peserta_ujian_id })
       .first();
 
@@ -5927,6 +5928,7 @@ class MainController {
           durasi: 0,
           ragu: 0,
           dijawab: 0,
+          dinilai: 0,
           m_soal_ujian_id: d.soal.id,
           tk_peserta_ujian_id: pesertaUjian.id,
         });
