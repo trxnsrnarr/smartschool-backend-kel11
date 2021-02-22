@@ -15,6 +15,10 @@ class TkJawabanUjianSiswa extends Model {
   pesertaUjian() {
     return this.belongsTo("App/Models/TkPesertaUjian", "tk_peserta_ujian_id");
   }
+
+  getDurasi(durasi) {
+    return durasi ? `${durasi / 100} detik` : `0 detik`;
+  }
 }
 
 module.exports = TkJawabanUjianSiswa;
