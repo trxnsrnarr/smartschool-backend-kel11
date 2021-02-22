@@ -6287,7 +6287,9 @@ class MainController {
         "base64"
       );
     if (foto_tentang_sekolah)
-      updatePayload.foto_tentang_sekolah = foto_tentang_sekolah;
+      updatePayload.foto_tentang_sekolah = foto_tentang_sekolah
+        ? foto_tentang_sekolah.toString()
+        : "";
     if (pesan_kepsek)
       updatePayload.pesan_kepsek = Buffer(pesan_kepsek).toString("base64");
     if (foto_kepsek) updatePayload.foto_kepsek = foto_kepsek;
@@ -6304,6 +6306,16 @@ class MainController {
     if (fax) updatePayload.fax = fax;
     if (banner_sarpras) updatePayload.banner_sarpras = banner_sarpras;
     if (banner_blog) updatePayload.banner_blog = banner_blog;
+
+    const check = await MInformasiSekolah.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .first();
+
+    if (!check) {
+      await MInformasiSekolah.create({
+        m_sekolah_id: sekolah.id,
+      });
+    }
 
     const check = await MInformasiSekolah.query()
       .where({ m_sekolah_id: sekolah.id })
