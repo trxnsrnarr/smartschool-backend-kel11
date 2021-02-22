@@ -9,6 +9,7 @@ class TkJawabanUjianSiswaSchema extends Schema {
       table.increments();
       table.text("jawaban_rubrik_esai");
       table.string("jawaban_pg");
+      table.string("jawaban_esai");
       table.integer("durasi");
       table.boolean("ragu");
       table.boolean("dijawab");

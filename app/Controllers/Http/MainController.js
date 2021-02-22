@@ -4025,7 +4025,16 @@ class MainController {
               timelineData.push({ ...d, sudah_lewat: false });
             }
           } else {
-            timelineData.push({ ...d });
+            if (d.tipe == "diskusi") {
+              if (
+                moment(d.tanggal_pembagian).format("YYYY-MM-DD") <=
+                moment(waktu_saat_ini).format("YYYY-MM-DD")
+              ) {
+                timelineData.push({ ...d });
+              }
+            } else {
+              timelineData.push({ ...d });
+            }
           }
         })
       );
@@ -4240,7 +4249,6 @@ class MainController {
         deskripsi: deskripsi ? Buffer(deskripsi).toString("base64") : "",
         gmeet,
         tanggal_dibuat,
-        lampiran: lampiran.toString(),
         dihapus: 0,
         tanggal_pembagian,
       });
@@ -4321,6 +4329,7 @@ class MainController {
       waktu_absen,
       waktu_pengumpulan,
       dikumpulkan,
+      tanggal_pembagian,
       nilai,
     } = request.post();
 
@@ -4355,7 +4364,7 @@ class MainController {
         timeline = await MTimeline.query()
           .where({ id: timeline_id })
           .update({
-            rpp: rpp.toString(),
+            rpp: rpp ? rpp.toString() : "",
             jurnal,
             deskripsi: deskripsi ? Buffer(deskripsi).toString("base64") : "",
             gmeet,
@@ -5788,8 +5797,10 @@ class MainController {
           builder.with("ujian");
         });
       })
+      .with("jawabanSiswa", (builder) => {
+        builder.with("soal");
+      })
       .where({ id: peserta_ujian_id })
-      .andWhere({ m_user_id: user.id })
       .first();
 
     const soal_ids = await TkJawabanUjianSiswa.query()
@@ -5831,7 +5842,7 @@ class MainController {
       .where({ id: tk_jadwal_ujian_id })
       .first();
 
-    if (jadwalUjian.jadwalUjian.waktu_dibuka > waktu_mulai) {
+    if (jadwalUjian.toJSON().jadwalUjian.waktu_dibuka > waktu_mulai) {
       return response.forbidden({
         message: messageForbidden,
       });
@@ -5839,23 +5850,49 @@ class MainController {
 
     let diacak = "ASC";
 
-    if (jadwalUjian.jadwalUjian.diacak) {
+    if (jadwalUjian.toJSON().jadwalUjian.diacak) {
       diacak = "RAND()";
     }
 
-    const soalUjian = await TkSoalUjian.query()
+    const soalPGIds = await TkSoalUjian.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_ujian_id: ujian_id })
+      .pluck("m_soal_ujian_id");
+
+    const soalMasterPGIds = await MSoalUjian.query()
+      .where({ bentuk: "pg" })
+      .whereIn("id", soalPGIds)
+      .ids();
+
+    const soalPG = await TkSoalUjian.query()
       .with("soal", (builder) => {
         builder.where({ dihapus: 0 });
       })
+      .whereIn("m_soal_ujian_id", soalMasterPGIds)
+      .orderByRaw(`${diacak}`)
+      .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_pg)
+      .fetch();
+
+    const soalEsaiIds = await TkSoalUjian.query()
       .where({ dihapus: 0 })
       .andWhere({ m_ujian_id: ujian_id })
-      .orderByRaw(`id ${diacak}`)
+      .pluck("m_soal_ujian_id");
+
+    const soalMasterEsaiIds = await MSoalUjian.query()
+      .where({ bentuk: "esai" })
+      .whereIn("id", soalEsaiIds)
+      .ids();
+
+    const soalEsai = await TkSoalUjian.query()
+      .with("soal", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .whereIn("m_soal_ujian_id", soalMasterEsaiIds)
+      .orderByRaw(`${diacak}`)
+      .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_esai)
       .fetch();
 
     const soalData = [];
-
-    let totalSoalPG = 0;
-    let totalSoalEsai = 0;
 
     const checkIfExist = await TkPesertaUjian.query()
       .where({ m_user_id: user.id })
@@ -5878,37 +5915,26 @@ class MainController {
     });
 
     await Promise.all(
-      soalUjian.toJSON().map(async (d) => {
-        if (totalSoalEsai == jadwalUjian.jadwalUjian.jumlah_esai) {
-          return;
-        }
-
-        if (totalSoalPG == jadwalUjian.jadwalUjian.jumlah_pg) {
-          return;
-        }
-
-        if (d.soal.bentuk == "pg") {
-          soalData.push({
-            durasi: 0,
-            ragu: 0,
-            dijawab: 0,
-            m_soal_ujian_id: d.soal.id,
-            tk_peserta_ujian_id: pesertaUjian.id,
-          });
-          totalSoalPG = totalSoalPG + 1;
-        }
-
-        if (d.soal.bentuk == "esai") {
-          soalData.push({
-            durasi: 0,
-            ragu: 0,
-            dijawab: 0,
-            m_soal_ujian_id: d.soal.id,
-            jawaban_rubrik_esai: d.soal.rubrik_kj,
-            tk_peserta_ujian_id: pesertaUjian.id,
-          });
-          totalSoalEsai = totalSoalEsai + 1;
-        }
+      soalPG.toJSON().map(async (d) => {
+        soalData.push({
+          durasi: 0,
+          ragu: 0,
+          dijawab: 0,
+          m_soal_ujian_id: d.soal.id,
+          tk_peserta_ujian_id: pesertaUjian.id,
+        });
+      })
+    );
+    await Promise.all(
+      soalEsai.toJSON().map(async (d) => {
+        soalData.push({
+          durasi: 0,
+          ragu: 0,
+          dijawab: 0,
+          m_soal_ujian_id: d.soal.id,
+          jawaban_rubrik_esai: d.soal.rubrik_kj,
+          tk_peserta_ujian_id: pesertaUjian.id,
+        });
       })
     );
 
@@ -5925,7 +5951,7 @@ class MainController {
     });
 
     return response.ok({
-      peserta_ujian: pesertaUjian.id,
+      peserta_ujian: pesertaUjian,
     });
   }
 
@@ -5945,7 +5971,37 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { jawaban_pg, durasi, ragu } = request.post();
+    const { jawaban_pg, jawaban_esai, durasi, ragu } = request.post();
+
+    let jawabanUjianSiswa;
+
+    if (jawaban_esai) {
+      jawabanUjianSiswa = await TkJawabanUjianSiswa.query()
+        .where({ id: jawaban_ujian_siswa })
+        .update({
+          jawaban_esai,
+          durasi,
+          ragu,
+          dijawab: 1,
+        });
+    }
+
+    if (jawaban_pg) {
+      jawabanUjianSiswa = await TkJawabanUjianSiswa.query()
+        .where({ id: jawaban_ujian_siswa })
+        .update({
+          jawaban_pg,
+          durasi,
+          ragu,
+          dijawab: 1,
+        });
+    }
+
+    if (!jawabanUjianSiswa) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
 
     const jawabanUjianSiswaData = await TkJawabanUjianSiswa.query()
       .with("pesertaUjian", (builder) => {
@@ -5955,21 +6011,6 @@ class MainController {
       })
       .where({ id: jawaban_ujian_siswa })
       .first();
-
-    const jawabanUjianSiswa = await TkJawabanUjianSiswa.query()
-      .where({ id: jawaban_ujian_siswa })
-      .update({
-        jawaban_pg,
-        durasi,
-        ragu,
-        dijawab: 1,
-      });
-
-    if (!jawabanUjianSiswa) {
-      return response.notFound({
-        message: messageNotFound,
-      });
-    }
 
     await jadwalUjianReference
       .doc(`${jawabanUjianSiswaData.toJSON().pesertaUjian.doc_id}`)

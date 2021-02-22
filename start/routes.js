@@ -157,7 +157,8 @@ Route.get(
   "/peserta-ujian/:peserta_ujian_id",
   "MainController.detailPesertaUjian"
 );
-Route.post("/peserta-ujian", "MainController.postPesertaUjian");
+Route.post("/peserta-ujian", "MainController.postPesertaUjian"); 
+Route.put('/peserta-ujian/:peserta_ujian_id', 'MainController.putPesertaUjian')
 
 // jawaban siswa
 Route.put(

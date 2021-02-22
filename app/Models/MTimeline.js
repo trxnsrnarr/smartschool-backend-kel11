@@ -60,6 +60,12 @@ class MTimeline extends Model {
       : moment(created_at).format("DD MMMM YYYY");
   }
 
+  getTanggalPembagian(tanggal_pembagian, created_at) {
+    return tanggal_pembagian
+      ? moment(tanggal_pembagian).format("DD MMMM YYYY")
+      : moment(created_at).format("DD MMMM YYYY");
+  }
+
   getCreatedAt(created_at) {
     return moment(created_at).format("DD MMMM YYYY");
   }
