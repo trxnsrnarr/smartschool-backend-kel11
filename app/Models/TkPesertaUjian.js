@@ -34,6 +34,10 @@ class TkJadwalUjianSiswa extends Model {
   getJamSelesai({ waktu_selesai }) {
     return !waktu_selesai ? "-" : moment(waktu_selesai).format("HH:mm");
   }
+
+  user() {
+    return this.belongsTo("App/Models/User", "m_user_id");
+  }
 }
 
 module.exports = TkJadwalUjianSiswa;
