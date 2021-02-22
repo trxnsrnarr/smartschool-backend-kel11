@@ -2,6 +2,9 @@
 
 /** @type {typeof import('@adonisjs/lucid/src/Lucid/Model')} */
 const Model = use("Model");
+const moment = require("moment");
+require("moment/locale/id");
+moment.locale("id");
 
 class MPost extends Model {
   static get table() {
@@ -18,6 +21,10 @@ class MPost extends Model {
 
   getKonten(konten) {
     return konten ? Buffer(konten, "base64").toString("ascii") : "";
+  }
+
+  getCreatedAt(created_at) {
+    return moment(created_at).format("DD MMMM YYYY");
   }
 }
 
