@@ -180,6 +180,7 @@ Route.delete(
 Route.get("/soal-ujian", "MainController.getSoalUjian");
 Route.get("/soal-ujian/:soal_ujian_id", "MainController.detailSoalUjian");
 Route.post("/soal-ujian", "MainController.postSoalUjian");
+Route.post("/soal-ujian/import", "MainController.importSoalUjian");
 Route.put("/soal-ujian/:soal_ujian_id", "MainController.putSoalUjian");
 Route.delete("/soal-ujian/:soal_ujian_id", "MainController.deleteSoalUjian");
 

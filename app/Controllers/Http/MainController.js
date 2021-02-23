@@ -5344,6 +5344,112 @@ class MainController {
     });
   }
 
+  async importSoalUjianServices(filelocation, sekolah, m_ujian_id) {
+    var workbook = new Excel.Workbook();
+
+    workbook = await workbook.xlsx.readFile(filelocation);
+
+    let explanation = workbook.getWorksheet("Sheet 1");
+
+    let colComment = explanation.getColumn("A");
+
+    let data = [];
+
+    colComment.eachCell(async (cell, rowNumber) => {
+      if (rowNumber >= 2) {
+        data.push({
+          kd: explanation.getCell("A" + rowNumber).value,
+          kd_konten_materi: explanation.getCell("B" + rowNumber).value,
+          level_kognitif: explanation.getCell("C" + rowNumber).value,
+          bentuk: explanation.getCell("D" + rowNumber).value,
+          // akm_konten_materi: explanation.getCell("A" + rowNumber).value,
+          // akm_konteks_materi: explanation.getCell("A" + rowNumber).value,
+          // akm_proses_kognitif: explanation.getCell("A" + rowNumber).value,
+          pertanyaan: explanation.getCell("E" + rowNumber).value,
+          jawaban_a: explanation.getCell("F" + rowNumber).value,
+          jawaban_b: explanation.getCell("G" + rowNumber).value,
+          jawaban_c: explanation.getCell("H" + rowNumber).value,
+          jawaban_d: explanation.getCell("I" + rowNumber).value,
+          jawaban_e: explanation.getCell("J" + rowNumber).value,
+          kj_pg: explanation.getCell("K" + rowNumber).value,
+          pembahasan: explanation.getCell("L" + rowNumber).value,
+          nilai_soal: explanation.getCell("M" + rowNumber).value,
+        });
+      }
+    });
+
+    const result = await Promise.all(
+      data.map(async (d) => {
+        const soalUjian = await MSoalUjian.create({
+          kd: d.kd,
+          kd_konten_materi: d.kd_konten_materi,
+          level_kognitif: d.level_kognitif,
+          bentuk: d.bentuk,
+          // akm_konten_materi,
+          // akm_konteks_materi,
+          // akm_proses_kognitif,
+          pertanyaan: pertanyaan ? Buffer(pertanyaan).toString("base64") : "",
+          jawaban_a: jawaban_aFormat,
+          jawaban_b: jawaban_bFormat,
+          jawaban_c: jawaban_cFormat,
+          jawaban_d: jawaban_dFormat,
+          jawaban_e: jawaban_eFormat,
+          kj_pg,
+          rubrik_kj: JSON.stringify(rubrik_kj),
+          pembahasan: pembahasan ? Buffer(pembahasan).toString("base64") : "",
+          nilai_soal,
+          m_user_id: user.id,
+          dihapus: 0,
+        });
+
+        const tkSoalUjian = await TkSoalUjian.create({
+          dihapus: 0,
+          m_ujian_id: m_ujian_id,
+          m_soal_ujian_id: soalUjian.id,
+        });
+
+        return;
+      })
+    );
+
+    return result;
+  }
+
+  async importSoalUjian({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let file = request.file("file");
+    let fname = `import-excel.${file.extname}`;
+
+    const user = await auth.getUser();
+
+    const {
+      m_ujian_id,
+    } = request.post();
+
+    //move uploaded file into custom folder
+    await file.move(Helpers.tmpPath("/uploads"), {
+      name: fname,
+      overwrite: true,
+    });
+
+    if (!file.moved()) {
+      return fileUpload.error();
+    }
+
+    return await this.importSoalUjianServices(
+      `tmp/uploads/${fname}`,
+      sekolah,
+      m_ujian_id
+    );
+  }
+
   async putSoalUjian({ response, request, auth, params: { soal_ujian_id } }) {
     const domain = request.headers().origin;
 
