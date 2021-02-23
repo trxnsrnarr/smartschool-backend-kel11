@@ -8,6 +8,15 @@ class MSoalUjian extends Model {
     return "m_soal_ujian";
   }
 
+  getBentuk(bentuk) {
+    return bentuk ? bentuk.toLowerCase() : "";
+  }
+  getLevelKognitif(level_kognitif) {
+    return level_kognitif ? level_kognitif.toLowerCase() : "";
+  }
+  getKjPg(kj_pg) {
+    return kj_pg ? kj_pg.toLowerCase() : "";
+  }
   getPertanyaan(pertanyaan) {
     return pertanyaan ? Buffer(pertanyaan, "base64").toString("ascii") : "";
   }

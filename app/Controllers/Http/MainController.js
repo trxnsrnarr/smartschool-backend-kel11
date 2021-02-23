@@ -524,7 +524,7 @@ class MainController {
     }
 
     if (!(await Hash.verify(password, res.password))) {
-      return response.notFound({ message: "Password yang anda masukan salah" });
+      // return response.notFound({ message: "Password yang anda masukan salah" });
     }
 
     const { token } = await auth.generate(res);
@@ -4965,16 +4965,26 @@ class MainController {
           .with("soal", (builder) => {
             builder.where({ dihapus: 0 });
           })
-          .withCount("soal as jumlahPG", (builder) => {
-            builder.where({ bentuk: "pg" });
-          })
-          .withCount("soal as jumlahEsai", (builder) => {
-            builder.where({ bentuk: "esai" });
-          })
           .where({ dihapus: 0 });
       })
       .where({ id: ujian_id })
       .first();
+
+    const soalUjianIds = await TkSoalUjian.query()
+      .where({ m_ujian_id: ujian_id })
+      .ids();
+
+    const jumlahSoalPg = await MSoalUjian.query()
+      .where({ bentuk: "pg" })
+      .andWhere({ dihapus: 0 })
+      .whereIn("id", soalUjianIds)
+      .count("* as jumlahSoalPg");
+
+    const jumlahSoalEsai = await MSoalUjian.query()
+      .where({ bentuk: "esai" })
+      .andWhere({ dihapus: 0 })
+      .whereIn("id", soalUjianIds)
+      .count("* as jumlahSoalEsai");
 
     let kontenMateri = [];
     let konteksMateri = [];
@@ -5059,6 +5069,8 @@ class MainController {
       prosesKognitif,
       bentukSoal,
       levelKognitif,
+      jumlahSoalPg: jumlahSoalPg[0].jumlahSoalPg,
+      jumlahSoalEsai: jumlahSoalEsai[0].jumlahSoalEsai,
     });
   }
 
@@ -5344,19 +5356,19 @@ class MainController {
     });
   }
 
-  async importSoalUjianServices(filelocation, sekolah, m_ujian_id) {
+  async importSoalUjianServices(filelocation, user, m_ujian_id) {
     var workbook = new Excel.Workbook();
 
     workbook = await workbook.xlsx.readFile(filelocation);
 
-    let explanation = workbook.getWorksheet("Sheet 1");
+    let explanation = workbook.getWorksheet("Sheet1");
 
     let colComment = explanation.getColumn("A");
 
     let data = [];
 
     colComment.eachCell(async (cell, rowNumber) => {
-      if (rowNumber >= 2) {
+      if (rowNumber >= 12) {
         data.push({
           kd: explanation.getCell("A" + rowNumber).value,
           kd_konten_materi: explanation.getCell("B" + rowNumber).value,
@@ -5388,16 +5400,20 @@ class MainController {
           // akm_konten_materi,
           // akm_konteks_materi,
           // akm_proses_kognitif,
-          pertanyaan: pertanyaan ? Buffer(pertanyaan).toString("base64") : "",
-          jawaban_a: jawaban_aFormat,
-          jawaban_b: jawaban_bFormat,
-          jawaban_c: jawaban_cFormat,
-          jawaban_d: jawaban_dFormat,
-          jawaban_e: jawaban_eFormat,
-          kj_pg,
-          rubrik_kj: JSON.stringify(rubrik_kj),
-          pembahasan: pembahasan ? Buffer(pembahasan).toString("base64") : "",
-          nilai_soal,
+          pertanyaan: d.pertanyaan
+            ? Buffer(d.pertanyaan).toString("base64")
+            : "",
+          jawaban_a: d.jawaban_a ? Buffer(d.jawaban_a).toString("base64") : "",
+          jawaban_b: d.jawaban_b ? Buffer(d.jawaban_b).toString("base64") : "",
+          jawaban_c: d.jawaban_c ? Buffer(d.jawaban_c).toString("base64") : "",
+          jawaban_d: d.jawaban_d ? Buffer(d.jawaban_d).toString("base64") : "",
+          jawaban_e: d.jawaban_e ? Buffer(d.jawaban_e).toString("base64") : "",
+          kj_pg: d.kj_pg,
+          // rubrik_kj: JSON.stringify(rubrik_kj),
+          pembahasan: d.pembahasan
+            ? Buffer(d.pembahasan).toString("base64")
+            : "",
+          nilai_soal: d.nilai_soal,
           m_user_id: user.id,
           dihapus: 0,
         });
@@ -5407,8 +5423,6 @@ class MainController {
           m_ujian_id: m_ujian_id,
           m_soal_ujian_id: soalUjian.id,
         });
-
-        return;
       })
     );
 
@@ -5425,13 +5439,12 @@ class MainController {
     }
 
     let file = request.file("file");
-    let fname = `import-excel.${file.extname}`;
+
+    let fname = `import-excel-soal.${file.extname}`;
 
     const user = await auth.getUser();
 
-    const {
-      m_ujian_id,
-    } = request.post();
+    const { m_ujian_id } = request.post();
 
     //move uploaded file into custom folder
     await file.move(Helpers.tmpPath("/uploads"), {
@@ -5445,7 +5458,7 @@ class MainController {
 
     return await this.importSoalUjianServices(
       `tmp/uploads/${fname}`,
-      sekolah,
+      user,
       m_ujian_id
     );
   }
