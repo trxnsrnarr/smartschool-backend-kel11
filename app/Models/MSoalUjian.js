@@ -15,7 +15,7 @@ class MSoalUjian extends Model {
     return level_kognitif ? level_kognitif.toLowerCase() : "";
   }
   getKjPg(kj_pg) {
-    return kj_pg ? kj_pg.toLowerCase() : "";
+    return kj_pg ? kj_pg.toUpperCase() : "";
   }
   getPertanyaan(pertanyaan) {
     return pertanyaan ? Buffer(pertanyaan, "base64").toString("ascii") : "";

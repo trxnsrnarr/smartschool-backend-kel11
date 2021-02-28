@@ -17,7 +17,7 @@ class TkJawabanUjianSiswa extends Model {
   }
 
   getDurasi(durasi) {
-    return durasi ? `${durasi / 100} detik` : `0 detik`;
+    return durasi ? `${durasi / 1000} detik` : `0 detik`;
   }
 }
 

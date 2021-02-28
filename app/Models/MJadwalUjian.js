@@ -18,7 +18,6 @@ class MJadwalUjian extends Model {
       "waktuUjian",
       "tanggalInput",
       "waktuInput",
-      "waktu_ditutup",
     ];
   }
 
@@ -44,10 +43,8 @@ class MJadwalUjian extends Model {
     return moment(waktu_dibuka).format("HH:mm");
   }
 
-  getWaktuDitutup({ waktu_dibuka, durasi }) {
-    return moment(waktu_dibuka)
-      .add("minutes", durasi)
-      .format("YYYY-MM-DD HH:mm:ss");
+  getWaktuDitutup(waktu_ditutup) {
+    return moment(waktu_ditutup).format("YYYY-MM-DD HH:mm:ss");
   }
 
   rombelUjian() {

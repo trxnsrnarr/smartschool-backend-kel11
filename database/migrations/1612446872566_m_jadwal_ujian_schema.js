@@ -11,6 +11,7 @@ class MJadwalUjianSchema extends Schema {
       table.integer("jumlah_esai");
       table.integer("kkm");
       table.datetime("waktu_dibuka");
+      table.datetime("waktu_ditutup");
       table.integer("durasi");
       table.string("gmeet");
       table.boolean("diacak");

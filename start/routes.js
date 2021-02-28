@@ -230,6 +230,7 @@ Route.delete(
 
 // sarpras
 Route.get("/sarpras", "MainController.getSarpras");
+Route.get("/sarpras/:sarpras_id", "MainController.detailSarpras");
 Route.post("/sarpras", "MainController.postSarpras");
 Route.put("/sarpras/:sarpras_id", "MainController.putSarpras");
 Route.delete("/sarpras/:sarpras_id", "MainController.deleteSarpras");
@@ -241,6 +242,10 @@ Route.put("/kegiatan/:kegiatan_id", "MainController.putKegiatan");
 Route.delete("/kegiatan/:kegiatan_id", "MainController.deleteKegiatan");
 
 // kegiatan galeri
+Route.get(
+  "/kegiatan-galeri/:kegiatan_galeri_id",
+  "MainController.detailKegiatanGaleri"
+);
 Route.post("/kegiatan-galeri", "MainController.postKegiatanGaleri");
 Route.put(
   "/kegiatan-galeri/:kegiatan_galeri_id",

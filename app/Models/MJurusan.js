@@ -11,6 +11,10 @@ class MJurusan extends Model {
   informasi() {
     return this.hasOne("App/Models/MInformasiJurusan");
   }
+
+  rombel() {
+    return this.hasMany('App/Models/MRombel')
+  }
 }
 
 module.exports = MJurusan;

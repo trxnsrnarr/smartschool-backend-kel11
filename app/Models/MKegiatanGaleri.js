@@ -7,6 +7,10 @@ class MKegiatanGaleri extends Model {
   static get table() {
     return "m_kegiatan_galeri";
   }
+
+  kegiatan() {
+    return this.belongsTo('App/Models/MKegiatan')
+  }
 }
 
 module.exports = MKegiatanGaleri;

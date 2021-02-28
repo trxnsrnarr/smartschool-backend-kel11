@@ -51,7 +51,7 @@ class MTimeline extends Model {
   }
 
   static get computed() {
-    return ["absen"];
+    return ["absen", "tanggal_pertemuan"];
   }
 
   getTanggalDibuat(tanggal_dibuat, created_at) {
@@ -60,7 +60,7 @@ class MTimeline extends Model {
       : moment(created_at).format("DD MMMM YYYY");
   }
 
-  getTanggalPembagian(tanggal_pembagian, created_at) {
+  getTanggalPertemuan({ tanggal_pembagian, created_at }) {
     return tanggal_pembagian
       ? moment(tanggal_pembagian).format("DD MMMM YYYY")
       : moment(created_at).format("DD MMMM YYYY");
