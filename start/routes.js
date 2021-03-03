@@ -119,6 +119,20 @@ Route.post("/materi", "MainController.postMateri");
 Route.put("/materi/:materi_id", "MainController.putMateri");
 Route.delete("/materi/:materi_id", "MainController.deleteMateri");
 
+// no rekening
+Route.get("/rek-sekolah", "MainController.getRekSekolah");
+Route.get("/rek-sekolah/:rek_sekolah_id", "MainController.detailRekSekolah");
+Route.post("/rek-sekolah", "MainController.postRekSekolah");
+Route.put("/rek-sekolah/:rek_sekolah_id", "MainController.putRekSekolah");
+Route.delete("/rek-sekolah/:rek_sekolah_id", "MainController.deleteRekSekolah");
+
+// pembayaran
+Route.get("/pembayaran", "MainController.getPembayaran");
+Route.get("/pembayaran/:pembayaran_id", "MainController.detailPembayaran");
+Route.post("/pembayaran", "MainController.postPembayaran");
+Route.put("/pembayaran/:pembayaran_id", "MainController.putPembayaran");
+Route.delete("/pembayaran/:pembayaran_id", "MainController.deletePembayaran");
+
 // materi kesimpulan
 Route.post("/materi-kesimpulan", "MainController.postMateriKesimpulan");
 Route.put(
@@ -169,6 +183,10 @@ Route.put(
 // jadwal ujian
 Route.get("/jadwal-ujian", "MainController.getJadwalUjian");
 Route.get("/jadwal-ujian/:jadwal_ujian_id", "MainController.detailJadwalUjian");
+Route.post(
+  "/jadwal-ujian/download-hasil",
+  "MainController.downloadJadwalUjian"
+);
 Route.post("/jadwal-ujian", "MainController.postJadwalUjian");
 Route.put("/jadwal-ujian/:jadwal_ujian_id", "MainController.putJadwalUjian");
 Route.delete(

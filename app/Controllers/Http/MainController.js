@@ -11,6 +11,8 @@ const MKegiatanGaleri = use("App/Models/MKegiatanGaleri");
 const MPerpusKomen = use("App/Models/MPerpusKomen");
 const TkPerpusAktivitas = use("App/Models/TkPerpusAktivitas");
 const MJurusan = use("App/Models/MJurusan");
+const MRekSekolah = use("App/Models/MRekSekolah");
+const MPembayaran = use("App/Models/MPembayaran");
 const Mta = use("App/Models/Mta");
 const MSlider = use("App/Models/MSlider");
 const MTugas = use("App/Models/MTugas");
@@ -1529,6 +1531,8 @@ class MainController {
 
     if (sekolah.tingkat == "SMK") {
       tingkat = ["X", "XI", "XII", "XIII"];
+    } else if (sekolah.tingkat == "SMP") {
+      tingkat = ["VII", "VIII", "IX"];
     }
 
     return response.ok({
@@ -3622,15 +3626,8 @@ class MainController {
     const { m_jadwal_mengajar_id, hari_ini, jam_saat_ini } = request.get();
 
     if (user.role == "siswa") {
-      const timeline = await TkTimeline.query()
-        .with("timeline")
-        .with("user")
-        .where({ m_user_id: user.id })
-        .andWhere({ tipe: "tugas" })
-        .fetch();
-
       return response.ok({
-        timeline: timeline,
+        message: "siswa",
       });
     }
 
@@ -5033,6 +5030,8 @@ class MainController {
 
     if (sekolah.tingkat == "SMK") {
       tingkatData = ["X", "XI", "XII", "XIII"];
+    } else if (sekolah.tingkat == "SMP") {
+      tingkatData = ["VII", "VIII", "IX"];
     }
 
     let tipeUjian = [
@@ -5040,7 +5039,7 @@ class MainController {
       { value: "pts1", label: "Penilaian Tengah Semester 1" },
       { value: "pts2", label: "Penilaian Tengah Semester 2" },
       { value: "pas1", label: "Penilaian Akhir Semester 1" },
-      { value: "pas2", label: "Penilaian Akhir Semester 1" },
+      { value: "pas2", label: "Penilaian Akhir Semester 2" },
       { value: "literasi", label: "AKM - Literasi" },
       { value: "numerasi", label: "AKM - Numerasi" },
     ];
@@ -5075,7 +5074,7 @@ class MainController {
 
     const soalUjianIds = await TkSoalUjian.query()
       .where({ m_ujian_id: ujian_id })
-      .ids();
+      .pluck("m_soal_ujian_id");
 
     const jumlahSoalPg = await MSoalUjian.query()
       .where({ bentuk: "pg" })
@@ -5169,6 +5168,8 @@ class MainController {
 
     if (sekolah.tingkat == "SMK") {
       tingkatData = ["X", "XI", "XII", "XIII"];
+    } else if (sekolah.tingkat == "SMP") {
+      tingkatData = ["VII", "VIII", "IX"];
     }
 
     return response.ok({
@@ -5308,6 +5309,8 @@ class MainController {
 
     if (sekolah.tingkat == "SMK") {
       tingkat = ["X", "XI", "XII", "XIII"];
+    } else if (sekolah.tingkat == "SMP") {
+      tingkat = ["VII", "VIII", "IX"];
     }
 
     let tipeUjian = [
@@ -5315,7 +5318,7 @@ class MainController {
       { value: "pts1", label: "Penilaian Tengah Semester 1" },
       { value: "pts2", label: "Penilaian Tengah Semester 2" },
       { value: "pas1", label: "Penilaian Akhir Semester 1" },
-      { value: "pas2", label: "Penilaian Akhir Semester 1" },
+      { value: "pas2", label: "Penilaian Akhir Semester 2" },
       { value: "literasi", label: "AKM - Literasi" },
       { value: "numerasi", label: "AKM - Numerasi" },
     ];
@@ -5410,6 +5413,7 @@ class MainController {
       akm_proses_kognitif,
       // pg
       pertanyaan,
+      audio,
       jawaban_a,
       jawaban_b,
       jawaban_c,
@@ -5483,6 +5487,7 @@ class MainController {
       akm_konten_materi,
       akm_konteks_materi,
       akm_proses_kognitif,
+      audio,
       pertanyaan: pertanyaan ? Buffer(pertanyaan).toString("base64") : "",
       jawaban_a: jawaban_aFormat,
       jawaban_b: jawaban_bFormat,
@@ -5513,14 +5518,14 @@ class MainController {
 
     workbook = await workbook.xlsx.readFile(filelocation);
 
-    let explanation = workbook.getWorksheet("Sheet 1");
+    let explanation = workbook.getWorksheet("Sheet1");
 
     let colComment = explanation.getColumn("A");
 
     let data = [];
 
     colComment.eachCell(async (cell, rowNumber) => {
-      if (rowNumber >= 12) {
+      if (rowNumber >= 13) {
         data.push({
           kd: explanation.getCell("A" + rowNumber).value,
           kd_konten_materi: explanation.getCell("B" + rowNumber).value,
@@ -5634,6 +5639,7 @@ class MainController {
       akm_konten_materi,
       akm_konteks_materi,
       akm_proses_kognitif,
+      audio,
       pertanyaan,
       jawaban_a,
       jawaban_b,
@@ -5656,6 +5662,7 @@ class MainController {
         akm_konten_materi,
         akm_konteks_materi,
         akm_proses_kognitif,
+        audio,
         pertanyaan: pertanyaan ? Buffer(pertanyaan).toString("base64") : "",
         jawaban_a: jawaban_a ? Buffer(jawaban_a).toString("base64") : "",
         jawaban_b: jawaban_b ? Buffer(jawaban_b).toString("base64") : "",
@@ -5816,16 +5823,12 @@ class MainController {
 
       await Promise.all(
         jadwalUjianDataTmp.map(async (d, idx) => {
-          if (d.id == jadwalUjianData[d.id]) {
-            jadwalUjianData[d.id] = {
-              ...jadwalUjianData[d.id],
-              pesertaSusulan:
-                jadwalUjianData[d.id].pesertaSusulan + d.pesertaSusulan,
-            };
-          } else {
-            jadwalUjianData[d.id] = { ...d, pesertaSusulan: d.pesertaSusulan };
-          }
-          return d;
+          jadwalUjianData[d.id] = {
+            ...d,
+            pesertaSusulan: jadwalUjianData[d.id]
+              ? jadwalUjianData[d.id].pesertaSusulan + d.pesertaSusulan
+              : d.pesertaSusulan,
+          };
         })
       );
 
@@ -5866,13 +5869,17 @@ class MainController {
               .where("waktu_dibuka", "<=", hari_ini)
               .andWhere("waktu_ditutup", ">=", hari_ini);
           })
+          .with("peserta")
           .where({ dihapus: 0 })
           .andWhere({ m_rombel_id: anggotaRombel.m_rombel_id })
           .fetch();
-      } else if (status == "selesai") {
+      } else if (status == "sudah-selesai") {
         jadwalUjian = await TkJadwalUjian.query()
           .with("jadwalUjian", (builder) => {
             builder.with("ujian").andWhere("waktu_ditutup", "<", hari_ini);
+          })
+          .with("peserta", (builder) => {
+            builder.where({ m_user_id: user.id });
           })
           .where({ dihapus: 0 })
           .andWhere({ m_rombel_id: anggotaRombel.m_rombel_id })
@@ -5942,6 +5949,139 @@ class MainController {
       pesertaUjian: pesertaUjianData,
       rombel: detailRombel,
     });
+  }
+
+  async downloadJadwalUjian({ response, request }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { jadwal_ujian_id } = request.post();
+
+    const jadwalUjian = await MJadwalUjian.query()
+      .with("rombelUjian", (builder) => {
+        builder.with("rombel");
+      })
+      .with("ujian")
+      .where({ id: jadwal_ujian_id })
+      .first();
+
+    const workbook = new Excel.Workbook();
+
+    await Promise.all(
+      timeline.toJSON().map(async (d, idx) => {
+        // Create workbook & add worksheet
+        const worksheet = workbook.addWorksheet(`Pertemuan ${idx + 1}`);
+
+        await Promise.all(
+          d.tkTimeline.map(async (e) => {
+            // add column headers
+            worksheet.getRow(10).values = ["Nama", "Absen"];
+
+            worksheet.columns = [{ key: "user" }, { key: "absen" }];
+
+            // Add row using key mapping to columns
+            const row = worksheet.addRow({
+              user: e.user.nama,
+              absen: e.absen || "alpa",
+            });
+          })
+        );
+
+        worksheet.getCell("A1").value = "Nama";
+        worksheet.getCell("B1").value = d.user.nama;
+        worksheet.getCell("D1").value = "NIP";
+        worksheet.getCell("E1").value = d.user.nip;
+        worksheet.getCell("D2").value = "Link Pertemuan";
+        worksheet.getCell("E2").value = d.gmeet;
+        worksheet.getCell("A2").value = "Tanggal Pertemuan";
+        worksheet.getCell("B2").value = d.tanggal_dibuat;
+
+        worksheet.getCell("A4").value = "RPP";
+        worksheet.getCell("A5").value = d.rpp.toString();
+
+        worksheet.getCell("A7").value = "Deskripsi";
+        worksheet.getCell("A8").value = d.deskripsi;
+
+        worksheet.columns.forEach(function (column, i) {
+          let maxLength = 0;
+          column["eachCell"]({ includeEmpty: true }, function (cell) {
+            let columnLength = cell.value ? cell.value.toString().length : 10;
+
+            if (cell.value == "alpa") {
+              // red
+              cell.fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: { argb: "F9D5D4" },
+                bgColor: { argb: "F9D5D4" },
+              };
+
+              cell.font = {
+                color: { argb: "FC544B" },
+              };
+            }
+
+            if (cell.value == "sakit") {
+              // yellow
+              cell.fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: { argb: "FCE8D2" },
+                bgColor: { argb: "FCE8D2" },
+              };
+
+              cell.font = {
+                color: { argb: "F9AC50" },
+              };
+            }
+
+            if (cell.value == "izin") {
+              // green
+              cell.fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: { argb: "E0FCE4" },
+                bgColor: { argb: "E0FCE4" },
+              };
+
+              cell.font = {
+                color: { argb: "63ED7A" },
+              };
+            }
+
+            if (cell.value == "hadir") {
+              // green
+              cell.fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: { argb: "2680EB" },
+                bgColor: { argb: "2680EB" },
+              };
+
+              cell.font = {
+                color: { argb: "FFFFFF" },
+              };
+            }
+
+            if (columnLength > maxLength) {
+              maxLength = columnLength;
+            }
+          });
+
+          column.width = maxLength < 15 ? 15 : maxLength > 30 ? 30 : 15;
+        });
+      })
+    );
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile("public/uploads/absen-pertemuan.xlsx");
+
+    return "/uploads/absen-pertemuan.xlsx";
   }
 
   async postJadwalUjian({ response, request, auth }) {
@@ -6133,11 +6273,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { jawaban_siswa_id } = request.get();
+    const { jawaban_siswa_id, siswa } = request.get();
 
     let pesertaUjian;
 
-    if (user.role == "guru") {
+    if (user.role == "guru" || siswa) {
       pesertaUjian = await TkPesertaUjian.query()
         .with("jadwalUjian", (builder) => {
           builder.with("jadwalUjian", (builder) => {
@@ -6276,7 +6416,7 @@ class MainController {
       });
     }
 
-    let diacak = "ASC";
+    let diacak = "id ASC";
 
     if (jadwalUjian.toJSON().jadwalUjian.diacak) {
       diacak = "RAND()";
@@ -7487,51 +7627,18 @@ class MainController {
         })
         .whereIn("id", perpusTags)
         .andWhere({ dihapus: 0 })
-        // .orWhere("judul", "like", `%${decodeURIComponent(search)}%`)
-        // .orWhere("deskripsi", "like", `%${decodeURIComponent(search)}%`)
-        // .orWhere("penulis", "like", `%${decodeURIComponent(search)}%`)
-        // .orWhere("penerbit", "like", `%${decodeURIComponent(search)}%`)
-        // .orWhere("isbn", "like", `%${decodeURIComponent(search)}%`)
+        .orWhere("judul", "like", `%${decodeURIComponent(search)}%`)
+        .orWhere("deskripsi", "like", `%${decodeURIComponent(search)}%`)
+        .orWhere("penulis", "like", `%${decodeURIComponent(search)}%`)
+        .orWhere("penerbit", "like", `%${decodeURIComponent(search)}%`)
+        .orWhere("isbn", "like", `%${decodeURIComponent(search)}%`)
         .andWhere({ dihapus: 0 })
         .orderBy("id", "desc")
         .fetch();
     }
 
-    if (urutkan) {
-      if (urutkan == "terbaru") {
-        perpus = await MPerpus.query()
-          .with("user")
-          .with("buku")
-          .with("sekolah")
-          .with("tag", (builder) => {
-            builder.with("tag");
-          })
-          .with("mapel", (builder) => {
-            builder.with("mapel");
-          })
-          .withCount("aktivitasPerpus as total_baca", (builder) => {
-            builder.where({ aktivitas: "baca" });
-          })
-          .withCount("aktivitasPerpus as total_download", (builder) => {
-            builder.where({ aktivitas: "download" });
-          })
-          .withCount("aktivitasPerpus as total_rating", (builder) => {
-            builder.where({ aktivitas: "rating" });
-          })
-          .withCount("komen as total_komen", (builder) => {
-            builder.where({ dihapus: 0 });
-          })
-          .where({ m_sekolah_id: sekolah.id })
-          .andWhere({ dihapus: 0 })
-          .orWhere("judul", "like", `%${decodeURIComponent(search)}%`)
-          .orWhere("deskripsi", "like", `%${decodeURIComponent(search)}%`)
-          .orWhere("penulis", "like", `%${decodeURIComponent(search)}%`)
-          .orWhere("penerbit", "like", `%${decodeURIComponent(search)}%`)
-          .orWhere("isbn", "like", `%${decodeURIComponent(search)}%`)
-          .andWhere({ dihapus: 0 })
-          .orderBy("id", "desc")
-          .fetch();
-      } else if (urutkan == "populer") {
+    if (search) {
+      if (nav == "buku-saya") {
         perpus = await MPerpus.query()
           .with("user")
           .with("buku")
@@ -7563,171 +7670,6 @@ class MainController {
           .orWhere("penerbit", "like", `%${decodeURIComponent(search)}%`)
           .orWhere("isbn", "like", `%${decodeURIComponent(search)}%`)
           .andWhere({ dihapus: 0 })
-          .orderBy("id", "desc")
-          .fetch();
-      } else if (urutkan == "dibicarakan") {
-        perpus = await MPerpus.query()
-          .with("user")
-          .with("buku")
-          .with("sekolah")
-          .with("tag", (builder) => {
-            builder.with("tag");
-          })
-          .with("mapel", (builder) => {
-            builder.with("mapel");
-          })
-          .withCount("aktivitasPerpus as total_baca", (builder) => {
-            builder.where({ aktivitas: "baca" });
-          })
-          .withCount("aktivitasPerpus as total_download", (builder) => {
-            builder.where({ aktivitas: "download" });
-          })
-          .withCount("aktivitasPerpus as total_rating", (builder) => {
-            builder.where({ aktivitas: "rating" });
-          })
-          .withCount("komen as total_komen", (builder) => {
-            builder.where({ dihapus: 0 });
-          })
-          .where({ m_sekolah_id: sekolah.id })
-          .andWhere({ dihapus: 0 })
-          .andWhere({ m_user_id: user.id })
-          .orWhere("judul", "like", `%${decodeURIComponent(search)}%`)
-          .orWhere("deskripsi", "like", `%${decodeURIComponent(search)}%`)
-          .orWhere("penulis", "like", `%${decodeURIComponent(search)}%`)
-          .orWhere("penerbit", "like", `%${decodeURIComponent(search)}%`)
-          .orWhere("isbn", "like", `%${decodeURIComponent(search)}%`)
-          .andWhere({ dihapus: 0 })
-          .orderBy("id", "desc")
-          .fetch();
-      }
-    } else {
-      if (search) {
-        if (nav == "buku-saya") {
-          perpus = await MPerpus.query()
-            .with("user")
-            .with("buku")
-            .with("sekolah")
-            .with("tag", (builder) => {
-              builder.with("tag");
-            })
-            .with("mapel", (builder) => {
-              builder.with("mapel");
-            })
-            .withCount("aktivitasPerpus as total_baca", (builder) => {
-              builder.where({ aktivitas: "baca" });
-            })
-            .withCount("aktivitasPerpus as total_download", (builder) => {
-              builder.where({ aktivitas: "download" });
-            })
-            .withCount("aktivitasPerpus as total_rating", (builder) => {
-              builder.where({ aktivitas: "rating" });
-            })
-            .withCount("komen as total_komen", (builder) => {
-              builder.where({ dihapus: 0 });
-            })
-            .where({ m_sekolah_id: sekolah.id })
-            .andWhere({ dihapus: 0 })
-            .andWhere({ m_user_id: user.id })
-            .orWhere("judul", "like", `%${decodeURIComponent(search)}%`)
-            .orWhere("deskripsi", "like", `%${decodeURIComponent(search)}%`)
-            .orWhere("penulis", "like", `%${decodeURIComponent(search)}%`)
-            .orWhere("penerbit", "like", `%${decodeURIComponent(search)}%`)
-            .orWhere("isbn", "like", `%${decodeURIComponent(search)}%`)
-            .andWhere({ dihapus: 0 })
-            .orderBy("id", "desc")
-            .fetch();
-        } else if (nav == "buku-sekolah") {
-          perpus = await MPerpus.query()
-            .with("user")
-            .with("buku")
-            .with("sekolah")
-            .with("tag", (builder) => {
-              builder.with("tag");
-            })
-            .with("mapel", (builder) => {
-              builder.with("mapel");
-            })
-            .withCount("aktivitasPerpus as total_baca", (builder) => {
-              builder.where({ aktivitas: "baca" });
-            })
-            .withCount("aktivitasPerpus as total_download", (builder) => {
-              builder.where({ aktivitas: "download" });
-            })
-            .withCount("aktivitasPerpus as total_rating", (builder) => {
-              builder.where({ aktivitas: "rating" });
-            })
-            .withCount("komen as total_komen", (builder) => {
-              builder.where({ dihapus: 0 });
-            })
-            .where({ m_sekolah_id: sekolah.id })
-            .andWhere({ dihapus: 0 })
-            .orWhere("judul", "like", `%${decodeURIComponent(search)}%`)
-            .orWhere("deskripsi", "like", `%${decodeURIComponent(search)}%`)
-            .orWhere("penulis", "like", `%${decodeURIComponent(search)}%`)
-            .orWhere("penerbit", "like", `%${decodeURIComponent(search)}%`)
-            .orWhere("isbn", "like", `%${decodeURIComponent(search)}%`)
-            .andWhere({ dihapus: 0 })
-            .orderBy("id", "desc")
-            .fetch();
-        } else {
-          perpus = await MPerpus.query()
-            .with("user")
-            .with("buku")
-            .with("sekolah")
-            .with("tag", (builder) => {
-              builder.with("tag");
-            })
-            .with("mapel", (builder) => {
-              builder.with("mapel");
-            })
-            .withCount("aktivitasPerpus as total_baca", (builder) => {
-              builder.where({ aktivitas: "baca" });
-            })
-            .withCount("aktivitasPerpus as total_download", (builder) => {
-              builder.where({ aktivitas: "download" });
-            })
-            .withCount("aktivitasPerpus as total_rating", (builder) => {
-              builder.where({ aktivitas: "rating" });
-            })
-            .withCount("komen as total_komen", (builder) => {
-              builder.where({ dihapus: 0 });
-            })
-            .where({ dihapus: 0 })
-            .orWhere("judul", "like", `%${decodeURIComponent(search)}%`)
-            .orWhere("deskripsi", "like", `%${decodeURIComponent(search)}%`)
-            .orWhere("penulis", "like", `%${decodeURIComponent(search)}%`)
-            .orWhere("penerbit", "like", `%${decodeURIComponent(search)}%`)
-            .orWhere("isbn", "like", `%${decodeURIComponent(search)}%`)
-            .andWhere({ dihapus: 0 })
-            .orderBy("id", "desc")
-            .fetch();
-        }
-      } else if (nav == "buku-saya") {
-        perpus = await MPerpus.query()
-          .with("user")
-          .with("buku")
-          .with("sekolah")
-          .with("tag", (builder) => {
-            builder.with("tag");
-          })
-          .with("mapel", (builder) => {
-            builder.with("mapel");
-          })
-          .withCount("aktivitasPerpus as total_baca", (builder) => {
-            builder.where({ aktivitas: "baca" });
-          })
-          .withCount("aktivitasPerpus as total_download", (builder) => {
-            builder.where({ aktivitas: "download" });
-          })
-          .withCount("aktivitasPerpus as total_rating", (builder) => {
-            builder.where({ aktivitas: "rating" });
-          })
-          .withCount("komen as total_komen", (builder) => {
-            builder.where({ dihapus: 0 });
-          })
-          .where({ m_sekolah_id: sekolah.id })
-          .andWhere({ dihapus: 0 })
-          .andWhere({ m_user_id: user.id })
           .orderBy("id", "desc")
           .fetch();
       } else if (nav == "buku-sekolah") {
@@ -7755,6 +7697,12 @@ class MainController {
           })
           .where({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
+          .orWhere("judul", "like", `%${decodeURIComponent(search)}%`)
+          .orWhere("deskripsi", "like", `%${decodeURIComponent(search)}%`)
+          .orWhere("penulis", "like", `%${decodeURIComponent(search)}%`)
+          .orWhere("penerbit", "like", `%${decodeURIComponent(search)}%`)
+          .orWhere("isbn", "like", `%${decodeURIComponent(search)}%`)
+          .andWhere({ dihapus: 0 })
           .orderBy("id", "desc")
           .fetch();
       } else {
@@ -7781,9 +7729,101 @@ class MainController {
             builder.where({ dihapus: 0 });
           })
           .where({ dihapus: 0 })
+          .orWhere("judul", "like", `%${decodeURIComponent(search)}%`)
+          .orWhere("deskripsi", "like", `%${decodeURIComponent(search)}%`)
+          .orWhere("penulis", "like", `%${decodeURIComponent(search)}%`)
+          .orWhere("penerbit", "like", `%${decodeURIComponent(search)}%`)
+          .orWhere("isbn", "like", `%${decodeURIComponent(search)}%`)
+          .andWhere({ dihapus: 0 })
           .orderBy("id", "desc")
           .fetch();
       }
+    } else if (nav == "buku-saya") {
+      perpus = await MPerpus.query()
+        .with("user")
+        .with("buku")
+        .with("sekolah")
+        .with("tag", (builder) => {
+          builder.with("tag");
+        })
+        .with("mapel", (builder) => {
+          builder.with("mapel");
+        })
+        .withCount("aktivitasPerpus as total_baca", (builder) => {
+          builder.where({ aktivitas: "baca" });
+        })
+        .withCount("aktivitasPerpus as total_download", (builder) => {
+          builder.where({ aktivitas: "download" });
+        })
+        .withCount("aktivitasPerpus as total_rating", (builder) => {
+          builder.where({ aktivitas: "rating" });
+        })
+        .withCount("komen as total_komen", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ dihapus: 0 })
+        .andWhere({ m_user_id: user.id })
+        .orderBy("id", "desc")
+        .fetch();
+    } else if (nav == "buku-sekolah") {
+      perpus = await MPerpus.query()
+        .with("user")
+        .with("buku")
+        .with("sekolah")
+        .with("tag", (builder) => {
+          builder.with("tag");
+        })
+        .with("mapel", (builder) => {
+          builder.with("mapel");
+        })
+        .withCount("aktivitasPerpus as total_baca", (builder) => {
+          builder.where({ aktivitas: "baca" });
+        })
+        .withCount("aktivitasPerpus as total_download", (builder) => {
+          builder.where({ aktivitas: "download" });
+        })
+        .withCount("aktivitasPerpus as total_rating", (builder) => {
+          builder.where({ aktivitas: "rating" });
+        })
+        .withCount("komen as total_komen", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ dihapus: 0 })
+        .orderBy("id", "desc")
+        .fetch();
+    } else {
+      perpus = await MPerpus.query()
+        .with("user")
+        .with("buku")
+        .with("sekolah")
+        .with("tag", (builder) => {
+          builder.with("tag");
+        })
+        .with("mapel", (builder) => {
+          builder.with("mapel");
+        })
+        .withCount("aktivitasPerpus as total_baca", (builder) => {
+          builder.where({ aktivitas: "baca" });
+        })
+        .withCount("aktivitasPerpus as total_download", (builder) => {
+          builder.where({ aktivitas: "download" });
+        })
+        .withCount("aktivitasPerpus as total_rating", (builder) => {
+          builder.where({ aktivitas: "rating" });
+        })
+        .withCount("komen as total_komen", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .where({ dihapus: 0 })
+        .orderBy("id", "desc")
+        .fetch();
+    }
+
+    if (urutkan == "terbaru") {
+    } else if (urutkan == "populer") {
+    } else if (urutkan == "dibicarakan") {
     }
 
     const tagData = await MPerpusTag.query()
@@ -8226,6 +8266,411 @@ class MainController {
       });
 
     if (!perpusKomen) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async getRekSekolah({ response, request, auth }) {
+    const user = await auth.getUser();
+
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    if (user.role == "siswa") {
+      const rombelIds = await MRombel.query().where({ m_ta_id: ta.id }).ids();
+
+      const rombelIdsAnggota = await MAnggotaRombel.query()
+        .whereIn("m_rombel_id", rombelIds)
+        .andWhere({ m_user_id: user.id })
+        .pluck("m_rombel_id");
+
+      const materiIds = await TkMateriRombel.query()
+        .whereIn("m_rombel_id", rombelIdsAnggota)
+        .pluck("m_materi_id");
+
+      const materi = await MMateri.query()
+        .with("jurusan")
+        .with("mataPelajaran", (builder) => {
+          builder.with("user");
+        })
+        .withCount("bab", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .whereIn("id", materiIds)
+        .fetch();
+
+      const materiLainnya = await MMateri.query()
+        .with("user")
+        .with("sekolah")
+        .withCount("bab", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ dihapus: 0 })
+        .fetch();
+
+      return response.ok({
+        materi,
+        materiLainnya,
+      });
+    }
+
+    const mataPelajaranIds = await MMataPelajaran.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_user_id: user.id })
+      .andWhere({ dihapus: 0 })
+      .ids();
+
+    const materi = await MMateri.query()
+      .with("jurusan")
+      .with("mataPelajaran")
+      .withCount("bab", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
+      .fetch();
+
+    const materiLainnya = await MMateri.query()
+      .with("user")
+      .with("sekolah")
+      .withCount("bab", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    return response.ok({
+      materi,
+      materiLainnya,
+    });
+  }
+
+  async detailRekSekolah({ response, request, auth, params: { materi_id } }) {
+    const user = await auth.getUser();
+
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const materi = await MMateri.query()
+      .with("jurusan")
+      .with("mataPelajaran")
+      .with("user")
+      .with("sekolah")
+      .where({ id: materi_id })
+      .first();
+
+    const bab = await MBab.query()
+      .with("topik", (builder) => {
+        builder
+          .with("materiKesimpulan", (builder) => {
+            builder.where({ m_user_id: user.id });
+          })
+          .where({ dihapus: 0 });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_materi_id: materi_id })
+      .fetch();
+
+    let looping = true;
+
+    const babData = [];
+
+    await Promise.all(
+      bab.toJSON().map(async (d) => {
+        d.topik.map(async (e, idx) => {
+          if (!e.materiKesimpulan) {
+            if (idx == 0) {
+              e.lock = false;
+            } else if (looping == false) {
+              e.lock = false;
+              looping = true;
+            } else {
+              e.lock = true;
+            }
+          } else {
+            e.lock = false;
+            looping = false;
+          }
+        });
+
+        babData.push(d);
+      })
+    );
+
+    return response.ok({
+      materi,
+      bab: babData,
+    });
+  }
+
+  async postRekSekolah({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { nama } = request.post();
+
+    await MMateri.create({
+      nama,
+      m_user_id: user.id,
+      m_sekolah_id: sekolah.id,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putRekSekolah({ response, request, auth, params: { materi_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { nama } = request.post();
+
+    const materi = await MMateri.query().where({ id: materi_id }).update({
+      nama,
+    });
+
+    if (!materi) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteRekSekolah({ response, request, auth, params: { materi_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const materi = await MMateri.query().where({ id: materi_id }).update({
+      dihapus: 1,
+    });
+
+    if (!materi) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async getPembayaran({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let { jenis, search } = request.get();
+
+    jenis = jenis ? jenis : "spp";
+
+    let pembayaran;
+
+    if(search) {
+      pembayaran = await MPembayaran.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ jenis: jenis })
+      .andWhere('nama', 'like', `%${search}%`)
+      .fetch();
+    } else {
+      pembayaran = await MPembayaran.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ jenis: jenis })
+      .fetch();
+    }
+
+    let jenisData = [
+      { label: "SPP", value: "spp" },
+      { label: "Ujian", value: "ujian" },
+      { label: "Lainnya", values: "lainnya" },
+    ];
+
+    return response.ok({
+      pembayaran: pembayaran,
+      jenisData: jenisData,
+    });
+  }
+
+  async detailPembayaran({ response, request, auth, params: { materi_id } }) {
+    const user = await auth.getUser();
+
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const materi = await MMateri.query()
+      .with("jurusan")
+      .with("mataPelajaran")
+      .with("user")
+      .with("sekolah")
+      .where({ id: materi_id })
+      .first();
+
+    const bab = await MBab.query()
+      .with("topik", (builder) => {
+        builder
+          .with("materiKesimpulan", (builder) => {
+            builder.where({ m_user_id: user.id });
+          })
+          .where({ dihapus: 0 });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_materi_id: materi_id })
+      .fetch();
+
+    let looping = true;
+
+    const babData = [];
+
+    await Promise.all(
+      bab.toJSON().map(async (d) => {
+        d.topik.map(async (e, idx) => {
+          if (!e.materiKesimpulan) {
+            if (idx == 0) {
+              e.lock = false;
+            } else if (looping == false) {
+              e.lock = false;
+              looping = true;
+            } else {
+              e.lock = true;
+            }
+          } else {
+            e.lock = false;
+            looping = false;
+          }
+        });
+
+        babData.push(d);
+      })
+    );
+
+    return response.ok({
+      materi,
+      bab: babData,
+    });
+  }
+
+  async postPembayaran({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { nama } = request.post();
+
+    await MMateri.create({
+      nama,
+      m_user_id: user.id,
+      m_sekolah_id: sekolah.id,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putPembayaran({ response, request, auth, params: { materi_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { nama } = request.post();
+
+    const materi = await MMateri.query().where({ id: materi_id }).update({
+      nama,
+    });
+
+    if (!materi) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deletePembayaran({ response, request, auth, params: { materi_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const materi = await MMateri.query().where({ id: materi_id }).update({
+      dihapus: 1,
+    });
+
+    if (!materi) {
       return response.notFound({
         message: messageNotFound,
       });

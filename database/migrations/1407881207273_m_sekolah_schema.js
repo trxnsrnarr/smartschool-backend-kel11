@@ -22,6 +22,7 @@ class MSekolahSchema extends Schema {
       table.string("domain");
       table.string("tingkat");
       table.string("integrasi");
+      table.boolean("diintegrasi");
       table.timestamps();
     });
   }

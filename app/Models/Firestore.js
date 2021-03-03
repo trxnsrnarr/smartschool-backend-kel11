@@ -3,7 +3,6 @@
 /** @type {typeof import('@adonisjs/lucid/src/Lucid/Model')} */
 const Model = use("Model");
 
-const firebase = require("firebase/app");
 const admin = require("firebase-admin");
 
 const serviceAccount = require("../../smart-school-300211-firebase-adminsdk-aa4g8-3364a1eaf3.json");

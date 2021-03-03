@@ -1,0 +1,25 @@
+"use strict";
+
+/** @type {import('@adonisjs/lucid/src/Schema')} */
+const Schema = use("Schema");
+
+class MRekSekolahSchema extends Schema {
+  up() {
+    this.create("m_rek_sekolah", (table) => {
+      table.increments();
+      table.string("bank");
+      table.string("norek");
+      table.string("nama");
+      table.integer("saldo");
+      table.boolean("dihapus");
+      table.integer("m_sekolah_id").unsigned();
+      table.timestamps();
+    });
+  }
+
+  down() {
+    this.drop("m_rek_sekolah");
+  }
+}
+
+module.exports = MRekSekolahSchema;

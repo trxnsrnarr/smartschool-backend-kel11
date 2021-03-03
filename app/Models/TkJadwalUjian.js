@@ -15,6 +15,10 @@ class TkJadwalUjian extends Model {
   jadwalUjian() {
     return this.belongsTo("App/Models/MJadwalUjian");
   }
+
+  peserta() {
+    return this.hasMany("App/Models/TkPesertaUjian");
+  }
 }
 
 module.exports = TkJadwalUjian;

@@ -30,6 +30,10 @@ class TkTimeline extends Model {
   getCreatedAt(created_at) {
     return moment(created_at).format("DD MMMM YYYY");
   }
+
+  getWaktuAbsen(waktu_absen) {
+    return waktu_absen ? moment(waktu_absen).format("HH:mm:ss") : "-";
+  }
 }
 
 module.exports = TkTimeline;
