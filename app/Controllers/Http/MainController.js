@@ -305,7 +305,7 @@ class MainController {
       .first();
 
     if (!res) {
-      return response.notFound({ message: "Nomor whatsapp tidak ditemukan" });
+      return response.notFound({ message: "Akun tidak ditemukan" });
     }
 
     if (role == "warga-sekolah") {
@@ -467,7 +467,7 @@ class MainController {
       .first();
 
     if (!res) {
-      return response.notFound({ message: "Nomor whatsapp tidak ditemukan" });
+      return response.notFound({ message: "Akun tidak ditemukan" });
     }
 
     return response.ok(res);
@@ -490,7 +490,7 @@ class MainController {
       .first();
 
     if (!res) {
-      return response.notFound({ message: "Nomor whatsapp tidak ditemukan" });
+      return response.notFound({ message: "Akun tidak ditemukan" });
     }
 
     if (!(await Hash.verify(password, res.password))) {
@@ -522,11 +522,11 @@ class MainController {
       .first();
 
     if (!res) {
-      return response.notFound({ message: "Nomor whatsapp tidak ditemukan" });
+      return response.notFound({ message: "Akun tidak ditemukan" });
     }
 
     if (!(await Hash.verify(password, res.password))) {
-      // return response.notFound({ message: "Password yang anda masukan salah" });
+      return response.notFound({ message: "Password yang anda masukan salah" });
     }
 
     const { token } = await auth.generate(res);
@@ -926,13 +926,7 @@ class MainController {
 
     const { search } = request.get();
 
-    let siswa = await User.query()
-      .select("nama", "id", "whatsapp", "avatar", "gender")
-      .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ dihapus: 0 })
-      .andWhere({ role: "siswa" })
-      .limit(25)
-      .fetch();
+    let siswa;
 
     if (search) {
       siswa = await User.query()
@@ -940,8 +934,15 @@ class MainController {
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ dihapus: 0 })
         .andWhere({ role: "siswa" })
-        .orWhere("nama", "like", `%${search}%`)
-        .orWhere("whatsapp", "like", `%${search}%`)
+        .andWhere("nama", "like", `%${search}%`)
+        .limit(25)
+        .fetch();
+    } else {
+      siswa = await User.query()
+        .select("nama", "id", "whatsapp", "avatar", "gender")
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ dihapus: 0 })
+        .andWhere({ role: "siswa" })
         .limit(25)
         .fetch();
     }
@@ -5527,22 +5528,22 @@ class MainController {
     colComment.eachCell(async (cell, rowNumber) => {
       if (rowNumber >= 13) {
         data.push({
-          kd: explanation.getCell("A" + rowNumber).value,
-          kd_konten_materi: explanation.getCell("B" + rowNumber).value,
-          level_kognitif: explanation.getCell("C" + rowNumber).value,
-          bentuk: explanation.getCell("D" + rowNumber).value,
-          // akm_konten_materi: explanation.getCell("A" + rowNumber).value,
-          // akm_konteks_materi: explanation.getCell("A" + rowNumber).value,
-          // akm_proses_kognitif: explanation.getCell("A" + rowNumber).value,
-          pertanyaan: explanation.getCell("E" + rowNumber).value,
-          jawaban_a: explanation.getCell("F" + rowNumber).value,
-          jawaban_b: explanation.getCell("G" + rowNumber).value,
-          jawaban_c: explanation.getCell("H" + rowNumber).value,
-          jawaban_d: explanation.getCell("I" + rowNumber).value,
-          jawaban_e: explanation.getCell("J" + rowNumber).value,
-          kj_pg: explanation.getCell("K" + rowNumber).value,
-          pembahasan: explanation.getCell("L" + rowNumber).value,
-          nilai_soal: explanation.getCell("M" + rowNumber).value,
+          kd: "" + explanation.getCell("A" + rowNumber).value,
+          kd_konten_materi: "" + explanation.getCell("B" + rowNumber).value,
+          level_kognitif: "" + explanation.getCell("C" + rowNumber).value,
+          bentuk: "" + explanation.getCell("D" + rowNumber).value,
+          // akm_konten_materi: '' + explanation.getCell("A" + rowNumber).value,
+          // akm_konteks_materi: '' + explanation.getCell("A" + rowNumber).value,
+          // akm_proses_kognitif: '' + explanation.getCell("A" + rowNumber).value,
+          pertanyaan: "" + explanation.getCell("E" + rowNumber).value,
+          jawaban_a: "" + explanation.getCell("F" + rowNumber).value,
+          jawaban_b: "" + explanation.getCell("G" + rowNumber).value,
+          jawaban_c: "" + explanation.getCell("H" + rowNumber).value,
+          jawaban_d: "" + explanation.getCell("I" + rowNumber).value,
+          jawaban_e: "" + explanation.getCell("J" + rowNumber).value,
+          kj_pg: "" + explanation.getCell("K" + rowNumber).value,
+          pembahasan: "" + explanation.getCell("L" + rowNumber).value,
+          nilai_soal: "" + explanation.getCell("M" + rowNumber).value,
         });
       }
     });
@@ -5960,128 +5961,263 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { jadwal_ujian_id } = request.post();
+    const { tk_jadwal_ujian_id, m_jadwal_ujian_id } = request.post();
 
-    const jadwalUjian = await MJadwalUjian.query()
-      .with("rombelUjian", (builder) => {
-        builder.with("rombel");
+    const jadwalUjian = await TkJadwalUjian.query()
+      .with("peserta")
+      .with("rombel")
+      .with("jadwalUjian", (builder) => {
+        builder.with("ujian");
       })
-      .with("ujian")
-      .where({ id: jadwal_ujian_id })
+      .where({ id: tk_jadwal_ujian_id })
       .first();
+
+    const tkJadwalUjian = await TkJadwalUjian.query()
+      .where({ id: tk_jadwal_ujian_id })
+      .pluck("m_rombel_id");
+
+    const anggotaRombel = await MAnggotaRombel.query()
+      .where({ m_rombel_id: tkJadwalUjian[0] })
+      .pluck("m_user_id");
+
+    const pesertaUjianData = await User.query()
+      .whereIn("id", anggotaRombel)
+      .fetch();
 
     const workbook = new Excel.Workbook();
 
     await Promise.all(
-      timeline.toJSON().map(async (d, idx) => {
+      [0].map(async (_, idx) => {
         // Create workbook & add worksheet
-        const worksheet = workbook.addWorksheet(`Pertemuan ${idx + 1}`);
+        const worksheet = workbook.addWorksheet(
+          `${jadwalUjian.toJSON().rombel.nama}`
+        );
 
         await Promise.all(
-          d.tkTimeline.map(async (e) => {
-            // add column headers
-            worksheet.getRow(10).values = ["Nama", "Absen"];
+          pesertaUjianData.toJSON().map(async (d) => {
+            await Promise.all(
+              jadwalUjian.toJSON().peserta.map(async (e) => {
+                if (d.id == e.m_user_id) {
+                  const pesertaUjian = await TkPesertaUjian.query()
+                    .with("jawabanSiswa", (builder) => {
+                      builder.with("soal");
+                    })
+                    .with("user")
+                    .where({ id: e.id })
+                    .first();
 
-            worksheet.columns = [{ key: "user" }, { key: "absen" }];
+                  let metaHasil = {
+                    nilaiPg: 0,
+                    nilaiEsai: 0,
+                    nilaiTotal: 0,
+                    benar: 0,
+                  };
+                  let analisisBenar = {};
+                  let analisisTotal = {};
 
-            // Add row using key mapping to columns
-            const row = worksheet.addRow({
-              user: e.user.nama,
-              absen: e.absen || "alpa",
-            });
+                  await Promise.all(
+                    pesertaUjian.toJSON().jawabanSiswa.map(async (d) => {
+                      if (d.soal.bentuk == "pg") {
+                        if (d.jawaban_pg == d.soal.kj_pg) {
+                          metaHasil.nilaiPg =
+                            metaHasil.nilaiPg + d.soal.nilai_soal;
+                          metaHasil.benar = metaHasil.benar + 1;
+                          analisisBenar[d.soal.kd] = analisisBenar[d.soal.kd]
+                            ? analisisBenar[d.soal.kd] + 1
+                            : 1;
+                        }
+                        analisisTotal[d.soal.kd] = analisisTotal[d.soal.kd]
+                          ? analisisTotal[d.soal.kd] + 1
+                          : 1;
+                      } else if (d.soal.bentuk == "esai") {
+                        JSON.parse(d.jawaban_rubrik_esai).map((e) => {
+                          if (e.benar) {
+                            metaHasil.nilaiEsai = metaHasil.nilaiEsai + e.poin;
+                          }
+                        });
+                        if (d.jawaban_rubrik_esai.indexOf("true") != -1) {
+                          metaHasil.benar = metaHasil.benar + 1;
+                        }
+                      }
+                    })
+                  );
+
+                  metaHasil.nilaiTotal =
+                    metaHasil.nilaiPg + metaHasil.nilaiEsai;
+
+                  // analisisBenar = Object.entries(analisisBenar);
+                  // analisisTotal = Object.entries(analisisTotal);
+
+                  // let analisisData = [];
+                  // let idTmp;
+
+                  // analisisTotal.map((d) => {
+                  //   analisisBenar.map((e) => {
+                  //     if (d[0] == e[0]) {
+                  //       idTmp = e[0];
+                  //       analisisData.push({
+                  //         kd: d[0],
+                  //         nilai: (e[1] / d[1]) * 100,
+                  //         total: d[1],
+                  //       });
+                  //     }
+                  //   });
+
+                  //   if (idTmp != d[0]) {
+                  //     analisisData.push({
+                  //       kd: d[0],
+                  //       nilai: 0 * 100,
+                  //       total: d[1],
+                  //     });
+                  //   }
+                  // });
+
+                  // add column headers
+                  worksheet.getRow(10).values = [
+                    "Nama",
+                    "Nilai PG",
+                    "Nilai Esai",
+                    "Nilai Total",
+                  ];
+
+                  worksheet.columns = [
+                    { key: "user" },
+                    { key: "nilai_pg" },
+                    { key: "nilai_esai" },
+                    { key: "nilai_total" },
+                  ];
+
+                  // Add row using key mapping to columns
+                  const row = worksheet.addRow({
+                    user: d.nama,
+                    nilai_pg: metaHasil.nilaiPg,
+                    nilai_esai: metaHasil.nilaiEsai,
+                    nilai_total: metaHasil.nilaiTotal,
+                  });
+                } else {
+                  worksheet.getRow(10).values = [
+                    "Nama",
+                    "Nilai PG",
+                    "Nilai Esai",
+                    "Nilai Total",
+                  ];
+
+                  worksheet.columns = [
+                    { key: "user" },
+                    { key: "nilai_pg" },
+                    { key: "nilai_esai" },
+                    { key: "nilai_total" },
+                  ];
+
+                  // Add row using key mapping to columns
+                  const row = worksheet.addRow({
+                    user: d.nama,
+                    nilai_pg: 0,
+                    nilai_esai: 0,
+                    nilai_total: 0,
+                  });
+                }
+              })
+            );
           })
         );
 
-        worksheet.getCell("A1").value = "Nama";
-        worksheet.getCell("B1").value = d.user.nama;
-        worksheet.getCell("D1").value = "NIP";
-        worksheet.getCell("E1").value = d.user.nip;
-        worksheet.getCell("D2").value = "Link Pertemuan";
-        worksheet.getCell("E2").value = d.gmeet;
-        worksheet.getCell("A2").value = "Tanggal Pertemuan";
-        worksheet.getCell("B2").value = d.tanggal_dibuat;
+        worksheet.getCell("A1").value = "Ujian";
+        worksheet.getCell(
+          "B1"
+        ).value = jadwalUjian.toJSON().jadwalUjian.ujian.nama;
+        worksheet.getCell("D1").value = "Tanggal";
+        worksheet.getCell("E1").value = `${
+          jadwalUjian.toJSON().jadwalUjian.tanggalUjian
+        } ${jadwalUjian.toJSON().jadwalUjian.waktuUjian}`;
+        worksheet.getCell("D2").value = "KKM";
+        worksheet.getCell("E2").value = jadwalUjian.toJSON().jadwalUjian.kkm;
+        worksheet.getCell("A2").value = "Durasi";
+        worksheet.getCell("B2").value = `${
+          jadwalUjian.toJSON().jadwalUjian.durasi
+        } menit`;
 
-        worksheet.getCell("A4").value = "RPP";
-        worksheet.getCell("A5").value = d.rpp.toString();
+        // worksheet.getCell("A4").value = "RPP";
+        // worksheet.getCell("A5").value = d.rpp.toString();
 
-        worksheet.getCell("A7").value = "Deskripsi";
-        worksheet.getCell("A8").value = d.deskripsi;
+        // worksheet.getCell("A7").value = "Deskripsi";
+        // worksheet.getCell("A8").value = d.deskripsi;
 
-        worksheet.columns.forEach(function (column, i) {
-          let maxLength = 0;
-          column["eachCell"]({ includeEmpty: true }, function (cell) {
-            let columnLength = cell.value ? cell.value.toString().length : 10;
+        // worksheet.columns.forEach(function (column, i) {
+        //   let maxLength = 0;
+        //   column["eachCell"]({ includeEmpty: true }, function (cell) {
+        //     let columnLength = cell.value ? cell.value.toString().length : 10;
 
-            if (cell.value == "alpa") {
-              // red
-              cell.fill = {
-                type: "pattern",
-                pattern: "solid",
-                fgColor: { argb: "F9D5D4" },
-                bgColor: { argb: "F9D5D4" },
-              };
+        //     if (cell.value == "alpa") {
+        //       // red
+        //       cell.fill = {
+        //         type: "pattern",
+        //         pattern: "solid",
+        //         fgColor: { argb: "F9D5D4" },
+        //         bgColor: { argb: "F9D5D4" },
+        //       };
 
-              cell.font = {
-                color: { argb: "FC544B" },
-              };
-            }
+        //       cell.font = {
+        //         color: { argb: "FC544B" },
+        //       };
+        //     }
 
-            if (cell.value == "sakit") {
-              // yellow
-              cell.fill = {
-                type: "pattern",
-                pattern: "solid",
-                fgColor: { argb: "FCE8D2" },
-                bgColor: { argb: "FCE8D2" },
-              };
+        //     if (cell.value == "sakit") {
+        //       // yellow
+        //       cell.fill = {
+        //         type: "pattern",
+        //         pattern: "solid",
+        //         fgColor: { argb: "FCE8D2" },
+        //         bgColor: { argb: "FCE8D2" },
+        //       };
 
-              cell.font = {
-                color: { argb: "F9AC50" },
-              };
-            }
+        //       cell.font = {
+        //         color: { argb: "F9AC50" },
+        //       };
+        //     }
 
-            if (cell.value == "izin") {
-              // green
-              cell.fill = {
-                type: "pattern",
-                pattern: "solid",
-                fgColor: { argb: "E0FCE4" },
-                bgColor: { argb: "E0FCE4" },
-              };
+        //     if (cell.value == "izin") {
+        //       // green
+        //       cell.fill = {
+        //         type: "pattern",
+        //         pattern: "solid",
+        //         fgColor: { argb: "E0FCE4" },
+        //         bgColor: { argb: "E0FCE4" },
+        //       };
 
-              cell.font = {
-                color: { argb: "63ED7A" },
-              };
-            }
+        //       cell.font = {
+        //         color: { argb: "63ED7A" },
+        //       };
+        //     }
 
-            if (cell.value == "hadir") {
-              // green
-              cell.fill = {
-                type: "pattern",
-                pattern: "solid",
-                fgColor: { argb: "2680EB" },
-                bgColor: { argb: "2680EB" },
-              };
+        //     if (cell.value == "hadir") {
+        //       // green
+        //       cell.fill = {
+        //         type: "pattern",
+        //         pattern: "solid",
+        //         fgColor: { argb: "2680EB" },
+        //         bgColor: { argb: "2680EB" },
+        //       };
 
-              cell.font = {
-                color: { argb: "FFFFFF" },
-              };
-            }
+        //       cell.font = {
+        //         color: { argb: "FFFFFF" },
+        //       };
+        //     }
 
-            if (columnLength > maxLength) {
-              maxLength = columnLength;
-            }
-          });
+        //     if (columnLength > maxLength) {
+        //       maxLength = columnLength;
+        //     }
+        //   });
 
-          column.width = maxLength < 15 ? 15 : maxLength > 30 ? 30 : 15;
-        });
+        //   column.width = maxLength < 15 ? 15 : maxLength > 30 ? 30 : 15;
+        // });
       })
     );
 
     // save workbook to disk
-    await workbook.xlsx.writeFile("public/uploads/absen-pertemuan.xlsx");
+    await workbook.xlsx.writeFile("public/uploads/rekap-nilai.xlsx");
 
-    return "/uploads/absen-pertemuan.xlsx";
+    return "/uploads/rekap-nilai.xlsx";
   }
 
   async postJadwalUjian({ response, request, auth }) {
@@ -8516,19 +8652,19 @@ class MainController {
 
     let pembayaran;
 
-    if(search) {
+    if (search) {
       pembayaran = await MPembayaran.query()
-      .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ jenis: jenis })
-      .andWhere('nama', 'like', `%${search}%`)
-      .fetch();
+        .where({ dihapus: 0 })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .andWhere({ jenis: jenis })
+        .andWhere("nama", "like", `%${search}%`)
+        .fetch();
     } else {
       pembayaran = await MPembayaran.query()
-      .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ jenis: jenis })
-      .fetch();
+        .where({ dihapus: 0 })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .andWhere({ jenis: jenis })
+        .fetch();
     }
 
     let jenisData = [

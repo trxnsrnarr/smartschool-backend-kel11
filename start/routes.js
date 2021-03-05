@@ -280,7 +280,7 @@ Route.get("/absen/me", "MainController.meAbsen");
 Route.get("/absen/:absen_id", "MainController.detailAbsen");
 Route.post("/absen", "MainController.postAbsen");
 Route.put("/absen/:absen_id", "MainController.putAbsen");
-Route.delete("/absen/:absen_id", "MainController.deleteAbsen");
+Route.post("/absen/download-absen", "MainController.downloadAbsen");
 
 // test
 Route.get("/test", "MainController.getTest");

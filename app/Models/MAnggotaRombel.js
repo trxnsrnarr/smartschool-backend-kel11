@@ -8,6 +8,10 @@ class MAnggotaRombel extends Model {
     return "m_anggota_rombel";
   }
 
+  rombel() {
+    return this.belongsTo("App/Models/MRombel");
+  }
+
   user() {
     return this.belongsTo("App/Models/User", "m_user_id");
   }
