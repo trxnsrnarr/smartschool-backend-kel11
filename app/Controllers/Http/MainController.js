@@ -526,7 +526,7 @@ class MainController {
     }
 
     if (!(await Hash.verify(password, res.password))) {
-      // return response.notFound({ message: "Password yang anda masukan salah" });
+      return response.notFound({ message: "Password yang anda masukan salah" });
     }
 
     const { token } = await auth.generate(res);
@@ -8646,6 +8646,12 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
     let { jenis, search } = request.get();
 
     jenis = jenis ? jenis : "spp";
@@ -8667,15 +8673,30 @@ class MainController {
         .fetch();
     }
 
+    const rombel = await MRombel.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .fetch();
+
     let jenisData = [
       { label: "SPP", value: "spp" },
       { label: "Ujian", value: "ujian" },
       { label: "Lainnya", values: "lainnya" },
     ];
 
+    let tipeUjian = [
+      { value: "pts1", label: "Penilaian Tengah Semester 1" },
+      { value: "pts2", label: "Penilaian Tengah Semester 2" },
+      { value: "pas1", label: "Penilaian Akhir Semester 1" },
+      { value: "pas2", label: "Penilaian Akhir Semester 2" },
+    ];
+
     return response.ok({
       pembayaran: pembayaran,
       jenisData: jenisData,
+      rombel: rombel,
+      tipeUjian: tipeUjian,
     });
   }
 
@@ -8753,13 +8774,16 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { nama } = request.post();
+    const { nama, jenis, bulan, tipe_ujian, nominal } = request.post();
 
-    await MMateri.create({
+    await MPembayaran.create({
       nama,
-      m_user_id: user.id,
-      m_sekolah_id: sekolah.id,
+      jenis,
+      bulan,
+      tipe_ujian,
+      nominal,
       dihapus: 0,
+      m_sekolah_id: sekolah.id,
     });
 
     return response.ok({
