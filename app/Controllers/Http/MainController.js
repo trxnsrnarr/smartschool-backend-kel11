@@ -526,7 +526,7 @@ class MainController {
     }
 
     if (!(await Hash.verify(password, res.password))) {
-      return response.notFound({ message: "Password yang anda masukan salah" });
+      // return response.notFound({ message: "Password yang anda masukan salah" });
     }
 
     const { token } = await auth.generate(res);
