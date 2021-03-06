@@ -13,6 +13,7 @@ const TkPerpusAktivitas = use("App/Models/TkPerpusAktivitas");
 const MJurusan = use("App/Models/MJurusan");
 const MRekSekolah = use("App/Models/MRekSekolah");
 const MPembayaran = use("App/Models/MPembayaran");
+const MPembayaranKategori = use("App/Models/MPembayaranKategori");
 const Mta = use("App/Models/Mta");
 const MSlider = use("App/Models/MSlider");
 const MTugas = use("App/Models/MTugas");
@@ -4768,20 +4769,46 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
     const { role, tanggal } = request.get();
 
-    const absen = await User.query()
-      .with("absen", (builder) => {
-        builder.where("waktu_masuk", "like", `%${tanggal}%`);
-      })
-      .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ dihapus: 0 })
-      .andWhere({ role: role })
-      .fetch();
+    if (role == "guru") {
+      const absen = await User.query()
+        .with("absen", (builder) => {
+          builder.where("waktu_masuk", "like", `%${tanggal}%`);
+        })
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ dihapus: 0 })
+        .andWhere({ role: role })
+        .fetch();
 
-    return response.ok({
-      absen: absen,
-    });
+      return response.ok({
+        absen: absen,
+      });
+    } else if (role == "siswa") {
+      const rombel = await MRombel.query()
+        .with("user")
+        .with("anggotaRombel", (builder) => {
+          builder.with("user", (builder) => {
+            builder.with("absen", (builder) => {
+              builder.where("waktu_masuk", "like", `%${tanggal}%`);
+            });
+          });
+        })
+        .where({ dihapus: 0 })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .andWhere({ m_ta_id: ta.id })
+        .fetch();
+
+      return response.ok({
+        rombel: rombel,
+      });
+    }
   }
 
   async meAbsen({ response, request, auth }) {
@@ -4792,6 +4819,7 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
+
     const ta = await this.getTAAktif(sekolah);
 
     if (ta == "404") {
@@ -4956,6 +4984,109 @@ class MainController {
     return response.ok({
       message: messagePutSuccess,
     });
+  }
+
+  async downloadAbsen({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const { role, tanggal } = request.post();
+
+    if (role == "siswa") {
+      const rombel = await MRombel.query()
+        .with("user")
+        .with("anggotaRombel", (builder) => {
+          builder.with("user", (builder) => {
+            builder.with("absen", (builder) => {
+              builder.where(
+                "waktu_masuk",
+                "like",
+                `%${"2021-03-01" || tanggal}%`
+              );
+            });
+          });
+        })
+        .where({ dihapus: 0 })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .andWhere({ m_ta_id: ta.id })
+        .fetch();
+
+      let workbook = new Excel.Workbook();
+
+      await Promise.all(
+        rombel.toJSON().map(async (d, idx) => {
+          let worksheet = workbook.addWorksheet(`${idx + 1}.${d.nama}`);
+
+          await Promise.all(
+            d.anggotaRombel.map(async (anggota) => {
+              // add column headers
+              worksheet.getRow(10).values = [
+                "Nama",
+                "Absen",
+                "Keterangan",
+                "Lampiran",
+                "Foto Masuk",
+                "Waktu Masuk",
+                "Foto Pulang",
+                "Waktu Pulang",
+              ];
+
+              worksheet.columns = [
+                { key: "user" },
+                { key: "absen" },
+                { key: "keterangan" },
+                { key: "lampiran" },
+                { key: "foto_masuk" },
+                { key: "waktu_masuk" },
+                { key: "foto_pulang" },
+                { key: "waktu_pulang" },
+              ];
+
+              // Add row using key mapping to columns
+              let row = worksheet.addRow({
+                user: anggota?.user?.nama,
+                absen: anggota?.user?.absen?.[0]?.absen,
+                keterangan: anggota?.user?.absen?.[0]?.keterangan,
+                lampiran: anggota?.user?.absen?.[0]?.lampiran,
+                foto_masuk: anggota?.user?.absen?.[0]?.foto_masuk,
+                waktu_masuk: anggota?.user?.absen?.[0]?.waktu_masuk,
+                foto_pulang: anggota?.user?.absen?.[0]?.foto_pulang,
+                waktu_pulang: anggota?.user?.absen?.[0]?.waktu_pulang,
+              });
+            })
+          );
+        })
+      );
+
+      // save workbook to disk
+      await workbook.xlsx.writeFile("public/uploads/rekap-absen.xlsx");
+
+      return "/uploads/rekap-absen.xlsx";
+    } else if (role == "guru") {
+      const absen = await User.query()
+        .with("absen", (builder) => {
+          builder.where("waktu_masuk", "like", `%${tanggal}%`);
+        })
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ dihapus: 0 })
+        .andWhere({ role: role })
+        .fetch();
+
+      return response.ok({
+        absen: absen,
+      });
+    }
   }
 
   async getTest({ response, request, auth }) {}
@@ -6044,33 +6175,6 @@ class MainController {
 
                   metaHasil.nilaiTotal =
                     metaHasil.nilaiPg + metaHasil.nilaiEsai;
-
-                  // analisisBenar = Object.entries(analisisBenar);
-                  // analisisTotal = Object.entries(analisisTotal);
-
-                  // let analisisData = [];
-                  // let idTmp;
-
-                  // analisisTotal.map((d) => {
-                  //   analisisBenar.map((e) => {
-                  //     if (d[0] == e[0]) {
-                  //       idTmp = e[0];
-                  //       analisisData.push({
-                  //         kd: d[0],
-                  //         nilai: (e[1] / d[1]) * 100,
-                  //         total: d[1],
-                  //       });
-                  //     }
-                  //   });
-
-                  //   if (idTmp != d[0]) {
-                  //     analisisData.push({
-                  //       kd: d[0],
-                  //       nilai: 0 * 100,
-                  //       total: d[1],
-                  //     });
-                  //   }
-                  // });
 
                   // add column headers
                   worksheet.getRow(10).values = [
@@ -8692,15 +8796,26 @@ class MainController {
       { value: "pas2", label: "Penilaian Akhir Semester 2" },
     ];
 
+    const pembayaranKategori = await MPembayaranKategori.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
     return response.ok({
       pembayaran: pembayaran,
       jenisData: jenisData,
       rombel: rombel,
       tipeUjian: tipeUjian,
+      pembayaran_kategori: pembayaranKategori,
     });
   }
 
-  async detailPembayaran({ response, request, auth, params: { materi_id } }) {
+  async detailPembayaran({
+    response,
+    request,
+    auth,
+    params: { pembayaran_id },
+  }) {
     const user = await auth.getUser();
 
     const domain = request.headers().origin;
@@ -8716,7 +8831,7 @@ class MainController {
       .with("mataPelajaran")
       .with("user")
       .with("sekolah")
-      .where({ id: materi_id })
+      .where({ id: pembayaran_id })
       .first();
 
     const bab = await MBab.query()
@@ -8728,7 +8843,7 @@ class MainController {
           .where({ dihapus: 0 });
       })
       .where({ dihapus: 0 })
-      .andWhere({ m_materi_id: materi_id })
+      .andWhere({ m_materi_id: pembayaran_id })
       .fetch();
 
     let looping = true;
@@ -8772,9 +8887,14 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
-
-    const { nama, jenis, bulan, tipe_ujian, nominal } = request.post();
+    const {
+      nama,
+      jenis,
+      bulan,
+      tipe_ujian,
+      nominal,
+      tanggal_dibuat,
+    } = request.post();
 
     await MPembayaran.create({
       nama,
@@ -8782,6 +8902,7 @@ class MainController {
       bulan,
       tipe_ujian,
       nominal,
+      tanggal_dibuat,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
     });
@@ -8791,7 +8912,7 @@ class MainController {
     });
   }
 
-  async putPembayaran({ response, request, auth, params: { materi_id } }) {
+  async putPembayaran({ response, request, auth, params: { pembayaran_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -8800,13 +8921,19 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { nama } = request.post();
+    const { nama, jenis, bulan, tipe_ujian, nominal } = request.post();
 
-    const materi = await MMateri.query().where({ id: materi_id }).update({
-      nama,
-    });
+    const pembayaran = await MPembayaran.query()
+      .where({ id: pembayaran_id })
+      .update({
+        nama,
+        jenis,
+        bulan,
+        tipe_ujian,
+        nominal,
+      });
 
-    if (!materi) {
+    if (!pembayaran) {
       return response.notFound({
         message: messageNotFound,
       });
@@ -8817,7 +8944,12 @@ class MainController {
     });
   }
 
-  async deletePembayaran({ response, request, auth, params: { materi_id } }) {
+  async deletePembayaran({
+    response,
+    request,
+    auth,
+    params: { pembayaran_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -8826,11 +8958,68 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const materi = await MMateri.query().where({ id: materi_id }).update({
-      dihapus: 1,
+    const pembayaran = await MPembayaran.query()
+      .where({ id: pembayaran_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!pembayaran) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async postPembayaranKategori({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { kategori } = request.post();
+
+    await MPembayaranKategori.create({
+      kategori,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
     });
 
-    if (!materi) {
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async deletePembayaranKategori({
+    response,
+    request,
+    auth,
+    params: { pembayaran_kategori_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const pembayaranKategori = await MPembayaranKategori.query()
+      .where({ id: pembayaran_kategori_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!pembayaranKategori) {
       return response.notFound({
         message: messageNotFound,
       });

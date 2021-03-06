@@ -1,5 +1,6 @@
 env: flex
-runtime: nodejs
+runtime: nodejs12 # or another supported version
+instance_class: F2
 env_variables:
   APP_KEY: "JD93YQ9BEY5vN8sERTZ4unRWzyqytYWO"
   DB_CONNECTION: mysql

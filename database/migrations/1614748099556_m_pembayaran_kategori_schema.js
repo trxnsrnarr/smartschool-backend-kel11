@@ -9,7 +9,6 @@ class MPembayaranKategoriSchema extends Schema {
       table.increments()
       table.string('kategori')
       table.boolean("dihapus");
-      table.integer("m_pembayaran_id").unsigned();
       table.integer("m_sekolah_id").unsigned();
       table.timestamps()
     })

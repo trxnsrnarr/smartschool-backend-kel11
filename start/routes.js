@@ -133,6 +133,13 @@ Route.post("/pembayaran", "MainController.postPembayaran");
 Route.put("/pembayaran/:pembayaran_id", "MainController.putPembayaran");
 Route.delete("/pembayaran/:pembayaran_id", "MainController.deletePembayaran");
 
+// pembayaran kategori
+Route.post("/pembayaran-kategori", "MainController.postPembayaranKategori");
+Route.delete(
+  "/pembayaran-kategori/:pembayaran_kategori_id",
+  "MainController.deletePembayaranKategori"
+);
+
 // materi kesimpulan
 Route.post("/materi-kesimpulan", "MainController.postMateriKesimpulan");
 Route.put(
