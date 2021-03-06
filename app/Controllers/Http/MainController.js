@@ -5009,11 +5009,7 @@ class MainController {
         .with("anggotaRombel", (builder) => {
           builder.with("user", (builder) => {
             builder.with("absen", (builder) => {
-              builder.where(
-                "waktu_masuk",
-                "like",
-                `%${"2021-03-01" || tanggal}%`
-              );
+              builder.where("waktu_masuk", "like", `%${tanggal}%`);
             });
           });
         })
@@ -5055,14 +5051,56 @@ class MainController {
 
               // Add row using key mapping to columns
               let row = worksheet.addRow({
-                user: anggota?.user?.nama,
-                absen: anggota?.user?.absen?.[0]?.absen,
-                keterangan: anggota?.user?.absen?.[0]?.keterangan,
-                lampiran: anggota?.user?.absen?.[0]?.lampiran,
-                foto_masuk: anggota?.user?.absen?.[0]?.foto_masuk,
-                waktu_masuk: anggota?.user?.absen?.[0]?.waktu_masuk,
-                foto_pulang: anggota?.user?.absen?.[0]?.foto_pulang,
-                waktu_pulang: anggota?.user?.absen?.[0]?.waktu_pulang,
+                user: anggota.user ? anggota.user.nama : "-",
+                absen: anggota.user
+                  ? anggota.user.absen
+                    ? anggota.user.absen.length
+                      ? anggota.user.absen[0].absen
+                      : "-"
+                    : "-"
+                  : "-",
+                keterangan: anggota.user
+                  ? anggota.user.absen
+                    ? anggota.user.absen.length
+                      ? anggota.user.absen[0].keterangan
+                      : "-"
+                    : "-"
+                  : "-",
+                lampiran: anggota.user
+                  ? anggota.user.absen
+                    ? anggota.user.absen.length
+                      ? anggota.user.absen[0].lampiran
+                      : "-"
+                    : "-"
+                  : "-",
+                foto_masuk: anggota.user
+                  ? anggota.user.absen
+                    ? anggota.user.absen.length
+                      ? anggota.user.absen[0].foto_masuk
+                      : "-"
+                    : "-"
+                  : "-",
+                waktu_masuk: anggota.user
+                  ? anggota.user.absen
+                    ? anggota.user.absen.length
+                      ? anggota.user.absen[0].waktu_masuk
+                      : "-"
+                    : "-"
+                  : "-",
+                foto_pulang: anggota.user
+                  ? anggota.user.absen
+                    ? anggota.user.absen.length
+                      ? anggota.user.absen[0].foto_pulang
+                      : "-"
+                    : "-"
+                  : "-",
+                waktu_pulang: anggota.user
+                  ? anggota.user.absen
+                    ? anggota.user.absen.length
+                      ? anggota.user.absen[0].waktu_pulang
+                      : "-"
+                    : "-"
+                  : "-",
               });
             })
           );
@@ -5070,9 +5108,9 @@ class MainController {
       );
 
       // save workbook to disk
-      await workbook.xlsx.writeFile("public/uploads/rekap-absen.xlsx");
+      await workbook.xlsx.writeFile("public/uploads/rekap-absen-siswa.xlsx");
 
-      return "/uploads/rekap-absen.xlsx";
+      return "/uploads/rekap-absen-siswa.xlsx";
     } else if (role == "guru") {
       const absen = await User.query()
         .with("absen", (builder) => {
@@ -5083,9 +5121,93 @@ class MainController {
         .andWhere({ role: role })
         .fetch();
 
-      return response.ok({
-        absen: absen,
-      });
+      let workbook = new Excel.Workbook();
+
+      let worksheet = workbook.addWorksheet(`${tanggal}`);
+
+      await Promise.all(
+        absen.toJSON().map(async (d) => {
+          worksheet.getRow(10).values = [
+            "Nama",
+            "Absen",
+            "Keterangan",
+            "Lampiran",
+            "Foto Masuk",
+            "Waktu Masuk",
+            "Foto Pulang",
+            "Waktu Pulang",
+          ];
+
+          worksheet.columns = [
+            { key: "user" },
+            { key: "absen" },
+            { key: "keterangan" },
+            { key: "lampiran" },
+            { key: "foto_masuk" },
+            { key: "waktu_masuk" },
+            { key: "foto_pulang" },
+            { key: "waktu_pulang" },
+          ];
+
+          let row = worksheet.addRow({
+            user: d ? d.nama : "-",
+            absen: d
+              ? d.absen
+                ? d.absen.length
+                  ? d.absen[0].absen
+                  : "-"
+                : "-"
+              : "-",
+            keterangan: d
+              ? d.absen
+                ? d.absen.length
+                  ? d.absen[0].keterangan
+                  : "-"
+                : "-"
+              : "-",
+            lampiran: d
+              ? d.absen
+                ? d.absen.length
+                  ? d.absen[0].lampiran
+                  : "-"
+                : "-"
+              : "-",
+            foto_masuk: d
+              ? d.absen
+                ? d.absen.length
+                  ? d.absen[0].foto_masuk
+                  : "-"
+                : "-"
+              : "-",
+            waktu_masuk: d
+              ? d.absen
+                ? d.absen.length
+                  ? d.absen[0].waktu_masuk
+                  : "-"
+                : "-"
+              : "-",
+            foto_pulang: d
+              ? d.absen
+                ? d.absen.length
+                  ? d.absen[0].foto_pulang
+                  : "-"
+                : "-"
+              : "-",
+            waktu_pulang: d
+              ? d.absen
+                ? d.absen.length
+                  ? d.absen[0].waktu_pulang
+                  : "-"
+                : "-"
+              : "-",
+          });
+        })
+      );
+
+      // save workbook to disk
+      await workbook.xlsx.writeFile("public/uploads/rekap-absen-guru.xlsx");
+
+      return "/uploads/rekap-absen-guru.xlsx";
     }
   }
 
