@@ -5294,6 +5294,7 @@ class MainController {
       { value: "pts2", label: "Penilaian Tengah Semester 2" },
       { value: "pas1", label: "Penilaian Akhir Semester 1" },
       { value: "pas2", label: "Penilaian Akhir Semester 2" },
+      { value: "us", label: "Ujian Sekolah" },
       { value: "literasi", label: "AKM - Literasi" },
       { value: "numerasi", label: "AKM - Numerasi" },
     ];
@@ -5573,6 +5574,7 @@ class MainController {
       { value: "pts2", label: "Penilaian Tengah Semester 2" },
       { value: "pas1", label: "Penilaian Akhir Semester 1" },
       { value: "pas2", label: "Penilaian Akhir Semester 2" },
+      { value: "us", label: "Ujian Sekolah" },
       { value: "literasi", label: "AKM - Literasi" },
       { value: "numerasi", label: "AKM - Numerasi" },
     ];
@@ -6008,6 +6010,102 @@ class MainController {
         .pluck("m_rombel_id");
 
       const rombel = await MRombel.query().whereIn("id", rombelIds).fetch();
+
+      let jadwalUjian;
+      let pesertaUjian = {};
+      let jadwalUjianDataTmp = [];
+
+      if (status == "akan-datang") {
+        jadwalUjian = await MJadwalUjian.query()
+          .with("rombelUjian", (builder) => {
+            builder.with("rombel");
+          })
+          .with("ujian")
+          .where({ m_user_id: user.id })
+          .andWhere({ dihapus: 0 })
+          .andWhere("waktu_dibuka", ">", hari_ini)
+          .fetch();
+      } else if (status == "berlangsung") {
+        jadwalUjian = await MJadwalUjian.query()
+          .with("rombelUjian", (builder) => {
+            builder.with("rombel");
+          })
+          .with("ujian")
+          .where({ m_user_id: user.id })
+          .andWhere({ dihapus: 0 })
+          .andWhere("waktu_dibuka", "<=", hari_ini)
+          .andWhere("waktu_ditutup", ">=", hari_ini)
+          .fetch();
+      } else if (status == "sudah-selesai") {
+        jadwalUjian = await MJadwalUjian.query()
+          .with("rombelUjian", (builder) => {
+            builder.with("rombel");
+          })
+          .with("ujian")
+          .where({ m_user_id: user.id })
+          .andWhere({ dihapus: 0 })
+          .andWhere("waktu_ditutup", "<", hari_ini)
+          .fetch();
+
+        await Promise.all(
+          jadwalUjian.toJSON().map(async (d) => {
+            await Promise.all(
+              d.rombelUjian.map(async (e) => {
+                const anggota = await MAnggotaRombel.query()
+                  .where({ m_rombel_id: e.m_rombel_id })
+                  .pluck("m_user_id");
+
+                let check = await TkPesertaUjian.query()
+                  .whereIn("m_user_id", anggota)
+                  .pluck("m_user_id");
+
+                check = new Set(check);
+
+                pesertaUjian[e.id] = anggota.filter((d) => !check.has(d));
+
+                if (d.id == e.m_jadwal_ujian_id) {
+                  jadwalUjianDataTmp.push({
+                    ...d,
+                    pesertaSusulan: pesertaUjian[e.id].length,
+                  });
+                }
+              })
+            );
+          })
+        );
+      }
+
+      let jadwalUjianData = {};
+
+      await Promise.all(
+        jadwalUjianDataTmp.map(async (d, idx) => {
+          jadwalUjianData[d.id] = {
+            ...d,
+            pesertaSusulan: jadwalUjianData[d.id]
+              ? jadwalUjianData[d.id].pesertaSusulan + d.pesertaSusulan
+              : d.pesertaSusulan,
+          };
+        })
+      );
+
+      const ujian = await MUjian.query()
+        .where({ m_user_id: user.id })
+        .andWhere({ dihapus: 0 })
+        .fetch();
+
+      return response.ok({
+        rombel,
+        jadwalUjian: jadwalUjianDataTmp.length
+          ? Object.entries(jadwalUjianData).map((d) => d[1])
+          : jadwalUjian,
+        ujian,
+      });
+    } else if (user.role == "admin") {
+      const rombel = await MRombel.query()
+        .where({ dihapus: 0 })
+        .andWhere({ m_ta_id: ta.id })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .fetch();
 
       let jadwalUjian;
       let pesertaUjian = {};
@@ -8916,6 +9014,7 @@ class MainController {
       { value: "pts2", label: "Penilaian Tengah Semester 2" },
       { value: "pas1", label: "Penilaian Akhir Semester 1" },
       { value: "pas2", label: "Penilaian Akhir Semester 2" },
+      { value: "us", label: "Ujian Sekolah" },
     ];
 
     const pembayaranKategori = await MPembayaranKategori.query()
