@@ -52,7 +52,7 @@ const MPerpus = use("App/Models/MPerpus");
 const TkPerpusMapel = use("App/Models/TkPerpusMapel");
 const MPerpusTag = use("App/Models/MPerpusTag");
 const TkPerpusTag = use("App/Models/TkPerpusTag");
-
+const MKontak = use("App/Models/MKontak");
 const TkJawabanUjianSiswa = use("App/Models/TkJawabanUjianSiswa");
 const User = use("App/Models/User");
 const moment = require("moment");
@@ -9149,6 +9149,80 @@ class MainController {
 
     return response.ok({
       message: messageDeleteSuccess,
+    });
+  }
+
+  async getKontak({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const kontak = await MKontak.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .first();
+
+    return response.ok({
+      kontak: kontak,
+    });
+  }
+
+  async putKontak({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+      return response.forbidden({ message: messageForbidden });
+    }
+
+    const {
+      tu,
+      keuangan,
+      kurikulum,
+      kesiswaan,
+      sarpras,
+      humas,
+    } = request.post();
+
+    const check = await MKontak.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .first();
+
+    if (!check) {
+      await MKontak.create({
+        m_sekolah_id: sekolah.id,
+      });
+    }
+
+    const kontak = await MKontak.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .update({
+        tu,
+        keuangan,
+        kurikulum,
+        kesiswaan,
+        sarpras,
+        humas,
+      });
+
+    if (!kontak) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
     });
   }
 }

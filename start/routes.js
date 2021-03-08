@@ -309,6 +309,10 @@ Route.delete(
   "MainController.deletePerpusKomen"
 );
 
+// kontak
+Route.get('/kontak', 'MainController.getKontak');
+Route.put('/kontak', 'MainController.putKontak');
+
 // slider
 Route.get("/slider", "MainController.getSlider");
 Route.post("/slider", "MainController.postSlider");

@@ -13,4 +13,4 @@ beta_settings:
   cloud_sql_instances: smart-school-300211:asia-southeast2:smart-school
 automatic_scaling:
   min_num_instances: 1
-  max_num_instances: 2
+  max_num_instances: 200
