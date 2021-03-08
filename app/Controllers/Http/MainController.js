@@ -5265,11 +5265,21 @@ class MainController {
       });
     }
 
-    const mataPelajaran = await MMataPelajaran.query()
-      .where({ dihapus: 0 })
-      .andWhere({ m_user_id: user.id })
-      .andWhere({ m_ta_id: ta.id })
-      .fetch();
+    let mataPelajaran;
+
+    if (user.role == "guru") {
+      mataPelajaran = await MMataPelajaran.query()
+        .where({ dihapus: 0 })
+        .andWhere({ m_user_id: user.id })
+        .andWhere({ m_ta_id: ta.id })
+        .fetch();
+    } else if (user.role == "admin") {
+      mataPelajaran = await MMataPelajaran.query()
+        .where({ dihapus: 0 })
+        .andWhere({ m_ta_id: ta.id })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .fetch();
+    }
 
     const ujian = await MUjian.query()
       .with("mataPelajaran")
