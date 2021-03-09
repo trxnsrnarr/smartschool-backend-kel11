@@ -19,7 +19,7 @@ class MSekolahSchema extends Schema {
       table.string("telp");
       table.string("email");
       table.string("logo");
-      table.string("domain");
+      table.text("domain");
       table.string("tingkat");
       table.string("integrasi");
       table.boolean("diintegrasi");

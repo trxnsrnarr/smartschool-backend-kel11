@@ -6428,28 +6428,6 @@ class MainController {
                     nilai_esai: metaHasil.nilaiEsai,
                     nilai_total: metaHasil.nilaiTotal,
                   });
-                } else {
-                  worksheet.getRow(10).values = [
-                    "Nama",
-                    "Nilai PG",
-                    "Nilai Esai",
-                    "Nilai Total",
-                  ];
-
-                  worksheet.columns = [
-                    { key: "user" },
-                    { key: "nilai_pg" },
-                    { key: "nilai_esai" },
-                    { key: "nilai_total" },
-                  ];
-
-                  // Add row using key mapping to columns
-                  const row = worksheet.addRow({
-                    user: d.nama,
-                    nilai_pg: 0,
-                    nilai_esai: 0,
-                    nilai_total: 0,
-                  });
                 }
               })
             );
