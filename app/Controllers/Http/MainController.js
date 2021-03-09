@@ -6747,7 +6747,7 @@ class MainController {
 
     let pesertaUjian;
 
-    if (user.role == "guru" || siswa) {
+    if (user.role == "guru" || siswa || user.role == "admin") {
       pesertaUjian = await TkPesertaUjian.query()
         .with("jadwalUjian", (builder) => {
           builder.with("jadwalUjian", (builder) => {
