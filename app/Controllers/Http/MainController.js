@@ -13,6 +13,7 @@ const TkPerpusAktivitas = use("App/Models/TkPerpusAktivitas");
 const MJurusan = use("App/Models/MJurusan");
 const MRekSekolah = use("App/Models/MRekSekolah");
 const MPembayaran = use("App/Models/MPembayaran");
+const MPembayaranSiswa = use("App/Models/MPembayaranSiswa");
 const MPembayaranKategori = use("App/Models/MPembayaranKategori");
 const Mta = use("App/Models/Mta");
 const MSlider = use("App/Models/MSlider");
@@ -22,6 +23,7 @@ const MInformasiSekolah = use("App/Models/MInformasiSekolah");
 const MInformasiJurusan = use("App/Models/MInformasiJurusan");
 const MGuruJurusan = use("App/Models/MGuruJurusan");
 const MRombel = use("App/Models/MRombel");
+const TkPembayaranRombel = use("App/Models/TkPembayaranRombel");
 const MJamMengajar = use("App/Models/MJamMengajar");
 const MJadwalMengajar = use("App/Models/MJadwalMengajar");
 const MMataPelajaran = use("App/Models/MMataPelajaran");
@@ -8735,186 +8737,50 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const ta = await this.getTAAktif(sekolah);
+    const rekSekolah = await MRekSekolah.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .first();
 
-    if (ta == "404") {
-      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    return response.ok({
+      rekSekolah: rekSekolah,
+    });
+  }
+
+  async putRekSekolah({ response, request }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    if (user.role == "siswa") {
-      const rombelIds = await MRombel.query().where({ m_ta_id: ta.id }).ids();
+    const { bank, norek, nama, saldo } = request.post();
 
-      const rombelIdsAnggota = await MAnggotaRombel.query()
-        .whereIn("m_rombel_id", rombelIds)
-        .andWhere({ m_user_id: user.id })
-        .pluck("m_rombel_id");
+    const check = await MRekSekolah.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .first();
 
-      const materiIds = await TkMateriRombel.query()
-        .whereIn("m_rombel_id", rombelIdsAnggota)
-        .pluck("m_materi_id");
-
-      const materi = await MMateri.query()
-        .with("jurusan")
-        .with("mataPelajaran", (builder) => {
-          builder.with("user");
-        })
-        .withCount("bab", (builder) => {
-          builder.where({ dihapus: 0 });
-        })
-        .whereIn("id", materiIds)
-        .fetch();
-
-      const materiLainnya = await MMateri.query()
-        .with("user")
-        .with("sekolah")
-        .withCount("bab", (builder) => {
-          builder.where({ dihapus: 0 });
-        })
-        .where({ m_sekolah_id: sekolah.id })
-        .andWhere({ dihapus: 0 })
-        .fetch();
-
-      return response.ok({
-        materi,
-        materiLainnya,
+    if (!check) {
+      await MRekSekolah.create({
+        dihapus: 0,
+        m_sekolah_id: sekolah.id,
       });
     }
 
-    const mataPelajaranIds = await MMataPelajaran.query()
-      .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_user_id: user.id })
-      .andWhere({ dihapus: 0 })
-      .ids();
-
-    const materi = await MMateri.query()
-      .with("jurusan")
-      .with("mataPelajaran")
-      .withCount("bab", (builder) => {
-        builder.where({ dihapus: 0 });
-      })
-      .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
-      .fetch();
-
-    const materiLainnya = await MMateri.query()
-      .with("user")
-      .with("sekolah")
-      .withCount("bab", (builder) => {
-        builder.where({ dihapus: 0 });
-      })
-      .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ dihapus: 0 })
-      .fetch();
-
-    return response.ok({
-      materi,
-      materiLainnya,
-    });
-  }
-
-  async detailRekSekolah({ response, request, auth, params: { materi_id } }) {
-    const user = await auth.getUser();
-
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const materi = await MMateri.query()
-      .with("jurusan")
-      .with("mataPelajaran")
-      .with("user")
-      .with("sekolah")
-      .where({ id: materi_id })
-      .first();
-
-    const bab = await MBab.query()
-      .with("topik", (builder) => {
-        builder
-          .with("materiKesimpulan", (builder) => {
-            builder.where({ m_user_id: user.id });
-          })
-          .where({ dihapus: 0 });
-      })
+    const rekSekolah = await MRekSekolah.query()
       .where({ dihapus: 0 })
-      .andWhere({ m_materi_id: materi_id })
-      .fetch();
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .update({
+        bank,
+        norek,
+        nama,
+        saldo,
+      });
 
-    let looping = true;
-
-    const babData = [];
-
-    await Promise.all(
-      bab.toJSON().map(async (d) => {
-        d.topik.map(async (e, idx) => {
-          if (!e.materiKesimpulan) {
-            if (idx == 0) {
-              e.lock = false;
-            } else if (looping == false) {
-              e.lock = false;
-              looping = true;
-            } else {
-              e.lock = true;
-            }
-          } else {
-            e.lock = false;
-            looping = false;
-          }
-        });
-
-        babData.push(d);
-      })
-    );
-
-    return response.ok({
-      materi,
-      bab: babData,
-    });
-  }
-
-  async postRekSekolah({ response, request, auth }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-
-    const { nama } = request.post();
-
-    await MMateri.create({
-      nama,
-      m_user_id: user.id,
-      m_sekolah_id: sekolah.id,
-      dihapus: 0,
-    });
-
-    return response.ok({
-      message: messagePostSuccess,
-    });
-  }
-
-  async putRekSekolah({ response, request, auth, params: { materi_id } }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const { nama } = request.post();
-
-    const materi = await MMateri.query().where({ id: materi_id }).update({
-      nama,
-    });
-
-    if (!materi) {
+    if (!rekSekolah) {
       return response.notFound({
         message: messageNotFound,
       });
@@ -8922,30 +8788,6 @@ class MainController {
 
     return response.ok({
       message: messagePutSuccess,
-    });
-  }
-
-  async deleteRekSekolah({ response, request, auth, params: { materi_id } }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const materi = await MMateri.query().where({ id: materi_id }).update({
-      dihapus: 1,
-    });
-
-    if (!materi) {
-      return response.notFound({
-        message: messageNotFound,
-      });
-    }
-
-    return response.ok({
-      message: messageDeleteSuccess,
     });
   }
 
@@ -8972,6 +8814,7 @@ class MainController {
 
     if (search) {
       pembayaran = await MPembayaran.query()
+        .with("rombel")
         .where({ dihapus: 0 })
         .andWhere({ m_sekolah_id: sekolah.id })
         .andWhere({ jenis: jenis })
@@ -8979,6 +8822,7 @@ class MainController {
         .fetch();
     } else {
       pembayaran = await MPembayaran.query()
+        .with("rombel")
         .where({ dihapus: 0 })
         .andWhere({ m_sekolah_id: sekolah.id })
         .andWhere({ jenis: jenis })
@@ -9096,16 +8940,21 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const {
+    const user = await auth.getUser();
+
+    let {
       nama,
       jenis,
       bulan,
       tipe_ujian,
       nominal,
       tanggal_dibuat,
+      rombel_id,
     } = request.post();
 
-    await MPembayaran.create({
+    rombel_id = rombel_id.length ? rombel_id : [];
+
+    const pembayaran = await MPembayaran.create({
       nama,
       jenis,
       bulan,
@@ -9115,6 +8964,28 @@ class MainController {
       dihapus: 0,
       m_sekolah_id: sekolah.id,
     });
+
+    if (rombel_id.length) {
+      await Promise.all(
+        rombel_id.map(async (d) => {
+          const check = await TkPembayaranRombel.query()
+            .where({ dihapus: 0 })
+            .andWhere({ m_pembayaran_id: pembayaran.id })
+            .andWhere({ m_rombel_id: d })
+            .andWhere({ m_sekolah_id: sekolah.id })
+            .first();
+
+          if (!check) {
+            await TkPembayaranRombel.create({
+              dihapus: 0,
+              m_pembayaran_id: pembayaran.id,
+              m_rombel_id: d,
+              m_sekolah_id: sekolah.id,
+            });
+          }
+        })
+      );
+    }
 
     return response.ok({
       message: messagePostSuccess,
@@ -9130,7 +9001,9 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { nama, jenis, bulan, tipe_ujian, nominal } = request.post();
+    let { nama, jenis, bulan, tipe_ujian, nominal, rombel_id } = request.post();
+
+    rombel_id = rombel_id.length ? rombel_id : [];
 
     const pembayaran = await MPembayaran.query()
       .where({ id: pembayaran_id })
@@ -9146,6 +9019,28 @@ class MainController {
       return response.notFound({
         message: messageNotFound,
       });
+    }
+
+    if (rombel_id.length) {
+      await Promise.all(
+        rombel_id.map(async (d) => {
+          const check = await TkPembayaranRombel.query()
+            .where({ dihapus: 0 })
+            .andWhere({ m_pembayaran_id: pembayaran.id })
+            .andWhere({ m_rombel_id: d })
+            .andWhere({ m_sekolah_id: sekolah.id })
+            .first();
+
+          if (!check) {
+            await TkPembayaranRombel.create({
+              dihapus: 0,
+              m_pembayaran_id: pembayaran.id,
+              m_rombel_id: d,
+              m_sekolah_id: sekolah.id,
+            });
+          }
+        })
+      );
     }
 
     return response.ok({

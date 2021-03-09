@@ -121,10 +121,7 @@ Route.delete("/materi/:materi_id", "MainController.deleteMateri");
 
 // no rekening
 Route.get("/rek-sekolah", "MainController.getRekSekolah");
-Route.get("/rek-sekolah/:rek_sekolah_id", "MainController.detailRekSekolah");
-Route.post("/rek-sekolah", "MainController.postRekSekolah");
-Route.put("/rek-sekolah/:rek_sekolah_id", "MainController.putRekSekolah");
-Route.delete("/rek-sekolah/:rek_sekolah_id", "MainController.deleteRekSekolah");
+Route.put("/rek-sekolah", "MainController.putRekSekolah");
 
 // pembayaran
 Route.get("/pembayaran", "MainController.getPembayaran");
@@ -310,8 +307,8 @@ Route.delete(
 );
 
 // kontak
-Route.get('/kontak', 'MainController.getKontak');
-Route.put('/kontak', 'MainController.putKontak');
+Route.get("/kontak", "MainController.getKontak");
+Route.put("/kontak", "MainController.putKontak");
 
 // slider
 Route.get("/slider", "MainController.getSlider");

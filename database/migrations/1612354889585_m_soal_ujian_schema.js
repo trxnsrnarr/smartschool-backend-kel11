@@ -29,7 +29,7 @@ class MSoalUjianSchema extends Schema {
 
       // nilai pembahasan
       table.text("pembahasan");
-      table.integer("nilai_soal");
+      table.float("nilai_soal", [11, 1]);
 
       // menjodohkan
       // table.string("judul_soal");
