@@ -7,6 +7,10 @@ class MPrestasi extends Model {
   static get table() {
     return "m_prestasi";
   }
+
+  user() {
+    return this.belongsTo("App/Models/User", "m_user_id");
+  }
 }
 
 module.exports = MPrestasi;

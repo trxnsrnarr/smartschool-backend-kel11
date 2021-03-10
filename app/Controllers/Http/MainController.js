@@ -930,7 +930,7 @@ class MainController {
 
     let { search, offset } = request.get();
 
-    offset = offset ? offset : 0;
+    offset = offset ? parseInt(offset) : 0;
     let siswa;
 
     if (search) {
@@ -3258,7 +3258,7 @@ class MainController {
 
     let { search, offset, tingkat, nama_siswa } = request.get();
 
-    offset = offset ? offset : 0;
+    offset = offset ? parseInt(offset) : 0;
 
     let prestasi;
 
@@ -3272,6 +3272,7 @@ class MainController {
 
       if (tingkat) {
         prestasi = await MPrestasi.query()
+          .with("user")
           .where({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
           .andWhere({ tingkat })
@@ -3281,9 +3282,9 @@ class MainController {
           .fetch();
       } else {
         prestasi = await MPrestasi.query()
+          .with("user")
           .where({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
-          .andWhere({ tingkat })
           .whereIn("m_user_id", userIds)
           .offset(offset)
           .limit(25)
@@ -3292,6 +3293,7 @@ class MainController {
     } else {
       if (tingkat) {
         prestasi = await MPrestasi.query()
+          .with("user")
           .where({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
           .andWhere({ tingkat })
@@ -3300,9 +3302,9 @@ class MainController {
           .fetch();
       } else {
         prestasi = await MPrestasi.query()
+          .with("user")
           .where({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
-          .andWhere({ tingkat })
           .offset(offset)
           .limit(25)
           .fetch();
@@ -3319,7 +3321,7 @@ class MainController {
     let user;
 
     if (nama_siswa) {
-      user = await MUser.query()
+      user = await User.query()
         .select("id", "nama")
         .where("nama", "like", `%${nama_siswa}%`)
         .andWhere({ dihapus: 0 })
@@ -3327,7 +3329,7 @@ class MainController {
         .limit(25)
         .fetch();
     } else {
-      user = await MUser.query()
+      user = await User.query()
         .select("id", "nama")
         .where("nama", "like", `%${search}%`)
         .andWhere({ dihapus: 0 })
