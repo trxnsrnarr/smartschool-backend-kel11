@@ -150,6 +150,12 @@ Route.post("/bab", "MainController.postBab");
 Route.put("/bab/:bab_id", "MainController.putBab");
 Route.delete("/bab/:bab_id", "MainController.deleteBab");
 
+// prestasi
+Route.get("/prestasi", "MainController.getPrestasi");
+Route.post("/prestasi", "MainController.postPrestasi");
+Route.put("/prestasi/:prestasi_id", "MainController.putPrestasi");
+Route.delete("/prestasi/:prestasi_id", "MainController.deletePrestasi");
+
 // topik
 Route.get("/topik/:topik_id", "MainController.detailTopik");
 Route.post("/topik", "MainController.postTopik");

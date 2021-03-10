@@ -34,6 +34,7 @@ const MTopik = use("App/Models/MTopik");
 const MAnggotaRombel = use("App/Models/MAnggotaRombel");
 const TkMateriRombel = use("App/Models/TkMateriRombel");
 const MBab = use("App/Models/MBab");
+const MPrestasi = use("App/Models/MPrestasi");
 const MAbsen = use("App/Models/MAbsen");
 const MSoalUjian = use("App/Models/MSoalUjian");
 const TkSoalUjian = use("App/Models/TkSoalUjian");
@@ -3222,6 +3223,131 @@ class MainController {
   }
 
   async deleteBab({ response, request, auth, params: { bab_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const bab = await MBab.query().where({ id: bab_id }).update({
+      dihapus: 1,
+    });
+
+    if (!bab) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async getPrestasi({ response, request, auth }) {
+    const user = await auth.getUser();
+
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const bab = await MPrestasi.query().where({ m_sekolah_id: sekolah.id }).andWhere({dihapus: 0}).fetch();
+
+    const topikIds = await MTopik.query()
+      .select("id", "kuis", "m_bab_id")
+      .with("materiKesimpulan", (builder) => {
+        builder.where({ m_user_id: user.id });
+      })
+      .where({ m_bab_id: bab.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    let looping = true;
+    const topikIdsData = [];
+
+    await Promise.all(
+      topikIds.toJSON().map(async (d, idx) => {
+        if (!d.materiKesimpulan) {
+          if (idx == 0) {
+            d.lock = false;
+          } else if (looping == false) {
+            d.lock = false;
+            looping = true;
+          } else {
+            d.lock = true;
+          }
+        } else {
+          d.lock = false;
+          looping = false;
+        }
+
+        topikIdsData.push(d);
+      })
+    );
+
+    return response.ok({
+      bab,
+      topikIds: topikIdsData,
+    });
+  }
+
+  async postPrestasi({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { judul, m_materi_id } = request.post();
+
+    const bab = await MBab.create({
+      judul,
+      m_materi_id,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putPrestasi({ response, request, auth, params: { bab_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { judul } = request.post();
+
+    const bab = await MBab.query().where({ id: bab_id }).update({
+      judul,
+    });
+
+    if (!bab) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deletePrestasi({ response, request, auth, params: { bab_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
