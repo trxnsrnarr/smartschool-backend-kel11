@@ -930,8 +930,8 @@ class MainController {
 
     let { search, offset } = request.get();
 
-    let siswa;
     offset = offset ? offset : 0;
+    let siswa;
 
     if (search) {
       siswa = await User.query()
@@ -940,6 +940,7 @@ class MainController {
         .andWhere({ dihapus: 0 })
         .andWhere({ role: "siswa" })
         .andWhere("nama", "like", `%${search}%`)
+        .offset(offset)
         .limit(25)
         .fetch();
     } else {
@@ -3247,8 +3248,6 @@ class MainController {
   }
 
   async getPrestasi({ response, request, auth }) {
-    const user = await auth.getUser();
-
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -3257,13 +3256,90 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const prestasi = await MPrestasi.query()
-      .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ dihapus: 0 })
-      .fetch();
+    let { search, offset, tingkat, nama_siswa } = request.get();
+
+    offset = offset ? offset : 0;
+
+    let prestasi;
+
+    if (search) {
+      const userIds = await User.query()
+        .where("nama", "like", `%${search}%`)
+        .andWhere({ dihapus: 0 })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .limit(25)
+        .ids();
+
+      if (tingkat) {
+        prestasi = await MPrestasi.query()
+          .where({ m_sekolah_id: sekolah.id })
+          .andWhere({ dihapus: 0 })
+          .andWhere({ tingkat })
+          .whereIn("m_user_id", userIds)
+          .offset(offset)
+          .limit(25)
+          .fetch();
+      } else {
+        prestasi = await MPrestasi.query()
+          .where({ m_sekolah_id: sekolah.id })
+          .andWhere({ dihapus: 0 })
+          .andWhere({ tingkat })
+          .whereIn("m_user_id", userIds)
+          .offset(offset)
+          .limit(25)
+          .fetch();
+      }
+    } else {
+      if (tingkat) {
+        prestasi = await MPrestasi.query()
+          .where({ m_sekolah_id: sekolah.id })
+          .andWhere({ dihapus: 0 })
+          .andWhere({ tingkat })
+          .offset(offset)
+          .limit(25)
+          .fetch();
+      } else {
+        prestasi = await MPrestasi.query()
+          .where({ m_sekolah_id: sekolah.id })
+          .andWhere({ dihapus: 0 })
+          .andWhere({ tingkat })
+          .offset(offset)
+          .limit(25)
+          .fetch();
+      }
+    }
+
+    let tingkatData = [
+      { label: "Internasional", value: "internasional" },
+      { label: "Nasional", value: "nasional" },
+      { label: "Provinsi", value: "provinsi" },
+      { label: "Kabupaten/Kota", value: "kabupaten" },
+    ];
+
+    let user;
+
+    if (nama_siswa) {
+      user = await MUser.query()
+        .select("id", "nama")
+        .where("nama", "like", `%${nama_siswa}%`)
+        .andWhere({ dihapus: 0 })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .limit(25)
+        .fetch();
+    } else {
+      user = await MUser.query()
+        .select("id", "nama")
+        .where("nama", "like", `%${search}%`)
+        .andWhere({ dihapus: 0 })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .limit(25)
+        .fetch();
+    }
 
     return response.ok({
       prestasi,
+      tingkat: tingkatData,
+      user: user,
     });
   }
 
