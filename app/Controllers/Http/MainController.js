@@ -927,9 +927,10 @@ class MainController {
       .andWhere({ role: "siswa" })
       .getCount();
 
-    const { search } = request.get();
+    let { search, offset } = request.get();
 
     let siswa;
+    offset = offset ? offset : 0;
 
     if (search) {
       siswa = await User.query()
@@ -946,6 +947,7 @@ class MainController {
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ dihapus: 0 })
         .andWhere({ role: "siswa" })
+        .offset(offset)
         .limit(25)
         .fetch();
     }
@@ -5428,6 +5430,7 @@ class MainController {
       bentukSoal = [
         { value: "pg", label: "Pilihan Ganda" },
         { value: "esai", label: "Esai" },
+        { value: "esai", label: "Isian" },
       ];
     }
 
@@ -8814,7 +8817,9 @@ class MainController {
 
     if (search) {
       pembayaran = await MPembayaran.query()
-        .with("rombel")
+        .with("rombel", (builder) => {
+          builder.with("rombel");
+        })
         .where({ dihapus: 0 })
         .andWhere({ m_sekolah_id: sekolah.id })
         .andWhere({ jenis: jenis })
@@ -8822,7 +8827,9 @@ class MainController {
         .fetch();
     } else {
       pembayaran = await MPembayaran.query()
-        .with("rombel")
+        .with("rombel", (builder) => {
+          builder.with("rombel");
+        })
         .where({ dihapus: 0 })
         .andWhere({ m_sekolah_id: sekolah.id })
         .andWhere({ jenis: jenis })

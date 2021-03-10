@@ -7,6 +7,10 @@ class TkPembayaranRombel extends Model {
   static get table() {
     return "tk_pembayaran_rombel";
   }
+
+  rombel() {
+    return this.belongsTo("App/Models/MRombel");
+  }
 }
 
 module.exports = TkPembayaranRombel;
