@@ -3257,43 +3257,13 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const bab = await MPrestasi.query().where({ m_sekolah_id: sekolah.id }).andWhere({dihapus: 0}).fetch();
-
-    const topikIds = await MTopik.query()
-      .select("id", "kuis", "m_bab_id")
-      .with("materiKesimpulan", (builder) => {
-        builder.where({ m_user_id: user.id });
-      })
-      .where({ m_bab_id: bab.id })
+    const prestasi = await MPrestasi.query()
+      .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .fetch();
 
-    let looping = true;
-    const topikIdsData = [];
-
-    await Promise.all(
-      topikIds.toJSON().map(async (d, idx) => {
-        if (!d.materiKesimpulan) {
-          if (idx == 0) {
-            d.lock = false;
-          } else if (looping == false) {
-            d.lock = false;
-            looping = true;
-          } else {
-            d.lock = true;
-          }
-        } else {
-          d.lock = false;
-          looping = false;
-        }
-
-        topikIdsData.push(d);
-      })
-    );
-
     return response.ok({
-      bab,
-      topikIds: topikIdsData,
+      prestasi,
     });
   }
 
@@ -3306,14 +3276,24 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
+    const {
+      nama,
+      tingkat,
+      peringkat,
+      tempat,
+      tahun,
+      m_user_id,
+    } = request.post();
 
-    const { judul, m_materi_id } = request.post();
-
-    const bab = await MBab.create({
-      judul,
-      m_materi_id,
+    await MPrestasi.create({
+      nama,
+      tingkat,
+      peringkat,
+      tempat,
+      tahun,
       dihapus: 0,
+      m_user_id: m_user_id,
+      m_sekolah_id: sekolah.id,
     });
 
     return response.ok({
@@ -3321,7 +3301,7 @@ class MainController {
     });
   }
 
-  async putPrestasi({ response, request, auth, params: { bab_id } }) {
+  async putPrestasi({ response, request, auth, params: { prestasi_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -3330,13 +3310,25 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { judul } = request.post();
+    const {
+      nama,
+      tingkat,
+      peringkat,
+      tempat,
+      tahun,
+      m_user_id,
+    } = request.post();
 
-    const bab = await MBab.query().where({ id: bab_id }).update({
-      judul,
+    const prestasi = await MPrestasi.query().where({ id: prestasi_id }).update({
+      nama,
+      tingkat,
+      peringkat,
+      tempat,
+      tahun,
+      m_user_id,
     });
 
-    if (!bab) {
+    if (!prestasi) {
       return response.notFound({
         message: messageNotFound,
       });
@@ -3347,7 +3339,7 @@ class MainController {
     });
   }
 
-  async deletePrestasi({ response, request, auth, params: { bab_id } }) {
+  async deletePrestasi({ response, request, auth, params: { prestasi_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -3356,11 +3348,11 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const bab = await MBab.query().where({ id: bab_id }).update({
+    const prestasi = await MPrestasi.query().where({ id: prestasi_id }).update({
       dihapus: 1,
     });
 
-    if (!bab) {
+    if (!prestasi) {
       return response.notFound({
         message: messageNotFound,
       });
