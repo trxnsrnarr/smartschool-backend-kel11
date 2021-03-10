@@ -3324,15 +3324,14 @@ class MainController {
       user = await User.query()
         .select("id", "nama")
         .where("nama", "like", `%${nama_siswa}%`)
-        .andWhere({ dihapus: 0 })
+        .where({ dihapus: 0 })
         .andWhere({ m_sekolah_id: sekolah.id })
         .limit(25)
         .fetch();
     } else {
       user = await User.query()
         .select("id", "nama")
-        .where("nama", "like", `%${search}%`)
-        .andWhere({ dihapus: 0 })
+        .where({ dihapus: 0 })
         .andWhere({ m_sekolah_id: sekolah.id })
         .limit(25)
         .fetch();
