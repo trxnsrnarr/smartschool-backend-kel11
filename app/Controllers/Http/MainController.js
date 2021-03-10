@@ -1591,7 +1591,9 @@ class MainController {
         .first();
     } else {
       jadwalMengajar = await MJadwalMengajar.query()
-        .with("mataPelajaran")
+        .with("mataPelajaran", (builder) => {
+          builder.with("user");
+        })
         .with("rombel", (builder) => {
           builder.with("anggotaRombel", (builder) => {
             builder.with("user");
