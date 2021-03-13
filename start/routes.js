@@ -59,6 +59,12 @@ Route.post("/siswa", "MainController.postSiswa");
 Route.put("/siswa/:siswa_id", "MainController.putSiswa");
 Route.delete("/siswa/:siswa_id", "MainController.deleteSiswa");
 
+// alumni
+Route.get("/alumni", "MainController.getAlumni");
+Route.post("/alumni", "MainController.postAlumni");
+Route.put("/alumni/:alumni_id", "MainController.putAlumni");
+Route.delete("/alumni/:alumni_id", "MainController.deleteAlumni");
+
 // ta
 Route.get("/ta", "MainController.getTA");
 Route.post("/ta", "MainController.postTA");
