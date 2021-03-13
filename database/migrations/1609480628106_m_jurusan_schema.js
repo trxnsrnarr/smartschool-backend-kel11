@@ -16,6 +16,7 @@ class MJurusanSchema extends Schema {
       table.integer("seragam_sekolah");
       table.integer("toolkit_praktek");
       table.integer("m_sekolah_id").unsigned();
+      table.boolean("alumni");
       table.boolean("dihapus");
       table.timestamps();
     });

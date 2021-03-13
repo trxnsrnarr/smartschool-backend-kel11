@@ -9,8 +9,10 @@ class UserSchema extends Schema {
       table.increments();
       table.string("nama");
       table.string("whatsapp");
+      table.string("email");
       table.string("password");
       table.string("avatar");
+      table.date("tanggal_lahir");
       table.string("role");
       table.enu("gender", ["L", "P"]);
       table.string("nip");
