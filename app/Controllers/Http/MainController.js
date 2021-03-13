@@ -1114,6 +1114,7 @@ class MainController {
 
     if (search) {
       alumni = await User.query()
+        .with("infoAlumni")
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ dihapus: 0 })
         .andWhere({ role: "alumni" })
@@ -1123,6 +1124,7 @@ class MainController {
         .fetch();
     } else {
       alumni = await User.query()
+        .with("infoAlumni")
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ dihapus: 0 })
         .andWhere({ role: "alumni" })
@@ -1159,6 +1161,7 @@ class MainController {
       sekolah_lanjutan,
       sertifikasi_keahlian,
       purnakarya,
+      pengalaman,
       deskripsi,
     } = request.post();
 
@@ -1220,6 +1223,7 @@ class MainController {
       sekolah_lanjutan,
       sertifikasi_keahlian,
       purnakarya,
+      pengalaman,
       deskripsi,
     } = request.post();
 

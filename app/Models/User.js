@@ -7,8 +7,6 @@ const Model = use("Model");
 const Hash = use("Hash");
 
 class User extends Model {
- 
-
   static get table() {
     return "m_user";
   }
@@ -19,6 +17,10 @@ class User extends Model {
 
   absen() {
     return this.hasMany("App/Models/MAbsen", "id", "m_user_id");
+  }
+
+  infoAlumni() {
+    return this.hasOne("App/Models/MAlumni", "id", "m_user_id");
   }
 
   kesimpulan() {

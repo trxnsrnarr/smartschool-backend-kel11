@@ -8,10 +8,6 @@ class MAlumni extends Model {
     return "m_alumni";
   }
 
-  user() {
-    return this.belongsTo("App/Models/User", "m_user_id");
-  }
-
   getDeskripsi(deskripsi) {
     return deskripsi ? Buffer(deskripsi, "base64").toString("ascii") : "";
   }
