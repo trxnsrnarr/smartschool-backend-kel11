@@ -1,0 +1,25 @@
+"use strict";
+
+/** @type {import('@adonisjs/lucid/src/Schema')} */
+const Schema = use("Schema");
+
+class MMutasiSchema extends Schema {
+  up() {
+    this.create("m_mutasi", (table) => {
+      table.increments();
+      table.string("tipe");
+      table.string("nama");
+      table.string("kategori");
+      table.string("nominal");
+      table.boolean("dihapus");
+      table.integer("m_sekolah_id").unsigned();
+      table.datetime("waktu_dibuat");
+    });
+  }
+
+  down() {
+    this.drop("m_mutasi");
+  }
+}
+
+module.exports = MMutasiSchema;
