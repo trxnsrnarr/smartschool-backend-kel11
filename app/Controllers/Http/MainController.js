@@ -1236,7 +1236,7 @@ class MainController {
     });
 
     const alumni = await MAlumni.query()
-      .where({ id: alumni_id })
+      .where({ m_user_id: alumni_id })
       .update({
         jurusan,
         tahun_masuk,
