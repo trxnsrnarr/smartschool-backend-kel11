@@ -14,6 +14,7 @@ const MJurusan = use("App/Models/MJurusan");
 const MRekSekolah = use("App/Models/MRekSekolah");
 const MPembayaran = use("App/Models/MPembayaran");
 const MPembayaranSiswa = use("App/Models/MPembayaranSiswa");
+const MMutasi = use("App/Models/MMutasi");
 const MAlumni = use("App/Models/MAlumni");
 const MPembayaranKategori = use("App/Models/MPembayaranKategori");
 const Mta = use("App/Models/Mta");
@@ -9595,6 +9596,166 @@ class MainController {
       });
 
     if (!kontak) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async getMutasi({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let { search, dari_tanggal, sampai_tanggal, tipe, offset } = request.get();
+    offset = offset ? parseInt(offset) : 0;
+
+    let sarpras;
+
+    if (search) {
+      if (dari_tanggal || sampai_tanggal || tipe) {
+        if (tipe) {
+          sarpras = await MMutasi.query()
+            .where({ dihapus: 0 })
+            .andWhere({ m_sekolah_id: sekolah.id })
+            .andWhere({ tipe: tipe })
+            .andWhere("nama", "like", `%${search}%`)
+            .whereBetween("waktu_dibuat", [dari_tanggal, sampai_tanggal])
+            .offset(offset)
+            .limit(25)
+            .fetch();
+        } else {
+          sarpras = await MMutasi.query()
+            .where({ dihapus: 0 })
+            .andWhere({ m_sekolah_id: sekolah.id })
+            .andWhere("nama", "like", `%${search}%`)
+            .whereBetween("waktu_dibuat", [dari_tanggal, sampai_tanggal])
+            .offset(offset)
+            .limit(25)
+            .fetch();
+        }
+      } else {
+        sarpras = await MMutasi.query()
+          .where({ dihapus: 0 })
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .andWhere("nama", "like", `%${search}%`)
+          .offset(offset)
+          .limit(25)
+          .fetch();
+      }
+    } else {
+      if (dari_tanggal || sampai_tanggal || tipe) {
+        if (tipe) {
+          sarpras = await MMutasi.query()
+            .where({ dihapus: 0 })
+            .andWhere({ m_sekolah_id: sekolah.id })
+            .andWhere({ tipe: tipe })
+            .whereBetween("waktu_dibuat", [dari_tanggal, sampai_tanggal])
+            .offset(offset)
+            .limit(25)
+            .fetch();
+        } else {
+          sarpras = await MMutasi.query()
+            .where({ dihapus: 0 })
+            .andWhere({ m_sekolah_id: sekolah.id })
+            .whereBetween("waktu_dibuat", [dari_tanggal, sampai_tanggal])
+            .offset(offset)
+            .limit(25)
+            .fetch();
+        }
+      } else {
+        sarpras = await MMutasi.query()
+          .where({ dihapus: 0 })
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .offset(offset)
+          .limit(25)
+          .fetch();
+      }
+    }
+
+    return response.ok({
+      sarpras: sarpras,
+    });
+  }
+
+  async postMutasi({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { tipe, nama, kategori, nominal, waktu_dibuat } = request.post();
+
+    const mutasi = await MMutasi.create({
+      tipe,
+      nama,
+      kategori,
+      nominal,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+      waktu_dibuat,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putMutasi({ response, request, auth, params: { mutasi_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { tipe, nama, kategori, nominal, waktu_dibuat } = request.post();
+
+    const mutasi = await MMutasi.query().where({ id: mutasi_id }).update({
+      tipe,
+      nama,
+      kategori,
+      nominal,
+      waktu_dibuat,
+    });
+
+    if (!mutasi) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteMutasi({ response, request, auth, params: { mutasi_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const mutasi = await MMutasi.query().where({ id: mutasi_id }).update({
+      dihapus: 1,
+    });
+
+    if (!mutasi) {
       return response.notFound({
         message: messageNotFound,
       });

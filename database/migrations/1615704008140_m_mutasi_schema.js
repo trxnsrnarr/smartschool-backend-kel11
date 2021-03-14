@@ -14,6 +14,7 @@ class MMutasiSchema extends Schema {
       table.boolean("dihapus");
       table.integer("m_sekolah_id").unsigned();
       table.datetime("waktu_dibuat");
+      table.timestamps();
     });
   }
 

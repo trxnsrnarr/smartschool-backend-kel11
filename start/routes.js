@@ -162,6 +162,12 @@ Route.post("/prestasi", "MainController.postPrestasi");
 Route.put("/prestasi/:prestasi_id", "MainController.putPrestasi");
 Route.delete("/prestasi/:prestasi_id", "MainController.deletePrestasi");
 
+// mutasi
+Route.get("/mutasi", "MainController.getMutasi");
+Route.post("/mutasi", "MainController.postMutasi");
+Route.put("/mutasi/:mutasi_id", "MainController.putMutasi");
+Route.delete("/mutasi/:mutasi_id", "MainController.deleteMutasi");
+
 // topik
 Route.get("/topik/:topik_id", "MainController.detailTopik");
 Route.post("/topik", "MainController.postTopik");
