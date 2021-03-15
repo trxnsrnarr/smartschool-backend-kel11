@@ -89,6 +89,7 @@ const bucket = firestore.bucket();
 const jadwalUjianReference = db.collection("jadwal-ujian");
 
 const Env = use("Env");
+const Database = use("Database");
 
 const accountSid = "AC124e53d8cfb40a9f80ae98c59eba0980";
 const authToken = "04e5831e528fa131ad81400739e1022f";
@@ -1773,7 +1774,9 @@ class MainController {
 
     let jadwalMengajar;
     let analisisMateri;
+    let analisisNilai;
     let checkAbsensi = [];
+    let judulTugas;
 
     if (rombel_id) {
       jadwalMengajar = await MJadwalMengajar.query()
@@ -1857,13 +1860,49 @@ class MainController {
         .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
         .andWhere({ m_materi_id: materi.id })
         .first();
+
+      const timelineIds = await MTimeline.query()
+        .where({ dihapus: 0 })
+        .andWhere({ tipe: "tugas" })
+        .andWhere({ m_rombel_id: jadwalMengajar.toJSON().m_rombel_id })
+        .andWhere({
+          m_user_id: jadwalMengajar.toJSON().mataPelajaran.m_user_id,
+        })
+        .ids();
+
+      judulTugas = await MTimeline.query()
+        .select("id", "m_tugas_id", "tanggal_dibuat")
+        .with("tugas", (builder) => {
+          builder.select("id", "judul");
+        })
+        .with("ditugaskan", (builder) => {
+          builder
+            .select(
+              Database.raw(
+                "sum(nilai) as jumlahNilai, count(id) as jumlahSiswa"
+              )
+            )
+            .select("m_timeline_id")
+            .groupBy("m_timeline_id");
+        })
+        .whereIn("id", timelineIds)
+        .fetch();
+
+      analisisNilai = await User.query()
+        .with("tugas", (builder) => {
+          builder.whereIn("m_timeline_id", timelineIds);
+        })
+        .whereIn("id", userIds)
+        .fetch();
     }
 
     return response.ok({
       jadwalMengajar: jadwalMengajar,
       analisisMateri: analisisMateri,
+      analisisNilai: analisisNilai,
       integrasi: sekolah.integrasi,
       checkAbsensi: checkAbsensi.length,
+      judulTugas: judulTugas,
     });
   }
 
@@ -9277,56 +9316,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const materi = await MMateri.query()
-      .with("jurusan")
-      .with("mataPelajaran")
-      .with("user")
-      .with("sekolah")
-      .where({ id: pembayaran_id })
-      .first();
-
-    const bab = await MBab.query()
-      .with("topik", (builder) => {
-        builder
-          .with("materiKesimpulan", (builder) => {
-            builder.where({ m_user_id: user.id });
-          })
-          .where({ dihapus: 0 });
-      })
-      .where({ dihapus: 0 })
-      .andWhere({ m_materi_id: pembayaran_id })
-      .fetch();
-
-    let looping = true;
-
-    const babData = [];
-
-    await Promise.all(
-      bab.toJSON().map(async (d) => {
-        d.topik.map(async (e, idx) => {
-          if (!e.materiKesimpulan) {
-            if (idx == 0) {
-              e.lock = false;
-            } else if (looping == false) {
-              e.lock = false;
-              looping = true;
-            } else {
-              e.lock = true;
-            }
-          } else {
-            e.lock = false;
-            looping = false;
-          }
-        });
-
-        babData.push(d);
-      })
-    );
-
-    return response.ok({
-      materi,
-      bab: babData,
-    });
+    return response.ok({});
   }
 
   async postPembayaran({ response, request, auth }) {
@@ -9374,12 +9364,29 @@ class MainController {
             .first();
 
           if (!check) {
-            await TkPembayaranRombel.create({
+            const tkPembayaran = await TkPembayaranRombel.create({
               dihapus: 0,
               m_pembayaran_id: pembayaran.id,
               m_rombel_id: d,
               m_sekolah_id: sekolah.id,
             });
+
+            const userIds = await MAnggotaRombel.query()
+              .select("m_user_id")
+              .where({ m_rombel_id: d })
+              .fetch();
+
+            await Promise.all(
+              userIds.toJSON().map(async (user) => {
+                await MPembayaranSiswa.create({
+                  status: "belum lunas",
+                  dihapus: 0,
+                  m_user_id: user,
+                  tk_pembayaran_rombel_id: tkPembayaran.id,
+                  m_sekolah_id: sekolah.id,
+                });
+              })
+            );
           }
         })
       );

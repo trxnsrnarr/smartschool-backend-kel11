@@ -26,6 +26,10 @@ class MTimeline extends Model {
     return this.hasMany("App/Models/TkTimeline");
   }
 
+  ditugaskan() {
+    return this.hasMany("App/Models/TkTimeline");
+  }
+
   komen() {
     return this.hasMany("App/Models/MTimelineKomen");
   }
