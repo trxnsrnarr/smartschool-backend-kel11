@@ -11,6 +11,10 @@ class TkPembayaranRombel extends Model {
   rombel() {
     return this.belongsTo("App/Models/MRombel");
   }
+
+  pembayaran() {
+    return this.belongsTo('App/Models/MPembayaran')
+  }
 }
 
 module.exports = TkPembayaranRombel;

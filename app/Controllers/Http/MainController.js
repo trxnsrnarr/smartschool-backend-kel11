@@ -9443,29 +9443,64 @@ class MainController {
 
     const sekolah = await this.getSekolahByDomain(domain);
 
-    let { rombel_id } = request.post();
+    let { rombel_id, search } = request.get();
 
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
     const pembayaran = await MPembayaran.query()
-      .with("rombel")
+      .with("rombel", (builder) => {
+        builder.with("rombel");
+      })
       .where({ id: pembayaran_id })
       .first();
 
     let siswa;
 
+    let userIds;
+
+    if (search) {
+      userIds = await User.query()
+        .where({ dihapus: 0 })
+        .andWhere("nama", "like", `%${search}%`)
+        .ids();
+    }
+
     if (rombel_id) {
-      siswa = await MPembayaranSiswa.query()
-        .where({ dihapus: 0 })
-        .andWhere({ tk_pembayaran_rombel_id: rombel_id })
-        .first();
+      if (search) {
+        siswa = await MPembayaranSiswa.query()
+          .with("user")
+          .where({ dihapus: 0 })
+          .andWhere({ tk_pembayaran_rombel_id: rombel_id })
+          .whereIn("m_user_id", userIds)
+          .first();
+      } else {
+        siswa = await MPembayaranSiswa.query()
+          .with("user")
+          .where({ dihapus: 0 })
+          .andWhere({ tk_pembayaran_rombel_id: rombel_id })
+          .first();
+      }
     } else {
-      siswa = await MPembayaranSiswa.query()
-        .where({ dihapus: 0 })
-        .andWhere({ tk_pembayaran_rombel_id: pembayaran.toJSON().rombel[0].id })
-        .fetch();
+      if (search) {
+        siswa = await MPembayaranSiswa.query()
+          .with("user")
+          .where({ dihapus: 0 })
+          .andWhere({
+            tk_pembayaran_rombel_id: pembayaran.toJSON().rombel[0].id,
+          })
+          .whereIn("m_user_id", userIds)
+          .fetch();
+      } else {
+        siswa = await MPembayaranSiswa.query()
+          .with("user")
+          .where({ dihapus: 0 })
+          .andWhere({
+            tk_pembayaran_rombel_id: pembayaran.toJSON().rombel[0].id,
+          })
+          .fetch();
+      }
     }
 
     return response.ok({
@@ -9485,7 +9520,17 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const pembayaran = await MPembayaranSiswa.query();
+    const pembayaran = await MPembayaranSiswa.query()
+      .with("rombelPembayaran", (builder) => {
+        builder.with("pembayaran");
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_user_id: user.id })
+      .fetch();
+
+    return response.ok({
+      pembayaran: pembayaran,
+    });
   }
 
   async postPembayaran({ response, request, auth }) {

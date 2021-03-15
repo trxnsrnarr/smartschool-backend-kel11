@@ -7,6 +7,14 @@ class MPembayaranSiswa extends Model {
   static get table() {
     return "m_pembayaran_siswa";
   }
+
+  user() {
+    return this.belongsTo("App/Models/User", "m_user_id");
+  }
+
+  rombelPembayaran() {
+    return this.belongsTo("App/Models/TkPembayaranRombel");
+  }
 }
 
 module.exports = MPembayaranSiswa;
