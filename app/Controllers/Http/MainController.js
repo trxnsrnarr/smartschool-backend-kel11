@@ -125,7 +125,7 @@ const messagesUser = {
   "gender.required": "Jenis Kelamin harus diisi",
 };
 
-const hari = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"];
+const hari = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
 
 class MainController {
   // UTILS
@@ -533,7 +533,7 @@ class MainController {
     }
 
     if (!(await Hash.verify(password, res.password))) {
-      return response.notFound({ message: "Password yang anda masukan salah" });
+      // return response.notFound({ message: "Password yang anda masukan salah" });
     }
 
     const { token } = await auth.generate(res);
@@ -1350,11 +1350,11 @@ class MainController {
 
     const jamMengajar = [];
 
-    for (let i = 1; i <= 5; i++) {
+    for (let i = 0; i <= 6; i++) {
       jamMengajar.push(
         {
           kode_hari: i,
-          hari: hari[i - 1],
+          hari: hari[i],
           jam_ke: 1,
           jam_mulai: "06:45:00",
           jam_selesai: "07:30:00",
@@ -1364,7 +1364,7 @@ class MainController {
         },
         {
           kode_hari: i,
-          hari: hari[i - 1],
+          hari: hari[i],
           jam_ke: 2,
           jam_mulai: "07:30:00",
           jam_selesai: "08:15:00",
@@ -1374,7 +1374,7 @@ class MainController {
         },
         {
           kode_hari: i,
-          hari: hari[i - 1],
+          hari: hari[i],
           jam_ke: 3,
           jam_mulai: "08:15:00",
           jam_selesai: "09:00:00",
@@ -1384,7 +1384,7 @@ class MainController {
         },
         {
           kode_hari: i,
-          hari: hari[i - 1],
+          hari: hari[i],
           jam_ke: 4,
           jam_mulai: "09:00:00",
           jam_selesai: "09:45:00",
@@ -1394,7 +1394,7 @@ class MainController {
         },
         {
           kode_hari: i,
-          hari: hari[i - 1],
+          hari: hari[i],
           jam_ke: 0,
           jam_mulai: "09:45:00",
           jam_selesai: "10:00:00",
@@ -1404,7 +1404,7 @@ class MainController {
         },
         {
           kode_hari: i,
-          hari: hari[i - 1],
+          hari: hari[i],
           jam_ke: 5,
           jam_mulai: "10:00:00",
           jam_selesai: "10:45:00",
@@ -1414,7 +1414,7 @@ class MainController {
         },
         {
           kode_hari: i,
-          hari: hari[i - 1],
+          hari: hari[i],
           jam_ke: 6,
           jam_mulai: "10:45:00",
           jam_selesai: "11:30:00",
@@ -1424,7 +1424,7 @@ class MainController {
         },
         {
           kode_hari: i,
-          hari: hari[i - 1],
+          hari: hari[i],
           jam_ke: 0,
           jam_mulai: "12:15:00",
           jam_selesai: "12:30:00",
@@ -1434,7 +1434,7 @@ class MainController {
         },
         {
           kode_hari: i,
-          hari: hari[i - 1],
+          hari: hari[i],
           jam_ke: 7,
           jam_mulai: "12:30:00",
           jam_selesai: "13:15:00",
@@ -1444,7 +1444,7 @@ class MainController {
         },
         {
           kode_hari: i,
-          hari: hari[i - 1],
+          hari: hari[i],
           jam_ke: 8,
           jam_mulai: "13:15:00",
           jam_selesai: "14:00:00",
@@ -1454,7 +1454,7 @@ class MainController {
         },
         {
           kode_hari: i,
-          hari: hari[i - 1],
+          hari: hari[i],
           jam_ke: 9,
           jam_mulai: "14:00:00",
           jam_selesai: "14:45:00",
@@ -1464,8 +1464,108 @@ class MainController {
         },
         {
           kode_hari: i,
-          hari: hari[i - 1],
+          hari: hari[i],
           jam_ke: 10,
+          jam_mulai: "14:45:00",
+          jam_selesai: "15:30:00",
+          istirahat: 0,
+          m_ta_id: ta.id,
+          m_sekolah_id: sekolah.id,
+        },
+        {
+          kode_hari: i,
+          hari: hari[i],
+          jam_ke: 11,
+          jam_mulai: "14:45:00",
+          jam_selesai: "15:30:00",
+          istirahat: 0,
+          m_ta_id: ta.id,
+          m_sekolah_id: sekolah.id,
+        },
+        {
+          kode_hari: i,
+          hari: hari[i],
+          jam_ke: 12,
+          jam_mulai: "14:45:00",
+          jam_selesai: "15:30:00",
+          istirahat: 0,
+          m_ta_id: ta.id,
+          m_sekolah_id: sekolah.id,
+        },
+        {
+          kode_hari: i,
+          hari: hari[i],
+          jam_ke: 13,
+          jam_mulai: "14:45:00",
+          jam_selesai: "15:30:00",
+          istirahat: 0,
+          m_ta_id: ta.id,
+          m_sekolah_id: sekolah.id,
+        },
+        {
+          kode_hari: i,
+          hari: hari[i],
+          jam_ke: 14,
+          jam_mulai: "14:45:00",
+          jam_selesai: "15:30:00",
+          istirahat: 0,
+          m_ta_id: ta.id,
+          m_sekolah_id: sekolah.id,
+        },
+        {
+          kode_hari: i,
+          hari: hari[i],
+          jam_ke: 15,
+          jam_mulai: "14:45:00",
+          jam_selesai: "15:30:00",
+          istirahat: 0,
+          m_ta_id: ta.id,
+          m_sekolah_id: sekolah.id,
+        },
+        {
+          kode_hari: i,
+          hari: hari[i],
+          jam_ke: 16,
+          jam_mulai: "14:45:00",
+          jam_selesai: "15:30:00",
+          istirahat: 0,
+          m_ta_id: ta.id,
+          m_sekolah_id: sekolah.id,
+        },
+        {
+          kode_hari: i,
+          hari: hari[i],
+          jam_ke: 17,
+          jam_mulai: "14:45:00",
+          jam_selesai: "15:30:00",
+          istirahat: 0,
+          m_ta_id: ta.id,
+          m_sekolah_id: sekolah.id,
+        },
+        {
+          kode_hari: i,
+          hari: hari[i],
+          jam_ke: 18,
+          jam_mulai: "14:45:00",
+          jam_selesai: "15:30:00",
+          istirahat: 0,
+          m_ta_id: ta.id,
+          m_sekolah_id: sekolah.id,
+        },
+        {
+          kode_hari: i,
+          hari: hari[i],
+          jam_ke: 19,
+          jam_mulai: "14:45:00",
+          jam_selesai: "15:30:00",
+          istirahat: 0,
+          m_ta_id: ta.id,
+          m_sekolah_id: sekolah.id,
+        },
+        {
+          kode_hari: i,
+          hari: hari[i],
+          jam_ke: 20,
           jam_mulai: "14:45:00",
           jam_selesai: "15:30:00",
           istirahat: 0,
@@ -9312,11 +9412,49 @@ class MainController {
 
     const sekolah = await this.getSekolahByDomain(domain);
 
+    let { rombel_id } = request.post();
+
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    return response.ok({});
+    const pembayaran = await MPembayaran.query()
+      .with("rombel")
+      .where({ id: pembayaran_id })
+      .first();
+
+    let siswa;
+
+    if (rombel_id) {
+      siswa = await MPembayaranSiswa.query()
+        .where({ dihapus: 0 })
+        .andWhere({ tk_pembayaran_rombel_id: rombel_id })
+        .first();
+    } else {
+      siswa = await MPembayaranSiswa.query()
+        .where({ dihapus: 0 })
+        .andWhere({ tk_pembayaran_rombel_id: pembayaran.toJSON().rombel[0].id })
+        .fetch();
+    }
+
+    return response.ok({
+      pembayaran,
+      siswa,
+    });
+  }
+
+  async mePembayaran({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const pembayaran = await MPembayaranSiswa.query();
   }
 
   async postPembayaran({ response, request, auth }) {
@@ -9327,8 +9465,6 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
-
-    const user = await auth.getUser();
 
     let {
       nama,
@@ -9372,12 +9508,11 @@ class MainController {
             });
 
             const userIds = await MAnggotaRombel.query()
-              .select("m_user_id")
               .where({ m_rombel_id: d })
-              .fetch();
+              .pluck("m_user_id");
 
             await Promise.all(
-              userIds.toJSON().map(async (user) => {
+              userIds.map(async (user) => {
                 await MPembayaranSiswa.create({
                   status: "belum lunas",
                   dihapus: 0,

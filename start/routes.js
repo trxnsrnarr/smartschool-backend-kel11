@@ -131,6 +131,7 @@ Route.put("/rek-sekolah", "MainController.putRekSekolah");
 
 // pembayaran
 Route.get("/pembayaran", "MainController.getPembayaran");
+Route.get("/pembayaran/me", "MainController.mePembayaran");
 Route.get("/pembayaran/:pembayaran_id", "MainController.detailPembayaran");
 Route.post("/pembayaran", "MainController.postPembayaran");
 Route.put("/pembayaran/:pembayaran_id", "MainController.putPembayaran");
