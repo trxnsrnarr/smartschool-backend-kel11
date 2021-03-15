@@ -6453,6 +6453,37 @@ class MainController {
       nilai_soal,
     } = request.post();
 
+    const jawaban_aFormat =
+      bentuk == "esai"
+        ? ""
+        : typeof jawaban_a !== "object" && jawaban_a
+        ? Buffer(jawaban_a).toString("base64")
+        : "";
+    const jawaban_bFormat =
+      bentuk == "esai"
+        ? ""
+        : typeof jawaban_b !== "object" && jawaban_b
+        ? Buffer(jawaban_b).toString("base64")
+        : "";
+    const jawaban_cFormat =
+      bentuk == "esai"
+        ? ""
+        : typeof jawaban_c !== "object" && jawaban_c
+        ? Buffer(jawaban_c).toString("base64")
+        : "";
+    const jawaban_dFormat =
+      bentuk == "esai"
+        ? ""
+        : typeof jawaban_d !== "object" && jawaban_d
+        ? Buffer(jawaban_d).toString("base64")
+        : "";
+    const jawaban_eFormat =
+      bentuk == "esai"
+        ? ""
+        : typeof jawaban_e !== "object" && jawaban_e
+        ? Buffer(jawaban_e).toString("base64")
+        : "";
+
     const soalUjian = await MSoalUjian.query()
       .where({ id: soal_ujian_id })
       .update({
@@ -6465,13 +6496,13 @@ class MainController {
         akm_proses_kognitif,
         audio,
         pertanyaan: pertanyaan ? Buffer(pertanyaan).toString("base64") : "",
-        jawaban_a: jawaban_a ? Buffer(jawaban_a).toString("base64") : "",
-        jawaban_b: jawaban_b ? Buffer(jawaban_b).toString("base64") : "",
-        jawaban_c: jawaban_c ? Buffer(jawaban_c).toString("base64") : "",
-        jawaban_d: jawaban_d ? Buffer(jawaban_d).toString("base64") : "",
-        jawaban_e: jawaban_e ? Buffer(jawaban_e).toString("base64") : "",
+        jawaban_a: jawaban_aFormat,
+        jawaban_b: jawaban_bFormat,
+        jawaban_c: jawaban_cFormat,
+        jawaban_d: jawaban_dFormat,
+        jawaban_e: jawaban_eFormat,
         kj_pg,
-        rubrik_kj,
+        rubrik_kj: JSON.stringify(rubrik_kj),
         pembahasan: pembahasan ? Buffer(pembahasan).toString("base64") : "",
         nilai_soal,
       });
