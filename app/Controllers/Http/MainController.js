@@ -9831,7 +9831,6 @@ class MainController {
             .where({ dihapus: 0 })
             .andWhere({ m_sekolah_id: sekolah.id })
             .andWhere({ tipe: tipe })
-            .whereBetween("waktu_dibuat", [dari_tanggal, sampai_tanggal])
             .offset(offset)
             .limit(25)
             .fetch();
