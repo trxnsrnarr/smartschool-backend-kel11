@@ -8,10 +8,12 @@ const Sekolah = use("App/Models/Sekolah");
 const MSekolah = use("App/Models/MSekolah");
 const MSarpras = use("App/Models/MSarpras");
 const MKegiatanGaleri = use("App/Models/MKegiatanGaleri");
+const MNotifikasi = use("App/Models/MNotifikasi");
 const MPerpusKomen = use("App/Models/MPerpusKomen");
 const TkPerpusAktivitas = use("App/Models/TkPerpusAktivitas");
 const MJurusan = use("App/Models/MJurusan");
 const MRekSekolah = use("App/Models/MRekSekolah");
+const MIndustri = use("App/Models/MIndustri");
 const MPembayaran = use("App/Models/MPembayaran");
 const MPembayaranSiswa = use("App/Models/MPembayaranSiswa");
 const MMutasi = use("App/Models/MMutasi");
@@ -533,7 +535,7 @@ class MainController {
     }
 
     if (!(await Hash.verify(password, res.password))) {
-      // return response.notFound({ message: "Password yang anda masukan salah" });
+      return response.notFound({ message: "Password yang anda masukan salah" });
     }
 
     const { token } = await auth.generate(res);
@@ -5326,21 +5328,53 @@ class MainController {
       });
     } else if (role == "siswa") {
       const rombel = await MRombel.query()
-        .with("user")
-        .with("anggotaRombel", (builder) => {
-          builder.with("user", (builder) => {
-            builder.with("absen", (builder) => {
-              builder.where("waktu_masuk", "like", `%${tanggal}%`);
-            });
-          });
-        })
         .where({ dihapus: 0 })
         .andWhere({ m_sekolah_id: sekolah.id })
         .andWhere({ m_ta_id: ta.id })
         .fetch();
 
+      let rombelData = [];
+
+      await Promise.all(
+        rombel.toJSON().map(async (d) => {
+          const userIds = await MAnggotaRombel.query()
+            .where({ m_rombel_id: d.id })
+            .pluck("m_user_id");
+
+          const totalHadir = await MAbsen.query()
+            .with("user")
+            .where("waktu_masuk", "like", `%${tanggal}%`)
+            .andWhere({ keterangan: "hadir" })
+            .whereIn("m_user_id", userIds)
+            .count("* as total");
+          const totalSakit = await MAbsen.query()
+            .with("user")
+            .where("waktu_masuk", "like", `%${tanggal}%`)
+            .andWhere({ keterangan: "sakit" })
+            .whereIn("m_user_id", userIds)
+            .count("* as total");
+          const totalIzin = await MAbsen.query()
+            .with("user")
+            .where("waktu_masuk", "like", `%${tanggal}%`)
+            .andWhere({ keterangan: "izin" })
+            .whereIn("m_user_id", userIds)
+            .count("* as total");
+          const totalAlpa =
+            userIds.length -
+            (totalHadir[0].total + totalSakit[0].total + totalIzin[0].total);
+
+          return rombelData.push({
+            rombel: d.nama,
+            totalHadir: totalHadir[0].total,
+            totalSakit: totalSakit[0].total,
+            totalIzin: totalIzin[0].total,
+            totalAlpa,
+          });
+        })
+      );
+
       return response.ok({
-        rombel: rombel,
+        rombel: rombelData,
       });
     }
   }
@@ -7992,6 +8026,7 @@ class MainController {
     const jurusan = await MJurusan.query()
       .with("informasi")
       .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
       .fetch();
 
     const { jurusan_id } = request.get();
@@ -9474,13 +9509,13 @@ class MainController {
           .where({ dihapus: 0 })
           .andWhere({ tk_pembayaran_rombel_id: rombel_id })
           .whereIn("m_user_id", userIds)
-          .first();
+          .fetch();
       } else {
         siswa = await MPembayaranSiswa.query()
           .with("user")
           .where({ dihapus: 0 })
           .andWhere({ tk_pembayaran_rombel_id: rombel_id })
-          .first();
+          .fetch();
       }
     } else {
       if (search) {
@@ -9973,6 +10008,126 @@ class MainController {
     });
 
     if (!mutasi) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async getIndustri({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    // get industri
+  }
+
+  async postIndustri({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let {
+      nama,
+      klasifikasi,
+      jumlah_karyawan,
+      tautan,
+      galeri,
+      deskripsi,
+      tahun_kerjasama,
+    } = request.post();
+
+    galeri = galeri ? galeri.toJSON() : null;
+    deskripsi = deskripsi ? Buffer(deskripsi).toString("base64") : null;
+    tautan = tautan ? JSON.stringify(tautan) : null;
+
+    await MIndustri.create({
+      nama,
+      klasifikasi,
+      jumlah_karyawan,
+      tautan,
+      galeri,
+      deskripsi,
+      tahun_kerjasama,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putIndustri({ response, request, auth, params: { industri_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let {
+      nama,
+      klasifikasi,
+      jumlah_karyawan,
+      tautan,
+      galeri,
+      deskripsi,
+      tahun_kerjasama,
+    } = request.post();
+
+    galeri = galeri ? galeri.toJSON() : null;
+    deskripsi = deskripsi ? Buffer(deskripsi).toString("base64") : null;
+    tautan = tautan ? JSON.stringify(tautan) : null;
+
+    const industri = await MIndustri.query().where({ id: industri_id }).update({
+      nama,
+      klasifikasi,
+      jumlah_karyawan,
+      tautan,
+      galeri,
+      deskripsi,
+      tahun_kerjasama,
+    });
+
+    if (!industri) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteIndustri({ response, request, auth, params: { industri_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const industri = await MIndustri.query().where({ id: industri_id }).update({
+      dihapus: 1,
+    });
+
+    if (!industri) {
       return response.notFound({
         message: messageNotFound,
       });

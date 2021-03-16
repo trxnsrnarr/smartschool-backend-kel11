@@ -7,6 +7,15 @@ class MIndustriSchema extends Schema {
   up() {
     this.create("m_industri", (table) => {
       table.increments();
+      table.string("nama");
+      table.string("klasifikasi");
+      table.string("jumlah_karyawan");
+      table.text("tautan");
+      table.text("galeri");
+      table.text("deskripsi");
+      table.string("tahun_kerjasama");
+      table.boolean("dihapus");
+      table.integer("m_sekolah_id").unsigned();
       table.timestamps();
     });
   }
