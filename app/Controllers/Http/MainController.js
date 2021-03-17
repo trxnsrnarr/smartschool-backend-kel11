@@ -6654,47 +6654,96 @@ class MainController {
           .with("ujian")
           .where({ m_user_id: user.id })
           .andWhere({ dihapus: 0 })
-          .andWhere("waktu_ditutup", "<", hari_ini)
+          .andWhere("waktu_ditutup", "<=", hari_ini)
           .fetch();
-
-        await Promise.all(
-          jadwalUjian.toJSON().map(async (d) => {
-            await Promise.all(
-              d.rombelUjian.map(async (e) => {
-                const anggota = await MAnggotaRombel.query()
-                  .where({ m_rombel_id: e.m_rombel_id })
-                  .pluck("m_user_id");
-
-                let check = await TkPesertaUjian.query()
-                  .whereIn("m_user_id", anggota)
-                  .pluck("m_user_id");
-
-                check = new Set(check);
-
-                pesertaUjian[e.id] = anggota.filter((d) => !check.has(d));
-
-                if (d.id == e.m_jadwal_ujian_id) {
-                  jadwalUjianDataTmp.push({
-                    ...d,
-                    pesertaSusulan: pesertaUjian[e.id].length,
-                  });
-                }
-              })
-            );
-          })
-        );
       }
 
-      let jadwalUjianData = {};
+      const jadwalUjianDataFormat = [];
 
       await Promise.all(
-        jadwalUjianDataTmp.map(async (d, idx) => {
-          jadwalUjianData[d.id] = {
-            ...d,
-            pesertaSusulan: jadwalUjianData[d.id]
-              ? jadwalUjianData[d.id].pesertaSusulan + d.pesertaSusulan
-              : d.pesertaSusulan,
+        jadwalUjian.toJSON().map(async (jadwalUjianData) => {
+          const tkJadwalUjian = await TkJadwalUjian.query()
+            .with("rombel")
+            .where({ m_jadwal_ujian_id: jadwalUjianData.id })
+            .fetch();
+
+          let metaJadwalUjian = {
+            remedial: 0,
+            susulan: 0,
+            diatasKKM: 0,
           };
+
+          await Promise.all(
+            tkJadwalUjian.toJSON().map(async (rombelUjianData) => {
+              const anggotaRombel = await MAnggotaRombel.query()
+                .where({ m_rombel_id: rombelUjianData.m_rombel_id })
+                .fetch();
+
+              const userIds = await MAnggotaRombel.query()
+                .where({ m_rombel_id: rombelUjianData.m_rombel_id })
+                .pluck("m_user_id");
+
+              const pesertaUjian = await TkPesertaUjian.query()
+                .with("jawabanSiswa", (builder) => {
+                  builder.with("soal");
+                })
+                .where({ tk_jadwal_ujian_id: rombelUjianData.id })
+                .andWhere({ m_user_id: userIds[0] })
+                .fetch();
+
+              await Promise.all(
+                pesertaUjian.toJSON().map(async (peserta) => {
+                  let metaHasil = {
+                    nilaiPg: 0,
+                    nilaiEsai: 0,
+                    nilaiTotal: 0,
+                    benar: 0,
+                  };
+
+                  await Promise.all(
+                    peserta.jawabanSiswa.map(async (jawaban) => {
+                      if (jawaban.soal.bentuk == "pg") {
+                        if (jawaban.jawaban_pg == jawaban.soal.kj_pg) {
+                          metaHasil.nilaiPg =
+                            metaHasil.nilaiPg + jawaban.soal.nilai_soal;
+                          metaHasil.benar = metaHasil.benar + 1;
+                        }
+                      } else if (jawaban.soal.bentuk == "esai") {
+                        JSON.parse(jawaban.jawaban_rubrik_esai).map((e) => {
+                          if (e.benar) {
+                            metaHasil.nilaiEsai = metaHasil.nilaiEsai + e.poin;
+                          }
+                        });
+                        if (jawaban.jawaban_rubrik_esai.indexOf("true") != -1) {
+                          metaHasil.benar = metaHasil.benar + 1;
+                        }
+                      }
+                    })
+                  );
+
+                  metaHasil.nilaiTotal =
+                    metaHasil.nilaiPg + metaHasil.nilaiEsai;
+
+                  const nilaiTotal = metaHasil.nilaiTotal;
+
+                  if (nilaiTotal > jadwalUjianData.kkm) {
+                    metaJadwalUjian.diatasKKM = metaJadwalUjian.diatasKKM + 1;
+                  } else {
+                    metaJadwalUjian.remedial = metaJadwalUjian.remedial + 1;
+                  }
+
+                  metaJadwalUjian.susulan =
+                    anggotaRombel.toJSON().length -
+                    (metaJadwalUjian.diatasKKM + metaJadwalUjian.remedial);
+                })
+              );
+            })
+          );
+
+          jadwalUjianDataFormat.push({
+            jadwalUjian: jadwalUjianData,
+            metaJadwalUjian: metaJadwalUjian,
+          });
         })
       );
 
@@ -6705,9 +6754,7 @@ class MainController {
 
       return response.ok({
         rombel,
-        jadwalUjian: jadwalUjianDataTmp.length
-          ? Object.entries(jadwalUjianData).map((d) => d[1])
-          : jadwalUjian,
+        jadwalUjian: jadwalUjianDataFormat,
         ujian,
       });
     } else if (user.role == "admin") {
@@ -6740,7 +6787,7 @@ class MainController {
           .where({ m_user_id: user.id })
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_dibuka", "<=", hari_ini)
-          .andWhere("waktu_ditutup", ">=", hari_ini)
+          .andWhere("waktu_ditutup", ">", hari_ini)
           .fetch();
       } else if (status == "sudah-selesai") {
         jadwalUjian = await MJadwalUjian.query()
@@ -6829,7 +6876,7 @@ class MainController {
             builder
               .with("ujian")
               .where("waktu_dibuka", "<=", hari_ini)
-              .andWhere("waktu_ditutup", ">=", hari_ini);
+              .andWhere("waktu_ditutup", ">", hari_ini);
           })
           .with("peserta")
           .where({ dihapus: 0 })
