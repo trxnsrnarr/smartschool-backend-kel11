@@ -145,22 +145,6 @@ class MainController {
       return fileUpload.error();
     }
 
-    // const metadata = {
-    //   metadata: {
-    //     // This line is very important. It's to create a download token.
-    //     firebaseStorageDownloadTokens: uuid(),
-    //   },
-    //   contentType: "image/png",
-    //   cacheControl: "public, max-age=31536000",
-    // };
-
-    // // Uploads a local file to the bucket
-    // await bucket.upload(Helpers.publicPath("uploads/") + fname, {
-    //   // Support for HTTP requests made with `Accept-Encoding: gzip`
-    //   gzip: true,
-    //   metadata: metadata,
-    // });
-
     return fname;
   }
 
