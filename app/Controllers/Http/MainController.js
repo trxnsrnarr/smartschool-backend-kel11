@@ -6250,7 +6250,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const {
+    let {
       kd,
       kd_konten_materi,
       level_kognitif,
@@ -6272,9 +6272,15 @@ class MainController {
       pembahasan,
       nilai_soal,
       m_ujian_id,
+      // menjodohkan
+      pilihan_menjodohkan,
+      soal_menjodohkan,
       // pilih dari bank soal
       daftar_soal_ujian_id,
     } = request.post();
+
+    pilihan_menjodohkan = pilihan_menjodohkan ? pilihan_menjodohkan.toString() : null,
+    soal_menjodohkan = soal_menjodohkan ? JSON.stringify(soal_menjodohkan) : null
 
     if (daftar_soal_ujian_id) {
       let soalUjianData = [];

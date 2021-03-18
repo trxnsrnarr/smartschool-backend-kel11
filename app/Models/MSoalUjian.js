@@ -38,6 +38,12 @@ class MSoalUjian extends Model {
   getPembahasan(pembahasan) {
     return pembahasan ? Buffer(pembahasan, "base64").toString("ascii") : "";
   }
+  getPilihanMenjodohkan(pilihan_menjodohkan) {
+    return pilihan_menjodohkan ? pilihan_menjodohkan.split(",") : null;
+  }
+  getSoalMenjodohkan(soal_menjodohkan) {
+    return soal_menjodohkan ? JSON.parse(soal_menjodohkan) : null;
+  }
 }
 
 module.exports = MSoalUjian;
