@@ -6715,6 +6715,7 @@ class MainController {
 
           jadwalUjianDataFormat.push({
             jadwalUjian: jadwalUjianData,
+            rombel: tkJadwalUjian,
             metaJadwalUjian: metaJadwalUjian,
           });
         })
@@ -6847,6 +6848,7 @@ class MainController {
 
           jadwalUjianDataFormat.push({
             jadwalUjian: jadwalUjianData,
+            rombel: tkJadwalUjian,
             metaJadwalUjian: metaJadwalUjian,
           });
         })
