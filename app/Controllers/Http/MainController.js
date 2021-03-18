@@ -5789,12 +5789,40 @@ class MainController {
     const { tingkat, daftar_ujian_id } = request.get();
 
     if (tingkat) {
-      const ujianTingkat = await MUjian.query()
-        .select("id", "nama")
-        .where({ tingkat: tingkat })
-        .andWhere({ dihapus: 0 })
-        .andWhere({ m_user_id: user.id })
-        .fetch();
+      let ujianTingkat;
+
+      if (user.role == "admin") {
+        const userIds = await User.query()
+          .where({ dihapus: 0 })
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .whereIn("role", ["guru", "admin"])
+          .ids();
+
+        const tipeUjian = [
+          "pts1",
+          "pts2",
+          "pas1",
+          "pas2",
+          "us",
+          "literasi",
+          "numerasi",
+        ];
+
+        ujianTingkat = await MUjian.query()
+          .select("id", "nama")
+          .where({ tingkat: tingkat })
+          .andWhere({ dihapus: 0 })
+          .whereIn("m_user_id", userIds)
+          .whereIn("tipe", tipeUjian)
+          .fetch();
+      } else {
+        ujianTingkat = await MUjian.query()
+          .select("id", "nama")
+          .where({ tingkat: tingkat })
+          .andWhere({ dihapus: 0 })
+          .andWhere({ m_user_id: user.id })
+          .fetch();
+      }
 
       let ujianDetail;
 

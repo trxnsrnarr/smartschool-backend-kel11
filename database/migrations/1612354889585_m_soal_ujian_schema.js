@@ -32,8 +32,8 @@ class MSoalUjianSchema extends Schema {
       table.float("nilai_soal", [11, 1]);
 
       // menjodohkan
-      // table.string("judul_soal");
-      // table.text('pilihan_menjodohkan')
+      table.text('pilihan_menjodohkan')
+      table.text('soal_menjodohkan')
 
       table.string("bentuk");
       table.boolean("dihapus");
