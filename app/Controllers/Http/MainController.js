@@ -6362,6 +6362,8 @@ class MainController {
       kj_pg,
       kj_uraian,
       jawaban_pg_kompleks,
+      pilihan_menjodohkan,
+      soal_menjodohkan,
       opsi_a_uraian,
       opsi_b_uraian,
       rubrik_kj: JSON.stringify(rubrik_kj),
@@ -6521,7 +6523,6 @@ class MainController {
       rubrik_kj,
       pembahasan,
       nilai_soal,
-      m_ujian_id,
       // uraian
       opsi_a_uraian,
       opsi_b_uraian,
@@ -6594,6 +6595,8 @@ class MainController {
         kj_pg,
         kj_uraian,
         jawaban_pg_kompleks,
+        pilihan_menjodohkan,
+        soal_menjodohkan,
         opsi_a_uraian,
         opsi_b_uraian,
         rubrik_kj: JSON.stringify(rubrik_kj),
@@ -7561,7 +7564,30 @@ class MainController {
 
       if (jawaban_siswa_id) {
         soal_siswa = await TkJawabanUjianSiswa.query()
-          .with("soal")
+          .with("soal", (builder) => {
+            builder.select(
+              "id",
+              "kd",
+              "kd_konten_materi",
+              "level_kognitif",
+              "bentuk_soal",
+              "akm_konten_materi",
+              "akm_konteks_materi",
+              "akm_proses_kognitif",
+              "pertanyaan",
+              "jawaban_a",
+              "jawaban_b",
+              "jawaban_c",
+              "jawaban_d",
+              "jawaban_e",
+              "opsi_a_uraian",
+              "opsi_b_uraian",
+              "soal_menjodohkan",
+              "bentuk",
+              "dihapus",
+              "m_user_id"
+            );
+          })
           .where({ id: jawaban_siswa_id })
           .first();
       }
