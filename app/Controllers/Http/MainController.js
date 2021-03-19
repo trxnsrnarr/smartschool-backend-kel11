@@ -5964,7 +5964,7 @@ class MainController {
       bentukSoal = [
         { value: "pg", label: "Pilihan Ganda" },
         { value: "pg_kompleks", label: "Pilihan Ganda Kompleks" },
-        { value: "isian", label: "Isian" },
+        { value: "esai", label: "Isian" },
         { value: "uraian", label: "Uraian" },
         { value: "menjodohkan", label: "Menjodohkan" },
       ];
@@ -5990,7 +5990,7 @@ class MainController {
       bentukSoal = [
         { value: "pg", label: "Pilihan Ganda" },
         { value: "pg_kompleks", label: "Pilihan Ganda Kompleks" },
-        { value: "isian", label: "Isian" },
+        { value: "esai", label: "Isian" },
         { value: "uraian", label: "Uraian" },
         { value: "menjodohkan", label: "Menjodohkan" },
       ];
@@ -6272,15 +6272,18 @@ class MainController {
       pembahasan,
       nilai_soal,
       m_ujian_id,
+      // uraian
+      opsi_a_uraian,
+      opsi_b_uraian,
+      kj_uraian,
+      // pg kompleks
+      jawaban_pg_kompleks,
       // menjodohkan
       pilihan_menjodohkan,
       soal_menjodohkan,
       // pilih dari bank soal
       daftar_soal_ujian_id,
     } = request.post();
-
-    pilihan_menjodohkan = pilihan_menjodohkan ? pilihan_menjodohkan.toString() : null,
-    soal_menjodohkan = soal_menjodohkan ? JSON.stringify(soal_menjodohkan) : null
 
     if (daftar_soal_ujian_id) {
       let soalUjianData = [];
@@ -6300,6 +6303,15 @@ class MainController {
         message: messagePostSuccess,
       });
     }
+    jawaban_pg_kompleks = jawaban_pg_kompleks
+      ? jawaban_pg_kompleks.toString()
+      : null;
+    pilihan_menjodohkan = pilihan_menjodohkan
+      ? pilihan_menjodohkan.toString()
+      : null;
+    soal_menjodohkan = soal_menjodohkan
+      ? JSON.stringify(soal_menjodohkan)
+      : null;
 
     const jawaban_aFormat =
       bentuk == "esai"
@@ -6348,6 +6360,10 @@ class MainController {
       jawaban_d: jawaban_dFormat,
       jawaban_e: jawaban_eFormat,
       kj_pg,
+      kj_uraian,
+      jawaban_pg_kompleks,
+      opsi_a_uraian,
+      opsi_b_uraian,
       rubrik_kj: JSON.stringify(rubrik_kj),
       pembahasan: pembahasan ? Buffer(pembahasan).toString("base64") : "",
       nilai_soal,
@@ -6492,18 +6508,40 @@ class MainController {
       akm_konten_materi,
       akm_konteks_materi,
       akm_proses_kognitif,
-      audio,
+      // pg
       pertanyaan,
+      audio,
       jawaban_a,
       jawaban_b,
       jawaban_c,
       jawaban_d,
       jawaban_e,
       kj_pg,
+      // esai
       rubrik_kj,
       pembahasan,
       nilai_soal,
+      m_ujian_id,
+      // uraian
+      opsi_a_uraian,
+      opsi_b_uraian,
+      kj_uraian,
+      // pg kompleks
+      jawaban_pg_kompleks,
+      // menjodohkan
+      pilihan_menjodohkan,
+      soal_menjodohkan,
     } = request.post();
+
+    jawaban_pg_kompleks = jawaban_pg_kompleks
+      ? jawaban_pg_kompleks.toString()
+      : null;
+    pilihan_menjodohkan = pilihan_menjodohkan
+      ? pilihan_menjodohkan.toString()
+      : null;
+    soal_menjodohkan = soal_menjodohkan
+      ? JSON.stringify(soal_menjodohkan)
+      : null;
 
     const jawaban_aFormat =
       bentuk == "esai"
@@ -6554,6 +6592,10 @@ class MainController {
         jawaban_d: jawaban_dFormat,
         jawaban_e: jawaban_eFormat,
         kj_pg,
+        kj_uraian,
+        jawaban_pg_kompleks,
+        opsi_a_uraian,
+        opsi_b_uraian,
         rubrik_kj: JSON.stringify(rubrik_kj),
         pembahasan: pembahasan ? Buffer(pembahasan).toString("base64") : "",
         nilai_soal,

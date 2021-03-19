@@ -31,9 +31,17 @@ class MSoalUjianSchema extends Schema {
       table.text("pembahasan");
       table.float("nilai_soal", [11, 1]);
 
+      // uraian
+      table.text("opsi_a_uraian");
+      table.text("opsi_b_uraian");
+      table.string("kj_uraian");
+
+      // pg kompleks
+      table.string("jawaban_pg_kompleks");
+
       // menjodohkan
-      table.text('pilihan_menjodohkan')
-      table.text('soal_menjodohkan')
+      table.text("pilihan_menjodohkan");
+      table.text("soal_menjodohkan");
 
       table.string("bentuk");
       table.boolean("dihapus");
