@@ -29,6 +29,7 @@ class MSoalUjianSchema extends Schema {
 
       // nilai pembahasan
       table.text("pembahasan");
+      table.text("audio");
       table.float("nilai_soal", [11, 1]);
 
       // uraian

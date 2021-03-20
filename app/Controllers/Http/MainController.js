@@ -6229,7 +6229,7 @@ class MainController {
     let bentukSoal = [
       { value: "pg", label: "Pilihan Ganda" },
       { value: "pg_kompleks", label: "Pilihan Ganda Kompleks" },
-      { value: "isian", label: "Isian" },
+      { value: "esai", label: "Isian" },
       { value: "uraian", label: "Uraian" },
       { value: "menjodohkan", label: "Menjodohkan" },
     ];
@@ -6313,36 +6313,30 @@ class MainController {
       ? JSON.stringify(soal_menjodohkan)
       : null;
 
-    const jawaban_aFormat =
-      bentuk == "esai"
-        ? ""
-        : typeof jawaban_a !== "object" && jawaban_a
+    jawaban_a =
+      typeof jawaban_a !== "object"
         ? Buffer(jawaban_a).toString("base64")
-        : "";
-    const jawaban_bFormat =
-      bentuk == "esai"
-        ? ""
-        : typeof jawaban_b !== "object" && jawaban_b
+        : null;
+    jawaban_b =
+      typeof jawaban_b !== "object"
         ? Buffer(jawaban_b).toString("base64")
-        : "";
-    const jawaban_cFormat =
-      bentuk == "esai"
-        ? ""
-        : typeof jawaban_c !== "object" && jawaban_c
+        : null;
+    jawaban_c =
+      typeof jawaban_c !== "object"
         ? Buffer(jawaban_c).toString("base64")
-        : "";
-    const jawaban_dFormat =
-      bentuk == "esai"
-        ? ""
-        : typeof jawaban_d !== "object" && jawaban_d
+        : null;
+    jawaban_d =
+      typeof jawaban_d !== "object"
         ? Buffer(jawaban_d).toString("base64")
-        : "";
-    const jawaban_eFormat =
-      bentuk == "esai"
-        ? ""
-        : typeof jawaban_e !== "object" && jawaban_e
+        : null;
+    jawaban_e =
+      typeof jawaban_e !== "object"
         ? Buffer(jawaban_e).toString("base64")
-        : "";
+        : null;
+    pembahasan =
+      typeof pembahasan !== "object"
+        ? Buffer(pembahasan).toString("base64")
+        : null;
 
     const soalUjian = await MSoalUjian.create({
       kd,
@@ -6354,11 +6348,11 @@ class MainController {
       akm_proses_kognitif,
       audio,
       pertanyaan: pertanyaan ? Buffer(pertanyaan).toString("base64") : "",
-      jawaban_a: jawaban_aFormat,
-      jawaban_b: jawaban_bFormat,
-      jawaban_c: jawaban_cFormat,
-      jawaban_d: jawaban_dFormat,
-      jawaban_e: jawaban_eFormat,
+      jawaban_a,
+      jawaban_b,
+      jawaban_c,
+      jawaban_d,
+      jawaban_e,
       kj_pg,
       kj_uraian,
       jawaban_pg_kompleks,
@@ -6367,7 +6361,7 @@ class MainController {
       opsi_a_uraian,
       opsi_b_uraian,
       rubrik_kj: JSON.stringify(rubrik_kj),
-      pembahasan: pembahasan ? Buffer(pembahasan).toString("base64") : "",
+      pembahasan,
       nilai_soal,
       m_user_id: user.id,
       dihapus: 0,
@@ -6502,7 +6496,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const {
+    let {
       kd,
       kd_konten_materi,
       level_kognitif,
@@ -6544,36 +6538,30 @@ class MainController {
       ? JSON.stringify(soal_menjodohkan)
       : null;
 
-    const jawaban_aFormat =
-      bentuk == "esai"
-        ? ""
-        : typeof jawaban_a !== "object" && jawaban_a
+    jawaban_a =
+      typeof jawaban_a !== "object"
         ? Buffer(jawaban_a).toString("base64")
-        : "";
-    const jawaban_bFormat =
-      bentuk == "esai"
-        ? ""
-        : typeof jawaban_b !== "object" && jawaban_b
+        : null;
+    jawaban_b =
+      typeof jawaban_b !== "object"
         ? Buffer(jawaban_b).toString("base64")
-        : "";
-    const jawaban_cFormat =
-      bentuk == "esai"
-        ? ""
-        : typeof jawaban_c !== "object" && jawaban_c
+        : null;
+    jawaban_c =
+      typeof jawaban_c !== "object"
         ? Buffer(jawaban_c).toString("base64")
-        : "";
-    const jawaban_dFormat =
-      bentuk == "esai"
-        ? ""
-        : typeof jawaban_d !== "object" && jawaban_d
+        : null;
+    jawaban_d =
+      typeof jawaban_d !== "object"
         ? Buffer(jawaban_d).toString("base64")
-        : "";
-    const jawaban_eFormat =
-      bentuk == "esai"
-        ? ""
-        : typeof jawaban_e !== "object" && jawaban_e
+        : null;
+    jawaban_e =
+      typeof jawaban_e !== "object"
         ? Buffer(jawaban_e).toString("base64")
-        : "";
+        : null;
+    pembahasan =
+      typeof pembahasan !== "object"
+        ? Buffer(pembahasan).toString("base64")
+        : null;
 
     const soalUjian = await MSoalUjian.query()
       .where({ id: soal_ujian_id })
@@ -6587,11 +6575,11 @@ class MainController {
         akm_proses_kognitif,
         audio,
         pertanyaan: pertanyaan ? Buffer(pertanyaan).toString("base64") : "",
-        jawaban_a: jawaban_aFormat,
-        jawaban_b: jawaban_bFormat,
-        jawaban_c: jawaban_cFormat,
-        jawaban_d: jawaban_dFormat,
-        jawaban_e: jawaban_eFormat,
+        jawaban_a,
+        jawaban_b,
+        jawaban_c,
+        jawaban_d,
+        jawaban_e,
         kj_pg,
         kj_uraian,
         jawaban_pg_kompleks,
@@ -6600,7 +6588,7 @@ class MainController {
         opsi_a_uraian,
         opsi_b_uraian,
         rubrik_kj: JSON.stringify(rubrik_kj),
-        pembahasan: pembahasan ? Buffer(pembahasan).toString("base64") : "",
+        pembahasan,
         nilai_soal,
       });
 
@@ -6735,6 +6723,10 @@ class MainController {
                 .where({ m_rombel_id: rombelUjianData.m_rombel_id })
                 .pluck("m_user_id");
 
+              if (!userIds[0]) {
+                return "kosong";
+              }
+
               const pesertaUjian = await TkPesertaUjian.query()
                 .with("jawabanSiswa", (builder) => {
                   builder.with("soal");
@@ -6742,6 +6734,11 @@ class MainController {
                 .where({ tk_jadwal_ujian_id: rombelUjianData.id })
                 .andWhere({ m_user_id: userIds[0] })
                 .fetch();
+
+              if (!pesertaUjian.toJSON().length) {
+                metaJadwalUjian.susulan = anggotaRombel.toJSON().length;
+                return;
+              }
 
               await Promise.all(
                 pesertaUjian.toJSON().map(async (peserta) => {
@@ -6868,6 +6865,10 @@ class MainController {
                 .where({ m_rombel_id: rombelUjianData.m_rombel_id })
                 .pluck("m_user_id");
 
+              if (!userIds[0]) {
+                return "kosong";
+              }
+
               const pesertaUjian = await TkPesertaUjian.query()
                 .with("jawabanSiswa", (builder) => {
                   builder.with("soal");
@@ -6875,6 +6876,11 @@ class MainController {
                 .where({ tk_jadwal_ujian_id: rombelUjianData.id })
                 .andWhere({ m_user_id: userIds[0] })
                 .fetch();
+
+              if (!pesertaUjian.toJSON().length) {
+                metaJadwalUjian.susulan = anggotaRombel.toJSON().length;
+                return;
+              }
 
               await Promise.all(
                 pesertaUjian.toJSON().map(async (peserta) => {
@@ -7585,7 +7591,8 @@ class MainController {
               "soal_menjodohkan",
               "bentuk",
               "dihapus",
-              "m_user_id"
+              "m_user_id",
+              "audio"
             );
           })
           .where({ id: jawaban_siswa_id })
