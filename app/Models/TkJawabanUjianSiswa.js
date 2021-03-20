@@ -19,6 +19,13 @@ class TkJawabanUjianSiswa extends Model {
   getDurasi(durasi) {
     return durasi ? `${durasi / 1000} detik` : `0 detik`;
   }
+
+  getJawabanPgKompleks() {
+    return jawaban_pg_kompleks ? jawaban_pg_kompleks.split(",") : [];
+  }
+  getJawabanMenjodohkan() {
+    return jawaban_menjodohkan ? JSON.parse(jawaban_menjodohkan) : "";
+  }
 }
 
 module.exports = TkJawabanUjianSiswa;

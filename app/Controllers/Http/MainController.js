@@ -7804,13 +7804,28 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const {
+    table.string("jawaban_opsi_uraian");
+    table.text("jawaban_uraian");
+    table.string("jawaban_pg_kompleks");
+    table.string("jawaban_menjodohkan");
+
+    let {
       jawaban_pg,
       jawaban_esai,
       durasi,
       ragu,
       jawaban_rubrik_esai,
+      jawaban_opsi_uraian,
+      jawaban_uraian,
+      jawaban_pg_kompleks,
+      jawaban_menjodohkan,
     } = request.post();
+    jawaban_pg_kompleks = jawaban_pg_kompleks
+      ? jawaban_pg_kompleks.toString()
+      : null;
+    jawaban_menjodohkan = jawaban_menjodohkan
+      ? JSON.stringify(jawaban_menjodohkan)
+      : null;
 
     if (user.role == "guru") {
       await TkJawabanUjianSiswa.query()
@@ -7826,7 +7841,36 @@ class MainController {
     } else if (user.role == "siswa") {
       let jawabanUjianSiswa;
 
-      if (jawaban_esai) {
+      if (jawaban_opsi_uraian) {
+        jawabanUjianSiswa = await TkJawabanUjianSiswa.query()
+          .where({ id: jawaban_ujian_siswa_id })
+          .update({
+            jawaban_opsi_uraian,
+            jawaban_uraian,
+            durasi,
+            ragu,
+            dijawab: 1,
+          });
+      } else if (jawaban_pg_kompleks) {
+        jawabanUjianSiswa = await TkJawabanUjianSiswa.query()
+          .where({ id: jawaban_ujian_siswa_id })
+          .update({
+            jawaban_pg_kompleks,
+            durasi,
+            ragu,
+            dijawab: 1,
+          });
+      }
+      if (jawaban_menjodohkan) {
+        jawabanUjianSiswa = await TkJawabanUjianSiswa.query()
+          .where({ id: jawaban_ujian_siswa_id })
+          .update({
+            jawaban_menjodohkan,
+            durasi,
+            ragu,
+            dijawab: 1,
+          });
+      } else if (jawaban_esai) {
         jawabanUjianSiswa = await TkJawabanUjianSiswa.query()
           .where({ id: jawaban_ujian_siswa_id })
           .update({
