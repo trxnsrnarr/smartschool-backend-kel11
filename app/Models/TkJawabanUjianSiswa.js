@@ -20,11 +20,15 @@ class TkJawabanUjianSiswa extends Model {
     return durasi ? `${durasi / 1000} detik` : `0 detik`;
   }
 
-  getJawabanPgKompleks() {
+  getJawabanPgKompleks(jawaban_pg_kompleks) {
     return jawaban_pg_kompleks ? jawaban_pg_kompleks.split(",") : [];
   }
-  getJawabanMenjodohkan() {
+  getJawabanMenjodohkan(jawaban_menjodohkan) {
     return jawaban_menjodohkan ? JSON.parse(jawaban_menjodohkan) : "";
+  }
+
+  getjawaban_foto(jawaban_foto) {
+    return jawaban_foto ? jawaban_foto.split(",") : [];
   }
 }
 

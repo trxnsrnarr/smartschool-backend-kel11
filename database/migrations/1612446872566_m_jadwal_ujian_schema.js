@@ -9,6 +9,7 @@ class MJadwalUjianSchema extends Schema {
       table.increments();
       table.integer("jumlah_pg");
       table.integer("jumlah_esai");
+      table.integer("jumlah_soal_akm");
       table.integer("kkm");
       table.datetime("waktu_dibuka");
       table.datetime("waktu_ditutup");

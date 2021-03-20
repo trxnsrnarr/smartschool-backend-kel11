@@ -7291,6 +7291,7 @@ class MainController {
       jumlah_esai,
       kkm,
       waktu_dibuka,
+      jumlah_soal_akm,
       durasi,
       gmeet,
       diacak,
@@ -7301,6 +7302,7 @@ class MainController {
     const jadwalUjian = await MJadwalUjian.create({
       jumlah_pg,
       jumlah_esai,
+      jumlah_soal_akm,
       m_ujian_id,
       kkm,
       waktu_dibuka,
@@ -7354,6 +7356,7 @@ class MainController {
     const {
       jumlah_pg,
       jumlah_esai,
+      jumlah_soal_akm,
       kkm,
       waktu_dibuka,
       durasi,
@@ -7367,6 +7370,7 @@ class MainController {
       .update({
         jumlah_pg,
         jumlah_esai,
+        jumlah_soal_akm,
         kkm,
         waktu_dibuka,
         waktu_ditutup: moment(waktu_dibuka)
@@ -7620,6 +7624,8 @@ class MainController {
 
     const { waktu_mulai, tk_jadwal_ujian_id, ujian_id } = request.post();
 
+    const ujian = MUjian.query().where({ id: ujian_id }).first();
+
     const jadwalUjian = await TkJadwalUjian.query()
       .with("jadwalUjian")
       .where({ id: tk_jadwal_ujian_id })
@@ -7637,108 +7643,221 @@ class MainController {
       diacak = "RAND()";
     }
 
-    const soalPGIds = await TkSoalUjian.query()
-      .where({ dihapus: 0 })
-      .andWhere({ m_ujian_id: ujian_id })
-      .pluck("m_soal_ujian_id");
+    if (ujian.tipe == "literasi" || ujian.tipe == "numerasi") {
+      const soalIds = await TkSoalUjian.query()
+        .where({ dihapus: 0 })
+        .andWhere({ m_ujian_id: ujian_id })
+        .pluck("m_soal_ujian_id");
 
-    const soalMasterPGIds = await MSoalUjian.query()
-      .where({ bentuk: "pg" })
-      .whereIn("id", soalPGIds)
-      .ids();
+      const soalMasterIds = await MSoalUjian.query()
+        .whereIn("id", soalIds)
+        .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_pg)
+        .ids();
 
-    const soalPG = await TkSoalUjian.query()
-      .with("soal", (builder) => {
-        builder.where({ dihapus: 0 });
-      })
-      .whereIn("m_soal_ujian_id", soalMasterPGIds)
-      .orderByRaw(`${diacak}`)
-      .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_pg)
-      .fetch();
+      const soalAKM = await TkSoalUjian.query()
+        .with("soal", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .whereIn("m_soal_ujian_id", soalMasterIds)
+        .orderByRaw(`${diacak}`)
+        .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_soal_akm)
+        .fetch();
 
-    const soalEsaiIds = await TkSoalUjian.query()
-      .where({ dihapus: 0 })
-      .andWhere({ m_ujian_id: ujian_id })
-      .pluck("m_soal_ujian_id");
+      const soalData = [];
 
-    const soalMasterEsaiIds = await MSoalUjian.query()
-      .where({ bentuk: "esai" })
-      .whereIn("id", soalEsaiIds)
-      .ids();
+      const checkIfExist = await TkPesertaUjian.query()
+        .where({ m_user_id: user.id })
+        .andWhere({ tk_jadwal_ujian_id: tk_jadwal_ujian_id })
+        .first();
 
-    const soalEsai = await TkSoalUjian.query()
-      .with("soal", (builder) => {
-        builder.where({ dihapus: 0 });
-      })
-      .whereIn("m_soal_ujian_id", soalMasterEsaiIds)
-      .orderByRaw(`${diacak}`)
-      .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_esai)
-      .fetch();
+      if (checkIfExist) {
+        return response.ok({
+          peserta_ujian: checkIfExist,
+        });
+      }
 
-    const soalData = [];
+      const pesertaUjian = await TkPesertaUjian.create({
+        waktu_mulai,
+        dinilai: 0,
+        selesai: 0,
+        dihapus: 0,
+        m_user_id: user.id,
+        tk_jadwal_ujian_id: tk_jadwal_ujian_id,
+      });
 
-    const checkIfExist = await TkPesertaUjian.query()
-      .where({ m_user_id: user.id })
-      .andWhere({ tk_jadwal_ujian_id: tk_jadwal_ujian_id })
-      .first();
+      await Promise.all(
+        soalAKM.toJSON().map(async (d) => {
+          if (d.soal.bentuk == "uraian") {
+            soalData.push({
+              durasi: 0,
+              ragu: 0,
+              dijawab: 0,
+              dinilai: 1,
+              m_soal_ujian_id: d.soal.id,
+              tk_peserta_ujian_id: pesertaUjian.id,
+            });
+          } else if (d.soal.bentuk == "pg_kompleks") {
+            soalData.push({
+              durasi: 0,
+              ragu: 0,
+              dijawab: 0,
+              dinilai: 1,
+              m_soal_ujian_id: d.soal.id,
+              tk_peserta_ujian_id: pesertaUjian.id,
+            });
+          } else if (d.soal.bentuk == "menjodohkan") {
+            soalData.push({
+              durasi: 0,
+              ragu: 0,
+              dijawab: 0,
+              dinilai: 1,
+              m_soal_ujian_id: d.soal.id,
+              tk_peserta_ujian_id: pesertaUjian.id,
+            });
+          } else if (d.soal.bentuk == "esai") {
+            soalData.push({
+              durasi: 0,
+              ragu: 0,
+              dijawab: 0,
+              m_soal_ujian_id: d.soal.id,
+              jawaban_rubrik_esai: d.soal.rubrik_kj,
+              tk_peserta_ujian_id: pesertaUjian.id,
+            });
+          } else if (d.soal.bentuk == "pg") {
+            soalData.push({
+              durasi: 0,
+              ragu: 0,
+              dijawab: 0,
+              dinilai: 1,
+              m_soal_ujian_id: d.soal.id,
+              tk_peserta_ujian_id: pesertaUjian.id,
+            });
+          }
+        })
+      );
 
-    if (checkIfExist) {
+      await TkJawabanUjianSiswa.createMany(soalData);
+
+      const res = await jadwalUjianReference.add({
+        tk_jadwal_ujian_id: tk_jadwal_ujian_id,
+        user_id: pesertaUjian.m_user_id,
+        progress: 0,
+        waktu_mulai: waktu_mulai,
+      });
+
+      await TkPesertaUjian.query().where({ id: pesertaUjian.id }).update({
+        doc_id: res.id,
+      });
+
       return response.ok({
-        peserta_ujian: checkIfExist,
+        peserta_ujian: pesertaUjian,
+      });
+    } else {
+      const soalPGIds = await TkSoalUjian.query()
+        .where({ dihapus: 0 })
+        .andWhere({ m_ujian_id: ujian_id })
+        .pluck("m_soal_ujian_id");
+
+      const soalMasterPGIds = await MSoalUjian.query()
+        .where({ bentuk: "pg" })
+        .whereIn("id", soalPGIds)
+        .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_pg)
+        .ids();
+
+      const soalPG = await TkSoalUjian.query()
+        .with("soal", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .whereIn("m_soal_ujian_id", soalMasterPGIds)
+        .orderByRaw(`${diacak}`)
+        .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_pg)
+        .fetch();
+
+      const soalEsaiIds = await TkSoalUjian.query()
+        .where({ dihapus: 0 })
+        .andWhere({ m_ujian_id: ujian_id })
+        .pluck("m_soal_ujian_id");
+
+      const soalMasterEsaiIds = await MSoalUjian.query()
+        .where({ bentuk: "esai" })
+        .whereIn("id", soalEsaiIds)
+        .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_esai)
+        .ids();
+
+      const soalEsai = await TkSoalUjian.query()
+        .with("soal", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .whereIn("m_soal_ujian_id", soalMasterEsaiIds)
+        .orderByRaw(`${diacak}`)
+        .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_esai)
+        .fetch();
+
+      const soalData = [];
+
+      const checkIfExist = await TkPesertaUjian.query()
+        .where({ m_user_id: user.id })
+        .andWhere({ tk_jadwal_ujian_id: tk_jadwal_ujian_id })
+        .first();
+
+      if (checkIfExist) {
+        return response.ok({
+          peserta_ujian: checkIfExist,
+        });
+      }
+
+      const pesertaUjian = await TkPesertaUjian.create({
+        waktu_mulai,
+        dinilai: 0,
+        selesai: 0,
+        dihapus: 0,
+        m_user_id: user.id,
+        tk_jadwal_ujian_id: tk_jadwal_ujian_id,
+      });
+
+      await Promise.all(
+        soalPG.toJSON().map(async (d) => {
+          soalData.push({
+            durasi: 0,
+            ragu: 0,
+            dijawab: 0,
+            dinilai: 1,
+            m_soal_ujian_id: d.soal.id,
+            tk_peserta_ujian_id: pesertaUjian.id,
+          });
+        })
+      );
+
+      await Promise.all(
+        soalEsai.toJSON().map(async (d) => {
+          soalData.push({
+            durasi: 0,
+            ragu: 0,
+            dijawab: 0,
+            m_soal_ujian_id: d.soal.id,
+            jawaban_rubrik_esai: d.soal.rubrik_kj,
+            tk_peserta_ujian_id: pesertaUjian.id,
+          });
+        })
+      );
+
+      await TkJawabanUjianSiswa.createMany(soalData);
+
+      const res = await jadwalUjianReference.add({
+        tk_jadwal_ujian_id: tk_jadwal_ujian_id,
+        user_id: pesertaUjian.m_user_id,
+        progress: 0,
+        waktu_mulai: waktu_mulai,
+      });
+
+      await TkPesertaUjian.query().where({ id: pesertaUjian.id }).update({
+        doc_id: res.id,
+      });
+
+      return response.ok({
+        peserta_ujian: pesertaUjian,
       });
     }
-
-    const pesertaUjian = await TkPesertaUjian.create({
-      waktu_mulai,
-      dinilai: 0,
-      selesai: 0,
-      dihapus: 0,
-      m_user_id: user.id,
-      tk_jadwal_ujian_id: tk_jadwal_ujian_id,
-    });
-
-    await Promise.all(
-      soalPG.toJSON().map(async (d) => {
-        soalData.push({
-          durasi: 0,
-          ragu: 0,
-          dijawab: 0,
-          dinilai: 1,
-          m_soal_ujian_id: d.soal.id,
-          tk_peserta_ujian_id: pesertaUjian.id,
-        });
-      })
-    );
-
-    await Promise.all(
-      soalEsai.toJSON().map(async (d) => {
-        soalData.push({
-          durasi: 0,
-          ragu: 0,
-          dijawab: 0,
-          m_soal_ujian_id: d.soal.id,
-          jawaban_rubrik_esai: d.soal.rubrik_kj,
-          tk_peserta_ujian_id: pesertaUjian.id,
-        });
-      })
-    );
-
-    await TkJawabanUjianSiswa.createMany(soalData);
-
-    const res = await jadwalUjianReference.add({
-      tk_jadwal_ujian_id: tk_jadwal_ujian_id,
-      user_id: pesertaUjian.m_user_id,
-      progress: 0,
-      waktu_mulai: waktu_mulai,
-    });
-
-    await TkPesertaUjian.query().where({ id: pesertaUjian.id }).update({
-      doc_id: res.id,
-    });
-
-    return response.ok({
-      peserta_ujian: pesertaUjian,
-    });
   }
 
   async putPesertaUjian({
@@ -7819,10 +7938,12 @@ class MainController {
       jawaban_uraian,
       jawaban_pg_kompleks,
       jawaban_menjodohkan,
+      jawaban_foto,
     } = request.post();
     jawaban_pg_kompleks = jawaban_pg_kompleks
       ? jawaban_pg_kompleks.toString()
       : null;
+    jawaban_foto = jawaban_foto ? jawaban_foto.toString() : null;
     jawaban_menjodohkan = jawaban_menjodohkan
       ? JSON.stringify(jawaban_menjodohkan)
       : null;
@@ -7850,6 +7971,7 @@ class MainController {
             durasi,
             ragu,
             dijawab: 1,
+            jawaban_foto,
           });
       } else if (jawaban_pg_kompleks) {
         jawabanUjianSiswa = await TkJawabanUjianSiswa.query()
@@ -7878,6 +8000,7 @@ class MainController {
             durasi,
             ragu,
             dijawab: 1,
+            jawaban_foto,
           });
       } else if (jawaban_pg) {
         jawabanUjianSiswa = await TkJawabanUjianSiswa.query()

@@ -8,6 +8,7 @@ class TkJawabanUjianSiswaSchema extends Schema {
     this.create("tk_jawaban_ujian_siswa", (table) => {
       table.increments();
       table.text("jawaban_rubrik_esai");
+      table.text("jawaban_foto");
       table.string("jawaban_pg");
       table.string("jawaban_esai");
       table.string("jawaban_opsi_uraian");
