@@ -7624,7 +7624,7 @@ class MainController {
 
     const { waktu_mulai, tk_jadwal_ujian_id, ujian_id } = request.post();
 
-    const ujian = MUjian.query().where({ id: ujian_id }).first();
+    const ujian = await MUjian.query().where({ id: ujian_id }).first();
 
     const jadwalUjian = await TkJadwalUjian.query()
       .with("jadwalUjian")
@@ -7651,7 +7651,7 @@ class MainController {
 
       const soalMasterIds = await MSoalUjian.query()
         .whereIn("id", soalIds)
-        .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_pg)
+        .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_soal_akm)
         .ids();
 
       const soalAKM = await TkSoalUjian.query()
@@ -7922,11 +7922,6 @@ class MainController {
     }
 
     const user = await auth.getUser();
-
-    table.string("jawaban_opsi_uraian");
-    table.text("jawaban_uraian");
-    table.string("jawaban_pg_kompleks");
-    table.string("jawaban_menjodohkan");
 
     let {
       jawaban_pg,
