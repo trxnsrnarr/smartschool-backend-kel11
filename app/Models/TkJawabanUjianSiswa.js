@@ -27,7 +27,7 @@ class TkJawabanUjianSiswa extends Model {
     return jawaban_menjodohkan ? JSON.parse(jawaban_menjodohkan) : "";
   }
 
-  getjawaban_foto(jawaban_foto) {
+  getJawabanFoto(jawaban_foto) {
     return jawaban_foto ? jawaban_foto.split(",") : [];
   }
 }

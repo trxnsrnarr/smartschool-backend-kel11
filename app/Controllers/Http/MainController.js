@@ -6950,12 +6950,16 @@ class MainController {
         ujian,
       });
     } else if (user.role == "siswa") {
-      const rombelIds = await MRombel.query().where({ m_ta_id: ta.id }).ids();
+      const rombelIds = await MRombel.query()
+        .where({ m_ta_id: ta.id })
+        .andWhere({ dihapus: 0 })
+        .andWhere({ dihapus: 0 })
+        .ids();
 
       const anggotaRombel = await MAnggotaRombel.query()
         .where({ m_user_id: user.id })
         .whereIn("m_rombel_id", rombelIds)
-        .first();
+        .pluck("m_rombel_id");
 
       let jadwalUjian;
       if (status == "akan-datang") {
@@ -6964,7 +6968,7 @@ class MainController {
             builder.with("ujian").where("waktu_dibuka", ">", hari_ini);
           })
           .where({ dihapus: 0 })
-          .andWhere({ m_rombel_id: anggotaRombel.m_rombel_id })
+          .whereIn("m_rombel_id", anggotaRombel)
           .fetch();
       } else if (status == "berlangsung") {
         jadwalUjian = await TkJadwalUjian.query()
@@ -6976,7 +6980,7 @@ class MainController {
           })
           .with("peserta")
           .where({ dihapus: 0 })
-          .andWhere({ m_rombel_id: anggotaRombel.m_rombel_id })
+          .whereIn("m_rombel_id", anggotaRombel)
           .fetch();
       } else if (status == "sudah-selesai") {
         jadwalUjian = await TkJadwalUjian.query()
@@ -6987,7 +6991,7 @@ class MainController {
             builder.where({ m_user_id: user.id });
           })
           .where({ dihapus: 0 })
-          .andWhere({ m_rombel_id: anggotaRombel.m_rombel_id })
+          .whereIn("m_rombel_id", anggotaRombel)
           .fetch();
       }
 
@@ -7592,6 +7596,7 @@ class MainController {
               "jawaban_e",
               "opsi_a_uraian",
               "opsi_b_uraian",
+              "pilihan_menjodohkan",
               "soal_menjodohkan",
               "bentuk",
               "dihapus",
