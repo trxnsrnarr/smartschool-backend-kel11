@@ -6707,11 +6707,11 @@ class MainController {
             .where({ m_jadwal_ujian_id: jadwalUjianData.id })
             .fetch();
 
-          // let metaJadwalUjian = {
-          //   remedial: 0,
-          //   susulan: 0,
-          //   diatasKKM: 0,
-          // };
+          let metaJadwalUjian = {
+            remedial: 0,
+            susulan: 0,
+            diatasKKM: 0,
+          };
 
           // await Promise.all(
           //   tkJadwalUjian.toJSON().map(async (rombelUjianData) => {
@@ -6792,7 +6792,7 @@ class MainController {
           jadwalUjianDataFormat.push({
             jadwalUjian: jadwalUjianData,
             rombel: tkJadwalUjian,
-            // metaJadwalUjian: metaJadwalUjian,
+            metaJadwalUjian: metaJadwalUjian,
           });
         })
       );
@@ -6849,11 +6849,11 @@ class MainController {
             .where({ m_jadwal_ujian_id: jadwalUjianData.id })
             .fetch();
 
-          // let metaJadwalUjian = {
-          //   remedial: 0,
-          //   susulan: 0,
-          //   diatasKKM: 0,
-          // };
+          let metaJadwalUjian = {
+            remedial: 0,
+            susulan: 0,
+            diatasKKM: 0,
+          };
 
           // await Promise.all(
           //   tkJadwalUjian.toJSON().map(async (rombelUjianData) => {
@@ -6934,7 +6934,7 @@ class MainController {
           jadwalUjianDataFormat.push({
             jadwalUjian: jadwalUjianData,
             rombel: tkJadwalUjian,
-            // metaJadwalUjian: metaJadwalUjian,
+            metaJadwalUjian: metaJadwalUjian,
           });
         })
       );
