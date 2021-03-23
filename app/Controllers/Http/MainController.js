@@ -7655,6 +7655,7 @@ class MainController {
         .pluck("m_soal_ujian_id");
 
       const soalMasterIds = await MSoalUjian.query()
+        .where({ dihapus: 0 })
         .whereIn("id", soalIds)
         .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_soal_akm)
         .ids();
@@ -7765,6 +7766,7 @@ class MainController {
 
       const soalMasterPGIds = await MSoalUjian.query()
         .where({ bentuk: "pg" })
+        .andWhere({ dihapus: 0 })
         .whereIn("id", soalPGIds)
         .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_pg)
         .ids();
@@ -7785,6 +7787,7 @@ class MainController {
 
       const soalMasterEsaiIds = await MSoalUjian.query()
         .where({ bentuk: "esai" })
+        .andWhere({ dihapus: 0 })
         .whereIn("id", soalEsaiIds)
         .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_esai)
         .ids();
@@ -9878,30 +9881,6 @@ class MainController {
     });
   }
 
-  async mePembayaran({ response, request, auth }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-
-    const pembayaran = await MPembayaranSiswa.query()
-      .with("rombelPembayaran", (builder) => {
-        builder.with("pembayaran");
-      })
-      .where({ dihapus: 0 })
-      .andWhere({ m_user_id: user.id })
-      .fetch();
-
-    return response.ok({
-      pembayaran: pembayaran,
-    });
-  }
-
   async postPembayaran({ response, request, auth }) {
     const domain = request.headers().origin;
 
@@ -10116,6 +10095,76 @@ class MainController {
 
     return response.ok({
       message: messageDeleteSuccess,
+    });
+  }
+
+  async getPembayaranSiswa({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let { status } = request.get();
+
+    status = status ? status : "belum lunas";
+
+    const user = await auth.getUser();
+
+    const rekSekolah = await MRekSekolah.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .first();
+
+    const pembayaran = await MPembayaranSiswa.query()
+      .with("rombelPembayaran", (builder) => {
+        builder.with("pembayaran");
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_user_id: user.id })
+      .andWhere({ status: status })
+      .fetch();
+
+    return response.ok({
+      pembayaran: pembayaran,
+      rek_sekolah: rekSekolah,
+    });
+  }
+
+  async detailPembayaranSiswa({
+    response,
+    request,
+    auth,
+    params: { pembayaran_siswa_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const rekSekolah = await MRekSekolah.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .first();
+
+    const pembayaran = await MPembayaranSiswa.query()
+      .with("rombelPembayaran", (builder) => {
+        builder.with("pembayaran");
+      })
+      .with("user")
+      .where({ dihapus: 0 })
+      .andWhere({ m_user_id: user.id })
+      .andWhere({ id: pembayaran_siswa_id })
+      .first();
+
+    return response.ok({
+      pembayaran: pembayaran,
+      rek_sekolah: rekSekolah,
     });
   }
 

@@ -131,11 +131,14 @@ Route.put("/rek-sekolah", "MainController.putRekSekolah");
 
 // pembayaran
 Route.get("/pembayaran", "MainController.getPembayaran");
-Route.get("/pembayaran/me", "MainController.mePembayaran");
 Route.get("/pembayaran/:pembayaran_id", "MainController.detailPembayaran");
 Route.post("/pembayaran", "MainController.postPembayaran");
 Route.put("/pembayaran/:pembayaran_id", "MainController.putPembayaran");
 Route.delete("/pembayaran/:pembayaran_id", "MainController.deletePembayaran");
+
+// pembayaran siswa
+Route.get("/pembayaran-siswa", "MainController.getPembayaranSiswa");
+Route.get("/pembayaran-siswa/:pembayaran_siswa_id", "MainController.detailPembayaranSiswa");
 
 // pembayaran kategori
 Route.post("/pembayaran-kategori", "MainController.postPembayaranKategori");
