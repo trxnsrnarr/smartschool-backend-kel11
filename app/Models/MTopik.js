@@ -33,7 +33,9 @@ class MTopik extends Model {
   }
 
   getKonten(konten) {
-    return konten ? Buffer(konten, "base64").toString("ascii") : "";
+    return konten
+      ? Buffer(konten, "base64").toString("ascii").replace("b&", "..........")
+      : "";
   }
 }
 

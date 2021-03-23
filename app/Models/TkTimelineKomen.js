@@ -20,7 +20,11 @@ class TkTimelineKomen extends Model {
   }
 
   getKesimpulan(kesimpulan) {
-    return kesimpulan ? Buffer(kesimpulan, "base64").toString("ascii") : "";
+    return kesimpulan
+      ? Buffer(kesimpulan, "base64")
+          .toString("ascii")
+          .replace("b&", "..........")
+      : "";
   }
 }
 

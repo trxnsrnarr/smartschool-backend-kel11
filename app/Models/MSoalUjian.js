@@ -18,25 +18,53 @@ class MSoalUjian extends Model {
     return kj_pg ? kj_pg.toUpperCase() : "";
   }
   getPertanyaan(pertanyaan) {
-    return pertanyaan ? Buffer(pertanyaan, "base64").toString("ascii") : "";
+    return pertanyaan
+      ? Buffer(pertanyaan, "base64")
+          .toString("ascii")
+          .replace("b&", "..........")
+      : "";
   }
   getJawabanA(jawaban_a) {
-    return jawaban_a ? Buffer(jawaban_a, "base64").toString("ascii") : "";
+    return jawaban_a
+      ? Buffer(jawaban_a, "base64")
+          .toString("ascii")
+          .replace("b&", "..........")
+      : "";
   }
   getJawabanB(jawaban_b) {
-    return jawaban_b ? Buffer(jawaban_b, "base64").toString("ascii") : "";
+    return jawaban_b
+      ? Buffer(jawaban_b, "base64")
+          .toString("ascii")
+          .replace("b&", "..........")
+      : "";
   }
   getJawabanC(jawaban_c) {
-    return jawaban_c ? Buffer(jawaban_c, "base64").toString("ascii") : "";
+    return jawaban_c
+      ? Buffer(jawaban_c, "base64")
+          .toString("ascii")
+          .replace("b&", "..........")
+      : "";
   }
   getJawabanD(jawaban_d) {
-    return jawaban_d ? Buffer(jawaban_d, "base64").toString("ascii") : "";
+    return jawaban_d
+      ? Buffer(jawaban_d, "base64")
+          .toString("ascii")
+          .replace("b&", "..........")
+      : "";
   }
   getJawabanE(jawaban_e) {
-    return jawaban_e ? Buffer(jawaban_e, "base64").toString("ascii") : "";
+    return jawaban_e
+      ? Buffer(jawaban_e, "base64")
+          .toString("ascii")
+          .replace("b&", "..........")
+      : "";
   }
   getPembahasan(pembahasan) {
-    return pembahasan ? Buffer(pembahasan, "base64").toString("ascii") : "";
+    return pembahasan
+      ? Buffer(pembahasan, "base64")
+          .toString("ascii")
+          .replace("b&", "..........")
+      : "";
   }
   getPilihanMenjodohkan(pilihan_menjodohkan) {
     return pilihan_menjodohkan ? pilihan_menjodohkan.split(",") : null;

@@ -10,34 +10,52 @@ class MInformasiSekolah extends Model {
 
   getDeskripsiSingkat(deskripsi_singkat) {
     return deskripsi_singkat
-      ? Buffer(deskripsi_singkat, "base64").toString("ascii")
+      ? Buffer(deskripsi_singkat, "base64")
+          .toString("ascii")
+          .replace("b&", "..........")
       : "";
   }
 
   getVisi(visi) {
-    return visi ? Buffer(visi, "base64").toString("ascii") : "";
+    return visi
+      ? Buffer(visi, "base64").toString("ascii").replace("b&", "..........")
+      : "";
   }
 
   getMisi(misi) {
-    return misi ? Buffer(misi, "base64").toString("ascii") : "";
+    return misi
+      ? Buffer(misi, "base64").toString("ascii").replace("b&", "..........")
+      : "";
   }
 
   getDeskripsiSekolah(deskripsi_sekolah) {
     return deskripsi_sekolah
-      ? Buffer(deskripsi_sekolah, "base64").toString("ascii")
+      ? Buffer(deskripsi_sekolah, "base64")
+          .toString("ascii")
+          .replace("b&", "..........")
       : "";
   }
 
   getPesanKepsek(pesan_kepsek) {
-    return pesan_kepsek ? Buffer(pesan_kepsek, "base64").toString("ascii") : "";
+    return pesan_kepsek
+      ? Buffer(pesan_kepsek, "base64")
+          .toString("ascii")
+          .replace("b&", "..........")
+      : "";
   }
 
   getSejarah(sejarah) {
-    return sejarah ? Buffer(sejarah, "base64").toString("ascii") : "";
+    return sejarah
+      ? Buffer(sejarah, "base64").toString("ascii").replace("b&", "..........")
+      : "";
   }
 
   getLirikMars(lirik_mars) {
-    return lirik_mars ? Buffer(lirik_mars, "base64").toString("ascii") : "";
+    return lirik_mars
+      ? Buffer(lirik_mars, "base64")
+          .toString("ascii")
+          .replace("b&", "..........")
+      : "";
   }
 
   getFotoTentangSekolah(foto_tentang_sekolah) {
