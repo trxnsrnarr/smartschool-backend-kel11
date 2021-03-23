@@ -36,11 +36,7 @@ class TkMateriKesimpulan extends Model {
   }
 
   getKesimpulan(kesimpulan) {
-    return kesimpulan
-      ? Buffer(kesimpulan, "base64")
-          .toString("ascii")
-          .replace("b&", "..........")
-      : "";
+    return kesimpulan ? Buffer(kesimpulan, "base64").toString("ascii") : "";
   }
 }
 

@@ -32,11 +32,7 @@ class MPerpus extends Model {
     return this.hasOne("App/Models/TkPerpusMapel");
   }
   getDeskripsi(deskripsi) {
-    return deskripsi
-      ? Buffer(deskripsi, "base64")
-          .toString("ascii")
-          .replace("b&", "..........")
-      : "";
+    return deskripsi ? Buffer(deskripsi, "base64").toString("ascii") : "";
   }
 }
 

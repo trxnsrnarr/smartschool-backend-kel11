@@ -9,11 +9,7 @@ class MAlumni extends Model {
   }
 
   getDeskripsi(deskripsi) {
-    return deskripsi
-      ? Buffer(deskripsi, "base64")
-          .toString("ascii")
-          .replace("b&", "..........")
-      : "";
+    return deskripsi ? Buffer(deskripsi, "base64").toString("ascii") : "";
   }
 }
 

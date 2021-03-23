@@ -10,9 +10,7 @@ class MInformasiSekolah extends Model {
 
   getDeskripsiSingkat(deskripsi_singkat) {
     return deskripsi_singkat
-      ? Buffer(deskripsi_singkat, "base64")
-          .toString("ascii")
-          .replace("b&", "..........")
+      ? Buffer(deskripsi_singkat, "base64").toString("ascii")
       : "";
   }
 
@@ -30,18 +28,12 @@ class MInformasiSekolah extends Model {
 
   getDeskripsiSekolah(deskripsi_sekolah) {
     return deskripsi_sekolah
-      ? Buffer(deskripsi_sekolah, "base64")
-          .toString("ascii")
-          .replace("b&", "..........")
+      ? Buffer(deskripsi_sekolah, "base64").toString("ascii")
       : "";
   }
 
   getPesanKepsek(pesan_kepsek) {
-    return pesan_kepsek
-      ? Buffer(pesan_kepsek, "base64")
-          .toString("ascii")
-          .replace("b&", "..........")
-      : "";
+    return pesan_kepsek ? Buffer(pesan_kepsek, "base64").toString("ascii") : "";
   }
 
   getSejarah(sejarah) {
@@ -51,11 +43,7 @@ class MInformasiSekolah extends Model {
   }
 
   getLirikMars(lirik_mars) {
-    return lirik_mars
-      ? Buffer(lirik_mars, "base64")
-          .toString("ascii")
-          .replace("b&", "..........")
-      : "";
+    return lirik_mars ? Buffer(lirik_mars, "base64").toString("ascii") : "";
   }
 
   getFotoTentangSekolah(foto_tentang_sekolah) {
