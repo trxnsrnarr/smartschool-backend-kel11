@@ -6707,92 +6707,92 @@ class MainController {
             .where({ m_jadwal_ujian_id: jadwalUjianData.id })
             .fetch();
 
-          let metaJadwalUjian = {
-            remedial: 0,
-            susulan: 0,
-            diatasKKM: 0,
-          };
+          // let metaJadwalUjian = {
+          //   remedial: 0,
+          //   susulan: 0,
+          //   diatasKKM: 0,
+          // };
 
-          await Promise.all(
-            tkJadwalUjian.toJSON().map(async (rombelUjianData) => {
-              const anggotaRombel = await MAnggotaRombel.query()
-                .where({ m_rombel_id: rombelUjianData.m_rombel_id })
-                .fetch();
+          // await Promise.all(
+          //   tkJadwalUjian.toJSON().map(async (rombelUjianData) => {
+          //     const anggotaRombel = await MAnggotaRombel.query()
+          //       .where({ m_rombel_id: rombelUjianData.m_rombel_id })
+          //       .fetch();
 
-              const userIds = await MAnggotaRombel.query()
-                .where({ m_rombel_id: rombelUjianData.m_rombel_id })
-                .pluck("m_user_id");
+          //     const userIds = await MAnggotaRombel.query()
+          //       .where({ m_rombel_id: rombelUjianData.m_rombel_id })
+          //       .pluck("m_user_id");
 
-              if (!userIds[0]) {
-                return "kosong";
-              }
+          //     if (!userIds[0]) {
+          //       return "kosong";
+          //     }
 
-              const pesertaUjian = await TkPesertaUjian.query()
-                .with("jawabanSiswa", (builder) => {
-                  builder.with("soal");
-                })
-                .where({ tk_jadwal_ujian_id: rombelUjianData.id })
-                .andWhere({ m_user_id: userIds[0] })
-                .fetch();
+          //     const pesertaUjian = await TkPesertaUjian.query()
+          //       .with("jawabanSiswa", (builder) => {
+          //         builder.with("soal");
+          //       })
+          //       .where({ tk_jadwal_ujian_id: rombelUjianData.id })
+          //       .andWhere({ m_user_id: userIds[0] })
+          //       .fetch();
 
-              if (!pesertaUjian.toJSON().length) {
-                metaJadwalUjian.susulan = anggotaRombel.toJSON().length;
-                return;
-              }
+          //     if (!pesertaUjian.toJSON().length) {
+          //       metaJadwalUjian.susulan = anggotaRombel.toJSON().length;
+          //       return;
+          //     }
 
-              await Promise.all(
-                pesertaUjian.toJSON().map(async (peserta) => {
-                  let metaHasil = {
-                    nilaiPg: 0,
-                    nilaiEsai: 0,
-                    nilaiTotal: 0,
-                    benar: 0,
-                  };
+          //     await Promise.all(
+          //       pesertaUjian.toJSON().map(async (peserta) => {
+          //         let metaHasil = {
+          //           nilaiPg: 0,
+          //           nilaiEsai: 0,
+          //           nilaiTotal: 0,
+          //           benar: 0,
+          //         };
 
-                  await Promise.all(
-                    peserta.jawabanSiswa.map(async (jawaban) => {
-                      if (jawaban.soal.bentuk == "pg") {
-                        if (jawaban.jawaban_pg == jawaban.soal.kj_pg) {
-                          metaHasil.nilaiPg =
-                            metaHasil.nilaiPg + jawaban.soal.nilai_soal;
-                          metaHasil.benar = metaHasil.benar + 1;
-                        }
-                      } else if (jawaban.soal.bentuk == "esai") {
-                        JSON.parse(jawaban.jawaban_rubrik_esai).map((e) => {
-                          if (e.benar) {
-                            metaHasil.nilaiEsai = metaHasil.nilaiEsai + e.poin;
-                          }
-                        });
-                        if (jawaban.jawaban_rubrik_esai.indexOf("true") != -1) {
-                          metaHasil.benar = metaHasil.benar + 1;
-                        }
-                      }
-                    })
-                  );
+          //         await Promise.all(
+          //           peserta.jawabanSiswa.map(async (jawaban) => {
+          //             if (jawaban.soal.bentuk == "pg") {
+          //               if (jawaban.jawaban_pg == jawaban.soal.kj_pg) {
+          //                 metaHasil.nilaiPg =
+          //                   metaHasil.nilaiPg + jawaban.soal.nilai_soal;
+          //                 metaHasil.benar = metaHasil.benar + 1;
+          //               }
+          //             } else if (jawaban.soal.bentuk == "esai") {
+          //               JSON.parse(jawaban.jawaban_rubrik_esai).map((e) => {
+          //                 if (e.benar) {
+          //                   metaHasil.nilaiEsai = metaHasil.nilaiEsai + e.poin;
+          //                 }
+          //               });
+          //               if (jawaban.jawaban_rubrik_esai.indexOf("true") != -1) {
+          //                 metaHasil.benar = metaHasil.benar + 1;
+          //               }
+          //             }
+          //           })
+          //         );
 
-                  metaHasil.nilaiTotal =
-                    metaHasil.nilaiPg + metaHasil.nilaiEsai;
+          //         metaHasil.nilaiTotal =
+          //           metaHasil.nilaiPg + metaHasil.nilaiEsai;
 
-                  const nilaiTotal = metaHasil.nilaiTotal;
+          //         const nilaiTotal = metaHasil.nilaiTotal;
 
-                  if (nilaiTotal > jadwalUjianData.kkm) {
-                    metaJadwalUjian.diatasKKM = metaJadwalUjian.diatasKKM + 1;
-                  } else {
-                    metaJadwalUjian.remedial = metaJadwalUjian.remedial + 1;
-                  }
+          //         if (nilaiTotal > jadwalUjianData.kkm) {
+          //           metaJadwalUjian.diatasKKM = metaJadwalUjian.diatasKKM + 1;
+          //         } else {
+          //           metaJadwalUjian.remedial = metaJadwalUjian.remedial + 1;
+          //         }
 
-                  metaJadwalUjian.susulan =
-                    anggotaRombel.toJSON().length -
-                    (metaJadwalUjian.diatasKKM + metaJadwalUjian.remedial);
-                })
-              );
-            })
-          );
+          //         metaJadwalUjian.susulan =
+          //           anggotaRombel.toJSON().length -
+          //           (metaJadwalUjian.diatasKKM + metaJadwalUjian.remedial);
+          //       })
+          //     );
+          //   })
+          // );
 
           jadwalUjianDataFormat.push({
             jadwalUjian: jadwalUjianData,
             rombel: tkJadwalUjian,
-            metaJadwalUjian: metaJadwalUjian,
+            // metaJadwalUjian: metaJadwalUjian,
           });
         })
       );
@@ -6849,92 +6849,92 @@ class MainController {
             .where({ m_jadwal_ujian_id: jadwalUjianData.id })
             .fetch();
 
-          let metaJadwalUjian = {
-            remedial: 0,
-            susulan: 0,
-            diatasKKM: 0,
-          };
+          // let metaJadwalUjian = {
+          //   remedial: 0,
+          //   susulan: 0,
+          //   diatasKKM: 0,
+          // };
 
-          await Promise.all(
-            tkJadwalUjian.toJSON().map(async (rombelUjianData) => {
-              const anggotaRombel = await MAnggotaRombel.query()
-                .where({ m_rombel_id: rombelUjianData.m_rombel_id })
-                .fetch();
+          // await Promise.all(
+          //   tkJadwalUjian.toJSON().map(async (rombelUjianData) => {
+          //     const anggotaRombel = await MAnggotaRombel.query()
+          //       .where({ m_rombel_id: rombelUjianData.m_rombel_id })
+          //       .fetch();
 
-              const userIds = await MAnggotaRombel.query()
-                .where({ m_rombel_id: rombelUjianData.m_rombel_id })
-                .pluck("m_user_id");
+          //     const userIds = await MAnggotaRombel.query()
+          //       .where({ m_rombel_id: rombelUjianData.m_rombel_id })
+          //       .pluck("m_user_id");
 
-              if (!userIds[0]) {
-                return "kosong";
-              }
+          //     if (!userIds[0]) {
+          //       return "kosong";
+          //     }
 
-              const pesertaUjian = await TkPesertaUjian.query()
-                .with("jawabanSiswa", (builder) => {
-                  builder.with("soal");
-                })
-                .where({ tk_jadwal_ujian_id: rombelUjianData.id })
-                .andWhere({ m_user_id: userIds[0] })
-                .fetch();
+          //     const pesertaUjian = await TkPesertaUjian.query()
+          //       .with("jawabanSiswa", (builder) => {
+          //         builder.with("soal");
+          //       })
+          //       .where({ tk_jadwal_ujian_id: rombelUjianData.id })
+          //       .andWhere({ m_user_id: userIds[0] })
+          //       .fetch();
 
-              if (!pesertaUjian.toJSON().length) {
-                metaJadwalUjian.susulan = anggotaRombel.toJSON().length;
-                return;
-              }
+          //     if (!pesertaUjian.toJSON().length) {
+          //       metaJadwalUjian.susulan = anggotaRombel.toJSON().length;
+          //       return;
+          //     }
 
-              await Promise.all(
-                pesertaUjian.toJSON().map(async (peserta) => {
-                  let metaHasil = {
-                    nilaiPg: 0,
-                    nilaiEsai: 0,
-                    nilaiTotal: 0,
-                    benar: 0,
-                  };
+          //     await Promise.all(
+          //       pesertaUjian.toJSON().map(async (peserta) => {
+          //         let metaHasil = {
+          //           nilaiPg: 0,
+          //           nilaiEsai: 0,
+          //           nilaiTotal: 0,
+          //           benar: 0,
+          //         };
 
-                  await Promise.all(
-                    peserta.jawabanSiswa.map(async (jawaban) => {
-                      if (jawaban.soal.bentuk == "pg") {
-                        if (jawaban.jawaban_pg == jawaban.soal.kj_pg) {
-                          metaHasil.nilaiPg =
-                            metaHasil.nilaiPg + jawaban.soal.nilai_soal;
-                          metaHasil.benar = metaHasil.benar + 1;
-                        }
-                      } else if (jawaban.soal.bentuk == "esai") {
-                        JSON.parse(jawaban.jawaban_rubrik_esai).map((e) => {
-                          if (e.benar) {
-                            metaHasil.nilaiEsai = metaHasil.nilaiEsai + e.poin;
-                          }
-                        });
-                        if (jawaban.jawaban_rubrik_esai.indexOf("true") != -1) {
-                          metaHasil.benar = metaHasil.benar + 1;
-                        }
-                      }
-                    })
-                  );
+          //         await Promise.all(
+          //           peserta.jawabanSiswa.map(async (jawaban) => {
+          //             if (jawaban.soal.bentuk == "pg") {
+          //               if (jawaban.jawaban_pg == jawaban.soal.kj_pg) {
+          //                 metaHasil.nilaiPg =
+          //                   metaHasil.nilaiPg + jawaban.soal.nilai_soal;
+          //                 metaHasil.benar = metaHasil.benar + 1;
+          //               }
+          //             } else if (jawaban.soal.bentuk == "esai") {
+          //               JSON.parse(jawaban.jawaban_rubrik_esai).map((e) => {
+          //                 if (e.benar) {
+          //                   metaHasil.nilaiEsai = metaHasil.nilaiEsai + e.poin;
+          //                 }
+          //               });
+          //               if (jawaban.jawaban_rubrik_esai.indexOf("true") != -1) {
+          //                 metaHasil.benar = metaHasil.benar + 1;
+          //               }
+          //             }
+          //           })
+          //         );
 
-                  metaHasil.nilaiTotal =
-                    metaHasil.nilaiPg + metaHasil.nilaiEsai;
+          //         metaHasil.nilaiTotal =
+          //           metaHasil.nilaiPg + metaHasil.nilaiEsai;
 
-                  const nilaiTotal = metaHasil.nilaiTotal;
+          //         const nilaiTotal = metaHasil.nilaiTotal;
 
-                  if (nilaiTotal > jadwalUjianData.kkm) {
-                    metaJadwalUjian.diatasKKM = metaJadwalUjian.diatasKKM + 1;
-                  } else {
-                    metaJadwalUjian.remedial = metaJadwalUjian.remedial + 1;
-                  }
+          //         if (nilaiTotal > jadwalUjianData.kkm) {
+          //           metaJadwalUjian.diatasKKM = metaJadwalUjian.diatasKKM + 1;
+          //         } else {
+          //           metaJadwalUjian.remedial = metaJadwalUjian.remedial + 1;
+          //         }
 
-                  metaJadwalUjian.susulan =
-                    anggotaRombel.toJSON().length -
-                    (metaJadwalUjian.diatasKKM + metaJadwalUjian.remedial);
-                })
-              );
-            })
-          );
+          //         metaJadwalUjian.susulan =
+          //           anggotaRombel.toJSON().length -
+          //           (metaJadwalUjian.diatasKKM + metaJadwalUjian.remedial);
+          //       })
+          //     );
+          //   })
+          // );
 
           jadwalUjianDataFormat.push({
             jadwalUjian: jadwalUjianData,
             rombel: tkJadwalUjian,
-            metaJadwalUjian: metaJadwalUjian,
+            // metaJadwalUjian: metaJadwalUjian,
           });
         })
       );
