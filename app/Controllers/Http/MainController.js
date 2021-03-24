@@ -6953,7 +6953,6 @@ class MainController {
       const rombelIds = await MRombel.query()
         .where({ m_ta_id: ta.id })
         .andWhere({ dihapus: 0 })
-        .andWhere({ dihapus: 0 })
         .ids();
 
       const anggotaRombel = await MAnggotaRombel.query()
