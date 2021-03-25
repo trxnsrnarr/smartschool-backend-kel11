@@ -8,6 +8,10 @@ class MMataPelajaran extends Model {
     return "m_mata_pelajaran";
   }
 
+  jadwalMengajar() {
+    return this.hasMany("App/Models/MJadwalMengajar");
+  }
+
   user() {
     return this.belongsTo("App/Models/User", "m_user_id");
   }

@@ -49,6 +49,7 @@ Route.delete("/jurusan/:jurusan_id", "MainController.deleteJurusan");
 
 // guru
 Route.get("/guru", "MainController.getGuru");
+Route.get("/guru/:guru_id", "MainController.detailGuru");
 Route.post("/guru", "MainController.postGuru");
 Route.put("/guru/:guru_id", "MainController.putGuru");
 Route.delete("/guru/:guru_id", "MainController.deleteGuru");
@@ -138,7 +139,10 @@ Route.delete("/pembayaran/:pembayaran_id", "MainController.deletePembayaran");
 
 // pembayaran siswa
 Route.get("/pembayaran-siswa", "MainController.getPembayaranSiswa");
-Route.get("/pembayaran-siswa/:pembayaran_siswa_id", "MainController.detailPembayaranSiswa");
+Route.get(
+  "/pembayaran-siswa/:pembayaran_siswa_id",
+  "MainController.detailPembayaranSiswa"
+);
 
 // pembayaran kategori
 Route.post("/pembayaran-kategori", "MainController.postPembayaranKategori");

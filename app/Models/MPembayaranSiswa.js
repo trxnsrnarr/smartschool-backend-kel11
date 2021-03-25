@@ -15,6 +15,10 @@ class MPembayaranSiswa extends Model {
   rombelPembayaran() {
     return this.belongsTo("App/Models/TkPembayaranRombel");
   }
+
+  getRiwayat(riwayat) {
+    return riwayat ? JSON.parse(riwayat) : null;
+  }
 }
 
 module.exports = MPembayaranSiswa;

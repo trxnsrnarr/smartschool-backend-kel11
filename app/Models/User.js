@@ -27,6 +27,10 @@ class User extends Model {
     return this.hasMany("App/Models/TkMateriKesimpulan", "id", "m_user_id");
   }
 
+  mataPelajaran() {
+    return this.hasMany("App/Models/MMataPelajaran", "id", "m_user_id");
+  }
+
   tugas() {
     return this.hasMany("App/Models/TkTimeline", "id", "m_user_id");
   }

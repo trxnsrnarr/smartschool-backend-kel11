@@ -291,6 +291,16 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
+    if (role == "ortu") {
+      const res = await User.query()
+        .select("nama", "whatsapp", "role")
+        .where({ wa_ayah: whatsapp })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .first();
+
+      return response.ok(res);
+    }
+
     const res = await User.query()
       .select("nama", "whatsapp", "role")
       .where({ whatsapp })
@@ -726,6 +736,42 @@ class MainController {
 
     return response.ok({
       guru: guru,
+    });
+  }
+
+  async detailGuru({ response, request, params: { guru_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const guru = await User.query()
+      .andWhere({ dihapus: 0 })
+      .andWhere({ id: guru_id })
+      .first();
+
+    const mataPelajaran = await MMataPelajaran.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ m_user_id: guru.id })
+      .fetch();
+
+    // const mataPelajaranIds = await Promise.all(
+    //   mataPelajaran.toJSON().map((d) => d.id)
+    // );
+
+    return response.ok({
+      guru: guru,
+      mata_pelajaran: mataPelajaran,
     });
   }
 
@@ -7950,7 +7996,7 @@ class MainController {
       ? JSON.stringify(jawaban_menjodohkan)
       : null;
 
-    if (user.role == "guru") {
+    if (user.role == "guru" || user.role == "admin") {
       await TkJawabanUjianSiswa.query()
         .where({ id: jawaban_ujian_siswa_id })
         .update({
@@ -10161,9 +10207,53 @@ class MainController {
       .andWhere({ id: pembayaran_siswa_id })
       .first();
 
+    const kontak = await MKontak.query()
+      .where({
+        m_sekolah_id: sekolah.id,
+      })
+      .first();
+
     return response.ok({
       pembayaran: pembayaran,
       rek_sekolah: rekSekolah,
+      kontak,
+    });
+  }
+
+  async putPembayaranSiswa({
+    response,
+    request,
+    auth,
+    params: { pembayaran_siswa_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { riwayat } = request.post();
+
+    riwayat = riwayat ? JSON.stringify(riwayat) : null;
+
+    const pembayaran = await MPembayaranSiswa.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_user_id: user.id })
+      .andWhere({ id: pembayaran_siswa_id })
+      .first();
+
+    if (!pembayaran) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
     });
   }
 
