@@ -5200,10 +5200,12 @@ class MainController {
       })
     );
 
-    // save workbook to disk
-    await workbook.xlsx.writeFile("public/uploads/absen-pertemuan.xlsx");
+    let fileName = `/uploads/absen-pertemuan-${moment().format('DD MMM YYYY')}.xlsx`
 
-    return "/uploads/absen-pertemuan.xlsx";
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${fileName}`);
+
+    return fileName;
   }
 
   async postTkTimelineKomen({ response, request, auth }) {
@@ -5705,10 +5707,12 @@ class MainController {
         })
       );
 
-      // save workbook to disk
-      await workbook.xlsx.writeFile("public/uploads/rekap-absen-siswa.xlsx");
+      let fileName = `/uploads/rekap-absen-siswa-${moment().format('DD MMM YYYY')}.xlsx`
 
-      return "/uploads/rekap-absen-siswa.xlsx";
+      // save workbook to disk
+      await workbook.xlsx.writeFile(`public${fileName}`);
+
+      return fileName;
     } else if (role == "guru") {
       const absen = await User.query()
         .with("absen", (builder) => {
@@ -5802,10 +5806,14 @@ class MainController {
         })
       );
 
-      // save workbook to disk
-      await workbook.xlsx.writeFile("public/uploads/rekap-absen-guru.xlsx");
+      let fileName = `/uploads/rekap-absen-guru-${moment().format(
+        "DD MMM YYYY"
+      )}.xlsx`;
 
-      return "/uploads/rekap-absen-guru.xlsx";
+      // save workbook to disk
+      await workbook.xlsx.writeFile(`public${fileName}`);
+
+      return fileName;
     }
   }
 
@@ -7318,10 +7326,12 @@ class MainController {
       })
     );
 
-    // save workbook to disk
-    await workbook.xlsx.writeFile("public/uploads/rekap-nilai.xlsx");
+    let fileName = `/uploads/rekap-nilai-${moment().format('DD MMM YYYY')}.xlsx`
 
-    return "/uploads/rekap-nilai.xlsx";
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${fileName}`);
+
+    return fileName;
   }
 
   async postJadwalUjian({ response, request, auth }) {
