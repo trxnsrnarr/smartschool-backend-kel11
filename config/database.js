@@ -6,7 +6,7 @@ const Env = use("Env");
 /** @type {import('@adonisjs/ignitor/src/Helpers')} */
 const Helpers = use("Helpers");
 
-const database = {
+module.exports = {
   /*
   |--------------------------------------------------------------------------
   | Default Connection
@@ -85,8 +85,8 @@ const database = {
   },
 };
 
-if ( process.env.NODE_ENV === 'production' ) {
-  database.mysql.connection.socketPath = Env.get('DB_SOCKET', '/cloudsql/smart-school-300211:asia-southeast2:smart-school');
-}
+// if ( process.env.NODE_ENV === 'production' ) {
+//   database.mysql.connection.socketPath = Env.get('DB_SOCKET', '/cloudsql/smart-school-300211:asia-southeast2:smart-school');
+// }
 
-module.exports = database
+// module.exports = database
