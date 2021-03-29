@@ -16,12 +16,20 @@ class UserSchema extends Schema {
       table.string("role");
       table.enu("gender", ["L", "P"]);
       table.string("nip");
+      table.string("nama_ayah");
+      table.string("nama_ibu");
+      table.string("wa_ayah");
+      table.string("wa_ibu");
       table.string("nrk");
       table.string("nuptk");
       table.string("pangkat");
       table.string("golongan");
-      table.integer("m_sekolah_id").unsigned().index('m_sekolah_id');
-      table.foreign('m_sekolah_id').references('m_sekolah.id').onDelete('cascade').onUpdate('cascade')
+      table.integer("m_sekolah_id").unsigned().index("m_sekolah_id");
+      table
+        .foreign("m_sekolah_id")
+        .references("m_sekolah.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
       table.boolean("dihapus");
       table.timestamps();
     });

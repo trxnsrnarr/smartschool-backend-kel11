@@ -20,6 +20,8 @@ class MSekolahSchema extends Schema {
       table.string("email");
       table.string("logo");
       table.text("domain");
+      table.text("logo_ss");
+      table.text("favicon");
       table.string("tingkat");
       table.string("integrasi");
       table.boolean("diintegrasi");
