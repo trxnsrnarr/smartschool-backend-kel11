@@ -13,8 +13,18 @@ class TkTimelineSchema extends Schema {
       table.datetime("waktu_absen"); // absen
       table.text("keterangan"); // absen
       table.integer("nilai");
-      table.integer("m_user_id").unsigned();
-      table.integer("m_timeline_id").unsigned();
+      table.integer("m_user_id").unsigned().index("m_user_id");
+      table
+        .foreign("m_user_id")
+        .references("m_user.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
+      table.integer("m_timeline_id").unsigned().index("m_timeline_id");
+      table
+        .foreign("m_timeline_id")
+        .references("m_timeline.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
       table.string("absen");
       table.boolean("dihapus");
       table.boolean("dikumpulkan");

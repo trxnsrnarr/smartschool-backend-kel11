@@ -17,8 +17,18 @@ class MJadwalUjianSchema extends Schema {
       table.string("gmeet");
       table.boolean("diacak");
       table.boolean("dihapus");
-      table.integer("m_ujian_id").unsigned();
-      table.integer("m_user_id").unsigned();
+      table.integer("m_ujian_id").unsigned().index("m_ujian_id");
+      table
+        .foreign("m_ujian_id")
+        .references("m_ujian.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
+      table.integer("m_user_id").unsigned().index("m_user_id");
+      table
+        .foreign("m_user_id")
+        .references("m_user.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
       table.timestamps();
     });
   }

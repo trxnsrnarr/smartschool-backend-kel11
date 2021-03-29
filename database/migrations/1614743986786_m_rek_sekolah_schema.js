@@ -12,7 +12,12 @@ class MRekSekolahSchema extends Schema {
       table.string("nama");
       table.integer("saldo");
       table.boolean("dihapus");
-      table.integer("m_sekolah_id").unsigned();
+      table.integer("m_sekolah_id").unsigned().index("m_sekolah_id");
+      table
+        .foreign("m_sekolah_id")
+        .references("m_sekolah.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
       table.timestamps();
     });
   }

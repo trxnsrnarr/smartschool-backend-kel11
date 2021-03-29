@@ -13,7 +13,12 @@ class MTopikSchema extends Schema {
       table.text("link");
       table.boolean("kuis");
       table.boolean("dihapus");
-      table.integer("m_bab_id").unsigned();
+      table.integer("m_bab_id").unsigned().index('m_bab_id');
+      table
+        .foreign("m_bab_id")
+        .references("m_bab.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
       table.timestamps();
     });
   }

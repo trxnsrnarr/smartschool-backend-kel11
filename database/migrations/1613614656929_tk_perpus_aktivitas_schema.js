@@ -8,8 +8,18 @@ class TkPerpusBacaSchema extends Schema {
     this.create("tk_perpus_aktivitas", (table) => {
       table.increments();
       table.boolean("dihapus");
-      table.integer("m_user_id").unsigned();
-      table.integer("m_perpus_id").unsigned();
+      table.integer("m_user_id").unsigned().index("m_user_id");
+      table
+        .foreign("m_user_id")
+        .references("m_user.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
+      table.integer("m_perpus_id").unsigned().index("m_perpus_id");
+      table
+        .foreign("m_perpus_id")
+        .references("m_perpus.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
       table.string("aktivitas");
       table.datetime("waktu_mulai");
       table.datetime("waktu_selesai");

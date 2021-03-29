@@ -7,8 +7,18 @@ class TkMateriRombelSchema extends Schema {
   up() {
     this.create("tk_materi_rombel", (table) => {
       table.increments();
-      table.integer("m_materi_id").unsigned();
-      table.integer("m_rombel_id").unsigned();
+      table.integer("m_materi_id").unsigned().index("m_materi_id");
+      table
+        .foreign("m_materi_id")
+        .references("m_materi.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
+      table.integer("m_rombel_id").unsigned().index("m_rombel_id");
+      table
+        .foreign("m_rombel_id")
+        .references("m_rombel.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
       table.timestamps();
     });
   }

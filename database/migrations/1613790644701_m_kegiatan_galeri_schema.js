@@ -11,7 +11,12 @@ class MKegiatanGaleriSchema extends Schema {
       table.string("nama");
       table.text("deskripsi");
       table.boolean("dihapus");
-      table.integer("m_kegiatan_id").unsigned();
+      table.integer("m_kegiatan_id").unsigned().index("m_kegiatan_id");
+      table
+        .foreign("m_kegiatan_id")
+        .references("m_kegiatan.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
       table.timestamps();
     });
   }

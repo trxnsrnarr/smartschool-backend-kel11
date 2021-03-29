@@ -9,14 +9,37 @@ class MMateriSchema extends Schema {
       table.increments();
       // iduka
       table.string("nama");
-      table.integer("m_user_id").unsigned();
-      table.integer("m_sekolah_id").unsigned();
+      table.integer("m_user_id").unsigned().index("m_user_id");
+      table
+        .foreign("m_user_id")
+        .references("m_user.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
+      table.integer("m_sekolah_id").unsigned().index("m_sekolah_id");
+      table
+        .foreign("m_sekolah_id")
+        .references("m_sekolah.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
 
       // init
       table.string("tingkat");
       table.boolean("dihapus");
-      table.integer("m_jurusan_id").unsigned();
-      table.integer("m_mata_pelajaran_id").unsigned();
+      table.integer("m_jurusan_id").unsigned().index("m_jurusan_id");
+      table
+        .foreign("m_jurusan_id")
+        .references("m_jurusan.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
+      table
+        .integer("m_mata_pelajaran_id")
+        .unsigned()
+        .index("m_mata_pelajaran_id");
+      table
+        .foreign("m_mata_pelajaran_id")
+        .references("m_mata_pelajaran.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
       table.timestamps();
     });
   }

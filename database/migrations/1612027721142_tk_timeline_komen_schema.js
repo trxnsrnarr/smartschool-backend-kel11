@@ -9,8 +9,18 @@ class TkTimelineKomenSchema extends Schema {
       table.increments();
       table.text("komen");
       table.boolean("dihapus");
-      table.integer("tk_timeline_id").unsigned();
-      table.integer("m_user_id").unsigned();
+      table.integer("tk_timeline_id").unsigned().index("tk_timeline_id");
+      table
+        .foreign("tk_timeline_id")
+        .references("tk_timeline.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
+      table.integer("m_user_id").unsigned().index("m_user_id");
+      table
+        .foreign("m_user_id")
+        .references("m_user.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
       table.timestamps();
     });
   }

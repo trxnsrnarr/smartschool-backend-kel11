@@ -19,8 +19,21 @@ class TkJawabanUjianSiswaSchema extends Schema {
       table.boolean("dinilai");
       table.boolean("ragu");
       table.boolean("dijawab");
-      table.integer("m_soal_ujian_id").unsigned();
-      table.integer("tk_peserta_ujian_id").unsigned();
+      table.integer("m_soal_ujian_id").unsigned().index("m_soal_ujian_id");
+      table
+        .foreign("m_soal_ujian_id")
+        .references("m_soal_ujian.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
+      table
+        .integer("tk_peserta_ujian_id")
+        .unsigned()
+        .index("tk_peserta_ujian_id");
+      table
+        .foreign("tk_peserta_ujian_id")
+        .references("tk_peserta_ujian.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
       table.timestamps();
     });
   }

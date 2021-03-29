@@ -20,7 +20,12 @@ class MSoalKuisSchema extends Schema {
       table.text("pembahasan");
       table.integer("pg_poin");
       table.boolean("dihapus");
-      table.integer("m_topik_id").unsigned();
+      table.integer("m_topik_id").unsigned().index('m_topik_id');
+      table
+        .foreign("m_topik_id")
+        .references("m_topik.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
       table.timestamps();
     });
   }

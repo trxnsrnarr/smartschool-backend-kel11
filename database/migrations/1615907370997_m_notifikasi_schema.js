@@ -13,7 +13,12 @@ class MNotifikasiSchema extends Schema {
       table.datetime("tanggal_dibuat");
       table.boolean("dibaca");
       table.boolean("dihapus");
-      table.integer("m_user_id").unsigned();
+      table.integer("m_user_id").unsigned().index("m_user_id");
+      table
+        .foreign("m_user_id")
+        .references("m_user.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
       table.timestamps();
     });
   }

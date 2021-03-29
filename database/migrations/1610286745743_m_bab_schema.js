@@ -9,7 +9,12 @@ class MBabSchema extends Schema {
       table.increments();
       table.string("judul");
       table.boolean("dihapus");
-      table.integer("m_materi_id").unsigned();
+      table.integer("m_materi_id").unsigned().index('m_materi_id');
+      table
+        .foreign("m_materi_id")
+        .references("m_materi.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
       table.timestamps();
     });
   }

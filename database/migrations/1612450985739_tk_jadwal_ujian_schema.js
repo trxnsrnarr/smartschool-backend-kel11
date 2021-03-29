@@ -8,8 +8,18 @@ class TkJadwalUjianSchema extends Schema {
     this.create("tk_jadwal_ujian", (table) => {
       table.increments();
       table.boolean("dihapus");
-      table.integer("m_rombel_id").unsigned();
-      table.integer("m_jadwal_ujian_id").unsigned();
+      table.integer("m_rombel_id").unsigned().index("m_rombel_id");
+      table
+        .foreign("m_rombel_id")
+        .references("m_rombel.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
+      table.integer("m_jadwal_ujian_id").unsigned().index("m_jadwal_ujian_id");
+      table
+        .foreign("m_jadwal_ujian_id")
+        .references("m_jadwal_ujian.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
       table.timestamps();
     });
   }

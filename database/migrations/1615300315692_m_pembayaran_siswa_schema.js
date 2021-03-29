@@ -10,9 +10,27 @@ class MPembayaranSiswaSchema extends Schema {
       table.text("riwayat"); // {bank: '', norek: '123', nama_pemilik: 'asdf', nominal: '123', bukti: 'asdf.jpg', status: 'menunggu konfirmasi'}
       table.string("status");
       table.boolean("dihapus");
-      table.integer("m_user_id").unsigned();
-      table.integer("tk_pembayaran_rombel_id").unsigned();
-      table.integer("m_sekolah_id").unsigned();
+      table.integer("m_user_id").unsigned().index("m_user_id");
+      table
+        .foreign("m_user_id")
+        .references("m_user.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
+      table
+        .integer("tk_pembayaran_rombel_id")
+        .unsigned()
+        .index("tk_pembayaran_rombel_id");
+      table
+        .foreign("tk_pembayaran_rombel_id")
+        .references("tk_pembayaran_rombel.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
+      table.integer("m_sekolah_id").unsigned().index("m_sekolah_id");
+      table
+        .foreign("m_sekolah_id")
+        .references("m_sekolah.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
       table.timestamps();
     });
   }

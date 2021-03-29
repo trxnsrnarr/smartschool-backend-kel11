@@ -8,8 +8,18 @@ class TkPerpusTagSchema extends Schema {
     this.create("tk_perpus_tag", (table) => {
       table.increments();
       table.boolean("dihapus");
-      table.integer("m_perpus_tag_id").unsigned();
-      table.integer("m_perpus_id").unsigned();
+      table.integer("m_perpus_tag_id").unsigned().index("m_perpus_tag_id");
+      table
+        .foreign("m_perpus_tag_id")
+        .references("m_perpus_tag.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
+      table.integer("m_perpus_id").unsigned().index("m_perpus_id");
+      table
+        .foreign("m_perpus_id")
+        .references("m_perpus.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
       table.timestamps();
     });
   }

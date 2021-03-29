@@ -9,8 +9,18 @@ class MGuruJurusanSchema extends Schema {
       table.increments();
       table.text("foto");
       table.string("jabatan");
-      table.integer("m_jurusan_id").unsigned();
-      table.integer("m_user_id").unsigned();
+      table.integer("m_jurusan_id").unsigned().index("m_jurusan_id");
+      table
+        .foreign("m_jurusan_id")
+        .references("m_jurusan.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
+      table.integer("m_user_id").unsigned().index("m_user_id");
+      table
+        .foreign("m_user_id")
+        .references("m_user.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
       table.boolean("dihapus");
       table.timestamps();
     });

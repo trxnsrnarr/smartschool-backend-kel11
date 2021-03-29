@@ -12,7 +12,12 @@ class MInformasiJurusanSchema extends Schema {
       table.text("deskripsi");
       table.text("cover");
       table.text("galeri");
-      table.integer("m_jurusan_id").unsigned();
+      table.integer("m_jurusan_id").unsigned().index("m_jurusan_id");
+      table
+        .foreign("m_jurusan_id")
+        .references("m_jurusan.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
       table.timestamps();
     });
   }
