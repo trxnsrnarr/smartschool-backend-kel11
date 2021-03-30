@@ -7318,7 +7318,7 @@ class MainController {
       })
     );
 
-    let namaFile = "/uploads/rekap-nilai.xlsx";
+    let namaFile = `/uploads/rekap-nilai-${new Date().getTime()}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
