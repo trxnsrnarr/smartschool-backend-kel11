@@ -7318,10 +7318,12 @@ class MainController {
       })
     );
 
-    // save workbook to disk
-    await workbook.xlsx.writeFile("public/uploads/rekap-nilai.xlsx");
+    let namaFile = "/uploads/rekap-nilai.xlsx";
 
-    return "/uploads/rekap-nilai.xlsx";
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
   }
 
   async postJadwalUjian({ response, request, auth }) {
