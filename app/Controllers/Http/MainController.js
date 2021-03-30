@@ -5200,10 +5200,12 @@ class MainController {
       })
     );
 
-    // save workbook to disk
-    await workbook.xlsx.writeFile("public/uploads/absen-pertemuan.xlsx");
+    let namaFile = `/uploads/absen-pertemuan-${new Date().getTime()}.xlsx`
 
-    return "/uploads/absen-pertemuan.xlsx";
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
   }
 
   async postTkTimelineKomen({ response, request, auth }) {
@@ -5705,10 +5707,12 @@ class MainController {
         })
       );
 
-      // save workbook to disk
-      await workbook.xlsx.writeFile("public/uploads/rekap-absen-siswa.xlsx");
+      let namaFile = `/uploads/rekap-absen-siswa-${new Date().getTime()}.xlsx`
 
-      return "/uploads/rekap-absen-siswa.xlsx";
+      // save workbook to disk
+      await workbook.xlsx.writeFile(`public${namaFile}`);
+
+      return namaFile;
     } else if (role == "guru") {
       const absen = await User.query()
         .with("absen", (builder) => {
@@ -5802,10 +5806,12 @@ class MainController {
         })
       );
 
-      // save workbook to disk
-      await workbook.xlsx.writeFile("public/uploads/rekap-absen-guru.xlsx");
+      let namaFile = `/uploads/rekap-absen-guru.xlsx`
 
-      return "/uploads/rekap-absen-guru.xlsx";
+      // save workbook to disk
+      await workbook.xlsx.writeFile(`public${namaFile}`);
+
+      return namaFile;
     }
   }
 
