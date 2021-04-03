@@ -144,6 +144,9 @@ Route.get(
   "MainController.detailPembayaranSiswa"
 );
 
+// riwayat pembayaran siswa
+Route.post('/riwayat-pembayaran-siswa', 'MainController.postRiwayatPembayaranSiswa')
+
 // pembayaran kategori
 Route.post("/pembayaran-kategori", "MainController.postPembayaranKategori");
 Route.delete(
