@@ -18,6 +18,7 @@ const MPembayaran = use("App/Models/MPembayaran");
 const MPembayaranSiswa = use("App/Models/MPembayaranSiswa");
 const MMutasi = use("App/Models/MMutasi");
 const MAlumni = use("App/Models/MAlumni");
+const MRiwayatPembayaranSiswa = use("App/Models/MRiwayatPembayaranSiswa");
 const MPembayaranKategori = use("App/Models/MPembayaranKategori");
 const Mta = use("App/Models/Mta");
 const MSlider = use("App/Models/MSlider");
@@ -5200,7 +5201,7 @@ class MainController {
       })
     );
 
-    let namaFile = `/uploads/absen-pertemuan-${new Date().getTime()}.xlsx`
+    let namaFile = `/uploads/absen-pertemuan-${new Date().getTime()}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -5707,7 +5708,7 @@ class MainController {
         })
       );
 
-      let namaFile = `/uploads/rekap-absen-siswa-${new Date().getTime()}.xlsx`
+      let namaFile = `/uploads/rekap-absen-siswa-${new Date().getTime()}.xlsx`;
 
       // save workbook to disk
       await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -5806,7 +5807,7 @@ class MainController {
         })
       );
 
-      let namaFile = `/uploads/rekap-absen-guru.xlsx`
+      let namaFile = `/uploads/rekap-absen-guru.xlsx`;
 
       // save workbook to disk
       await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -10210,6 +10211,7 @@ class MainController {
         builder.with("pembayaran");
       })
       .with("user")
+      .with("riwayat")
       .where({ dihapus: 0 })
       .andWhere({ m_user_id: user.id })
       .andWhere({ id: pembayaran_siswa_id })
@@ -10228,12 +10230,7 @@ class MainController {
     });
   }
 
-  async putPembayaranSiswa({
-    response,
-    request,
-    auth,
-    params: { pembayaran_siswa_id },
-  }) {
+  async postRiwayatPembayaranSiswa({ response, request, auth }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -10244,24 +10241,28 @@ class MainController {
 
     const user = await auth.getUser();
 
-    let { riwayat } = request.post();
+    let {
+      bank,
+      norek,
+      nama_pemilik,
+      nominal,
+      bukti,
+      status,
+      m_pembayaran_siswa_id,
+    } = request.post();
 
-    riwayat = riwayat ? JSON.stringify(riwayat) : null;
-
-    const pembayaran = await MPembayaranSiswa.query()
-      .where({ dihapus: 0 })
-      .andWhere({ m_user_id: user.id })
-      .andWhere({ id: pembayaran_siswa_id })
-      .first();
-
-    if (!pembayaran) {
-      return response.notFound({
-        message: messageNotFound,
-      });
-    }
+    const pembayaran = await MRiwayatPembayaranSiswa.create({
+      bank,
+      norek,
+      nama_pemilik,
+      nominal: +nominal,
+      bukti,
+      status,
+      m_pembayaran_siswa_id: +m_pembayaran_siswa_id,
+    });
 
     return response.ok({
-      message: messagePutSuccess,
+      message: messagePostSuccess,
     });
   }
 
