@@ -8,6 +8,10 @@ class MPembayaranSiswa extends Model {
     return "m_pembayaran_siswa";
   }
 
+  riwayat() {
+    return this.hasMany("App/Models/MRiwayatPembayaranSiswa");
+  }
+
   user() {
     return this.belongsTo("App/Models/User", "m_user_id");
   }
