@@ -9897,14 +9897,7 @@ class MainController {
         siswa = await MPembayaranSiswa.query()
           .with("user")
           .with("riwayat", (builder) => {
-            builder
-              .select(
-                Database.raw(
-                  "sum(nominal) as jumlahNominal, count(id) as jumlahRiwayat"
-                )
-              )
-              .select("m_pembayaran_siswa_id")
-              .groupBy("m_pembayaran_siswa_id");
+            builder.where({ dihapus: 0 });
           })
           .where({ dihapus: 0 })
           .andWhere({ tk_pembayaran_rombel_id: rombel_id })
@@ -9914,14 +9907,7 @@ class MainController {
         siswa = await MPembayaranSiswa.query()
           .with("user")
           .with("riwayat", (builder) => {
-            builder
-              .select(
-                Database.raw(
-                  "sum(nominal) as jumlahNominal, count(id) as jumlahRiwayat"
-                )
-              )
-              .select("m_pembayaran_siswa_id")
-              .groupBy("m_pembayaran_siswa_id");
+            builder.where({ dihapus: 0 });
           })
           .where({ dihapus: 0 })
           .andWhere({ tk_pembayaran_rombel_id: rombel_id })
@@ -9932,14 +9918,7 @@ class MainController {
         siswa = await MPembayaranSiswa.query()
           .with("user")
           .with("riwayat", (builder) => {
-            builder
-              .select(
-                Database.raw(
-                  "sum(nominal) as jumlahNominal, count(id) as jumlahRiwayat"
-                )
-              )
-              .select("m_pembayaran_siswa_id")
-              .groupBy("m_pembayaran_siswa_id");
+            builder.where({ dihapus: 0 });
           })
           .where({ dihapus: 0 })
           .andWhere({
@@ -9951,14 +9930,7 @@ class MainController {
         siswa = await MPembayaranSiswa.query()
           .with("user")
           .with("riwayat", (builder) => {
-            builder
-              .select(
-                Database.raw(
-                  "sum(nominal) as jumlahNominal, count(id) as jumlahRiwayat"
-                )
-              )
-              .select("m_pembayaran_siswa_id")
-              .groupBy("m_pembayaran_siswa_id");
+            builder.where({ dihapus: 0 });
           })
           .where({ dihapus: 0 })
           .andWhere({
@@ -10291,7 +10263,6 @@ class MainController {
       nama_pemilik,
       nominal,
       bukti,
-      status,
       m_pembayaran_siswa_id,
     } = request.post();
 
@@ -10301,7 +10272,7 @@ class MainController {
       nama_pemilik,
       nominal: +nominal,
       bukti,
-      status,
+      dikonfirmasi: 0,
       m_pembayaran_siswa_id: +m_pembayaran_siswa_id,
       dihapus: 0,
     });
