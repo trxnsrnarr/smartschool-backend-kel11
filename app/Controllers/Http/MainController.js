@@ -964,9 +964,9 @@ class MainController {
       .andWhere({ role: "siswa" })
       .getCount();
 
-    let { search, offset } = request.get();
+    let { search, page } = request.get();
 
-    offset = offset ? parseInt(offset) : 0;
+    page = page ? parseInt(page) : 1;
     let siswa;
 
     if (search) {
@@ -976,18 +976,14 @@ class MainController {
         .andWhere({ dihapus: 0 })
         .andWhere({ role: "siswa" })
         .andWhere("nama", "like", `%${search}%`)
-        .offset(offset)
-        .limit(25)
-        .fetch();
+        .paginate(page, 25);
     } else {
       siswa = await User.query()
         .select("nama", "id", "whatsapp", "avatar", "gender")
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ dihapus: 0 })
         .andWhere({ role: "siswa" })
-        .offset(offset)
-        .limit(25)
-        .fetch();
+        .paginate(page, 25);
     }
 
     return response.ok({
@@ -5511,7 +5507,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const {
+    let {
       absen,
       keterangan,
       lampiran,
@@ -5519,14 +5515,17 @@ class MainController {
       waktu_masuk,
     } = request.post();
 
+    lampiran = lampiran ? lampiran.toString() : null;
+
     if (absen != "hadir") {
-      await MAbsen.create({
+      return await MAbsen.create({
         m_sekolah_id: sekolah.id,
         m_user_id: user.id,
         role: user.role,
         absen,
         keterangan,
-        lampiran: lampiran.toString(),
+        lampiran: lampiran,
+        waktu_masuk,
       });
     } else {
       await MAbsen.create({
@@ -9897,6 +9896,16 @@ class MainController {
       if (search) {
         siswa = await MPembayaranSiswa.query()
           .with("user")
+          .with("riwayat", (builder) => {
+            builder
+              .select(
+                Database.raw(
+                  "sum(nominal) as jumlahNominal, count(id) as jumlahRiwayat"
+                )
+              )
+              .select("m_pembayaran_siswa_id")
+              .groupBy("m_pembayaran_siswa_id");
+          })
           .where({ dihapus: 0 })
           .andWhere({ tk_pembayaran_rombel_id: rombel_id })
           .whereIn("m_user_id", userIds)
@@ -9904,6 +9913,16 @@ class MainController {
       } else {
         siswa = await MPembayaranSiswa.query()
           .with("user")
+          .with("riwayat", (builder) => {
+            builder
+              .select(
+                Database.raw(
+                  "sum(nominal) as jumlahNominal, count(id) as jumlahRiwayat"
+                )
+              )
+              .select("m_pembayaran_siswa_id")
+              .groupBy("m_pembayaran_siswa_id");
+          })
           .where({ dihapus: 0 })
           .andWhere({ tk_pembayaran_rombel_id: rombel_id })
           .fetch();
@@ -9912,6 +9931,16 @@ class MainController {
       if (search) {
         siswa = await MPembayaranSiswa.query()
           .with("user")
+          .with("riwayat", (builder) => {
+            builder
+              .select(
+                Database.raw(
+                  "sum(nominal) as jumlahNominal, count(id) as jumlahRiwayat"
+                )
+              )
+              .select("m_pembayaran_siswa_id")
+              .groupBy("m_pembayaran_siswa_id");
+          })
           .where({ dihapus: 0 })
           .andWhere({
             tk_pembayaran_rombel_id: pembayaran.toJSON().rombel[0].id,
@@ -9921,6 +9950,16 @@ class MainController {
       } else {
         siswa = await MPembayaranSiswa.query()
           .with("user")
+          .with("riwayat", (builder) => {
+            builder
+              .select(
+                Database.raw(
+                  "sum(nominal) as jumlahNominal, count(id) as jumlahRiwayat"
+                )
+              )
+              .select("m_pembayaran_siswa_id")
+              .groupBy("m_pembayaran_siswa_id");
+          })
           .where({ dihapus: 0 })
           .andWhere({
             tk_pembayaran_rombel_id: pembayaran.toJSON().rombel[0].id,
@@ -10211,7 +10250,12 @@ class MainController {
         builder.with("pembayaran");
       })
       .with("user")
-      .with("riwayat")
+      .with("riwayat", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .withCount("riwayat as totalJumlah", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
       .where({ dihapus: 0 })
       .andWhere({ m_user_id: user.id })
       .andWhere({ id: pembayaran_siswa_id })
@@ -10259,6 +10303,7 @@ class MainController {
       bukti,
       status,
       m_pembayaran_siswa_id: +m_pembayaran_siswa_id,
+      dihapus: 0,
     });
 
     return response.ok({
