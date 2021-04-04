@@ -10277,9 +10277,7 @@ class MainController {
       dihapus: 0,
     });
 
-    return response.ok({
-      message: messagePostSuccess,
-    });
+    return response.ok(pembayaran);
   }
 
   async getKontak({ response, request, auth }) {
