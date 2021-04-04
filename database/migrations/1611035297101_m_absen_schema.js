@@ -10,7 +10,7 @@ class MAbsenSchema extends Schema {
       table.string("role");
       table.string("absen");
       table.string("keterangan");
-      table.string("lampiran");
+      table.text("lampiran");
       table.string("foto_masuk");
       table.datetime("waktu_masuk");
       table.string("foto_pulang");
