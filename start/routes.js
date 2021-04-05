@@ -145,7 +145,10 @@ Route.get(
 );
 
 // riwayat pembayaran siswa
-Route.post('/riwayat-pembayaran-siswa', 'MainController.postRiwayatPembayaranSiswa')
+Route.post(
+  "/riwayat-pembayaran-siswa",
+  "MainController.postRiwayatPembayaranSiswa"
+);
 
 // pembayaran kategori
 Route.post("/pembayaran-kategori", "MainController.postPembayaranKategori");
@@ -187,7 +190,6 @@ Route.delete("/topik/:topik_id", "MainController.deleteTopik");
 
 // tugas
 Route.get("/tugas", "MainController.getTugas");
-Route.get("/tugas/:tugas_id", "MainController.detailTugas");
 Route.post("/tugas", "MainController.postTugas");
 Route.put("/tugas/:tugas_id", "MainController.putTugas");
 Route.delete("/tugas/:tugas_id", "MainController.deleteTugas");
