@@ -5345,7 +5345,7 @@ class MainController {
     if (role == "guru") {
       const absen = await User.query()
         .with("absen", (builder) => {
-          builder.where("waktu_masuk", "like", `%${tanggal}%`);
+          builder.where("created_at", "like", `%${tanggal}%`);
         })
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ dihapus: 0 })
@@ -5372,19 +5372,19 @@ class MainController {
 
           const totalHadir = await MAbsen.query()
             .with("user")
-            .where("waktu_masuk", "like", `%${tanggal}%`)
+            .where("created_at", "like", `%${tanggal}%`)
             .andWhere({ keterangan: "hadir" })
             .whereIn("m_user_id", userIds)
             .count("* as total");
           const totalSakit = await MAbsen.query()
             .with("user")
-            .where("waktu_masuk", "like", `%${tanggal}%`)
+            .where("created_at", "like", `%${tanggal}%`)
             .andWhere({ keterangan: "sakit" })
             .whereIn("m_user_id", userIds)
             .count("* as total");
           const totalIzin = await MAbsen.query()
             .with("user")
-            .where("waktu_masuk", "like", `%${tanggal}%`)
+            .where("created_at", "like", `%${tanggal}%`)
             .andWhere({ keterangan: "izin" })
             .whereIn("m_user_id", userIds)
             .count("* as total");
@@ -5432,7 +5432,7 @@ class MainController {
 
     if (hari_ini) {
       absen = await MAbsen.query()
-        .where("waktu_masuk", "like", `%${hari_ini}%`)
+        .where("created_at", "like", `%${hari_ini}%`)
         .andWhere({ m_user_id: user.id })
         .first();
 
@@ -5507,13 +5507,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    let {
-      absen,
-      keterangan,
-      lampiran,
-      foto_masuk,
-      waktu_masuk,
-    } = request.post();
+    let { absen, keterangan, lampiran, foto_masuk } = request.post();
 
     lampiran = lampiran ? lampiran.toString() : null;
 
@@ -5525,7 +5519,6 @@ class MainController {
         absen,
         keterangan,
         lampiran: lampiran,
-        waktu_masuk,
       });
     } else {
       await MAbsen.create({
@@ -5535,7 +5528,6 @@ class MainController {
         absen,
         keterangan,
         foto_masuk,
-        waktu_masuk,
       });
     }
 
@@ -5562,7 +5554,6 @@ class MainController {
       foto_pulang,
       waktu_pulang,
       foto_masuk,
-      waktu_masuk,
     } = request.post();
 
     if (absen != "hadir") {
@@ -5574,7 +5565,6 @@ class MainController {
     } else {
       await MAbsen.query().where({ id: absen_id }).update({
         foto_masuk,
-        waktu_masuk,
         absen,
         foto_pulang,
         waktu_pulang,
@@ -5609,7 +5599,7 @@ class MainController {
         .with("anggotaRombel", (builder) => {
           builder.with("user", (builder) => {
             builder.with("absen", (builder) => {
-              builder.where("waktu_masuk", "like", `%${tanggal}%`);
+              builder.where("created_at", "like", `%${tanggal}%`);
             });
           });
         })
@@ -5644,7 +5634,7 @@ class MainController {
                 { key: "keterangan" },
                 { key: "lampiran" },
                 { key: "foto_masuk" },
-                { key: "waktu_masuk" },
+                { key: "created_at" },
                 { key: "foto_pulang" },
                 { key: "waktu_pulang" },
               ];
@@ -5680,10 +5670,10 @@ class MainController {
                       : "-"
                     : "-"
                   : "-",
-                waktu_masuk: anggota.user
+                created_at: anggota.user
                   ? anggota.user.absen
                     ? anggota.user.absen.length
-                      ? anggota.user.absen[0].waktu_masuk
+                      ? anggota.user.absen[0].created_at
                       : "-"
                     : "-"
                   : "-",
@@ -5716,7 +5706,7 @@ class MainController {
     } else if (role == "guru") {
       const absen = await User.query()
         .with("absen", (builder) => {
-          builder.where("waktu_masuk", "like", `%${tanggal}%`);
+          builder.where("created_at", "like", `%${tanggal}%`);
         })
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ dihapus: 0 })
@@ -5746,7 +5736,7 @@ class MainController {
             { key: "keterangan" },
             { key: "lampiran" },
             { key: "foto_masuk" },
-            { key: "waktu_masuk" },
+            { key: "created_at" },
             { key: "foto_pulang" },
             { key: "waktu_pulang" },
           ];
@@ -5781,10 +5771,10 @@ class MainController {
                   : "-"
                 : "-"
               : "-",
-            waktu_masuk: d
+            created_at: d
               ? d.absen
                 ? d.absen.length
-                  ? d.absen[0].waktu_masuk
+                  ? d.absen[0].created_at
                   : "-"
                 : "-"
               : "-",
