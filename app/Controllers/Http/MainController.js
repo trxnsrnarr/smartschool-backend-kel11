@@ -4296,27 +4296,6 @@ class MainController {
     });
   }
 
-  async detailTugas({ response, request, auth, params: { topik_id } }) {
-    const user = await auth.getUser();
-
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const topik = await MTopik.query()
-      .where({ id: topik_id })
-      .andWhere({ dihapus: 0 })
-      .first();
-
-    return response.ok({
-      topik,
-    });
-  }
-
   async postTugas({ response, request, auth }) {
     const domain = request.headers().origin;
 
@@ -4808,10 +4787,20 @@ class MainController {
         builder.with("user").whereNull("waktu_pengumpulan");
       })
       .with("listSiswaTerkumpul", (builder) => {
-        builder.with("user").where({ dikumpulkan: 1 });
+        builder
+          .with("user")
+          .where({ dikumpulkan: 1 })
+          .with("komen", (builder) => {
+            builder.with("user").where({ dihapus: 0 });
+          });
       })
       .with("listSiswaDinilai", (builder) => {
-        builder.with("user").whereNotNull("nilai");
+        builder
+          .with("user")
+          .whereNotNull("nilai")
+          .with("komen", (builder) => {
+            builder.with("user").where({ dihapus: 0 });
+          });
       })
       .withCount("tkTimeline as total_respon_tugas", (builder) => {
         builder.whereNotNull("waktu_pengumpulan");
