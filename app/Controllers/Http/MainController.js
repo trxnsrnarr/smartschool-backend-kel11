@@ -316,7 +316,11 @@ class MainController {
       return response.ok(res);
     }
 
-    if (res.role == "admin" && role == "kepsek") {
+    if (res.role == "admin") {
+      return response.ok(res);
+    }
+
+    if (res.role == "kepsek") {
       return response.ok(res);
     }
 
