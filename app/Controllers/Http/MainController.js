@@ -840,16 +840,6 @@ class MainController {
 
     const { gender, nama, whatsapp, password, avatar } = request.post();
 
-    const validation = await validate(
-      request.post(),
-      rulesUserPut,
-      messagesUser
-    );
-
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
-    }
-
     let guru;
 
     if (!password) {
