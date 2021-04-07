@@ -5955,20 +5955,23 @@ class MainController {
       .first();
 
     const soalUjianIds = await TkSoalUjian.query()
+      .with("soal")
       .where({ m_ujian_id: ujian_id })
-      .pluck("m_soal_ujian_id");
+      .fetch();
 
-    const jumlahSoalPg = await MSoalUjian.query()
-      .where({ bentuk: "pg" })
-      .andWhere({ dihapus: 0 })
-      .whereIn("id", soalUjianIds)
-      .count("* as jumlahSoalPg");
+    let jumlahSoalPg = 0;
 
-    const jumlahSoalEsai = await MSoalUjian.query()
-      .where({ bentuk: "esai" })
-      .andWhere({ dihapus: 0 })
-      .whereIn("id", soalUjianIds)
-      .count("* as jumlahSoalEsai");
+    let jumlahSoalEsai = 0;
+
+    await Promise.all(
+      soalUjianIds.toJSON().map(async (d) => {
+        if (d.soal.bentuk == "pg") {
+          jumlahSoalPg = jumlahSoalPg + 1;
+        } else if (d.soal.bentuk == "esai") {
+          jumlahSoalEsai = jumlahSoalEsai + 1;
+        }
+      })
+    );
 
     let kontenMateri = [];
     let konteksMateri = [];
@@ -6062,8 +6065,8 @@ class MainController {
       prosesKognitif,
       bentukSoal,
       levelKognitif,
-      jumlahSoalPg: jumlahSoalPg[0].jumlahSoalPg,
-      jumlahSoalEsai: jumlahSoalEsai[0].jumlahSoalEsai,
+      jumlahSoalPg: jumlahSoalPg,
+      jumlahSoalEsai: jumlahSoalEsai,
       // filter
       tingkat: tingkatData,
     });
