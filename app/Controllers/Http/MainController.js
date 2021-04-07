@@ -1966,34 +1966,6 @@ class MainController {
         .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
         .pluck("m_user_id");
 
-      analisisMateri = await TkMateriRombel.query()
-        .with("materi", (builder) => {
-          builder.with("bab", (builder) => {
-            builder
-              .with("topik", (builder) => {
-                builder
-                  .withCount(
-                    "materiKesimpulan as totalKesimpulan",
-                    (builder) => {
-                      builder
-                        .whereIn("m_user_id", userIds)
-                        .whereNotNull("kesimpulan");
-                    }
-                  )
-                  .where({ dihapus: 0 });
-              })
-              .where({ dihapus: 0 });
-          });
-        })
-        .with("rombel", (builder) => {
-          builder.withCount("anggotaRombel as totalAnggota", (builder) => {
-            builder.where({ dihapus: 0 });
-          });
-        })
-        .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
-        .andWhere({ m_materi_id: materi.id })
-        .first();
-
       const timelineIds = await MTimeline.query()
         .where({ dihapus: 0 })
         .andWhere({ tipe: "tugas" })
@@ -2003,30 +1975,60 @@ class MainController {
         })
         .ids();
 
-      judulTugas = await MTimeline.query()
-        .select("id", "m_tugas_id", "tanggal_dibuat")
-        .with("tugas", (builder) => {
-          builder.select("id", "judul");
-        })
-        .with("ditugaskan", (builder) => {
-          builder
-            .select(
-              Database.raw(
-                "sum(nilai) as jumlahNilai, count(id) as jumlahSiswa"
+      if (user.role == "guru") {
+        judulTugas = await MTimeline.query()
+          .select("id", "m_tugas_id", "tanggal_dibuat")
+          .with("tugas", (builder) => {
+            builder.select("id", "judul");
+          })
+          .with("ditugaskan", (builder) => {
+            builder
+              .select(
+                Database.raw(
+                  "sum(nilai) as jumlahNilai, count(id) as jumlahSiswa"
+                )
               )
-            )
-            .select("m_timeline_id")
-            .groupBy("m_timeline_id");
-        })
-        .whereIn("id", timelineIds)
-        .fetch();
+              .select("m_timeline_id")
+              .groupBy("m_timeline_id");
+          })
+          .whereIn("id", timelineIds)
+          .fetch();
 
-      analisisNilai = await User.query()
-        .with("tugas", (builder) => {
-          builder.whereIn("m_timeline_id", timelineIds);
-        })
-        .whereIn("id", userIds)
-        .fetch();
+        analisisNilai = await User.query()
+          .with("tugas", (builder) => {
+            builder.whereIn("m_timeline_id", timelineIds);
+          })
+          .whereIn("id", userIds)
+          .fetch();
+
+        analisisMateri = await TkMateriRombel.query()
+          .with("materi", (builder) => {
+            builder.with("bab", (builder) => {
+              builder
+                .with("topik", (builder) => {
+                  builder
+                    .withCount(
+                      "materiKesimpulan as totalKesimpulan",
+                      (builder) => {
+                        builder
+                          .whereIn("m_user_id", userIds)
+                          .whereNotNull("kesimpulan");
+                      }
+                    )
+                    .where({ dihapus: 0 });
+                })
+                .where({ dihapus: 0 });
+            });
+          })
+          .with("rombel", (builder) => {
+            builder.withCount("anggotaRombel as totalAnggota", (builder) => {
+              builder.where({ dihapus: 0 });
+            });
+          })
+          .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
+          .andWhere({ m_materi_id: materi.id })
+          .first();
+      }
     }
 
     return response.ok({
@@ -9851,7 +9853,7 @@ class MainController {
 
     const sekolah = await this.getSekolahByDomain(domain);
 
-    let { rombel_id, search } = request.get();
+    let { rombel_id, search, nav } = request.get();
 
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
