@@ -11,7 +11,7 @@ class MSoalUjianSchema extends Schema {
       table.text("kd");
       table.text("kd_konten_materi");
       table.string("level_kognitif");
-      table.string("bentuk_soal");
+      table.string("bentuk");
       // akm literasi
       table.string("akm_konten_materi");
       table.string("akm_konteks_materi");
@@ -44,7 +44,6 @@ class MSoalUjianSchema extends Schema {
       table.text("pilihan_menjodohkan");
       table.text("soal_menjodohkan");
 
-      table.string("bentuk");
       table.boolean("dihapus");
       table.integer("m_user_id").unsigned().index("m_user_id");
       table
