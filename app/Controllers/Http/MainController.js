@@ -2190,7 +2190,7 @@ class MainController {
     const { kode_hari } = request.get();
 
     let jamMengajar = await MJamMengajar.query()
-      .where({ kode_hari: 1 })
+      .where({ kode_hari: kode_hari })
       .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ m_ta_id: ta.id })
       .fetch();
