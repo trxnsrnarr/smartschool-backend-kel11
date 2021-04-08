@@ -2187,17 +2187,13 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    const { kode_hari } = request.get();
+    let { hari } = request.get();
 
-    let jamMengajar = await MJamMengajar.query()
-      .where({ kode_hari: kode_hari })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta.id })
-      .fetch();
+    hari = hari ? hari : 1;
 
-    if (kode_hari) {
+    if (hari) {
       jamMengajar = await MJamMengajar.query()
-        .where({ kode_hari: kode_hari })
+        .where({ kode_hari: hari })
         .andWhere({ m_sekolah_id: sekolah.id })
         .andWhere({ m_ta_id: ta.id })
         .fetch();
