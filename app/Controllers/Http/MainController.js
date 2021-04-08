@@ -2191,13 +2191,11 @@ class MainController {
 
     hari = hari ? hari : 1;
 
-    if (hari) {
-      jamMengajar = await MJamMengajar.query()
-        .where({ kode_hari: hari })
-        .andWhere({ m_sekolah_id: sekolah.id })
-        .andWhere({ m_ta_id: ta.id })
-        .fetch();
-    }
+    const jamMengajar = await MJamMengajar.query()
+      .where({ kode_hari: hari })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .fetch();
 
     return {
       jamMengajar: jamMengajar,
