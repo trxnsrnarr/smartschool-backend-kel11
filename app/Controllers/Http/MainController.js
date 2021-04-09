@@ -3049,7 +3049,7 @@ class MainController {
             nama: d.nama,
             whatsapp: d.whatsapp,
             gender: d.gender,
-            password: await Hash.make(d.password),
+            password: await Hash.make(`${d.password}`),
             role: "siswa",
             m_sekolah_id: sekolah.id,
             dihapus: 0,
