@@ -206,9 +206,16 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
+    const kontak = await MKontak.query()
+      .where({
+        m_sekolah_id: sekolah.id,
+      })
+      .first();
+
     return response.ok({
       sekolah: sekolah,
       integrasi: sekolah.integrasi,
+      kontak,
     });
   }
 
