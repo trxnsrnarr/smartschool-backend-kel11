@@ -10594,6 +10594,16 @@ class MainController {
       message: messagePutSuccess,
     });
   }
+
+  async getProyek({ response, request, auth }){
+    const domain = request.headersrs().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404"){
+      return response.notFound({ message: "Sekolah belum terdaftar"});
+    }
+  }
 }
 
 module.exports = MainController;
