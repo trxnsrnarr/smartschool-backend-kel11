@@ -60,6 +60,9 @@ Route.post("/siswa", "MainController.postSiswa");
 Route.put("/siswa/:siswa_id", "MainController.putSiswa");
 Route.delete("/siswa/:siswa_id", "MainController.deleteSiswa");
 
+// ppdb
+Route.post("/ppdb/daftar", "MainController.daftarPPDB");
+
 // alumni
 Route.get("/alumni", "MainController.getAlumni");
 Route.post("/alumni", "MainController.postAlumni");
