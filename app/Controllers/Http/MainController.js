@@ -221,7 +221,7 @@ class MainController {
 
   async getTAAktif(sekolah) {
     const ta = await Mta.query()
-      .select("id")
+      .select("id", "tahun")
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ aktif: 1 })
       .andWhere({ dihapus: 0 })
@@ -376,6 +376,7 @@ class MainController {
       user: userData,
       mataPelajaran: mataPelajaran,
       rombel,
+      ta,
     });
   }
 
@@ -1116,6 +1117,43 @@ class MainController {
 
     return response.ok({
       message: messageDeleteSuccess,
+    });
+  }
+
+  async daftarPPDB({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { nama, nama_ibu, whatsapp, password } = request.post();
+
+    const check = await User.query().where({ whatsapp: whatsapp }).first();
+
+    if (check) {
+      return response.forbidden({
+        message: "Akun sudah terdaftar",
+      });
+    }
+
+    const res = await User.create({
+      nama,
+      nama_ibu,
+      whatsapp,
+      password: await Hash.make(password),
+      role: "ppdb",
+      m_sekolah_id: sekolah.id,
+      dihapus: 0,
+    });
+
+    const { token } = await auth.generate(res);
+
+    return response.ok({
+      message: `Selamat datang ${res.nama}`,
+      token,
     });
   }
 
