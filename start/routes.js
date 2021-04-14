@@ -377,5 +377,12 @@ Route.post("/proyek", "MainController.postProyek");
 Route.put("/proyek/:proyek_id", "MainController.putProyek");
 Route.delete("/proyek/:proyek_id", "MainController.deleteProyek");
 
+// anggota-proyek
+Route.get("/anggota-proyek", "MainController.getAnggotaProyek");
+Route.post("/anggota-proyek", "MainController.postAnggotaProyek");
+Route.put("/anggota-proyek/:anggota_proyek_id", "MainController.putAnggotaProyek");
+Route.delete("/anggota-proyek/:anggota_proyek_id", "MainController.deleteAnggotaProyek");
+
+
 // wildcard
 Route.any("*", "MainController.notFoundPage");
