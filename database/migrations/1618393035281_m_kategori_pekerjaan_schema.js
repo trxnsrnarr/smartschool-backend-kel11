@@ -16,6 +16,7 @@ class MKategoriPekerjaanSchema extends Schema {
         .references("m_proyek.id")
         .onDelete("cascade")
         .onUpdate("cascade");
+      table.integer("urutan");
       table.timestamps()
   
     })
