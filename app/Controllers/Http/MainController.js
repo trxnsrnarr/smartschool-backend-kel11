@@ -10,6 +10,7 @@ const MSarpras = use("App/Models/MSarpras");
 const MKegiatanGaleri = use("App/Models/MKegiatanGaleri");
 const MNotifikasi = use("App/Models/MNotifikasi");
 const MPerpusKomen = use("App/Models/MPerpusKomen");
+const MGelombangPpdb = use("App/Models/MGelombangPpdb");
 const TkPerpusAktivitas = use("App/Models/TkPerpusAktivitas");
 const MJurusan = use("App/Models/MJurusan");
 const MRekSekolah = use("App/Models/MRekSekolah");
@@ -8629,6 +8630,147 @@ class MainController {
     });
 
     if (!kegiatan) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async getGelombangPPDB({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (!ta) {
+      return response.notFound({
+        message: "Aktifkan tahun ajaran yg tersedia di menu kurikulum",
+      });
+    }
+
+    const gelombang = await MGelombangPpdb.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    return response.ok({
+      gelombang: gelombang,
+    });
+  }
+
+  async postGelombangPPDB({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+      return response.forbidden({ message: messageForbidden });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    const { nama, dibuka, ditutup, tes_akademik } = request.post();
+
+    await MGelombangPpdb.create({
+      nama,
+      dibuka,
+      ditutup,
+      dihapus: 0,
+      tes_akademik,
+      m_sekolah_id: sekolah.id,
+      m_ta_id: ta.id,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putGelombangPPDB({
+    response,
+    request,
+    auth,
+    params: { gelombang_ppdb_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+      return response.forbidden({ message: messageForbidden });
+    }
+
+    const { nama, dibuka, ditutup, tes_akademik } = request.post();
+
+    const gelombang = await MGelombangPpdb.query()
+      .where({ id: gelombang_ppdb_id })
+      .update({
+        nama,
+        dibuka,
+        ditutup,
+        tes_akademik,
+      });
+
+    if (!gelombang) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteGelombangPPDB({
+    response,
+    request,
+    auth,
+    params: { gelombang_ppdb_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+      return response.forbidden({ message: messageForbidden });
+    }
+
+    const gelombang = await MGelombangPpdb.query()
+      .where({ id: gelombang_ppdb_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!gelombang) {
       return response.notFound({
         message: messageNotFound,
       });
