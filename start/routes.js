@@ -60,6 +60,9 @@ Route.post("/siswa", "MainController.postSiswa");
 Route.put("/siswa/:siswa_id", "MainController.putSiswa");
 Route.delete("/siswa/:siswa_id", "MainController.deleteSiswa");
 
+// ppdb
+Route.post("/ppdb/daftar", "MainController.daftarPPDB");
+
 // alumni
 Route.get("/alumni", "MainController.getAlumni");
 Route.post("/alumni", "MainController.postAlumni");
@@ -294,6 +297,18 @@ Route.post("/kegiatan", "MainController.postKegiatan");
 Route.put("/kegiatan/:kegiatan_id", "MainController.putKegiatan");
 Route.delete("/kegiatan/:kegiatan_id", "MainController.deleteKegiatan");
 
+// gelombang-ppdb
+Route.get("/gelombang-ppdb", "MainController.getGelombangPPDB");
+Route.post("/gelombang-ppdb", "MainController.postGelombangPPDB");
+Route.put(
+  "/gelombang-ppdb/:gelombang_ppdb_id",
+  "MainController.putGelombangPPDB"
+);
+Route.delete(
+  "/gelombang-ppdb/:gelombang_ppdb_id",
+  "MainController.deleteGelombangPPDB"
+);
+
 // kegiatan galeri
 Route.get(
   "/kegiatan-galeri/:kegiatan_galeri_id",
@@ -346,6 +361,21 @@ Route.get("/slider", "MainController.getSlider");
 Route.post("/slider", "MainController.postSlider");
 Route.put("/slider/:slider_id", "MainController.putSlider");
 Route.delete("/slider/:slider_id", "MainController.deleteSlider");
+
+// status-proyek
+Route.get("/status-proyek", "MainController.getStatusProyek");
+Route.post("/status-proyek", "MainController.postStatusProyek");
+Route.put("/status-proyek/:status_proyek_id", "MainController.putStatusProyek");
+Route.delete(
+  "/status-proyek/:status_proyek_id",
+  "MainController.deleteStatusProyek"
+);
+
+// proyek
+Route.get("/proyek", "MainController.getProyek");
+Route.post("/proyek", "MainController.postProyek");
+Route.put("/proyek/:proyek_id", "MainController.putProyek");
+Route.delete("/proyek/:proyek_id", "MainController.deleteProyek");
 
 // wildcard
 Route.any("*", "MainController.notFoundPage");
