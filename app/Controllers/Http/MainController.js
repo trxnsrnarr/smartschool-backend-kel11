@@ -8,6 +8,7 @@ const Sekolah = use("App/Models/Sekolah");
 const MSekolah = use("App/Models/MSekolah");
 const MSarpras = use("App/Models/MSarpras");
 const MKegiatanGaleri = use("App/Models/MKegiatanGaleri");
+const MProyek = use("App/Models/MProyek");
 const MNotifikasi = use("App/Models/MNotifikasi");
 const MPerpusKomen = use("App/Models/MPerpusKomen");
 const MGelombangPpdb = use("App/Models/MGelombangPpdb");
@@ -10779,6 +10780,95 @@ class MainController {
 
     return response.ok({
       message: messagePutSuccess,
+    });
+  }
+
+  async getProyek({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+  }
+
+  async detailProyek({ response, request, auth, params: { ujian_id } }) {
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async postProyek({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      nama,
+      privasi,
+      deskripsi,
+      banner,
+      m_status_proyek_id,
+    } = request.post();
+
+    await MProyek.create({
+      nama,
+      privasi,
+      deskripsi,
+      banner,
+      m_status_proyek_id,
+      m_user_id: user.id,
+      m_sekolah_id: sekolah.id,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async putProyek({ response, request, auth, params: { ujian_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteProyek({ response, request, auth, params: { ujian_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ujian = await MProyek.query().where({ id: ujian_id }).update({
+      dihapus: 1,
+    });
+
+    if (!ujian) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
     });
   }
 }
