@@ -10830,7 +10830,7 @@ class MainController {
     });
 
     return response.ok({
-      message: messagePutSuccess,
+      message: messagePostSuccess,
     });
   }
 
