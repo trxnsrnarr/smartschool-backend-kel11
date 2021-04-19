@@ -11022,6 +11022,7 @@ class MainController {
       // cek proyek yg diterima
       const terimaProyekIds = await MAnggotaProyek.query()
         .where({ dihapus: 0 })
+        .andWhere({m_user_id: user.id})
         .andWhere({ status: "menerima" })
         .pluck("m_proyek_id");
 
