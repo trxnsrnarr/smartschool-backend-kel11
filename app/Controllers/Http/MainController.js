@@ -12,6 +12,7 @@ const MProyek = use("App/Models/MProyek");
 const MNotifikasi = use("App/Models/MNotifikasi");
 const MPerpusKomen = use("App/Models/MPerpusKomen");
 const MGelombangPpdb = use("App/Models/MGelombangPpdb");
+const MAlurPPDB = use("App/Models/MAlurPPDB");
 const TkPerpusAktivitas = use("App/Models/TkPerpusAktivitas");
 const MJurusan = use("App/Models/MJurusan");
 const MRekSekolah = use("App/Models/MRekSekolah");
@@ -8766,6 +8767,147 @@ class MainController {
     }
 
     const gelombang = await MGelombangPpdb.query()
+      .where({ id: gelombang_ppdb_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!gelombang) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async getAlurPPDB({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (!ta) {
+      return response.notFound({
+        message: "Aktifkan tahun ajaran yg tersedia di menu kurikulum",
+      });
+    }
+
+    const alur = await MAlurPPDB.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    return response.ok({
+      alur: alur,
+    });
+  }
+
+  async postAlurPPDB({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+      return response.forbidden({ message: messageForbidden });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    const { nama, dibuka, ditutup, tes_akademik } = request.post();
+
+    await MAlurPPDB.create({
+      nama,
+      dibuka,
+      ditutup,
+      dihapus: 0,
+      tes_akademik,
+      m_sekolah_id: sekolah.id,
+      m_ta_id: ta.id,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putAlurPPDB({
+    response,
+    request,
+    auth,
+    params: { gelombang_ppdb_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+      return response.forbidden({ message: messageForbidden });
+    }
+
+    const { nama, dibuka, ditutup, tes_akademik } = request.post();
+
+    const gelombang = await MAlurPPDB.query()
+      .where({ id: gelombang_ppdb_id })
+      .update({
+        nama,
+        dibuka,
+        ditutup,
+        tes_akademik,
+      });
+
+    if (!gelombang) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteAlurPPDB({
+    response,
+    request,
+    auth,
+    params: { gelombang_ppdb_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+      return response.forbidden({ message: messageForbidden });
+    }
+
+    const gelombang = await MAlurPPDB.query()
       .where({ id: gelombang_ppdb_id })
       .update({
         dihapus: 1,
