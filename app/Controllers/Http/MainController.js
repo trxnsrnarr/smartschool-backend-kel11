@@ -11002,6 +11002,32 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
+
+    const user = await auth.getUser();
+    const { search } = request.get();
+
+    let proyek;
+
+    if (search) {
+      // ===== service cari proyek ====
+
+      proyek = await MProyek.query()
+        .where({ dihapus: 0 })
+        .andWhere("nama", "like", `%${search}%`)
+        .fetch();
+    } else {
+      // ===== service proyek saya ====
+
+      proyek = await MProyek.query()
+        .where({ dihapus: 0 })
+        .andWhere({ m_user_id: user.id })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .fetch();
+    }
+
+    return response.ok({
+      proyek: proyek,
+    });
   }
 
   async detailProyek({ response, request, auth, params: { ujian_id } }) {
