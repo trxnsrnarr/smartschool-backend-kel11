@@ -7,6 +7,16 @@ class MAnggotaProyek extends Model {
     static get table() {
         return "m_anggota_proyek";
       }
+    
+      user() {
+        return this.belongsTo("App/Models/User", "m_user_id");
+      }
+      proyek(){
+          return this.belongsToMany("App/Models/MProyek");
+      }
+      role(){
+        return this.belongsTo("App/Models/MAnggotaProyekRole");
+      }
 }
 
 module.exports = MAnggotaProyek
