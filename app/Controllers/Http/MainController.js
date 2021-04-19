@@ -5823,7 +5823,7 @@ class MainController {
 
       await Promise.all(
         absen.toJSON().map(async (d) => {
-          worksheet.getRow(11).values = [
+          worksheet.getRow(12).values = [
             "Nama",
             "Absen",
             "Keterangan",
