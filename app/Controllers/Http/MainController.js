@@ -5721,6 +5721,15 @@ class MainController {
 
       return namaFile;
     } else if (role == "guru") {
+      const kepsek = await User.query()
+        .with("absen", (builder) => {
+          builder.where("created_at", "like", `%${tanggal}%`);
+        })
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ dihapus: 0 })
+        .andWhere({ role: "kepsek" })
+        .fetch();
+
       const absen = await User.query()
         .with("absen", (builder) => {
           builder.where("created_at", "like", `%${tanggal}%`);
@@ -5733,6 +5742,85 @@ class MainController {
       let workbook = new Excel.Workbook();
 
       let worksheet = workbook.addWorksheet(`${tanggal}`);
+
+      await Promise.all(
+        kepsek.toJSON().map(async (d) => {
+          worksheet.getRow(10).values = [
+            "Nama",
+            "Absen",
+            "Keterangan",
+            "Lampiran",
+            "Foto Masuk",
+            "Waktu Masuk",
+            "Foto Pulang",
+            "Waktu Pulang",
+          ];
+
+          worksheet.columns = [
+            { key: "user" },
+            { key: "absen" },
+            { key: "keterangan" },
+            { key: "lampiran" },
+            { key: "foto_masuk" },
+            { key: "created_at" },
+            { key: "foto_pulang" },
+            { key: "waktu_pulang" },
+          ];
+
+          let row = worksheet.addRow({
+            user: d ? d.nama : "-",
+            kepsek: d
+              ? d.kepsek
+                ? d.kepsek.length
+                  ? d.kepsek[0].kepsek
+                  : "-"
+                : "-"
+              : "-",
+            keterangan: d
+              ? d.kepsek
+                ? d.kepsek.length
+                  ? d.kepsek[0].keterangan
+                  : "-"
+                : "-"
+              : "-",
+            lampiran: d
+              ? d.kepsek
+                ? d.kepsek.length
+                  ? d.kepsek[0].lampiran
+                  : "-"
+                : "-"
+              : "-",
+            foto_masuk: d
+              ? d.kepsek
+                ? d.kepsek.length
+                  ? d.kepsek[0].foto_masuk
+                  : "-"
+                : "-"
+              : "-",
+            created_at: d
+              ? d.kepsek
+                ? d.kepsek.length
+                  ? d.kepsek[0].created_at
+                  : "-"
+                : "-"
+              : "-",
+            foto_pulang: d
+              ? d.kepsek
+                ? d.kepsek.length
+                  ? d.kepsek[0].foto_pulang
+                  : "-"
+                : "-"
+              : "-",
+            waktu_pulang: d
+              ? d.kepsek
+                ? d.kepsek.length
+                  ? d.kepsek[0].waktu_pulang
+                  : "-"
+                : "-"
+              : "-",
+          });
+        })
+      );
 
       await Promise.all(
         absen.toJSON().map(async (d) => {
