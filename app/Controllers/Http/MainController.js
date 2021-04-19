@@ -8828,14 +8828,12 @@ class MainController {
 
     const ta = await this.getTAAktif(sekolah);
 
-    const { nama, dibuka, ditutup, tes_akademik } = request.post();
+    const { judul, deskripsi } = request.post();
 
     await MAlurPPDB.create({
-      nama,
-      dibuka,
-      ditutup,
+      judul,
+      deskripsi,
       dihapus: 0,
-      tes_akademik,
       m_sekolah_id: sekolah.id,
       m_ta_id: ta.id,
     });
@@ -8845,12 +8843,7 @@ class MainController {
     });
   }
 
-  async putAlurPPDB({
-    response,
-    request,
-    auth,
-    params: { gelombang_ppdb_id },
-  }) {
+  async putAlurPPDB({ response, request, auth, params: { alur_ppdb_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -8865,18 +8858,14 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    const { nama, dibuka, ditutup, tes_akademik } = request.post();
+    const { judul, deskripsi } = request.post();
 
-    const gelombang = await MAlurPPDB.query()
-      .where({ id: gelombang_ppdb_id })
-      .update({
-        nama,
-        dibuka,
-        ditutup,
-        tes_akademik,
-      });
+    const alur = await MAlurPPDB.query().where({ id: alur_ppdb_id }).update({
+      judul,
+      deskripsi,
+    });
 
-    if (!gelombang) {
+    if (!alur) {
       return response.notFound({
         message: messageNotFound,
       });
@@ -8887,12 +8876,7 @@ class MainController {
     });
   }
 
-  async deleteAlurPPDB({
-    response,
-    request,
-    auth,
-    params: { gelombang_ppdb_id },
-  }) {
+  async deleteAlurPPDB({ response, request, auth, params: { alur_ppdb_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -8908,7 +8892,7 @@ class MainController {
     }
 
     const gelombang = await MAlurPPDB.query()
-      .where({ id: gelombang_ppdb_id })
+      .where({ id: alur_ppdb_id })
       .update({
         dihapus: 1,
       });
