@@ -11,6 +11,7 @@ const MKegiatanGaleri = use("App/Models/MKegiatanGaleri");
 const MProyek = use("App/Models/MProyek");
 const MPerpusKomen = use("App/Models/MPerpusKomen");
 const MGelombangPpdb = use("App/Models/MGelombangPpdb");
+const MAnggotaProyek = use("App/Models/MAnggotaProyek");
 const MAlurPPDB = use("App/Models/MAlurPpdb");
 const TkPerpusAktivitas = use("App/Models/TkPerpusAktivitas");
 const MJurusan = use("App/Models/MJurusan");
@@ -11002,6 +11003,39 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
+
+    const user = await auth.getUser();
+    const { search } = request.get();
+
+    let proyek;
+
+    if (search) {
+      // ===== service cari proyek ====
+
+      proyek = await MProyek.query()
+        .where({ dihapus: 0 })
+        .andWhere("nama", "like", `%${search}%`)
+        .fetch();
+    } else {
+      // ===== service proyek saya ====
+
+      // cek proyek yg diterima
+      const terimaProyekIds = await MAnggotaProyek.query()
+        .where({ dihapus: 0 })
+        .andWhere({ status: "menerima" })
+        .pluck("m_proyek_id");
+
+      // ambil data dari proyek yg diterima
+      proyek = await MProyek.query()
+        .where({ dihapus: 0 })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .whereIn("id", terimaProyekIds)
+        .fetch();
+    }
+
+    return response.ok({
+      proyek: proyek,
+    });
   }
 
   async detailProyek({ response, request, auth, params: { ujian_id } }) {
