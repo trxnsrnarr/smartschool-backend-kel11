@@ -11093,7 +11093,7 @@ class MainController {
     });
   }
 
-  async deleteProyek({ response, request, auth, params: { ujian_id } }) {
+  async deleteProyek({ response, request, auth, params: { proyek_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -11102,11 +11102,17 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const ujian = await MProyek.query().where({ id: ujian_id }).update({
-      dihapus: 1,
-    });
+    // mengambil data user
+    const user = await auth.getUser();
 
-    if (!ujian) {
+    const proyek = await MProyek.query()
+      .where({ id: proyek_id })
+      .andWhere({ m_user_id: user.id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!proyek) {
       return response.notFound({
         message: messageNotFound,
       });
