@@ -8891,13 +8891,11 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    const gelombang = await MAlurPPDB.query()
-      .where({ id: alur_ppdb_id })
-      .update({
-        dihapus: 1,
-      });
+    const alur = await MAlurPPDB.query().where({ id: alur_ppdb_id }).update({
+      dihapus: 1,
+    });
 
-    if (!gelombang) {
+    if (!alur) {
       return response.notFound({
         message: messageNotFound,
       });
