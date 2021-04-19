@@ -9,7 +9,6 @@ const MSekolah = use("App/Models/MSekolah");
 const MSarpras = use("App/Models/MSarpras");
 const MKegiatanGaleri = use("App/Models/MKegiatanGaleri");
 const MProyek = use("App/Models/MProyek");
-const MNotifikasi = use("App/Models/MNotifikasi");
 const MPerpusKomen = use("App/Models/MPerpusKomen");
 const MGelombangPpdb = use("App/Models/MGelombangPpdb");
 const MAlurPPDB = use("App/Models/MAlurPPDB");
