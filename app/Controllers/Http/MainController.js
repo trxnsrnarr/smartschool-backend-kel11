@@ -11079,13 +11079,43 @@ class MainController {
     });
   }
 
-  async putProyek({ response, request, auth, params: { ujian_id } }) {
+  async putProyek({ response, request, auth, params: { proyek_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
 
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      nama,
+      privasi,
+      deskripsi,
+      banner,
+      m_status_proyek_id,
+    } = request.post();
+
+    const proyek = await MProyek.query()
+      .where({ id: proyek_id })
+      .andWhere({ m_user_id: user.id })
+      .update({
+        nama,
+        privasi,
+        deskripsi,
+        banner,
+        m_status_proyek_id,
+        m_user_id: user.id,
+        m_sekolah_id: sekolah.id,
+        dihapus: 0,
+      });
+
+    if (!proyek) {
+      return response.notFound({
+        message: messageNotFound,
+      });
     }
 
     return response.ok({
