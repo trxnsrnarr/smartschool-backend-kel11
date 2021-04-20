@@ -12,6 +12,7 @@ const MProyek = use("App/Models/MProyek");
 const MPerpusKomen = use("App/Models/MPerpusKomen");
 const MGelombangPpdb = use("App/Models/MGelombangPpdb");
 const MAnggotaProyek = use("App/Models/MAnggotaProyek");
+const MKategoriPekerjaan = use("App/Models/MKategoriPekerjaan");
 const MAlurPPDB = use("App/Models/MAlurPpdb");
 const TkPerpusAktivitas = use("App/Models/TkPerpusAktivitas");
 const MJurusan = use("App/Models/MJurusan");
@@ -11175,6 +11176,37 @@ class MainController {
       message: messageDeleteSuccess,
     });
   }
+
+  async postKategoriPekerjaan({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      nama,
+      warna,
+      m_proyek_id,
+    } = request.post();
+
+    await MKategoriPekerjaan.create({
+      nama,
+      warna,
+      m_proyek_id,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
 }
+
+
 
 module.exports = MainController;
