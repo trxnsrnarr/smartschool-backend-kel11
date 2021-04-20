@@ -11205,6 +11205,44 @@ class MainController {
       message: messagePostSuccess,
     });
   }
+  
+  async putKategoriPekerjaan({ response, request, auth, params: { proyek_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      nama,
+      warna,
+      m_proyek_id,
+    } = request.post();
+
+    const kategoriPekerjaan = await MKategoriPekerjaan.query()
+      .where({ id: proyek_id })
+      .andWhere({ m_user_id: user.id })
+      .update({
+        nama,
+        warna,
+        m_proyek_id,
+        dihapus: 0,
+      });
+
+    if (!kategoriPekerjaan) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
 }
 
 
