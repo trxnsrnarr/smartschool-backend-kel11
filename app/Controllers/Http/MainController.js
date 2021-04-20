@@ -11022,7 +11022,7 @@ class MainController {
       // cek proyek yg diterima
       const terimaProyekIds = await MAnggotaProyek.query()
         .where({ dihapus: 0 })
-        .andWhere({m_user_id: user.id})
+        .andWhere({ m_user_id: user.id })
         .andWhere({ status: "menerima" })
         .pluck("m_proyek_id");
 
@@ -11034,12 +11034,34 @@ class MainController {
         .fetch();
     }
 
+    // ===== service cari partner ====
+    const cariPartner = await MAnggotaProyek.query()
+      .where({ dihapus: 0 })
+      .pluck("m_user_id");
+
+    const userPartner = await User.query()
+      .where({ dihapus: 0 })
+      .andWhere("nama", "like", `%${search}%`)
+      .whereIn("id", cariPartner)
+      .fetch();
+
     return response.ok({
       proyek: proyek,
+      userPartner: userPartner,
     });
   }
 
   async detailProyek({ response, request, auth, params: { ujian_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
     return response.ok({
       message: messagePostSuccess,
     });
