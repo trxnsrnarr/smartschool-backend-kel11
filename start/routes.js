@@ -309,6 +309,14 @@ Route.delete(
   "MainController.deleteGelombangPPDB"
 );
 
+// alur-ppdb
+Route.get("/alur-ppdb", "MainController.getAlurPPDB");
+Route.post("/alur-ppdb", "MainController.postAlurPPDB");
+Route.put("/alur-ppdb/:alur_ppdb_id", "MainController.putAlurPPDB");
+Route.delete("/alur-ppdb/:alur_ppdb_id", "MainController.deleteAlurPPDB");
+
+// gelombang ppdb pendaftar
+
 // kegiatan galeri
 Route.get(
   "/kegiatan-galeri/:kegiatan_galeri_id",
