@@ -11337,6 +11337,44 @@ class MainController {
     });
   }
 
+  // ================ Update status Anggota Proyek ======================
+  async putAnggotaProyek({
+    response,
+    request,
+    auth,
+    params: { anggota_proyek_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { status } = request.post();
+
+    const anggota = await MAnggotaProyek.query()
+      .where({ id: anggota_proyek_id })
+      .andWhere({ m_user_id: user.id})
+      .andWhere({ dihapus: 0})
+      .update({
+        status
+      });
+
+    if (!anggota) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
 }
 
 module.exports = MainController;
