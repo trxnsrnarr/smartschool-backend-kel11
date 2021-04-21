@@ -12,6 +12,7 @@ const MProyek = use("App/Models/MProyek");
 const MPerpusKomen = use("App/Models/MPerpusKomen");
 const MGelombangPpdb = use("App/Models/MGelombangPpdb");
 const MAnggotaProyek = use("App/Models/MAnggotaProyek");
+const MAnggotaProyekRole = use("App/Models/MAnggotaProyekRole");
 const MKategoriPekerjaan = use("App/Models/MKategoriPekerjaan");
 const MAlurPPDB = use("App/Models/MAlurPpdb");
 const TkPerpusAktivitas = use("App/Models/TkPerpusAktivitas");
@@ -11188,11 +11189,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const {
-      nama,
-      warna,
-      m_proyek_id,
-    } = request.post();
+    const { nama, warna, m_proyek_id } = request.post();
 
     await MKategoriPekerjaan.create({
       nama,
@@ -11206,7 +11203,12 @@ class MainController {
     });
   }
 
-  async putKategoriPekerjaan({ response, request, auth, params: { proyek_id } }) {
+  async putKategoriPekerjaan({
+    response,
+    request,
+    auth,
+    params: { proyek_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -11217,11 +11219,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const {
-      nama,
-      warna,
-      m_proyek_id,
-    } = request.post();
+    const { nama, warna, m_proyek_id } = request.post();
 
     const kategoriPekerjaan = await MKategoriPekerjaan.query()
       .where({ id: proyek_id })
@@ -11244,7 +11242,12 @@ class MainController {
     });
   }
 
-  async deleteKategoriPekerjaaan({ response, request, auth, params: { proyek_id } }) {
+  async deleteKategoriPekerjaaan({
+    response,
+    request,
+    auth,
+    params: { proyek_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -11273,8 +11276,30 @@ class MainController {
       message: messageDeleteSuccess,
     });
   }
+
+  // ===================== Anggota Proyek Service =========================
+
+  async getAnggotaProyek({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { proyek_id } = request.get();
+
+    const anggota = await MAnggotaProyek.query()
+      .where({ dihapus: 0 })
+      .andWhere({ status: "menerima" })
+      .andWhere({ m_proyek_id: proyek_id })
+      .fetch();
+
+    return response.ok({
+      anggota,
+    });
+  }
 }
-
-
 
 module.exports = MainController;
