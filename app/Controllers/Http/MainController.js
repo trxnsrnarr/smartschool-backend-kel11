@@ -11300,6 +11300,43 @@ class MainController {
       anggota,
     });
   }
+
+  // ============ Invite Anggota kedalam Proyek =================
+  async postAnggotaProyek({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    
+    const { anggota_proyek_id, proyek_id, user_id } = request.post();
+
+    const isAdmin = await MAnggotaProyekRole.query()
+      .where({m_anggota_proyek_id: anggota_proyek_id})
+      .andWhere({dihapus: 0})
+      .andWhere({role: "Admin"})
+      .fetch();
+    
+    if(!isAdmin){
+      return response.forbidden({ message: messageForbidden });
+    }
+    
+    user_id?.map((d, idx) => {
+      await MAnggotaProyek.create({
+        m_proyek_id: proyek_id,
+        m_user_id: d,
+        status: "undangan",
+        dihapus: 0,
+      });
+    })
+    
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
 }
 
 module.exports = MainController;
