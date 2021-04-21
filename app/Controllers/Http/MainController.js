@@ -11,6 +11,7 @@ const MKegiatanGaleri = use("App/Models/MKegiatanGaleri");
 const MProyek = use("App/Models/MProyek");
 const MPerpusKomen = use("App/Models/MPerpusKomen");
 const MGelombangPpdb = use("App/Models/MGelombangPpdb");
+const MPendaftarPpdb = use("App/Models/MPendaftarPpdb");
 const MAnggotaProyek = use("App/Models/MAnggotaProyek");
 const MAlurPPDB = use("App/Models/MAlurPpdb");
 const TkPerpusAktivitas = use("App/Models/TkPerpusAktivitas");
@@ -1120,6 +1121,35 @@ class MainController {
 
     return response.ok({
       message: messageDeleteSuccess,
+    });
+  }
+
+  async loginPPDB({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { whatsapp, password } = request.post();
+
+    const res = await User.query().where({ whatsapp: whatsapp }).first();
+
+    if (!res) {
+      return response.notFound({ message: "Akun tidak ditemukan" });
+    }
+
+    // if (!(await Hash.verify(password, res.password))) {
+    //   return response.notFound({ message: "Password yang anda masukan salah" });
+    // }
+
+    const { token } = await auth.generate(res);
+
+    return response.ok({
+      message: `Selamat datang ${res.nama}`,
+      token,
     });
   }
 
@@ -8871,6 +8901,74 @@ class MainController {
     });
   }
 
+  async postPendaftarPPDB({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const ta = await this.getTAAktif(sekolah);
+
+    const { nama, dibuka, ditutup, tes_akademik } = request.post();
+
+    await MPendaftarPpdb.create({
+      nama,
+      dibuka,
+      ditutup,
+      dihapus: 0,
+      tes_akademik,
+      m_sekolah_id: sekolah.id,
+      m_ta_id: ta.id,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putPendaftarPPDB({
+    response,
+    request,
+    auth,
+    params: { pendaftar_ppdb_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { nama, dibuka, ditutup, tes_akademik } = request.post();
+
+    const gelombang = await MPendaftarPpdb.query()
+      .where({ id: pendaftar_ppdb_id })
+      .update({
+        nama,
+        dibuka,
+        ditutup,
+        tes_akademik,
+      });
+
+    if (!gelombang) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
   async getAlurPPDB({ response, request, auth }) {
     const domain = request.headers().origin;
 
@@ -11022,7 +11120,7 @@ class MainController {
       // cek proyek yg diterima
       const terimaProyekIds = await MAnggotaProyek.query()
         .where({ dihapus: 0 })
-        .andWhere({m_user_id: user.id})
+        .andWhere({ m_user_id: user.id })
         .andWhere({ status: "menerima" })
         .pluck("m_proyek_id");
 
@@ -11064,7 +11162,7 @@ class MainController {
       m_status_proyek_id,
     } = request.post();
 
-    await MProyek.create({
+    const proyek = await MProyek.create({
       nama,
       privasi,
       deskripsi,
@@ -11072,6 +11170,13 @@ class MainController {
       m_status_proyek_id,
       m_user_id: user.id,
       m_sekolah_id: sekolah.id,
+      dihapus: 0,
+    });
+
+    await MAnggotaProyek.create({
+      m_proyek_id: proyek.id,
+      m_user_id: user.id,
+      status: "menerima",
       dihapus: 0,
     });
 
