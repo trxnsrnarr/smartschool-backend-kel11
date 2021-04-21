@@ -12,6 +12,7 @@ const MProyek = use("App/Models/MProyek");
 const MPerpusKomen = use("App/Models/MPerpusKomen");
 const MGelombangPpdb = use("App/Models/MGelombangPpdb");
 const MAnggotaProyek = use("App/Models/MAnggotaProyek");
+const MKategoriPekerjaan = use("App/Models/MKategoriPekerjaan");
 const MAlurPPDB = use("App/Models/MAlurPpdb");
 const TkPerpusAktivitas = use("App/Models/TkPerpusAktivitas");
 const MJurusan = use("App/Models/MJurusan");
@@ -11022,7 +11023,7 @@ class MainController {
       // cek proyek yg diterima
       const terimaProyekIds = await MAnggotaProyek.query()
         .where({ dihapus: 0 })
-        .andWhere({m_user_id: user.id})
+        .andWhere({ m_user_id: user.id })
         .andWhere({ status: "menerima" })
         .pluck("m_proyek_id");
 
@@ -11034,12 +11035,34 @@ class MainController {
         .fetch();
     }
 
+    // ===== service cari partner ====
+    const cariPartner = await MAnggotaProyek.query()
+      .where({ dihapus: 0 })
+      .pluck("m_user_id");
+
+    const userPartner = await User.query()
+      .where({ dihapus: 0 })
+      .andWhere("nama", "like", `%${search}%`)
+      .whereIn("id", cariPartner)
+      .fetch();
+
     return response.ok({
       proyek: proyek,
+      userPartner: userPartner,
     });
   }
 
   async detailProyek({ response, request, auth, params: { ujian_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
     return response.ok({
       message: messagePostSuccess,
     });
@@ -11153,6 +11176,105 @@ class MainController {
       message: messageDeleteSuccess,
     });
   }
+
+  async postKategoriPekerjaan({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      nama,
+      warna,
+      m_proyek_id,
+    } = request.post();
+
+    await MKategoriPekerjaan.create({
+      nama,
+      warna,
+      m_proyek_id,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putKategoriPekerjaan({ response, request, auth, params: { proyek_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      nama,
+      warna,
+      m_proyek_id,
+    } = request.post();
+
+    const kategoriPekerjaan = await MKategoriPekerjaan.query()
+      .where({ id: proyek_id })
+      .andWhere({ m_user_id: user.id })
+      .update({
+        nama,
+        warna,
+        m_proyek_id,
+        dihapus: 0,
+      });
+
+    if (!kategoriPekerjaan) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteKategoriPekerjaaan({ response, request, auth, params: { proyek_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    // mengambil data user
+    const user = await auth.getUser();
+
+    const kategoriPekerjaan = await MKategoriPekerjaaan.query()
+      .where({ id: proyek_id })
+      .andWhere({ m_user_id: user.id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!kategoriPekerjaan) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
 }
+
+
 
 module.exports = MainController;
