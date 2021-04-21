@@ -11375,6 +11375,48 @@ class MainController {
     });
   }
 
+  async deleteAnggotaProyek({
+    response,
+    request,
+    auth,
+    params: { anggota_proyek_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { delete_anggota } = request.post();
+
+    // Cek Role, selain admin tidak boleh delete anggota
+    const isAdmin = await MAnggotaProyekRole.query()
+      .where({m_anggota_proyek_id: anggota_proyek_id})
+      .andWhere({role: "Admin"})
+      .fetch();
+
+    if(!isAdmin){
+      return response.forbidden({ message: messageForbidden})
+    }
+
+    const hapusAnggota = await MAnggotaProyek.query()
+      .where({ id: delete_anggota })
+      .update({
+        dihapus: 1, 
+      });
+
+    if (!hapusAnggota) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
 }
 
 module.exports = MainController;
