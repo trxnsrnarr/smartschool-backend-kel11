@@ -11047,9 +11047,17 @@ class MainController {
       .whereIn("id", cariPartner)
       .fetch();
 
+    // ===== List Undangan =====
+    const undangan = await MAnggotaProyek.query()
+      .where({ dihapus: 0})
+      .andWhere({ m_user_id: user.id})
+      .andWhere({status: "undangan"})
+      .fetch();
+
     return response.ok({
       proyek: proyek,
       userPartner: userPartner,
+      undangan
     });
   }
 
