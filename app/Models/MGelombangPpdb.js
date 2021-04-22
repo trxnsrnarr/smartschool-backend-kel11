@@ -17,13 +17,12 @@ class MGelombangPpdb extends Model {
   }
 
   getKeterangan({ dibuka, ditutup }) {
-    if (
-      moment().format("YYYY-MM-DD HH:mm:ss") <
-      moment(dibuka).format("YYYY-MM-DD HH:mm:ss")
-    ) {
+    if (moment().format("YYYY-MM-DD") <= moment(dibuka).format("YYYY-MM-DD")) {
       return "Akan Dibuka";
-    } else if (moment(new Date()).isBetween(dibuka, ditutup)) {
-      return "Dibuka";
+    } else if (
+      moment().format("YYYY-MM-DD") <= moment(ditutup).format("YYYY-MM-DD")
+    ) {
+      return "Daftar";
     } else {
       return "Sudah Ditutup";
     }
