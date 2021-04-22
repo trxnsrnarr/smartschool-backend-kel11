@@ -112,6 +112,7 @@ const messagePutSuccess = "Data berhasil diubah";
 const messageDeleteSuccess = "Data berhasil dihapus";
 const messageNotFound = "Data tidak ditemukan";
 const messageForbidden = "Dilarang, anda bukan seorang admin";
+const pesanSudahDitambahkan = "Data sudah ditambahkan";
 
 // RULES
 const rulesUserPost = {
@@ -126,6 +127,12 @@ const rulesUserPut = {
   password: "required",
   whatsapp: "required",
   gender: "required",
+};
+
+const rulesAnggotaPost = {
+  m_proyek_id: "required",
+  m_user_id: "required",
+  status: "required",
 };
 
 const messagesUser = {
@@ -11711,6 +11718,16 @@ class MainController {
     }
 
     const { anggota_proyek_id, proyek_id, user_id } = request.post();
+
+    const validation = await validate(
+      request.post(),
+      rulesAnggotaPost,
+      pesanSudahDitambahkan
+    );
+
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
 
     const isAdmin = await MAnggotaProyekRole.query()
       .where({ m_anggota_proyek_id: anggota_proyek_id })
