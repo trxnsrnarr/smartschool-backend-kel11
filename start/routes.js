@@ -38,6 +38,7 @@ Route.get("/profil", "MainController.getProfil");
 Route.put("/profil", "MainController.putProfil");
 Route.put("/ubah-password", "MainController.putUbahPassword");
 Route.post("/profil-user", "MainController.postProfilUser");
+Route.get("/profil-user", "MainController.getProfilUser");
 
 // sekolah
 Route.get("/sekolah", "MainController.getSekolah");
