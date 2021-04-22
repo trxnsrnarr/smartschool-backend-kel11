@@ -454,10 +454,6 @@ class MainController {
   }
 
   async getProfilUser({ auth, response, request }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
     const user = await auth.getUser();
 
     const profil = await User.query()
@@ -478,13 +474,26 @@ class MainController {
     const user = await auth.getUser();
 
     let {
+      // identitas
+      nama,
+      nama_panggilan,
+      whatsapp,
+      gender,
+      agama,
+      tempat_lahir,
+      tanggal_lahir,
+
+      // informasi
+      nisn,
+      asal_sekolah,
+
       // alamat
       alamat,
-      provinces_id,
-      regencies_id,
-      districts_id,
-      villages_id,
-      kode_pos,
+      province_id,
+      regency_id,
+      district_id,
+      village_id,
+      kodepos,
 
       // kesehatan
       tb,
@@ -500,10 +509,11 @@ class MainController {
       nama_ayah,
       telp_ayah,
       alamat_ayah,
+      pekerjaan_ayah,
       nama_ibu,
       telp_ibu,
       alamat_ibu,
-      m_user_id,
+      pekerjaan_ibu,
 
       // rapor
       fisika1,
@@ -540,6 +550,17 @@ class MainController {
       semester6,
     } = request.post();
 
+    await User.query().where({ id: user.id }).update({
+      // identitas
+      nama,
+      nama_panggilan,
+      whatsapp,
+      gender,
+      agama,
+      tempat_lahir,
+      tanggal_lahir,
+    });
+
     const check = await MProfilUser.query()
       .select("id")
       .where({
@@ -551,13 +572,17 @@ class MainController {
 
     if (check) {
       profil = await MProfilUser.query().where({ id: check.id }).update({
+        // informasi
+        nisn,
+        asal_sekolah,
+
         // alamat
         alamat,
-        provinces_id,
-        regencies_id,
-        districts_id,
-        villages_id,
-        kode_pos,
+        province_id,
+        regency_id,
+        district_id,
+        village_id,
+        kodepos,
 
         // kesehatan
         tb,
@@ -573,10 +598,12 @@ class MainController {
         nama_ayah,
         telp_ayah,
         alamat_ayah,
+        pekerjaan_ayah,
         nama_ibu,
         telp_ibu,
         alamat_ibu,
-        m_user_id,
+        pekerjaan_ibu,
+        m_user_id: user.id,
 
         // rapor
         fisika1,
@@ -614,13 +641,17 @@ class MainController {
       });
     } else {
       profil = await MProfilUser.create({
+        // informasi
+        nisn,
+        asal_sekolah,
+
         // alamat
         alamat,
-        provinces_id,
-        regencies_id,
-        districts_id,
-        villages_id,
-        kode_pos,
+        province_id,
+        regency_id,
+        district_id,
+        village_id,
+        kodepos,
 
         // kesehatan
         tb,
@@ -636,10 +667,12 @@ class MainController {
         nama_ayah,
         telp_ayah,
         alamat_ayah,
+        pekerjaan_ayah,
         nama_ibu,
         telp_ibu,
         alamat_ibu,
-        m_user_id,
+        pekerjaan_ibu,
+        m_user_id: user.id,
 
         // rapor
         fisika1,
