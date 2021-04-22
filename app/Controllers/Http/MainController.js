@@ -24,6 +24,7 @@ const MPembayaran = use("App/Models/MPembayaran");
 const MPembayaranSiswa = use("App/Models/MPembayaranSiswa");
 const MMutasi = use("App/Models/MMutasi");
 const MAlumni = use("App/Models/MAlumni");
+const MProfilUser = use("App/Models/MProfilUser");
 const MRiwayatPembayaranSiswa = use("App/Models/MRiwayatPembayaranSiswa");
 const MPembayaranKategori = use("App/Models/MPembayaranKategori");
 const Mta = use("App/Models/Mta");
@@ -452,7 +453,234 @@ class MainController {
     });
   }
 
-  async postProfilDetail({ auth, response, request }) {}
+  async getProfilUser({ auth, response, request }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    const user = await auth.getUser();
+
+    const profil = await User.query()
+      .with("profil")
+      .where({ id: user.id })
+      .first();
+
+    return response.ok({
+      profil: profil,
+    });
+  }
+
+  async postProfilUser({ auth, response, request }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    const user = await auth.getUser();
+
+    let {
+      // alamat
+      alamat,
+      provinces_id,
+      regencies_id,
+      districts_id,
+      villages_id,
+      kode_pos,
+
+      // kesehatan
+      tb,
+      bb,
+      gol_darah,
+      buta_warna,
+      kacamata,
+      disabilitas,
+      surat_keterangan_sehat,
+      surat_keterangan_buta_warna,
+
+      // ortu
+      nama_ayah,
+      telp_ayah,
+      alamat_ayah,
+      nama_ibu,
+      telp_ibu,
+      alamat_ibu,
+      m_user_id,
+
+      // rapor
+      fisika1,
+      fisika2,
+      fisika3,
+      fisika4,
+      fisika5,
+      fisika6,
+      matematika1,
+      matematika2,
+      matematika3,
+      matematika4,
+      matematika5,
+      matematika6,
+      bindo1,
+      bindo2,
+      bindo3,
+      bindo4,
+      bindo5,
+      bindo6,
+      bing1,
+      bing2,
+      bing3,
+      bing4,
+      bing5,
+      bing6,
+
+      // lampiran rapor
+      semester1,
+      semester2,
+      semester3,
+      semester4,
+      semester5,
+      semester6,
+    } = request.post();
+
+    const check = await MProfilUser.query()
+      .select("id")
+      .where({
+        m_user_id: user.id,
+      })
+      .first();
+
+    let profil;
+
+    if (check) {
+      profil = await MProfilUser.query().where({ id: check.id }).update({
+        // alamat
+        alamat,
+        provinces_id,
+        regencies_id,
+        districts_id,
+        villages_id,
+        kode_pos,
+
+        // kesehatan
+        tb,
+        bb,
+        gol_darah,
+        buta_warna,
+        kacamata,
+        disabilitas,
+        surat_keterangan_sehat,
+        surat_keterangan_buta_warna,
+
+        // ortu
+        nama_ayah,
+        telp_ayah,
+        alamat_ayah,
+        nama_ibu,
+        telp_ibu,
+        alamat_ibu,
+        m_user_id,
+
+        // rapor
+        fisika1,
+        fisika2,
+        fisika3,
+        fisika4,
+        fisika5,
+        fisika6,
+        matematika1,
+        matematika2,
+        matematika3,
+        matematika4,
+        matematika5,
+        matematika6,
+        bindo1,
+        bindo2,
+        bindo3,
+        bindo4,
+        bindo5,
+        bindo6,
+        bing1,
+        bing2,
+        bing3,
+        bing4,
+        bing5,
+        bing6,
+
+        // lampiran rapor
+        semester1,
+        semester2,
+        semester3,
+        semester4,
+        semester5,
+        semester6,
+      });
+    } else {
+      profil = await MProfilUser.create({
+        // alamat
+        alamat,
+        provinces_id,
+        regencies_id,
+        districts_id,
+        villages_id,
+        kode_pos,
+
+        // kesehatan
+        tb,
+        bb,
+        gol_darah,
+        buta_warna,
+        kacamata,
+        disabilitas,
+        surat_keterangan_sehat,
+        surat_keterangan_buta_warna,
+
+        // ortu
+        nama_ayah,
+        telp_ayah,
+        alamat_ayah,
+        nama_ibu,
+        telp_ibu,
+        alamat_ibu,
+        m_user_id,
+
+        // rapor
+        fisika1,
+        fisika2,
+        fisika3,
+        fisika4,
+        fisika5,
+        fisika6,
+        matematika1,
+        matematika2,
+        matematika3,
+        matematika4,
+        matematika5,
+        matematika6,
+        bindo1,
+        bindo2,
+        bindo3,
+        bindo4,
+        bindo5,
+        bindo6,
+        bing1,
+        bing2,
+        bing3,
+        bing4,
+        bing5,
+        bing6,
+
+        // lampiran rapor
+        semester1,
+        semester2,
+        semester3,
+        semester4,
+        semester5,
+        semester6,
+      });
+    }
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
 
   async putUbahPassword({ auth, response, request }) {
     const domain = request.headers().origin;
@@ -8787,6 +9015,17 @@ class MainController {
       });
     }
 
+    const user = await auth.getUser();
+
+    const pendaftarIds = await MPendaftarPpdb.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_user_id: user.id })
+      .pluck("m_gelombang_ppdb_id");
+
+    const terdaftar = await MGelombangPpdb.query()
+      .whereIn("id", pendaftarIds)
+      .fetch();
+
     const gelombang = await MGelombangPpdb.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ m_ta_id: ta.id })
@@ -8795,6 +9034,7 @@ class MainController {
 
     return response.ok({
       gelombang: gelombang,
+      terdaftar: terdaftar,
     });
   }
 
@@ -8922,18 +9162,23 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const ta = await this.getTAAktif(sekolah);
+    const { m_gelombang_ppdb_id } = request.post();
 
-    const { nama, dibuka, ditutup, tes_akademik } = request.post();
+    const check = await MPendaftarPpdb.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_gelombang_ppdb_id: m_gelombang_ppdb_id })
+      .andWhere({ m_user_id: user.id })
+      .first();
+
+    if (check) {
+      return response.forbidden({
+        message: "Kamu sudah terdaftar pada gelombang ini",
+      });
+    }
 
     await MPendaftarPpdb.create({
-      nama,
-      dibuka,
-      ditutup,
-      dihapus: 0,
-      tes_akademik,
-      m_sekolah_id: sekolah.id,
-      m_ta_id: ta.id,
+      m_gelombang_ppdb_id,
+      m_user_id: user.id,
     });
 
     return response.ok({
