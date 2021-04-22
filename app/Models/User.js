@@ -87,7 +87,7 @@ class User extends Model {
   }
 
   profil() {
-    return this.hasOne("App/Models/User", "m_user_id");
+    return this.hasOne("App/Models/MProfilUser", "id", "m_user_id");
   }
 }
 
