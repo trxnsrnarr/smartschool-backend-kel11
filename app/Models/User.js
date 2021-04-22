@@ -85,6 +85,10 @@ class User extends Model {
   tokens() {
     return this.hasMany("App/Models/Token");
   }
+
+  profil() {
+    return this.hasOne("App/Models/User", "m_user_id");
+  }
 }
 
 module.exports = User;
