@@ -265,19 +265,25 @@ class MainController {
     return response.ok(res);
   }
 
-  async getRegency({ response, params: { province_id } }) {
+  async getRegency({ response, request }) {
+    const { province_id } = request.get();
+
     const res = await Regency.query().where({ province_id }).fetch();
 
     return response.ok(res);
   }
 
-  async getDistrict({ response, params: { regency_id } }) {
+  async getDistrict({ response, request }) {
+    const { regency_id } = request.get();
+
     const res = await District.query().where({ regency_id }).fetch();
 
     return response.ok(res);
   }
 
-  async getVillage({ response, params: { district_id } }) {
+  async getVillage({ response, request }) {
+    const { district_id } = request.get();
+
     const res = await Village.query().where({ district_id }).fetch();
 
     return response.ok(res);
@@ -443,6 +449,8 @@ class MainController {
       message: messagePutSuccess,
     });
   }
+
+  async postProfilDetail({ auth, response, request }) {}
 
   async putUbahPassword({ auth, response, request }) {
     const domain = request.headers().origin;
