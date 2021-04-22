@@ -7,13 +7,17 @@ class MProfilUserSchema extends Schema {
   up() {
     this.create("m_profil_user", (table) => {
       table.increments();
+      // informasi
+      table.string("nisn");
+      table.string("asal_sekolah");
+
       // alamat
       table.text("alamat");
-      table.string("provinces_id", 2).index("provinces_id");
-      table.string("regencies_id", 4).index("regencies_id");
-      table.string("districts_id", 7).index("districts_id");
-      table.string("villages_id", 10).index("villages_id");
-      table.string("kode_pos");
+      table.string("province_id", 2).index("province_id");
+      table.string("regency_id", 4).index("regency_id");
+      table.string("district_id", 7).index("district_id");
+      table.string("village_id", 10).index("village_id");
+      table.string("kodepos");
 
       // kesehatan
       table.integer("tb"); // tinggi badan
@@ -29,9 +33,11 @@ class MProfilUserSchema extends Schema {
       table.string("nama_ayah");
       table.string("telp_ayah");
       table.text("alamat_ayah");
+      table.string("pekerjaan_ayah");
       table.string("nama_ibu");
       table.string("telp_ibu");
       table.text("alamat_ibu");
+      table.string("pekerjaan_ibu");
       table.integer("m_user_id").unsigned().index("m_user_id");
       table
         .foreign("m_user_id")
