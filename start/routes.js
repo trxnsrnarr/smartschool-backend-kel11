@@ -24,9 +24,9 @@ Route.get("/sekolah/me", "MainController.meSekolah");
 
 // data
 Route.get("/province", "MainController.getProvince");
-Route.get("/province/:province_id/regency", "MainController.getRegency");
-Route.get("/regency/:regency_id/district", "MainController.getDistrict");
-Route.get("/district/:district_id/village", "MainController.getVillage");
+Route.get("/regency", "MainController.getRegency");
+Route.get("/district", "MainController.getDistrict");
+Route.get("/village", "MainController.getVillage");
 Route.get("/sekolah-kemdikbud", "MainController.getMasterSekolah");
 
 // auth
@@ -37,6 +37,7 @@ Route.post("/loginadmin", "MainController.loginAdmin");
 Route.get("/profil", "MainController.getProfil");
 Route.put("/profil", "MainController.putProfil");
 Route.put("/ubah-password", "MainController.putUbahPassword");
+Route.post("/profil-user", "MainController.postProfilUser");
 
 // sekolah
 Route.get("/sekolah", "MainController.getSekolah");
@@ -62,6 +63,7 @@ Route.delete("/siswa/:siswa_id", "MainController.deleteSiswa");
 
 // ppdb
 Route.post("/ppdb/daftar", "MainController.daftarPPDB");
+Route.post("/ppdb/login", "MainController.loginPPDB");
 
 // alumni
 Route.get("/alumni", "MainController.getAlumni");
@@ -309,6 +311,13 @@ Route.delete(
   "MainController.deleteGelombangPPDB"
 );
 
+// pendaftar-ppdb
+Route.post("/pendaftar-ppdb", "MainController.postPendaftarPPDB");
+Route.put(
+  "/pendaftar-ppdb/:pendaftar_ppdb_id",
+  "MainController.putPendaftarPPDB"
+);
+
 // alur-ppdb
 Route.get("/alur-ppdb", "MainController.getAlurPPDB");
 Route.post("/alur-ppdb", "MainController.postAlurPPDB");
@@ -388,14 +397,26 @@ Route.delete("/proyek/:proyek_id", "MainController.deleteProyek");
 // anggota-proyek
 Route.get("/anggota-proyek", "MainController.getAnggotaProyek");
 Route.post("/anggota-proyek", "MainController.postAnggotaProyek");
-Route.put("/anggota-proyek/:anggota_proyek_id", "MainController.putAnggotaProyek");
-Route.delete("/anggota-proyek/:anggota_proyek_id", "MainController.deleteAnggotaProyek");
+Route.put(
+  "/anggota-proyek/:anggota_proyek_id",
+  "MainController.putAnggotaProyek"
+);
+Route.delete(
+  "/anggota-proyek/:anggota_proyek_id",
+  "MainController.deleteAnggotaProyek"
+);
 
 // kategori-pekerjaan
 Route.get("/kategori-pekerjaan", "MainController.getKategoriPekerjaan");
 Route.post("/kategori-pekerjaan", "MainController.postKategoriPekerjaan");
-Route.put("/kategori-pekerjaan/:kategori_pekerjaan_id", "MainController.putKategoriPekerjaan");
-Route.delete("/kategori-pekerjaan/:kategori_pekerjaan_id", "MainController.deleteKategoriPekerjaan");
+Route.put(
+  "/kategori-pekerjaan/:kategori_pekerjaan_id",
+  "MainController.putKategoriPekerjaan"
+);
+Route.delete(
+  "/kategori-pekerjaan/:kategori_pekerjaan_id",
+  "MainController.deleteKategoriPekerjaan"
+);
 
 // wildcard
 Route.any("*", "MainController.notFoundPage");
