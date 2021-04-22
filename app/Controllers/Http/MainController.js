@@ -11155,15 +11155,15 @@ class MainController {
 
     // ===== List Undangan =====
     const undangan = await MAnggotaProyek.query()
-      .where({ dihapus: 0})
-      .andWhere({ m_user_id: user.id})
-      .andWhere({status: "undangan"})
+      .where({ dihapus: 0 })
+      .andWhere({ m_user_id: user.id })
+      .andWhere({ status: "undangan" })
       .fetch();
 
     return response.ok({
       proyek: proyek,
       userPartner: userPartner,
-      undangan
+      undangan,
     });
   }
 
@@ -11431,28 +11431,30 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
-    
+
     const { anggota_proyek_id, proyek_id, user_id } = request.post();
 
     const isAdmin = await MAnggotaProyekRole.query()
-      .where({m_anggota_proyek_id: anggota_proyek_id})
-      .andWhere({dihapus: 0})
-      .andWhere({role: "Admin"})
+      .where({ m_anggota_proyek_id: anggota_proyek_id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ role: "Admin" })
       .fetch();
-    
-    if(!isAdmin){
+
+    if (!isAdmin) {
       return response.forbidden({ message: messageForbidden });
     }
-    
-    user_id?.map((d, idx) => {
-      await MAnggotaProyek.create({
-        m_proyek_id: proyek_id,
-        m_user_id: d,
-        status: "undangan",
-        dihapus: 0,
-      });
-    })
-    
+
+    await Promise.all(
+      user_id.map(async (d, idx) => {
+        await MAnggotaProyek.create({
+          m_proyek_id: proyek_id,
+          m_user_id: d,
+          status: "undangan",
+          dihapus: 0,
+        });
+      })
+    );
+
     return response.ok({
       message: messagePostSuccess,
     });
@@ -11479,10 +11481,10 @@ class MainController {
 
     const anggota = await MAnggotaProyek.query()
       .where({ id: anggota_proyek_id })
-      .andWhere({ m_user_id: user.id})
-      .andWhere({ dihapus: 0})
+      .andWhere({ m_user_id: user.id })
+      .andWhere({ dihapus: 0 })
       .update({
-        status
+        status,
       });
 
     if (!anggota) {
@@ -11514,18 +11516,18 @@ class MainController {
 
     // Cek Role, selain admin tidak boleh delete anggota
     const isAdmin = await MAnggotaProyekRole.query()
-      .where({m_anggota_proyek_id: anggota_proyek_id})
-      .andWhere({role: "Admin"})
+      .where({ m_anggota_proyek_id: anggota_proyek_id })
+      .andWhere({ role: "Admin" })
       .fetch();
 
-    if(!isAdmin){
-      return response.forbidden({ message: messageForbidden})
+    if (!isAdmin) {
+      return response.forbidden({ message: messageForbidden });
     }
 
     const hapusAnggota = await MAnggotaProyek.query()
       .where({ id: delete_anggota })
       .update({
-        dihapus: 1, 
+        dihapus: 1,
       });
 
     if (!hapusAnggota) {
