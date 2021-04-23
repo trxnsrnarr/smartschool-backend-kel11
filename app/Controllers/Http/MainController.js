@@ -9057,6 +9057,26 @@ class MainController {
 
     const user = await auth.getUser();
 
+    const checkIds = await MGelombangPpdb.query()
+      .where("dibuka", "<=", moment().format("YYYY-MM-DD"))
+      .andWhere("ditutup", ">=", moment().format("YYYY-MM-DD"))
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .ids();
+
+    let gelombangAktif;
+
+    if (checkIds.length) {
+      gelombangAktif = await MPendaftarPpdb.query()
+        .with("gelombang")
+        .where({ dihapus: 0 })
+        .andWhere({ m_user_id: user.id })
+        .whereIn("m_gelombang_ppdb_id", checkIds)
+        .orWhereNotNull("bukti")
+        .first();
+    }
+
     const pendaftarIds = await MPendaftarPpdb.query()
       .where({ dihapus: 0 })
       .andWhere({ m_user_id: user.id })
@@ -9075,6 +9095,7 @@ class MainController {
     return response.ok({
       gelombang: gelombang,
       terdaftar: terdaftar,
+      gelombangAktif: gelombangAktif,
     });
   }
 
@@ -9226,41 +9247,43 @@ class MainController {
     });
   }
 
-  async putPendaftarPPDB({
-    response,
-    request,
-    auth,
-    params: { pendaftar_ppdb_id },
-  }) {
-    const domain = request.headers().origin;
+  async putPendaftarPPDB({ response, request, params: { pendaftar_ppdb_id } }) {
+    const {
+      bank,
+      norek,
+      nama_pemilik,
+      nominal,
+      bukti,
+      m_jurusan_1_id,
+      m_jurusan_2_id,
+      m_jurusan_3_id,
+      m_jurusan_4_id,
+      m_jurusan_5_id,
+    } = request.post();
 
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-
-    const { nama, dibuka, ditutup, tes_akademik } = request.post();
-
-    const gelombang = await MPendaftarPpdb.query()
+    const check = await MPendaftarPpdb.query()
       .where({ id: pendaftar_ppdb_id })
       .update({
-        nama,
-        dibuka,
-        ditutup,
-        tes_akademik,
+        bank,
+        norek,
+        nama_pemilik,
+        nominal,
+        bukti,
+        m_jurusan_1_id,
+        m_jurusan_2_id,
+        m_jurusan_3_id,
+        m_jurusan_4_id,
+        m_jurusan_5_id,
       });
 
-    if (!gelombang) {
+    if (!check) {
       return response.notFound({
         message: messageNotFound,
       });
     }
 
     return response.ok({
-      message: messagePutSuccess,
+      message: messagePostSuccess,
     });
   }
 
