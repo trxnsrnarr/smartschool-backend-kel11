@@ -7,6 +7,10 @@ class MPendaftarPpdb extends Model {
   static get table() {
     return "m_pendaftar_ppdb";
   }
+
+  gelombang() {
+    return this.belongsTo("App/Models/MGelombangPpdb");
+  }
 }
 
 module.exports = MPendaftarPpdb;
