@@ -11500,8 +11500,17 @@ class MainController {
 
     const user = await auth.getUser();
 
+    const { proyek_id } = request.get();
+
+    const anggota = await MAnggotaProyek.query()
+      .where({ dihapus: 0 })
+      .andWhere({ status: "menerima" })
+      .andWhere({ m_proyek_id: proyek_id })
+      .fetch();
+
     return response.ok({
       message: messagePostSuccess,
+      anggota,
     });
   }
 
@@ -11722,27 +11731,27 @@ class MainController {
 
   // ===================== Anggota Proyek Service =========================
 
-  async getAnggotaProyek({ response, request, auth }) {
-    const domain = request.headers().origin;
+  // async getAnggotaProyek({ response, request, auth }) {
+  //   const domain = request.headers().origin;
 
-    const sekolah = await this.getSekolahByDomain(domain);
+  //   const sekolah = await this.getSekolahByDomain(domain);
 
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
+  //   if (sekolah == "404") {
+  //     return response.notFound({ message: "Sekolah belum terdaftar" });
+  //   }
 
-    const { proyek_id } = request.get();
+  //   const { proyek_id } = request.get();
 
-    const anggota = await MAnggotaProyek.query()
-      .where({ dihapus: 0 })
-      .andWhere({ status: "menerima" })
-      .andWhere({ m_proyek_id: proyek_id })
-      .fetch();
+  //   const anggota = await MAnggotaProyek.query()
+  //     .where({ dihapus: 0 })
+  //     .andWhere({ status: "menerima" })
+  //     .andWhere({ m_proyek_id: proyek_id })
+  //     .fetch();
 
-    return response.ok({
-      anggota,
-    });
-  }
+  //   return response.ok({
+  //     anggota,
+  //   });
+  // }
 
   // ============ Invite Anggota kedalam Proyek =================
   async postAnggotaProyek({ response, request, auth }) {
