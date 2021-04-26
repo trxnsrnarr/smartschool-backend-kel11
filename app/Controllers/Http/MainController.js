@@ -11489,7 +11489,7 @@ class MainController {
     });
   }
 
-  async detailProyek({ response, request, auth, params: { ujian_id } }) {
+  async detailProyek({ response, request, auth, params: { proyek_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -11502,6 +11502,18 @@ class MainController {
 
     const { proyek_id } = request.get();
 
+    const kategori = await MKategoriPekerjaan.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_proyek_id: proyek_id });
+
+    const pekerjaanProyek = await MPekerjaanProyek.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_kategori_pekerjaan_id: kategori_id });
+
+    const ditugaskanPekerjaan = await MDitugaskanPekerjaan.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_pekerjaan_proyek_id: pekerjaanProyek_id });
+
     const anggota = await MAnggotaProyek.query()
       .where({ dihapus: 0 })
       .andWhere({ status: "menerima" })
@@ -11511,6 +11523,9 @@ class MainController {
     return response.ok({
       message: messagePostSuccess,
       anggota,
+      kategori,
+      pekerjaanProyek,
+      ditugaskanPekerjaan,
     });
   }
 
