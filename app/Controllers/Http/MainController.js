@@ -15,6 +15,7 @@ const MPendaftarPpdb = use("App/Models/MPendaftarPpdb");
 const MAnggotaProyek = use("App/Models/MAnggotaProyek");
 const MAnggotaProyekRole = use("App/Models/MAnggotaProyekRole");
 const MKategoriPekerjaan = use("App/Models/MKategoriPekerjaan");
+const MPekerjaanProyek = use("App/Models/MPekerjaanPekerjaan");
 const MAlurPPDB = use("App/Models/MAlurPpdb");
 const TkPerpusAktivitas = use("App/Models/TkPerpusAktivitas");
 const MJurusan = use("App/Models/MJurusan");
