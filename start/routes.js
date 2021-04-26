@@ -302,6 +302,10 @@ Route.delete("/kegiatan/:kegiatan_id", "MainController.deleteKegiatan");
 
 // gelombang-ppdb
 Route.get("/gelombang-ppdb", "MainController.getGelombangPPDB");
+Route.get(
+  "/gelombang-ppdb/:gelombang_ppdb_id",
+  "MainController.detailGelombangPPDB"
+);
 Route.post("/gelombang-ppdb", "MainController.postGelombangPPDB");
 Route.put(
   "/gelombang-ppdb/:gelombang_ppdb_id",
