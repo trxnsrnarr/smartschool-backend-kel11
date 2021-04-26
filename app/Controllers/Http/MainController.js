@@ -9099,6 +9099,18 @@ class MainController {
     });
   }
 
+  async detailGelombangPPDB({ response, params: { gelombang_ppdb_id } }) {
+    const gelombang = await MGelombangPpdb.query()
+      .with("pendaftar")
+      .where({ id: gelombang_ppdb_id })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    return response.ok({
+      gelombang: gelombang,
+    });
+  }
+
   async postGelombangPPDB({ response, request, auth }) {
     const domain = request.headers().origin;
 
