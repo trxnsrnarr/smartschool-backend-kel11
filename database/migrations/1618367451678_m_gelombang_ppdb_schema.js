@@ -8,6 +8,7 @@ class MGelombangPpdbSchema extends Schema {
     this.create("m_gelombang_ppdb", (table) => {
       table.increments();
       table.string("nama");
+      table.integer("biaya_pendaftaran");
       table.datetime("dibuka");
       table.datetime("ditutup");
       table.boolean("dihapus").defaultTo(0);
