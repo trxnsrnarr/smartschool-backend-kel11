@@ -9116,7 +9116,13 @@ class MainController {
 
     const ta = await this.getTAAktif(sekolah);
 
-    const { nama, dibuka, ditutup, tes_akademik } = request.post();
+    const {
+      nama,
+      dibuka,
+      ditutup,
+      tes_akademik,
+      biaya_pendaftaran,
+    } = request.post();
 
     await MGelombangPpdb.create({
       nama,
@@ -9124,6 +9130,7 @@ class MainController {
       ditutup,
       dihapus: 0,
       tes_akademik,
+      biaya_pendaftaran,
       m_sekolah_id: sekolah.id,
       m_ta_id: ta.id,
     });
@@ -9153,7 +9160,13 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    const { nama, dibuka, ditutup, tes_akademik } = request.post();
+    const {
+      nama,
+      dibuka,
+      ditutup,
+      tes_akademik,
+      biaya_pendaftaran,
+    } = request.post();
 
     const gelombang = await MGelombangPpdb.query()
       .where({ id: gelombang_ppdb_id })
@@ -9162,6 +9175,7 @@ class MainController {
         dibuka,
         ditutup,
         tes_akademik,
+        biaya_pendaftaran,
       });
 
     if (!gelombang) {
