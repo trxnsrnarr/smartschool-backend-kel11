@@ -9330,6 +9330,7 @@ class MainController {
       .with("user", (builder) => {
         builder.with("profil");
       })
+      .with("gelombang")
       .where({ id: pendaftar_ppdb_id })
       .first();
 
