@@ -11,6 +11,10 @@ class MPendaftarPpdb extends Model {
   gelombang() {
     return this.belongsTo("App/Models/MGelombangPpdb");
   }
+
+  user() {
+    return this.belongsTo("App/Models/User", "m_user_id");
+  }
 }
 
 module.exports = MPendaftarPpdb;
