@@ -9101,7 +9101,9 @@ class MainController {
 
   async detailGelombangPPDB({ response, params: { gelombang_ppdb_id } }) {
     const gelombang = await MGelombangPpdb.query()
-      .with("pendaftar")
+      .with("pendaftar", (builder) => {
+        builder.with("user");
+      })
       .where({ id: gelombang_ppdb_id })
       .andWhere({ dihapus: 0 })
       .first();
