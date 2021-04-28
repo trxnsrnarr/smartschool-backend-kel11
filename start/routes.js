@@ -317,6 +317,10 @@ Route.delete(
 );
 
 // pendaftar-ppdb
+Route.get(
+  "/pendaftar-ppdb/:pendaftar_ppdb_id",
+  "MainController.detailPendaftarPPDB"
+);
 Route.post("/pendaftar-ppdb", "MainController.postPendaftarPPDB");
 Route.put(
   "/pendaftar-ppdb/:pendaftar_ppdb_id",
@@ -355,7 +359,7 @@ Route.put("/absen/:absen_id", "MainController.putAbsen");
 Route.post("/absen/download-absen", "MainController.downloadAbsen");
 
 // test
-Route.get("/test", "MainController.getTest");
+Route.get("/test", "MainController.downloadPendaftarPPDB");
 
 // perpus
 Route.get("/perpus", "MainController.getPerpus");
