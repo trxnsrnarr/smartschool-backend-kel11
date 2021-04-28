@@ -11860,6 +11860,132 @@ class MainController {
     });
   }
 
+  // ===================== Proyek Pekerjaan Service ===========================
+  async postPekerjaanProyek({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      judul,
+      prioritas,
+      status,
+      baras_waktu,
+      deskripsi,
+      m_kategori_pekerjaan_id,
+      urutan,
+    } = request.post();
+
+    await MPekerjaanProyek.create({
+      judul,
+      prioritas,
+      status,
+      baras_waktu,
+      deskripsi,
+      m_kategori_pekerjaan_id,
+      urutan,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putPekerjaanProyek({
+    response,
+    request,
+    auth,
+    params: { proyek_id },
+    params: { pekerjaaan_proyek_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      judul,
+      prioritas,
+      status,
+      baras_waktu,
+      deskripsi,
+      m_kategori_pekerjaan_id,
+      urutan,
+    } = request.post();
+
+    const pekerjaanProyek = await MPekerjaanProyek.query()
+      .where({ id: pekerjaan_proyek_id })
+      .andWhere({ m_user_id: user.id })
+      .update({
+        judul,
+        prioritas,
+        status,
+        baras_waktu,
+        deskripsi,
+        m_kategori_pekerjaan_id,
+        urutan,
+        dihapus: 0,
+      });
+
+    if (!pekerjaanProyek) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteProyekForum({
+    response,
+    request,
+    auth,
+    params: { proyek_id },
+    params: { pekerjaan_proyek_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    // mengambil data user
+    const user = await auth.getUser();
+
+    const pekerjaanProyek = await MProyekForum.query()
+      .where({ id: pekerjaan_proyek_id })
+      .andWhere({ m_user_id: user.id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!pekerjaanProyek) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
   // ===================== Anggota Proyek Service =========================
 
   // async getAnggotaProyek({ response, request, auth }) {
