@@ -11768,6 +11768,96 @@ class MainController {
     });
   }
 
+  // ===================== Forum Proyek Service ===========================
+  async postProyekForum({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { deskripsi, lampiran, m_proyek_id } = request.post();
+
+    await MProyekForum.create({
+      deskripsi,
+      lampiran,
+      m_proyek_id,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putProyekForum({ response, request, auth, params: { proyek_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { deskripsi, lampiran, m_proyek_id } = request.post();
+
+    const proyekForum = await MProyekForum.query()
+      .where({ id: proyek_id })
+      .andWhere({ m_user_id: user.id })
+      .update({
+        deskripsi,
+        lampiran,
+        m_proyek_id,
+        dihapus: 0,
+      });
+
+    if (!proyekForum) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteProyekForum({ response, request, auth, params: { proyek_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    // mengambil data user
+    const user = await auth.getUser();
+
+    const proyekForum = await MProyekForum.query()
+      .where({ id: proyek_id })
+      .andWhere({ m_user_id: user.id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!proyekForum) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
   // ===================== Anggota Proyek Service =========================
 
   // async getAnggotaProyek({ response, request, auth }) {
