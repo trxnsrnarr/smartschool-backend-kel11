@@ -17,6 +17,7 @@ const MAnggotaProyekRole = use("App/Models/MAnggotaProyekRole");
 const MKategoriPekerjaan = use("App/Models/MKategoriPekerjaan");
 const MPekerjaanProyek = use("App/Models/MPekerjaanProyek");
 const MDitugaskanPekerjaan = use("App/Models/MDitugaskanPekerjaan");
+const MProyekForum = use("App/Models/MProyekForum");
 const MAlurPPDB = use("App/Models/MAlurPpdb");
 const TkPerpusAktivitas = use("App/Models/TkPerpusAktivitas");
 const MJurusan = use("App/Models/MJurusan");
@@ -11528,6 +11529,11 @@ class MainController {
       .where({ dihapus: 0 })
       .andWhere({ m_pekerjaan_proyek_id: pekerjaanProyek_id });
 
+    const forum = await MProyekForum.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_proyek_id: proyek_id })
+      .fetch();
+
     const anggota = await MAnggotaProyek.query()
       .where({ dihapus: 0 })
       .andWhere({ status: "menerima" })
@@ -11540,6 +11546,7 @@ class MainController {
       kategori,
       pekerjaanProyek,
       ditugaskanPekerjaan,
+      forum,
     });
   }
 
