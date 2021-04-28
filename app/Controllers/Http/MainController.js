@@ -11519,15 +11519,18 @@ class MainController {
 
     const kategori = await MKategoriPekerjaan.query()
       .where({ dihapus: 0 })
-      .andWhere({ m_proyek_id: proyek_id });
+      .andWhere({ m_proyek_id: proyek_id })
+      .fetch();
 
     const pekerjaanProyek = await MPekerjaanProyek.query()
       .where({ dihapus: 0 })
-      .andWhere({ m_kategori_pekerjaan_id: kategori_id });
+      .andWhere({ m_kategori_pekerjaan_id: MKategoriPekerjaan.id })
+      .fetch();
 
     const ditugaskanPekerjaan = await MDitugaskanPekerjaan.query()
       .where({ dihapus: 0 })
-      .andWhere({ m_pekerjaan_proyek_id: pekerjaanProyek_id });
+      .andWhere({ m_pekerjaan_proyek_id: MPekerjaanProyek.id })
+      .fetch();
 
     const forum = await MProyekForum.query()
       .where({ dihapus: 0 })
