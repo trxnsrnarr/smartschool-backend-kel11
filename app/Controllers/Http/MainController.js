@@ -19,6 +19,7 @@ const MKategoriPekerjaan = use("App/Models/MKategoriPekerjaan");
 const MPekerjaanProyek = use("App/Models/MPekerjaanProyek");
 const MDitugaskanPekerjaan = use("App/Models/MDitugaskanPekerjaan");
 const MProyekForum = use("App/Models/MProyekForum");
+const MProyekForumKomen = use("App/Models/MProyekForumKomen");
 const MAlurPPDB = use("App/Models/MAlurPpdb");
 const TkPerpusAktivitas = use("App/Models/TkPerpusAktivitas");
 const MJurusan = use("App/Models/MJurusan");
