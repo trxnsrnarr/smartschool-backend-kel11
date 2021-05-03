@@ -10555,6 +10555,9 @@ class MainController {
     }
 
     const rpp = await MRpp.query()
+      .with("mataPelajaran")
+      .with("user")
+      .with("sekolah")
       .where({ dihapus: 0 })
       .andWhere({ m_user_id: user.id })
       .fetch();
@@ -11918,8 +11921,6 @@ class MainController {
     }
 
     const user = await auth.getUser();
-
-    const { proyek_id } = request.get();
 
     const kategori = await MKategoriPekerjaan.query()
       .where({ dihapus: 0 })
