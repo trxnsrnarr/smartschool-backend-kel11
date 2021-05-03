@@ -11942,6 +11942,11 @@ class MainController {
       .andWhere({ m_proyek_id: proyek_id })
       .fetch();
 
+    const forumKomen = await MProyekForumKomen.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_proyek_forum: MProyekForum.id })
+      .fetch();
+
     const anggota = await MAnggotaProyek.query()
       .where({ dihapus: 0 })
       .andWhere({ status: "menerima" })
@@ -11955,6 +11960,7 @@ class MainController {
       pekerjaanProyek,
       ditugaskanPekerjaan,
       forum,
+      forumKomen,
     });
   }
 
