@@ -368,6 +368,13 @@ Route.post("/perpus", "MainController.postPerpus");
 Route.put("/perpus/:perpus_id", "MainController.putPerpus");
 Route.delete("/perpus/:perpus_id", "MainController.deletePerpus");
 
+// rpp
+Route.get("/rpp", "MainController.getRpp");
+Route.get("/rpp/:rpp_id", "MainController.detailRpp");
+Route.post("/rpp", "MainController.postRpp");
+Route.put("/rpp/:rpp_id", "MainController.putRpp");
+Route.delete("/rpp/:rpp_id", "MainController.deleteRpp");
+
 // perpus aktivitas
 Route.post("/perpus-aktivitas", "MainController.postPerpusAktivitas");
 

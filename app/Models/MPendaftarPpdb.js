@@ -8,6 +8,18 @@ class MPendaftarPpdb extends Model {
     return "m_pendaftar_ppdb";
   }
 
+  static get computed() {
+    return ["dataJurusan", "bayarPendaftar"];
+  }
+
+  getDataJurusan({ m_jurusan_1_id }) {
+    return m_jurusan_1_id ? true : false;
+  }
+
+  getBayarPendaftar({ diverifikasi }) {
+    return diverifikasi ? true : false;
+  }
+
   gelombang() {
     return this.belongsTo("App/Models/MGelombangPpdb");
   }
