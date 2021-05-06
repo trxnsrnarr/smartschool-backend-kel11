@@ -9453,6 +9453,44 @@ class MainController {
     });
   }
 
+  async konfirmasiPendaftarPPDB({
+    response,
+    request,
+    params: { pendaftar_ppdb_id },
+  }) {
+    const check = await MPendaftarPpdb.query()
+      .where({ id: pendaftar_ppdb_id })
+      .first();
+
+    const gelombang = await MGelombangPpdb.query()
+      .where({ id: check.m_gelombang_ppdb_id })
+      .first();
+
+    if (check.nominal == gelombang.biaya_pendaftaran) {
+      await MPendaftarPpdb.query().where({ id: pendaftar_ppdb_id }).update({
+        diverifikasi: 1,
+      });
+
+      return response.ok({
+        message: `Pembayaran ${gelombang.nama} sudah lunas dengan nomor transaksi #${check.id}`,
+      });
+    } else if (check.nominal > gelombang.biaya_pendaftaran) {
+      return response.ok({
+        message: `Pembayaran ${gelombang.nama} kelebihan Rp${
+          +check.nominal - +gelombang.biaya_pendaftaran
+        } dengan nomor transaksi #${check.id}`,
+      });
+    } else if (check.nominal < gelombang.biaya_pendaftaran) {
+      return response.ok({
+        message: `Pembayaran ${gelombang.nama} kurang Rp${
+          +gelombang.biaya_pendaftaran - +check.nominal
+        } dengan nomor transaksi #${
+          check.id
+        }. Silahkan upload kekurangannya pada menu pembayaran`,
+      });
+    }
+  }
+
   async getAlurPPDB({ response, request, auth }) {
     const domain = request.headers().origin;
 
