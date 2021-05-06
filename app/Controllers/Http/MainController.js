@@ -411,9 +411,13 @@ class MainController {
 
     const sekolah = await this.getSekolahByDomain(domain);
 
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
     const user = await auth.getUser();
 
-    const {
+    let {
       nama,
       whatsapp,
       avatar,
@@ -431,9 +435,16 @@ class MainController {
       pangkat,
       golongan,
     } = request.post();
+    whatsapp = whatsapp.trim();
 
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
+    if (user.whatsapp != whatsapp) {
+      const check = await User.query().where({ whatsapp: whatsapp }).first();
+
+      if (check) {
+        return response.forbidden({
+          message: "Akun sudah terdaftar",
+        });
+      }
     }
 
     const update = await User.query().where({ id: user.id }).update({
@@ -1134,9 +1145,20 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    const { gender, nama, whatsapp, password, avatar } = request.post();
+    let { gender, nama, whatsapp, password, avatar } = request.post();
+    whatsapp = whatsapp.trim();
 
     let guru;
+
+    if (user.whatsapp != whatsapp) {
+      const check = await User.query().where({ whatsapp: whatsapp }).first();
+
+      if (check) {
+        return response.forbidden({
+          message: "Akun sudah terdaftar",
+        });
+      }
+    }
 
     if (!password) {
       guru = await User.query().where({ id: guru_id }).update({
@@ -1344,9 +1366,20 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    const { nama, whatsapp, gender, password, avatar } = request.post();
+    let { nama, whatsapp, gender, password, avatar } = request.post();
+    whatsapp = whatsapp.trim();
 
     let siswa;
+
+    if (user.whatsapp != whatsapp) {
+      const check = await User.query().where({ whatsapp: whatsapp }).first();
+
+      if (check) {
+        return response.forbidden({
+          message: "Akun sudah terdaftar",
+        });
+      }
+    }
 
     if (!password) {
       siswa = await User.query().where({ id: siswa_id }).update({
