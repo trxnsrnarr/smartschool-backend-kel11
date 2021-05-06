@@ -1450,17 +1450,21 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { whatsapp, password } = request.post();
+    let { whatsapp, password } = request.post();
+    whatsapp = whatsapp.trim();
 
-    const res = await User.query().where({ whatsapp: whatsapp }).first();
+    const res = await User.query()
+      .where({ whatsapp: whatsapp })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .first();
 
     if (!res) {
       return response.notFound({ message: "Akun tidak ditemukan" });
     }
 
-    // if (!(await Hash.verify(password, res.password))) {
-    //   return response.notFound({ message: "Password yang anda masukan salah" });
-    // }
+    if (!(await Hash.verify(password, res.password))) {
+      return response.notFound({ message: "Password yang anda masukan salah" });
+    }
 
     const { token } = await auth.generate(res);
 
