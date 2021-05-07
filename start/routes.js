@@ -326,6 +326,10 @@ Route.put(
   "/pendaftar-ppdb/:pendaftar_ppdb_id",
   "MainController.putPendaftarPPDB"
 );
+Route.put(
+  "/pendaftar-ppdb/:pendaftar_ppdb_id/konfirmasi",
+  "MainController.konfirmasiPendaftarPPDB"
+);
 
 // alur-ppdb
 Route.get("/alur-ppdb", "MainController.getAlurPPDB");

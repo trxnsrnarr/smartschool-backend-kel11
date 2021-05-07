@@ -326,16 +326,6 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    if (role == "ortu") {
-      const res = await User.query()
-        .select("nama", "whatsapp", "role")
-        .where({ wa_ayah: whatsapp })
-        .andWhere({ m_sekolah_id: sekolah.id })
-        .first();
-
-      return response.ok(res);
-    }
-
     const res = await User.query()
       .select("nama", "whatsapp", "role")
       .where({ whatsapp })
@@ -412,9 +402,13 @@ class MainController {
 
     const sekolah = await this.getSekolahByDomain(domain);
 
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
     const user = await auth.getUser();
 
-    const {
+    let {
       nama,
       whatsapp,
       avatar,
@@ -432,9 +426,16 @@ class MainController {
       pangkat,
       golongan,
     } = request.post();
+    whatsapp = whatsapp.trim();
 
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
+    if (user.whatsapp != whatsapp) {
+      const check = await User.query().where({ whatsapp: whatsapp }).first();
+
+      if (check) {
+        return response.forbidden({
+          message: "Akun sudah terdaftar",
+        });
+      }
     }
 
     const update = await User.query().where({ id: user.id }).update({
@@ -1135,9 +1136,20 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    const { gender, nama, whatsapp, password, avatar } = request.post();
+    let { gender, nama, whatsapp, password, avatar } = request.post();
+    whatsapp = whatsapp.trim();
 
     let guru;
+
+    if (user.whatsapp != whatsapp) {
+      const check = await User.query().where({ whatsapp: whatsapp }).first();
+
+      if (check) {
+        return response.forbidden({
+          message: "Akun sudah terdaftar",
+        });
+      }
+    }
 
     if (!password) {
       guru = await User.query().where({ id: guru_id }).update({
@@ -1345,9 +1357,20 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    const { nama, whatsapp, gender, password, avatar } = request.post();
+    let { nama, whatsapp, gender, password, avatar } = request.post();
+    whatsapp = whatsapp.trim();
 
     let siswa;
+
+    if (user.whatsapp != whatsapp) {
+      const check = await User.query().where({ whatsapp: whatsapp }).first();
+
+      if (check) {
+        return response.forbidden({
+          message: "Akun sudah terdaftar",
+        });
+      }
+    }
 
     if (!password) {
       siswa = await User.query().where({ id: siswa_id }).update({
@@ -1418,17 +1441,21 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { whatsapp, password } = request.post();
+    let { whatsapp, password } = request.post();
+    whatsapp = whatsapp.trim();
 
-    const res = await User.query().where({ whatsapp: whatsapp }).first();
+    const res = await User.query()
+      .where({ whatsapp: whatsapp })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .first();
 
     if (!res) {
       return response.notFound({ message: "Akun tidak ditemukan" });
     }
 
-    // if (!(await Hash.verify(password, res.password))) {
-    //   return response.notFound({ message: "Password yang anda masukan salah" });
-    // }
+    if (!(await Hash.verify(password, res.password))) {
+      return response.notFound({ message: "Password yang anda masukan salah" });
+    }
 
     const { token } = await auth.generate(res);
 
@@ -9415,6 +9442,44 @@ class MainController {
     return response.ok({
       message: messagePostSuccess,
     });
+  }
+
+  async konfirmasiPendaftarPPDB({
+    response,
+    request,
+    params: { pendaftar_ppdb_id },
+  }) {
+    const check = await MPendaftarPpdb.query()
+      .where({ id: pendaftar_ppdb_id })
+      .first();
+
+    const gelombang = await MGelombangPpdb.query()
+      .where({ id: check.m_gelombang_ppdb_id })
+      .first();
+
+    if (check.nominal == gelombang.biaya_pendaftaran) {
+      await MPendaftarPpdb.query().where({ id: pendaftar_ppdb_id }).update({
+        diverifikasi: 1,
+      });
+
+      return response.ok({
+        message: `Pembayaran ${gelombang.nama} sudah lunas dengan nomor transaksi #${check.id}`,
+      });
+    } else if (check.nominal > gelombang.biaya_pendaftaran) {
+      return response.ok({
+        message: `Pembayaran ${gelombang.nama} kelebihan Rp${
+          +check.nominal - +gelombang.biaya_pendaftaran
+        } dengan nomor transaksi #${check.id}`,
+      });
+    } else if (check.nominal < gelombang.biaya_pendaftaran) {
+      return response.ok({
+        message: `Pembayaran ${gelombang.nama} kurang Rp${
+          +gelombang.biaya_pendaftaran - +check.nominal
+        } dengan nomor transaksi #${
+          check.id
+        }. Silahkan upload kekurangannya pada menu pembayaran`,
+      });
+    }
   }
 
   async getAlurPPDB({ response, request, auth }) {
