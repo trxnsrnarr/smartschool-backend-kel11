@@ -325,16 +325,6 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    if (role == "ortu") {
-      const res = await User.query()
-        .select("nama", "whatsapp", "role")
-        .where({ wa_ayah: whatsapp })
-        .andWhere({ m_sekolah_id: sekolah.id })
-        .first();
-
-      return response.ok(res);
-    }
-
     const res = await User.query()
       .select("nama", "whatsapp", "role")
       .where({ whatsapp })
