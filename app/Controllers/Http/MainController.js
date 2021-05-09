@@ -11931,9 +11931,12 @@ class MainController {
       // ===== service cari proyek ====
 
       proyek = await MProyek.query()
+        .withCount("anggota", (builder) => {
+          builder.where({ status: "menerima" });
+        })
         .where({ dihapus: 0 })
         .andWhere("nama", "like", `%${search}%`)
-        .fetch();
+        .paginate();
     } else {
       // ===== service proyek saya ====
 
@@ -11946,10 +11949,13 @@ class MainController {
 
       // ambil data dari proyek yg diterima
       proyek = await MProyek.query()
+        .withCount("anggota", (builder) => {
+          builder.where({ status: "menerima" });
+        })
         .where({ dihapus: 0 })
         .andWhere({ m_sekolah_id: sekolah.id })
         .whereIn("id", terimaProyekIds)
-        .fetch();
+        .paginate();
     }
 
     // ===== service cari partner ====
@@ -11988,45 +11994,97 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const kategori = await MKategoriPekerjaan.query()
-      .where({ dihapus: 0 })
-      .andWhere({ m_proyek_id: proyek_id })
-      .fetch();
+    const proyek = await MProyek.query()
+      .with("status")
+      .with("user")
+      .with("sekolah")
+      .with("forum", (builder) => {
+        builder.where({ dihapus: 0 }).orderBy("created_at", "desc");
+      })
+      .with("anggota", (builder) => {
+        builder
+          .with("user")
+          .where({ dihapus: 0 })
+          .andWhere({ status: "menerima" });
+      })
+      .where({ id: proyek_id })
+      .first();
 
-    const pekerjaanProyek = await MPekerjaanProyek.query()
-      .where({ dihapus: 0 })
-      .andWhere({ m_kategori_pekerjaan_id: MKategoriPekerjaan.id })
-      .fetch();
-
-    const ditugaskanPekerjaan = await MDitugaskanPekerjaan.query()
-      .where({ dihapus: 0 })
-      .andWhere({ m_pekerjaan_proyek_id: MPekerjaanProyek.id })
-      .fetch();
-
-    const forum = await MProyekForum.query()
-      .where({ dihapus: 0 })
-      .andWhere({ m_proyek_id: proyek_id })
-      .fetch();
-
-    const forumKomen = await MProyekForumKomen.query()
-      .where({ dihapus: 0 })
-      .andWhere({ m_proyek_forum: MProyekForum.id })
-      .fetch();
-
-    const anggota = await MAnggotaProyek.query()
-      .where({ dihapus: 0 })
-      .andWhere({ status: "menerima" })
-      .andWhere({ m_proyek_id: proyek_id })
-      .fetch();
+    // const forumKomen = await MProyekForumKomen.query()
+    //   .where({ dihapus: 0 })
+    //   .andWhere({ m_proyek_forum: MProyekForum.id })
+    //   .fetch();
 
     return response.ok({
       message: messagePostSuccess,
-      anggota,
-      kategori,
-      pekerjaanProyek,
-      ditugaskanPekerjaan,
-      forum,
-      forumKomen,
+      proyek,
+      // forumKomen,
+    });
+  }
+
+  async getKategoriPekerjaan({
+    response,
+    request,
+    auth,
+    params: { proyek_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let { user_id, prioritas, status, batas_waktu } = request.get();
+
+    let kategori;
+
+    if (batas_waktu) {
+      kategori = await MKategoriPekerjaan.query()
+        .with("pekerjaan", (builder) => {
+          builder
+            .with("ditugaskan", (builder) => {
+              builder.with("user").where({ dihapus: 0 });
+            })
+            .where({ dihapus: 0 })
+            .andWhere({ batas_waktu: batas_waktu });
+        })
+        .where({ m_proyek_id: proyek_id })
+        .andWhere({ dihapus: 0 })
+        .orderBy("urutan", "asc")
+        .fetch();
+    } else if (prioritas) {
+      kategori = await MKategoriPekerjaan.query()
+        .with("pekerjaan", (builder) => {
+          builder
+            .with("ditugaskan", (builder) => {
+              builder.with("user").where({ dihapus: 0 });
+            })
+            .where({ dihapus: 0 })
+            .andWhere({ prioritas: prioritas });
+        })
+        .where({ m_proyek_id: proyek_id })
+        .andWhere({ dihapus: 0 })
+        .orderBy("urutan", "asc")
+        .fetch();
+    } else {
+      kategori = await MKategoriPekerjaan.query()
+        .with("pekerjaan", (builder) => {
+          builder
+            .with("ditugaskan", (builder) => {
+              builder.with("user").where({ dihapus: 0 });
+            })
+            .where({ dihapus: 0 });
+        })
+        .where({ m_proyek_id: proyek_id })
+        .andWhere({ dihapus: 0 })
+        .orderBy("urutan", "asc")
+        .fetch();
+    }
+
+    return response.ok({
+      kategori: kategori,
     });
   }
 
@@ -12066,6 +12124,30 @@ class MainController {
       status: "menerima",
       dihapus: 0,
     });
+
+    await MKategoriPekerjaan.createMany([
+      {
+        nama: "Daftar Pekerjaan",
+        warna: "#2680eb",
+        m_proyek_id: proyek.id,
+        dihapus: 0,
+        urutan: 1,
+      },
+      {
+        nama: "Sedang Dikerjakan",
+        warna: "#f9ac50",
+        m_proyek_id: proyek.id,
+        dihapus: 0,
+        urutan: 2,
+      },
+      {
+        nama: "Selesai",
+        warna: "#62ed7a",
+        m_proyek_id: proyek.id,
+        dihapus: 0,
+        urutan: 3,
+      },
+    ]);
 
     return response.ok({
       message: messagePostSuccess,
