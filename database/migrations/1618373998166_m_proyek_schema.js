@@ -10,6 +10,7 @@ class MProyekSchema extends Schema {
       table.string("nama");
       table.boolean("privasi");
       table.text("deskripsi");
+      table.text("link_grup_whatsapp");
       table.text("banner");
       table
         .integer("m_status_proyek_id")
