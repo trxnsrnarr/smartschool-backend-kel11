@@ -16,6 +16,15 @@ class MProyek extends Model {
   status() {
     return this.belongsTo("App/Models/MStatusProyek");
   }
+  anggota() {
+    return this.hasMany("App/Models/MAnggotaProyek");
+  }
+  forum() {
+    return this.hasMany("App/Models/MProyekForum");
+  }
+  kategoriPekerjaan() {
+    return this.hasMany("App/Models/MKategoriPekerjaan");
+  }
 }
 
 module.exports = MProyek;
