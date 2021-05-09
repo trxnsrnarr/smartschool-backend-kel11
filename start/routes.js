@@ -410,6 +410,11 @@ Route.delete(
 
 // proyek
 Route.get("/proyek", "MainController.getProyek");
+Route.get("/proyek/:proyek_id", "MainController.detailProyek");
+Route.get(
+  "/proyek/:proyek_id/kategori-pekerjaan",
+  "MainController.getKategoriPekerjaan"
+);
 Route.post("/proyek", "MainController.postProyek");
 Route.put("/proyek/:proyek_id", "MainController.putProyek");
 Route.delete("/proyek/:proyek_id", "MainController.deleteProyek");
