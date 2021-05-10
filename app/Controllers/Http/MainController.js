@@ -12339,12 +12339,13 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { deskripsi, lampiran, m_proyek_id } = request.post();
+    const { deskripsi, lampiran, m_proyek_id, m_user_id } = request.post();
 
     await MProyekForum.create({
       deskripsi,
       lampiran,
       m_proyek_id,
+      m_user_id,
       dihapus: 0,
     });
 
@@ -12353,7 +12354,13 @@ class MainController {
     });
   }
 
-  async putProyekForum({ response, request, auth, params: { proyek_id } }) {
+  async putProyekForum({
+    response,
+    request,
+    auth,
+    params: { proyek_id },
+    params: { proyekForum_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -12367,7 +12374,7 @@ class MainController {
     const { deskripsi, lampiran, m_proyek_id } = request.post();
 
     const proyekForum = await MProyekForum.query()
-      .where({ id: proyek_id })
+      .where({ id: proyekForum_id })
       .andWhere({ m_user_id: user.id })
       .update({
         deskripsi,
@@ -12387,7 +12394,13 @@ class MainController {
     });
   }
 
-  async deleteProyekForum({ response, request, auth, params: { proyek_id } }) {
+  async deleteProyekForum({
+    response,
+    request,
+    auth,
+    params: { proyek_id },
+    params: { proyekForum_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -12400,8 +12413,8 @@ class MainController {
     const user = await auth.getUser();
 
     const proyekForum = await MProyekForum.query()
-      .where({ id: proyek_id })
-      .andWhere({ m_user_id: user.id })
+      .where({ id: proyekForum_id })
+      .andWhere({ m_proyek_id: proyek_id })
       .update({
         dihapus: 1,
       });
@@ -12507,7 +12520,7 @@ class MainController {
     });
   }
 
-  async deleteProyekForum({
+  async deletePekerjaanProyek({
     response,
     request,
     auth,
