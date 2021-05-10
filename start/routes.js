@@ -420,9 +420,15 @@ Route.put("/proyek/:proyek_id", "MainController.putProyek");
 Route.delete("/proyek/:proyek_id", "MainController.deleteProyek");
 
 // forumProyek
-Route.post("/proyek/:proyek_id", "MainController.postProyekForum");
-Route.put("/proyek/:proyekForum_id", "MainController.putProyekForum");
-Route.delete("/proyek/:proyekForum_id", "MainController.deleteProyekForum");
+Route.post("/proyek/forum/:proyek_id", "MainController.postProyekForum");
+Route.put(
+  "/proyek/forum/update/:proyek_id/:proyekForum_id",
+  "MainController.putProyekForum"
+);
+Route.delete(
+  "/proyek/forum/delete/:proyek_id/:proyekForum_id",
+  "MainController.deleteProyekForum"
+);
 
 // anggota-proyek
 Route.get("/anggota-proyek", "MainController.getAnggotaProyek");
