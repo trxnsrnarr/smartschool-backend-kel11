@@ -12723,7 +12723,7 @@ class MainController {
     const user = await auth.getUser();
 
     const rekap = await MRekap.query()
-      .where({ id: rekap_id })
+      .where({ m_materi_id: rekap_id })
       .andWhere({ dihapus: 0 })
       .first();
 
@@ -12735,11 +12735,11 @@ class MainController {
 
   // ============ Detail Rekap Tugas ============
 
-  async detailRekapTugas({
+  async detailRekapNilai({
     response,
     request,
     auth,
-    params: { rekaptugas_id },
+    params: { rekapnilai_id },
   }) {
     const domain = request.headers().origin;
 
@@ -12751,77 +12751,28 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const rekaptugas = await MRekapTugas.query()
+    const rekap = await MRekap.query()
       .with("siswa")
-      .where({ id: rekaptugas_id })
+      .with("rekapnilai", (builder) => {
+        builder
+          .with("rombel", (builder) => {
+            builder.with("materi").where({ dihapus: 0 });
+          })
+          .where({ dihapus: 0 });
+      })
+      .where({ id: rekapnilai_id })
       .andWhere({ dihapus: 0 })
       .first();
 
     return response.ok({
       message: messagePostSuccess,
-      rekaptugas,
-    });
-  }
-
-  async detailRekapUjian({
-    response,
-    request,
-    auth,
-    params: { rekapujian_id },
-  }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-
-    const rekapujian = await MRekapUjian.query()
-      .with("siswa")
-      .where({ id: rekapujian_id })
-      .andWhere({ dihapus: 0 })
-      .first();
-
-    return response.ok({
-      message: messagePostSuccess,
-      rekapujian,
-    });
-  }
-
-  async detailRekapKeterampilan({
-    response,
-    request,
-    auth,
-    params: { rekapketerampilan_id },
-  }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-
-    const rekapketerampilan = await MRekapKeterampilan.query()
-      .with("siswa")
-      .where({ id: rekapketerampilan_id })
-      .andWhere({ dihapus: 0 })
-      .first();
-
-    return response.ok({
-      message: messagePostSuccess,
-      rekapketerampilan,
+      rekap,
     });
   }
 
   // ============ POST Rekap Tugas =================
 
-  async postRekapTugas({ response, request, auth }) {
+  async postRekap({ response, request, auth }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -12839,59 +12790,6 @@ class MainController {
       judul,
       deskripsi,
       tanggal,
-      dihapus: 0,
-    });
-
-    return response.ok({
-      message: messagePostSuccess,
-    });
-  }
-
-  async postRekapUjian({ response, request, auth }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-
-    const { jenis, judul, deskripsi, tanggal } = request.post();
-
-    const rekapUjian = await MRekapUjian.create({
-      jenis,
-      judul,
-      deskripsi,
-      tanggal,
-      dihapus: 0,
-    });
-
-    return response.ok({
-      message: messagePostSuccess,
-    });
-  }
-
-  async postRekapKeterampilan({ response, request, auth }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-
-    const { jenis, judul, deskripsi, tanggal, teknik } = request.post();
-
-    const rekapKeterampilan = await MRekapKeterampilan.create({
-      jenis,
-      judul,
-      deskripsi,
-      tanggal,
-      teknik,
       dihapus: 0,
     });
 
