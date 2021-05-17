@@ -458,7 +458,18 @@ Route.delete(
 
 // rekap-nilai
 Route.get("/rekap", "MainController.getMateri");
-Route.get("/rekap/:rekap_id", "MainController.detailRekap");
+Route.get("/rekap/:materi_id", "MainController.detailRekap");
+Route.post("/rekap/:materi_id", "MainController.postRekap");
+Route.put("/rekap/:rekap_id", "MainController.putRekap");
+Route.delete("/rekap/:rekap_id", "MainController.deleteRekap");
+Route.get(
+  "/rekap/:materi_id/:rekapnilai_id",
+  "MainController.detailRekapNilai"
+);
+Route.put(
+  "/rekap/:materi_id/:rekapnilai_id/m_user_id",
+  "MainController.postRekapNilai"
+);
 
 // wildcard
 Route.any("*", "MainController.notFoundPage");
