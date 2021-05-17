@@ -12847,61 +12847,9 @@ class MainController {
     });
   }
 
-  // ============ Invite Anggota kedalam Proyek =================
-  async postAnggotaProyek({ response, request, auth }) {
-    const domain = request.headers().origin;
+  // ============ POST Rekap Tugas =================
 
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const { anggota_proyek_id, proyek_id, user_id } = request.post();
-
-    const validation = await validate(
-      request.post(),
-      rulesAnggotaPost,
-      pesanSudahDitambahkan
-    );
-
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
-    }
-
-    const isAdmin = await MAnggotaProyekRole.query()
-      .where({ m_anggota_proyek_id: anggota_proyek_id })
-      .andWhere({ dihapus: 0 })
-      .andWhere({ role: "Admin" })
-      .fetch();
-
-    if (!isAdmin) {
-      return response.forbidden({ message: messageForbidden });
-    }
-
-    await Promise.all(
-      user_id.map(async (d, idx) => {
-        await MAnggotaProyek.create({
-          m_proyek_id: proyek_id,
-          m_user_id: d,
-          status: "undangan",
-          dihapus: 0,
-        });
-      })
-    );
-
-    return response.ok({
-      message: messagePostSuccess,
-    });
-  }
-
-  // ================ Update status Anggota Proyek ======================
-  async putAnggotaProyek({
-    response,
-    request,
-    auth,
-    params: { anggota_proyek_id },
-  }) {
+  async postRekapTugas({ response, request, auth }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -12912,17 +12860,108 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { status } = request.post();
+    const { jenis, judul, deskripsi, tanggal } = request.post();
 
-    const anggota = await MAnggotaProyek.query()
-      .where({ id: anggota_proyek_id })
+    const rekapTugas = await MRekapTugas.create({
+      jenis,
+      judul,
+      deskripsi,
+      tanggal,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async postRekapUjian({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { jenis, judul, deskripsi, tanggal } = request.post();
+
+    const rekapUjian = await MRekapUjian.create({
+      jenis,
+      judul,
+      deskripsi,
+      tanggal,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async postRekapKeterampilan({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { jenis, judul, deskripsi, tanggal, teknik } = request.post();
+
+    const rekapKeterampilan = await MRekapKeterampilan.create({
+      jenis,
+      judul,
+      deskripsi,
+      tanggal,
+      teknik,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putProyek({ response, request, auth, params: { proyek_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      nama,
+      privasi,
+      deskripsi,
+      banner,
+      m_status_proyek_id,
+    } = request.post();
+
+    const proyek = await MProyek.query()
+      .where({ id: proyek_id })
       .andWhere({ m_user_id: user.id })
-      .andWhere({ dihapus: 0 })
       .update({
-        status,
+        nama,
+        privasi,
+        deskripsi,
+        banner,
+        m_status_proyek_id,
+        m_user_id: user.id,
+        m_sekolah_id: sekolah.id,
+        dihapus: 0,
       });
 
-    if (!anggota) {
+    if (!proyek) {
       return response.notFound({
         message: messageNotFound,
       });
@@ -12933,12 +12972,7 @@ class MainController {
     });
   }
 
-  async deleteAnggotaProyek({
-    response,
-    request,
-    auth,
-    params: { anggota_proyek_id },
-  }) {
+  async deleteProyek({ response, request, auth, params: { proyek_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -12947,25 +12981,17 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { delete_anggota } = request.post();
+    // mengambil data user
+    const user = await auth.getUser();
 
-    // Cek Role, selain admin tidak boleh delete anggota
-    const isAdmin = await MAnggotaProyekRole.query()
-      .where({ m_anggota_proyek_id: anggota_proyek_id })
-      .andWhere({ role: "Admin" })
-      .fetch();
-
-    if (!isAdmin) {
-      return response.forbidden({ message: messageForbidden });
-    }
-
-    const hapusAnggota = await MAnggotaProyek.query()
-      .where({ id: delete_anggota })
+    const proyek = await MProyek.query()
+      .where({ id: proyek_id })
+      .andWhere({ m_user_id: user.id })
       .update({
         dihapus: 1,
       });
 
-    if (!hapusAnggota) {
+    if (!proyek) {
       return response.notFound({
         message: messageNotFound,
       });
