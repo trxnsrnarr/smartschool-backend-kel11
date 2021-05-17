@@ -12729,7 +12729,7 @@ class MainController {
     });
   }
 
-  // ============ Detail Rekap Nilai
+  // ============ Detail Rekap Nilai ============
 
   async detailRekapNilai({
     response,
@@ -12758,9 +12758,10 @@ class MainController {
     return response.ok({
       message: messagePostSuccess,
       rekapnilai,
-      // forumKomen,
     });
   }
+
+  // ============ Detail Rekap Tugas ============
 
   async detailRekapTugas({
     response,
@@ -12787,7 +12788,62 @@ class MainController {
     return response.ok({
       message: messagePostSuccess,
       rekaptugas,
-      // forumKomen,
+    });
+  }
+
+  async detailRekapUjian({
+    response,
+    request,
+    auth,
+    params: { rekapujian_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const rekapujian = await MRekapUjian.query()
+      .with("siswa")
+      .where({ id: rekapujian_id })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    return response.ok({
+      message: messagePostSuccess,
+      rekapujian,
+    });
+  }
+
+  async detailRekapKeterampilan({
+    response,
+    request,
+    auth,
+    params: { rekapketerampilan_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const rekapketerampilan = await MRekapKeterampilan.query()
+      .with("siswa")
+      .where({ id: rekapketerampilan_id })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    return response.ok({
+      message: messagePostSuccess,
+      rekapketerampilan,
     });
   }
 
