@@ -16,6 +16,8 @@ class UserSchema extends Schema {
       table.string("avatar");
       table.string("role");
       table.string("email");
+      table.string("agama");
+      table.string("panggilan");
 
       //====
       table.string("nip");

@@ -40,6 +40,9 @@ Route.put("/ubah-password", "MainController.putUbahPassword");
 Route.post("/profil-user", "MainController.postProfilUser");
 Route.get("/profil-user", "MainController.getProfilUser");
 
+// user
+Route.get("/user", "MainController.getUser");
+
 // sekolah
 Route.get("/sekolah", "MainController.getSekolah");
 
@@ -408,7 +411,8 @@ Route.delete(
   "MainController.deleteStatusProyek"
 );
 
-// proyek
+// KOLABORASI SERVICE START
+// ==== proyek
 Route.get("/proyek", "MainController.getProyek");
 Route.get("/proyek/:proyek_id", "MainController.detailProyek");
 Route.get(
@@ -419,7 +423,7 @@ Route.post("/proyek", "MainController.postProyek");
 Route.put("/proyek/:proyek_id", "MainController.putProyek");
 Route.delete("/proyek/:proyek_id", "MainController.deleteProyek");
 
-// anggota-proyek
+// ==== anggota-proyek
 Route.get("/anggota-proyek", "MainController.getAnggotaProyek");
 Route.post("/anggota-proyek", "MainController.postAnggotaProyek");
 Route.put(
@@ -430,6 +434,7 @@ Route.delete(
   "/anggota-proyek/:anggota_proyek_id",
   "MainController.deleteAnggotaProyek"
 );
+// KOLABORASI SERVICE END
 
 // kategori-pekerjaan
 Route.get("/kategori-pekerjaan", "MainController.getKategoriPekerjaan");

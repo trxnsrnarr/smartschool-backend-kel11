@@ -7,6 +7,13 @@ class MProfilUserSchema extends Schema {
   up() {
     this.create("m_profil_user", (table) => {
       table.increments();
+      table.text("bio");
+      table.text("pendidikan");
+      table.text("pengalaman");
+      table.text("prestasi");
+      table.text("portofolio");
+      table.text("bahasa");
+
       // informasi
       table.string("nisn");
       table.string("asal_sekolah");
