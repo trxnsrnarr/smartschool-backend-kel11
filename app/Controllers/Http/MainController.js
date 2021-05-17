@@ -12772,7 +12772,7 @@ class MainController {
 
   // ============ POST Rekap Tugas =================
 
-  async postRekap({ response, request, auth }) {
+  async postRekap({ response, request, auth, params: { m_materi_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -12783,14 +12783,26 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { jenis, judul, deskripsi, tanggal } = request.post();
+    const { di_ss, judul, deskripsi, tanggal, teknik, tipe } = request.post();
 
-    const rekapTugas = await MRekapTugas.create({
-      jenis,
+    const rekap = await MRekap.create({
+      di_ss,
       judul,
       deskripsi,
       tanggal,
+      kkm: 80,
+      teknik,
+      tipe,
+      m_materi_id: m_materi_id,
       dihapus: 0,
+    });
+
+    const rekapnilai = await TkRekapnilai.create({
+      m_user_id,
+      nilai,
+      m_rekap_tugas_id,
+      dihapus: 0,
+      m_rombel_id,
     });
 
     return response.ok({
@@ -12822,76 +12834,6 @@ class MainController {
       });
 
     if (!rekapTugas) {
-      return response.notFound({
-        message: messageNotFound,
-      });
-    }
-
-    return response.ok({
-      message: messagePutSuccess,
-    });
-  }
-
-  async putRekapUjian({ response, request, auth, params: { rekapUjian_id } }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-
-    const { jenis, judul, deskripsi, tanggal } = request.post();
-
-    const rekapUjian = await MRekapUjian.query()
-      .where({ id: rekapUjian_id })
-      .update({
-        jenis,
-        judul,
-        deskripsi,
-        tanggal,
-        dihapus: 0,
-      });
-
-    if (!rekapUjian) {
-      return response.notFound({
-        message: messageNotFound,
-      });
-    }
-  }
-
-  async putRekapKeterampilan({
-    response,
-    request,
-    auth,
-    params: { rekapKeterampilan_id },
-  }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-
-    const { jenis, judul, deskripsi, tanggal, teknik } = request.post();
-
-    const rekapKeterampilan = await MRekapKeterampilan.query()
-      .where({ id: rekapKeterampilan_id })
-      .update({
-        jenis,
-        judul,
-        deskripsi,
-        tanggal,
-        teknik,
-        dihapus: 0,
-      });
-
-    if (!rekapKeterampilan) {
       return response.notFound({
         message: messageNotFound,
       });
@@ -12936,73 +12878,6 @@ class MainController {
     });
   }
 
-  async deleteRekapUjian({
-    response,
-    request,
-    auth,
-    params: { rekapUjian_id },
-  }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    // mengambil data user
-    const user = await auth.getUser();
-
-    const rekapUjian = await MRekapUjian.query()
-      .where({ id: rekapUjian_id })
-      .update({
-        dihapus: 1,
-      });
-
-    if (!rekapUjian) {
-      return response.notFound({
-        message: messageNotFound,
-      });
-    }
-
-    return response.ok({
-      message: messageDeleteSuccess,
-    });
-  }
-
-  async deleteRekapKeterampilan({
-    response,
-    request,
-    auth,
-    params: { rekapKeterampilan_id },
-  }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    // mengambil data user
-    const user = await auth.getUser();
-
-    const rekapKeterampilan = await MRekapKeterampilan.query()
-      .where({ id: rekapKeterampilan_id })
-      .update({
-        dihapus: 1,
-      });
-
-    if (!rekapKeterampilan) {
-      return response.notFound({
-        message: messageNotFound,
-      });
-    }
-
-    return response.ok({
-      message: messageDeleteSuccess,
-    });
-  }
   // ===========
 }
 
