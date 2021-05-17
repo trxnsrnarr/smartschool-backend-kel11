@@ -31,6 +31,10 @@ class MMateri extends Model {
   sekolah() {
     return this.belongsTo("App/Models/MSekolah");
   }
+
+  rekap() {
+    return this.hasMany("App/Models/MRekap");
+  }
 }
 
 module.exports = MMateri;
