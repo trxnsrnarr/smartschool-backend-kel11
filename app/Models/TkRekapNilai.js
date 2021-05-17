@@ -10,7 +10,7 @@ class TkRekapNilai extends Model {
   user() {
     return this.belongsTo("App/Models/User", "m_user_id");
   }
-  Rombel() {
+  rombel() {
     return this.hasMany("App/Models/MRombel");
   }
 }
