@@ -12711,7 +12711,7 @@ class MainController {
 
   // =========== Rekap Nilai Service ==============
 
-  async detailRekap({ response, request, auth, params: { rekap_id } }) {
+  async detailRekap({ response, request, auth, params: { materi_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -12722,8 +12722,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const rekap = await MRekap.query()
-      .where({ m_materi_id: rekap_id })
+    const rekap = await MMateri.query()
+      .with("rekap", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .where({ id: materi_id })
       .andWhere({ dihapus: 0 })
       .first();
 
@@ -12810,7 +12813,7 @@ class MainController {
     });
   }
 
-  async putRekapTugas({ response, request, auth, params: { rekapTugas_id } }) {
+  async putRekap({ response, request, auth, params: { rekap_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -12823,8 +12826,8 @@ class MainController {
 
     const { jenis, judul, deskripsi, tanggal } = request.post();
 
-    const rekapTugas = await MRekapTugas.query()
-      .where({ id: rekapTugas_id })
+    const rekap = await MRekap.query()
+      .where({ id: (rekap = s_id) })
       .update({
         jenis,
         judul,
@@ -12833,7 +12836,7 @@ class MainController {
         dihapus: 0,
       });
 
-    if (!rekapTugas) {
+    if (!rekap) {
       return response.notFound({
         message: messageNotFound,
       });
@@ -12844,12 +12847,7 @@ class MainController {
     });
   }
 
-  async deleteRekapTugas({
-    response,
-    request,
-    auth,
-    params: { rekapTugas_id },
-  }) {
+  async deleteRekap({ response, request, auth, params: { rekap_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -12861,13 +12859,11 @@ class MainController {
     // mengambil data user
     const user = await auth.getUser();
 
-    const rekapTugas = await MRekapTugas.query()
-      .where({ id: rekapTugas_id })
-      .update({
-        dihapus: 1,
-      });
+    const rekap = await MRekap.query().where({ id: rekap_id }).update({
+      dihapus: 1,
+    });
 
-    if (!rekapTugas) {
+    if (!rekap) {
       return response.notFound({
         message: messageNotFound,
       });
@@ -12875,6 +12871,35 @@ class MainController {
 
     return response.ok({
       message: messageDeleteSuccess,
+    });
+  }
+
+  async putRekapNilai({ response, request, auth, params: { m_user_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { nilai } = request.post();
+
+    const rekap = await MRekap.query().where({ id: m_user_id }).update({
+      nilai,
+      dihapus: 0,
+    });
+
+    if (!rekap) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
     });
   }
 
