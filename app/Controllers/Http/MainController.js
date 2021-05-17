@@ -12736,7 +12736,7 @@ class MainController {
     });
   }
 
-  // ============ Detail Rekap Tugas ============
+  // ============ Detail Rekap Nilai ============
 
   async detailRekapNilai({
     response,
@@ -12755,12 +12755,12 @@ class MainController {
     const user = await auth.getUser();
 
     const rekap = await MRekap.query()
-      .with("siswa")
       .with("rekapnilai", (builder) => {
         builder
           .with("rombel", (builder) => {
             builder.with("materi").where({ dihapus: 0 });
           })
+          .with("siswa")
           .where({ dihapus: 0 });
       })
       .where({ id: rekapnilai_id })
@@ -12775,7 +12775,7 @@ class MainController {
 
   // ============ POST Rekap Tugas =================
 
-  async postRekap({ response, request, auth, params: { m_materi_id } }) {
+  async postRekap({ response, request, auth, params: { materi_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -12786,27 +12786,63 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { di_ss, judul, deskripsi, tanggal, teknik, tipe } = request.post();
+    const { di_ss, judul, tanggal, teknik, tipe } = request.post();
 
-    const rekap = await MRekap.create({
-      di_ss,
-      judul,
-      deskripsi,
-      tanggal,
-      kkm: 80,
-      teknik,
-      tipe,
-      m_materi_id: m_materi_id,
-      dihapus: 0,
-    });
+    if ((di_ss = 1)) {
+      if (teknik) {
+        const rekap = await MRekap.create({
+          di_ss,
+          judul,
+          tanggal,
+          kkm: 80,
+          teknik,
+          tipe,
+          m_materi_id: materi_id,
+          dihapus: 0,
+        });
+      } else {
+        const rekap = await MRekap.create({
+          di_ss,
+          judul,
+          tanggal,
+          kkm: 80,
+          tipe,
+          m_materi_id: materi_id,
+          dihapus: 0,
+        });
+      }
+    } else {
+      if (teknik) {
+        const rekap = await MRekap.create({
+          di_ss,
+          judul,
+          tanggal,
+          kkm: 80,
+          teknik,
+          tipe,
+          m_materi_id: materi_id,
+          dihapus: 0,
+        });
+      } else {
+        const rekap = await MRekap.create({
+          di_ss,
+          judul,
+          tanggal,
+          kkm: 80,
+          tipe,
+          m_materi_id: materi_id,
+          dihapus: 0,
+        });
+      }
+    }
 
-    const rekapnilai = await TkRekapnilai.create({
-      m_user_id,
-      nilai,
-      m_rekap_tugas_id,
-      dihapus: 0,
-      m_rombel_id,
-    });
+    // const rekapnilai = await TkRekapnilai.create({
+    //   m_user_id,
+    //   nilai,
+    //   m_rekap_tugas_id,
+    //   dihapus: 0,
+    //   m_rombel_id,
+    // });
 
     return response.ok({
       message: messagePostSuccess,
