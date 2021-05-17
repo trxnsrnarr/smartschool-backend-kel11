@@ -12928,7 +12928,7 @@ class MainController {
     });
   }
 
-  async putProyek({ response, request, auth, params: { proyek_id } }) {
+  async putRekapTugas({ response, request, auth, params: { rekapTugas_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -12939,29 +12939,19 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const {
-      nama,
-      privasi,
-      deskripsi,
-      banner,
-      m_status_proyek_id,
-    } = request.post();
+    const { jenis, judul, deskripsi, tanggal } = request.post();
 
-    const proyek = await MProyek.query()
-      .where({ id: proyek_id })
-      .andWhere({ m_user_id: user.id })
+    const rekapTugas = await MRekapTugas.query()
+      .where({ id: rekapTugas_id })
       .update({
-        nama,
-        privasi,
+        jenis,
+        judul,
         deskripsi,
-        banner,
-        m_status_proyek_id,
-        m_user_id: user.id,
-        m_sekolah_id: sekolah.id,
+        tanggal,
         dihapus: 0,
       });
 
-    if (!proyek) {
+    if (!rekapTugas) {
       return response.notFound({
         message: messageNotFound,
       });
