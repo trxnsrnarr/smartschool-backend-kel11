@@ -13065,6 +13065,74 @@ class MainController {
       message: messageDeleteSuccess,
     });
   }
+
+  async deleteRekapUjian({
+    response,
+    request,
+    auth,
+    params: { rekapUjian_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    // mengambil data user
+    const user = await auth.getUser();
+
+    const rekapUjian = await MRekapUjian.query()
+      .where({ id: rekapUjian_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!rekapUjian) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async deleteRekapKeterampilan({
+    response,
+    request,
+    auth,
+    params: { rekapKeterampilan_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    // mengambil data user
+    const user = await auth.getUser();
+
+    const rekapKeterampilan = await MRekapKeterampilan.query()
+      .where({ id: rekapKeterampilan_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!rekapKeterampilan) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
   // ===========
 }
 
