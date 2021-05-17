@@ -12760,9 +12760,10 @@ class MainController {
       .with("rekapnilai", (builder) => {
         builder
           .with("rombel", (builder) => {
-            builder.with("materi").where({ dihapus: 0 });
+            builder.with("materi");
+            // .where({ dihapus: 0 });
           })
-          .with("siswa")
+          .with("user")
           .where({ dihapus: 0 });
       })
       .where({ id: rekapnilai_id })
@@ -12790,7 +12791,7 @@ class MainController {
 
     const { di_ss, judul, tanggal, teknik, tipe } = request.post();
 
-    if ((di_ss = 1)) {
+    if (di_ss) {
       if (teknik) {
         const rekap = await MRekap.create({
           di_ss,
@@ -12838,13 +12839,16 @@ class MainController {
       }
     }
 
-    // const rekapnilai = await TkRekapnilai.create({
-    //   m_user_id,
-    //   nilai,
-    //   m_rekap_tugas_id,
-    //   dihapus: 0,
-    //   m_rombel_id,
-    // });
+    // for (m_rombel_id) {
+    //   const rekapnilai = await TkRekapnilai.create({
+    //     m_user_id,
+    //     nilai,
+    //     m_rekap_tugas_id,
+    //     dihapus: 0,
+    //     m_rombel_id,
+    //   });
+
+    // }
 
     return response.ok({
       message: messagePostSuccess,
