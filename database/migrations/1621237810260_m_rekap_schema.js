@@ -14,6 +14,7 @@ class MRekapSchema extends Schema {
       table.integer("kkm");
       table.integer("dibawahkkm");
       table.string("teknik");
+      table.string("tipe");
       table.integer("m_materi_id").unsigned().index("m_materi_id");
       table
         .foreign("m_materi_id")
