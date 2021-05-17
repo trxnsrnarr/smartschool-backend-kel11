@@ -1,5 +1,7 @@
 "use strict";
 
+const { route } = require("@adonisjs/framework/src/Route/Manager");
+
 /*
 |--------------------------------------------------------------------------
 | Routes
@@ -453,6 +455,10 @@ Route.delete(
   "/kategori-pekerjaan/:kategori_pekerjaan_id",
   "MainController.deleteKategoriPekerjaan"
 );
+
+// rekap-nilai
+Route.get("/rekap", "MainController.getMateri");
+Route.get("/rekap/:rekap_id", "MainController.detailRekap");
 
 // wildcard
 Route.any("*", "MainController.notFoundPage");
