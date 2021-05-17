@@ -12711,7 +12711,7 @@ class MainController {
 
   // =========== Rekap Nilai Service ==============
 
-  async getRekapNilai({ response, request, auth }) {
+  async detailRekap({ response, request, auth, params: { rekap_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -12722,42 +12722,14 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const Rekap = await MMapelRekap.query().where({ dihapus: 0 }).paginate();
-
-    return response.ok({
-      rekap,
-    });
-  }
-
-  // ============ Detail Rekap Nilai ============
-
-  async detailRekapNilai({
-    response,
-    request,
-    auth,
-    params: { mapelrekap_id },
-  }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-
-    const rekapnilai = await MMapelRekap.query()
-      .with("tugas")
-      .with("ujian")
-      .with("keterampilan")
-      .where({ id: mapelrekap_id })
+    const rekap = await MRekap.query()
+      .where({ id: rekap_id })
       .andWhere({ dihapus: 0 })
       .first();
 
     return response.ok({
       message: messagePostSuccess,
-      rekapnilai,
+      rekap,
     });
   }
 
