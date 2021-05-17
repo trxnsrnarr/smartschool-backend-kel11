@@ -12962,7 +12962,82 @@ class MainController {
     });
   }
 
-  async deleteProyek({ response, request, auth, params: { proyek_id } }) {
+  async putRekapUjian({ response, request, auth, params: { rekapUjian_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { jenis, judul, deskripsi, tanggal } = request.post();
+
+    const rekapUjian = await MRekapUjian.query()
+      .where({ id: rekapUjian_id })
+      .update({
+        jenis,
+        judul,
+        deskripsi,
+        tanggal,
+        dihapus: 0,
+      });
+
+    if (!rekapUjian) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+  }
+
+  async putRekapKeterampilan({
+    response,
+    request,
+    auth,
+    params: { rekapKeterampilan_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { jenis, judul, deskripsi, tanggal, teknik } = request.post();
+
+    const rekapKeterampilan = await MRekapKeterampilan.query()
+      .where({ id: rekapKeterampilan_id })
+      .update({
+        jenis,
+        judul,
+        deskripsi,
+        tanggal,
+        teknik,
+        dihapus: 0,
+      });
+
+    if (!rekapKeterampilan) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteRekapTugas({
+    response,
+    request,
+    auth,
+    params: { rekapTugas_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -12974,14 +13049,13 @@ class MainController {
     // mengambil data user
     const user = await auth.getUser();
 
-    const proyek = await MProyek.query()
-      .where({ id: proyek_id })
-      .andWhere({ m_user_id: user.id })
+    const rekapTugas = await MRekapTugas.query()
+      .where({ id: rekapTugas_id })
       .update({
         dihapus: 1,
       });
 
-    if (!proyek) {
+    if (!rekapTugas) {
       return response.notFound({
         message: messageNotFound,
       });
