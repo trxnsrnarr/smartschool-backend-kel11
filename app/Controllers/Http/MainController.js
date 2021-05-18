@@ -13011,7 +13011,12 @@ class MainController {
     });
   }
 
-  async putRekapNilai({ response, request, auth, params: { user_id } }) {
+  async putRekapNilai({
+    response,
+    request,
+    auth,
+    params: { user_id, rekapnilai_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -13024,11 +13029,24 @@ class MainController {
 
     const { nilai } = request.post();
 
-    const rekap = await TkRekapNilai.query()
+    const check = await TkRekapNilai.query()
       .where({ m_user_id: user_id })
-      .update({
+      .andWhere({ m_rekap_rombel_id: rekapnilai_id })
+      .first();
+
+    let rekap;
+
+    if (check) {
+      rekap = await TkRekapNilai.query().where({ m_user_id: user_id }).update({
         nilai,
       });
+    } else {
+      await TkRekapNilai.create({
+        m_user_id: user_id,
+        nilai,
+        m_rekap_rombel_id: rekapnilai_id,
+      });
+    }
 
     if (!rekap) {
       return response.notFound({
