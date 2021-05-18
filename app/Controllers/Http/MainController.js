@@ -12758,21 +12758,21 @@ class MainController {
 
     const rekap = await MRekap.query()
       .with("rekapnilai", (builder) => {
-        builder
-          .with("rombel", (builder) => {
-            builder.with("materi");
-            // .where({ dihapus: 0 });
-          })
-          .with("user")
-          .where({ dihapus: 0 });
+        builder.with("user").where({ dihapus: 0 });
       })
       .where({ id: rekapnilai_id })
       .andWhere({ dihapus: 0 })
       .first();
 
+    const materirombel = await TkMateriRombel.query()
+      .with("rombel")
+      .where({ id: rekap.m_materi_id })
+      .fetch();
+
     return response.ok({
       message: messagePostSuccess,
       rekap,
+      materirombel,
     });
   }
 
