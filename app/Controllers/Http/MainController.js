@@ -3172,13 +3172,8 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const {
-      judul,
-      konten,
-      banner,
-      m_kategori_id,
-      disembunyikan,
-    } = request.post();
+    const { judul, konten, banner, m_kategori_id, disembunyikan } =
+      request.post();
 
     let post;
 
@@ -3849,12 +3844,8 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const {
-      kesimpulan,
-      waktu_mulai,
-      waktu_selesai,
-      m_topik_id,
-    } = request.post();
+    const { kesimpulan, waktu_mulai, waktu_selesai, m_topik_id } =
+      request.post();
 
     const materiKesimpulan = await TkMateriKesimpulan.query()
       .where({ m_topik_id: m_topik_id })
@@ -4106,14 +4097,8 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const {
-      nama,
-      tingkat,
-      peringkat,
-      tempat,
-      tahun,
-      m_user_id,
-    } = request.post();
+    const { nama, tingkat, peringkat, tempat, tahun, m_user_id } =
+      request.post();
 
     await MPrestasi.create({
       nama,
@@ -4140,14 +4125,8 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const {
-      nama,
-      tingkat,
-      peringkat,
-      tempat,
-      tahun,
-      m_user_id,
-    } = request.post();
+    const { nama, tingkat, peringkat, tempat, tahun, m_user_id } =
+      request.post();
 
     const prestasi = await MPrestasi.query().where({ id: prestasi_id }).update({
       nama,
@@ -4971,12 +4950,8 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const {
-      m_jadwal_mengajar_id,
-      absen,
-      hari_ini,
-      waktu_saat_ini,
-    } = request.get();
+    const { m_jadwal_mengajar_id, absen, hari_ini, waktu_saat_ini } =
+      request.get();
 
     const jadwalMengajar = await MJadwalMengajar.query()
       .with("rombel")
@@ -7694,9 +7669,8 @@ class MainController {
         );
 
         worksheet.getCell("A1").value = "Ujian";
-        worksheet.getCell(
-          "B1"
-        ).value = jadwalUjian.toJSON().jadwalUjian.ujian.nama;
+        worksheet.getCell("B1").value =
+          jadwalUjian.toJSON().jadwalUjian.ujian.nama;
         worksheet.getCell("D1").value = "Tanggal";
         worksheet.getCell("E1").value = `${
           jadwalUjian.toJSON().jadwalUjian.tanggalUjian
@@ -8555,11 +8529,11 @@ class MainController {
         .doc(`${jawabanUjianSiswaData.toJSON().pesertaUjian.doc_id}`)
         .set(
           {
-            tk_jadwal_ujian_id: jawabanUjianSiswaData.toJSON().pesertaUjian
-              .tk_jadwal_ujian_id,
+            tk_jadwal_ujian_id:
+              jawabanUjianSiswaData.toJSON().pesertaUjian.tk_jadwal_ujian_id,
             user_id: jawabanUjianSiswaData.toJSON().pesertaUjian.m_user_id,
-            progress: jawabanUjianSiswaData.toJSON().pesertaUjian.__meta__
-              .totalDijawab,
+            progress:
+              jawabanUjianSiswaData.toJSON().pesertaUjian.__meta__.totalDijawab,
           },
           { merge: true }
         );
@@ -8799,9 +8773,8 @@ class MainController {
     let updatePayload = {};
 
     if (deskripsi_singkat)
-      updatePayload.deskripsi_singkat = Buffer(deskripsi_singkat).toString(
-        "base64"
-      );
+      updatePayload.deskripsi_singkat =
+        Buffer(deskripsi_singkat).toString("base64");
     if (visi) updatePayload.visi = Buffer(visi).toString("base64");
     if (misi) updatePayload.misi = Buffer(misi).toString("base64");
     if (background_section_mengapa)
@@ -8812,13 +8785,13 @@ class MainController {
     if (thumbnail_profil) updatePayload.thumbnail_profil = thumbnail_profil;
     if (video_profil) updatePayload.video_profil = video_profil;
     if (background_section_virtual_tour)
-      updatePayload.background_section_virtual_tour = background_section_virtual_tour;
+      updatePayload.background_section_virtual_tour =
+        background_section_virtual_tour;
     if (virtual_tour) updatePayload.virtual_tour = virtual_tour;
     if (banner_profil) updatePayload.banner_profil = banner_profil;
     if (deskripsi_sekolah)
-      updatePayload.deskripsi_sekolah = Buffer(deskripsi_sekolah).toString(
-        "base64"
-      );
+      updatePayload.deskripsi_sekolah =
+        Buffer(deskripsi_sekolah).toString("base64");
     if (foto_tentang_sekolah)
       updatePayload.foto_tentang_sekolah = foto_tentang_sekolah
         ? foto_tentang_sekolah.toString()
@@ -8928,14 +8901,8 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    const {
-      banner,
-      sambutan,
-      deskripsi,
-      cover,
-      galeri,
-      m_jurusan_id,
-    } = request.post();
+    const { banner, sambutan, deskripsi, cover, galeri, m_jurusan_id } =
+      request.post();
 
     const check = await MInformasiJurusan.query()
       .where({ m_jurusan_id: m_jurusan_id })
@@ -9184,13 +9151,8 @@ class MainController {
 
     const ta = await this.getTAAktif(sekolah);
 
-    const {
-      nama,
-      dibuka,
-      ditutup,
-      tes_akademik,
-      biaya_pendaftaran,
-    } = request.post();
+    const { nama, dibuka, ditutup, tes_akademik, biaya_pendaftaran } =
+      request.post();
 
     await MGelombangPpdb.create({
       nama,
@@ -9228,13 +9190,8 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    const {
-      nama,
-      dibuka,
-      ditutup,
-      tes_akademik,
-      biaya_pendaftaran,
-    } = request.post();
+    const { nama, dibuka, ditutup, tes_akademik, biaya_pendaftaran } =
+      request.post();
 
     const gelombang = await MGelombangPpdb.query()
       .where({ id: gelombang_ppdb_id })
@@ -10819,14 +10776,8 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const {
-      judul,
-      moda,
-      deskripsi,
-      lampiran,
-      tingkat,
-      m_mata_pelajaran_id,
-    } = request.post();
+    const { judul, moda, deskripsi, lampiran, tingkat, m_mata_pelajaran_id } =
+      request.post();
 
     await MRpp.create({
       judul,
@@ -10862,14 +10813,8 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const {
-      judul,
-      moda,
-      deskripsi,
-      lampiran,
-      tingkat,
-      m_mata_pelajaran_id,
-    } = request.post();
+    const { judul, moda, deskripsi, lampiran, tingkat, m_mata_pelajaran_id } =
+      request.post();
 
     const rpp = await MRpp.query().where({ id: rpp_id }).update({
       judul,
@@ -10924,13 +10869,8 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const {
-      aktivitas,
-      waktu_mulai,
-      waktu_selesai,
-      m_perpus_id,
-      rating,
-    } = request.post();
+    const { aktivitas, waktu_mulai, waktu_selesai, m_perpus_id, rating } =
+      request.post();
 
     const check = await TkPerpusAktivitas.query()
       .where({ m_user_id: user.id })
@@ -11256,15 +11196,8 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let {
-      nama,
-      jenis,
-      bulan,
-      tipe_ujian,
-      nominal,
-      tanggal_dibuat,
-      rombel_id,
-    } = request.post();
+    let { nama, jenis, bulan, tipe_ujian, nominal, tanggal_dibuat, rombel_id } =
+      request.post();
 
     rombel_id = rombel_id.length ? rombel_id : [];
 
@@ -11558,14 +11491,8 @@ class MainController {
 
     const user = await auth.getUser();
 
-    let {
-      bank,
-      norek,
-      nama_pemilik,
-      nominal,
-      bukti,
-      m_pembayaran_siswa_id,
-    } = request.post();
+    let { bank, norek, nama_pemilik, nominal, bukti, m_pembayaran_siswa_id } =
+      request.post();
 
     const pembayaran = await MRiwayatPembayaranSiswa.create({
       bank,
@@ -11614,14 +11541,8 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    const {
-      tu,
-      keuangan,
-      kurikulum,
-      kesiswaan,
-      sarpras,
-      humas,
-    } = request.post();
+    const { tu, keuangan, kurikulum, kesiswaan, sarpras, humas } =
+      request.post();
 
     const check = await MKontak.query()
       .where({ m_sekolah_id: sekolah.id })
@@ -12049,7 +11970,7 @@ class MainController {
     const user = await User.query()
       .with("sekolah")
       .where({ dihapus: 0 })
-      .andWhere({ role: '' })
+      .andWhereNot({ role: "admin" })
       .paginate(page);
 
     return response.ok({
@@ -12134,13 +12055,8 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const {
-      nama,
-      privasi,
-      deskripsi,
-      banner,
-      m_status_proyek_id,
-    } = request.post();
+    const { nama, privasi, deskripsi, banner, m_status_proyek_id } =
+      request.post();
 
     const proyek = await MProyek.create({
       nama,
@@ -12200,13 +12116,8 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const {
-      nama,
-      privasi,
-      deskripsi,
-      banner,
-      m_status_proyek_id,
-    } = request.post();
+    const { nama, privasi, deskripsi, banner, m_status_proyek_id } =
+      request.post();
 
     const proyek = await MProyek.query()
       .where({ id: proyek_id })
