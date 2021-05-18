@@ -12,6 +12,7 @@ const MProyek = use("App/Models/MProyek");
 const MPerpusKomen = use("App/Models/MPerpusKomen");
 const MRpp = use("App/Models/MRpp");
 const MRekap = use("App/Models/MRekap");
+const MRekapRombel = use("App/Models/MRekapRombel");
 const TkRekapNilai = use("App/Models/TkRekapNilai");
 const MGelombangPpdb = use("App/Models/MGelombangPpdb");
 const MPendaftarPpdb = use("App/Models/MPendaftarPpdb");
@@ -12051,7 +12052,7 @@ class MainController {
     const user = await User.query()
       .with("sekolah")
       .where({ dihapus: 0 })
-      .andWhere({ role: '' })
+      .andWhere({ role: "" })
       .paginate(page);
 
     return response.ok({
@@ -12774,7 +12775,6 @@ class MainController {
       .first();
 
     return response.ok({
-      message: messagePostSuccess,
       rekap,
     });
   }
@@ -12798,8 +12798,13 @@ class MainController {
     const user = await auth.getUser();
 
     const rekap = await MRekap.query()
-      .with("rekapnilai", (builder) => {
-        builder.with("user").where({ dihapus: 0 });
+      .with("rekaprombel", (builder) => {
+        builder
+          .with("rekapnilai", (builder) => {
+            builder.with("user");
+          })
+          .with("tugas")
+          .where({ dihapus: 0 });
       })
       .where({ id: rekapnilai_id })
       .andWhere({ dihapus: 0 })
@@ -12811,13 +12816,10 @@ class MainController {
       .fetch();
 
     return response.ok({
-      message: messagePostSuccess,
       rekap,
       materirombel,
     });
   }
-
-  // ============ POST Rekap Tugas =================
 
   async postRekap({ response, request, auth, params: { materi_id } }) {
     const domain = request.headers().origin;
@@ -12832,64 +12834,55 @@ class MainController {
 
     const { di_ss, judul, tanggal, teknik, tipe } = request.post();
 
-    if (di_ss) {
-      if (teknik) {
-        const rekap = await MRekap.create({
-          di_ss,
-          judul,
-          tanggal,
-          kkm: 80,
-          teknik,
-          tipe,
-          m_materi_id: materi_id,
-          dihapus: 0,
-        });
-      } else {
-        const rekap = await MRekap.create({
-          di_ss,
-          judul,
-          tanggal,
-          kkm: 80,
-          tipe,
-          m_materi_id: materi_id,
-          dihapus: 0,
-        });
-      }
-    } else {
-      if (teknik) {
-        const rekap = await MRekap.create({
-          di_ss,
-          judul,
-          tanggal,
-          kkm: 80,
-          teknik,
-          tipe,
-          m_materi_id: materi_id,
-          dihapus: 0,
-        });
-      } else {
-        const rekap = await MRekap.create({
-          di_ss,
-          judul,
-          tanggal,
-          kkm: 80,
-          tipe,
-          m_materi_id: materi_id,
-          dihapus: 0,
-        });
-      }
+    const rekap = await MRekap.create({
+      judul,
+      teknik,
+      tipe,
+      m_materi_id: materi_id,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  // ============ POST Rekap Tugas =================
+
+  async postRekapRombel({
+    response,
+    request,
+    auth,
+    params: { rekapnilai_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    // for (m_rombel_id) {
-    //   const rekapnilai = await TkRekapnilai.create({
-    //     m_user_id,
-    //     nilai,
-    //     m_rekap_tugas_id,
-    //     dihapus: 0,
-    //     m_rombel_id,
-    //   });
+    const user = await auth.getUser();
 
-    // }
+    const {
+      di_ss,
+      judul,
+      tanggal,
+      m_tugas_id,
+      m_rombel_id,
+      m_rekap_id,
+    } = request.post();
+
+    const rekap = await MRekapRombel.create({
+      di_ss,
+      judul,
+      tanggal,
+      m_tugas_id,
+      m_rombel_id,
+      m_rekap_id: rekapnilai_id,
+      dihapus: 0,
+    });
 
     return response.ok({
       message: messagePostSuccess,
@@ -12907,14 +12900,42 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { jenis, judul, deskripsi, tanggal, teknik } = request.post();
+    const { judul, teknik } = request.post();
 
     const rekap = await MRekap.query().where({ id: rekap_id }).update({
-      jenis,
       judul,
-      deskripsi,
       teknik,
+      dihapus: 0,
+    });
+
+    if (!rekap) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async putRekapRombel({ response, request, auth, params: { rekap_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { judul, tanggal, m_tugas_id } = request.post();
+
+    const rekap = await MRekapRombel.query().where({ id: rekap_id }).update({
+      judul,
       tanggal,
+      m_tugas_Id,
       dihapus: 0,
     });
 
@@ -12956,7 +12977,41 @@ class MainController {
     });
   }
 
-  async putRekapNilai({ response, request, auth, params: { m_user_id } }) {
+  async deleteRekapRombel({
+    response,
+    request,
+    auth,
+    params: { rekaprombel_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    // mengambil data user
+    const user = await auth.getUser();
+
+    const rekap = await MRekapRombel.query()
+      .where({ id: rekaprombel_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!rekap) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async putRekapNilai({ response, request, auth, params: { user_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -12969,10 +13024,11 @@ class MainController {
 
     const { nilai } = request.post();
 
-    const rekap = await MRekap.query().where({ id: m_user_id }).update({
-      nilai,
-      dihapus: 0,
-    });
+    const rekap = await TkRekapNilai.query()
+      .where({ m_user_id: user_id })
+      .update({
+        nilai,
+      });
 
     if (!rekap) {
       return response.notFound({
