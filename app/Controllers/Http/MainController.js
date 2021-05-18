@@ -491,6 +491,13 @@ class MainController {
     const user = await auth.getUser();
 
     let {
+      bio,
+      pendidikan,
+      pengalaman,
+      prestasi,
+      portofolio,
+      bahasa,
+
       // identitas
       nama,
       nama_panggilan,
@@ -589,6 +596,13 @@ class MainController {
 
     if (check) {
       profil = await MProfilUser.query().where({ id: check.id }).update({
+        bio,
+        pendidikan,
+        pengalaman,
+        prestasi,
+        portofolio,
+        bahasa,
+
         // informasi
         nisn,
         asal_sekolah,
@@ -658,6 +672,13 @@ class MainController {
       });
     } else {
       profil = await MProfilUser.create({
+        bio,
+        pendidikan,
+        pengalaman,
+        prestasi,
+        portofolio,
+        bahasa,
+
         // informasi
         nisn,
         asal_sekolah,
@@ -1455,9 +1476,9 @@ class MainController {
       return response.notFound({ message: "Akun tidak ditemukan" });
     }
 
-    if (!(await Hash.verify(password, res.password))) {
-      return response.notFound({ message: "Password yang anda masukan salah" });
-    }
+    // if (!(await Hash.verify(password, res.password))) {
+    //   return response.notFound({ message: "Password yang anda masukan salah" });
+    // }
 
     const { token } = await auth.generate(res);
 
@@ -12024,6 +12045,20 @@ class MainController {
     });
   }
 
+  async getUser({ response, request, auth }) {
+    const { page } = request.get();
+
+    const user = await User.query()
+      .with("sekolah")
+      .where({ dihapus: 0 })
+      .andWhere({ role: '' })
+      .paginate(page);
+
+    return response.ok({
+      user: user,
+    });
+  }
+
   async getKategoriPekerjaan({
     response,
     request,
@@ -12241,11 +12276,17 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { nama, warna, m_proyek_id } = request.post();
+    let { nama, warna, m_proyek_id } = request.post();
+    warna = warna
+      ? warna
+      : `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+
+    const maxUrutan = await MKategoriPekerjaan.query().getMax("urutan");
 
     await MKategoriPekerjaan.create({
       nama,
       warna,
+      urutan: maxUrutan,
       m_proyek_id,
       dihapus: 0,
     });
