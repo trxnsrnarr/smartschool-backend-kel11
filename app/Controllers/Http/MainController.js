@@ -12866,17 +12866,16 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { jenis, judul, deskripsi, tanggal } = request.post();
+    const { jenis, judul, deskripsi, tanggal, teknik } = request.post();
 
-    const rekap = await MRekap.query()
-      .where({ id: (rekap = s_id) })
-      .update({
-        jenis,
-        judul,
-        deskripsi,
-        tanggal,
-        dihapus: 0,
-      });
+    const rekap = await MRekap.query().where({ id: rekap_id }).update({
+      jenis,
+      judul,
+      deskripsi,
+      teknik,
+      tanggal,
+      dihapus: 0,
+    });
 
     if (!rekap) {
       return response.notFound({
