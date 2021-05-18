@@ -1,5 +1,7 @@
 "use strict";
 
+const { route } = require("@adonisjs/framework/src/Route/Manager");
+
 /*
 |--------------------------------------------------------------------------
 | Routes
@@ -423,7 +425,18 @@ Route.post("/proyek", "MainController.postProyek");
 Route.put("/proyek/:proyek_id", "MainController.putProyek");
 Route.delete("/proyek/:proyek_id", "MainController.deleteProyek");
 
-// ==== anggota-proyek
+// forumProyek
+Route.post("/proyek/forum/:proyek_id", "MainController.postProyekForum");
+Route.put(
+  "/proyek/forum/update/:proyek_id/:proyekForum_id",
+  "MainController.putProyekForum"
+);
+Route.delete(
+  "/proyek/forum/delete/:proyek_id/:proyekForum_id",
+  "MainController.deleteProyekForum"
+);
+
+// anggota-proyek
 Route.get("/anggota-proyek", "MainController.getAnggotaProyek");
 Route.post("/anggota-proyek", "MainController.postAnggotaProyek");
 Route.put(
@@ -446,6 +459,21 @@ Route.put(
 Route.delete(
   "/kategori-pekerjaan/:kategori_pekerjaan_id",
   "MainController.deleteKategoriPekerjaan"
+);
+
+// rekap-nilai
+Route.get("/rekap", "MainController.getMateri");
+Route.get("/rekap/:materi_id", "MainController.detailRekap");
+Route.post("/rekap/:materi_id", "MainController.postRekap");
+Route.put("/rekap/:materi_id/:rekap_id", "MainController.putRekap");
+Route.delete("/rekap/:materi_id/:rekap_id", "MainController.deleteRekap");
+Route.get(
+  "/rekap/:materi_id/:rekapnilai_id",
+  "MainController.detailRekapNilai"
+);
+Route.put(
+  "/rekap/:materi_id/:rekapnilai_id/m_user_id",
+  "MainController.postRekapNilai"
 );
 
 // wildcard

@@ -11,6 +11,8 @@ const MKegiatanGaleri = use("App/Models/MKegiatanGaleri");
 const MProyek = use("App/Models/MProyek");
 const MPerpusKomen = use("App/Models/MPerpusKomen");
 const MRpp = use("App/Models/MRpp");
+const MRekap = use("App/Models/MRekap");
+const TkRekapNilai = use("App/Models/TkRekapNilai");
 const MGelombangPpdb = use("App/Models/MGelombangPpdb");
 const MPendaftarPpdb = use("App/Models/MPendaftarPpdb");
 const MAnggotaProyek = use("App/Models/MAnggotaProyek");
@@ -12291,12 +12293,13 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { deskripsi, lampiran, m_proyek_id } = request.post();
+    const { deskripsi, lampiran, m_proyek_id, m_user_id } = request.post();
 
     await MProyekForum.create({
       deskripsi,
       lampiran,
       m_proyek_id,
+      m_user_id,
       dihapus: 0,
     });
 
@@ -12305,7 +12308,13 @@ class MainController {
     });
   }
 
-  async putProyekForum({ response, request, auth, params: { proyek_id } }) {
+  async putProyekForum({
+    response,
+    request,
+    auth,
+    params: { proyek_id },
+    params: { proyekForum_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -12319,7 +12328,7 @@ class MainController {
     const { deskripsi, lampiran, m_proyek_id } = request.post();
 
     const proyekForum = await MProyekForum.query()
-      .where({ id: proyek_id })
+      .where({ id: proyekForum_id })
       .andWhere({ m_user_id: user.id })
       .update({
         deskripsi,
@@ -12339,7 +12348,13 @@ class MainController {
     });
   }
 
-  async deleteProyekForum({ response, request, auth, params: { proyek_id } }) {
+  async deleteProyekForum({
+    response,
+    request,
+    auth,
+    params: { proyek_id },
+    params: { proyekForum_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -12352,8 +12367,8 @@ class MainController {
     const user = await auth.getUser();
 
     const proyekForum = await MProyekForum.query()
-      .where({ id: proyek_id })
-      .andWhere({ m_user_id: user.id })
+      .where({ id: proyekForum_id })
+      .andWhere({ m_proyek_id: proyek_id })
       .update({
         dihapus: 1,
       });
@@ -12459,7 +12474,7 @@ class MainController {
     });
   }
 
-  async deleteProyekForum({
+  async deletePekerjaanProyek({
     response,
     request,
     auth,
@@ -12647,6 +12662,241 @@ class MainController {
       message: messageDeleteSuccess,
     });
   }
+
+  // =========== Rekap Nilai Service ==============
+
+  async detailRekap({ response, request, auth, params: { materi_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const rekap = await MMateri.query()
+      .with("rekap", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .where({ id: materi_id })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    return response.ok({
+      message: messagePostSuccess,
+      rekap,
+    });
+  }
+
+  // ============ Detail Rekap Nilai ============
+
+  async detailRekapNilai({
+    response,
+    request,
+    auth,
+    params: { rekapnilai_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const rekap = await MRekap.query()
+      .with("rekapnilai", (builder) => {
+        builder.with("user").where({ dihapus: 0 });
+      })
+      .where({ id: rekapnilai_id })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    const materirombel = await TkMateriRombel.query()
+      .with("rombel")
+      .where({ id: rekap.m_materi_id })
+      .fetch();
+
+    return response.ok({
+      message: messagePostSuccess,
+      rekap,
+      materirombel,
+    });
+  }
+
+  // ============ POST Rekap Tugas =================
+
+  async postRekap({ response, request, auth, params: { materi_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { di_ss, judul, tanggal, teknik, tipe } = request.post();
+
+    if (di_ss) {
+      if (teknik) {
+        const rekap = await MRekap.create({
+          di_ss,
+          judul,
+          tanggal,
+          kkm: 80,
+          teknik,
+          tipe,
+          m_materi_id: materi_id,
+          dihapus: 0,
+        });
+      } else {
+        const rekap = await MRekap.create({
+          di_ss,
+          judul,
+          tanggal,
+          kkm: 80,
+          tipe,
+          m_materi_id: materi_id,
+          dihapus: 0,
+        });
+      }
+    } else {
+      if (teknik) {
+        const rekap = await MRekap.create({
+          di_ss,
+          judul,
+          tanggal,
+          kkm: 80,
+          teknik,
+          tipe,
+          m_materi_id: materi_id,
+          dihapus: 0,
+        });
+      } else {
+        const rekap = await MRekap.create({
+          di_ss,
+          judul,
+          tanggal,
+          kkm: 80,
+          tipe,
+          m_materi_id: materi_id,
+          dihapus: 0,
+        });
+      }
+    }
+
+    // for (m_rombel_id) {
+    //   const rekapnilai = await TkRekapnilai.create({
+    //     m_user_id,
+    //     nilai,
+    //     m_rekap_tugas_id,
+    //     dihapus: 0,
+    //     m_rombel_id,
+    //   });
+
+    // }
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putRekap({ response, request, auth, params: { rekap_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { jenis, judul, deskripsi, tanggal, teknik } = request.post();
+
+    const rekap = await MRekap.query().where({ id: rekap_id }).update({
+      jenis,
+      judul,
+      deskripsi,
+      teknik,
+      tanggal,
+      dihapus: 0,
+    });
+
+    if (!rekap) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteRekap({ response, request, auth, params: { rekap_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    // mengambil data user
+    const user = await auth.getUser();
+
+    const rekap = await MRekap.query().where({ id: rekap_id }).update({
+      dihapus: 1,
+    });
+
+    if (!rekap) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async putRekapNilai({ response, request, auth, params: { m_user_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { nilai } = request.post();
+
+    const rekap = await MRekap.query().where({ id: m_user_id }).update({
+      nilai,
+      dihapus: 0,
+    });
+
+    if (!rekap) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  // ===========
 }
 
 module.exports = MainController;
