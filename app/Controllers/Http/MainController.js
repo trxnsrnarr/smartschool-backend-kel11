@@ -13049,8 +13049,8 @@ class MainController {
     }
 
     if (!rekap) {
-      return response.notFound({
-        message: messageNotFound,
+      return response.ok({
+        message: messagePostSuccess,
       });
     }
 
