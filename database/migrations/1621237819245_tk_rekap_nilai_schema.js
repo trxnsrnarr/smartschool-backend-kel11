@@ -14,16 +14,10 @@ class TkRekapNilaiSchema extends Schema {
         .onDelete("cascade")
         .onUpdate("cascade");
       table.integer("nilai");
-      table.integer("m_rekap_id").unsigned().index("m_rekap_id");
+      table.integer("m_rekap_rombel_id").unsigned().index("m_rekap_rombel_id");
       table
-        .foreign("m_rekap_id")
-        .references("m_rekap.id")
-        .onDelete("cascade")
-        .onUpdate("cascade");
-      table.integer("m_rombel_id").unsigned().index("m_rombel_id");
-      table
-        .foreign("m_rombel_id")
-        .references("m_rombel.id")
+        .foreign("m_rekap_rombel_id")
+        .references("m_rekap_rombel.id")
         .onDelete("cascade")
         .onUpdate("cascade");
       table.timestamps();
