@@ -471,9 +471,21 @@ Route.get(
   "/rekap/:materi_id/:rekapnilai_id",
   "MainController.detailRekapNilai"
 );
+Route.post(
+  "/rekap/:materi_id/:rekapnilai_id",
+  "MainController.postRekapRombel"
+);
 Route.put(
-  "/rekap/:materi_id/:rekapnilai_id/m_user_id",
-  "MainController.postRekapNilai"
+  "/rekap/:materi_id/:rekapnilai_id/:rekaprombel_id",
+  "MainController.postRekapRombel"
+);
+Route.delete(
+  "/rekap/:materi_id/:rekapnilai_id/:rekaprombel_id",
+  "MainController.deleteRekapRombel"
+);
+Route.put(
+  "/rekap/:materi_id/:rekapnilai_id/ubah/:user_id",
+  "MainController.putRekapNilai"
 );
 
 // wildcard
