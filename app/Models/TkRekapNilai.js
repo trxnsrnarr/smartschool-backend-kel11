@@ -10,9 +10,6 @@ class TkRekapNilai extends Model {
   user() {
     return this.belongsTo("App/Models/User", "m_user_id");
   }
-  rombel() {
-    return this.belongsTo("App/Models/TkMateriRombel");
-  }
 }
 
 module.exports = TkRekapNilai;
