@@ -460,8 +460,8 @@ Route.delete(
 Route.get("/rekap", "MainController.getMateri");
 Route.get("/rekap/:materi_id", "MainController.detailRekap");
 Route.post("/rekap/:materi_id", "MainController.postRekap");
-Route.put("/rekap/:rekap_id", "MainController.putRekap");
-Route.delete("/rekap/:rekap_id", "MainController.deleteRekap");
+Route.put("/rekap/:materi_id/:rekap_id", "MainController.putRekap");
+Route.delete("/rekap/:materi_id/:rekap_id", "MainController.deleteRekap");
 Route.get(
   "/rekap/:materi_id/:rekapnilai_id",
   "MainController.detailRekapNilai"
