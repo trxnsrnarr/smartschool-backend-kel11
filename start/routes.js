@@ -488,5 +488,9 @@ Route.put(
   "MainController.putRekapNilai"
 );
 
+// GTK
+
+Route.post("/gtk/import", "MainController.importGTK");
+
 // wildcard
 Route.any("*", "MainController.notFoundPage");
