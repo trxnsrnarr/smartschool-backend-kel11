@@ -13072,7 +13072,7 @@ class MainController {
     let data = [];
 
     colComment.eachCell(async (cell, rowNumber) => {
-      if (rowNumber >= 6) {
+      if (rowNumber >= 3) {
         data.push({
           nama: explanation.getCell("B" + rowNumber).value,
           whatsapp: explanation.getCell("D" + rowNumber).value,
@@ -13086,21 +13086,27 @@ class MainController {
       data.map(async (d) => {
         const checkUser = await User.query()
           .where({ whatsapp: d.whatsapp })
+          .andWhere({ dihapus: 0 })
           .first();
 
-        if (!checkUser) {
-          await User.create({
-            nama: d.nama,
-            whatsapp: d.whatsapp,
-            gender: d.gender,
-            password: await Hash.make(`${d.password}`),
-            role: "guru",
-            m_sekolah_id: sekolah.id,
-            dihapus: 0,
-          });
-
-          return;
+        if (checkUser) {
+          return {
+            message: `${d.nama} ${d.whatsapp} sudah terdaftar`,
+            error: true,
+          };
         }
+
+        await User.create({
+          nama: d.nama,
+          whatsapp: d.whatsapp,
+          gender: d.gender,
+          password: await Hash.make(`${d.password}`),
+          role: "guru",
+          m_sekolah_id: sekolah.id,
+          dihapus: 0,
+        });
+
+        return;
       })
     );
 
