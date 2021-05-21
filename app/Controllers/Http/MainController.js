@@ -12685,7 +12685,6 @@ class MainController {
       .first();
 
     return response.ok({
-      message: messagePostSuccess,
       rekap,
     });
   }
@@ -12743,64 +12742,19 @@ class MainController {
 
     const { di_ss, judul, tanggal, teknik, tipe } = request.post();
 
+    const rekap = await MRekap.create({
+      di_ss,
+      judul,
+      tanggal,
+      kkm: 80,
+      teknik,
+      tipe,
+      m_materi_id: materi_id,
+      dihapus: 0,
+    });
+
     if (di_ss) {
-      if (teknik) {
-        const rekap = await MRekap.create({
-          di_ss,
-          judul,
-          tanggal,
-          kkm: 80,
-          teknik,
-          tipe,
-          m_materi_id: materi_id,
-          dihapus: 0,
-        });
-      } else {
-        const rekap = await MRekap.create({
-          di_ss,
-          judul,
-          tanggal,
-          kkm: 80,
-          tipe,
-          m_materi_id: materi_id,
-          dihapus: 0,
-        });
-      }
-    } else {
-      if (teknik) {
-        const rekap = await MRekap.create({
-          di_ss,
-          judul,
-          tanggal,
-          kkm: 80,
-          teknik,
-          tipe,
-          m_materi_id: materi_id,
-          dihapus: 0,
-        });
-      } else {
-        const rekap = await MRekap.create({
-          di_ss,
-          judul,
-          tanggal,
-          kkm: 80,
-          tipe,
-          m_materi_id: materi_id,
-          dihapus: 0,
-        });
-      }
     }
-
-    // for (m_rombel_id) {
-    //   const rekapnilai = await TkRekapnilai.create({
-    //     m_user_id,
-    //     nilai,
-    //     m_rekap_tugas_id,
-    //     dihapus: 0,
-    //     m_rombel_id,
-    //   });
-
-    // }
 
     return response.ok({
       message: messagePostSuccess,
