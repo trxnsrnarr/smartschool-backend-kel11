@@ -13137,6 +13137,192 @@ class MainController {
 
     return await this.importGTKServices(`tmp/uploads/${fname}`, sekolah);
   }
-}
 
+  async downloadRekapAbsen({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const { role, tanggal_awal, tanggal_akhir } = request.post();
+
+    // if (role == "guru") {
+    // if (mingguan) {
+    const kepsek = await User.query()
+      .with("absen", (builder) => {
+        builder.whereBetween(
+          "created_at",
+          [`%${tanggal_awal}%`, `%${tanggal_akhir}%`]
+          // "like"/,
+          // `%${tanggal_awal}%`
+          // "between",
+          // `%${tanggal_awal}%`,
+          // "AND",
+          // `%${tanggal_akhir}%`
+        );
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ role: "kepsek" })
+      .fetch();
+
+    const absen = await User.query()
+      .with("absen", (builder) => {
+        builder.whereBetween("created_at", [
+          `${tanggal_awal}`,
+          `${tanggal_akhir}`,
+        ]);
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ role: "guru" })
+      .fetch();
+
+    const totalHadir = await MAbsen.query()
+      .with("user")
+      .where("created_at", "like", `%${mingguan}%`)
+      .andWhere({ keterangan: "hadir" })
+      .whereIn("m_user_id", kepsek)
+      .count("* as total");
+    const totalSakit = await MAbsen.query()
+      .with("user")
+      .where("created_at", "like", `%${mingguan}%`)
+      .andWhere({ keterangan: "sakit" })
+      .whereIn("m_user_id", kepsek)
+      .count("* as total");
+    const totalIzin = await MAbsen.query()
+      .with("user")
+      .where("created_at", "like", `%${mingguan}%`)
+      .andWhere({ keterangan: "izin" })
+      .whereIn("m_user_id", kepsek)
+      .count("* as total");
+    const totalAlpa =
+      kepsek.length -
+      (totalHadir[0].total + totalSakit[0].total + totalIzin[0].total);
+
+    let workbook = new Excel.Workbook();
+
+    let worksheet = workbook.addWorksheet(`${mingguan}`);
+
+    await Promise.all(
+      kepsek.toJSON().map(async (d) => {
+        worksheet.getRow(10).values = [
+          "Nama",
+          "Hadir",
+          "Sakit",
+          "Izin",
+          "Alpa",
+        ];
+
+        worksheet.columns = [
+          { key: "user" },
+          { key: "hadir" },
+          { key: "sakit" },
+          { key: "izin" },
+          { key: "alpa" },
+        ];
+
+        let row = worksheet.addRow({
+          user: d ? d.nama : "-",
+          hadir: d
+            ? d.kepsek
+              ? d.kepsek.length
+                ? d.kepsek[0].kepsek
+                : "-"
+              : "-"
+            : "-",
+          sakit: d
+            ? d.kepsek
+              ? d.kepsek.length
+                ? d.kepsek[0].keterangan
+                : "-"
+              : "-"
+            : "-",
+          izin: d
+            ? d.kepsek
+              ? d.kepsek.length
+                ? d.kepsek[0].lampiran
+                : "-"
+              : "-"
+            : "-",
+          alpa: d
+            ? d.kepsek
+              ? d.kepsek.length
+                ? d.kepsek[0].foto_masuk
+                : "-"
+              : "-"
+            : "-",
+        });
+      })
+    );
+
+    await Promise.all(
+      absen.toJSON().map(async (d) => {
+        worksheet.getRow(12).values = [
+          "Nama",
+          "Hadir",
+          "Sakit",
+          "Izin",
+          "Alpa",
+        ];
+
+        worksheet.columns = [
+          { key: "user" },
+          { key: "hadir" },
+          { key: "sakit" },
+          { key: "izin" },
+          { key: "alpa" },
+        ];
+
+        let row = worksheet.addRow({
+          user: d ? d.nama : "-",
+          hadir: d
+            ? d.absen
+              ? d.absen.length
+                ? d.absen[0].absen
+                : "-"
+              : "-"
+            : "-",
+          sakit: d
+            ? d.absen
+              ? d.absen.length
+                ? d.absen[0].keterangan
+                : "-"
+              : "-"
+            : "-",
+          izin: d
+            ? d.absen
+              ? d.absen.length
+                ? d.absen[0].lampiran
+                : "-"
+              : "-"
+            : "-",
+          alpa: d
+            ? d.absen
+              ? d.absen.length
+                ? d.absen[0].foto_masuk
+                : "-"
+              : "-"
+            : "-",
+        });
+      })
+    );
+
+    let namaFile = `/uploads/rekap-absen-gurubulanan.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
+}
 module.exports = MainController;
