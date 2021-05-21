@@ -11973,7 +11973,7 @@ class MainController {
     const user = await User.query()
       .with("sekolah")
       .where({ dihapus: 0 })
-      .andWhere({ role: "" })
+      .andWhereNot({ role: "admin" })
       .paginate(page);
 
     return response.ok({
@@ -13062,22 +13062,22 @@ class MainController {
 
     const { role, tanggal_awal, tanggal_akhir } = request.post();
 
-    const kepsek = await User.query()
+    const tanggalDistinct = await Database.raw(
+      "SELECT DISTINCT DATE_FORMAT(created_at, '%Y-%m-%d') as tanggalDistinct from m_absen WHERE created_at BETWEEN ? AND  ?",
+      [tanggal_awal, tanggal_akhir]
+    );
+
+    const absenKepsek = await User.query()
+      .select("id", "nama")
       .with("absen", (builder) => {
-        builder.whereBetween("created_at", [
-          `%${tanggal_awal}%`,
-          `%${tanggal_akhir}%`,
-        ]);
+        builder
+          .select("id", "m_user_id", "created_at", "absen")
+          .whereBetween("created_at", [`${tanggal_awal}`, `${tanggal_akhir}`]);
       })
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .andWhere({ role: "kepsek" })
       .fetch();
-
-    const tanggalDistinct = await Database.raw(
-      "SELECT DISTINCT DATE_FORMAT(created_at, '%Y-%m-%d') as tanggalDistinct from m_absen WHERE created_at BETWEEN ? AND  ?",
-      [tanggal_awal, tanggal_akhir]
-    );
 
     const absenGuru = await User.query()
       .select("id", "nama")
@@ -13090,6 +13090,54 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .andWhere({ role: "guru" })
       .fetch();
+
+    // loop pertama untuk nge looping data kepsek
+    const rekapAbsenKepsek = await Promise.all(
+      absenKepsek.toJSON().map(async (d) => {
+        let namaKepsek = d.nama;
+        let totalSakit = 0;
+        let totalHadir = 0;
+        let totalTelat = 0;
+        let totalIzin = 0;
+        let totalAlpa = 0;
+
+        // loop ketiga untuk nge looping absen kepsek
+        await Promise.all(
+          d.absen.map(async (e) => {
+            if (e.absen == "sakit") {
+              totalSakit = totalSakit + 1;
+            } else if (e.absen == "izin") {
+              totalIzin = totalIzin + 1;
+            } else if (
+              (await Promise.all(
+                tanggalDistinct.find(async (tanggal) => {
+                  tanggal.tanggalDistinct ==
+                    moment(e.created_at).format("YYYY-MM-DD");
+                })
+              )) !== undefined
+            ) {
+              totalHadir = totalHadir + 1;
+
+              if (moment(e.created_at).format("HH:mm:ss") > "06.30") {
+                totalTelat = totalTelat + 1;
+              }
+            }
+          })
+        );
+
+        totalAlpa =
+          tanggalDistinct[0].length - (totalSakit + totalHadir + totalIzin);
+
+        return {
+          namaKepsek,
+          totalSakit,
+          totalHadir,
+          totalTelat,
+          totalIzin,
+          totalAlpa,
+        };
+      })
+    );
 
     // loop pertama untuk nge looping data guru
     const rekapAbsenGuru = await Promise.all(
@@ -13139,122 +13187,167 @@ class MainController {
       })
     );
 
-    return rekapAbsenGuru;
+    // return rekapAbsenGuru;
 
-    // let workbook = new Excel.Workbook();
+    let workbook = new Excel.Workbook();
 
-    // let worksheet = workbook.addWorksheet(`${mingguan}`);
+    let worksheet = workbook.addWorksheet(`RekapAbsen`);
+    const awal = moment(`${tanggal_awal}`).format("YYYY-MM-DD");
+    const akhir = moment(`${tanggal_akhir}`).format("YYYY-MM-DD");
 
-    // await Promise.all(
-    //   kepsek.toJSON().map(async (d) => {
-    //     worksheet.getRow(10).values = [
-    //       "Nama",
-    //       "Hadir",
-    //       "Sakit",
-    //       "Izin",
-    //       "Alpa",
-    //     ];
+    await Promise.all(
+      rekapAbsenKepsek.map(async (d) => {
+        worksheet.getRow(5).values = [
+          "Nama",
+          "Hadir",
+          "telat",
+          "Sakit",
+          "Izin",
+          "Alpa",
+        ];
 
-    //     worksheet.columns = [
-    //       { key: "user" },
-    //       { key: "hadir" },
-    //       { key: "sakit" },
-    //       { key: "izin" },
-    //       { key: "alpa" },
-    //     ];
+        worksheet.columns = [
+          { key: "user" },
+          { key: "hadir" },
+          { key: "telat" },
+          { key: "sakit" },
+          { key: "izin" },
+          { key: "alpa" },
+        ];
 
-    //     let row = worksheet.addRow({
-    //       user: d ? d.nama : "-",
-    //       hadir: d
-    //         ? d.kepsek
-    //           ? d.kepsek.length
-    //             ? d.kepsek[0].kepsek
-    //             : "-"
-    //           : "-"
-    //         : "-",
-    //       sakit: d
-    //         ? d.kepsek
-    //           ? d.kepsek.length
-    //             ? d.kepsek[0].keterangan
-    //             : "-"
-    //           : "-"
-    //         : "-",
-    //       izin: d
-    //         ? d.kepsek
-    //           ? d.kepsek.length
-    //             ? d.kepsek[0].lampiran
-    //             : "-"
-    //           : "-"
-    //         : "-",
-    //       alpa: d
-    //         ? d.kepsek
-    //           ? d.kepsek.length
-    //             ? d.kepsek[0].foto_masuk
-    //             : "-"
-    //           : "-"
-    //         : "-",
-    //     });
-    //   })
-    // );
+        worksheet.getCell("A1").value = "Rekap Absen";
+        worksheet.getCell("A2").value = `${awal} sampai ${akhir}`;
+        worksheet.getCell("A3").value = sekolah.nama;
 
-    // await Promise.all(
-    //   absen.toJSON().map(async (d) => {
-    //     worksheet.getRow(12).values = [
-    //       "Nama",
-    //       "Hadir",
-    //       "Sakit",
-    //       "Izin",
-    //       "Alpa",
-    //     ];
+        let row = worksheet.addRow({
+          user: d ? d.namaKepsek : "-",
+          hadir: d ? d.totalHadir : "-",
+          telat: d ? d.totalTelat : "-",
+          sakit: d ? d.totalSakit : "-",
+          izin: d ? d.totalIzin : "-",
+          alpa: d ? d.totalAlpa : "-",
+        });
+      })
+    );
 
-    //     worksheet.columns = [
-    //       { key: "user" },
-    //       { key: "hadir" },
-    //       { key: "sakit" },
-    //       { key: "izin" },
-    //       { key: "alpa" },
-    //     ];
+    await Promise.all(
+      rekapAbsenGuru.map(async (d) => {
+        worksheet.getRow(8).values = [
+          "Nama",
+          "Hadir",
+          "Telat",
+          "Sakit",
+          "Izin",
+          "Alpa",
+        ];
 
-    //     let row = worksheet.addRow({
-    //       user: d ? d.nama : "-",
-    //       hadir: d
-    //         ? d.absen
-    //           ? d.absen.length
-    //             ? d.absen[0].absen
-    //             : "-"
-    //           : "-"
-    //         : "-",
-    //       sakit: d
-    //         ? d.absen
-    //           ? d.absen.length
-    //             ? d.absen[0].keterangan
-    //             : "-"
-    //           : "-"
-    //         : "-",
-    //       izin: d
-    //         ? d.absen
-    //           ? d.absen.length
-    //             ? d.absen[0].lampiran
-    //             : "-"
-    //           : "-"
-    //         : "-",
-    //       alpa: d
-    //         ? d.absen
-    //           ? d.absen.length
-    //             ? d.absen[0].foto_masuk
-    //             : "-"
-    //           : "-"
-    //         : "-",
-    //     });
-    //   })
-    // );
+        worksheet.columns = [
+          { key: "user" },
+          { key: "hadir" },
+          { key: "telat" },
+          { key: "sakit" },
+          { key: "izin" },
+          { key: "alpa" },
+        ];
 
-    // let namaFile = `/uploads/rekap-absen-gurubulanan.xlsx`;
+        let row = worksheet.addRow({
+          user: d ? d.namaGuru : "-",
+          hadir: d ? d.totalHadir : "-",
+          telat: d ? d.totalTelat : "-",
+          sakit: d ? d.totalSakit : "-",
+          izin: d ? d.totalIzin : "-",
+          alpa: d ? d.totalAlpa : "-",
+        });
+      })
+    );
 
-    // // save workbook to disk
-    // await workbook.xlsx.writeFile(`public${namaFile}`);
+    let namaFile = `/uploads/rekap-absen-guru-tanggal.xlsx`;
 
-    // return namaFile;
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
+
+  // =========== IMPORT GTK SERVICE ================
+  async importMapelServices(filelocation, sekolah,ta) {
+    var workbook = new Excel.Workbook();
+
+    workbook = await workbook.xlsx.readFile(filelocation);
+
+    let explanation = workbook.getWorksheet("Daftar Mapel");
+
+    let colComment = explanation.getColumn("A");
+
+    let data = [];
+
+    colComment.eachCell(async (cell, rowNumber) => {
+      if (rowNumber >= 3) {
+        data.push({
+          namaGuru: explanation.getCell("B" + rowNumber).value,
+          whatsapp: explanation.getCell("C" + rowNumber).value,
+          nama: explanation.getCell("D" + rowNumber).value,
+          kode: explanation.getCell("E" + rowNumber).value,
+          kelompok: explanation.getCell("F" + rowNumber).value,
+          kkm: explanation.getCell("G" + rowNumber).value,
+        });
+      }
+    });
+
+    const result = await Promise.all(
+      data.map(async (d) => {
+        const userIds = await User.query()
+          .where({ whatsapp: d.whatsapp })
+          .andWhere({ dihapus: 0 })
+          .ids();
+
+        await MMataPelajaran.create({
+          nama: d.nama,
+          kode: d.kode,
+          kelompok: d.kelompok,
+          kkm: d.kkm,
+          m_user_id: userIds,
+          m_sekolah_id: sekolah.id,
+          m_ta_id: ta.id,
+          dihapus: 0,
+        });
+
+        return;
+      })
+    );
+
+    return result;
+  }
+
+  async importMapel({ request, response, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    let file = request.file("file");
+    let fname = `import-excel.${file.extname}`;
+
+    //move uploaded file into custom folder
+    await file.move(Helpers.tmpPath("/uploads"), {
+      name: fname,
+      overwrite: true,
+    });
+
+    if (!file.moved()) {
+      return fileUpload.error();
+    }
+
+    return await this.importMapelServices(`tmp/uploads/${fname}`, sekolah,ta);
   }
 }
 module.exports = MainController;
