@@ -462,7 +462,6 @@ Route.delete(
 );
 
 // rekap-nilai
-Route.get("/rekap", "MainController.getMateri");
 Route.get("/rekap/:materi_id", "MainController.detailRekap");
 Route.post("/rekap/:materi_id", "MainController.postRekap");
 Route.put("/rekap/:materi_id/:rekap_id", "MainController.putRekap");

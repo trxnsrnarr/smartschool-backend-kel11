@@ -12681,6 +12681,8 @@ class MainController {
       .with("rekap", (builder) => {
         builder.where({ dihapus: 0 });
       })
+      .with("jurusan")
+      .with("mataPelajaran")
       .where({ id: materi_id })
       .andWhere({ dihapus: 0 })
       .first();
