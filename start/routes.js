@@ -495,5 +495,9 @@ Route.post("/gtk/import", "MainController.importGTK");
 Route.get("/absen/rekapdownload", "MainController.downloadRekapAbsen");
 Route.post("/absen/rekapdownload", "MainController.downloadRekapAbsen");
 
+// Mapel Import
+
+Route.post("/mapel/importMapel", "MainController.importMapel");
+
 // wildcard
 Route.any("*", "MainController.notFoundPage");
