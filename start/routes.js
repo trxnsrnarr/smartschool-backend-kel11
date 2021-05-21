@@ -492,5 +492,8 @@ Route.put(
 
 Route.post("/gtk/import", "MainController.importGTK");
 
+Route.get("/absen/rekapdownload", "MainController.downloadRekapAbsen");
+Route.post("/absen/rekapdownload", "MainController.downloadRekapAbsen");
+
 // wildcard
 Route.any("*", "MainController.notFoundPage");
