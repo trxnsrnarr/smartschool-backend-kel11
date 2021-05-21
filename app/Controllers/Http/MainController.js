@@ -12052,7 +12052,7 @@ class MainController {
     const user = await User.query()
       .with("sekolah")
       .where({ dihapus: 0 })
-      .andWhere({ role: "" })
+      .andWhereNot({ role: "admin" })
       .paginate(page);
 
     return response.ok({
