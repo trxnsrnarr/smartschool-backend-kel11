@@ -13270,7 +13270,7 @@ class MainController {
   }
 
   // =========== IMPORT GTK SERVICE ================
-  async importMapelServices(filelocation, sekolah,ta) {
+  async importMapelServices(filelocation, sekolah, ta) {
     var workbook = new Excel.Workbook();
 
     workbook = await workbook.xlsx.readFile(filelocation);
@@ -13347,7 +13347,116 @@ class MainController {
       return fileUpload.error();
     }
 
-    return await this.importMapelServices(`tmp/uploads/${fname}`, sekolah,ta);
+    return await this.importMapelServices(`tmp/uploads/${fname}`, sekolah, ta);
+  }
+
+  async downloadMapel({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const mapel = await MMataPelajaran.query()
+      .with("user")
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    // return rekapAbsenGuru;
+
+    let workbook = new Excel.Workbook();
+
+    let worksheet = workbook.addWorksheet(`Rekap Mata Pelajaran`);
+    const awal = moment(`${tanggal_awal}`).format("YYYY-MM-DD");
+    const akhir = moment(`${tanggal_akhir}`).format("YYYY-MM-DD");
+
+    await Promise.all(
+      mapel.map(async (d) => {
+        worksheet.getRow(5).values = [
+          "Nama Guru",
+          "Whatsapp",
+          "Nama",
+          "Kode",
+          "Kelompok",
+          "KKM",
+        ];
+
+        worksheet.columns = [
+          { key: "guru" },
+          { key: "wa" },
+          { key: "nama" },
+          { key: "kode" },
+          { key: "kelompok" },
+          { key: "kkm" },
+        ];
+
+        worksheet.getCell("A1").value = "Rekap Mata Pelajaran";
+        worksheet.getCell("A3").value = sekolah.nama;
+        worksheet.getCell("A2").value = ta.tahun;
+
+        let row = worksheet.addRow({
+          guru: d
+            ? d.mapel.user
+              ? d.mapel.user.length
+                ? d.mapel.user[0].nama
+                : "-"
+              : "-"
+            : "-",
+          wa: d
+            ? d.mapel.user
+              ? d.mapel.user.length
+                ? d.mapel.user[0].whatsapp
+                : "-"
+              : "-"
+            : "-",
+          nama: d
+            ? d.mapel
+              ? d.mapel.length
+                ? d.mapel[0].nama
+                : "-"
+              : "-"
+            : "-",
+          kode: d
+            ? d.mapel
+              ? d.mapel.length
+                ? d.mapel[0].kode
+                : "-"
+              : "-"
+            : "-",
+          kelompok: d
+            ? d.mapel
+              ? d.mapel.length
+                ? d.mapel[0].kelompok
+                : "-"
+              : "-"
+            : "-",
+          kkm: d
+            ? d.mapel
+              ? d.mapel.length
+                ? d.mapel[0].kkm
+                : "-"
+              : "-"
+            : "-",
+        });
+      })
+    );
+
+    let namaFile = `/uploads/rekap-mata-pelajaran.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
   }
 }
 module.exports = MainController;
