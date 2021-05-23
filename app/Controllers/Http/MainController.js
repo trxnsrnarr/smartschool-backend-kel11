@@ -13458,5 +13458,96 @@ class MainController {
 
     return namaFile;
   }
+
+  async downloadKeuanganMutasi({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const mutasi = await MMutasi.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    // return rekapAbsenGuru;
+
+    let workbook = new Excel.Workbook();
+
+    let worksheet = workbook.addWorksheet(`Rekap Mutasi Keuangan`);
+    const awal = moment(`${tanggal_awal}`).format("YYYY-MM-DD");
+    const akhir = moment(`${tanggal_akhir}`).format("YYYY-MM-DD");
+
+    await Promise.all(
+      mutasi.map(async (d) => {
+        worksheet.getRow(5).values = [
+          "Tanggal",
+          "Nama",
+          "Kategori",
+          "Jumlah",
+          "tipe",
+        ];
+
+        worksheet.columns = [
+          { key: "tanggal" },
+          { key: "nama" },
+          { key: "kategori" },
+          { key: "jumlah" },
+          { key: "tipe" },
+        ];
+
+        worksheet.getCell("A1").value = "Rekap Mutasi Keuangan";
+        worksheet.getCell("A2").value = sekolah.nama;
+
+        let row = worksheet.addRow({
+          tanggal: d
+            ? d.mutasi
+              ? d.mutasi.length
+                ? d.mutasi[0].waktu_dibuat
+                : "-"
+              : "-"
+            : "-",
+          nama: d
+            ? d.mutasi
+              ? d.mutasi.length
+                ? d.mutasi[0].nama
+                : "-"
+              : "-"
+            : "-",
+          kategori: d
+            ? d.mutasi
+              ? d.mutasi.length
+                ? d.mutasi[0].kategori
+                : "-"
+              : "-"
+            : "-",
+          jumlah: d
+            ? d.mutasi
+              ? d.mutasi.length
+                ? d.mutasi[0].jumlah
+                : "-"
+              : "-"
+            : "-",
+          tipe: d
+            ? d.mutasi
+              ? d.mutasi.length
+                ? d.mutasi[0].tipe
+                : "-"
+              : "-"
+            : "-",
+        });
+      })
+    );
+
+    let namaFile = `/uploads/rekap-keuangan.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
 }
 module.exports = MainController;
