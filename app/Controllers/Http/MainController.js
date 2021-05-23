@@ -9079,7 +9079,8 @@ class MainController {
       });
     }
 
-    const user = await auth.getUser();
+    let { is_public } = request.get();
+    is_public = is_public ? is_public : false;
 
     const checkIds = await MGelombangPpdb.query()
       .where("dibuka", "<=", moment().format("YYYY-MM-DD"))
@@ -9090,24 +9091,28 @@ class MainController {
       .ids();
 
     let gelombangAktif;
+    let pendaftarIds;
+    let terdaftar;
 
-    if (checkIds.length) {
+    if (checkIds.length && is_public == false) {
+      const user = await auth.getUser();
+
       gelombangAktif = await MPendaftarPpdb.query()
         .with("gelombang")
         .where({ dihapus: 0 })
         .andWhere({ m_user_id: user.id })
         .whereIn("m_gelombang_ppdb_id", checkIds)
         .first();
+
+      pendaftarIds = await MPendaftarPpdb.query()
+        .where({ dihapus: 0 })
+        .andWhere({ m_user_id: user.id })
+        .pluck("m_gelombang_ppdb_id");
+
+      terdaftar = await MGelombangPpdb.query()
+        .whereIn("id", pendaftarIds)
+        .fetch();
     }
-
-    const pendaftarIds = await MPendaftarPpdb.query()
-      .where({ dihapus: 0 })
-      .andWhere({ m_user_id: user.id })
-      .pluck("m_gelombang_ppdb_id");
-
-    const terdaftar = await MGelombangPpdb.query()
-      .whereIn("id", pendaftarIds)
-      .fetch();
 
     const gelombang = await MGelombangPpdb.query()
       .where({ m_sekolah_id: sekolah.id })
@@ -9437,11 +9442,11 @@ class MainController {
       .where({ id: check.m_gelombang_ppdb_id })
       .first();
 
-    if (check.nominal == gelombang.biaya_pendaftaran) {
-      await MPendaftarPpdb.query().where({ id: pendaftar_ppdb_id }).update({
-        diverifikasi: 1,
-      });
+    await MPendaftarPpdb.query().where({ id: pendaftar_ppdb_id }).update({
+      diverifikasi: 1,
+    });
 
+    if (check.nominal == gelombang.biaya_pendaftaran) {
       return response.ok({
         message: `Pembayaran ${gelombang.nama} sudah lunas dengan nomor transaksi #${check.id}`,
       });
