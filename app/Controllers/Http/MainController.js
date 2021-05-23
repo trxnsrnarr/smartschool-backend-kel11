@@ -13459,6 +13459,73 @@ class MainController {
     return namaFile;
   }
 
+  async importMutasiServices(filelocation, sekolah, ta) {
+    var workbook = new Excel.Workbook();
+
+    workbook = await workbook.xlsx.readFile(filelocation);
+
+    let explanation = workbook.getWorksheet("Daftar Mutasi");
+
+    let colComment = explanation.getColumn("A");
+
+    let data = [];
+
+    colComment.eachCell(async (cell, rowNumber) => {
+      if (rowNumber >= 3) {
+        data.push({
+          tanggal: explanation.getCell("B" + rowNumber).value,
+          nama: explanation.getCell("D" + rowNumber).value,
+          kategori: explanation.getCell("E" + rowNumber).value,
+          nominal: explanation.getCell("F" + rowNumber).value,
+          tipe: explanation.getCell("G" + rowNumber).value,
+        });
+      }
+    });
+
+    const result = await Promise.all(
+      data.map(async (d) => {
+        await MMataPelajaran.create({
+          nama: d.nama,
+          waktu_dibuat: d.tanggal,
+          kategori: d.kategori,
+          nominal: d.nominal,
+          m_sekolah_id: sekolah.id,
+          tipe: d.tipe,
+          dihapus: 0,
+        });
+
+        return;
+      })
+    );
+
+    return result;
+  }
+
+  async importMutasi({ request, response, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let file = request.file("file");
+    let fname = `import-excel.${file.extname}`;
+
+    //move uploaded file into custom folder
+    await file.move(Helpers.tmpPath("/uploads"), {
+      name: fname,
+      overwrite: true,
+    });
+
+    if (!file.moved()) {
+      return fileUpload.error();
+    }
+
+    return await this.importMutasiServices(`tmp/uploads/${fname}`, sekolah);
+  }
+
   async downloadKeuanganMutasi({ response, request, auth }) {
     const domain = request.headers().origin;
 
@@ -13487,7 +13554,7 @@ class MainController {
           "Tanggal",
           "Nama",
           "Kategori",
-          "Jumlah",
+          "Nominal",
           "tipe",
         ];
 
@@ -13495,7 +13562,7 @@ class MainController {
           { key: "tanggal" },
           { key: "nama" },
           { key: "kategori" },
-          { key: "jumlah" },
+          { key: "nominal" },
           { key: "tipe" },
         ];
 
@@ -13524,10 +13591,10 @@ class MainController {
                 : "-"
               : "-"
             : "-",
-          jumlah: d
+          nominal: d
             ? d.mutasi
               ? d.mutasi.length
-                ? d.mutasi[0].jumlah
+                ? d.mutasi[0].nominal
                 : "-"
               : "-"
             : "-",
