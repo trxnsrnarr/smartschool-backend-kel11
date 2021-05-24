@@ -45,6 +45,10 @@ class MProfilUserSchema extends Schema {
       table.string("telp_ibu");
       table.text("alamat_ibu");
       table.string("pekerjaan_ibu");
+      table.string("nama_wali");
+      table.string("telp_wali");
+      table.text("alamat_wali");
+      table.string("pekerjaan_wali");
       table.integer("m_user_id").unsigned().index("m_user_id");
       table
         .foreign("m_user_id")
