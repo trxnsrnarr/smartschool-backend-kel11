@@ -496,7 +496,11 @@ Route.post("/absen/rekapdownload", "MainController.downloadRekapAbsen");
 // Mapel Import
 
 Route.post("/mapel/importMapel", "MainController.importMapel");
-Route.post("/mapel/downloadMapel", "MainController.dowmloadMapel");
+Route.post("/mapel/downloadMapel", "MainController.downloadMapel");
+
+// Mutasi Service
+Route.post("/mutasi/importmutasi", "MainController.importMutasi");
+Route.post("/mutasi/downloadmutasi", "MainController.downloadMutasi");
 
 // wildcard
 Route.any("*", "MainController.notFoundPage");
