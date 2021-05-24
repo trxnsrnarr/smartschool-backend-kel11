@@ -499,10 +499,12 @@ Route.post("/mapel/importMapel", "MainController.importMapel");
 Route.post("/mapel/downloadMapel", "MainController.downloadMapel");
 
 // Mutasi Service
-Route.post("/rombel/importrombel", "MainController.importRombel");
-Route.post("/rombel/downloadrombel", "MainController.downloadRombel");
+Route.post("/mutasi/importmutasi", "MainController.importMutasi");
+Route.post("/mutasi/downloadmutasi", "MainController.downloadMutasi");
 
 // Rombel Service
+Route.post("/rombel/importrombel", "MainController.importRombel");
+Route.post("/rombel/downloadrombel", "MainController.downloadRombel");
 
 // wildcard
 Route.any("*", "MainController.notFoundPage");
