@@ -13372,16 +13372,14 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .fetch();
 
-    // return rekapAbsenGuru;
-
     let workbook = new Excel.Workbook();
-
     let worksheet = workbook.addWorksheet(`Rekap Mata Pelajaran`);
-    const awal = moment(`${tanggal_awal}`).format("YYYY-MM-DD");
-    const akhir = moment(`${tanggal_akhir}`).format("YYYY-MM-DD");
+    worksheet.getCell("A1").value = "Rekap Mata Pelajaran";
+    worksheet.getCell("A3").value = sekolah.nama;
+    worksheet.getCell("A2").value = ta.tahun;
 
     await Promise.all(
-      mapel.map(async (d) => {
+      mapel.toJSON().map(async (d) => {
         worksheet.getRow(5).values = [
           "Nama Guru",
           "Whatsapp",
@@ -13393,60 +13391,20 @@ class MainController {
 
         worksheet.columns = [
           { key: "guru" },
-          { key: "wa" },
+          { key: "whatsapp" },
           { key: "nama" },
           { key: "kode" },
           { key: "kelompok" },
           { key: "kkm" },
         ];
 
-        worksheet.getCell("A1").value = "Rekap Mata Pelajaran";
-        worksheet.getCell("A3").value = sekolah.nama;
-        worksheet.getCell("A2").value = ta.tahun;
-
         let row = worksheet.addRow({
-          guru: d
-            ? d.mapel.user
-              ? d.mapel.user.length
-                ? d.mapel.user[0].nama
-                : "-"
-              : "-"
-            : "-",
-          wa: d
-            ? d.mapel.user
-              ? d.mapel.user.length
-                ? d.mapel.user[0].whatsapp
-                : "-"
-              : "-"
-            : "-",
-          nama: d
-            ? d.mapel
-              ? d.mapel.length
-                ? d.mapel[0].nama
-                : "-"
-              : "-"
-            : "-",
-          kode: d
-            ? d.mapel
-              ? d.mapel.length
-                ? d.mapel[0].kode
-                : "-"
-              : "-"
-            : "-",
-          kelompok: d
-            ? d.mapel
-              ? d.mapel.length
-                ? d.mapel[0].kelompok
-                : "-"
-              : "-"
-            : "-",
-          kkm: d
-            ? d.mapel
-              ? d.mapel.length
-                ? d.mapel[0].kkm
-                : "-"
-              : "-"
-            : "-",
+          guru: d.user ? d.user.nama : "-",
+          whatsapp: d.user ? d.user.whatsapp : "-",
+          nama: d ? d.nama : "-",
+          kode: d ? d.kode : "-",
+          kelompok: d ? d.kelompok : "-",
+          kkm: d ? d.kkm : "-",
         });
       })
     );
@@ -13471,20 +13429,20 @@ class MainController {
     let data = [];
 
     colComment.eachCell(async (cell, rowNumber) => {
-      if (rowNumber >= 3) {
+      if (rowNumber >= 6) {
         data.push({
           tanggal: explanation.getCell("B" + rowNumber).value,
           nama: explanation.getCell("D" + rowNumber).value,
           kategori: explanation.getCell("E" + rowNumber).value,
           nominal: explanation.getCell("F" + rowNumber).value,
-          tipe: explanation.getCell("G" + rowNumber).value,
+          tipe: explanation.getCell("C" + rowNumber).value,
         });
       }
     });
 
     const result = await Promise.all(
       data.map(async (d) => {
-        await MMataPelajaran.create({
+        await MMutasi.create({
           nama: d.nama,
           waktu_dibuat: d.tanggal,
           kategori: d.kategori,
@@ -13526,7 +13484,7 @@ class MainController {
     return await this.importMutasiServices(`tmp/uploads/${fname}`, sekolah);
   }
 
-  async downloadKeuanganMutasi({ response, request, auth }) {
+  async downloadMutasi({ response, request, auth }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -13534,77 +13492,51 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
+    const { tanggal_awal, tanggal_akhir } = request.post();
 
     const mutasi = await MMutasi.query()
-      .where({ m_sekolah_id: sekolah.id })
+      .whereBetween("waktu_dibuat", [`${tanggal_awal}`, `${tanggal_akhir}`])
+      .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .fetch();
 
-    // return rekapAbsenGuru;
+    const tanggalDistinct = await Database.raw(
+      "SELECT DISTINCT DATE_FORMAT(waktu_dibuat, '%Y-%m-%d') from m_mutasi"
+    );
 
     let workbook = new Excel.Workbook();
 
     let worksheet = workbook.addWorksheet(`Rekap Mutasi Keuangan`);
-    const awal = moment(`${tanggal_awal}`).format("YYYY-MM-DD");
-    const akhir = moment(`${tanggal_akhir}`).format("YYYY-MM-DD");
 
     await Promise.all(
-      mutasi.map(async (d) => {
+      mutasi.toJSON().map(async (d) => {
         worksheet.getRow(5).values = [
-          "Tanggal",
+          "Tanggal Transaksi",
+          "Tipe",
           "Nama",
           "Kategori",
           "Nominal",
-          "tipe",
         ];
 
         worksheet.columns = [
-          { key: "tanggal" },
+          { key: "waktu_dibuat" },
+          { key: "tipe" },
           { key: "nama" },
           { key: "kategori" },
           { key: "nominal" },
-          { key: "tipe" },
         ];
 
         worksheet.getCell("A1").value = "Rekap Mutasi Keuangan";
+        const awal = moment(`${tanggal_awal}`).format("YYYY-MM-DD");
+        const akhir = moment(`${tanggal_akhir}`).format("YYYY-MM-DD");
         worksheet.getCell("A2").value = sekolah.nama;
 
         let row = worksheet.addRow({
-          tanggal: d
-            ? d.mutasi
-              ? d.mutasi.length
-                ? d.mutasi[0].waktu_dibuat
-                : "-"
-              : "-"
-            : "-",
-          nama: d
-            ? d.mutasi
-              ? d.mutasi.length
-                ? d.mutasi[0].nama
-                : "-"
-              : "-"
-            : "-",
-          kategori: d
-            ? d.mutasi
-              ? d.mutasi.length
-                ? d.mutasi[0].kategori
-                : "-"
-              : "-"
-            : "-",
-          nominal: d
-            ? d.mutasi
-              ? d.mutasi.length
-                ? d.mutasi[0].nominal
-                : "-"
-              : "-"
-            : "-",
-          tipe: d
-            ? d.mutasi
-              ? d.mutasi.length
-                ? d.mutasi[0].tipe
-                : "-"
-              : "-"
-            : "-",
+          waktu_dibuat: d ? d.waktu_dibuat : "-",
+          tipe: d ? d.tipe : "-",
+          nama: d ? d.nama : "-",
+          kategori: d ? d.kategori : "-",
+          nominal: d ? d.nominal : "-",
         });
       })
     );
