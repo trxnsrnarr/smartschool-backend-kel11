@@ -13635,7 +13635,7 @@ class MainController {
 
         const checkRombel = await MRombel.query()
           .where({ nama: tingkatkelas })
-          .andWhere({ tingkat: tingkatromawi })
+          // .andWhere({ tingkat: tingkatromawi })
           .andWhere({ m_ta_id: ta.id })
           .andWhere({ m_sekolah_id: sekolah.id })
           .first();
@@ -13655,123 +13655,131 @@ class MainController {
             dihapus: 0,
           });
 
-          if (!checkUser) {
-            const createUser = await User.create({
-              nama: d.nama,
-              whatsapp: d.whatsapp,
-              email: d.email,
-              gender: d.jk,
-              password: await Hash.make(`${d.password}`),
-              role: "siswa",
-              tempat_lahir: d.tempatlahir,
-              tanggal_lahir: d.tanggallahir,
-              nip: d.nipd,
-              nama_ayah: d.namaayah,
-              nama_ibu: d.namaibu,
-              m_sekolah_id: sekolah.id,
-              agama: d.agama,
-              dihapus: 0,
-            });
-
-            if ((districtIds, villageIds)) {
-              await MProfilUser.create({
-                nisn: d.nisn,
-                asal_sekolah: d.asalsekolah,
-                alamat: d.alamat,
-                regency_id: districtIds.regency_id,
-                district_id: districtIds.id,
-                village_id: villageIds.id,
-                kodepos: d.kodepos,
-                bb: d.bb,
-                tb: d.tb,
-                disabilitas: d.kebutuhan,
-                nama_ayah: d.namaayah,
-                pekerjaan_ayah: d.pekerjaanayah,
-                nama_ibu: d.namaibu,
-                pekerjaan_ibu: d.pekerjaanibu,
-                m_user_id: createUser.toJSON().id,
-                nama_wali: d.namawali,
-                pekerjaan_wali: d.pekerjaanwali,
-              });
-              return;
-            }
-            await MProfilUser.create({
-              nisn: d.nisn,
-              asal_sekolah: d.asalsekolah,
-              alamat: d.alamat,
-              kodepos: d.kodepos,
-              bb: d.bb,
-              tb: d.tb,
-              disabilitas: d.kebutuhan,
-              nama_ayah: d.namaayah,
-              pekerjaan_ayah: d.pekerjaanayah,
-              nama_ibu: d.namaibu,
-              pekerjaan_ibu: d.pekerjaanibu,
-              m_user_id: createUser.toJSON().id,
-              nama_wali: d.namawali,
-              pekerjaan_wali: d.pekerjaanwali,
-            });
-            if (createRombel) {
-              await MAnggotaRombel.create({
-                role: "anggota",
-                dihapus: 0,
-                m_user_id: createUser.toJSON().id,
-                m_rombel_id: createRombel.toJSON().id,
-              });
-              return;
-            }
-            await MAnggotaRombel.create({
-              role: "anggota",
-              dihapus: 0,
-              m_user_id: createUser.toJSON().id,
-              m_rombel_id: checkRombel.id,
-            });
-            return;
-          }
-
-          if (createRombel) {
-            const checkAnggotaRombel = await MAnggotaRombel.query()
-              .where({ dihapus: 0 })
-              .andWhere({ m_user_id: checkUser.id })
-              .andWhere({ m_rombel_id: createRombel.id })
-              .first();
-
-            if (checkAnggotaRombel) {
-              return {
-                message: `${d.nama} sudah terdaftar`,
-                error: true,
-              };
-            }
-
-            await MAnggotaRombel.create({
-              role: "anggota",
-              dihapus: 0,
-              m_user_id: checkUser.id,
-              m_rombel_id: createRombel.id,
-            });
-            return;
-          }
-          const checkAnggotaRombel = await MAnggotaRombel.query()
-            .where({ dihapus: 0 })
-            .andWhere({ m_user_id: checkUser.id })
-            .andWhere({ m_rombel_id: checkRombel.id })
-            .first();
-
-          if (checkAnggotaRombel) {
-            return {
-              message: `${d.nama} sudah terdaftar`,
-              error: true,
-            };
-          }
-
-          await MAnggotaRombel.create({
-            role: "anggota",
-            dihapus: 0,
-            m_user_id: checkUser.id,
-            m_rombel_id: checkRombel.id,
-          });
-          return;
+          return {
+            message: "kelas berhasil dibuat",
+            tingkat: tingkatkelas,
+          };
         }
+
+        // else {
+
+        //   if (!checkUser) {
+        //     const createUser = await User.create({
+        //       nama: d.nama,
+        //       whatsapp: d.whatsapp,
+        //       email: d.email,
+        //       gender: d.jk,
+        //       password: await Hash.make(`${d.password}`),
+        //       role: "siswa",
+        //       tempat_lahir: d.tempatlahir,
+        //       tanggal_lahir: d.tanggallahir,
+        //       nip: d.nipd,
+        //       nama_ayah: d.namaayah,
+        //       nama_ibu: d.namaibu,
+        //       m_sekolah_id: sekolah.id,
+        //       agama: d.agama,
+        //       dihapus: 0,
+        //     });
+
+        //     if ((districtIds, villageIds)) {
+        //       await MProfilUser.create({
+        //         nisn: d.nisn,
+        //         asal_sekolah: d.asalsekolah,
+        //         alamat: d.alamat,
+        //         regency_id: districtIds.regency_id,
+        //         district_id: districtIds.id,
+        //         village_id: villageIds.id,
+        //         kodepos: d.kodepos,
+        //         bb: d.bb,
+        //         tb: d.tb,
+        //         disabilitas: d.kebutuhan,
+        //         nama_ayah: d.namaayah,
+        //         pekerjaan_ayah: d.pekerjaanayah,
+        //         nama_ibu: d.namaibu,
+        //         pekerjaan_ibu: d.pekerjaanibu,
+        //         m_user_id: createUser.toJSON().id,
+        //         nama_wali: d.namawali,
+        //         pekerjaan_wali: d.pekerjaanwali,
+        //       });
+        //       return;
+        //     }
+        //     await MProfilUser.create({
+        //       nisn: d.nisn,
+        //       asal_sekolah: d.asalsekolah,
+        //       alamat: d.alamat,
+        //       kodepos: d.kodepos,
+        //       bb: d.bb,
+        //       tb: d.tb,
+        //       disabilitas: d.kebutuhan,
+        //       nama_ayah: d.namaayah,
+        //       pekerjaan_ayah: d.pekerjaanayah,
+        //       nama_ibu: d.namaibu,
+        //       pekerjaan_ibu: d.pekerjaanibu,
+        //       m_user_id: createUser.toJSON().id,
+        //       nama_wali: d.namawali,
+        //       pekerjaan_wali: d.pekerjaanwali,
+        //     });
+        //     if (createRombel) {
+        //       await MAnggotaRombel.create({
+        //         role: "anggota",
+        //         dihapus: 0,
+        //         m_user_id: createUser.toJSON().id,
+        //         m_rombel_id: createRombel.toJSON().id,
+        //       });
+        //       return;
+        //     }
+        //     await MAnggotaRombel.create({
+        //       role: "anggota",
+        //       dihapus: 0,
+        //       m_user_id: createUser.toJSON().id,
+        //       m_rombel_id: checkRombel.id,
+        //     });
+        //     return;
+        //   }
+
+        //   if (createRombel) {
+        //     const checkAnggotaRombel = await MAnggotaRombel.query()
+        //       .where({ dihapus: 0 })
+        //       .andWhere({ m_user_id: checkUser.id })
+        //       .andWhere({ m_rombel_id: createRombel.id })
+        //       .first();
+
+        //     if (checkAnggotaRombel) {
+        //       return {
+        //         message: `${d.nama} sudah terdaftar`,
+        //         error: true,
+        //       };
+        //     }
+
+        //     await MAnggotaRombel.create({
+        //       role: "anggota",
+        //       dihapus: 0,
+        //       m_user_id: checkUser.id,
+        //       m_rombel_id: createRombel.id,
+        //     });
+        //     return;
+        //   }
+        //   const checkAnggotaRombel = await MAnggotaRombel.query()
+        //     .where({ dihapus: 0 })
+        //     .andWhere({ m_user_id: checkUser.id })
+        //     .andWhere({ m_rombel_id: checkRombel.id })
+        //     .first();
+
+        //   if (checkAnggotaRombel) {
+        //     return {
+        //       message: `${d.nama} sudah terdaftar`,
+        //       error: true,
+        //     };
+        //   }
+
+        //   await MAnggotaRombel.create({
+        //     role: "anggota",
+        //     dihapus: 0,
+        //     m_user_id: checkUser.id,
+        //     m_rombel_id: checkRombel.id,
+        //   });
+        //   return;
+        // }
       })
     );
 
