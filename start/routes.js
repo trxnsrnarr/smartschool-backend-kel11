@@ -491,12 +491,20 @@ Route.put(
 
 Route.post("/gtk/import", "MainController.importGTK");
 
-Route.get("/absen/rekapdownload", "MainController.downloadRekapAbsen");
 Route.post("/absen/rekapdownload", "MainController.downloadRekapAbsen");
 
 // Mapel Import
 
 Route.post("/mapel/importMapel", "MainController.importMapel");
+Route.post("/mapel/downloadMapel", "MainController.downloadMapel");
+
+// Mutasi Service
+Route.post("/mutasi/importmutasi", "MainController.importMutasi");
+Route.post("/mutasi/downloadmutasi", "MainController.downloadMutasi");
+
+// Rombel Service
+Route.post("/rombel/importrombel", "MainController.importRombel");
+Route.post("/rombel/downloadrombel", "MainController.downloadRombel");
 
 // wildcard
 Route.any("*", "MainController.notFoundPage");
