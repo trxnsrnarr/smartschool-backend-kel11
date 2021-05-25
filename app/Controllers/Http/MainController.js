@@ -12745,13 +12745,10 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { di_ss, judul, tanggal, teknik, tipe } = request.post();
+    const { judul, teknik, tipe } = request.post();
 
     const rekap = await MRekap.create({
-      di_ss,
       judul,
-      tanggal,
-      kkm: 80,
       teknik,
       tipe,
       m_materi_id: materi_id,
@@ -12777,15 +12774,12 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { jenis, judul, deskripsi, tanggal, teknik } = request.post();
+    const { jenis, judul, teknik } = request.post();
 
     const rekap = await MRekap.query().where({ id: rekap_id }).update({
       jenis,
       judul,
-      deskripsi,
       teknik,
-      tanggal,
-      dihapus: 0,
     });
 
     if (!rekap) {
