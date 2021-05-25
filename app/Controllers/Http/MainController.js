@@ -13711,12 +13711,12 @@ class MainController {
               nama_wali: d.namawali,
               pekerjaan_wali: d.pekerjaanwali,
             });
-            if (checkRombel) {
+            if (createRombel) {
               await MAnggotaRombel.create({
                 role: "anggota",
                 dihapus: 0,
                 m_user_id: createUser.toJSON().id,
-                m_rombel_id: checkRombel.id,
+                m_rombel_id: createRombel.toJSON().id,
               });
               return;
             }
@@ -13724,16 +13724,16 @@ class MainController {
               role: "anggota",
               dihapus: 0,
               m_user_id: createUser.toJSON().id,
-              m_rombel_id: createRombel.toJSON().id,
+              m_rombel_id: checkRombel.id,
             });
             return;
           }
 
-          if (checkRombel) {
+          if (createRombel) {
             const checkAnggotaRombel = await MAnggotaRombel.query()
               .where({ dihapus: 0 })
               .andWhere({ m_user_id: checkUser.id })
-              .andWhere({ m_rombel_id: checkRombel.id })
+              .andWhere({ m_rombel_id: createRombel.id })
               .first();
 
             if (checkAnggotaRombel) {
@@ -13747,14 +13747,14 @@ class MainController {
               role: "anggota",
               dihapus: 0,
               m_user_id: checkUser.id,
-              m_rombel_id: checkRombel.id,
+              m_rombel_id: createRombel.id,
             });
             return;
           }
           const checkAnggotaRombel = await MAnggotaRombel.query()
             .where({ dihapus: 0 })
             .andWhere({ m_user_id: checkUser.id })
-            .andWhere({ m_rombel_id: createRombel.id })
+            .andWhere({ m_rombel_id: checkRombel.id })
             .first();
 
           if (checkAnggotaRombel) {
@@ -13768,7 +13768,7 @@ class MainController {
             role: "anggota",
             dihapus: 0,
             m_user_id: checkUser.id,
-            m_rombel_id: createRombel.id,
+            m_rombel_id: checkRombel.id,
           });
           return;
         }
