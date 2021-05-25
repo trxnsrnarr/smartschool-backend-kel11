@@ -13582,6 +13582,7 @@ class MainController {
 
     colComment.eachCell(async (cell, rowNumber) => {
       if (rowNumber >= 7) {
+        const rombel = explanation.getCell("U" + rowNumber).value;
         data.push({
           nama: explanation.getCell("B" + rowNumber).value,
           nipd: explanation.getCell("C" + rowNumber).value,
@@ -13602,7 +13603,10 @@ class MainController {
           pekerjaanibu: explanation.getCell("R" + rowNumber).value,
           namawali: explanation.getCell("S" + rowNumber).value,
           pekerjaanwali: explanation.getCell("T" + rowNumber).value,
-          rombel: explanation.getCell("U" + rowNumber).value,
+          rombel: `${romawi[rombel.split(" ")[0] - 1]} ${
+            rombel.split(" ")[1]
+          } ${rombel.split(" ")[2]}`,
+          tingkat: romawi[rombel.split(" ")[0] - 1],
           kebutuhan: explanation.getCell("V" + rowNumber).value,
           asalsekolah: explanation.getCell("W" + rowNumber).value,
           bb: explanation.getCell("X" + rowNumber).value,
@@ -13625,40 +13629,26 @@ class MainController {
           .where({ name: d.kecamatan })
           .first();
 
-        const rombel = d.rombel;
-        const tingkat = rombel.split(" ", 1);
-        const tingkatromawi = romawi[tingkat - 1];
-        const kelas = rombel.split(" ", 3);
-        const kelasangka = rombel.split(" ", 3);
-        const tingkatkelas =
-          tingkatromawi + " " + kelas[1] + " " + kelasangka[2];
-
         const checkRombel = await MRombel.query()
-          .where({ nama: tingkatkelas })
+          .where({ nama: d.rombel })
           // .andWhere({ tingkat: tingkatromawi })
           .andWhere({ m_ta_id: ta.id })
           .andWhere({ m_sekolah_id: sekolah.id })
           .first();
 
         if (checkRombel) {
-          return {
-            message: `${tingkatkelas} sudah terdaftar`,
-            error: true,
-          };
+          return "ganda";
         } else {
           const createRombel = await MRombel.create({
-            tingkat: tingkatromawi,
-            nama: tingkatkelas,
+            tingkat: d.tingkat,
+            nama: d.rombel,
             kelompok: "reguler",
             m_sekolah_id: sekolah.id,
             m_ta_id: ta.id,
             dihapus: 0,
           });
 
-          return {
-            message: "kelas berhasil dibuat",
-            tingkat: tingkatkelas,
-          };
+          return "ok";
         }
 
         // else {
