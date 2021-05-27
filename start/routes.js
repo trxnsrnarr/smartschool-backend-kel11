@@ -147,6 +147,8 @@ Route.get("/pembayaran/:pembayaran_id", "MainController.detailPembayaran");
 Route.post("/pembayaran", "MainController.postPembayaran");
 Route.put("/pembayaran/:pembayaran_id", "MainController.putPembayaran");
 Route.delete("/pembayaran/:pembayaran_id", "MainController.deletePembayaran");
+Route.post("/pembayaran/importspp", "MainController.importSPP");
+Route.post("/pembayaran/downloadspp", "MainController.downloadSPP");
 
 // pembayaran siswa
 Route.get("/pembayaran-siswa", "MainController.getPembayaranSiswa");
