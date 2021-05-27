@@ -13134,12 +13134,27 @@ class MainController {
 
     let colComment = explanation.getColumn("A");
 
+    colComment.eachCell(async (cell, rowNumber) => {
+      if (rowNumber >= 7) {
+        let rombelall = explanation.getCell("B" + rowNumber).value;
+        let tingkat = `${rombelall.split(" ")[0]}`;
+
+        const createRombel = await MRombel.create({
+          tingkat: tingkat,
+          nama: rombelall,
+          kelompok: "reguler",
+          m_sekolah_id: sekolah.id,
+          m_ta_id: ta.id,
+          dihapus: 0,
+        });
+      }
+    });
+
     let data = [];
 
     colComment.eachCell(async (cell, rowNumber) => {
       if (rowNumber >= 7) {
         const rombelsiswa = explanation.getCell("X" + rowNumber).value;
-        const rombelall = explanation.getCell("B" + rowNumber).value;
         data.push({
           nama: explanation.getCell("E" + rowNumber).value,
           nipd: explanation.getCell("F" + rowNumber).value,
@@ -13163,8 +13178,6 @@ class MainController {
           rombel: `${romawi[rombelsiswa.split(" ")[0] - 1]} ${
             rombelsiswa.split(" ")[1]
           } ${rombelsiswa.split(" ")[2]}`,
-          rombelsemua: `${rombelall}`,
-          tingkat: `${rombelall.split(" ")[0]}`,
           kebutuhan: explanation.getCell("Y" + rowNumber).value,
           asalsekolah: explanation.getCell("Z" + rowNumber).value,
           bb: explanation.getCell("AA" + rowNumber).value,
@@ -13173,18 +13186,18 @@ class MainController {
       }
     });
 
-    const rombelResult = await Promise.all(
-      data.map(async (d) => {
-        const createRombel = await MRombel.create({
-          tingkat: d.tingkat,
-          nama: d.rombelsemua,
-          kelompok: "reguler",
-          m_sekolah_id: sekolah.id,
-          m_ta_id: ta.id,
-          dihapus: 0,
-        });
-      })
-    );
+    // const rombelResult = await Promise.all(
+    //   dataRombel.map(async (d) => {
+    //     const createRombel = await MRombel.create({
+    //       tingkat: d.tingkat,
+    //       nama: d.rombelall,
+    //       kelompok: "reguler",
+    //       m_sekolah_id: sekolah.id,
+    //       m_ta_id: ta.id,
+    //       dihapus: 0,
+    //     });
+    //   })
+    // );
 
     const result = await Promise.all(
       data.map(async (d) => {
@@ -13295,7 +13308,7 @@ class MainController {
       })
     );
 
-    return result, rombelResult;
+    return result;
   }
 
   async importRombel({ request, response }) {
