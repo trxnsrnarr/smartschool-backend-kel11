@@ -13,7 +13,11 @@ class TkPembayaranRombel extends Model {
   }
 
   pembayaran() {
-    return this.belongsTo('App/Models/MPembayaran')
+    return this.belongsTo("App/Models/MPembayaran");
+  }
+
+  siswa() {
+    return this.hasMany("App/Models/MPembayaranSiswa");
   }
 }
 
