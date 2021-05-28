@@ -14026,7 +14026,7 @@ class MainController {
     return namaFile;
   }
 
-  async downloadSPP({ response, request }) {
+  async downloadSPP({ response, request, params: { pembayaran_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -14040,8 +14040,6 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    const { tanggal_awal, tanggal_akhir } = request.post();
-
     const pembayaran = await MPembayaran.query()
       .with("rombel", (builder) => {
         builder
@@ -14049,13 +14047,14 @@ class MainController {
             builder.where({ dihapus: 0 });
           })
           .with("siswa", (builder) => {
-            builder.with("user", (builder) => {
+            builder.with("riwayat").with("user", (builder) => {
               builder.select("id", "nama");
             });
           })
           .where({ dihapus: 0 });
       })
-      .whereBetween("tanggal_dibuat", [`${tanggal_awal}`, `${tanggal_akhir}`])
+      .where({ id: pembayaran_id })
+      .andWhere({ jenis: "spp" })
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .fetch();
@@ -14063,31 +14062,75 @@ class MainController {
     let workbook = new Excel.Workbook();
 
     await Promise.all(
-      pembayaran.toJSON().map(async (d, idx) => {
-        let worksheet = workbook.addWorksheet(`${idx + 1}.${d.nama}`);
-        worksheet.getCell("A1").value = "Rekap SPP";
-        worksheet.getCell("A2").value = sekolah.nama;
-        worksheet.getCell("A3").value = ta.tahun;
-        worksheet.getCell("A4").value = d.nama;
-        worksheet.getCell("A5").value = d.bulan;
-
+      pembayaran.toJSON().map(async (d) => {
         await Promise.all(
-          d.rombel.map(async (anggota) => {
-            // add column headers
-            worksheet.getRow(7).values = ["Nama", "Status", "Riwayat"];
+          d.rombel.map(async (e, idx) => {
+            let worksheet = workbook.addWorksheet(
+              `${idx + 1}.${e.rombel.nama}`
+            );
+            worksheet.getCell("A1").value = "Rekap SPP";
+            worksheet.getCell("A2").value = sekolah.nama;
+            worksheet.getCell("A3").value = ta.tahun;
+            worksheet.getCell("A5").value = d.nama;
+            worksheet.getCell("A6").value = e.rombel.nama;
+            worksheet.getCell("A7").value = d.bulan;
+            await Promise.all(
+              e.siswa.map(async (anggota, nox) => {
+                // add column headers
+                worksheet.getRow(9).values = ["No", "Nama", "Status"];
+                worksheet.columns = [
+                  { key: "no" },
+                  { key: "nama" },
+                  { key: "status" },
+                ];
 
-            worksheet.columns = [
-              { key: "nama" },
-              { key: "status" },
-              { key: "riwayat" },
-            ];
+                // Add row using key mapping to columns
+                let row = worksheet.addRow({
+                  no: `${nox + 1}`,
+                  id: `${nox + 1}`,
+                  nama: anggota.user ? anggota.user.nama : "-",
+                  status: anggota ? anggota.status : "-",
+                  status: anggota ? anggota.status : "-",
+                  status: anggota ? anggota.status : "-",
+                  status: anggota ? anggota.status : "-",
+                  status: anggota ? anggota.status : "-",
+                });
 
-            // Add row using key mapping to columns
-            let row = worksheet.addRow({
-              nama: anggota.siswa.user ? anggota.siswa.user.nama : "-",
-              status: anggota.siswa.user ? anggota.siswa.user.status : "-",
-              riwayat: anggota.siswa.user ? anggota.siswa.user.riwayat : "-",
-            });
+                await Promise.all(
+                  anggota.riwayat.map(async (r, no) => {
+                    worksheet.getRow(9).values = [
+                      "",
+                      "No",
+                      "Nama",
+                      "Bank",
+                      "Norek",
+                      "NamaPemilik",
+                      "Nominal",
+                      "Bukti",
+                    ];
+
+                    worksheet.columns = [
+                      { key: "" },
+                      { key: "no" },
+                      { key: "bank" },
+                      { key: "norek" },
+                      { key: "nama_pemilik" },
+                      { key: "nominal" },
+                      { key: "bukti" },
+                    ];
+
+                    let row = worksheet.addRow({
+                      no: `Pembayaran #${no + 1}`,
+                      bank: r ? r.bank : "-",
+                      norek: r ? r.norek : "-",
+                      nama_pemilik: r ? r.nama_pemilik : "-",
+                      nominal: r ? r.nominal : "-",
+                      bukti: r ? r.bukti : "-",
+                    });
+                  })
+                );
+              })
+            );
           })
         );
       })
