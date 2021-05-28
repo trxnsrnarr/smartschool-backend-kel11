@@ -147,6 +147,8 @@ Route.get("/pembayaran/:pembayaran_id", "MainController.detailPembayaran");
 Route.post("/pembayaran", "MainController.postPembayaran");
 Route.put("/pembayaran/:pembayaran_id", "MainController.putPembayaran");
 Route.delete("/pembayaran/:pembayaran_id", "MainController.deletePembayaran");
+Route.post("/pembayaran/importspp", "MainController.importSPP");
+Route.post("/pembayaran/downloadspp", "MainController.downloadSPP");
 
 // pembayaran siswa
 Route.get("/pembayaran-siswa", "MainController.getPembayaranSiswa");
@@ -462,7 +464,6 @@ Route.delete(
 );
 
 // rekap-nilai
-Route.get("/rekap", "MainController.getMateri");
 Route.get("/rekap/:materi_id", "MainController.detailRekap");
 Route.post("/rekap/:materi_id", "MainController.postRekap");
 Route.put("/rekap/:materi_id/:rekap_id", "MainController.putRekap");
@@ -471,10 +472,41 @@ Route.get(
   "/rekap/:materi_id/:rekapnilai_id",
   "MainController.detailRekapNilai"
 );
-Route.put(
-  "/rekap/:materi_id/:rekapnilai_id/m_user_id",
-  "MainController.postRekapNilai"
+Route.post(
+  "/rekap/:materi_id/:rekapnilai_id",
+  "MainController.postRekapRombel"
 );
+Route.put(
+  "/rekap/:materi_id/:rekapnilai_id/:rekaprombel_id",
+  "MainController.postRekapRombel"
+);
+Route.delete(
+  "/rekap/:materi_id/:rekapnilai_id/:rekaprombel_id",
+  "MainController.deleteRekapRombel"
+);
+Route.put(
+  "/rekap/:materi_id/:rekapnilai_id/ubah/:user_id",
+  "MainController.putRekapNilai"
+);
+
+// GTK
+
+Route.post("/gtk/import", "MainController.importGTK");
+
+Route.post("/absen/rekapdownload", "MainController.downloadRekapAbsen");
+
+// Mapel Import
+
+Route.post("/mapel/importMapel", "MainController.importMapel");
+Route.post("/mapel/downloadMapel", "MainController.downloadMapel");
+
+// Mutasi Service
+Route.post("/mutasi/importmutasi", "MainController.importMutasi");
+Route.post("/mutasi/downloadmutasi", "MainController.downloadMutasi");
+
+// Rombel Service
+Route.post("/rombel/importrombel", "MainController.importRombel");
+Route.post("/rombel/downloadrombel", "MainController.downloadRombel");
 
 // wildcard
 Route.any("*", "MainController.notFoundPage");

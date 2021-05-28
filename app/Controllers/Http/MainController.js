@@ -12,6 +12,7 @@ const MProyek = use("App/Models/MProyek");
 const MPerpusKomen = use("App/Models/MPerpusKomen");
 const MRpp = use("App/Models/MRpp");
 const MRekap = use("App/Models/MRekap");
+const MRekapRombel = use("App/Models/MRekapRombel");
 const TkRekapNilai = use("App/Models/TkRekapNilai");
 const MGelombangPpdb = use("App/Models/MGelombangPpdb");
 const MPendaftarPpdb = use("App/Models/MPendaftarPpdb");
@@ -152,6 +153,21 @@ const messagesUser = {
 };
 
 const hari = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+const romawi = [
+  "I",
+  "II",
+  "III",
+  "IV",
+  "V",
+  "VI",
+  "VII",
+  "VIII",
+  "IX",
+  "X",
+  "XI",
+  "XII",
+  "XIII",
+];
 
 class MainController {
   // UTILS
@@ -12685,6 +12701,8 @@ class MainController {
       .with("rekap", (builder) => {
         builder.where({ dihapus: 0 });
       })
+      .with("jurusan")
+      .with("mataPelajaran")
       .where({ id: materi_id })
       .andWhere({ dihapus: 0 })
       .first();
@@ -12713,8 +12731,13 @@ class MainController {
     const user = await auth.getUser();
 
     const rekap = await MRekap.query()
-      .with("rekapnilai", (builder) => {
-        builder.with("user").where({ dihapus: 0 });
+      .with("rekaprombel", (builder) => {
+        builder
+          .with("rekapnilai", (builder) => {
+            builder.with("user");
+          })
+          .with("tugas")
+          .where({ dihapus: 0 });
       })
       .where({ id: rekapnilai_id })
       .andWhere({ dihapus: 0 })
@@ -12726,13 +12749,10 @@ class MainController {
       .fetch();
 
     return response.ok({
-      message: messagePostSuccess,
       rekap,
       materirombel,
     });
   }
-
-  // ============ POST Rekap Tugas =================
 
   async postRekap({ response, request, auth, params: { materi_id } }) {
     const domain = request.headers().origin;
@@ -12755,8 +12775,41 @@ class MainController {
       dihapus: 0,
     });
 
-    if (di_ss) {
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  // ============ POST Rekap Tugas =================
+
+  async postRekapRombel({
+    response,
+    request,
+    auth,
+    params: { rekapnilai_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
     }
+
+    const user = await auth.getUser();
+
+    const { di_ss, judul, tanggal, m_tugas_id, m_rombel_id, m_rekap_id } =
+      request.post();
+
+    const rekap = await MRekapRombel.create({
+      di_ss,
+      judul,
+      tanggal,
+      m_tugas_id,
+      m_rombel_id,
+      m_rekap_id: rekapnilai_id,
+      dihapus: 0,
+    });
 
     return response.ok({
       message: messagePostSuccess,
@@ -12774,12 +12827,43 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { jenis, judul, teknik } = request.post();
+    const { judul, teknik } = request.post();
 
     const rekap = await MRekap.query().where({ id: rekap_id }).update({
-      jenis,
       judul,
       teknik,
+      dihapus: 0,
+    });
+
+    if (!rekap) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async putRekapRombel({ response, request, auth, params: { rekap_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { judul, tanggal, m_tugas_id } = request.post();
+
+    const rekap = await MRekapRombel.query().where({ id: rekap_id }).update({
+      judul,
+      tanggal,
+      m_tugas_Id,
+      dihapus: 0,
     });
 
     if (!rekap) {
@@ -12820,7 +12904,46 @@ class MainController {
     });
   }
 
-  async putRekapNilai({ response, request, auth, params: { m_user_id } }) {
+  async deleteRekapRombel({
+    response,
+    request,
+    auth,
+    params: { rekaprombel_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    // mengambil data user
+    const user = await auth.getUser();
+
+    const rekap = await MRekapRombel.query()
+      .where({ id: rekaprombel_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!rekap) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async putRekapNilai({
+    response,
+    request,
+    auth,
+    params: { user_id, rekapnilai_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -12833,14 +12956,28 @@ class MainController {
 
     const { nilai } = request.post();
 
-    const rekap = await MRekap.query().where({ id: m_user_id }).update({
-      nilai,
-      dihapus: 0,
-    });
+    const check = await TkRekapNilai.query()
+      .where({ m_user_id: user_id })
+      .andWhere({ m_rekap_rombel_id: rekapnilai_id })
+      .first();
+
+    let rekap;
+
+    if (check) {
+      rekap = await TkRekapNilai.query().where({ m_user_id: user_id }).update({
+        nilai,
+      });
+    } else {
+      await TkRekapNilai.create({
+        m_user_id: user_id,
+        nilai,
+        m_rekap_rombel_id: rekapnilai_id,
+      });
+    }
 
     if (!rekap) {
-      return response.notFound({
-        message: messageNotFound,
+      return response.ok({
+        message: messagePostSuccess,
       });
     }
 
@@ -12849,7 +12986,1118 @@ class MainController {
     });
   }
 
-  // ===========
-}
+  // =========== IMPORT GTK SERVICE ================
+  async importGTKServices(filelocation, sekolah) {
+    var workbook = new Excel.Workbook();
 
+    workbook = await workbook.xlsx.readFile(filelocation);
+
+    let explanation = workbook.getWorksheet("Daftar guru");
+
+    let colComment = explanation.getColumn("A");
+
+    let data = [];
+
+    colComment.eachCell(async (cell, rowNumber) => {
+      if (rowNumber >= 3) {
+        data.push({
+          nama: explanation.getCell("B" + rowNumber).value,
+          whatsapp: explanation.getCell("D" + rowNumber).value,
+          gender: explanation.getCell("C" + rowNumber).value,
+          password: explanation.getCell("E" + rowNumber).value,
+        });
+      }
+    });
+
+    const result = await Promise.all(
+      data.map(async (d) => {
+        const checkUser = await User.query()
+          .where({ whatsapp: d.whatsapp })
+          .andWhere({ dihapus: 0 })
+          .first();
+
+        if (checkUser) {
+          return {
+            message: `${d.nama} ${d.whatsapp} sudah terdaftar`,
+            error: true,
+          };
+        }
+
+        await User.create({
+          nama: d.nama,
+          whatsapp: d.whatsapp,
+          gender: d.gender,
+          password: await Hash.make(`${d.password}`),
+          role: "guru",
+          m_sekolah_id: sekolah.id,
+          dihapus: 0,
+        });
+
+        return;
+      })
+    );
+
+    return result;
+  }
+
+  async importGTK({ request, response }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let file = request.file("file");
+    let fname = `import-excel.${file.extname}`;
+
+    //move uploaded file into custom folder
+    await file.move(Helpers.tmpPath("/uploads"), {
+      name: fname,
+      overwrite: true,
+    });
+
+    if (!file.moved()) {
+      return fileUpload.error();
+    }
+
+    return await this.importGTKServices(`tmp/uploads/${fname}`, sekolah);
+  }
+
+  async downloadRekapAbsen({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const { role, tanggal_awal, tanggal_akhir } = request.post();
+
+    const tanggalDistinct = await Database.raw(
+      "SELECT DISTINCT DATE_FORMAT(created_at, '%Y-%m-%d') as tanggalDistinct from m_absen WHERE created_at BETWEEN ? AND  ?",
+      [tanggal_awal, tanggal_akhir]
+    );
+
+    const absenKepsek = await User.query()
+      .select("id", "nama")
+      .with("absen", (builder) => {
+        builder
+          .select("id", "m_user_id", "created_at", "absen")
+          .whereBetween("created_at", [`${tanggal_awal}`, `${tanggal_akhir}`]);
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ role: "kepsek" })
+      .fetch();
+
+    const absenGuru = await User.query()
+      .select("id", "nama")
+      .with("absen", (builder) => {
+        builder
+          .select("id", "m_user_id", "created_at", "absen")
+          .whereBetween("created_at", [`${tanggal_awal}`, `${tanggal_akhir}`]);
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ role: "guru" })
+      .fetch();
+
+    // loop pertama untuk nge looping data kepsek
+    const rekapAbsenKepsek = await Promise.all(
+      absenKepsek.toJSON().map(async (d) => {
+        let namaKepsek = d.nama;
+        let totalSakit = 0;
+        let totalHadir = 0;
+        let totalTelat = 0;
+        let totalIzin = 0;
+        let totalAlpa = 0;
+
+        // loop ketiga untuk nge looping absen kepsek
+        await Promise.all(
+          d.absen.map(async (e) => {
+            if (e.absen == "sakit") {
+              totalSakit = totalSakit + 1;
+            } else if (e.absen == "izin") {
+              totalIzin = totalIzin + 1;
+            } else if (
+              (await Promise.all(
+                tanggalDistinct.find(async (tanggal) => {
+                  tanggal.tanggalDistinct ==
+                    moment(e.created_at).format("YYYY-MM-DD");
+                })
+              )) !== undefined
+            ) {
+              totalHadir = totalHadir + 1;
+
+              if (moment(e.created_at).format("HH:mm:ss") > "06.30") {
+                totalTelat = totalTelat + 1;
+              }
+            }
+          })
+        );
+
+        totalAlpa =
+          tanggalDistinct[0].length - (totalSakit + totalHadir + totalIzin);
+
+        return {
+          namaKepsek,
+          totalSakit,
+          totalHadir,
+          totalTelat,
+          totalIzin,
+          totalAlpa,
+        };
+      })
+    );
+
+    // loop pertama untuk nge looping data guru
+    const rekapAbsenGuru = await Promise.all(
+      absenGuru.toJSON().map(async (d) => {
+        let namaGuru = d.nama;
+        let totalSakit = 0;
+        let totalHadir = 0;
+        let totalTelat = 0;
+        let totalIzin = 0;
+        let totalAlpa = 0;
+
+        // loop ketiga untuk nge looping absen guru
+        await Promise.all(
+          d.absen.map(async (e) => {
+            if (e.absen == "sakit") {
+              totalSakit = totalSakit + 1;
+            } else if (e.absen == "izin") {
+              totalIzin = totalIzin + 1;
+            } else if (
+              (await Promise.all(
+                tanggalDistinct.find(async (tanggal) => {
+                  tanggal.tanggalDistinct ==
+                    moment(e.created_at).format("YYYY-MM-DD");
+                })
+              )) !== undefined
+            ) {
+              totalHadir = totalHadir + 1;
+
+              if (moment(e.created_at).format("HH:mm:ss") > "06.30") {
+                totalTelat = totalTelat + 1;
+              }
+            }
+          })
+        );
+
+        totalAlpa =
+          tanggalDistinct[0].length - (totalSakit + totalHadir + totalIzin);
+
+        return {
+          namaGuru,
+          totalSakit,
+          totalHadir,
+          totalTelat,
+          totalIzin,
+          totalAlpa,
+        };
+      })
+    );
+
+    // return rekapAbsenGuru;
+
+    let workbook = new Excel.Workbook();
+
+    let worksheet = workbook.addWorksheet(`RekapAbsen`);
+    const awal = moment(`${tanggal_awal}`).format("YYYY-MM-DD");
+    const akhir = moment(`${tanggal_akhir}`).format("YYYY-MM-DD");
+
+    await Promise.all(
+      rekapAbsenKepsek.map(async (d) => {
+        worksheet.getRow(5).values = [
+          "Nama",
+          "Hadir",
+          "telat",
+          "Sakit",
+          "Izin",
+          "Alpa",
+        ];
+
+        worksheet.columns = [
+          { key: "user" },
+          { key: "hadir" },
+          { key: "telat" },
+          { key: "sakit" },
+          { key: "izin" },
+          { key: "alpa" },
+        ];
+
+        worksheet.getCell("A1").value = "Rekap Absen";
+        worksheet.getCell("A2").value = `${awal} sampai ${akhir}`;
+        worksheet.getCell("A3").value = sekolah.nama;
+
+        let row = worksheet.addRow({
+          user: d ? d.namaKepsek : "-",
+          hadir: d ? d.totalHadir : "-",
+          telat: d ? d.totalTelat : "-",
+          sakit: d ? d.totalSakit : "-",
+          izin: d ? d.totalIzin : "-",
+          alpa: d ? d.totalAlpa : "-",
+        });
+      })
+    );
+
+    await Promise.all(
+      rekapAbsenGuru.map(async (d) => {
+        worksheet.getRow(8).values = [
+          "Nama",
+          "Hadir",
+          "Telat",
+          "Sakit",
+          "Izin",
+          "Alpa",
+        ];
+
+        worksheet.columns = [
+          { key: "user" },
+          { key: "hadir" },
+          { key: "telat" },
+          { key: "sakit" },
+          { key: "izin" },
+          { key: "alpa" },
+        ];
+
+        let row = worksheet.addRow({
+          user: d ? d.namaGuru : "-",
+          hadir: d ? d.totalHadir : "-",
+          telat: d ? d.totalTelat : "-",
+          sakit: d ? d.totalSakit : "-",
+          izin: d ? d.totalIzin : "-",
+          alpa: d ? d.totalAlpa : "-",
+        });
+      })
+    );
+
+    let namaFile = `/uploads/rekap-absen-guru-tanggal.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
+
+  // =========== IMPORT GTK SERVICE ================
+  async importMapelServices(filelocation, sekolah, ta) {
+    var workbook = new Excel.Workbook();
+
+    workbook = await workbook.xlsx.readFile(filelocation);
+
+    let explanation = workbook.getWorksheet("Daftar Mapel");
+
+    let colComment = explanation.getColumn("A");
+
+    let data = [];
+
+    colComment.eachCell(async (cell, rowNumber) => {
+      if (rowNumber >= 3) {
+        data.push({
+          namaGuru: explanation.getCell("B" + rowNumber).value,
+          whatsapp: explanation.getCell("C" + rowNumber).value,
+          nama: explanation.getCell("D" + rowNumber).value,
+          kode: explanation.getCell("E" + rowNumber).value,
+          kelompok: explanation.getCell("F" + rowNumber).value,
+          kkm: explanation.getCell("G" + rowNumber).value,
+        });
+      }
+    });
+
+    const result = await Promise.all(
+      data.map(async (d) => {
+        const userIds = await User.query()
+          .where({ whatsapp: d.whatsapp })
+          .andWhere({ dihapus: 0 })
+          .ids();
+
+        await MMataPelajaran.create({
+          nama: d.nama,
+          kode: d.kode,
+          kelompok: d.kelompok,
+          kkm: d.kkm,
+          m_user_id: userIds,
+          m_sekolah_id: sekolah.id,
+          m_ta_id: ta.id,
+          dihapus: 0,
+        });
+
+        return;
+      })
+    );
+
+    return result;
+  }
+
+  async importMapel({ request, response, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    let file = request.file("file");
+    let fname = `import-excel.${file.extname}`;
+
+    //move uploaded file into custom folder
+    await file.move(Helpers.tmpPath("/uploads"), {
+      name: fname,
+      overwrite: true,
+    });
+
+    if (!file.moved()) {
+      return fileUpload.error();
+    }
+
+    return await this.importMapelServices(`tmp/uploads/${fname}`, sekolah, ta);
+  }
+
+  async downloadMapel({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const mapel = await MMataPelajaran.query()
+      .with("user")
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    let workbook = new Excel.Workbook();
+    let worksheet = workbook.addWorksheet(`Rekap Mata Pelajaran`);
+    worksheet.getCell("A1").value = "Rekap Mata Pelajaran";
+    worksheet.getCell("A3").value = sekolah.nama;
+    worksheet.getCell("A2").value = ta.tahun;
+
+    await Promise.all(
+      mapel.toJSON().map(async (d) => {
+        worksheet.getRow(5).values = [
+          "Nama Guru",
+          "Whatsapp",
+          "Nama",
+          "Kode",
+          "Kelompok",
+          "KKM",
+        ];
+
+        worksheet.columns = [
+          { key: "guru" },
+          { key: "whatsapp" },
+          { key: "nama" },
+          { key: "kode" },
+          { key: "kelompok" },
+          { key: "kkm" },
+        ];
+
+        let row = worksheet.addRow({
+          guru: d.user ? d.user.nama : "-",
+          whatsapp: d.user ? d.user.whatsapp : "-",
+          nama: d ? d.nama : "-",
+          kode: d ? d.kode : "-",
+          kelompok: d ? d.kelompok : "-",
+          kkm: d ? d.kkm : "-",
+        });
+      })
+    );
+
+    let namaFile = `/uploads/rekap-mata-pelajaran.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
+
+  async importMutasiServices(filelocation, sekolah, ta) {
+    var workbook = new Excel.Workbook();
+
+    workbook = await workbook.xlsx.readFile(filelocation);
+
+    let explanation = workbook.getWorksheet("Daftar Mutasi");
+
+    let colComment = explanation.getColumn("A");
+
+    let data = [];
+
+    colComment.eachCell(async (cell, rowNumber) => {
+      if (rowNumber >= 6) {
+        data.push({
+          tanggal: explanation.getCell("B" + rowNumber).value,
+          nama: explanation.getCell("D" + rowNumber).value,
+          kategori: explanation.getCell("E" + rowNumber).value,
+          nominal: explanation.getCell("F" + rowNumber).value,
+          tipe: explanation.getCell("C" + rowNumber).value,
+        });
+      }
+    });
+
+    const result = await Promise.all(
+      data.map(async (d) => {
+        await MMutasi.create({
+          nama: d.nama,
+          waktu_dibuat: d.tanggal,
+          kategori: d.kategori,
+          nominal: d.nominal,
+          m_sekolah_id: sekolah.id,
+          tipe: d.tipe,
+          dihapus: 0,
+        });
+
+        return;
+      })
+    );
+
+    return result;
+  }
+
+  async importMutasi({ request, response, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let file = request.file("file");
+    let fname = `import-excel.${file.extname}`;
+
+    //move uploaded file into custom folder
+    await file.move(Helpers.tmpPath("/uploads"), {
+      name: fname,
+      overwrite: true,
+    });
+
+    if (!file.moved()) {
+      return fileUpload.error();
+    }
+
+    return await this.importMutasiServices(`tmp/uploads/${fname}`, sekolah);
+  }
+
+  async downloadMutasi({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const { tanggal_awal, tanggal_akhir } = request.post();
+
+    const mutasi = await MMutasi.query()
+      .whereBetween("waktu_dibuat", [`${tanggal_awal}`, `${tanggal_akhir}`])
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    const tanggalDistinct = await Database.raw(
+      "SELECT DISTINCT DATE_FORMAT(waktu_dibuat, '%Y-%m-%d') from m_mutasi"
+    );
+
+    let workbook = new Excel.Workbook();
+
+    let worksheet = workbook.addWorksheet(`Rekap Mutasi Keuangan`);
+
+    await Promise.all(
+      mutasi.toJSON().map(async (d) => {
+        worksheet.getRow(5).values = [
+          "Tanggal Transaksi",
+          "Tipe",
+          "Nama",
+          "Kategori",
+          "Nominal",
+        ];
+
+        worksheet.columns = [
+          { key: "waktu_dibuat" },
+          { key: "tipe" },
+          { key: "nama" },
+          { key: "kategori" },
+          { key: "nominal" },
+        ];
+
+        worksheet.getCell("A1").value = "Rekap Mutasi Keuangan";
+        const awal = moment(`${tanggal_awal}`).format("YYYY-MM-DD");
+        const akhir = moment(`${tanggal_akhir}`).format("YYYY-MM-DD");
+        worksheet.getCell("A2").value = sekolah.nama;
+
+        let row = worksheet.addRow({
+          waktu_dibuat: d ? d.waktu_dibuat : "-",
+          tipe: d ? d.tipe : "-",
+          nama: d ? d.nama : "-",
+          kategori: d ? d.kategori : "-",
+          nominal: d ? d.nominal : "-",
+        });
+      })
+    );
+
+    let namaFile = `/uploads/rekap-keuangan.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
+
+  async importRombelServices(filelocation, sekolah, ta) {
+    var workbook = new Excel.Workbook();
+
+    workbook = await workbook.xlsx.readFile(filelocation);
+
+    let explanation = workbook.getWorksheet("Daftar Peserta Didik");
+
+    let colComment = explanation.getColumn("A");
+
+    let data = [];
+
+    colComment.eachCell(async (cell, rowNumber) => {
+      if (rowNumber >= 7) {
+        const rombelData = explanation.getCell("U" + rowNumber).value;
+        // data.push({
+        // });
+      }
+    });
+
+    const result = await Promise.all(
+      data.map(async (d) => {
+        const checkRombel = await MRombel.query()
+          .where({ nama: d.rombel })
+          // .andWhere({ tingkat: tingkatromawi })
+          .andWhere({ m_ta_id: ta.id })
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .first();
+
+        if (checkRombel) {
+          return "ganda";
+        } else {
+          return "ok";
+        }
+
+        // else {
+
+        //   if (!checkUser) {
+        //     const createUser = await User.create({
+        //       nama: d.nama,
+        //       whatsapp: d.whatsapp,
+        //       email: d.email,
+        //       gender: d.jk,
+        //       password: await Hash.make(`${d.password}`),
+        //       role: "siswa",
+        //       tempat_lahir: d.tempatlahir,
+        //       tanggal_lahir: d.tanggallahir,
+        //       nip: d.nipd,
+        //       nama_ayah: d.namaayah,
+        //       nama_ibu: d.namaibu,
+        //       m_sekolah_id: sekolah.id,
+        //       agama: d.agama,
+        //       dihapus: 0,
+        //     });
+
+        //     if ((districtIds, villageIds)) {
+        //       await MProfilUser.create({
+        //         nisn: d.nisn,
+        //         asal_sekolah: d.asalsekolah,
+        //         alamat: d.alamat,
+        //         regency_id: districtIds.regency_id,
+        //         district_id: districtIds.id,
+        //         village_id: villageIds.id,
+        //         kodepos: d.kodepos,
+        //         bb: d.bb,
+        //         tb: d.tb,
+        //         disabilitas: d.kebutuhan,
+        //         nama_ayah: d.namaayah,
+        //         pekerjaan_ayah: d.pekerjaanayah,
+        //         nama_ibu: d.namaibu,
+        //         pekerjaan_ibu: d.pekerjaanibu,
+        //         m_user_id: createUser.toJSON().id,
+        //         nama_wali: d.namawali,
+        //         pekerjaan_wali: d.pekerjaanwali,
+        //       });
+        //       return;
+        //     }
+        //     await MProfilUser.create({
+        //       nisn: d.nisn,
+        //       asal_sekolah: d.asalsekolah,
+        //       alamat: d.alamat,
+        //       kodepos: d.kodepos,
+        //       bb: d.bb,
+        //       tb: d.tb,
+        //       disabilitas: d.kebutuhan,
+        //       nama_ayah: d.namaayah,
+        //       pekerjaan_ayah: d.pekerjaanayah,
+        //       nama_ibu: d.namaibu,
+        //       pekerjaan_ibu: d.pekerjaanibu,
+        //       m_user_id: createUser.toJSON().id,
+        //       nama_wali: d.namawali,
+        //       pekerjaan_wali: d.pekerjaanwali,
+        //     });
+        //     if (createRombel) {
+        //       await MAnggotaRombel.create({
+        //         role: "anggota",
+        //         dihapus: 0,
+        //         m_user_id: createUser.toJSON().id,
+        //         m_rombel_id: createRombel.toJSON().id,
+        //       });
+        //       return;
+        //     }
+        //     await MAnggotaRombel.create({
+        //       role: "anggota",
+        //       dihapus: 0,
+        //       m_user_id: createUser.toJSON().id,
+        //       m_rombel_id: checkRombel.id,
+        //     });
+        //     return;
+        //   }
+
+        //   if (createRombel) {
+        //     const checkAnggotaRombel = await MAnggotaRombel.query()
+        //       .where({ dihapus: 0 })
+        //       .andWhere({ m_user_id: checkUser.id })
+        //       .andWhere({ m_rombel_id: createRombel.id })
+        //       .first();
+
+        //     if (checkAnggotaRombel) {
+        //       return {
+        //         message: `${d.nama} sudah terdaftar`,
+        //         error: true,
+        //       };
+        //     }
+
+        //     await MAnggotaRombel.create({
+        //       role: "anggota",
+        //       dihapus: 0,
+        //       m_user_id: checkUser.id,
+        //       m_rombel_id: createRombel.id,
+        //     });
+        //     return;
+        //   }
+        //   const checkAnggotaRombel = await MAnggotaRombel.query()
+        //     .where({ dihapus: 0 })
+        //     .andWhere({ m_user_id: checkUser.id })
+        //     .andWhere({ m_rombel_id: checkRombel.id })
+        //     .first();
+
+        //   if (checkAnggotaRombel) {
+        //     return {
+        //       message: `${d.nama} sudah terdaftar`,
+        //       error: true,
+        //     };
+        //   }
+
+        //   await MAnggotaRombel.create({
+        //     role: "anggota",
+        //     dihapus: 0,
+        //     m_user_id: checkUser.id,
+        //     m_rombel_id: checkRombel.id,
+        //   });
+        //   return;
+        // }
+      })
+    );
+
+    return result;
+  }
+
+  async importRombelServices2(filelocation, sekolah, ta) {
+    var workbook = new Excel.Workbook();
+
+    workbook = await workbook.xlsx.readFile(filelocation);
+
+    let explanation = workbook.getWorksheet("Daftar Peserta Didik");
+
+    let colComment = explanation.getColumn("A");
+
+    colComment.eachCell(async (cell, rowNumber) => {
+      if (rowNumber >= 7) {
+        let rombelall = explanation.getCell("B" + rowNumber).value;
+        let tingkat = `${rombelall.split(" ")[0]}`;
+
+        const rombelCheck = await MRombel.query()
+          .where({ nama: d.rombel })
+          // .andWhere({ tingkat: tingkatromawi })
+          .andWhere({ m_ta_id: ta.id })
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .first();
+
+        if (!rombelCheck) {
+          const createRombel = await MRombel.create({
+            tingkat: tingkat,
+            nama: rombelall,
+            kelompok: "reguler",
+            m_sekolah_id: sekolah.id,
+            m_ta_id: ta.id,
+            dihapus: 0,
+          });
+          return;
+        }
+      }
+    });
+
+    let data = [];
+
+    colComment.eachCell(async (cell, rowNumber) => {
+      if (rowNumber >= 7) {
+        const rombelsiswa = explanation.getCell("X" + rowNumber).value;
+        data.push({
+          nama: explanation.getCell("E" + rowNumber).value,
+          nipd: explanation.getCell("F" + rowNumber).value,
+          jk: explanation.getCell("G" + rowNumber).value,
+          nisn: explanation.getCell("H" + rowNumber).value,
+          tempatlahir: explanation.getCell("I" + rowNumber).value,
+          tanggallahir: explanation.getCell("J" + rowNumber).value,
+          agama: explanation.getCell("K" + rowNumber).value,
+          alamat: explanation.getCell("L" + rowNumber).value,
+          kelurahan: explanation.getCell("M" + rowNumber).value,
+          kecamatan: explanation.getCell("N" + rowNumber).value,
+          kodepos: explanation.getCell("O" + rowNumber).value,
+          whatsapp: explanation.getCell("P" + rowNumber).value,
+          email: explanation.getCell("Q" + rowNumber).value,
+          namaayah: explanation.getCell("R" + rowNumber).value,
+          pekerjaanayah: explanation.getCell("S" + rowNumber).value,
+          namaibu: explanation.getCell("T" + rowNumber).value,
+          pekerjaanibu: explanation.getCell("U" + rowNumber).value,
+          namawali: explanation.getCell("V" + rowNumber).value,
+          pekerjaanwali: explanation.getCell("W" + rowNumber).value,
+          rombel: `${romawi[rombelsiswa.split(" ")[0] - 1]} ${
+            rombelsiswa.split(" ")[1]
+          } ${rombelsiswa.split(" ")[2]}`,
+          kebutuhan: explanation.getCell("Y" + rowNumber).value,
+          asalsekolah: explanation.getCell("Z" + rowNumber).value,
+          bb: explanation.getCell("AA" + rowNumber).value,
+          tb: explanation.getCell("AB" + rowNumber).value,
+        });
+      }
+    });
+
+    // const rombelResult = await Promise.all(
+    //   dataRombel.map(async (d) => {
+    //     const createRombel = await MRombel.create({
+    //       tingkat: d.tingkat,
+    //       nama: d.rombelall,
+    //       kelompok: "reguler",
+    //       m_sekolah_id: sekolah.id,
+    //       m_ta_id: ta.id,
+    //       dihapus: 0,
+    //     });
+    //   })
+    // );
+
+    const result = await Promise.all(
+      data.map(async (d) => {
+        const checkUser = await User.query()
+          .where({ whatsapp: d.whatsapp })
+          .first();
+
+        const districtIds = await District.query()
+          .where({ name: d.kelurahan })
+          .first();
+
+        const villageIds = await Village.query()
+          .where({ name: d.kecamatan })
+          .first();
+
+        const checkRombel = await MRombel.query()
+          .where({ nama: d.rombel })
+          // .andWhere({ tingkat: tingkatromawi })
+          .andWhere({ m_ta_id: ta.id })
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .first();
+
+        if (!checkUser) {
+          const createUser = await User.create({
+            nama: d.nama,
+            whatsapp: d.whatsapp,
+            email: d.email,
+            gender: d.jk,
+            password: await Hash.make(`${d.password}`),
+            role: "siswa",
+            tempat_lahir: d.tempatlahir,
+            tanggal_lahir: d.tanggallahir,
+            nip: d.nipd,
+            nama_ayah: d.namaayah,
+            nama_ibu: d.namaibu,
+            m_sekolah_id: sekolah.id,
+            agama: d.agama,
+            dihapus: 0,
+          });
+
+          if ((districtIds, villageIds)) {
+            await MProfilUser.create({
+              nisn: d.nisn,
+              asal_sekolah: d.asalsekolah,
+              alamat: d.alamat,
+              regency_id: districtIds.regency_id,
+              district_id: districtIds.id,
+              village_id: villageIds.id,
+              kodepos: d.kodepos,
+              bb: d.bb,
+              tb: d.tb,
+              disabilitas: d.kebutuhan,
+              nama_ayah: d.namaayah,
+              pekerjaan_ayah: d.pekerjaanayah,
+              nama_ibu: d.namaibu,
+              pekerjaan_ibu: d.pekerjaanibu,
+              m_user_id: createUser.toJSON().id,
+              nama_wali: d.namawali,
+              pekerjaan_wali: d.pekerjaanwali,
+            });
+            return;
+          }
+          await MProfilUser.create({
+            nisn: d.nisn,
+            asal_sekolah: d.asalsekolah,
+            alamat: d.alamat,
+            kodepos: d.kodepos,
+            bb: d.bb,
+            tb: d.tb,
+            disabilitas: d.kebutuhan,
+            nama_ayah: d.namaayah,
+            pekerjaan_ayah: d.pekerjaanayah,
+            nama_ibu: d.namaibu,
+            pekerjaan_ibu: d.pekerjaanibu,
+            m_user_id: createUser.toJSON().id,
+            nama_wali: d.namawali,
+            pekerjaan_wali: d.pekerjaanwali,
+          });
+          await MAnggotaRombel.create({
+            role: "anggota",
+            dihapus: 0,
+            m_user_id: createUser.toJSON().id,
+            m_rombel_id: checkRombel.id,
+          });
+          return;
+        }
+
+        const checkAnggotaRombel = await MAnggotaRombel.query()
+          .where({ dihapus: 0 })
+          .andWhere({ m_user_id: checkUser.id })
+          .andWhere({ m_rombel_id: checkRombel.id })
+          .first();
+
+        if (checkAnggotaRombel) {
+          return {
+            message: `${d.nama} sudah terdaftar`,
+            error: true,
+          };
+        }
+
+        await MAnggotaRombel.create({
+          role: "anggota",
+          dihapus: 0,
+          m_user_id: checkUser.id,
+          m_rombel_id: checkRombel.id,
+        });
+        return;
+      })
+    );
+
+    return result;
+  }
+
+  async importRombel({ request, response, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    let file = request.file("file");
+    let fname = `import-excel.${file.extname}`;
+
+    //move uploaded file into custom folder
+    await file.move(Helpers.tmpPath("/uploads"), {
+      name: fname,
+      overwrite: true,
+    });
+
+    if (!file.moved()) {
+      return fileUpload.error();
+    }
+
+    return await this.importRombelServices(`tmp/uploads/${fname}`, sekolah, ta);
+  }
+
+  async downloadRombel({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const rombel = await MRombel.query()
+      .with("user")
+      .with("anggotaRombel", (builder) => {
+        builder.with("user");
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .fetch();
+
+    let workbook = new Excel.Workbook();
+
+    await Promise.all(
+      rombel.toJSON().map(async (d, idx) => {
+        let worksheet = workbook.addWorksheet(`${idx + 1}.${d.nama}`);
+        worksheet.getCell("A1").value = "Rekap Data Siswa";
+        worksheet.getCell("A2").value = sekolah.nama;
+        worksheet.getCell("A3").value = ta.tahun;
+        worksheet.getCell("A4 ").value = d.nama;
+
+        await Promise.all(
+          d.anggotaRombel.map(async (anggota) => {
+            // add column headers
+            worksheet.getRow(7).values = [
+              "Nama",
+              "Whatsapp",
+              "Gender",
+              "Jabatan",
+            ];
+
+            worksheet.columns = [
+              { key: "user" },
+              { key: "whatsapp" },
+              { key: "gender" },
+              { key: "jabatan" },
+            ];
+
+            // Add row using key mapping to columns
+            let row = worksheet.addRow({
+              user: anggota.user ? anggota.user.nama : "-",
+              whatsapp: anggota.user ? anggota.user.whatsapp : "-",
+              gender: anggota.user ? anggota.user.gender : "-",
+              jabatan: anggota ? anggota.role : "-",
+            });
+          })
+        );
+      })
+    );
+    let namaFile = `/uploads/rekap-Rombel.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
+
+  async downloadSPP({ response, request }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const { tanggal_awal, tanggal_akhir } = request.post();
+
+    const pembayaran = await MPembayaran.query()
+      .with("rombel", (builder) => {
+        builder
+          .with("rombel", (builder) => {
+            builder.where({ dihapus: 0 });
+          })
+          .with("siswa", (builder) => {
+            builder.with("user", (builder) => {
+              builder.select("id", "nama");
+            });
+          })
+          .where({ dihapus: 0 });
+      })
+      .whereBetween("tanggal_dibuat", [`${tanggal_awal}`, `${tanggal_akhir}`])
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
+    let workbook = new Excel.Workbook();
+
+    await Promise.all(
+      pembayaran.toJSON().map(async (d, idx) => {
+        let worksheet = workbook.addWorksheet(`${idx + 1}.${d.nama}`);
+        worksheet.getCell("A1").value = "Rekap SPP";
+        worksheet.getCell("A2").value = sekolah.nama;
+        worksheet.getCell("A3").value = ta.tahun;
+        worksheet.getCell("A4").value = d.nama;
+        worksheet.getCell("A5").value = d.bulan;
+
+        await Promise.all(
+          d.rombel.map(async (anggota) => {
+            // add column headers
+            worksheet.getRow(7).values = ["Nama", "Status", "Riwayat"];
+
+            worksheet.columns = [
+              { key: "nama" },
+              { key: "status" },
+              { key: "riwayat" },
+            ];
+
+            // Add row using key mapping to columns
+            let row = worksheet.addRow({
+              nama: anggota.siswa.user ? anggota.siswa.user.nama : "-",
+              status: anggota.siswa.user ? anggota.siswa.user.status : "-",
+              riwayat: anggota.siswa.user ? anggota.siswa.user.riwayat : "-",
+            });
+          })
+        );
+      })
+    );
+    let namaFile = `/uploads/rekap-SPP.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
+}
 module.exports = MainController;

@@ -8,12 +8,12 @@ class MRekap extends Model {
     return "m_rekap";
   }
 
-  rekapnilai() {
-    return this.hasMany("App/Models/TkRekapNilai");
+  materi() {
+    return this.hasMany("App/Models/MMateri");
   }
 
-  tugas() {
-    return this.belongsTo("App/Model/MTugas");
+  rekaprombel() {
+    return this.hasMany("App/Models/MRekapRombel");
   }
 }
 
