@@ -13954,7 +13954,7 @@ class MainController {
       return fileUpload.error();
     }
 
-    return await this.importRombelServices(`tmp/uploads/${fname}`, sekolah, ta);
+    return await this.importRombelServices2(`tmp/uploads/${fname}`, sekolah, ta);
   }
 
   async downloadRombel({ response, request, auth }) {
