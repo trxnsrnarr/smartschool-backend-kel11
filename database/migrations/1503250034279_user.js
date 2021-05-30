@@ -35,6 +35,7 @@ class UserSchema extends Schema {
         .references("m_sekolah.id")
         .onDelete("cascade")
         .onUpdate("cascade");
+      table.string("photos");
       table.boolean("dihapus");
       table.timestamps();
     });
