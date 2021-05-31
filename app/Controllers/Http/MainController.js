@@ -6352,14 +6352,14 @@ class MainController {
 
     if (user.role == "guru") {
       mataPelajaran = await MMataPelajaran.query()
-      .with('user')
+        .with("user")
         .where({ dihapus: 0 })
         .andWhere({ m_user_id: user.id })
         .andWhere({ m_ta_id: ta.id })
         .fetch();
     } else if (user.role == "admin") {
       mataPelajaran = await MMataPelajaran.query()
-      .with('user')
+        .with("user")
         .where({ dihapus: 0 })
         .andWhere({ m_ta_id: ta.id })
         .andWhere({ m_sekolah_id: sekolah.id })
@@ -13318,17 +13318,17 @@ class MainController {
 
     const result = await Promise.all(
       data.map(async (d) => {
-        const userIds = await User.query()
+        const user = await User.query()
           .where({ whatsapp: d.whatsapp })
           .andWhere({ dihapus: 0 })
-          .ids();
+          .first();
 
         await MMataPelajaran.create({
           nama: d.nama,
           kode: d.kode,
           kelompok: d.kelompok,
           kkm: d.kkm,
-          m_user_id: userIds,
+          m_user_id: user.id,
           m_sekolah_id: sekolah.id,
           m_ta_id: ta.id,
           dihapus: 0,
@@ -13954,7 +13954,11 @@ class MainController {
       return fileUpload.error();
     }
 
-    return await this.importRombelServices2(`tmp/uploads/${fname}`, sekolah, ta);
+    return await this.importRombelServices2(
+      `tmp/uploads/${fname}`,
+      sekolah,
+      ta
+    );
   }
 
   async downloadRombel({ response, request, auth }) {
@@ -14151,19 +14155,31 @@ class MainController {
 
     workbook = await workbook.xlsx.readFile(filelocation);
 
-    let explanation = workbook.getWorksheet("Daftar guru");
+    let explanation = workbook.getWorksheet("Daftar Alumni");
 
     let colComment = explanation.getColumn("A");
 
     let data = [];
 
     colComment.eachCell(async (cell, rowNumber) => {
-      if (rowNumber >= 3) {
+      if (rowNumber >= 8) {
         data.push({
           nama: explanation.getCell("B" + rowNumber).value,
-          whatsapp: explanation.getCell("D" + rowNumber).value,
-          gender: explanation.getCell("C" + rowNumber).value,
-          password: explanation.getCell("E" + rowNumber).value,
+          whatsapp: explanation.getCell("C" + rowNumber).value,
+          email: explanation.getCell("D" + rowNumber).value,
+          gender: explanation.getCell("E" + rowNumber).value,
+          tempat_lahir: explanation.getCell("F" + rowNumber).value,
+          tanggal_lahir: explanation.getCell("G" + rowNumber).value,
+          jurusan: explanation.getCell("H" + rowNumber).value,
+          tahun_masuk: explanation.getCell("I" + rowNumber).value,
+          pekerjaan: explanation.getCell("J" + rowNumber).value,
+          kantor: explanation.getCell("K" + rowNumber).value,
+          sektor_industri: explanation.getCell("L" + rowNumber).value,
+          sekolah_lanjutan: explanation.getCell("M" + rowNumber).value,
+          pengalaman: explanation.getCell("N" + rowNumber).value,
+          sertifikasi_keahlian: explanation.getCell("O" + rowNumber).value,
+          purnakarya: explanation.getCell("P" + rowNumber).value,
+          deskripsi: explanation.getCell("Q" + rowNumber).value,
         });
       }
     });
@@ -14176,20 +14192,57 @@ class MainController {
           .first();
 
         if (checkUser) {
+          const alumni = await MAlumni.create({
+            jurusan: d.jurusan,
+            tahun_masuk: d.tahun_masuk,
+            pekerjaan: d.pekerjaan,
+            kantor: d.kantor,
+            sektor_industri: d.sektor_industri,
+            sekolah_lanjutan: d.sekolah_lanjutan,
+            sertifikasi_keahlian: d.sertifikasi_keahlian,
+            pengalaman: d.pengalaman,
+            purnakarya: d.purnakarya,
+            deskripsi: d.deskripsi,
+            dihapus: 0,
+            m_user_id: checkUser.id,
+          });
           return {
             message: `${d.nama} ${d.whatsapp} sudah terdaftar`,
             error: true,
           };
         }
 
-        await User.create({
+        const user = await User.create({
           nama: d.nama,
           whatsapp: d.whatsapp,
+          email: d.email,
           gender: d.gender,
-          password: await Hash.make(`${d.password}`),
-          role: "guru",
+          role: "alumni",
           m_sekolah_id: sekolah.id,
+          tanggal_lahir: d.tanggal_lahir,
+          tempat_lahir: d.tempat_lahir,
           dihapus: 0,
+        });
+
+        await MProfilUser.create({
+          gender: d.gender,
+          tanggal_lahir: d.tanggal_lahir,
+          tempat_lahir: d.tempat_lahir,
+        });
+
+        const alumni = await MAlumni.create({
+          jurusan: d.jurusan,
+          tahun_masuk: d.tahun_masuk,
+          pekerjaan: d.pekerjaan,
+          kantor: d.kantor,
+          sektor_industri: d.sektor_industri,
+          sekolah_lanjutan: d.sekolah_lanjutan,
+          sertifikasi_keahlian: d.sertifikasi_keahlian,
+          pengalaman: d.pengalaman,
+          purnakarya: d.purnakarya,
+          deskripsi: d.deskripsi,
+          dihapus: 0,
+          m_user_id: user.id,
         });
 
         return;
@@ -14199,7 +14252,7 @@ class MainController {
     return result;
   }
 
-  async importAlumni({ request, response }) {
+  async importAlumni({ request, response, auth }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -14221,7 +14274,395 @@ class MainController {
       return fileUpload.error();
     }
 
-    return await this.importAlumniService(`tmp/uploads/${fname}`, sekolah);
+    return await this.importAlumniServices(`tmp/uploads/${fname}`, sekolah);
+  }
+
+  async downloadAlumni({ response, request }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const alumni = await MAlumni.query()
+      .with("user", (builder) => {
+        builder.where({ m_sekolah_id: sekolah.id });
+      })
+      .where({ dihapus: 0 })
+      .fetch();
+
+    let workbook = new Excel.Workbook();
+    let worksheet = workbook.addWorksheet(`Daftar Alumni`);
+
+    await Promise.all(
+      alumni.toJSON().map(async (d, idx) => {
+        worksheet.getCell("A1").value = "Rekap Alumni";
+        worksheet.getCell("A2").value = sekolah.nama;
+
+        // add column headers
+        worksheet.getRow(4).values = [
+          "No",
+          "Nama",
+          "Whatsapp",
+          "Email",
+          "Jenis Kelamin",
+          "Tempat Lahir",
+          "Tanggal Lahir",
+          "Tahun Masuk",
+          "Pekerjaan",
+          "Kantor",
+          "Sektor Industri",
+          "Sekolah Lanjutan",
+          "Pengalaman",
+          "Sertifikasi Keahlian",
+          "Purnakarya",
+          "Deskripsi",
+        ];
+        worksheet.columns = [
+          { key: "no" },
+          { key: "nama" },
+          { key: "whatsapp" },
+          { key: "email" },
+          { key: "jeniskelamin" },
+          { key: "tempat_lahir" },
+          { key: "tanggal_lahir" },
+          { key: "tahun_masuk" },
+          { key: "pekerjaan" },
+          { key: "kantor" },
+          { key: "sektor_industri" },
+          { key: "sekolah_lanjutan" },
+          { key: "pengalaman" },
+          { key: "sertifikasi_keahlian" },
+          { key: "purnakarya" },
+          { key: "deskripsi" },
+        ];
+
+        // Add row using key mapping to columns
+        let row = worksheet.addRow({
+          no: `${idx + 1}`,
+          nama: d.user ? d.user.nama : "-",
+          whatsapp: d.user ? d.user.whatsapp : "-",
+          email: d.user ? d.user.email : "-",
+          jeniskelamnin: d.user ? d.user.gender : "-",
+          tempat_lahir: d.user ? d.user.tempat_lahir : "-",
+          tanggal_lahir: d.user ? d.user.tanggal_lahir : "-",
+          tahun_masuk: d ? d.tahun_masuk : "-",
+          pekerjaan: d ? d.pekerjaan : "-",
+          kantor: d ? d.kantor : "-",
+          sektor_industri: d ? d.sektor_industri : "-",
+          sekolah_lanjutan: d ? d.sekolah_lanjutan : "-",
+          pengalaman: d ? d.pengalaman : "-",
+          sertifikasi_keahlian: d ? d.sertifikasi_keahlian : "-",
+          purnakarya: d ? d.purnakarya : "-",
+          deskripsi: d ? d.deskripsi : "-",
+        });
+      })
+    );
+    let namaFile = `/uploads/rekap-Alumni.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
+
+  async downloadKartuUjian({ response, request, params: { ujian_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    let tipeUjian = [
+      { value: "ph", label: "Penilaian Harian" },
+      { value: "pts1", label: "Penilaian Tengah Semester 1" },
+      { value: "pts2", label: "Penilaian Tengah Semester 2" },
+      { value: "pas1", label: "Penilaian Akhir Semester 1" },
+      { value: "pas2", label: "Penilaian Akhir Semester 2" },
+      { value: "us", label: "Ujian Sekolah" },
+      { value: "literasi", label: "AKM - Literasi" },
+      { value: "numerasi", label: "AKM - Numerasi" },
+    ];
+
+    const ujian = await MUjian.query()
+      .with("mataPelajaran", (builder) => {
+        builder.with("user");
+      })
+      .with("soalUjian", (builder) => {
+        builder.with("soal").where({ dihapus: 0 });
+      })
+      .withCount("soalUjian as TotalUjian", (builder) => {
+        builder.where({ m_ujian_id: ujian_id });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ id: ujian_id })
+      .first();
+
+    return ujian.toJSON().mataPelajaran.user;
+
+    const jumlahSoal = await MSoalUjian.query()
+      .where({ dihapus: 0 })
+      .andWhere({})
+      .count();
+
+    let workbook = new Excel.Workbook();
+
+    let worksheet = workbook.addWorksheet(`sheet1`, {
+      properties: { tabColor: { argb: "FFC0000" } },
+    });
+    worksheet.mergeCells("A1:J1");
+    worksheet.mergeCells("A2:J2");
+    worksheet.mergeCells("A4:J4");
+    worksheet.mergeCells("A5:J5");
+    worksheet.mergeCells("A21:J21");
+    worksheet.getCell("A1").value = "";
+    worksheet.getCell("A4").value = {
+      richText: [
+        {
+          font: { name: "Times New Roman", family: 4, size: 16, bold: true },
+          text: "KISI-KISI",
+        },
+      ],
+    };
+    worksheet.getCell("A4").alignment = {
+      vertical: "middle",
+      horizontal: "center",
+    };
+    worksheet.getCell("A5").value = `${ujian.tipe_format}`;
+    worksheet.getCell("A5").alignment = {
+      vertical: "middle",
+      horizontal: "center",
+    };
+    worksheet.getCell("A4").fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFFFFF" },
+      bgColor: { argb: "FF0000" },
+    };
+    worksheet.getCell("A5").fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFFFFF" },
+      bgColor: { argb: "FF0000" },
+    };
+    // worksheet.getRow(5).font = {
+    //   name: "Times New Roman",
+    //   family: 4,
+    //   size: 16,
+    //   bold: true,
+    // };
+
+    worksheet.getCell("B7").alignment = {
+      vertical: "middle",
+      horizontal: "right",
+    };
+    worksheet.getCell("G7").alignment = {
+      vertical: "middle",
+      horizontal: "right",
+    };
+    worksheet.getCell("B8").alignment = {
+      vertical: "middle",
+      horizontal: "right",
+    };
+    worksheet.getCell("G8").alignment = {
+      vertical: "middle",
+      horizontal: "right",
+    };
+    worksheet.getCell("B9").alignment = {
+      vertical: "middle",
+      horizontal: "right",
+    };
+    worksheet.getCell("G9").alignment = {
+      vertical: "middle",
+      horizontal: "right",
+    };
+    worksheet.getCell("B10").alignment = {
+      vertical: "middle",
+      horizontal: "right",
+    };
+    worksheet.getCell("G10").alignment = {
+      vertical: "middle",
+      horizontal: "right",
+    };
+
+    worksheet.getCell("B7").value = {
+      richText: [
+        {
+          font: { name: "Times New Roman", bold: true },
+          text: "Nama Sekolah                    :",
+        },
+      ],
+    };
+    worksheet.getCell("C7").value = {
+      richText: [
+        { font: { name: "Times New Roman" }, text: `${sekolah.nama}` },
+      ],
+    };
+
+    worksheet.getCell("G7").value = {
+      richText: [
+        {
+          font: { name: "Times New Roman", bold: true },
+          text: "Tanggal Tes                  :",
+        },
+      ],
+    };
+    worksheet.getCell("H7").value = {
+      richText: [{ font: { name: "Times New Roman" }, text: 0 }],
+    };
+
+    worksheet.getCell("B8").value = {
+      richText: [
+        {
+          font: { name: "Times New Roman", bold: true },
+          text: "Mata Pelajaran                  :",
+        },
+      ],
+    };
+    worksheet.getCell("C8").value = {
+      richText: [
+        {
+          font: { name: "Times New Roman" },
+          text: `${ujian.mataPelajaran.nama}`,
+        },
+      ],
+    };
+
+    worksheet.getCell("G8").value = {
+      richText: [
+        {
+          font: { name: "Times New Roman", bold: true },
+          text: "Kelas/Ujian                 :",
+        },
+      ],
+    };
+    worksheet.getCell("H8").value = {
+      richText: [
+        { font: { name: "Times New Roman" }, text: `${ujian.tingkat}` },
+      ],
+    };
+
+    worksheet.getCell("B9").value = {
+      richText: [
+        {
+          font: { name: "Times New Roman", bold: true },
+          text: "Kompetensi Keahlian        :",
+        },
+      ],
+    };
+    worksheet.getCell("C9").value = {
+      richText: [{ font: { name: "Times New Roman" }, text: 0 }],
+    };
+
+    worksheet.getCell("G9").value = {
+      richText: [
+        {
+          font: { name: "Times New Roman", bold: true },
+          text: "Bentuk Soal                  :",
+        },
+      ],
+    };
+    // worksheet.getCell("H9").value = {
+    //   richText: [
+    //     {
+    //       font: { name: "Times New Roman" },
+    //       text: `${ujian.soalUjian.soal.bentuk}`,
+    //     },
+    //   ],
+    // };
+
+    worksheet.getCell("B10").value = {
+      richText: [
+        {
+          font: { name: "Times New Roman", bold: true },
+          text: "Guru Mata Pelajarn         :",
+        },
+      ],
+    };
+    worksheet.getCell("C8").value = {
+      richText: [
+        {
+          font: { name: "Times New Roman" },
+          text: `${ujian.mataPelajaran.user.nama}`,
+        },
+      ],
+    };
+
+    worksheet.getCell("G10").value = {
+      richText: [
+        {
+          font: { name: "Times New Roman", bold: true },
+          text: "Jumlah Soal/Waktu       :",
+        },
+      ],
+    };
+    worksheet.getCell("H10").value = {
+      richText: [
+        {
+          font: { name: "Times New Roman" },
+          text: `${ujian.TotalUjian}soal `,
+        },
+      ],
+    };
+
+    await Promise.all(
+      ujian.map(async (d, idx) => {
+        // add column headers
+        worksheet.getRow(22).values = [
+          "No",
+          "KOMPETENSI DASAR",
+          "MATERI",
+          "INDIKATOR PENCAPAIAN KOMPETENSI",
+          "INDIKATOR SOAL",
+          "LEVEL KOGNITIF",
+          "BENTUK SOAL",
+          "TINGKAT KESUKARAN",
+          "SUMBER BUKU",
+          "NO SOAL",
+        ];
+        worksheet.columns = [
+          { key: "No" },
+          { key: "KOMPETENSI_DASAR" },
+          { key: "MATERI" },
+          { key: "INDIKATOR_PENCAPAIAN_KOMPETENSI" },
+          { key: "INDIKATOR SOAL" },
+          { key: "LEVEL_KOGNITIF" },
+          { key: "BENTUK_SOAL" },
+          { key: "TINGKAT_KESUKARAN" },
+          { key: "SUMBER_BUKU" },
+          { key: "NO_SOAL" },
+        ];
+
+        // Add row using key mapping to columns
+        let row = worksheet.addRow({
+          // no: `${idx + 1}`,
+          // nama: d.user ? d.user.nama : "-",
+          // whatsapp: d.user ? d.user.whatsapp : "-",
+          // email: d.user ? d.user.email : "-",
+          // jeniskelamnin: d.user ? d.user.gender : "-",
+          // tempat_lahir: d.user ? d.user.tempat_lahir : "-",
+          // tanggal_lahir: d.user ? d.user.tanggal_lahir : "-",
+          // tahun_masuk: d ? d.tahun_masuk : "-",
+          // pekerjaan: d ? d.pekerjaan : "-",
+          // kantor: d ? d.kantor : "-",
+          // sektor_industri: d ? d.sektor_industri : "-",
+          // sekolah_lanjutan: d ? d.sekolah_lanjutan : "-",
+          // pengalaman: d ? d.pengalaman : "-",
+          // sertifikasi_keahlian: d ? d.sertifikasi_keahlian : "-",
+          // purnakarya: d ? d.purnakarya : "-",
+          // deskripsi: d ? d.deskripsi : "-",
+        });
+      })
+    );
+    let namaFile = `/uploads/rekap-Kartu-Ujian.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
   }
 }
 module.exports = MainController;
