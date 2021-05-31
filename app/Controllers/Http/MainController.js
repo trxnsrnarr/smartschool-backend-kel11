@@ -1313,7 +1313,7 @@ class MainController {
 
     if (search) {
       siswa = await User.query()
-        .select("nama", "id", "whatsapp", "avatar", "gender")
+        .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ dihapus: 0 })
         .andWhere({ role: "siswa" })
@@ -1321,7 +1321,7 @@ class MainController {
         .paginate(page, 25);
     } else {
       siswa = await User.query()
-        .select("nama", "id", "whatsapp", "avatar", "gender")
+        .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ dihapus: 0 })
         .andWhere({ role: "siswa" })
