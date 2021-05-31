@@ -11,6 +11,10 @@ class MAlumni extends Model {
   getDeskripsi(deskripsi) {
     return deskripsi ? Buffer(deskripsi, "base64").toString("ascii") : "";
   }
+
+  user() {
+    return this.belongsTo("App/Models/User", "m_user_id");
+  }
 }
 
 module.exports = MAlumni;

@@ -508,8 +508,23 @@ Route.post("/mutasi/importmutasi", "MainController.importMutasi");
 Route.post("/mutasi/downloadmutasi", "MainController.downloadMutasi");
 
 // Rombel Service
-Route.post("/rombel/importrombel", "MainController.importRombel");
-Route.post("/rombel/downloadrombel", "MainController.downloadRombel");
+Route.post("/rombel/import-rombel", "MainController.importRombel");
+Route.post("/rombel/download-rombel", "MainController.downloadRombel");
+
+// Foto User
+Route.get("/muka/:user_id", "MainController.getMuka");
+Route.post("/muka/:user_id", "MainController.postMuka");
+Route.delete("/muka/:user_id", "MainController.deleteMuka");
 
 // wildcard
+// Alumni Service
+Route.post("/alumni/import-alumni", "MainController.importAlumni");
+Route.post("/alumni/download-alumni", "MainController.downloadAlumni");
+
+Route.post(
+  "/ujian/download-kartu-ujian/:ujian_id",
+  "MainController.downloadKartuUjian"
+);
+
+// wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
