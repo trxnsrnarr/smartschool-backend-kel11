@@ -14142,5 +14142,84 @@ class MainController {
 
     return namaFile;
   }
+
+  // =========== IMPORT Alumni SERVICE ================
+  async importAlumniServices(filelocation, sekolah) {
+    var workbook = new Excel.Workbook();
+
+    workbook = await workbook.xlsx.readFile(filelocation);
+
+    let explanation = workbook.getWorksheet("Daftar guru");
+
+    let colComment = explanation.getColumn("A");
+
+    let data = [];
+
+    colComment.eachCell(async (cell, rowNumber) => {
+      if (rowNumber >= 3) {
+        data.push({
+          nama: explanation.getCell("B" + rowNumber).value,
+          whatsapp: explanation.getCell("D" + rowNumber).value,
+          gender: explanation.getCell("C" + rowNumber).value,
+          password: explanation.getCell("E" + rowNumber).value,
+        });
+      }
+    });
+
+    const result = await Promise.all(
+      data.map(async (d) => {
+        const checkUser = await User.query()
+          .where({ whatsapp: d.whatsapp })
+          .andWhere({ dihapus: 0 })
+          .first();
+
+        if (checkUser) {
+          return {
+            message: `${d.nama} ${d.whatsapp} sudah terdaftar`,
+            error: true,
+          };
+        }
+
+        await User.create({
+          nama: d.nama,
+          whatsapp: d.whatsapp,
+          gender: d.gender,
+          password: await Hash.make(`${d.password}`),
+          role: "guru",
+          m_sekolah_id: sekolah.id,
+          dihapus: 0,
+        });
+
+        return;
+      })
+    );
+
+    return result;
+  }
+
+  async importAlumni({ request, response }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let file = request.file("file");
+    let fname = `import-excel.${file.extname}`;
+
+    //move uploaded file into custom folder
+    await file.move(Helpers.tmpPath("/uploads"), {
+      name: fname,
+      overwrite: true,
+    });
+
+    if (!file.moved()) {
+      return fileUpload.error();
+    }
+
+    return await this.importAlumniService(`tmp/uploads/${fname}`, sekolah);
+  }
 }
 module.exports = MainController;
