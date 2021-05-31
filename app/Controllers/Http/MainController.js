@@ -14188,7 +14188,7 @@ class MainController {
     });
   }
 
-  async deleteMuka({ response, request, auth }) {
+  async deleteMuka({ response, request, auth, param: { user_id } }) {
     const user = await auth.getUser();
 
     const domain = request.headers().origin;
@@ -14200,7 +14200,7 @@ class MainController {
     }
 
     const photos = await User.query()
-      .where({ id: user.id })
+      .where({ id: user_id })
       .update({ photos: null });
 
     if (!photos) {
