@@ -6352,14 +6352,14 @@ class MainController {
 
     if (user.role == "guru") {
       mataPelajaran = await MMataPelajaran.query()
-      .with('user')
+        .with("user")
         .where({ dihapus: 0 })
         .andWhere({ m_user_id: user.id })
         .andWhere({ m_ta_id: ta.id })
         .fetch();
     } else if (user.role == "admin") {
       mataPelajaran = await MMataPelajaran.query()
-      .with('user')
+        .with("user")
         .where({ dihapus: 0 })
         .andWhere({ m_ta_id: ta.id })
         .andWhere({ m_sekolah_id: sekolah.id })
@@ -14143,6 +14143,49 @@ class MainController {
     await workbook.xlsx.writeFile(`public${namaFile}`);
 
     return namaFile;
+  }
+
+  async getPhotos({ response, request, auth }) {
+    const user = await auth.getUser();
+
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const photos = await User.query()
+      .select("photos")
+      .where({ id: user.id })
+      .first();
+
+    return response.ok({
+      photos,
+    });
+  }
+
+  async postPhotos({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { link } = request.post();
+
+    const photos = await User.query()
+      .where({ id: user.id })
+      .update({ photos: link.toString() });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
   }
 }
 module.exports = MainController;
