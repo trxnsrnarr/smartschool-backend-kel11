@@ -512,8 +512,8 @@ Route.post("/rombel/importrombel", "MainController.importRombel");
 Route.post("/rombel/downloadrombel", "MainController.downloadRombel");
 
 // Foto User
-Route.get("/photos", "MainController.getPhotos");
-Route.post("/photos", "MainController.postPhotos");
+Route.get("/muka", "MainController.getMuka");
+Route.post("/muka", "MainController.postMuka");
 
 // wildcard
 Route.any("*", "MainController.notFoundPage");
