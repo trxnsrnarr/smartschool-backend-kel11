@@ -511,5 +511,14 @@ Route.post("/mutasi/downloadmutasi", "MainController.downloadMutasi");
 Route.post("/rombel/import-rombel", "MainController.importRombel");
 Route.post("/rombel/download-rombel", "MainController.downloadRombel");
 
+// Alumni Service
+Route.post("/alumni/import-alumni", "MainController.importAlumni");
+Route.post("/alumni/download-alumni", "MainController.downloadAlumni");
+
+Route.post(
+  "/ujian/download-kartu-ujian/:ujian_id",
+  "MainController.downloadKartuUjian"
+);
+
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
