@@ -1396,7 +1396,7 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    let { nama, whatsapp, gender, password, avatar } = request.post();
+    let { nama, whatsapp, gender, password, avatar, photos } = request.post();
     whatsapp = whatsapp.trim();
 
     let siswa;
@@ -1417,6 +1417,7 @@ class MainController {
         whatsapp,
         gender,
         avatar,
+        photos: photos.toString(),
       });
     } else {
       siswa = await User.query()
@@ -1427,6 +1428,7 @@ class MainController {
           gender,
           password: await Hash.make(password),
           avatar,
+          photos: photos.toString(),
         });
     }
 
@@ -14147,68 +14149,6 @@ class MainController {
     await workbook.xlsx.writeFile(`public${namaFile}`);
 
     return namaFile;
-  }
-
-  async getMuka({ response, request, auth, param: { user_id } }) {
-    const user = await auth.getUser();
-
-    if (user.role !== "admin") {
-      response.forbidden({
-        message: messageForbidden,
-      });
-    }
-
-    const photos = await User.query()
-      .select("photos")
-      .where({ id: user_id })
-      .first();
-
-    return response.ok({
-      photos,
-    });
-  }
-
-  async postMuka({ response, request, auth, param: { user_id } }) {
-    const user = await auth.getUser();
-
-    const { link } = request.post();
-
-    if (user.role !== "admin") {
-      response.forbidden({
-        message: messageForbidden,
-      });
-    }
-
-    const photos = await User.query()
-      .where({ id: user_id })
-      .update({ photos: link.toString() });
-
-    return response.ok({
-      message: messagePostSuccess,
-    });
-  }
-
-  async deleteMuka({ response, request, auth, param: { user_id } }) {
-    const user = await auth.getUser();
-    if (user.role !== "admin") {
-      response.forbidden({
-        message: messageForbidden,
-      });
-    }
-
-    const photos = await User.query()
-      .where({ id: user_id })
-      .update({ photos: null });
-
-    if (!photos) {
-      return response.notFound({
-        message: messageNotFound,
-      });
-    }
-
-    return response.ok({
-      message: messageDeleteSuccess,
-    });
   }
 
   // =========== IMPORT Alumni SERVICE ================

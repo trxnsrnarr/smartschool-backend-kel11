@@ -511,12 +511,6 @@ Route.post("/mutasi/downloadmutasi", "MainController.downloadMutasi");
 Route.post("/rombel/import-rombel", "MainController.importRombel");
 Route.post("/rombel/download-rombel", "MainController.downloadRombel");
 
-// Foto User
-Route.get("/muka/:user_id", "MainController.getMuka");
-Route.post("/muka/:user_id", "MainController.postMuka");
-Route.delete("/muka/:user_id", "MainController.deleteMuka");
-
-// wildcard
 // Alumni Service
 Route.post("/alumni/import-alumni", "MainController.importAlumni");
 Route.post("/alumni/download-alumni", "MainController.downloadAlumni");
