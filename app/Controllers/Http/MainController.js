@@ -14145,7 +14145,7 @@ class MainController {
     return namaFile;
   }
 
-  async getMuka({ response, request, auth }) {
+  async getMuka({ response, request, auth, param: { user_id } }) {
     const user = await auth.getUser();
 
     const domain = request.headers().origin;
@@ -14156,9 +14156,15 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
+    if (user.role !== "admin") {
+      response.forbidden({
+        message: messageForbidden,
+      });
+    }
+
     const photos = await User.query()
       .select("photos")
-      .where({ id: user.id })
+      .where({ id: user_id })
       .first();
 
     return response.ok({
@@ -14166,7 +14172,7 @@ class MainController {
     });
   }
 
-  async postMuka({ response, request, auth }) {
+  async postMuka({ response, request, auth, param: { user_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -14179,8 +14185,14 @@ class MainController {
 
     const { link } = request.post();
 
+    if (user.role !== "admin") {
+      response.forbidden({
+        message: messageForbidden,
+      });
+    }
+
     const photos = await User.query()
-      .where({ id: user.id })
+      .where({ id: user_id })
       .update({ photos: link.toString() });
 
     return response.ok({
@@ -14197,6 +14209,12 @@ class MainController {
 
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    if (user.role !== "admin") {
+      response.forbidden({
+        message: messageForbidden,
+      });
     }
 
     const photos = await User.query()
