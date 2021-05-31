@@ -508,8 +508,8 @@ Route.post("/mutasi/importmutasi", "MainController.importMutasi");
 Route.post("/mutasi/downloadmutasi", "MainController.downloadMutasi");
 
 // Rombel Service
-Route.post("/rombel/importrombel", "MainController.importRombel");
-Route.post("/rombel/downloadrombel", "MainController.downloadRombel");
+Route.post("/rombel/import-rombel", "MainController.importRombel");
+Route.post("/rombel/download-rombel", "MainController.downloadRombel");
 
-// wildcard
+// wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
