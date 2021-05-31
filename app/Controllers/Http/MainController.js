@@ -14187,5 +14187,31 @@ class MainController {
       message: messagePostSuccess,
     });
   }
+
+  async deleteMuka({ response, request, auth }) {
+    const user = await auth.getUser();
+
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const photos = await User.query()
+      .where({ id: user.id })
+      .update({ photos: null });
+
+    if (!photos) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
 }
 module.exports = MainController;
