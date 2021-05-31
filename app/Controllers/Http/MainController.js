@@ -14145,7 +14145,7 @@ class MainController {
     return namaFile;
   }
 
-  async getPhotos({ response, request, auth }) {
+  async getMuka({ response, request, auth }) {
     const user = await auth.getUser();
 
     const domain = request.headers().origin;
@@ -14166,7 +14166,7 @@ class MainController {
     });
   }
 
-  async postPhotos({ response, request, auth }) {
+  async postMuka({ response, request, auth }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
