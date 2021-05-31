@@ -514,7 +514,7 @@ Route.post("/rombel/downloadrombel", "MainController.downloadRombel");
 // Foto User
 Route.get("/muka", "MainController.getMuka");
 Route.post("/muka", "MainController.postMuka");
-Route.delete("/muka", "MainController.deleteMuka");
+Route.delete("/muka/:user_id", "MainController.deleteMuka");
 
 // wildcard
 Route.any("*", "MainController.notFoundPage");
