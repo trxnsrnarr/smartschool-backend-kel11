@@ -6352,12 +6352,14 @@ class MainController {
 
     if (user.role == "guru") {
       mataPelajaran = await MMataPelajaran.query()
+      .with('user')
         .where({ dihapus: 0 })
         .andWhere({ m_user_id: user.id })
         .andWhere({ m_ta_id: ta.id })
         .fetch();
     } else if (user.role == "admin") {
       mataPelajaran = await MMataPelajaran.query()
+      .with('user')
         .where({ dihapus: 0 })
         .andWhere({ m_ta_id: ta.id })
         .andWhere({ m_sekolah_id: sekolah.id })
@@ -12765,7 +12767,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { di_ss, judul, tanggal, teknik, tipe } = request.post();
+    const { judul, teknik, tipe } = request.post();
 
     const rekap = await MRekap.create({
       judul,
@@ -13952,7 +13954,7 @@ class MainController {
       return fileUpload.error();
     }
 
-    return await this.importRombelServices(`tmp/uploads/${fname}`, sekolah, ta);
+    return await this.importRombelServices2(`tmp/uploads/${fname}`, sekolah, ta);
   }
 
   async downloadRombel({ response, request, auth }) {
