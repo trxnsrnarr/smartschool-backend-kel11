@@ -40,7 +40,7 @@ class User extends Model {
   }
 
   getPhotos(photos) {
-    return photos ? photos.split(",") : [];
+    return photos ? JSON.parse(photos) : {};
   }
   static boot() {
     super.boot();

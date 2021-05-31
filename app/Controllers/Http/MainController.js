@@ -1412,13 +1412,15 @@ class MainController {
     }
 
     if (!password) {
-      siswa = await User.query().where({ id: siswa_id }).update({
-        nama,
-        whatsapp,
-        gender,
-        avatar,
-        photos: photos.toString(),
-      });
+      siswa = await User.query()
+        .where({ id: siswa_id })
+        .update({
+          nama,
+          whatsapp,
+          gender,
+          avatar,
+          photos: JSON.stringify(photos),
+        });
     } else {
       siswa = await User.query()
         .where({ id: siswa_id })
@@ -1428,7 +1430,7 @@ class MainController {
           gender,
           password: await Hash.make(password),
           avatar,
-          photos: photos.toString(),
+          photos: JSON.stringify(photos),
         });
     }
 
