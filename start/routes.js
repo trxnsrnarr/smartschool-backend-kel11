@@ -512,8 +512,8 @@ Route.post("/rombel/importrombel", "MainController.importRombel");
 Route.post("/rombel/downloadrombel", "MainController.downloadRombel");
 
 // Foto User
-Route.get("/muka", "MainController.getMuka");
-Route.post("/muka", "MainController.postMuka");
+Route.get("/muka/:user_id", "MainController.getMuka");
+Route.post("/muka/:user_id", "MainController.postMuka");
 Route.delete("/muka/:user_id", "MainController.deleteMuka");
 
 // wildcard
