@@ -39,6 +39,9 @@ class User extends Model {
     return this.hasMany("App/Models/TkPesertaUjian", "id", "m_user_id");
   }
 
+  getPhotos(photos) {
+    return photos ? JSON.parse(photos) : {};
+  }
   static boot() {
     super.boot();
 
