@@ -94,7 +94,7 @@ Route.delete("/rombel/:rombel_id", "MainController.deleteRombel");
 Route.post("/anggota-rombel", "MainController.postAnggotaRombel");
 Route.post("/anggota-rombel/import", "MainController.importAnggotaRombel");
 
-// mata-pelajaran
+// MATA PELAJARAN SERVICE - START
 Route.get("/mata-pelajaran", "MainController.getMataPelajaran");
 Route.post("/mata-pelajaran", "MainController.postMataPelajaran");
 Route.put(
@@ -105,6 +105,9 @@ Route.delete(
   "/mata-pelajaran/:mata_pelajaran_id",
   "MainController.deleteMataPelajaran"
 );
+Route.post("/mata-pelajaran/import", "MainController.importMapel");
+Route.post("/mata-pelajaran/download", "MainController.downloadMapel");
+// MATA PELAJARAN SERVICE - END
 
 // jam mengajar
 Route.get("/jam-mengajar", "MainController.getJamMengajar");
@@ -497,11 +500,6 @@ Route.put(
 Route.post("/gtk/import", "MainController.importGTK");
 
 Route.post("/absen/rekapdownload", "MainController.downloadRekapAbsen");
-
-// Mapel Import
-
-Route.post("/mapel/importMapel", "MainController.importMapel");
-Route.post("/mapel/downloadMapel", "MainController.downloadMapel");
 
 // Mutasi Service
 Route.post("/mutasi/importmutasi", "MainController.importMutasi");
