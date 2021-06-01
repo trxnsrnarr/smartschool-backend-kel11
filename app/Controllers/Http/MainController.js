@@ -2878,6 +2878,8 @@ class MainController {
 
     if (sekolah.tingkat == "SMK") {
       tingkatRombel = ["X", "XI", "XII"];
+    } else if (sekolah.tingkat == "SMP") {
+      tingkatRombel = ["VII", "VIII", "IX"];
     }
 
     const { tingkat, hari } = request.get();
