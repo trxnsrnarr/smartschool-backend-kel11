@@ -12992,12 +12992,27 @@ class MainController {
     let data = [];
 
     colComment.eachCell(async (cell, rowNumber) => {
-      if (rowNumber >= 3) {
+      if (rowNumber >= 6) {
         data.push({
           nama: explanation.getCell("B" + rowNumber).value,
-          whatsapp: explanation.getCell("D" + rowNumber).value,
-          gender: explanation.getCell("C" + rowNumber).value,
-          password: explanation.getCell("E" + rowNumber).value,
+          nuptk: explanation.getCell("C" + rowNumber).value,
+          gender: explanation.getCell("D" + rowNumber).value,
+          tempat_lahir: explanation.getCell("E" + rowNumber).value,
+          tanggal_lahir: explanation.getCell("F" + rowNumber).value,
+          nip: explanation.getCell("G" + rowNumber).value,
+          status_kepegawaian: explanation.getCell("H" + rowNumber).value,
+          jenis_ptk: explanation.getCell("I" + rowNumber).value,
+          agama: explanation.getCell("J" + rowNumber).value,
+          alamat: explanation.getCell("K" + rowNumber).value,
+          rt: explanation.getCell("L" + rowNumber).value,
+          rw: explanation.getCell("M" + rowNumber).value,
+          dusun: explanation.getCell("N" + rowNumber).value,
+          kelurahan: explanation.getCell("O" + rowNumber).value,
+          kecamatan: explanation.getCell("P" + rowNumber).value,
+          kode_pos: explanation.getCell("Q" + rowNumber).value,
+          whatsapp: explanation.getCell("R" + rowNumber).value,
+          email: explanation.getCell("S" + rowNumber).value,
+          tugas_tambahan: explanation.getCell("T" + rowNumber).value,
         });
       }
     });
@@ -13009,7 +13024,42 @@ class MainController {
           .andWhere({ dihapus: 0 })
           .first();
 
+        let kecamatan1 = `${d.kecamatan.split(" ")[1]}`;
+        let kecamatan2 = d ? d.kecamatan.split(" ")[2] : "";
+        let kecamatans = kecamatan1.concat(" ", kecamatan2 ? kecamatan2 : "");
+        const districtIds = await District.query()
+          .with("regency")
+          .where({ name: kecamatans })
+          .first();
+
+        const villageIds = await Village.query()
+          .where({ name: d.kelurahan })
+          .andWhere({ district_id: districtIds.id })
+          .first();
+
+        // return villageIds;
+
         if (checkUser) {
+          await MProfilUser.create({
+            nuptk: d.nuptk,
+            gender: d.gender,
+            tempat_lahir: d.tempat_lahir,
+            tanggal_lahir: d.tanggal_lahir,
+            nip: d.nip,
+            status_kepegawaian: d.status_kepegawaian,
+            jenis_ptk: d.jenis_ptk,
+            agama: d.agama,
+            alamat: d.alamat,
+            rt: d.rt,
+            rw: d.rw,
+            dusun: d.dusun,
+            village_id: villageIds ? villageIds.id : "",
+            district_id: districtIds.id,
+            regency_id: districtIds.regency_id,
+            province_id: districtIds.toJSON().regency.province_id,
+            kodepos: d.kode_pos,
+            tugas_tambahan: d.tugas_tambahan,
+          });
           return {
             message: `${d.nama} ${d.whatsapp} sudah terdaftar`,
             error: true,
@@ -13020,10 +13070,30 @@ class MainController {
           nama: d.nama,
           whatsapp: d.whatsapp,
           gender: d.gender,
-          password: await Hash.make(`${d.password}`),
+          password: await Hash.make(`smartschool`),
           role: "guru",
           m_sekolah_id: sekolah.id,
           dihapus: 0,
+        });
+        await MProfilUser.create({
+          nuptk: d.nuptk,
+          gender: d.gender,
+          tempat_lahir: d.tempat_lahir,
+          tanggal_lahir: d.tanggal_lahir,
+          nip: d.nip,
+          status_kepegawaian: d.status_kepegawaian,
+          jenis_ptk: d.jenis_ptk,
+          agama: d.agama,
+          alamat: d.alamat,
+          rt: d.rt,
+          rw: d.rw,
+          dusun: d.dusun,
+          village_id: villageIds.id,
+          district_id: districtIds.id,
+          regency_id: districtIds.regency_id,
+          province_id: districtIds.toJSON().regency.province_id,
+          kodepos: d.kode_pos,
+          tugas_tambahan: d.tugas_tambahan,
         });
 
         return;
@@ -13812,11 +13882,11 @@ class MainController {
           .first();
 
         const districtIds = await District.query()
-          .where({ name: d.kelurahan })
+          .where({ name: d.kecamatan })
           .first();
 
         const villageIds = await Village.query()
-          .where({ name: d.kecamatan })
+          .where({ name: d.kelurahan })
           .first();
 
         const checkRombel = await MRombel.query()
