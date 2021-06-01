@@ -1398,40 +1398,27 @@ class MainController {
 
     let { nama, whatsapp, gender, password, avatar, photos } = request.post();
     whatsapp = whatsapp.trim();
+    photos = JSON.stringify(photos);
 
     let siswa;
 
-    if (user.whatsapp != whatsapp) {
-      const check = await User.query().where({ whatsapp: whatsapp }).first();
+    let payload = {
+      whatsapp,
+      nama,
+      gender,
+      avatar,
+      photos,
+    };
 
-      if (check) {
-        return response.forbidden({
-          message: "Akun sudah terdaftar",
-        });
-      }
-    }
+    password ? (payload.password = await Hash.make(password)) : null;
 
-    if (!password) {
-      siswa = await User.query()
-        .where({ id: siswa_id })
-        .update({
-          nama,
-          whatsapp,
-          gender,
-          avatar,
-          photos: JSON.stringify(photos),
-        });
+    const check = await User.query().where({ whatsapp: whatsapp }).first();
+
+    if (check) {
+      delete payload.whatsapp;
+      siswa = await User.query().where({ id: siswa_id }).update(payload);
     } else {
-      siswa = await User.query()
-        .where({ id: siswa_id })
-        .update({
-          nama,
-          whatsapp,
-          gender,
-          password: await Hash.make(password),
-          avatar,
-          photos: JSON.stringify(photos),
-        });
+      siswa = await User.query().where({ id: siswa_id }).update(payload);
     }
 
     if (!siswa) {
