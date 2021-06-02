@@ -9,6 +9,7 @@ class MRekapSchema extends Schema {
       table.increments();
       table.string("judul");
       table.string("tipe");
+      table.string("teknik");
       table.integer("m_materi_id").unsigned().index("m_materi_id");
       table
         .foreign("m_materi_id")
