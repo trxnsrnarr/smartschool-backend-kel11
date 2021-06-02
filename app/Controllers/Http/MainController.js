@@ -13090,7 +13090,7 @@ class MainController {
           rt: d.rt,
           rw: d.rw,
           dusun: d.dusun,
-          village_id: villageIds.id,
+          village_id: villageIds ? villageIds.id : "",
           district_id: districtIds.id,
           regency_id: districtIds.regency_id,
           province_id: districtIds.toJSON().regency.province_id,
@@ -13883,12 +13883,17 @@ class MainController {
           .where({ whatsapp: d.whatsapp })
           .first();
 
+        let kecamatan1 = `${d.kecamatan.split(" ")[1]}`;
+        let kecamatan2 = d ? d.kecamatan.split(" ")[2] : "";
+        let kecamatans = kecamatan1.concat(" ", kecamatan2 ? kecamatan2 : "");
         const districtIds = await District.query()
-          .where({ name: d.kecamatan })
+          .with("regency")
+          .where({ name: kecamatans })
           .first();
 
         const villageIds = await Village.query()
           .where({ name: d.kelurahan })
+          .andWhere({ district_id: districtIds.id })
           .first();
 
         const checkRombel = await MRombel.query()
@@ -13916,28 +13921,6 @@ class MainController {
             dihapus: 0,
           });
 
-          if ((districtIds, villageIds)) {
-            await MProfilUser.create({
-              nisn: d.nisn,
-              asal_sekolah: d.asalsekolah,
-              alamat: d.alamat,
-              regency_id: districtIds.regency_id,
-              district_id: districtIds.id,
-              village_id: villageIds.id,
-              kodepos: d.kodepos,
-              bb: d.bb,
-              tb: d.tb,
-              disabilitas: d.kebutuhan,
-              nama_ayah: d.namaayah,
-              pekerjaan_ayah: d.pekerjaanayah,
-              nama_ibu: d.namaibu,
-              pekerjaan_ibu: d.pekerjaanibu,
-              m_user_id: createUser.toJSON().id,
-              nama_wali: d.namawali,
-              pekerjaan_wali: d.pekerjaanwali,
-            });
-            return;
-          }
           await MProfilUser.create({
             nisn: d.nisn,
             asal_sekolah: d.asalsekolah,
@@ -13953,6 +13936,10 @@ class MainController {
             m_user_id: createUser.toJSON().id,
             nama_wali: d.namawali,
             pekerjaan_wali: d.pekerjaanwali,
+            village_id: villageIds ? villageIds.id : "",
+            district_id: districtIds.id,
+            regency_id: districtIds.regency_id,
+            province_id: districtIds.toJSON().regency.province_id,
           });
           await MAnggotaRombel.create({
             role: "anggota",
