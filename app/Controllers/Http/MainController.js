@@ -14426,6 +14426,11 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
 
     const kepsek = await User.query()
       .where({ role: "kepsek" })
@@ -15107,10 +15112,1229 @@ class MainController {
       ],
     };
 
-    let worksheet2 = workbook.addWorksheet(`Kartu Soal`, {
+    let worksheet2 = workbook.addWorksheet(`Kartu Soal PG`, {
       properties: { tabColor: { argb: "FFC0000" } },
     });
+    worksheet2.getColumn("A").width = 3;
+    worksheet2.getColumn("B").width = 28;
+    worksheet2.getColumn("C").width = 1.5;
+    worksheet2.getColumn("D").width = 7;
+    worksheet2.getColumn("E").width = 5.5;
+    worksheet2.getColumn("F").width = 33;
+    worksheet2.getColumn("G").width = 42;
+    worksheet2.getColumn("H").width = 31;
+    worksheet2.mergeCells("B2:H2");
+    worksheet2.mergeCells("B3:H3");
+    worksheet2.mergeCells("B4:H4");
+    worksheet2.mergeCells("B5:H5");
+    worksheet2.mergeCells("B6:H6");
+    worksheet2.mergeCells("D7:F7");
+    worksheet2.mergeCells("D8:F8");
+    worksheet2.mergeCells("D9:F9");
+    worksheet2.mergeCells("D10:F10");
+    worksheet2.mergeCells("G7:H7");
+    worksheet2.mergeCells("G8:H10");
+    worksheet2.mergeCells("B11:E11");
+    worksheet2.mergeCells("F11:G11");
+    worksheet2.mergeCells("B12:E12");
+    worksheet2.mergeCells("F12:G12");
+    worksheet2.mergeCells("C13:D14");
+    worksheet2.mergeCells("E13:G13");
+    worksheet2.mergeCells("B14:B21");
+    worksheet2.mergeCells("C15:D16");
+    worksheet2.mergeCells("C17:D18");
+    worksheet2.mergeCells("C19:D21");
+    worksheet2.mergeCells("E14:G16");
+    worksheet2.mergeCells("H16:H21");
+    worksheet2.mergeCells("F17:G17");
+    worksheet2.mergeCells("F18:G18");
+    worksheet2.mergeCells("F19:G19");
+    worksheet2.mergeCells("F20:G20");
+    worksheet2.mergeCells("F21:G21");
 
+    worksheet2.getCell("B2").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 16,
+            bold: true,
+          },
+          text: `PEMERINTAH DAERAH PROVINSI ${sekolah.provinsi}`,
+        },
+      ],
+    };
+    worksheet2.getCell("B2").alignment = {
+      vertical: "middle",
+      horizontal: "center",
+    };
+    worksheet2.getCell("B3").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 20,
+            bold: true,
+          },
+          text: "CABANG DINAS PENDIDIKAN",
+        },
+      ],
+    };
+    worksheet2.getCell("B3").alignment = {
+      vertical: "middle",
+      horizontal: "center",
+    };
+    worksheet2.getCell("B4").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 14,
+            bold: true,
+          },
+          text: `${ta.tahun} `,
+        },
+      ],
+    };
+    worksheet2.getCell("B4").alignment = {
+      vertical: "middle",
+      horizontal: "center",
+    };
+
+    worksheet2.getCell("B6").value = {
+      richText: [
+        {
+          font: {
+            name: "Arial Narrow",
+            family: 4,
+            size: 22,
+            color: { argb: "000000" },
+          },
+          text: `${ujian.toJSON().tipe_format}`,
+        },
+      ],
+    };
+    worksheet2.getCell("B6").alignment = {
+      vertical: "middle",
+      horizontal: "center",
+    };
+    worksheet2.getCell("B6").fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "ADD8E6" },
+      bgColor: { argb: "ADD8E6" },
+    };
+    worksheet2.getCell("G7").fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "E0FFFF" },
+      bgColor: { argb: "E0FFFF" },
+    };
+    worksheet2.getCell("G7").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 12,
+            color: { argb: "000000" },
+            bold: true,
+          },
+          text: `Kompetensi Dasar`,
+        },
+      ],
+    };
+    // worksheet2.getCell("B29").value = `${ujian.nama}`;
+    worksheet2.getCell("G7").alignment = {
+      vertical: "middle",
+      horizontal: "center",
+    };
+
+    worksheet2.getCell("B7").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 12,
+            color: { argb: "000000" },
+            // bold: true,
+          },
+          text: `Nama Sekolah`,
+        },
+      ],
+    };
+    worksheet2.getCell("D7").value = `${sekolah.nama}`;
+    worksheet2.getCell("B8").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 12,
+            color: { argb: "000000" },
+            // bold: true,
+          },
+          text: `Kelas / Semester`,
+        },
+      ],
+    };
+    worksheet2.getCell("D8").value = `${ujian.tingkat}`;
+    worksheet2.getCell("B9").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 12,
+            color: { argb: "000000" },
+            // bold: true,
+          },
+          text: `Mata Pelajaran`,
+        },
+      ],
+    };
+    worksheet2.getCell("D9").value = `${ujian.toJSON().mataPelajaran.nama}`;
+    worksheet2.getCell("B10").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 12,
+            color: { argb: "000000" },
+            // bold: true,
+          },
+          text: `Kompetensi Keahlian`,
+        },
+      ],
+    };
+    worksheet2.getCell("C7").value = ":";
+    worksheet2.getCell("C8").value = ":";
+    worksheet2.getCell("C9").value = ":";
+    worksheet2.getCell("C10").value = ":";
+
+    worksheet2.getCell("B11").value = `Materi Pembelajaran`;
+    worksheet2.getCell("F11").value = `Indikator Pencapaian Kompetensi`;
+    worksheet2.getCell("H11").value = `Aspek (Level)`;
+    worksheet2.getCell("B13").value = `Indikator Soal`;
+    worksheet2.getCell("C13").value = `Nomor`;
+    worksheet2.getCell("E13").value = `Rumusan Butir Soal`;
+    worksheet2.getCell("H13").value = `BUKU`;
+    worksheet2.addConditionalFormatting({
+      ref: "B11:H11",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "E0FFFF", fgColor: { argb: "E0FFFF" } },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+    worksheet2.addConditionalFormatting({
+      ref: "B13:H13",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "E0FFFF", fgColor: { argb: "E0FFFF" } },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+    worksheet2.addConditionalFormatting({
+      ref: "B2:H21",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+            alignment: { wrapText: true },
+          },
+        },
+      ],
+    });
+
+    worksheet2.getCell("C17").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 12,
+            color: { argb: "000000" },
+            bold: true,
+          },
+          text: `Kunci Jawaban`,
+        },
+      ],
+    };
+    worksheet2.addConditionalFormatting({
+      ref: "C17",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            alignment: {
+              wrapText: true,
+              vertical: "middle",
+              horizontal: "center",
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "E0FFFF", fgColor: { argb: "E0FFFF" } },
+            },
+          },
+        },
+      ],
+    });
+
+    worksheet2.getCell("H15").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 12,
+            color: { argb: "000000" },
+            bold: true,
+          },
+          text: `Gambar/Tabel/Grafik/Wacana`,
+        },
+      ],
+    };
+    worksheet2.addConditionalFormatting({
+      ref: "H15",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            alignment: {
+              wrapText: true,
+              vertical: "middle",
+              horizontal: "center",
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "E0FFFF", fgColor: { argb: "E0FFFF" } },
+            },
+          },
+        },
+      ],
+    });
+
+    worksheet2.getCell("B24").value = `Mengetahui :`;
+    worksheet2.getCell("B25").value = `Kepala Sekolah`;
+    worksheet2.getCell("B29").value = `${kepsek.nama}`;
+
+    worksheet2.getCell("H23").value = ``;
+    worksheet2.getCell("H25").value = `Guru Mata Pelajaran`;
+    worksheet2.getCell("H29").value = `${
+      ujian.toJSON().mataPelajaran.user.nama
+    }`;
+
+    worksheet2.addConditionalFormatting({
+      ref: "B22:B28",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              // top: { style: "thin" },
+              left: { style: "thin" },
+              // bottom: { style: "thin" },
+              // right: { style: "thin" },
+            },
+            alignment: {
+              wrapText: true,
+              vertical: "middle",
+              horizontal: "right",
+            },
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              color: { argb: "000000" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet2.addConditionalFormatting({
+      ref: "H22:H28",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              // top: { style: "thin" },
+              // left: { style: "thin" },
+              // bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+            alignment: {
+              wrapText: true,
+              vertical: "middle",
+              horizontal: "left",
+            },
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              color: { argb: "000000" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet2.addConditionalFormatting({
+      ref: "C29:G29",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              // top: { style: "thin" },
+              // left: { style: "thin" },
+              bottom: { style: "thin" },
+              // right: { style: "thin" },
+            },
+            alignment: {
+              wrapText: true,
+              vertical: "middle",
+              horizontal: "left",
+            },
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              color: { argb: "000000" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet2.addConditionalFormatting({
+      ref: "B29",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              // top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              // right: { style: "thin" },
+            },
+            alignment: {
+              wrapText: true,
+              vertical: "middle",
+              horizontal: "left",
+            },
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              color: { argb: "000000" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet2.addConditionalFormatting({
+      ref: "H29",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              // top: { style: "thin" },
+              // left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+            alignment: {
+              wrapText: true,
+              vertical: "middle",
+              horizontal: "left",
+            },
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              color: { argb: "000000" },
+            },
+          },
+        },
+      ],
+    });
+
+    let worksheet3 = workbook.addWorksheet(`Kartu Soal Essay`, {
+      properties: { tabColor: { argb: "FFC0000" } },
+    });
+    worksheet3.getColumn("A").width = 3;
+    worksheet3.getColumn("B").width = 28;
+    worksheet3.getColumn("C").width = 1.5;
+    worksheet3.getColumn("D").width = 7;
+    worksheet3.getColumn("E").width = 5.5;
+    worksheet3.getColumn("F").width = 33;
+    worksheet3.getColumn("G").width = 42;
+    worksheet3.getColumn("H").width = 31;
+    worksheet3.mergeCells("B2:H2");
+    worksheet3.mergeCells("B3:H3");
+    worksheet3.mergeCells("B4:H4");
+    worksheet3.mergeCells("B5:H5");
+    worksheet3.mergeCells("B6:H6");
+    worksheet3.mergeCells("D7:F7");
+    worksheet3.mergeCells("D8:F8");
+    worksheet3.mergeCells("D9:F9");
+    worksheet3.mergeCells("D10:F10");
+    worksheet3.mergeCells("G7:H7");
+    worksheet3.mergeCells("G8:H10");
+    worksheet3.mergeCells("B11:E11");
+    worksheet3.mergeCells("F11:G11");
+    worksheet3.mergeCells("B12:E12");
+    worksheet3.mergeCells("F12:G12");
+    worksheet3.mergeCells("C13:D14");
+    worksheet3.mergeCells("E13:G13");
+    worksheet3.mergeCells("B14:B21");
+    worksheet3.mergeCells("C15:D16");
+    worksheet3.mergeCells("C17:D21");
+    worksheet3.mergeCells("E17:G21");
+    worksheet3.mergeCells("E14:G16");
+    worksheet3.mergeCells("H16:H21");
+
+    worksheet3.getCell("B2").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 16,
+            bold: true,
+          },
+          text: `PEMERINTAH DAERAH PROVINSI ${sekolah.provinsi}`,
+        },
+      ],
+    };
+    worksheet3.getCell("B2").alignment = {
+      vertical: "middle",
+      horizontal: "center",
+    };
+    worksheet3.getCell("B3").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 20,
+            bold: true,
+          },
+          text: "CABANG DINAS PENDIDIKAN",
+        },
+      ],
+    };
+    worksheet3.getCell("B3").alignment = {
+      vertical: "middle",
+      horizontal: "center",
+    };
+    worksheet3.getCell("B4").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 14,
+            bold: true,
+          },
+          text: `${ta.tahun} `,
+        },
+      ],
+    };
+    worksheet3.getCell("B4").alignment = {
+      vertical: "middle",
+      horizontal: "center",
+    };
+
+    worksheet3.getCell("B6").value = {
+      richText: [
+        {
+          font: {
+            name: "Arial Narrow",
+            family: 4,
+            size: 22,
+            color: { argb: "000000" },
+          },
+          text: `${ujian.toJSON().tipe_format}`,
+        },
+      ],
+    };
+    worksheet3.getCell("B6").alignment = {
+      vertical: "middle",
+      horizontal: "center",
+    };
+    worksheet3.getCell("B6").fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "ADD8E6" },
+      bgColor: { argb: "ADD8E6" },
+    };
+    worksheet3.getCell("G7").fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "E0FFFF" },
+      bgColor: { argb: "E0FFFF" },
+    };
+    worksheet3.getCell("G7").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 12,
+            color: { argb: "000000" },
+            bold: true,
+          },
+          text: `Kompetensi Dasar`,
+        },
+      ],
+    };
+    // worksheet3.getCell("B29").value = `${ujian.nama}`;
+    worksheet3.getCell("G7").alignment = {
+      vertical: "middle",
+      horizontal: "center",
+    };
+
+    worksheet3.getCell("B7").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 12,
+            color: { argb: "000000" },
+            // bold: true,
+          },
+          text: `Nama Sekolah`,
+        },
+      ],
+    };
+    worksheet3.getCell("D7").value = `${sekolah.nama}`;
+    worksheet3.getCell("B8").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 12,
+            color: { argb: "000000" },
+            // bold: true,
+          },
+          text: `Kelas / Semester`,
+        },
+      ],
+    };
+    worksheet3.getCell("D8").value = `${ujian.tingkat}`;
+    worksheet3.getCell("B9").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 12,
+            color: { argb: "000000" },
+            // bold: true,
+          },
+          text: `Mata Pelajaran`,
+        },
+      ],
+    };
+    worksheet3.getCell("D9").value = `${ujian.toJSON().mataPelajaran.nama}`;
+    worksheet3.getCell("B10").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 12,
+            color: { argb: "000000" },
+            // bold: true,
+          },
+          text: `Kompetensi Keahlian`,
+        },
+      ],
+    };
+    worksheet3.getCell("C7").value = ":";
+    worksheet3.getCell("C8").value = ":";
+    worksheet3.getCell("C9").value = ":";
+    worksheet3.getCell("C10").value = ":";
+
+    worksheet3.getCell("B11").value = `Materi Pembelajaran`;
+    worksheet3.getCell("F11").value = `Indikator Pencapaian Kompetensi`;
+    worksheet3.getCell("H11").value = `Aspek (Level)`;
+    worksheet3.getCell("B13").value = `Indikator Soal`;
+    worksheet3.getCell("C13").value = `Nomor`;
+    worksheet3.getCell("E13").value = `Rumusan Butir Soal`;
+    worksheet3.getCell("H13").value = `BUKU`;
+    worksheet3.addConditionalFormatting({
+      ref: "B11:H11",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "E0FFFF", fgColor: { argb: "E0FFFF" } },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+    worksheet3.addConditionalFormatting({
+      ref: "B13:H13",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "E0FFFF", fgColor: { argb: "E0FFFF" } },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+    worksheet3.addConditionalFormatting({
+      ref: "B2:H21",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+            alignment: { wrapText: true },
+          },
+        },
+      ],
+    });
+
+    worksheet3.getCell("C17").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 12,
+            color: { argb: "000000" },
+            bold: true,
+          },
+          text: `Kunci Jawaban`,
+        },
+      ],
+    };
+    worksheet3.addConditionalFormatting({
+      ref: "C17",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            alignment: {
+              wrapText: true,
+              vertical: "middle",
+              horizontal: "center",
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "E0FFFF", fgColor: { argb: "E0FFFF" } },
+            },
+          },
+        },
+      ],
+    });
+
+    worksheet3.getCell("H15").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 12,
+            color: { argb: "000000" },
+            bold: true,
+          },
+          text: `Gambar/Tabel/Grafik/Wacana`,
+        },
+      ],
+    };
+    worksheet3.addConditionalFormatting({
+      ref: "H15",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            alignment: {
+              wrapText: true,
+              vertical: "middle",
+              horizontal: "center",
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "E0FFFF", fgColor: { argb: "E0FFFF" } },
+            },
+          },
+        },
+      ],
+    });
+
+    worksheet3.getCell("B24").value = `Mengetahui :`;
+    worksheet3.getCell("B25").value = `Kepala Sekolah`;
+    worksheet3.getCell("B29").value = `${kepsek.nama}`;
+
+    worksheet3.getCell("H23").value = ``;
+    worksheet3.getCell("H25").value = `Guru Mata Pelajaran`;
+    worksheet3.getCell("H29").value = `${
+      ujian.toJSON().mataPelajaran.user.nama
+    }`;
+
+    worksheet3.addConditionalFormatting({
+      ref: "B22:B28",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              // top: { style: "thin" },
+              left: { style: "thin" },
+              // bottom: { style: "thin" },
+              // right: { style: "thin" },
+            },
+            alignment: {
+              wrapText: true,
+              vertical: "middle",
+              horizontal: "right",
+            },
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              color: { argb: "000000" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet3.addConditionalFormatting({
+      ref: "H22:H28",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              // top: { style: "thin" },
+              // left: { style: "thin" },
+              // bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+            alignment: {
+              wrapText: true,
+              vertical: "middle",
+              horizontal: "left",
+            },
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              color: { argb: "000000" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet3.addConditionalFormatting({
+      ref: "C29:G29",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              // top: { style: "thin" },
+              // left: { style: "thin" },
+              bottom: { style: "thin" },
+              // right: { style: "thin" },
+            },
+            alignment: {
+              wrapText: true,
+              vertical: "middle",
+              horizontal: "left",
+            },
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              color: { argb: "000000" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet3.addConditionalFormatting({
+      ref: "B29",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              // top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              // right: { style: "thin" },
+            },
+            alignment: {
+              wrapText: true,
+              vertical: "middle",
+              horizontal: "left",
+            },
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              color: { argb: "000000" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet3.addConditionalFormatting({
+      ref: "H29",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              // top: { style: "thin" },
+              // left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+            alignment: {
+              wrapText: true,
+              vertical: "middle",
+              horizontal: "left",
+            },
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              color: { argb: "000000" },
+            },
+          },
+        },
+      ],
+    });
+
+    let worksheet4 = workbook.addWorksheet(`Rumusan Soal`, {
+      properties: { tabColor: { argb: "FFC0000" } },
+    });
+    await Promise.all(
+      ujian.toJSON().soalUjian.map(async (e, idx) => {
+        // await Promise.all(
+        //   d.soal.map(async (e, idx) => {
+        // add column headers
+
+        worksheet4.getRow(6).values = [
+          "NO",
+          "INDIKATOR SOAL",
+          "RUMUSAN BUTIR SOAL",
+          "PILIHAN JAWABAN",
+          "",
+          "",
+          "",
+          "",
+          "KUNCI JAWABAN",
+        ];
+
+        worksheet4.getRow(7).values = ["", "", "", "A", "B", "C", "D", "E", ""];
+
+        worksheet4.columns = [
+          { key: "No" },
+          { key: "INDIKATOR_SOAL" },
+          { key: "RUMUSAN_BUTIR_SOAL" },
+          { key: "A" },
+          { key: "B" },
+          { key: "C" },
+          { key: "D" },
+          { key: "E" },
+          { key: "KUNCI_JAWABAN" },
+        ];
+
+        // Add row using key mapping to columns
+        let row = worksheet4.addRow({
+          No: `${idx + 1}`,
+          INDIKATOR_SOAL: e.soal ? e.soal.akm_konten_materi : "-",
+          RUMUSAN_BUTIR_SOAL: e.soal ? e.soal.pertanyaan : "-",
+          A: e.soal ? e.soal.jawaban_a : "-",
+          B: e.soal ? e.soal.jawaban_b : "-",
+          C: e.soal ? e.soal.jawaban_c : "-",
+          D: e.soal ? e.soal.jawaban_d : "-",
+          E: e.soal ? e.soal.jawaban_e : "-",
+          KUNCI_JAWABAN: e.soal ? e.soal.kj_pg : "-",
+        });
+        // })
+        // );
+      })
+    );
+    worksheet4.mergeCells("A1:I1");
+    worksheet4.mergeCells("A2:I2");
+    worksheet4.mergeCells("A3:I3");
+    worksheet4.mergeCells("A4:I4");
+    worksheet4.mergeCells("A5:I5");
+    worksheet4.mergeCells("A6:A7");
+    worksheet4.mergeCells("B6:B7");
+    worksheet4.mergeCells("C6:C7");
+    worksheet4.mergeCells("D6:H6");
+    worksheet4.mergeCells("I6:I7");
+    worksheet4.getColumn("A").width = 4;
+    worksheet4.getColumn("B").width = 32;
+    worksheet4.getColumn("C").width = 84;
+    worksheet4.getColumn("D").width = 11;
+    worksheet4.getColumn("E").width = 11;
+    worksheet4.getColumn("F").width = 11;
+    worksheet4.getColumn("G").width = 11;
+    worksheet4.getColumn("H").width = 11;
+    worksheet4.getColumn("I").width = 11;
+    worksheet4.addConditionalFormatting({
+      ref: "A1:A4",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              // top: { style: "thin" },
+              // left: { style: "thin" },
+              // bottom: { style: "thin" },
+              // right: { style: "thin" },
+            },
+            alignment: {
+              wrapText: true,
+              vertical: "middle",
+              horizontal: "center",
+            },
+            font: {
+              name: "Stencil",
+              family: 4,
+              size: 18,
+              color: { argb: "000000" },
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "32CD32", fgColor: { argb: "32CD32" } },
+            },
+          },
+        },
+      ],
+    });
+    worksheet4.getCell("A1").value = `RUMUSAN BUTIR SOAL`;
+    worksheet4.getCell("A2").value = `${ujian.tipe_format}`;
+    worksheet4.getCell("A3").value = `${sekolah.nama}`;
+    worksheet4.getCell("A4").value = `${ta.tahun}`;
+    worksheet4.getCell("A5").fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "000000" },
+      bgColor: { argb: "000000" },
+    };
+    worksheet4.addConditionalFormatting({
+      ref: "A6:I7",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+            font: {
+              name: "Calibri",
+              family: 4,
+              size: 11,
+              bold: true,
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "0000FF", fgColor: { argb: "0000FF" } },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+
+    worksheet4.addConditionalFormatting({
+      ref: "A8:I57",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+    worksheet4.getCell("B60").value = {
+      richText: [
+        {
+          font: { name: "Calibri" },
+          text: "MENGETAHUI",
+        },
+      ],
+    };
+    worksheet4.getCell("B61").value = {
+      richText: [
+        {
+          font: { name: "Calibri" },
+          text: "KEPALA SEKOLAH",
+        },
+      ],
+    };
+    worksheet4.getCell("B66").value = {
+      richText: [
+        {
+          font: { name: "Calibri" },
+          text: `${kepsek.nama}`,
+        },
+      ],
+    };
+
+    worksheet4.getCell("G60").value = {
+      richText: [
+        {
+          font: { name: "Calibri" },
+          text: `${sekolah.kabupaten},`,
+        },
+      ],
+    };
+    worksheet4.getCell("G61").value = {
+      richText: [
+        {
+          font: { name: "Calibri" },
+          text: "GURU MATA PELAJARAN",
+        },
+      ],
+    };
+    worksheet4.getCell("G66").value = {
+      richText: [
+        {
+          font: { name: "Calibri" },
+          text: `${ujian.toJSON().mataPelajaran.user.nama}`,
+        },
+      ],
+    };
     // return ujian.toJSON().soalUjian.soal;
 
     let namaFile = `/uploads/rekap-Kartu-Ujian.xlsx`;
