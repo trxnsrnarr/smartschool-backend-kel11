@@ -12699,7 +12699,7 @@ class MainController {
       .with("jurusan")
       .with("mataPelajaran")
       .where({ id: materi_id })
-      .andWhere({ dihapus: 0 })
+      // .andWhere({ dihapus: 0 })
       .first();
 
     return response.ok({
