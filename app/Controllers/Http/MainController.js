@@ -7156,7 +7156,9 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    const { hari_ini, status } = request.get();
+    const { status } = request.get();
+
+    const hari_ini = moment().format("YYYY-MM-DD HH:mm");
 
     const user = await auth.getUser();
 
