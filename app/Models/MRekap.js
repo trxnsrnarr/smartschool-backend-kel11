@@ -9,7 +9,7 @@ class MRekap extends Model {
   }
 
   materi() {
-    return this.hasMany("App/Models/MMateri");
+    return this.belongsTo("App/Models/MMateri");
   }
 
   rekaprombel() {
