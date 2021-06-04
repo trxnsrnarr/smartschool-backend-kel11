@@ -171,6 +171,17 @@ const romawi = [
 
 class MainController {
   // UTILS
+
+  async removeTag(content) {
+    // const h5 = content?.indexOf("</h5>");
+    // const string = content?.substring(h5);
+
+    // const removeEl = string?.replace(/<[^>]*>/g, "");
+    const removeEl = content.replace(/<[^>]*>/g, "");
+
+    return removeEl;
+  }
+
   async singleUpload({ request, response }) {
     const fileUpload = request.file("file");
 
@@ -14462,6 +14473,8 @@ class MainController {
     let worksheet = workbook.addWorksheet(`KISI-KISI`, {
       properties: { tabColor: { argb: "FFC0000" } },
     });
+
+    // looping worksheet
     await Promise.all(
       ujian.toJSON().soalUjian.map(async (e, idx) => {
         // await Promise.all(
@@ -15627,6 +15640,8 @@ class MainController {
     let worksheet3 = workbook.addWorksheet(`Kartu Soal Essay`, {
       properties: { tabColor: { argb: "FFC0000" } },
     });
+
+    //desain worksheet3
     worksheet3.getColumn("A").width = 3;
     worksheet3.getColumn("B").width = 28;
     worksheet3.getColumn("C").width = 1.5;
@@ -16128,6 +16143,8 @@ class MainController {
     let worksheet4 = workbook.addWorksheet(`Rumusan Soal`, {
       properties: { tabColor: { argb: "FFC0000" } },
     });
+
+    // looping worksheet4
     await Promise.all(
       ujian.toJSON().soalUjian.map(async (e, idx) => {
         // await Promise.all(
@@ -16164,18 +16181,20 @@ class MainController {
         let row = worksheet4.addRow({
           No: `${idx + 1}`,
           INDIKATOR_SOAL: e.soal ? e.soal.akm_konten_materi : "-",
-          RUMUSAN_BUTIR_SOAL: e.soal ? e.soal.pertanyaan : "-",
-          A: e.soal ? e.soal.jawaban_a : "-",
-          B: e.soal ? e.soal.jawaban_b : "-",
-          C: e.soal ? e.soal.jawaban_c : "-",
-          D: e.soal ? e.soal.jawaban_d : "-",
-          E: e.soal ? e.soal.jawaban_e : "-",
+          RUMUSAN_BUTIR_SOAL: e.soal ? this.removeTag(e.soal.pertanyaan) : "-",
+          A: e.soal ? this.removeTag(e.soal.jawaban_a) : "-",
+          B: e.soal ? this.removeTag(e.soal.jawaban_b) : "-",
+          C: e.soal ? this.removeTag(e.soal.jawaban_c) : "-",
+          D: e.soal ? this.removeTag(e.soal.jawaban_d) : "-",
+          E: e.soal ? this.removeTag(e.soal.jawaban_e) : "-",
           KUNCI_JAWABAN: e.soal ? e.soal.kj_pg : "-",
         });
         // })
         // );
       })
     );
+
+    // desain Worksheet 4
     worksheet4.mergeCells("A1:I1");
     worksheet4.mergeCells("A2:I2");
     worksheet4.mergeCells("A3:I3");
@@ -16195,6 +16214,7 @@ class MainController {
     worksheet4.getColumn("G").width = 11;
     worksheet4.getColumn("H").width = 11;
     worksheet4.getColumn("I").width = 11;
+
     worksheet4.addConditionalFormatting({
       ref: "A1:A4",
       rules: [
@@ -16345,6 +16365,7 @@ class MainController {
     let worksheet5 = workbook.addWorksheet(`Naskah Soal`, {
       properties: { tabColor: { argb: "FFC0000" } },
     });
+
     worksheet5.mergeCells("A1:L1");
     worksheet5.mergeCells("A2:L2");
     worksheet5.mergeCells("A3:L3");
@@ -16738,53 +16759,52 @@ class MainController {
       ],
     });
 
-    // await Promise.all(
-    //   ujian
-    //     .toJSON()
-    //     .soalUjian.map(async (e, idx) => {
-    //       // , pertanyaan, a, b, c, d, f
-    //       // await Promise.all(
-    //       //   d.soal.map(async (e, idx) => {
-    //       // add column headers
-    //       // let pertanyaan = 22;
-    //       // let a = 23;
-    //       // let b = 24;
-    //       // let c = 25;
-    //       // let d = 26;
-    //       // let e = 27;
+    // looping worksheet 5
+    await Promise.all(
+      ujian.toJSON().soalUjian.map(async (e, idx) => {
+        // , pertanyaan, a, b, c, d, f
+        // await Promise.all(
+        //   d.soal.map(async (e, idx) => {
+        // add column headers
+        // let pertanyaan = 22;
+        // let a = 23;
+        // let b = 24;
+        // let c = 25;
+        // let d = 26;
+        // let e = 27;
 
-    //       worksheet5.getRow(`${pertanyaan + 7}`).values = [
-    //         `${idx + 1}`,
-    //         `${e.soal ? e.soal.pertanyaan : "-"}`,
-    //       ];
+        worksheet5.getRow(`${22 + 7}`).values = [
+          `${idx + 1}`,
+          `${e.soal ? e.soal.pertanyaan : "-"}`,
+        ];
 
-    //       worksheet5.getRow(`${a + 7}`).values = [
-    //         "",
-    //         "A",
-    //         `${e.soal ? e.soal.jawaban_a : "-"}`,
-    //       ];
-    //       worksheet5.getRow(`${b + 7}`).values = [
-    //         "",
-    //         "B",
-    //         `${e.soal ? e.soal.jawaban_b : "-"}`,
-    //       ];
-    //       worksheet5.getRow(`${c + 7}`).values = [
-    //         "",
-    //         "C",
-    //         `${e.soal ? e.soal.jawaban_c : "-"}`,
-    //       ];
-    //       worksheet5.getRow(`${d + 7}`).values = [
-    //         "",
-    //         "D",
-    //         `${e.soal ? e.soal.jawaban_d : "-"}`,
-    //       ];
-    //       worksheet5.getRow(`${f + 7}`).values = [
-    //         "",
-    //         "E",
-    //         `${e.soal ? e.soal.jawaban_e : "-"}`,
-    //       ];
-    //     })
-    // );
+        worksheet5.getRow(`${23 + 7}`).values = [
+          "",
+          "A",
+          `${e.soal ? e.soal.jawaban_a : "-"}`,
+        ];
+        worksheet5.getRow(`${24 + 7}`).values = [
+          "",
+          "B",
+          `${e.soal ? e.soal.jawaban_b : "-"}`,
+        ];
+        worksheet5.getRow(`${25 + 7}`).values = [
+          "",
+          "C",
+          `${e.soal ? e.soal.jawaban_c : "-"}`,
+        ];
+        worksheet5.getRow(`${26 + 7}`).values = [
+          "",
+          "D",
+          `${e.soal ? e.soal.jawaban_d : "-"}`,
+        ];
+        worksheet5.getRow(`${27 + 7}`).values = [
+          "",
+          "E",
+          `${e.soal ? e.soal.jawaban_e : "-"}`,
+        ];
+      })
+    );
 
     // return ujian.toJSON().soalUjian.soal;
 
@@ -16800,6 +16820,40 @@ class MainController {
     const sekolah = await MSekolah.query().fetch();
 
     return sekolah;
+  }
+
+  async ubahtipedata({ response, request }) {
+    const post = await MPost.query().fetch();
+    // console.log(`${post.judul}`);
+
+    // let kontenisi = post.konten
+    //   ? Buffer(konten, "base64").toString("ascii").replace("b&", "..........")
+    //   : "";
+
+    // await Promise.all(
+    //   post.toJSON().map(async (d) => {
+    //     d.konten = post.konten
+    //       ? Buffer(konten, "base64")
+    //           .toString("ascii")
+    //           .replace("b&", "..........")
+    //       : "";
+    //     return d;
+    //   })
+    // );
+
+    // const industri = await MIndustri.query().where({ id: industri_id }).update({
+    //   nama,
+    //   klasifikasi,
+    //   jumlah_karyawan,
+    //   tautan,
+    //   galeri,
+    //   deskripsi,
+    //   tahun_kerjasama,
+    // });
+
+    return post.konten
+      ? Buffer(konten, "base64").toString("ascii").replace("b&", "..........")
+      : "";
   }
 }
 module.exports = MainController;
