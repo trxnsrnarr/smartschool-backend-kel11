@@ -518,5 +518,10 @@ Route.post(
   "MainController.downloadKartuUjian"
 );
 
+Route.get("/daftarsekolah", "MainController.daftarsekolah");
+
+//ubah tipe data
+Route.get("/ubahtipedata", "MainController.ubahtipedata");
+
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
