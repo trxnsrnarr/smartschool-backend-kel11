@@ -9131,10 +9131,17 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .fetch();
 
+    const jumlahPeserta = await User.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ role: "ppdb" })
+      .count("* as total");
+
     return response.ok({
       gelombang: gelombang,
       terdaftar: terdaftar,
       gelombangAktif: gelombangAktif,
+      jumlahPeserta: jumlahPeserta[0].total,
     });
   }
 
