@@ -7167,7 +7167,9 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    const { hari_ini, status } = request.get();
+    const { status } = request.get();
+
+    const hari_ini = moment().format("YYYY-MM-DD HH:mm");
 
     const user = await auth.getUser();
 
@@ -9142,10 +9144,17 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .fetch();
 
+    const jumlahPeserta = await User.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ role: "ppdb" })
+      .count("* as total");
+
     return response.ok({
       gelombang: gelombang,
       terdaftar: terdaftar,
       gelombangAktif: gelombangAktif,
+      jumlahPeserta: jumlahPeserta[0].total,
     });
   }
 
