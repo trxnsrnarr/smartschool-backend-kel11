@@ -12727,7 +12727,9 @@ class MainController {
       .with("rombel", (builder) => {
         builder.with("anggotaRombel", (builder) => {
           builder.with("user", (builder) => {
-            builder.with("sikap").select("id", "nama");
+            builder.with("sikap",(builder)=>{
+              builder.with("ditingkatkan").with("ditunjukkan");
+            }).select("id", "nama");
           });
         });
       })
