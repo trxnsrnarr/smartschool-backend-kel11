@@ -518,7 +518,7 @@ Route.post(
   "MainController.downloadKartuUjian"
 );
 
-Route.get("/daftarsekolah", "MainController.daftarsekolah");
+Route.get("/daftar-sekolah", "MainController.daftarsekolah");
 
 //ubah tipe data
 Route.get("/ubahtipedata", "MainController.ubahtipedata");
