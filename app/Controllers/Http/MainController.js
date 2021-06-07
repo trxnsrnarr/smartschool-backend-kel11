@@ -11,6 +11,7 @@ const MKegiatanGaleri = use("App/Models/MKegiatanGaleri");
 const MProyek = use("App/Models/MProyek");
 const MPerpusKomen = use("App/Models/MPerpusKomen");
 const MRpp = use("App/Models/MRpp");
+const MSikapSiswa = use("App/Models/MSikapSiswa");
 const MRekap = use("App/Models/MRekap");
 const MRekapRombel = use("App/Models/MRekapRombel");
 const TkRekapNilai = use("App/Models/TkRekapNilai");
@@ -12722,8 +12723,47 @@ class MainController {
       // .andWhere({ dihapus: 0 })
       .first();
 
+    const materirombel = await TkMateriRombel.query()
+      .with("rombel", (builder) => {
+        builder.with("anggotaRombel", (builder) => {
+          builder.with("user", (builder) => {
+            builder.with("sikap").select("id", "nama");
+          });
+        });
+      })
+      .where({ m_materi_id: materi_id })
+      .fetch();
+
     return response.ok({
       rekap,
+      materirombel,
+    });
+  }
+
+  async postRekapSikap({ response, request, auth, params: { m_user_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { m_sikap_ditunjukkan_id, m_sikap_ditingkatkan_id, status } =
+      request.post();
+
+    const rekap = await MSikapSiswa.create({
+      m_user_id: m_user_id,
+      m_sikap_ditunjukkan_id,
+      m_sikap_ditingkatkan_id,
+      status: 1,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
     });
   }
 
@@ -12761,7 +12801,7 @@ class MainController {
     const materirombel = await TkMateriRombel.query()
       .with("rombel")
       .where({ m_materi_id: rekap.m_materi_id })
-      .fetch(); 
+      .fetch();
 
     return response.ok({
       rekap,
@@ -16789,7 +16829,7 @@ class MainController {
         //   d.soal.map(async (e, idx) => {
         // add column headers
         // pertanyaan = 0;pertanyaan > 22;pertanyaan + 7;a = 0;a > 23;a + 7;b = 0;b > 24;b + 7;c = 0;c > 25;c + 7;d = 0;d > 26;d + 7;e = 0;e > 27;
-        worksheet5.getRow(`${idx + 11*2 }`).values = [
+        worksheet5.getRow(`${idx + 11 * 2}`).values = [
           // `${idx + 1}`,
           `${e.soal ? e.soal.pertanyaan : "-"}`,
         ];
