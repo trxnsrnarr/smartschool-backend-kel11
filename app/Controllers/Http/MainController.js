@@ -12751,8 +12751,8 @@ class MainController {
 
     const materirombel = await TkMateriRombel.query()
       .with("rombel")
-      .where({ id: rekap.m_materi_id })
-      .fetch();
+      .where({ m_materi_id: rekap.m_materi_id })
+      .fetch(); 
 
     return response.ok({
       rekap,
@@ -16779,43 +16779,37 @@ class MainController {
         // await Promise.all(
         //   d.soal.map(async (e, idx) => {
         // add column headers
-        // let pertanyaan = 22;
-        // let a = 23;
-        // let b = 24;
-        // let c = 25;
-        // let d = 26;
-        // let e = 27;
-
-        worksheet5.getRow(`${22 + 7}`).values = [
-          `${idx + 1}`,
+        // pertanyaan = 0;pertanyaan > 22;pertanyaan + 7;a = 0;a > 23;a + 7;b = 0;b > 24;b + 7;c = 0;c > 25;c + 7;d = 0;d > 26;d + 7;e = 0;e > 27;
+        worksheet5.getRow(`${idx + 11*2 }`).values = [
+          // `${idx + 1}`,
           `${e.soal ? e.soal.pertanyaan : "-"}`,
         ];
 
-        worksheet5.getRow(`${23 + 7}`).values = [
-          "",
-          "A",
-          `${e.soal ? e.soal.jawaban_a : "-"}`,
-        ];
-        worksheet5.getRow(`${24 + 7}`).values = [
-          "",
-          "B",
-          `${e.soal ? e.soal.jawaban_b : "-"}`,
-        ];
-        worksheet5.getRow(`${25 + 7}`).values = [
-          "",
-          "C",
-          `${e.soal ? e.soal.jawaban_c : "-"}`,
-        ];
-        worksheet5.getRow(`${26 + 7}`).values = [
-          "",
-          "D",
-          `${e.soal ? e.soal.jawaban_d : "-"}`,
-        ];
-        worksheet5.getRow(`${27 + 7}`).values = [
-          "",
-          "E",
-          `${e.soal ? e.soal.jawaban_e : "-"}`,
-        ];
+        // worksheet5.getRow(`${a + 7}`).values = [
+        //   "",
+        //   "A",
+        //   `${e.soal ? e.soal.jawaban_a : "-"}`,
+        // ];
+        // worksheet5.getRow(`${b + 7}`).values = [
+        //   "",
+        //   "B",
+        //   `${e.soal ? e.soal.jawaban_b : "-"}`,
+        // ];
+        // worksheet5.getRow(`${c + 7}`).values = [
+        //   "",
+        //   "C",
+        //   `${e.soal ? e.soal.jawaban_c : "-"}`,
+        // ];
+        // worksheet5.getRow(`${d + 7}`).values = [
+        //   "",
+        //   "D",
+        //   `${e.soal ? e.soal.jawaban_d : "-"}`,
+        // ];
+        // worksheet5.getRow(`${f + 7}`).values = [
+        //   "",
+        //   "E",
+        //   `${e.soal ? e.soal.jawaban_e : "-"}`,
+        // ];
       })
     );
 
@@ -16830,7 +16824,9 @@ class MainController {
   }
 
   async daftarsekolah({ response, request }) {
-    const sekolah = await MSekolah.query().fetch();
+    const sekolah = await MSekolah.query()
+      .select("id", "nama", "page", "logo")
+      .fetch();
 
     return sekolah;
   }
