@@ -472,6 +472,10 @@ Route.delete(
 // rekap-nilai
 Route.get("/rekap/:materi_id", "MainController.detailRekap");
 Route.post("/rekap/:materi_id", "MainController.postRekap");
+Route.post(
+  "/rekap/:materi_id/sikap/:m_user_id",
+  "MainController.postRekapSikap"
+);
 Route.put("/rekap/:materi_id/:rekap_id", "MainController.putRekap");
 Route.delete("/rekap/:materi_id/:rekap_id", "MainController.deleteRekap");
 Route.get(
