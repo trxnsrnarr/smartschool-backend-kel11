@@ -522,6 +522,7 @@ class MainController {
       agama,
       tempat_lahir,
       tanggal_lahir,
+      avatar,
 
       // informasi
       nisn,
@@ -599,6 +600,7 @@ class MainController {
       agama,
       tempat_lahir,
       tanggal_lahir,
+      avatar,
     });
 
     const check = await MProfilUser.query()
