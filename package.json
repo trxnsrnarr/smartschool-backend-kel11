@@ -44,6 +44,8 @@
     "pdfkit": "^0.12.1",
     "pdftohtmljs": "^0.6.0",
     "slugify": "^1.4.6",
+    "string-strip-html": "^8.3.0",
+    "striptags": "^3.1.1",
     "twilio": "^3.54.1",
     "uuid-v4": "^0.1.0",
     "word-extractor": "^0.3.0"
