@@ -16,10 +16,22 @@ class MProfilUserSchema extends Schema {
 
       // informasi
       table.string("nisn");
+      table.string("nuptk");
+      table.string("nip");
+      table.string("status_kepegawaian");
+      table.string("jenis_ptk");
+      table.string("tugas_tambahan");
+      table.string("tempat_lahir");
+      table.date("tanggal_lahir");
+      table.date("tanggal_masuk");
+      table.string("kelas_diterima");
+      table.date("telp_rumah");
       table.string("asal_sekolah");
 
       // alamat
       table.text("alamat");
+      table.integer("rt");
+      table.string("rw");
       table.string("province_id", 2).index("province_id");
       table.string("regency_id", 4).index("regency_id");
       table.string("district_id", 7).index("district_id");
