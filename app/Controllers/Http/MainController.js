@@ -2324,6 +2324,7 @@ class MainController {
     let analisisNilai;
     let checkAbsensi = [];
     let judulTugas;
+    let rekap;
 
     if (rombel_id) {
       jadwalMengajar = await MJadwalMengajar.query()
@@ -2442,6 +2443,14 @@ class MainController {
           .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
           .andWhere({ m_materi_id: materi.id })
           .first();
+
+        //disini
+        rekap = await MRekap.query()
+          .with("rekaprombel", (builder) => {
+            builder.with("rekapnilai");
+          })
+          .where({ dihapus: 0 })
+          .fetch();
       }
     }
 
@@ -2452,6 +2461,7 @@ class MainController {
       integrasi: sekolah.integrasi,
       checkAbsensi: checkAbsensi.length,
       judulTugas: judulTugas,
+      rekap: rekap,
     });
   }
 
@@ -17060,7 +17070,7 @@ class MainController {
       : "";
   }
 
-  async getPredikat({ response, request, auth }) {
+  async getBukuInduk({ response, request, auth }) {
     const user = await auth.getUser();
 
     const domain = request.headers().origin;
@@ -17070,12 +17080,197 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
+
+    const ta = await this.getTAAktif(sekolah);
+
     const predikat = await MPredikatNilai.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .fetch();
+
+    const rombel = await MRombel.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
     return response.ok({
       predikat: predikat,
+      rombel: rombel,
+    });
+  }
+
+  async detailBukuInduk({ response, request, auth, params: { rombel_id } }) {
+    const user = await auth.getUser();
+
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    const rombel = await MRombel.query()
+      .with("anggotaRombel", (builder) => {
+        builder.with("user");
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ id: rombel_id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    return response.ok({
+      rombel: rombel,
+    });
+  }
+  async detailBukuIndukSiswa({
+    response,
+    request,
+    auth,
+    params: { rombel_id },
+    params: { user_id },
+  }) {
+    const user = await auth.getUser();
+
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await Mta.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ aktif: 1 })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    const tanggalDistinct = await Database.raw(
+      "SELECT DISTINCT DATE_FORMAT(created_at, '%Y-%m-%d') as tanggalDistinct from m_absen WHERE created_at BETWEEN ? AND  ?",
+      [`${ta.tanggal_awal}`, `${ta.tanggal_akhir}`]
+    );
+
+    const siswa = await User.query()
+      .with("profil")
+      .with("keteranganRapor")
+      .with("keteranganPkl")
+      .with("raporEkskul")
+      .with("prestasi")
+      .where({ id: user_id })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    const nilai = await TkRekapNilai.query()
+      .with("rekapRombel", (builder) => {
+        builder.with("rekap").where({ dihapus: 0 });
+      })
+      .where({ m_user_id: user_id })
+      .fetch();
+
+    const materiRombel = await TkMateriRombel.query()
+      .with("materi", (builder) => {
+        builder.with("mataPelajaran");
+      })
+      .where({ m_rombel_id: rombel_id })
+      .fetch();
+
+    const predikat = await MPredikatNilai.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    const rombel = await MRombel.query()
+      .with("user")
+      .where({ id: rombel_id })
+      .first();
+
+    const ekskul = await MRombel.query()
+      .with("anggotaRombel", (builder) => {
+        builder.where({ m_user_id: user_id });
+      })
+      .where({ kelompok: "ekskul" })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    const totalHadir = await MAbsen.query()
+      .with("user")
+      .whereBetween("created_at", [`${ta.tanggal_awal}`, `${ta.tanggal_akhir}`])
+      .andWhere({ keterangan: "hadir" })
+      .andWhere({ m_user_id: user_id })
+      .count("* as total");
+    const totalSakit = await MAbsen.query()
+      .with("user")
+      .whereBetween("created_at", [`${ta.tanggal_awal}`, `${ta.tanggal_akhir}`])
+      .andWhere({ keterangan: "sakit" })
+      .andWhere({ m_user_id: user_id })
+      .count("* as total");
+    const totalIzin = await MAbsen.query()
+      .with("user")
+      .whereBetween("created_at", [`${ta.tanggal_awal}`, `${ta.tanggal_akhir}`])
+      .andWhere({ keterangan: "izin" })
+      .andWhere({ m_user_id: user_id })
+      .count("* as total");
+    const totalAlpa =
+      user_id.length -
+      (totalHadir[0].total + totalSakit[0].total + totalIzin[0].total);
+
+    return response.ok({
+      siswa: siswa,
+      ta: ta,
+      nilai: nilai,
+      sekolah: sekolah,
+      materiRombel: materiRombel,
+      predikat: predikat,
+      rombel: rombel,
+      ekskul: ekskul,
+      totalHadir: totalHadir,
+      totalSakit: totalSakit,
+      totalIzin: totalIzin,
+      totalAlpa: totalAlpa,
+      tanggalDistinct: tanggalDistinct,
+    });
+  }
+
+  async detailBukuIndukRapor({
+    response,
+    request,
+    auth,
+    params: { rombel_id },
+  }) {
+    const user = await auth.getUser();
+
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    const rombel = await MRombel.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ id: rombel_id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    const materiRombel = await TkMateriRombel.query()
+      .with("materi", (builder) => {
+        builder.with("mataPelajaran");
+      })
+      .where({ m_rombel_id: rombel_id })
+      .fetch();
+
+    return response.ok({
+      rombel: rombel,
+      materiRombel: materiRombel,
     });
   }
 
@@ -17184,31 +17379,37 @@ class MainController {
 
   //rapor service
 
-  async detailRombelRapor({ response, request, auth, params: { user_id } }) {
-    const user = await auth.getUser();
+  // async detailRombelRapor({ response, request, auth, params: { user_id } }) {
+  //   const user = await auth.getUser();
 
-    const domain = request.headers().origin;
+  //   const domain = request.headers().origin;
 
-    const sekolah = await this.getSekolahByDomain(domain);
+  //   const sekolah = await this.getSekolahByDomain(domain);
 
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-    const rekap = await MRekap.query()
-      .with("rekaprombel", (builder) => {
-        builder.with("rekapnilai", (builder) => {
-          builder.where({ m_user_id: user_id });
-        });
-      })
-      .where({ dihapus: 0 })
-      .fetch();
-    return response.ok({
-      predikat: predikat,
-    });
-  }
+  //   if (sekolah == "404") {
+  //     return response.notFound({ message: "Sekolah belum terdaftar" });
+  //   }
+  //   const rekap = await MRekap.query()
+  //     .with("rekaprombel", (builder) => {
+  //       builder.with("rekapnilai", (builder) => {
+  //         builder.where({ m_user_id: user_id });
+  //       });
+  //     })
+  //     .where({ dihapus: 0 })
+  //     .fetch();
+  //   return response.ok({
+  //     predikat: predikat,
+  //   });
+  // }
 
   //Tambah Ekskul
-  async postRaporEkskul({ response, request, auth, params: { user_id } }) {
+  async postRaporEkskul({
+    response,
+    request,
+    auth,
+    params: { rombel_id },
+    params: { user_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -17222,9 +17423,10 @@ class MainController {
     const { keterangan } = request.post();
 
     const raporEkskul = await MRaporEkskul.create({
+      m_rombel_id: rombel_id,
       keterangan,
       status: 1,
-      m_user_id: user.id,
+      m_user_id: user_id,
       dihapus: 0,
     });
 
