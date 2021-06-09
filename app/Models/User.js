@@ -92,6 +92,18 @@ class User extends Model {
   profil() {
     return this.hasOne("App/Models/MProfilUser", "id", "m_user_id");
   }
+  sikap() {
+    return this.hasOne("App/Models/MSikapSiswa", "id", "m_user_id");
+  }
+  keteranganRapor() {
+    return this.hasOne("App/Models/MKeteranganRapor", "id", "m_user_id");
+  }
+  keteranganPkl() {
+    return this.hasOne("App/Models/MKeteranganPkl", "id", "m_user_id");
+  }
+  raporEkskul() {
+    return this.hasOne("App/Models/MRaporEkskul", "id", "m_user_id");
+  }
 }
 
 module.exports = User;
