@@ -528,7 +528,6 @@ Route.get("/daftar-sekolah", "MainController.daftarsekolah");
 Route.get("/ubahtipedata", "MainController.ubahtipedata");
 
 //predikat service
-Route.get("/predikat", "MainController.getPredikat");
 Route.post("/predikat", "MainController.postPredikat");
 Route.put("/predikat/:predikat_id", "MainController.putPredikat");
 Route.delete("/predikat/:predikat_id", "MainController.deletePredikat");
@@ -539,9 +538,24 @@ Route.get(
   "MainController.detailRombelRapor"
 );
 
-Route.post("/rapor/ekskul/:user_id", "MainController.postRaporEkskul");
+Route.post(
+  "/rapor/ekskul/:rombel_id/:user_id",
+  "MainController.postRaporEkskul"
+);
 Route.post("/rapor/kelulusan/:user_id", "MainController.postKeteranganRapor");
 Route.post("/rapor/pkl/:user_id", "MainController.postKeteranganPkl");
+
+//Buku Induk Service
+Route.get("/buku-induk", "MainController.getBukuInduk");
+Route.get("/buku-induk/:rombel_id", "MainController.detailBukuInduk");
+Route.get(
+  "/buku-induk/:rombel_id/:user_id",
+  "MainController.detailBukuIndukSiswa"
+);
+Route.get(
+  "/buku-induk/rapor/:rombel_id",
+  "MainController.detailBukuIndukRapor"
+);
 
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");

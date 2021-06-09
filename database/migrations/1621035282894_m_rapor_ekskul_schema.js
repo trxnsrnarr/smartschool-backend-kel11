@@ -13,8 +13,14 @@ class MRaporEkskulSchema extends Schema {
         .references("m_user.id")
         .onDelete("cascade")
         .onUpdate("cascade");
-      table.boolean("status");
+      table.integer("m_rombel_id").unsigned().index("m_rombel_id");
+      table
+        .foreign("m_rombel_id")
+        .references("m_rombel.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
       table.string("keterangan");
+      table.boolean("status");
       table.boolean("dihapus");
       table.timestamps();
     });

@@ -13,13 +13,19 @@ class MSikapSiswaSchema extends Schema {
         .references("m_user.id")
         .onDelete("cascade")
         .onUpdate("cascade");
-      table.integer("m_sikap_ditunjukkan_id").unsigned().index("m_sikap_id");
+      table
+        .integer("m_sikap_ditunjukkan_id")
+        .unsigned()
+        .index("m_sikap_ditunjukkan_id");
       table
         .foreign("m_sikap_ditunjukkan_id")
         .references("m_sikap.id")
         .onDelete("cascade")
         .onUpdate("cascade");
-      table.integer("m_sikap_ditingkatkan_id").unsigned().index("m_sikap_id");
+      table
+        .integer("m_sikap_ditingkatkan_id")
+        .unsigned()
+        .index("m_sikap_ditingkatkan_id");
       table
         .foreign("m_sikap_ditingkatkan_id")
         .references("m_sikap.id")

@@ -104,6 +104,9 @@ class User extends Model {
   raporEkskul() {
     return this.hasOne("App/Models/MRaporEkskul", "id", "m_user_id");
   }
+  prestasi() {
+    return this.hasOne("App/Models/MPrestasi", "id", "m_user_id");
+  }
 }
 
 module.exports = User;
