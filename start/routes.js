@@ -472,6 +472,10 @@ Route.delete(
 // rekap-nilai
 Route.get("/rekap/:materi_id", "MainController.detailRekap");
 Route.post("/rekap/:materi_id", "MainController.postRekap");
+Route.post(
+  "/rekap/:materi_id/sikap/:m_user_id",
+  "MainController.postRekapSikap"
+);
 Route.put("/rekap/:materi_id/:rekap_id", "MainController.putRekap");
 Route.delete("/rekap/:materi_id/:rekap_id", "MainController.deleteRekap");
 Route.get(
@@ -516,6 +520,41 @@ Route.post("/alumni/download-alumni", "MainController.downloadAlumni");
 Route.post(
   "/ujian/download-kartu-ujian/:ujian_id",
   "MainController.downloadKartuUjian"
+);
+
+Route.get("/daftar-sekolah", "MainController.daftarsekolah");
+
+//ubah tipe data
+Route.get("/ubahtipedata", "MainController.ubahtipedata");
+
+//predikat service
+Route.post("/predikat", "MainController.postPredikat");
+Route.put("/predikat/:predikat_id", "MainController.putPredikat");
+Route.delete("/predikat/:predikat_id", "MainController.deletePredikat");
+
+//Rapor Service
+Route.get(
+  "/rombel/:jadwal_mengajar_id/rapor/:user_id",
+  "MainController.detailRombelRapor"
+);
+
+Route.post(
+  "/rapor/ekskul/:rombel_id/:user_id",
+  "MainController.postRaporEkskul"
+);
+Route.post("/rapor/kelulusan/:user_id", "MainController.postKeteranganRapor");
+Route.post("/rapor/pkl/:user_id", "MainController.postKeteranganPkl");
+
+//Buku Induk Service
+Route.get("/buku-induk", "MainController.getBukuInduk");
+Route.get("/buku-induk/:rombel_id", "MainController.detailBukuInduk");
+Route.get(
+  "/buku-induk/:rombel_id/:user_id",
+  "MainController.detailBukuIndukSiswa"
+);
+Route.get(
+  "/buku-induk/rapor/:rombel_id",
+  "MainController.detailBukuIndukRapor"
 );
 
 // wildcard (DROP AT BOTTOM OF THE FILE)

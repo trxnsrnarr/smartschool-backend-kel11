@@ -7,24 +7,26 @@ class MSekolahSchema extends Schema {
   up() {
     this.create("m_sekolah", (table) => {
       table.increments();
-      table.string("npsn");
-      table.string("nama");
-      table.string("provinsi");
-      table.string("kabupaten");
-      table.string("kecamatan");
-      table.string("kelurahan");
-      table.text("alamat");
-      table.string("kode_pos");
-      table.string("status");
-      table.string("telp");
-      table.string("email");
       table.string("logo");
       table.text("domain");
       table.text("logo_ss");
       table.text("favicon");
-      table.string("tingkat");
       table.string("integrasi");
       table.boolean("diintegrasi");
+      table.string("kode_prop");
+      table.string("propinsi");
+      table.string("kode_kab_kota");
+      table.string("kabupaten_kota");
+      table.string("kode_kec");
+      table.string("kecamatan");
+      table.string("kelurahan");
+      table.string("npsn");
+      table.string("nama");
+      table.string("tingkat");
+      table.string("status");
+      table.string("alamat");
+      table.string("lintang");
+      table.string("bujur");
       table.timestamps();
     });
   }
