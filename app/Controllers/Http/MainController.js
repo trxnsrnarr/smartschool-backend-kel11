@@ -5942,8 +5942,8 @@ class MainController {
     }
 
     return response.ok({
+      data: data,
       message: messagePostSuccess,
-      data,
     });
   }
 
