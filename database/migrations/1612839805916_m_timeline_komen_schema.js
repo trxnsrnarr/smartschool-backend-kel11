@@ -8,7 +8,7 @@ class MTimelineKomenSchema extends Schema {
     this.create("m_timeline_komen", (table) => {
       table.increments();
       table.text("komen");
-      table.boolean("dihapus");
+      table.boolean("dihapus").defaultTo(0);
       table.integer("m_user_id").unsigned().index("m_user_id");
       table
         .foreign("m_user_id")

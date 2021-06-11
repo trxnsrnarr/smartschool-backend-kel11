@@ -21,7 +21,7 @@ class MRaporEkskulSchema extends Schema {
         .onUpdate("cascade");
       table.string("keterangan");
       table.boolean("status");
-      table.boolean("dihapus");
+      table.boolean("dihapus").defaultTo(0);
       table.timestamps();
     });
   }

@@ -10,7 +10,7 @@ class MUjianSchema extends Schema {
       table.string("nama");
       table.string("tipe");
       table.string("tingkat");
-      table.boolean("dihapus");
+      table.boolean("dihapus").defaultTo(0);
       table
         .integer("m_mata_pelajaran_id")
         .unsigned()

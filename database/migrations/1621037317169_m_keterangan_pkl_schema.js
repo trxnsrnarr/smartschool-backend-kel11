@@ -17,7 +17,7 @@ class MKeteranganPklSchema extends Schema {
       table.dateTime("tanggal_mulai");
       table.dateTime("tanggal_selesai");
       table.string("keterangan");
-      table.boolean("dihapus");
+      table.boolean("dihapus").defaultTo(0);
 
       table.timestamps();
     });

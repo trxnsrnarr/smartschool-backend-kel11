@@ -44,7 +44,7 @@ class MSoalUjianSchema extends Schema {
       table.text("pilihan_menjodohkan");
       table.text("soal_menjodohkan");
 
-      table.boolean("dihapus");
+      table.boolean("dihapus").defaultTo(0);
       table.integer("m_user_id").unsigned().index("m_user_id");
       table
         .foreign("m_user_id")

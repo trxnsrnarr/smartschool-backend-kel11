@@ -2333,7 +2333,14 @@ class MainController {
         .with("mataPelajaran")
         .with("rombel", (builder) => {
           builder.with("anggotaRombel", (builder) => {
-            builder.with("user");
+            builder.with("user", (builder) => {
+              builder
+                .with("keteranganRapor")
+                .with("keteranganPkl")
+                .with("raporEkskul")
+                .with("prestasi")
+                .with("sikap");
+            });
           });
         })
         .where({ m_rombel_id: rombel_id })
@@ -2345,7 +2352,14 @@ class MainController {
         })
         .with("rombel", (builder) => {
           builder.with("anggotaRombel", (builder) => {
-            builder.with("user");
+            builder.with("user", (builder) => {
+              builder
+                .with("keteranganRapor")
+                .with("keteranganPkl")
+                .with("raporEkskul")
+                .with("prestasi")
+                .with("sikap");
+            });
           });
         })
         .where({ id: jadwal_mengajar_id })
@@ -2709,18 +2723,33 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    const mataPelajaran = await MMataPelajaran.query()
+    const mataPelajaranKelompokA = await MMataPelajaran.query()
       .with("user", (builder) => {
         builder.select("id", "nama");
       })
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ m_ta_id: ta.id })
       .andWhere({ dihapus: 0 })
-      .fetch();
-
-    const mataPelajaranKelompokA = [];
-    const mataPelajaranKelompokB = [];
-    const mataPelajaranKelompokC = [];
+      .andWhere({ kelompok: A })
+      .paginate();
+    const mataPelajaranKelompokB = await MMataPelajaran.query()
+      .with("user", (builder) => {
+        builder.select("id", "nama");
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ kelompok: B })
+      .paginate();
+    const mataPelajaranKelompokC = await MMataPelajaran.query()
+      .with("user", (builder) => {
+        builder.select("id", "nama");
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ kelompok: C })
+      .paginate();
 
     const guru = await User.query()
       .select("nama", "id", "whatsapp", "avatar", "gender")
@@ -2728,18 +2757,6 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .andWhere({ role: "guru" })
       .fetch();
-
-    await Promise.all(
-      mataPelajaran.toJSON().map(async (data) => {
-        if (data.kelompok == "A") {
-          mataPelajaranKelompokA.push(data);
-        } else if (data.kelompok == "B") {
-          mataPelajaranKelompokB.push(data);
-        } else if (data.kelompok == "C") {
-          mataPelajaranKelompokC.push(data);
-        }
-      })
-    );
 
     return response.ok({
       mataPelajaranKelompokA,
@@ -12760,7 +12777,13 @@ class MainController {
     });
   }
 
-  async postRekapSikap({ response, request, auth, params: { m_user_id } }) {
+  async postSikapRombel({
+    response,
+    request,
+    auth,
+    params: { user_id },
+    params: { rombel_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -12771,16 +12794,70 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { m_sikap_ditunjukkan_id, m_sikap_ditingkatkan_id, status } =
-      request.post();
+    const { m_sikap_ditunjukkan_id, m_sikap_ditingkatkan_id } = request.post();
 
-    const rekap = await MSikapSiswa.create({
-      m_user_id: m_user_id,
+    const sikap = await MSikapRombel.create({
+      m_user_id: user_id,
+      m_rombel_id: rombel_id,
       m_sikap_ditunjukkan_id,
       m_sikap_ditingkatkan_id,
       status: 1,
       dihapus: 0,
     });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+  async postRaporSikap({ response, request, auth, params: { user_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const checkSikap = await MSikapSiswa.query()
+      .where({ m_user_id: user_id })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    const {
+      m_sikap_spiritual_ditingkatkan_id,
+      m_sikap_spiritual_ditunjukkan_id,
+      m_sikap_sosial_ditunjukkan_id,
+      m_sikap_sosial_ditingkatkan_id,
+      tipe,
+    } = request.post();
+
+    if (checkSikap) {
+      sikap = await MSikapSiswa.query().where({ m_user_id: user_id }).update({
+        tipe,
+        m_sikap_sosial_ditunjukkan_id,
+        m_sikap_sosial_ditingkatkan_id,
+        m_sikap_spiritual_ditunjukkan_id,
+        m_sikap_spiritual_ditingkatkan_id,
+      });
+    } else {
+      await MSikapSiswa.create({
+        m_user_id: user_id,
+        tipe,
+        m_sikap_sosial_ditunjukkan_id,
+        m_sikap_sosial_ditingkatkan_id,
+        m_sikap_spiritual_ditunjukkan_id,
+        m_sikap_spiritual_ditingkatkan_id,
+        status: 1,
+        dihapus: 0,
+      });
+    }
+    if (!sikap) {
+      return response.ok({
+        message: messagePostSuccess,
+      });
+    }
 
     return response.ok({
       message: messagePostSuccess,
@@ -12819,7 +12896,9 @@ class MainController {
       .first();
 
     const materirombel = await TkMateriRombel.query()
-      .with("rombel")
+      .with("rombel", (builder) => {
+        builder.with("anggotaRombel");
+      })
       .where({ m_materi_id: rekap.m_materi_id })
       .fetch();
 
@@ -13465,6 +13544,9 @@ class MainController {
           .where({ whatsapp: d.whatsapp })
           .andWhere({ dihapus: 0 })
           .first();
+        if (!user) {
+          return;
+        }
 
         await MMataPelajaran.create({
           nama: d.nama,
@@ -15543,7 +15625,67 @@ class MainController {
         worksheet2.getCell(`H${(idx + 1) * 32 - 19}`).value = `BUKU`;
         worksheet2.getCell(`H${(idx + 1) * 32 - 17}`).value = ``;
         worksheet2.addConditionalFormatting({
-          ref: `B${(idx + 1) * 32 - 24}:H${(idx + 1) * 32 - 24}`,
+          ref: `B${(idx + 1) * 32 - 20}:H${(idx + 1) * 32 - 20}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Arial Narrow",
+                  family: 4,
+                  size: 12,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+              },
+            },
+          ],
+        });
+        worksheet2.addConditionalFormatting({
+          ref: `B${(idx + 1) * 32 - 18}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Arial Narrow",
+                  family: 4,
+                  size: 12,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+              },
+            },
+          ],
+        });
+        worksheet2.addConditionalFormatting({
+          ref: `C${(idx + 1) * 32 - 17}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Arial Narrow",
+                  family: 4,
+                  size: 12,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+              },
+            },
+          ],
+        });
+        worksheet2.addConditionalFormatting({
+          ref: `E${(idx + 1) * 32 - 18}`,
           rules: [
             {
               type: "expression",
@@ -15647,6 +15789,90 @@ class MainController {
             },
           ],
         };
+        worksheet2.getCell(`C${(idx + 1) * 32 - 13}`).value = {
+          richText: [
+            {
+              font: {
+                name: "Times New Roman",
+                family: 4,
+                size: 22,
+                color: { argb: "000000" },
+              },
+              text: `${d.soal.kj_pg}`,
+            },
+          ],
+        };
+        worksheet2.getCell(`C${(idx + 1) * 32 - 13}`).alignment = {
+          wrapText: true,
+          vertical: "middle",
+          horizontal: "center",
+        };
+
+        worksheet2.addConditionalFormatting({
+          ref: `E${(idx + 1) * 32 - 15}:E${(idx + 1) * 32 - 11}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                alignment: {
+                  wrapText: true,
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  color: { argb: "000000" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet2.getCell(`E${(idx + 1) * 32 - 15}`).value = `A`;
+        worksheet2.getCell(`E${(idx + 1) * 32 - 14}`).value = `B`;
+        worksheet2.getCell(`E${(idx + 1) * 32 - 13}`).value = `C`;
+        worksheet2.getCell(`E${(idx + 1) * 32 - 12}`).value = `D`;
+        worksheet2.getCell(`E${(idx + 1) * 32 - 11}`).value = `E`;
+        worksheet2.addConditionalFormatting({
+          ref: `F${(idx + 1) * 32 - 15}:F${(idx + 1) * 32 - 11}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                alignment: {
+                  wrapText: true,
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                font: {
+                  name: "Arial Narrow",
+                  family: 4,
+                  size: 9,
+                  color: { argb: "000000" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet2.getCell(
+          `F${(idx + 1) * 32 - 15}`
+        ).value = `${d.soal.jawaban_a}`;
+        worksheet2.getCell(
+          `F${(idx + 1) * 32 - 14}`
+        ).value = `${d.soal.jawaban_b}`;
+        worksheet2.getCell(
+          `F${(idx + 1) * 32 - 13}`
+        ).value = `${d.soal.jawaban_c}`;
+        worksheet2.getCell(
+          `F${(idx + 1) * 32 - 12}`
+        ).value = `${d.soal.jawaban_d}`;
+        worksheet2.getCell(
+          `F${(idx + 1) * 32 - 11}`
+        ).value = `${d.soal.jawaban_e}`;
+
         worksheet2.addConditionalFormatting({
           ref: `C${(idx + 1) * 32 - 15}`,
           rules: [

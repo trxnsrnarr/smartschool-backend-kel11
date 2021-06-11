@@ -15,7 +15,7 @@ class MPerpusSchema extends Schema {
       table.string("tahun_terbit");
       table.string("isbn");
       table.boolean("draft");
-      table.boolean("dihapus");
+      table.boolean("dihapus").defaultTo(0);
       table.integer("m_user_id").unsigned().index("m_user_id");
       table
         .foreign("m_user_id")

@@ -23,7 +23,7 @@ class TkPekerjaanProyekAktivitasSchema extends Schema {
         .references("m_pekerjaan_proyek.id")
         .onDelete("cascade")
         .onUpdate("cascade");
-      table.boolean("dihapus");
+      table.boolean("dihapus").defaultTo(0);
       table.timestamps();
     });
   }

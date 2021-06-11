@@ -13,7 +13,7 @@ class MRiwayatPembayaranSiswaSchema extends Schema {
       table.string("nominal");
       table.text("bukti");
       table.boolean("dikonfirmasi");
-      table.boolean("dihapus");
+      table.boolean("dihapus").defaultTo(0);
       table
         .integer("m_pembayaran_siswa_id")
         .unsigned()

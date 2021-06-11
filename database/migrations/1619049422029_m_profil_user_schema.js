@@ -16,6 +16,7 @@ class MProfilUserSchema extends Schema {
 
       // informasi
       table.string("nisn");
+      table.string("nipd");
       table.string("nuptk");
       table.string("nip");
       table.string("status_kepegawaian");
@@ -23,6 +24,7 @@ class MProfilUserSchema extends Schema {
       table.string("tugas_tambahan");
       table.string("tempat_lahir");
       table.date("tanggal_lahir");
+      table.string("agama");
       table.date("tanggal_masuk");
       table.string("kelas_diterima");
       table.date("telp_rumah");

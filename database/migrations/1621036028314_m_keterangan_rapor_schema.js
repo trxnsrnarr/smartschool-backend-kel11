@@ -15,7 +15,7 @@ class MKeteranganRaporSchema extends Schema {
         .onUpdate("cascade");
       table.string("catatan");
       table.string("kelulusan");
-      table.boolean("dihapus");
+      table.boolean("dihapus").defaultTo(0);
       table.timestamps();
     });
   }

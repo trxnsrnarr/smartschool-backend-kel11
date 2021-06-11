@@ -20,7 +20,7 @@ class MAnggotaProyekSchema extends Schema {
         .onDelete("cascade")
         .onUpdate("cascade");
       table.string("status"); // undangan,menerima,menolak
-      table.boolean("dihapus");
+      table.boolean("dihapus").defaultTo(0);
       table.timestamps();
     });
   }

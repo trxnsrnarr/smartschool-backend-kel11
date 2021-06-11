@@ -36,7 +36,7 @@ class UserSchema extends Schema {
         .onDelete("cascade")
         .onUpdate("cascade");
       table.text("photos");
-      table.boolean("dihapus");
+      table.boolean("dihapus").defaultTo(0);
       table.timestamps();
     });
   }
