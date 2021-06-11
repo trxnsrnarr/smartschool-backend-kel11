@@ -10,7 +10,7 @@ class MSliderSchema extends Schema {
       table.text("banner");
       table.string("judul");
       table.text("deskripsi");
-      table.boolean("dihapus");
+      table.boolean("dihapus").defaultTo(0);
       table.integer("m_sekolah_id").unsigned().index("m_sekolah_id");
       table
         .foreign("m_sekolah_id")

@@ -12,8 +12,8 @@ class MTopikSchema extends Schema {
       table.text("lampiran");
       table.text("link");
       table.boolean("kuis");
-      table.boolean("dihapus");
-      table.integer("m_bab_id").unsigned().index('m_bab_id');
+      table.boolean("dihapus").defaultTo(0);
+      table.integer("m_bab_id").unsigned().index("m_bab_id");
       table
         .foreign("m_bab_id")
         .references("m_bab.id")

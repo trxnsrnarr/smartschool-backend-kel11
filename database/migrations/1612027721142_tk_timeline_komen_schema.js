@@ -8,7 +8,7 @@ class TkTimelineKomenSchema extends Schema {
     this.create("tk_timeline_komen", (table) => {
       table.increments();
       table.text("komen");
-      table.boolean("dihapus");
+      table.boolean("dihapus").defaultTo(0);
       table.integer("tk_timeline_id").unsigned().index("tk_timeline_id");
       table
         .foreign("tk_timeline_id")

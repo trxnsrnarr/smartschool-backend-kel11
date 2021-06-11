@@ -8,8 +8,8 @@ class MBabSchema extends Schema {
     this.create("m_bab", (table) => {
       table.increments();
       table.string("judul");
-      table.boolean("dihapus");
-      table.integer("m_materi_id").unsigned().index('m_materi_id');
+      table.boolean("dihapus").defaultTo(0);
+      table.integer("m_materi_id").unsigned().index("m_materi_id");
       table
         .foreign("m_materi_id")
         .references("m_materi.id")

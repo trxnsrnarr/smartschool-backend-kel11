@@ -3,11 +3,16 @@
 /** @type {import('@adonisjs/lucid/src/Schema')} */
 const Schema = use("Schema");
 
-class MSikapSiswaSchema extends Schema {
+class MSikapRombelSchema extends Schema {
   up() {
-    this.create("m_sikap_siswa", (table) => {
+    this.create("m_sikap_rombel", (table) => {
       table.increments();
-      table.string("tipe");
+      table.integer("m_rombel_id").unsigned().index("m_rombel_id");
+      table
+        .foreign("m_rombel_id")
+        .references("m_rombel.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
       table.integer("m_user_id").unsigned().index("m_user_id");
       table
         .foreign("m_user_id")
@@ -39,8 +44,8 @@ class MSikapSiswaSchema extends Schema {
   }
 
   down() {
-    this.drop("m_sikap_siswa");
+    this.drop("m_sikap_rombel");
   }
 }
 
-module.exports = MSikapSiswaSchema;
+module.exports = MSikapRombelSchema;

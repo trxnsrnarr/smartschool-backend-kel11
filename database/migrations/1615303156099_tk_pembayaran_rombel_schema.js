@@ -7,7 +7,7 @@ class TkPembayaranRombelSchema extends Schema {
   up() {
     this.create("tk_pembayaran_rombel", (table) => {
       table.increments();
-      table.boolean("dihapus");
+      table.boolean("dihapus").defaultTo(0);
       table.integer("m_pembayaran_id").unsigned().index("m_pembayaran_id");
       table
         .foreign("m_pembayaran_id")

@@ -8,7 +8,7 @@ class MPerpusKomenSchema extends Schema {
     this.create("m_perpus_komen", (table) => {
       table.increments();
       table.text("komen");
-      table.boolean("dihapus");
+      table.boolean("dihapus").defaultTo(0);
       table.integer("m_perpus_id").unsigned().index("m_perpus_id");
       table
         .foreign("m_perpus_id")

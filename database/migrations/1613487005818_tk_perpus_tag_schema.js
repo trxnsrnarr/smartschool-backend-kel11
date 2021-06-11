@@ -7,7 +7,7 @@ class TkPerpusTagSchema extends Schema {
   up() {
     this.create("tk_perpus_tag", (table) => {
       table.increments();
-      table.boolean("dihapus");
+      table.boolean("dihapus").defaultTo(0);
       table.integer("m_perpus_tag_id").unsigned().index("m_perpus_tag_id");
       table
         .foreign("m_perpus_tag_id")

@@ -12,7 +12,7 @@ class MPrestasiSchema extends Schema {
       table.string("peringkat");
       table.string("tempat");
       table.string("tahun");
-      table.boolean("dihapus");
+      table.boolean("dihapus").defaultTo(0);
       table.integer("m_user_id").unsigned().index("m_user_id");
       table
         .foreign("m_user_id")

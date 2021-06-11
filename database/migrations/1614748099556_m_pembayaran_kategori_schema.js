@@ -8,7 +8,7 @@ class MPembayaranKategoriSchema extends Schema {
     this.create("m_pembayaran_kategori", (table) => {
       table.increments();
       table.string("kategori");
-      table.boolean("dihapus");
+      table.boolean("dihapus").defaultTo(0);
       table.integer("m_sekolah_id").unsigned().index("m_sekolah_id");
       table
         .foreign("m_sekolah_id")

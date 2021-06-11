@@ -9,7 +9,7 @@ class MStatusProyekSchema extends Schema {
       table.increments();
       table.string("nama");
       table.string("warna");
-      table.boolean("dihapus");
+      table.boolean("dihapus").defaultTo(0);
       table.timestamps();
     });
   }
