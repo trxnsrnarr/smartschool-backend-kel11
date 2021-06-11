@@ -2730,7 +2730,7 @@ class MainController {
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ m_ta_id: ta.id })
       .andWhere({ dihapus: 0 })
-      .andWhere({ kelompok: A })
+      .andWhere({ kelompok: "A" })
       .paginate();
     const mataPelajaranKelompokB = await MMataPelajaran.query()
       .with("user", (builder) => {
@@ -2739,7 +2739,7 @@ class MainController {
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ m_ta_id: ta.id })
       .andWhere({ dihapus: 0 })
-      .andWhere({ kelompok: B })
+      .andWhere({ kelompok: "B" })
       .paginate();
     const mataPelajaranKelompokC = await MMataPelajaran.query()
       .with("user", (builder) => {
@@ -2748,7 +2748,7 @@ class MainController {
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ m_ta_id: ta.id })
       .andWhere({ dihapus: 0 })
-      .andWhere({ kelompok: C })
+      .andWhere({ kelompok: "C" })
       .paginate();
 
     const guru = await User.query()
