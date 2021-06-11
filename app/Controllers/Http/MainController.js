@@ -12889,6 +12889,9 @@ class MainController {
           .with("tugas")
           .where({ dihapus: 0 });
       })
+      .with("materi", (builder) => {
+        builder.with("mataPelajaran");
+      })
       .where({ id: rekapnilai_id })
       .andWhere({ dihapus: 0 })
       .first();
@@ -15591,7 +15594,7 @@ class MainController {
           `F${(idx + 1) * 32 - 21}`
         ).value = `Indikator Pencapaian Kompetensi`;
         worksheet2.getCell(
-          `F${(idx + 1) * 32 - 21}`
+          `F${(idx + 1) * 32 - 20}`
         ).value = `${d.soal.akm_konteks_materi}`;
         worksheet2.getCell(`H${(idx + 1) * 32 - 21}`).value = `Aspek (Level)`;
         worksheet2.getCell(
