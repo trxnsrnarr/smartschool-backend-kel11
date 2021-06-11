@@ -5903,6 +5903,7 @@ class MainController {
 
     lampiran = lampiran ? lampiran.toString() : null;
 
+    let data;
     if (absen != "hadir") {
       return await MAbsen.create({
         m_sekolah_id: sekolah.id,
@@ -5913,9 +5914,9 @@ class MainController {
         lampiran: lampiran,
       });
     } else {
-      await MAbsen.create({
+      data = await MAbsen.create({
         m_sekolah_id: sekolah.id,
-        m_user_id: user_id? user_id : user.id,
+        m_user_id: user_id ? user_id : user.id,
         role: user.role,
         absen,
         keterangan,
@@ -5925,6 +5926,7 @@ class MainController {
 
     return response.ok({
       message: messagePostSuccess,
+      data,
     });
   }
 
