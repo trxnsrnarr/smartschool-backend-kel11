@@ -2722,6 +2722,9 @@ class MainController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
+    let { page } = request.get();
+
+    page = page ? parseInt(page) : 1;
 
     const mataPelajaranKelompokA = await MMataPelajaran.query()
       .with("user", (builder) => {
@@ -2731,7 +2734,7 @@ class MainController {
       .andWhere({ m_ta_id: ta.id })
       .andWhere({ dihapus: 0 })
       .andWhere({ kelompok: "A" })
-      .paginate();
+      .paginate(page);
     const mataPelajaranKelompokB = await MMataPelajaran.query()
       .with("user", (builder) => {
         builder.select("id", "nama");
@@ -2740,7 +2743,7 @@ class MainController {
       .andWhere({ m_ta_id: ta.id })
       .andWhere({ dihapus: 0 })
       .andWhere({ kelompok: "B" })
-      .paginate();
+      .paginate(page);
     const mataPelajaranKelompokC = await MMataPelajaran.query()
       .with("user", (builder) => {
         builder.select("id", "nama");
@@ -2749,7 +2752,7 @@ class MainController {
       .andWhere({ m_ta_id: ta.id })
       .andWhere({ dihapus: 0 })
       .andWhere({ kelompok: "C" })
-      .paginate();
+      .paginate(page);
 
     const guru = await User.query()
       .select("nama", "id", "whatsapp", "avatar", "gender")
