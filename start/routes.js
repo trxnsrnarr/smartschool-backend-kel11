@@ -89,6 +89,7 @@ Route.get("/rombel/:jadwal_mengajar_id", "MainController.detailRombel");
 Route.post("/rombel", "MainController.postRombel");
 Route.put("/rombel/:rombel_id", "MainController.putRombel");
 Route.delete("/rombel/:rombel_id", "MainController.deleteRombel");
+Route.post("/rombel/:rombel_id/:user_id", "MainController.postSikapRombel");
 
 // anggota rombel
 Route.post("/anggota-rombel", "MainController.postAnggotaRombel");
