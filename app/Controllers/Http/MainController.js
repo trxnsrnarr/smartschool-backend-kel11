@@ -2723,18 +2723,33 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    const mataPelajaran = await MMataPelajaran.query()
+    const mataPelajaranKelompokA = await MMataPelajaran.query()
       .with("user", (builder) => {
         builder.select("id", "nama");
       })
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ m_ta_id: ta.id })
       .andWhere({ dihapus: 0 })
-      .fetch();
-
-    const mataPelajaranKelompokA = [];
-    const mataPelajaranKelompokB = [];
-    const mataPelajaranKelompokC = [];
+      .andWhere({ kelompok: A })
+      .paginate();
+    const mataPelajaranKelompokB = await MMataPelajaran.query()
+      .with("user", (builder) => {
+        builder.select("id", "nama");
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ kelompok: B })
+      .paginate();
+    const mataPelajaranKelompokC = await MMataPelajaran.query()
+      .with("user", (builder) => {
+        builder.select("id", "nama");
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ kelompok: C })
+      .paginate();
 
     const guru = await User.query()
       .select("nama", "id", "whatsapp", "avatar", "gender")
@@ -2742,18 +2757,6 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .andWhere({ role: "guru" })
       .fetch();
-
-    await Promise.all(
-      mataPelajaran.toJSON().map(async (data) => {
-        if (data.kelompok == "A") {
-          mataPelajaranKelompokA.push(data);
-        } else if (data.kelompok == "B") {
-          mataPelajaranKelompokB.push(data);
-        } else if (data.kelompok == "C") {
-          mataPelajaranKelompokC.push(data);
-        }
-      })
-    );
 
     return response.ok({
       mataPelajaranKelompokA,
@@ -5929,7 +5932,7 @@ class MainController {
     } else {
       await MAbsen.create({
         m_sekolah_id: sekolah.id,
-        m_user_id: user_id? user_id : user.id,
+        m_user_id: user_id ? user_id : user.id,
         role: user.role,
         absen,
         keterangan,
