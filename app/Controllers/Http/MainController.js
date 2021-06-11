@@ -5913,7 +5913,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    let { absen, keterangan, lampiran, foto_masuk } = request.post();
+    let { absen, keterangan, lampiran, foto_masuk, user_id } = request.post();
 
     lampiran = lampiran ? lampiran.toString() : null;
 
@@ -5929,7 +5929,7 @@ class MainController {
     } else {
       await MAbsen.create({
         m_sekolah_id: sekolah.id,
-        m_user_id: user.id,
+        m_user_id: user_id? user_id : user.id,
         role: user.role,
         absen,
         keterangan,
