@@ -12053,6 +12053,23 @@ class MainController {
     });
   }
 
+  async detailUser({ response, request, auth, params: { user_id } }) {
+    const role = await auth.getUser();
+    if (role.role != "admin") {
+      return response.json({
+        message: messageForbidden,
+      });
+    }
+    const user = await User.query()
+      .where({ dihapus: 0 })
+      .where({ id: user_id })
+      .first();
+
+    return response.ok({
+      user: user,
+    });
+  }
+
   async getKategoriPekerjaan({
     response,
     request,
