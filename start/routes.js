@@ -44,6 +44,7 @@ Route.get("/profil-user", "MainController.getProfilUser");
 
 // user
 Route.get("/user", "MainController.getUser");
+Route.get("/user/:user_id", "MainController.detailUser");
 
 // sekolah
 Route.get("/sekolah", "MainController.getSekolah");
