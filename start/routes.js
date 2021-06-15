@@ -459,6 +459,12 @@ Route.delete(
 );
 // KOLABORASI SERVICE END
 
+// pekerjaan-proyek
+Route.post(
+  "/pekerjaan-proyek/:kategori_id",
+  "MainController.postPekerjaanProyek"
+);
+
 // kategori-pekerjaan
 Route.get("/kategori-pekerjaan", "MainController.getKategoriPekerjaan");
 Route.post("/kategori-pekerjaan", "MainController.postKategoriPekerjaan");

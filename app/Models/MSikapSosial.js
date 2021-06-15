@@ -5,7 +5,7 @@ const Model = use("Model");
 
 class MSikap extends Model {
   static get table() {
-    return "m_sikap";
+    return "m_sikap_sosial";
   }
 }
 
