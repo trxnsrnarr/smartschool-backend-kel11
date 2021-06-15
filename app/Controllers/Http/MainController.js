@@ -12037,13 +12037,23 @@ class MainController {
   }
 
   async getUser({ response, request, auth }) {
-    const { page } = request.get();
+    const { page, name } = request.get();
 
-    const user = await User.query()
-      .with("sekolah")
-      .where({ dihapus: 0 })
-      .andWhereNot({ role: "admin" })
-      .paginate(page);
+    let user;
+    if (name) {
+      user = await User.query()
+        .with("sekolah")
+        .where({ dihapus: 0 })
+        .where("nama", "like", `%${name}%`)
+        .andWhereNot({ role: "admin" })
+        .paginate(page);
+    } else {
+      user = await User.query()
+        .with("sekolah")
+        .where({ dihapus: 0 })
+        .andWhereNot({ role: "admin" })
+        .paginate(page);
+    }
 
     return response.ok({
       user: user,
