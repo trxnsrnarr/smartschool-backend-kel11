@@ -145,8 +145,8 @@ const rulesUserPut = {
 };
 
 const rulesAnggotaPost = {
-  m_proyek_id: "required",
-  m_user_id: "required",
+  proyek_id: "required",
+  user_id: "required",
   status: "required",
 };
 
@@ -12019,10 +12019,7 @@ class MainController {
         builder.where({ dihapus: 0 }).orderBy("created_at", "desc");
       })
       .with("anggota", (builder) => {
-        builder
-          .with("user")
-          .where({ dihapus: 0 })
-          .andWhere({ status: "menerima" });
+        builder.with("user").where({ dihapus: 0 });
       })
       .where({ id: proyek_id })
       .first();
@@ -12634,7 +12631,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { anggota_proyek_id, proyek_id, user_id } = request.post();
+    const { anggota_proyek_id, proyek_id, user_id, status } = request.post();
 
     const validation = await validate(
       request.post(),
@@ -12661,7 +12658,7 @@ class MainController {
         await MAnggotaProyek.create({
           m_proyek_id: proyek_id,
           m_user_id: d,
-          status: "undangan",
+          status: status,
           dihapus: 0,
         });
       })
