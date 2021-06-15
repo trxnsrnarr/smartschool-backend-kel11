@@ -12,6 +12,7 @@ const MProyek = use("App/Models/MProyek");
 const MPerpusKomen = use("App/Models/MPerpusKomen");
 const MRpp = use("App/Models/MRpp");
 const MSikapSiswa = use("App/Models/MSikapSiswa");
+const MSikapRombel = use("App/Models/MSikapRombel");
 const MRekap = use("App/Models/MRekap");
 const MPredikatNilai = use("App/Models/MPredikatNilai");
 const MKeteranganRapor = use("App/Models/MKeteranganRapor");
@@ -68,6 +69,8 @@ const TkJadwalUjian = use("App/Models/TkJadwalUjian");
 const TkPesertaUjian = use("App/Models/TkPesertaUjian");
 const MUjian = use("App/Models/MUjian");
 const MMateri = use("App/Models/MMateri");
+const MSikapSosial = use("App/Models/MSikapSosial");
+const MSikapSpiritual = use("App/Models/MSikapSpiritual");
 const MSoalKuis = use("App/Models/MSoalKuis");
 const MTimeline = use("App/Models/MTimeline");
 const TkTimeline = use("App/Models/TkTimeline");
@@ -2339,7 +2342,13 @@ class MainController {
                 .with("keteranganPkl")
                 .with("raporEkskul")
                 .with("prestasi")
-                .with("sikap");
+                .with("sikap", (builder) => {
+                  builder
+                    .with("ditingkatkanSosial")
+                    .with("ditunjukkanSosial")
+                    .with("ditingkatkanSpiritual")
+                    .with("ditunjukkanSpiritual");
+                });
             });
           });
         })
@@ -2358,7 +2367,13 @@ class MainController {
                 .with("keteranganPkl")
                 .with("raporEkskul")
                 .with("prestasi")
-                .with("sikap");
+                .with("sikap", (builder) => {
+                  builder
+                    .with("ditingkatkanSosial")
+                    .with("ditunjukkanSosial")
+                    .with("ditingkatkanSpiritual")
+                    .with("ditunjukkanSpiritual");
+                });
             });
           });
         })
@@ -12475,7 +12490,7 @@ class MainController {
   }
 
   // ===================== Proyek Pekerjaan Service ===========================
-  async postPekerjaanProyek({ response, request, auth }) {
+  async postPekerjaanProyek({ response, request, auth, params: { kategori_id }, }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -12492,7 +12507,6 @@ class MainController {
       status,
       baras_waktu,
       deskripsi,
-      m_kategori_pekerjaan_id,
       urutan,
     } = request.post();
 
@@ -12502,7 +12516,7 @@ class MainController {
       status,
       baras_waktu,
       deskripsi,
-      m_kategori_pekerjaan_id,
+      m_kategori_pekerjaan_id:kategori_id,
       urutan,
       dihapus: 0,
     });
@@ -12771,6 +12785,9 @@ class MainController {
       .where({ id: materi_id })
       .first();
 
+    const sikapsosial = await MSikapSosial.query().fetch();
+    const sikapspiritual = await MSikapSpiritual.query().fetch();
+
     const rekap = await MMateri.query()
       .with("jurusan")
       .with("mataPelajaran")
@@ -12797,7 +12814,11 @@ class MainController {
           builder.with("user", (builder) => {
             builder
               .with("sikap", (builder) => {
-                builder.with("ditingkatkan").with("ditunjukkan");
+                builder
+                  .with("ditingkatkanSosial")
+                  .with("ditunjukkanSosial")
+                  .with("ditingkatkanSpiritual")
+                  .with("ditunjukkanSpiritual");
               })
               .select("id", "nama");
           });
@@ -12809,6 +12830,8 @@ class MainController {
     return response.ok({
       rekap,
       materirombel,
+      sikapsosial,
+      sikapspiritual,
     });
   }
 
@@ -12827,15 +12850,19 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
+    // const user = await auth.getUser();
 
     const { m_sikap_ditunjukkan_id, m_sikap_ditingkatkan_id } = request.post();
 
     const sikap = await MSikapRombel.create({
       m_user_id: user_id,
       m_rombel_id: rombel_id,
-      m_sikap_ditunjukkan_id,
-      m_sikap_ditingkatkan_id,
+      m_sikap_ditunjukkan_id: m_sikap_ditunjukkan_id.length
+        ? m_sikap_ditunjukkan_id.toString()
+        : null,
+      m_sikap_ditingkatkan_id: m_sikap_ditingkatkan_id.length
+        ? m_sikap_ditingkatkan_id.toString()
+        : null,
       status: 1,
       dihapus: 0,
     });
@@ -12869,21 +12896,43 @@ class MainController {
     } = request.post();
 
     if (checkSikap) {
-      sikap = await MSikapSiswa.query().where({ m_user_id: user_id }).update({
-        tipe,
-        m_sikap_sosial_ditunjukkan_id,
-        m_sikap_sosial_ditingkatkan_id,
-        m_sikap_spiritual_ditunjukkan_id,
-        m_sikap_spiritual_ditingkatkan_id,
-      });
+      sikap = await MSikapSiswa.query()
+        .where({ m_user_id: user_id })
+        .update({
+          tipe,
+          m_sikap_sosial_ditunjukkan_id: m_sikap_sosial_ditunjukkan_id.length
+            ? m_sikap_sosial_ditunjukkan_id.toString()
+            : null,
+          m_sikap_sosial_ditingkatkan_id: m_sikap_sosial_ditingkatkan_id.length
+            ? m_sikap_sosial_ditingkatkan_id.toString()
+            : null,
+          m_sikap_spiritual_ditunjukkan_id:
+            m_sikap_spiritual_ditunjukkan_id.length
+              ? m_sikap_spiritual_ditunjukkan_id.toString()
+              : null,
+          m_sikap_spiritual_ditingkatkan_id:
+            m_sikap_spiritual_ditingkatkan_id.length
+              ? m_sikap_spiritual_ditingkatkan_id.toString()
+              : null,
+        });
     } else {
       await MSikapSiswa.create({
         m_user_id: user_id,
         tipe,
-        m_sikap_sosial_ditunjukkan_id,
-        m_sikap_sosial_ditingkatkan_id,
-        m_sikap_spiritual_ditunjukkan_id,
-        m_sikap_spiritual_ditingkatkan_id,
+        m_sikap_sosial_ditunjukkan_id: m_sikap_sosial_ditunjukkan_id.length
+          ? m_sikap_sosial_ditunjukkan_id.toString()
+          : null,
+        m_sikap_sosial_ditingkatkan_id: m_sikap_sosial_ditingkatkan_id.length
+          ? m_sikap_sosial_ditingkatkan_id.toString()
+          : null,
+        m_sikap_spiritual_ditunjukkan_id:
+          m_sikap_spiritual_ditunjukkan_id.length
+            ? m_sikap_spiritual_ditunjukkan_id.toString()
+            : null,
+        m_sikap_spiritual_ditingkatkan_id:
+          m_sikap_spiritual_ditingkatkan_id.length
+            ? m_sikap_spiritual_ditingkatkan_id.toString()
+            : null,
         status: 1,
         dihapus: 0,
       });
@@ -12935,7 +12984,9 @@ class MainController {
 
     const materirombel = await TkMateriRombel.query()
       .with("rombel", (builder) => {
-        builder.with("anggotaRombel");
+        builder.with("anggotaRombel", (builder) => {
+          builder.with("user");
+        });
       })
       .where({ m_materi_id: rekap.m_materi_id })
       .fetch();
@@ -17745,6 +17796,13 @@ class MainController {
       .with("keteranganPkl")
       .with("raporEkskul")
       .with("prestasi")
+      .with("sikap", (builder) => {
+        builder
+          .with("ditingkatkanSosial")
+          .with("ditunjukkanSosial")
+          .with("ditingkatkanSpiritual")
+          .with("ditunjukkanSpiritual");
+      })
       .where({ id: user_id })
       .andWhere({ dihapus: 0 })
       .first();
