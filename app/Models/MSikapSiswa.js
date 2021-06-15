@@ -8,12 +8,31 @@ class MSikapSiswa extends Model {
     return "m_sikap_siswa";
   }
 
-  ditunjukkan() {
-    return this.belongsTo("App/Models/MSikap", "m_sikap_ditunjukkan_id");
+  ditunjukkanSosial() {
+    return this.belongsTo(
+      "App/Models/MSikapSosial",
+      "m_sikap_sosial_ditunjukkan_id"
+    );
   }
 
-  ditingkatkan() {
-    return this.belongsTo("App/Models/MSikap", "m_sikap_ditingkatkan_id");
+  ditingkatkanSosial() {
+    return this.belongsTo(
+      "App/Models/MSikapSosial",
+      "m_sikap_sosial_ditingkatkan_id"
+    );
+  }
+  ditunjukkanSpiritual() {
+    return this.belongsTo(
+      "App/Models/MSikapSpiritual",
+      "m_sikap_spiritual_ditunjukkan_id"
+    );
+  }
+
+  ditingkatkanSpiritual() {
+    return this.belongsTo(
+      "App/Models/MSikapSpiritual",
+      "m_sikap_spiritual_ditingkatkan_id"
+    );
   }
 }
 
