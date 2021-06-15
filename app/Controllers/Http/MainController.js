@@ -12497,7 +12497,12 @@ class MainController {
   }
 
   // ===================== Proyek Pekerjaan Service ===========================
-  async postPekerjaanProyek({ response, request, auth, params: { kategori_id }, }) {
+  async postPekerjaanProyek({
+    response,
+    request,
+    auth,
+    params: { kategori_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -12508,23 +12513,22 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const {
-      judul,
-      prioritas,
-      status,
-      baras_waktu,
-      deskripsi,
-      urutan,
-    } = request.post();
+    const { judul, prioritas, status, batas_waktu, deskripsi, urutan } =
+      request.post();
+
+    const maxUrutan =
+      (await MPekerjaanProyek.query()
+        .where({ m_kategori_pekerjaan_id: kategori_id })
+        .getMax("urutan")) + 1;
 
     await MPekerjaanProyek.create({
       judul,
       prioritas,
       status,
-      baras_waktu,
+      batas_waktu,
       deskripsi,
-      m_kategori_pekerjaan_id:kategori_id,
-      urutan,
+      m_kategori_pekerjaan_id: kategori_id,
+      urutan: maxUrutan,
       dihapus: 0,
     });
 
@@ -12537,8 +12541,7 @@ class MainController {
     response,
     request,
     auth,
-    params: { proyek_id },
-    params: { pekerjaaan_proyek_id },
+    params: { pekerjaan_proyek_id },
   }) {
     const domain = request.headers().origin;
 
@@ -12554,7 +12557,7 @@ class MainController {
       judul,
       prioritas,
       status,
-      baras_waktu,
+      batas_waktu,
       deskripsi,
       m_kategori_pekerjaan_id,
       urutan,
@@ -12562,12 +12565,12 @@ class MainController {
 
     const pekerjaanProyek = await MPekerjaanProyek.query()
       .where({ id: pekerjaan_proyek_id })
-      .andWhere({ m_user_id: user.id })
+      // .andWhere({ m_user_id: user.id }) // Kolom m_user_id tidak ada di table pekerjaan proyek
       .update({
         judul,
         prioritas,
         status,
-        baras_waktu,
+        batas_waktu,
         deskripsi,
         m_kategori_pekerjaan_id,
         urutan,
