@@ -464,6 +464,10 @@ Route.post(
   "/pekerjaan-proyek/:kategori_id",
   "MainController.postPekerjaanProyek"
 );
+Route.put(
+  "/pekerjaan-proyek/:pekerjaan_proyek_id",
+  "MainController.putPekerjaanProyek"
+);
 
 // kategori-pekerjaan
 Route.get("/kategori-pekerjaan", "MainController.getKategoriPekerjaan");
