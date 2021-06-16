@@ -71,6 +71,7 @@ Route.delete("/siswa/:siswa_id", "MainController.deleteSiswa");
 // ppdb
 Route.post("/ppdb/daftar", "MainController.daftarPPDB");
 Route.post("/ppdb/login", "MainController.loginPPDB");
+Route.post("/ppdb/downloadgelombang","MainController.downloadGelombangPPDB")
 
 // alumni
 Route.get("/alumni", "MainController.getAlumni");
