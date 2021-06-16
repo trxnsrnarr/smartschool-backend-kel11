@@ -12487,7 +12487,12 @@ class MainController {
   }
 
   // ===================== Proyek Pekerjaan Service ===========================
-  async postPekerjaanProyek({ response, request, auth, params: { kategori_id }, }) {
+  async postPekerjaanProyek({
+    response,
+    request,
+    auth,
+    params: { kategori_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -12498,14 +12503,8 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const {
-      judul,
-      prioritas,
-      status,
-      baras_waktu,
-      deskripsi,
-      urutan,
-    } = request.post();
+    const { judul, prioritas, status, baras_waktu, deskripsi, urutan } =
+      request.post();
 
     await MPekerjaanProyek.create({
       judul,
@@ -12513,7 +12512,7 @@ class MainController {
       status,
       baras_waktu,
       deskripsi,
-      m_kategori_pekerjaan_id:kategori_id,
+      m_kategori_pekerjaan_id: kategori_id,
       urutan,
       dihapus: 0,
     });
@@ -12785,6 +12784,10 @@ class MainController {
     const sikapsosial = await MSikapSosial.query().fetch();
     const sikapspiritual = await MSikapSpiritual.query().fetch();
 
+    const tugas = await MTugas.query()
+    .where({m__user_id: user.id })
+    .fetch()
+
     const rekap = await MMateri.query()
       .with("jurusan")
       .with("mataPelajaran")
@@ -12829,6 +12832,7 @@ class MainController {
       materirombel,
       sikapsosial,
       sikapspiritual,
+      tugas,
     });
   }
 
@@ -14704,12 +14708,17 @@ class MainController {
       .andWhere({ m_sekolah_id: sekolah.id })
       .first();
 
+    const soal = await MSoalUjian.query().first();
+
+    
     const ujian = await MUjian.query()
       .with("mataPelajaran", (builder) => {
         builder.with("user");
       })
       .with("soalUjian", (builder) => {
-        builder.with("soal").where({ dihapus: 0 });
+        builder
+          .with("soal")
+          .where({ dihapus: 0 });
       })
       .withCount("soalUjian as TotalUjian", (builder) => {
         builder.where({ m_ujian_id: ujian_id });
@@ -15712,7 +15721,7 @@ class MainController {
           ).value = `Rumusan Butir Soal`;
           worksheet2.getCell(
             `E${(idx + 1) * 32 - 17}`
-          ).value = `${d.soal.pertanyaan}`;
+          ).value = `${d.soal.pertanyaan_ascii}`;
           worksheet2.getCell(`H${(idx + 1) * 32 - 19}`).value = `BUKU`;
           worksheet2.getCell(`H${(idx + 1) * 32 - 17}`).value = ``;
           worksheet2.addConditionalFormatting({
@@ -15950,19 +15959,19 @@ class MainController {
           });
           worksheet2.getCell(
             `F${(idx + 1) * 32 - 15}`
-          ).value = `${d.soal.jawaban_a}`;
+          ).value = `${d.soal.jawaban_a_ascii}`;
           worksheet2.getCell(
             `F${(idx + 1) * 32 - 14}`
-          ).value = `${d.soal.jawaban_b}`;
+          ).value = `${d.soal.jawaban_b_ascii}`;
           worksheet2.getCell(
             `F${(idx + 1) * 32 - 13}`
-          ).value = `${d.soal.jawaban_c}`;
+          ).value = `${d.soal.jawaban_c_ascii}`;
           worksheet2.getCell(
             `F${(idx + 1) * 32 - 12}`
-          ).value = `${d.soal.jawaban_d}`;
+          ).value = `${d.soal.jawaban_d_ascii}`;
           worksheet2.getCell(
             `F${(idx + 1) * 32 - 11}`
-          ).value = `${d.soal.jawaban_e}`;
+          ).value = `${d.soal.jawaban_e_ascii}`;
 
           worksheet2.addConditionalFormatting({
             ref: `C${(idx + 1) * 32 - 15}`,
@@ -16535,7 +16544,7 @@ class MainController {
           ).value = `Rumusan Butir Soal`;
           worksheet3.getCell(
             `E${(idx + 1) * 32 - 17}`
-          ).value = `${d.soal.pertanyaan}`;
+          ).value = `${d.soal.pertanyaan_ascii}`;
           worksheet3.getCell(`H${(idx + 1) * 32 - 19}`).value = `BUKU`;
           worksheet3.getCell(`H${(idx + 1) * 32 - 17}`).value = ``;
           worksheet3.addConditionalFormatting({
@@ -16970,15 +16979,15 @@ class MainController {
       properties: { tabColor: { argb: "FFC0000" } },
     });
 
-    worksheet4.getColumn("A").width = 4;
-    worksheet4.getColumn("B").width = 32;
-    worksheet4.getColumn("C").width = 84;
-    worksheet4.getColumn("D").width = 11;
-    worksheet4.getColumn("E").width = 11;
-    worksheet4.getColumn("F").width = 11;
-    worksheet4.getColumn("G").width = 11;
-    worksheet4.getColumn("H").width = 11;
-    worksheet4.getColumn("I").width = 11;
+    // worksheet4.getColumn("A").width = 4;
+    // worksheet4.getColumn("B").width = 32;
+    // worksheet4.getColumn("C").width = 84;
+    // worksheet4.getColumn("D").width = 11;
+    // worksheet4.getColumn("E").width = 11;
+    // worksheet4.getColumn("F").width = 11;
+    // worksheet4.getColumn("G").width = 11;
+    // worksheet4.getColumn("H").width = 11;
+    // worksheet4.getColumn("I").width = 11;
 
     // looping worksheet4
     await Promise.all(
@@ -17017,12 +17026,12 @@ class MainController {
         let row = worksheet4.addRow({
           No: `${idx + 1}`,
           INDIKATOR_SOAL: e.soal ? e.soal.akm_konten_materi : "-",
-          RUMUSAN_BUTIR_SOAL: e.soal ? e.soal.pertanyaan : "-",
-          A: e.soal ? e.soal.jawaban_a : "-",
-          B: e.soal ? e.soal.jawaban_b : "-",
-          C: e.soal ? e.soal.jawaban_c : "-",
-          D: e.soal ? e.soal.jawaban_d : "-",
-          E: e.soal ? e.soal.jawaban_e : "-",
+          RUMUSAN_BUTIR_SOAL: e.soal ? e.soal.pertanyaan_ascii : "-",
+          A: e.soal ? e.soal.jawaban_a_ascii : "-",
+          B: e.soal ? e.soal.jawaban_b_ascii : "-",
+          C: e.soal ? e.soal.jawaban_c_ascii : "-",
+          D: e.soal ? e.soal.jawaban_d_ascii : "-",
+          E: e.soal ? e.soal.jawaban_e_ascii : "-",
           KUNCI_JAWABAN: e.soal ? e.soal.kj_pg : "-",
         });
         // })
@@ -17031,15 +17040,15 @@ class MainController {
     );
 
     // desain Worksheet 4
-    worksheet4.getColumn("A").width = 4;
-    worksheet4.getColumn("B").width = 32;
-    worksheet4.getColumn("C").width = 84;
-    worksheet4.getColumn("D").width = 11;
-    worksheet4.getColumn("E").width = 11;
-    worksheet4.getColumn("F").width = 11;
-    worksheet4.getColumn("G").width = 11;
-    worksheet4.getColumn("H").width = 11;
-    worksheet4.getColumn("I").width = 11;
+    // worksheet4.getColumn("A").width = 4;
+    // worksheet4.getColumn("B").width = 32;
+    // worksheet4.getColumn("C").width = 84;
+    // worksheet4.getColumn("D").width = 11;
+    // worksheet4.getColumn("E").width = 11;
+    // worksheet4.getColumn("F").width = 11;
+    // worksheet4.getColumn("G").width = 11;
+    // worksheet4.getColumn("H").width = 11;
+    // worksheet4.getColumn("I").width = 11;
     worksheet4.mergeCells("A1:I1");
     worksheet4.mergeCells("A2:I2");
     worksheet4.mergeCells("A3:I3");
@@ -17050,6 +17059,28 @@ class MainController {
     worksheet4.mergeCells("C6:C7");
     worksheet4.mergeCells("D6:H6");
     worksheet4.mergeCells("I6:I7");
+    worksheet4.addConditionalFormatting({
+      ref: "C8:I57",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+            alignment: {
+              wrapText: true,
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
 
     worksheet4.addConditionalFormatting({
       ref: "A1:A4",
@@ -17085,7 +17116,7 @@ class MainController {
       ],
     });
     worksheet4.getCell("A1").value = `RUMUSAN BUTIR SOAL`;
-    worksheet4.getCell("A2").value = `${ujian.tipe_format}`;
+    worksheet4.getCell("A2").value = `${ujian.toJSON().tipe_format}`;
     worksheet4.getCell("A3").value = `${sekolah.nama}`;
     worksheet4.getCell("A4").value = `${ta.tahun}`;
     worksheet4.getCell("A5").fill = {
@@ -17198,15 +17229,15 @@ class MainController {
       ],
     };
 
-    worksheet4.getColumn("A").width = 4;
-    worksheet4.getColumn("B").width = 32;
-    worksheet4.getColumn("C").width = 84;
-    worksheet4.getColumn("D").width = 11;
-    worksheet4.getColumn("E").width = 11;
-    worksheet4.getColumn("F").width = 11;
-    worksheet4.getColumn("G").width = 11;
-    worksheet4.getColumn("H").width = 11;
-    worksheet4.getColumn("I").width = 11;
+    // worksheet4.getColumn("A").width = 4;
+    // worksheet4.getColumn("B").width = 32;
+    // worksheet4.getColumn("C").width = 84;
+    // worksheet4.getColumn("D").width = 11;
+    // worksheet4.getColumn("E").width = 11;
+    // worksheet4.getColumn("F").width = 11;
+    // worksheet4.getColumn("G").width = 11;
+    // worksheet4.getColumn("H").width = 11;
+    // worksheet4.getColumn("I").width = 11;
 
     let worksheet5 = workbook.addWorksheet(`Naskah Soal`, {
       properties: { tabColor: { argb: "FFC0000" } },
@@ -17242,7 +17273,7 @@ class MainController {
             color: { argb: "000000" },
             bold: true,
           },
-          text: `${ujian.tipe_format}`,
+          text: `${ujian.toJSON().tipe_format}`,
         },
       ],
     };
@@ -17256,7 +17287,7 @@ class MainController {
             color: { argb: "000000" },
             bold: true,
           },
-          text: `${ujian.toJSON().tipe_format}`,
+          text: `${sekolah.toJSON().tingkat_format}`,
         },
       ],
     };
@@ -17608,41 +17639,188 @@ class MainController {
     // looping worksheet 5
     await Promise.all(
       ujian.toJSON().soalUjian.map(async (e, idx) => {
-        // , pertanyaan, a, b, c, d, f
+        // worksheet5.mergeCells(`B${(idx + 1) * 7 + 15}:L${(idx + 1) * 7 + 15}`);
+        worksheet5.addConditionalFormatting({
+          ref: `B${(idx + 1) * 7 + 15}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                alignment: {
+                  wrapText: true,
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                font: {
+                  name: "Arial",
+                  family: 4,
+                  size: 12,
+                  color: { argb: "000000" },
+                  // italic: true,
+                },
+              },
+            },
+          ],
+        });
+        worksheet5.addConditionalFormatting({
+          ref: `C${(idx + 1) * 7 + 16}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                alignment: {
+                  wrapText: true,
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                font: {
+                  name: "Arial",
+                  family: 4,
+                  size: 11,
+                  color: { argb: "000000" },
+                  // italic: true,
+                },
+              },
+            },
+          ],
+        });
+        worksheet5.addConditionalFormatting({
+          ref: `B${(idx + 1) * 7 + 17}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                alignment: {
+                  wrapText: true,
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                font: {
+                  name: "Arial",
+                  family: 4,
+                  size: 11,
+                  color: { argb: "000000" },
+                  // italic: true,
+                },
+              },
+            },
+          ],
+        });
+        worksheet5.addConditionalFormatting({
+          ref: `B${(idx + 1) * 7 + 18}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                alignment: {
+                  wrapText: true,
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                font: {
+                  name: "Arial",
+                  family: 4,
+                  size: 11,
+                  color: { argb: "000000" },
+                  // italic: true,
+                },
+              },
+            },
+          ],
+        });
+        worksheet5.addConditionalFormatting({
+          ref: `B${(idx + 1) * 7 + 19}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                alignment: {
+                  wrapText: true,
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                font: {
+                  name: "Arial",
+                  family: 4,
+                  size: 11,
+                  color: { argb: "000000" },
+                  // italic: true,
+                },
+              },
+            },
+          ],
+        });
+        // , pertanyaan, a, b, c, d,
+        worksheet5.addConditionalFormatting({
+          ref: `B${(idx + 1) * 7 + 20}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                alignment: {
+                  wrapText: true,
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                font: {
+                  name: "Arial",
+                  family: 4,
+                  size: 11,
+                  color: { argb: "000000" },
+                  // italic: true,
+                },
+              },
+            },
+          ],
+        });
+
         // await Promise.all(
         //   d.soal.map(async (e, idx) => {
         // add column headers
         // pertanyaan = 0;pertanyaan > 22;pertanyaan + 7;a = 0;a > 23;a + 7;b = 0;b > 24;b + 7;c = 0;c > 25;c + 7;d = 0;d > 26;d + 7;e = 0;e > 27;
         worksheet5.getRow(`${(idx + 1) * 7 + 15}`).values = [
           `${idx + 1}`,
-          `${e.soal ? e.soal.pertanyaan : "-"}`,
+          `${e.soal ? e.soal.pertanyaan_ascii : "-"}`,
         ];
 
         worksheet5.getRow(`${(idx + 1) * 7 + 16}`).values = [
           "",
           "A",
-          `${e.soal ? e.soal.jawaban_a : "-"}`,
+          `${e.soal ? e.soal.jawaban_a_ascii : "-"}`,
         ];
         worksheet5.getRow(`${(idx + 1) * 7 + 17}`).values = [
           "",
           "B",
-          `${e.soal ? e.soal.jawaban_b : "-"}`,
+          `${e.soal ? e.soal.jawaban_b_ascii : "-"}`,
         ];
         worksheet5.getRow(`${(idx + 1) * 7 + 18}`).values = [
           "",
           "C",
-          `${e.soal ? e.soal.jawaban_c : "-"}`,
+          `${e.soal ? e.soal.jawaban_c_ascii : "-"}`,
         ];
         worksheet5.getRow(`${(idx + 1) * 7 + 19}`).values = [
           "",
           "D",
-          `${e.soal ? e.soal.jawaban_d : "-"}`,
+          `${e.soal ? e.soal.jawaban_d_ascii : "-"}`,
         ];
         worksheet5.getRow(`${(idx + 1) * 7 + 20}`).values = [
           "",
           "E",
-          `${e.soal ? e.soal.jawaban_e : "-"}`,
+          `${e.soal ? e.soal.jawaban_e_ascii : "-"}`,
         ];
+
+        worksheet5.mergeCells(`B${(idx + 1) * 7 + 15}:L${(idx + 1) * 7 + 15}`);
+        worksheet5.mergeCells(`C${(idx + 1) * 7 + 16}:L${(idx + 1) * 7 + 16}`);
+        worksheet5.mergeCells(`C${(idx + 1) * 7 + 17}:L${(idx + 1) * 7 + 17}`);
+        worksheet5.mergeCells(`C${(idx + 1) * 7 + 18}:L${(idx + 1) * 7 + 18}`);
+        worksheet5.mergeCells(`C${(idx + 1) * 7 + 19}:L${(idx + 1) * 7 + 19}`);
+        worksheet5.mergeCells(`C${(idx + 1) * 7 + 20}:L${(idx + 1) * 7 + 20}`);
       })
     );
 
