@@ -11,6 +11,17 @@ class MSekolah extends Model {
   informasi() {
     return this.hasOne("App/Models/MInformasiSekolah");
   }
+  static get computed() {
+    return ["tingkat_format"];
+  }
+
+  getTingkatFormat({ tingkat }) {
+    if (tingkat == "SMK") return "Sekolah Menengah Kejuruan";
+    else if (tingkat == "SMA") return "Sekolah Menengah Atas";
+    else if (tingkat == "SMP") return "Sekolah Menengah Pertama";
+    else if (tingkat == "SD") return "Sekolah Dasar";
+    else if (tingkat == "TK") return "Taman Kanak Kanak";
+  }
 }
 
 module.exports = MSekolah;
