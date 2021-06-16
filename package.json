@@ -37,6 +37,7 @@
     "moment": "^2.29.1",
     "mysql": "^2.18.1",
     "node-fetch": "^2.6.1",
+    "nodejs-file-downloader": "^4.6.0",
     "pdf-image": "^2.0.0",
     "pdf-parse": "^1.1.1",
     "pdf-to-base64": "^1.0.3",
