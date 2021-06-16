@@ -12997,6 +12997,10 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .first();
 
+      const tugas = await MTugas.query()
+    .where({m_user_id: user.id })
+    .fetch()
+
     const materirombel = await TkMateriRombel.query()
       .with("rombel", (builder) => {
         builder.with("anggotaRombel", (builder) => {
@@ -13009,6 +13013,7 @@ class MainController {
     return response.ok({
       rekap,
       materirombel,
+      tugas,
     });
   }
 
@@ -14745,6 +14750,16 @@ class MainController {
 
     let worksheet = workbook.addWorksheet(`KISI-KISI`, {
       properties: { tabColor: { argb: "FFC0000" } },
+    });
+
+    const imageId1 = workbook.addImage({
+      filename: 'public/images/smkn-26.png',
+      extension: 'png',
+    });
+    // worksheet.addImage(imageId1, 'B1:B3');
+    worksheet.addImage(imageId1, {
+      tl: { col: 1.5, row: 0.1 },
+      ext: { width: 100, height: 60 }
     });
 
     // looping worksheet
@@ -18407,5 +18422,97 @@ class MainController {
       message: messagePutSuccess,
     });
   }
+
+  async downloadGelombangPPDB({ response, request }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const alumni = await MAlumni.query()
+      .with("user", (builder) => {
+        builder.where({ m_sekolah_id: sekolah.id });
+      })
+      .where({ dihapus: 0 })
+      .fetch();
+
+    let workbook = new Excel.Workbook();
+    let worksheet = workbook.addWorksheet(`Daftar Alumni`);
+
+    await Promise.all(
+      alumni.toJSON().map(async (d, idx) => {
+        worksheet.getCell("A1").value = "Rekap Alumni";
+        worksheet.getCell("A2").value = sekolah.nama;
+
+        // add column headers
+        worksheet.getRow(4).values = [
+          "No",
+          "Nama",
+          "Whatsapp",
+          "Email",
+          "Jenis Kelamin",
+          "Tempat Lahir",
+          "Tanggal Lahir",
+          "Tahun Masuk",
+          "Pekerjaan",
+          "Kantor",
+          "Sektor Industri",
+          "Sekolah Lanjutan",
+          "Pengalaman",
+          "Sertifikasi Keahlian",
+          "Purnakarya",
+          "Deskripsi",
+        ];
+        worksheet.columns = [
+          { key: "no" },
+          { key: "nama" },
+          { key: "whatsapp" },
+          { key: "email" },
+          { key: "jeniskelamin" },
+          { key: "tempat_lahir" },
+          { key: "tanggal_lahir" },
+          { key: "tahun_masuk" },
+          { key: "pekerjaan" },
+          { key: "kantor" },
+          { key: "sektor_industri" },
+          { key: "sekolah_lanjutan" },
+          { key: "pengalaman" },
+          { key: "sertifikasi_keahlian" },
+          { key: "purnakarya" },
+          { key: "deskripsi" },
+        ];
+
+        // Add row using key mapping to columns
+        let row = worksheet.addRow({
+          no: `${idx + 1}`,
+          nama: d.user ? d.user.nama : "-",
+          whatsapp: d.user ? d.user.whatsapp : "-",
+          email: d.user ? d.user.email : "-",
+          jeniskelamnin: d.user ? d.user.gender : "-",
+          tempat_lahir: d.user ? d.user.tempat_lahir : "-",
+          tanggal_lahir: d.user ? d.user.tanggal_lahir : "-",
+          tahun_masuk: d ? d.tahun_masuk : "-",
+          pekerjaan: d ? d.pekerjaan : "-",
+          kantor: d ? d.kantor : "-",
+          sektor_industri: d ? d.sektor_industri : "-",
+          sekolah_lanjutan: d ? d.sekolah_lanjutan : "-",
+          pengalaman: d ? d.pengalaman : "-",
+          sertifikasi_keahlian: d ? d.sertifikasi_keahlian : "-",
+          purnakarya: d ? d.purnakarya : "-",
+          deskripsi: d ? d.deskripsi : "-",
+        });
+      })
+    );
+    let namaFile = `/uploads/rekap-Alumni.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
+
 }
 module.exports = MainController;
