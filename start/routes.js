@@ -71,7 +71,7 @@ Route.delete("/siswa/:siswa_id", "MainController.deleteSiswa");
 // ppdb
 Route.post("/ppdb/daftar", "MainController.daftarPPDB");
 Route.post("/ppdb/login", "MainController.loginPPDB");
-Route.post("/ppdb/downloadgelombang","MainController.downloadGelombangPPDB")
+Route.post("/ppdb/downloadgelombang", "MainController.downloadGelombangPPDB");
 
 // alumni
 Route.get("/alumni", "MainController.getAlumni");
@@ -491,8 +491,9 @@ Route.post(
 );
 Route.put("/rekap/:materi_id/:rekap_id", "MainController.putRekap");
 Route.delete("/rekap/:materi_id/:rekap_id", "MainController.deleteRekap");
+// Route.get("/rekap/:materi_id/:rekap_id", "MainController.detailRekapNilai");
 Route.get(
-  "/rekap/:materi_id/:rekapnilai_id",
+  "/rekap/:materi_id/:rekap_id/:rombel_id",
   "MainController.detailRekapNilai"
 );
 Route.post(
