@@ -12052,13 +12052,23 @@ class MainController {
   }
 
   async getUser({ response, request, auth }) {
-    const { page } = request.get();
+    const { page, name } = request.get();
 
-    const user = await User.query()
-      .with("sekolah")
-      .where({ dihapus: 0 })
-      .andWhereNot({ role: "admin" })
-      .paginate(page);
+    let user;
+    if (name) {
+      user = await User.query()
+        .with("sekolah")
+        .where({ dihapus: 0 })
+        .where("nama", "like", `%${name}%`)
+        .andWhereNot({ role: "admin" })
+        .paginate(page);
+    } else {
+      user = await User.query()
+        .with("sekolah")
+        .where({ dihapus: 0 })
+        .andWhereNot({ role: "admin" })
+        .paginate(page);
+    }
 
     return response.ok({
       user: user,
@@ -12503,17 +12513,22 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { judul, prioritas, status, baras_waktu, deskripsi, urutan } =
+    const { judul, prioritas, status, batas_waktu, deskripsi, urutan } =
       request.post();
+
+    const maxUrutan =
+      (await MPekerjaanProyek.query()
+        .where({ m_kategori_pekerjaan_id: kategori_id })
+        .getMax("urutan")) + 1;
 
     await MPekerjaanProyek.create({
       judul,
       prioritas,
       status,
-      baras_waktu,
+      batas_waktu,
       deskripsi,
       m_kategori_pekerjaan_id: kategori_id,
-      urutan,
+      urutan: maxUrutan,
       dihapus: 0,
     });
 
@@ -12526,8 +12541,7 @@ class MainController {
     response,
     request,
     auth,
-    params: { proyek_id },
-    params: { pekerjaaan_proyek_id },
+    params: { pekerjaan_proyek_id },
   }) {
     const domain = request.headers().origin;
 
@@ -12543,7 +12557,7 @@ class MainController {
       judul,
       prioritas,
       status,
-      baras_waktu,
+      batas_waktu,
       deskripsi,
       m_kategori_pekerjaan_id,
       urutan,
@@ -12551,12 +12565,12 @@ class MainController {
 
     const pekerjaanProyek = await MPekerjaanProyek.query()
       .where({ id: pekerjaan_proyek_id })
-      .andWhere({ m_user_id: user.id })
+      // .andWhere({ m_user_id: user.id }) // Kolom m_user_id tidak ada di table pekerjaan proyek
       .update({
         judul,
         prioritas,
         status,
-        baras_waktu,
+        batas_waktu,
         deskripsi,
         m_kategori_pekerjaan_id,
         urutan,
@@ -12785,7 +12799,7 @@ class MainController {
     const sikapspiritual = await MSikapSpiritual.query().fetch();
 
     const tugas = await MTugas.query()
-    .where({m__user_id: user.id })
+    .where({m_user_id: user.id })
     .fetch()
 
     const rekap = await MMateri.query()
