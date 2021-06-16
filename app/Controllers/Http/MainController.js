@@ -101,6 +101,8 @@ const WordExtractor = require("word-extractor");
 const AdonisGCS = require("adonis-google-cloud-storage");
 const uuid = require("uuid-v4");
 const pdftohtml = require("pdftohtmljs");
+const http = require("http"); // or 'https' for https:// URLs
+const Downloader = require("nodejs-file-downloader");
 
 const PDFDocument = require("pdfkit");
 const fs = require("fs");
@@ -12798,9 +12800,7 @@ class MainController {
     const sikapsosial = await MSikapSosial.query().fetch();
     const sikapspiritual = await MSikapSpiritual.query().fetch();
 
-    const tugas = await MTugas.query()
-    .where({m_user_id: user.id })
-    .fetch()
+    const tugas = await MTugas.query().where({ m_user_id: user.id }).fetch();
 
     const rekap = await MMateri.query()
       .with("jurusan")
@@ -12969,7 +12969,9 @@ class MainController {
     response,
     request,
     auth,
-    params: { rekapnilai_id },
+    params: { rekap_id },
+    params: { rombel_id },
+    params: { materi_id },
   }) {
     const domain = request.headers().origin;
 
@@ -12980,26 +12982,7 @@ class MainController {
     }
 
     const user = await auth.getUser();
-
-    const rekap = await MRekap.query()
-      .with("rekaprombel", (builder) => {
-        builder
-          .with("rekapnilai", (builder) => {
-            builder.with("user");
-          })
-          .with("tugas")
-          .where({ dihapus: 0 });
-      })
-      .with("materi", (builder) => {
-        builder.with("mataPelajaran");
-      })
-      .where({ id: rekapnilai_id })
-      .andWhere({ dihapus: 0 })
-      .first();
-
-      const tugas = await MTugas.query()
-    .where({m_user_id: user.id })
-    .fetch()
+    // const { rombel_id } = request.post();
 
     const materirombel = await TkMateriRombel.query()
       .with("rombel", (builder) => {
@@ -13007,12 +12990,35 @@ class MainController {
           builder.with("user");
         });
       })
-      .where({ m_materi_id: rekap.m_materi_id })
+      .where({ m_materi_id: materi_id })
       .fetch();
 
+    // const rekap = await Promise.all(
+    //   materirombel.toJSON().map(async (d) => {
+    await MRekap.query()
+      .with("rekaprombel", (builder) => {
+        builder
+          .with("rekapnilai", (builder) => {
+            builder.with("user");
+          })
+          .with("tugas")
+          .where({ dihapus: 0 })
+          .andWhere({ m_rombel_id: rombel_id });
+      })
+      .with("materi", (builder) => {
+        builder.with("mataPelajaran");
+      })
+      .where({ id: rekap_id })
+      .andWhere({ dihapus: 0 })
+      .first();
+    //   })
+    // );
+
+    const tugas = await MTugas.query().where({ m_user_id: user.id }).fetch();
+
     return response.ok({
-      rekap,
       materirombel,
+      rekap,
       tugas,
     });
   }
@@ -14727,17 +14733,12 @@ class MainController {
       .andWhere({ m_sekolah_id: sekolah.id })
       .first();
 
-    const soal = await MSoalUjian.query().first();
-
-    
     const ujian = await MUjian.query()
       .with("mataPelajaran", (builder) => {
         builder.with("user");
       })
       .with("soalUjian", (builder) => {
-        builder
-          .with("soal")
-          .where({ dihapus: 0 });
+        builder.with("soal").where({ dihapus: 0 });
       })
       .withCount("soalUjian as TotalUjian", (builder) => {
         builder.where({ m_ujian_id: ujian_id });
@@ -14746,6 +14747,26 @@ class MainController {
       .andWhere({ id: ujian_id })
       .first();
 
+    // const file = fs.createWriteStream("file.jpg");
+    // const request = http.get(`${sekolah.logo}`, function (response) {
+    //   response.pipe(file);
+    // });
+
+    (async () => {
+      const downloader = new Downloader({
+        url: `${sekolah.logo}`,
+        directory: "./public/images/", //Sub directories will also be automatically created if they do not exist.
+        fileName: "logo.png",
+        cloneFiles: false,
+      });
+
+      try {
+        await downloader.download();
+      } catch (error) {
+        console.log(error);
+      }
+    })();
+
     let workbook = new Excel.Workbook();
 
     let worksheet = workbook.addWorksheet(`KISI-KISI`, {
@@ -14753,13 +14774,13 @@ class MainController {
     });
 
     const imageId1 = workbook.addImage({
-      filename: 'public/images/smkn-26.png',
-      extension: 'png',
+      filename: "public/images/logo.png",
+      extension: "png",
     });
     // worksheet.addImage(imageId1, 'B1:B3');
     worksheet.addImage(imageId1, {
       tl: { col: 1.5, row: 0.1 },
-      ext: { width: 100, height: 60 }
+      ext: { width: 100, height: 60 },
     });
 
     // looping worksheet
@@ -15520,6 +15541,8 @@ class MainController {
             `F${(idx + 1) * 32 - 11}:G${(idx + 1) * 32 - 11}`
           ); //21
 
+          worksheet2.addImage(imageId1, "B2:C5");
+
           worksheet2.getCell(`B${(idx + 1) * 32 - 30}`).value = {
             richText: [
               {
@@ -15725,7 +15748,7 @@ class MainController {
           worksheet2.getCell(`H${(idx + 1) * 32 - 21}`).value = `Aspek (Level)`;
           worksheet2.getCell(
             `H${(idx + 1) * 32 - 20}`
-          ).value = `${d.soal.level_kognitif}`;
+          ).value = `${d.soal.aspek_level}`;
           worksheet2.getCell(
             `B${(idx + 1) * 32 - 19}`
           ).value = `Indikator Soal`;
@@ -17007,6 +17030,15 @@ class MainController {
     let worksheet4 = workbook.addWorksheet(`Rumusan Soal`, {
       properties: { tabColor: { argb: "FFC0000" } },
     });
+    worksheet4.getColumn("A").width = 4;
+    worksheet4.getColumn("B").width = 32;
+    worksheet4.getColumn("C").width = 84;
+    worksheet4.getColumn("D").width = 11;
+    worksheet4.getColumn("E").width = 11;
+    worksheet4.getColumn("F").width = 11;
+    worksheet4.getColumn("G").width = 11;
+    worksheet4.getColumn("H").width = 11;
+    worksheet4.getColumn("I").width = 11;
 
     // worksheet4.getColumn("A").width = 4;
     // worksheet4.getColumn("B").width = 32;
@@ -17021,10 +17053,6 @@ class MainController {
     // looping worksheet4
     await Promise.all(
       ujian.toJSON().soalUjian.map(async (e, idx) => {
-        // await Promise.all(
-        //   d.soal.map(async (e, idx) => {
-        // add column headers
-
         worksheet4.getRow(6).values = [
           "NO",
           "INDIKATOR SOAL",
@@ -17067,6 +17095,10 @@ class MainController {
         // );
       })
     );
+    worksheet4.addImage(imageId1, {
+      tl: { col: 1, row: 0.5 },
+      ext: { width: 100, height: 60 },
+    });
 
     // desain Worksheet 4
     // worksheet4.getColumn("A").width = 4;
@@ -17666,6 +17698,10 @@ class MainController {
     });
 
     // looping worksheet 5
+    worksheet5.addImage(imageId1, {
+      tl: { col: 1, row: 0.5 },
+      ext: { width: 100, height: 60 },
+    });
     await Promise.all(
       ujian.toJSON().soalUjian.map(async (e, idx) => {
         // worksheet5.mergeCells(`B${(idx + 1) * 7 + 15}:L${(idx + 1) * 7 + 15}`);
@@ -18432,87 +18468,122 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const alumni = await MAlumni.query()
-      .with("user", (builder) => {
-        builder.where({ m_sekolah_id: sekolah.id });
+    const ta = await this.getTAAktif(sekolah);
+
+    const gelombang = await MGelombangPpdb.query()
+      .with("pendaftar", (builder) => {
+        builder.with("user");
       })
       .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
       .fetch();
 
+    // return gelombang;
+
     let workbook = new Excel.Workbook();
-    let worksheet = workbook.addWorksheet(`Daftar Alumni`);
 
     await Promise.all(
-      alumni.toJSON().map(async (d, idx) => {
-        worksheet.getCell("A1").value = "Rekap Alumni";
+      gelombang.toJSON().map(async (d, idx) => {
+        let worksheet = workbook.addWorksheet(`${idx + 1}.${d.nama}`);
+        worksheet.getCell("A1").value = d.nama;
         worksheet.getCell("A2").value = sekolah.nama;
-
-        // add column headers
-        worksheet.getRow(4).values = [
-          "No",
-          "Nama",
-          "Whatsapp",
-          "Email",
-          "Jenis Kelamin",
-          "Tempat Lahir",
-          "Tanggal Lahir",
-          "Tahun Masuk",
-          "Pekerjaan",
-          "Kantor",
-          "Sektor Industri",
-          "Sekolah Lanjutan",
-          "Pengalaman",
-          "Sertifikasi Keahlian",
-          "Purnakarya",
-          "Deskripsi",
-        ];
-        worksheet.columns = [
-          { key: "no" },
-          { key: "nama" },
-          { key: "whatsapp" },
-          { key: "email" },
-          { key: "jeniskelamin" },
-          { key: "tempat_lahir" },
-          { key: "tanggal_lahir" },
-          { key: "tahun_masuk" },
-          { key: "pekerjaan" },
-          { key: "kantor" },
-          { key: "sektor_industri" },
-          { key: "sekolah_lanjutan" },
-          { key: "pengalaman" },
-          { key: "sertifikasi_keahlian" },
-          { key: "purnakarya" },
-          { key: "deskripsi" },
-        ];
-
-        // Add row using key mapping to columns
-        let row = worksheet.addRow({
-          no: `${idx + 1}`,
-          nama: d.user ? d.user.nama : "-",
-          whatsapp: d.user ? d.user.whatsapp : "-",
-          email: d.user ? d.user.email : "-",
-          jeniskelamnin: d.user ? d.user.gender : "-",
-          tempat_lahir: d.user ? d.user.tempat_lahir : "-",
-          tanggal_lahir: d.user ? d.user.tanggal_lahir : "-",
-          tahun_masuk: d ? d.tahun_masuk : "-",
-          pekerjaan: d ? d.pekerjaan : "-",
-          kantor: d ? d.kantor : "-",
-          sektor_industri: d ? d.sektor_industri : "-",
-          sekolah_lanjutan: d ? d.sekolah_lanjutan : "-",
-          pengalaman: d ? d.pengalaman : "-",
-          sertifikasi_keahlian: d ? d.sertifikasi_keahlian : "-",
-          purnakarya: d ? d.purnakarya : "-",
-          deskripsi: d ? d.deskripsi : "-",
+        worksheet.getCell("A3").value = ta.tahun;
+        worksheet.getCell("A5").value = `dibuka : ${d.waktuawal}`;
+        worksheet.getCell("A6").value = `ditutup : ${d.waktuakhir}`;
+        worksheet.getCell("A7").value = `Keterangan : ${d.keterangan}`;
+        worksheet.mergeCells(`A1:I1`);
+        worksheet.mergeCells(`A2:I2`);
+        worksheet.mergeCells(`A3:I3`);
+        worksheet.mergeCells(`A5:I5`);
+        worksheet.mergeCells(`A6:I6`);
+        worksheet.mergeCells(`A7:I7`);
+        worksheet.getColumn("A").width = 28;
+        worksheet.getColumn("B").width = 14;
+        worksheet.getColumn("C").width = 8;
+        worksheet.getColumn("D").width = 8.5;
+        worksheet.getColumn("E").width = 9;
+        worksheet.getColumn("F").width = 14;
+        worksheet.getColumn("G").width = 10;
+        worksheet.getColumn("H").width = 8;
+        worksheet.getColumn("I").width = 11;
+        worksheet.addConditionalFormatting({
+          ref: "A1:I3",
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 14,
+                  bold: true,
+                },
+                // fill: {
+                //   type: "pattern",
+                //   pattern: "solid",
+                //   bgColor: { argb: "0000FF", fgColor: { argb: "0000FF" } },
+                // },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+              },
+            },
+          ],
         });
+
+        await Promise.all(
+          d.pendaftar.map(async (anggota) => {
+            // add column headers
+            worksheet.getRow(9).values = [
+              "Nama",
+              "Whatsapp",
+              "Gender",
+              "Bank",
+              "Norek",
+              "Nama Pemilih",
+              "Nominal",
+              "Bukti",
+              "Diverifikasi",
+            ];
+
+            worksheet.columns = [
+              { key: "user" },
+              { key: "whatsapp" },
+              { key: "gender" },
+              { key: "bank" },
+              { key: "norek" },
+              { key: "nama_pemilik" },
+              { key: "nominal" },
+              { key: "bukti" },
+              { key: "diverifikasi" },
+            ];
+
+            // Add row using key mapping to columns
+            let row = worksheet.addRow({
+              user: anggota.user ? anggota.user.nama : "-",
+              whatsapp: anggota.user ? anggota.user.whatsapp : "-",
+              gender: anggota.user ? anggota.user.gender : "-",
+              bank: anggota ? anggota.bank : "-",
+              norek: anggota ? anggota.norek : "-",
+              nama_pemilik: anggota ? anggota.nama_pemilik : "-",
+              nominal: anggota ? anggota.nominal : "-",
+              bukti: anggota ? anggota.bukti : "-",
+              diverifikasi: anggota ? anggota.diverifikasi : "-",
+            });
+          })
+        );
       })
     );
-    let namaFile = `/uploads/rekap-Alumni.xlsx`;
+
+    let namaFile = `/uploads/rekap-Gelombang PPDB.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
 
     return namaFile;
   }
-
 }
 module.exports = MainController;
