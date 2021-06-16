@@ -57,8 +57,13 @@ class MSoalUjian extends Model {
   }
   
     static get computed() {
-    return ["pertanyaan_ascii","jawaban_a_ascii","jawaban_b_ascii","jawaban_c_ascii","jawaban_d_ascii","jawaban_e_ascii"];
+    return ["pertanyaan_ascii","jawaban_a_ascii","jawaban_b_ascii","jawaban_c_ascii","jawaban_d_ascii","jawaban_e_ascii","aspek_level"];
   }
+
+  getAspekLevel({level_kognitif}) {
+    return level_kognitif ? level_kognitif.toUpperCase() : "";
+  }
+
   getPertanyaanAscii({pertanyaan}) {
     var regex = /(<([^>]+)>)/ig,
       body = pertanyaan ,
