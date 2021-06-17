@@ -13083,6 +13083,22 @@ class MainController {
       .where({ m_tugas_id: 172 })
       .fetch();
 
+    const datatugas = await MRombel.query()
+      .with("anggotaRombel", (builder) => {
+        builder.with("user", (builder) => {
+          builder.select("id", "nama").with("tugas", (builder) => {
+            builder
+              .select("id", "nilai", "m_user_id", "m_timeline_id")
+              .with("user", (builder) => {
+                builder.select("id", "nama");
+              })
+              .whereNotNull("nilai");
+          });
+        });
+      })
+      .where({ id: m_rombel_id })
+      .fetch();
+
     // // const rekap = await Promise.all(
     // //   materirombel.toJSON().map(async (d) => {
     // const rekap = await MRekap.query()
@@ -13116,6 +13132,7 @@ class MainController {
     const tugas = await MTugas.query().where({ m_user_id: user.id }).fetch();
 
     return response.ok({
+      datatugas,
       materirombel,
       // rekap,
       tugas,
@@ -13195,6 +13212,49 @@ class MainController {
       })
       .where({ id: m_rombel_id })
       .fetch();
+
+    // const tugasdata = await MRombel.query()
+    //   .with("anggotaRombel", (builder) => {
+    //     builder.with("user", (builder) => {
+    //       builder.select("id", "nama").with("tugas", (builder) => {
+    //         builder
+    //           .select("id", "nilai", "m_user_id", "m_timeline_id")
+    //           .with("user", (builder) => {
+    //             builder.select("id", "nama");
+    //           })
+    //           .whereNotNull("nilai");
+    //       });
+    //     });
+    //   })
+    //   .where({ id: m_rombel_id })
+    //   .fetch();
+
+    // if (tugasdata) {
+    //   const all = await Promise.all(
+    //     data.toJSON().map(async (d) => {
+    //       await Promise.all(
+    //         d.anggotaRombel.map(async (e) => {
+    //           const tugasdata = await MTimeline.query()
+    //             .select("id", "m_tugas_id", "m_rombel_id", "m_user_id")
+    //             .with("listSiswaDinilai", (builder) => {
+    //               builder
+    //                 .select("id", "nilai", "m_user_id", "m_timeline_id")
+    //                 .whereNotNull("nilai")
+    //                 .andWhere({ m_user_id: e.m_user_id });
+    //             })
+    //             .where({ m_tugas_id: m_tugas_id })
+    //             .fetch();
+
+    //           await TkRekapNilai.create({
+    //             m_user_id: e.m_user_id,
+    //             nilai: tugasdata.lisSiswaDinilai.nilai,
+    //             m_rekap_rombel_id: `${rekap.id}`,
+    //           });
+    //         })
+    //       );
+    //     })
+    //   );
+    // }
 
     const all = await Promise.all(
       data.toJSON().map(async (d) => {
