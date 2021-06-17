@@ -12,7 +12,7 @@ class MNotifikasiSchema extends Schema {
       table.text("isi");
       table.datetime("tanggal_dibuat");
       table.boolean("dibaca");
-      table.boolean("dihapus");
+      table.boolean("dihapus").defaultTo(0);
       table.integer("m_user_id").unsigned().index("m_user_id");
       table
         .foreign("m_user_id")

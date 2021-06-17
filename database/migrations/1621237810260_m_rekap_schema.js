@@ -15,7 +15,8 @@ class MRekapSchema extends Schema {
         .references("m_materi.id")
         .onDelete("cascade")
         .onUpdate("cascade");
-      table.boolean("dihapus");
+      table.string("teknik");
+      table.boolean("dihapus").defaultTo(0);
       table.timestamps();
     });
   }

@@ -21,7 +21,7 @@ class MGuruJurusanSchema extends Schema {
         .references("m_user.id")
         .onDelete("cascade")
         .onUpdate("cascade");
-      table.boolean("dihapus");
+      table.boolean("dihapus").defaultTo(0);
       table.timestamps();
     });
   }

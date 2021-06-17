@@ -7,7 +7,7 @@ class TkPerpusBacaSchema extends Schema {
   up() {
     this.create("tk_perpus_aktivitas", (table) => {
       table.increments();
-      table.boolean("dihapus");
+      table.boolean("dihapus").defaultTo(0);
       table.integer("m_user_id").unsigned().index("m_user_id");
       table
         .foreign("m_user_id")

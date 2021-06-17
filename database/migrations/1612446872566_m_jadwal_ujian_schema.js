@@ -16,7 +16,7 @@ class MJadwalUjianSchema extends Schema {
       table.integer("durasi");
       table.string("gmeet");
       table.boolean("diacak");
-      table.boolean("dihapus");
+      table.boolean("dihapus").defaultTo(0);
       table.integer("m_ujian_id").unsigned().index("m_ujian_id");
       table
         .foreign("m_ujian_id")

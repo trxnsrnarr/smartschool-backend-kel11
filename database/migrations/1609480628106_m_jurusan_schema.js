@@ -15,10 +15,14 @@ class MJurusanSchema extends Schema {
       table.integer("mpls_jas_almamater");
       table.integer("seragam_sekolah");
       table.integer("toolkit_praktek");
-      table.integer("m_sekolah_id").unsigned().index('m_sekolah_id');
-      table.foreign('m_sekolah_id').references('m_sekolah.id').onDelete('cascade').onUpdate('cascade')
+      table.integer("m_sekolah_id").unsigned().index("m_sekolah_id");
+      table
+        .foreign("m_sekolah_id")
+        .references("m_sekolah.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
       table.boolean("alumni");
-      table.boolean("dihapus");
+      table.boolean("dihapus").defaultTo(0);
       table.timestamps();
     });
   }

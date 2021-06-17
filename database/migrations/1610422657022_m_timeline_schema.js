@@ -30,7 +30,7 @@ class MTimelineSchema extends Schema {
       table.string("gmeet"); // absen
       table.text("rpp"); // absen
       table.text("jurnal"); // absen
-      table.boolean("dihapus");
+      table.boolean("dihapus").defaultTo(0);
       table.string("lampiran");
       table.datetime("tanggal_dibuat");
       table.datetime("tanggal_pembagian");

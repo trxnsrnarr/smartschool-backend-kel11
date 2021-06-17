@@ -44,6 +44,7 @@ Route.get("/profil-user", "MainController.getProfilUser");
 
 // user
 Route.get("/user", "MainController.getUser");
+Route.get("/user/:user_id", "MainController.detailUser");
 
 // sekolah
 Route.get("/sekolah", "MainController.getSekolah");
@@ -70,6 +71,7 @@ Route.delete("/siswa/:siswa_id", "MainController.deleteSiswa");
 // ppdb
 Route.post("/ppdb/daftar", "MainController.daftarPPDB");
 Route.post("/ppdb/login", "MainController.loginPPDB");
+Route.post("/ppdb/downloadgelombang", "MainController.downloadGelombangPPDB");
 
 // alumni
 Route.get("/alumni", "MainController.getAlumni");
@@ -89,6 +91,7 @@ Route.get("/rombel/:jadwal_mengajar_id", "MainController.detailRombel");
 Route.post("/rombel", "MainController.postRombel");
 Route.put("/rombel/:rombel_id", "MainController.putRombel");
 Route.delete("/rombel/:rombel_id", "MainController.deleteRombel");
+Route.post("/rombel/:rombel_id/:user_id", "MainController.postSikapRombel");
 
 // anggota rombel
 Route.post("/anggota-rombel", "MainController.postAnggotaRombel");
@@ -457,6 +460,16 @@ Route.delete(
 );
 // KOLABORASI SERVICE END
 
+// pekerjaan-proyek
+Route.post(
+  "/pekerjaan-proyek/:kategori_id",
+  "MainController.postPekerjaanProyek"
+);
+Route.put(
+  "/pekerjaan-proyek/:pekerjaan_proyek_id",
+  "MainController.putPekerjaanProyek"
+);
+
 // kategori-pekerjaan
 Route.get("/kategori-pekerjaan", "MainController.getKategoriPekerjaan");
 Route.post("/kategori-pekerjaan", "MainController.postKategoriPekerjaan");
@@ -478,10 +491,12 @@ Route.post(
 );
 Route.put("/rekap/:materi_id/:rekap_id", "MainController.putRekap");
 Route.delete("/rekap/:materi_id/:rekap_id", "MainController.deleteRekap");
-Route.get(
-  "/rekap/:materi_id/:rekapnilai_id",
-  "MainController.detailRekapNilai"
-);
+Route.get("/rekap/:materi_id/rombel/:rekapnilai_id", "MainController.detailRekapRombel");
+Route.get("/rekap/:materi_id/:rekap_id", "MainController.detailRekapNilai");
+// Route.get(
+//   "/rekap/:materi_id/:rekap_id/:rombel_id",
+//   "MainController.detailRekapNilai"
+// );
 Route.post(
   "/rekap/:materi_id/:rekapnilai_id",
   "MainController.postRekapRombel"
@@ -507,7 +522,7 @@ Route.post("/absen/rekapdownload", "MainController.downloadRekapAbsen");
 
 // Mutasi Service
 Route.post("/mutasi/importmutasi", "MainController.importMutasi");
-Route.post("/mutasi/downloadmutasi", "MainController.downloadMutasi");
+Route.post("/mutasi/download-mutasi", "MainController.downloadMutasi");
 
 // Rombel Service
 Route.post("/rombel/import-rombel", "MainController.importRombel");
