@@ -14748,9 +14748,10 @@ class MainController {
 
     let workbook = new Excel.Workbook();
     let worksheet = workbook.addWorksheet(`Daftar Alumni`);
-    worksheet.mergeCells("A1:J1");
+    worksheet.mergeCells("A1:P1");
+    worksheet.mergeCells("A2:P2");
     worksheet.addConditionalFormatting({
-      ref: "A9:C9",
+      ref: "A1:P2",
       rules: [
         {
           type: "expression",
@@ -14759,7 +14760,39 @@ class MainController {
             font: {
               name: "Times New Roman",
               family: 4,
-              size: 14,
+              size: 16,
+              bold: true,
+            },
+            // fill: {
+            //   type: "pattern",
+            //   pattern: "solid",
+            //   bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            // },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            // border: {
+            //   top: { style: "thin" },
+            //   left: { style: "thin" },
+            //   bottom: { style: "thin" },
+            //   right: { style: "thin" },
+            // },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: "A4:P4",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
               bold: true,
             },
             fill: {
@@ -14785,7 +14818,33 @@ class MainController {
       alumni.toJSON().map(async (d, idx) => {
         worksheet.getCell("A1").value = "Rekap Alumni";
         worksheet.getCell("A2").value = sekolah.nama;
-
+        worksheet.addConditionalFormatting({
+          ref: `A${(idx + 1) * 1 + 4}:P${(idx + 1) * 1 + 4}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
         // add column headers
         worksheet.getRow(4).values = [
           "No",
