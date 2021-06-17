@@ -12970,7 +12970,7 @@ class MainController {
     request,
     auth,
     params: { rekap_id },
-    params: { rombel_id },
+    // params: { rombel_id },
     params: { materi_id },
   }) {
     const domain = request.headers().origin;
@@ -13017,8 +13017,8 @@ class MainController {
             );
           })
           .with("tugas")
-          .where({ dihapus: 0 })
-          .andWhere({ m_rombel_id: rombel_id });
+          .where({ dihapus: 0 });
+        // .andWhere({ m_rombel_id: rombel_id });
       })
       .with("materi", (builder) => {
         builder.with("mataPelajaran");
@@ -14350,11 +14350,123 @@ class MainController {
         worksheet.getCell("A2").value = sekolah.nama;
         worksheet.getCell("A3").value = ta.tahun;
         worksheet.getCell("A4 ").value = d.nama;
+        worksheet.addConditionalFormatting({
+          ref: `A1:E4`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 16,
+                  bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+              },
+            },
+          ],
+        });
+        worksheet.mergeCells(`A1:E1`);
+        worksheet.mergeCells(`A2:E2`);
+        worksheet.mergeCells(`A3:E3`);
+        worksheet.mergeCells(`A4:E4`);
+        worksheet.addConditionalFormatting({
+          ref: `A7:E7`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                fill: {
+                  type: "pattern",
+                  pattern: "solid",
+                  bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
 
         await Promise.all(
-          d.anggotaRombel.map(async (anggota) => {
+          d.anggotaRombel.map(async (anggota, idx) => {
+            worksheet.addConditionalFormatting({
+              ref: `B${(idx + 1) * 1 + 7}:E${(idx + 1) * 1 + 7}`,
+              rules: [
+                {
+                  type: "expression",
+                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                  style: {
+                    font: {
+                      name: "Times New Roman",
+                      family: 4,
+                      size: 11,
+                      // bold: true,
+                    },
+                    alignment: {
+                      vertical: "middle",
+                      horizontal: "left",
+                    },
+                    border: {
+                      top: { style: "thin" },
+                      left: { style: "thin" },
+                      bottom: { style: "thin" },
+                      right: { style: "thin" },
+                    },
+                  },
+                },
+              ],
+            });
+            worksheet.addConditionalFormatting({
+              ref: `A${(idx + 1) * 1 + 7}`,
+              rules: [
+                {
+                  type: "expression",
+                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                  style: {
+                    font: {
+                      name: "Times New Roman",
+                      family: 4,
+                      size: 11,
+                      // bold: true,
+                    },
+                    alignment: {
+                      vertical: "middle",
+                      horizontal: "center",
+                    },
+                    border: {
+                      top: { style: "thin" },
+                      left: { style: "thin" },
+                      bottom: { style: "thin" },
+                      right: { style: "thin" },
+                    },
+                  },
+                },
+              ],
+            });
             // add column headers
             worksheet.getRow(7).values = [
+              "No",
               "Nama",
               "Whatsapp",
               "Gender",
@@ -14362,6 +14474,7 @@ class MainController {
             ];
 
             worksheet.columns = [
+              { key: "no" },
               { key: "user" },
               { key: "whatsapp" },
               { key: "gender" },
@@ -14370,6 +14483,7 @@ class MainController {
 
             // Add row using key mapping to columns
             let row = worksheet.addRow({
+              no: `${idx + 1}`,
               user: anggota.user ? anggota.user.nama : "-",
               whatsapp: anggota.user ? anggota.user.whatsapp : "-",
               gender: anggota.user ? anggota.user.gender : "-",
@@ -14819,7 +14933,7 @@ class MainController {
         worksheet.getCell("A1").value = "Rekap Alumni";
         worksheet.getCell("A2").value = sekolah.nama;
         worksheet.addConditionalFormatting({
-          ref: `A${(idx + 1) * 1 + 4}:P${(idx + 1) * 1 + 4}`,
+          ref: `B${(idx + 1) * 1 + 4}:P${(idx + 1) * 1 + 4}`,
           rules: [
             {
               type: "expression",
@@ -14834,6 +14948,33 @@ class MainController {
                 alignment: {
                   vertical: "middle",
                   horizontal: "left",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet.addConditionalFormatting({
+          ref: `A${(idx + 1) * 1 + 4}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
                 },
                 border: {
                   top: { style: "thin" },
