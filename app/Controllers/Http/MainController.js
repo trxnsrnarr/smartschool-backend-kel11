@@ -14518,20 +14518,26 @@ class MainController {
 
     let colComment = explanation.getColumn("A");
 
+    // let dataRombel = [];
+
     colComment.eachCell(async (cell, rowNumber) => {
       if (rowNumber >= 7) {
         let rombelall = explanation.getCell("B" + rowNumber).value;
         let tingkat = `${rombelall.split(" ")[0]}`;
 
+        // dataRombel.push({
+        //   rombelall: explanation.getCell("B" + rowNumber).value,
+        //   tingkat: `${rombelall.split(" ")[0]}`,
+        // });
+
         const rombelCheck = await MRombel.query()
-          .where({ nama: d.rombel })
-          // .andWhere({ tingkat: tingkatromawi })
+          .where({ nama: rombelall })
           .andWhere({ m_ta_id: ta.id })
           .andWhere({ m_sekolah_id: sekolah.id })
           .first();
 
         if (!rombelCheck) {
-          const createRombel = await MRombel.create({
+          await MRombel.create({
             tingkat: tingkat,
             nama: rombelall,
             kelompok: "reguler",
@@ -14539,10 +14545,32 @@ class MainController {
             m_ta_id: ta.id,
             dihapus: 0,
           });
-          return;
+          return rombelCheck;
         }
       }
     });
+
+    // const rombelResult = await Promise.all(
+    //   dataRombel.map(async (d) => {
+    //     const rombelCheck = await MRombel.query()
+    //       .where({ nama: d.rombel })
+    //       .andWhere({ m_ta_id: ta.id })
+    //       .andWhere({ m_sekolah_id: sekolah.id })
+    //       .first();
+
+    //     if (!rombelCheck) {
+    //       const createRombel = await MRombel.create({
+    //         tingkat: d.tingkat,
+    //         nama: d.rombelall,
+    //         kelompok: "reguler",
+    //         m_sekolah_id: sekolah.id,
+    //         m_ta_id: ta.id,
+    //         dihapus: 0,
+    //       });
+    //       return;
+    //     }
+    //   })
+    // );
 
     let data = [];
 
@@ -14580,19 +14608,6 @@ class MainController {
       }
     });
 
-    // const rombelResult = await Promise.all(
-    //   dataRombel.map(async (d) => {
-    //     const createRombel = await MRombel.create({
-    //       tingkat: d.tingkat,
-    //       nama: d.rombelall,
-    //       kelompok: "reguler",
-    //       m_sekolah_id: sekolah.id,
-    //       m_ta_id: ta.id,
-    //       dihapus: 0,
-    //     });
-    //   })
-    // );
-
     const result = await Promise.all(
       data.map(async (d) => {
         const checkUser = await User.query()
@@ -14609,7 +14624,6 @@ class MainController {
 
         const checkRombel = await MRombel.query()
           .where({ nama: d.rombel })
-          // .andWhere({ tingkat: tingkatromawi })
           .andWhere({ m_ta_id: ta.id })
           .andWhere({ m_sekolah_id: sekolah.id })
           .first();
@@ -14681,7 +14695,7 @@ class MainController {
 
         const checkAnggotaRombel = await MAnggotaRombel.query()
           .where({ dihapus: 0 })
-          .andWhere({ m_user_id: checkUser.id })
+          .andWhere({ m_user_id: checkUser.toJSON().id })
           .andWhere({ m_rombel_id: checkRombel.id })
           .first();
 
