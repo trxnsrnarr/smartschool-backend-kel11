@@ -12983,11 +12983,17 @@ class MainController {
 
     const user = await auth.getUser();
     // const { rombel_id } = request.post();
+    const pelajaran = await MMateri.query()
+      .with("mataPelajaran")
+      .where({ id: materi_id })
+      .first();
 
     const materirombel = await TkMateriRombel.query()
       .with("rombel", (builder) => {
         builder.with("anggotaRombel", (builder) => {
-          builder.with("user");
+          builder.with("user", (builder) => {
+            builder.select("id", "nama");
+          });
         });
       })
       .where({ m_materi_id: materi_id })
@@ -12995,11 +13001,20 @@ class MainController {
 
     // const rekap = await Promise.all(
     //   materirombel.toJSON().map(async (d) => {
-    await MRekap.query()
+    const rekap = await MRekap.query()
       .with("rekaprombel", (builder) => {
         builder
           .with("rekapnilai", (builder) => {
-            builder.with("user");
+            builder.with("user", (builder) => {
+              builder.select("id", "nama");
+            });
+          })
+          .withCount("rekapnilai as total", (builder) => {
+            builder.where(
+              "nilai",
+              "<",
+              `${pelajaran.toJSON().mataPelajaran.kkm}`
+            );
           })
           .with("tugas")
           .where({ dihapus: 0 })
@@ -14420,6 +14435,104 @@ class MainController {
             worksheet.getCell("A5").value = d.nama;
             worksheet.getCell("A6").value = e.rombel.nama;
             worksheet.getCell("A7").value = d.bulan;
+            worksheet.mergeCells(`A1:F1`);
+            worksheet.mergeCells(`A2:F2`);
+            worksheet.mergeCells(`A3:F3`);
+            worksheet.mergeCells(`A5:F5`);
+            worksheet.mergeCells(`A6:F6`);
+            worksheet.mergeCells(`A7:F7`);
+            worksheet.addConditionalFormatting({
+              ref: "A1:F3",
+              rules: [
+                {
+                  type: "expression",
+                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                  style: {
+                    font: {
+                      name: "Times New Roman",
+                      family: 4,
+                      size: 16,
+                      bold: true,
+                    },
+                    alignment: {
+                      vertical: "middle",
+                      horizontal: "center",
+                    },
+                  },
+                },
+              ],
+            });
+            worksheet.addConditionalFormatting({
+              ref: "A5:F7",
+              rules: [
+                {
+                  type: "expression",
+                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                  style: {
+                    font: {
+                      name: "Times New Roman",
+                      family: 4,
+                      size: 14,
+                      // bold: true,
+                    },
+                    alignment: {
+                      vertical: "middle",
+                      horizontal: "center",
+                    },
+                  },
+                },
+              ],
+            });
+            worksheet.getColumn("A").width = 5;
+            worksheet.getColumn("B").width = 28;
+            worksheet.getColumn("C").width = 10;
+            worksheet.addConditionalFormatting({
+              ref: "A9:C9",
+              rules: [
+                {
+                  type: "expression",
+                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                  style: {
+                    font: {
+                      name: "Times New Roman",
+                      family: 4,
+                      size: 14,
+                      bold: true,
+                    },
+                    fill: {
+                      type: "pattern",
+                      pattern: "solid",
+                      bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+                    },
+                    alignment: {
+                      vertical: "middle",
+                      horizontal: "center",
+                    },
+                    border: {
+                      top: { style: "thin" },
+                      left: { style: "thin" },
+                      bottom: { style: "thin" },
+                      right: { style: "thin" },
+                    },
+                  },
+                },
+              ],
+            });
+            worksheet.addConditionalFormatting({
+              ref: "A10:A109",
+              rules: [
+                {
+                  type: "expression",
+                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                  style: {
+                    alignment: {
+                      vertical: "middle",
+                      horizontal: "center",
+                    },
+                  },
+                },
+              ],
+            });
             await Promise.all(
               e.siswa.map(async (anggota, nox) => {
                 // add column headers
@@ -14635,7 +14748,39 @@ class MainController {
 
     let workbook = new Excel.Workbook();
     let worksheet = workbook.addWorksheet(`Daftar Alumni`);
-
+    worksheet.mergeCells("A1:J1");
+    worksheet.addConditionalFormatting({
+      ref: "A9:C9",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 14,
+              bold: true,
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
     await Promise.all(
       alumni.toJSON().map(async (d, idx) => {
         worksheet.getCell("A1").value = "Rekap Alumni";
@@ -14827,7 +14972,7 @@ class MainController {
             ? e.soal.akm_konteks_materi
             : "-",
           INDIKATOR_SOAL: e.soal ? e.soal.akm_konten_materi : "-",
-          LEVEL_KOGNITIF: e.soal ? e.soal.level_kognitif : "-",
+          LEVEL_KOGNITIF: e.soal ? e.soal.aspek_level : "-",
           BENTUK_SOAL: e.soal ? e.soal.bentuk : "-",
           TINGAT_KESUKARAN: e.soal ? e.soal.tahun_masuk : "-",
           SUMBER_BUKU: e.soal ? e.soal.pekerjaan : "-",
@@ -18517,7 +18662,7 @@ class MainController {
                 font: {
                   name: "Times New Roman",
                   family: 4,
-                  size: 14,
+                  size: 16,
                   bold: true,
                 },
                 // fill: {
@@ -18535,9 +18680,10 @@ class MainController {
         });
 
         await Promise.all(
-          d.pendaftar.map(async (anggota) => {
+          d.pendaftar.map(async (anggota, idx) => {
             // add column headers
             worksheet.getRow(9).values = [
+              "No",
               "Nama",
               "Whatsapp",
               "Gender",
@@ -18550,6 +18696,7 @@ class MainController {
             ];
 
             worksheet.columns = [
+              { key: "no" },
               { key: "user" },
               { key: "whatsapp" },
               { key: "gender" },
@@ -18563,6 +18710,7 @@ class MainController {
 
             // Add row using key mapping to columns
             let row = worksheet.addRow({
+              no: `${idx + 1}`,
               user: anggota.user ? anggota.user.nama : "-",
               whatsapp: anggota.user ? anggota.user.whatsapp : "-",
               gender: anggota.user ? anggota.user.gender : "-",
@@ -18572,6 +18720,66 @@ class MainController {
               nominal: anggota ? anggota.nominal : "-",
               bukti: anggota ? anggota.bukti : "-",
               diverifikasi: anggota ? anggota.diverifikasi : "-",
+            });
+
+            worksheet.addConditionalFormatting({
+              ref: `A9:J9`,
+              rules: [
+                {
+                  type: "expression",
+                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                  style: {
+                    border: {
+                      top: { style: "thin" },
+                      left: { style: "thin" },
+                      bottom: { style: "thin" },
+                      right: { style: "thin" },
+                    },
+                    font: {
+                      name: "Times New Roman",
+                      family: 4,
+                      size: 14,
+                      bold: true,
+                    },
+                    fill: {
+                      type: "pattern",
+                      pattern: "solid",
+                      bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+                    },
+                    alignment: {
+                      vertical: "middle",
+                      horizontal: "center",
+                    },
+                  },
+                },
+              ],
+            });
+            worksheet.addConditionalFormatting({
+              ref: `A${(idx + 1) * 1 + 9}:J${(idx + 1) * 1 + 9}`,
+              rules: [
+                {
+                  type: "expression",
+                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                  style: {
+                    border: {
+                      top: { style: "thin" },
+                      left: { style: "thin" },
+                      bottom: { style: "thin" },
+                      right: { style: "thin" },
+                    },
+                    font: {
+                      name: "Times New Roman",
+                      family: 4,
+                      size: 11,
+                      // bold: true,
+                    },
+                    alignment: {
+                      vertical: "middle",
+                      horizontal: "left",
+                    },
+                  },
+                },
+              ],
             });
           })
         );
