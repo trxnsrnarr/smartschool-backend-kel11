@@ -13013,8 +13013,6 @@ class MainController {
       .where({ m_materi_id: materi_id })
       .fetch();
 
-    // const rekap = await Promise.all(
-    //   materirombel.toJSON().map(async (d) => {
     const rekap = await MRekap.query()
       .with("rekaprombel", (builder) => {
         builder
@@ -13040,8 +13038,6 @@ class MainController {
       .where({ id: rekap_id })
       .andWhere({ dihapus: 0 })
       .first();
-    //   })
-    // );
 
     const tugas = await MTugas.query().where({ m_user_id: user.id }).fetch();
 
@@ -13049,6 +13045,81 @@ class MainController {
       materirombel,
       rekap,
       tugas,
+    });
+  }
+
+  async detailRekapRombel({
+    response,
+    request,
+    auth,
+    // params: { rekap_id },
+    params: { materi_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const materirombel = await TkMateriRombel.query()
+      .with("rombel")
+      .where({ m_materi_id: materi_id })
+      .fetch();
+
+const tugasdata = await MTimeline.query()
+.select("id","m_tugas_id","m_rombel_id","m_user_id")
+      .with("listSiswaDinilai", (builder) => {
+        builder
+        .select("id","nilai","m_user_id","m_timeline_id")
+          .with("user",(builder)=>{
+            builder.select("id","nama");
+          })
+          .whereNotNull("nilai");
+          })
+      .where({m_tugas_id:172})
+      .fetch();
+    
+    // // const rekap = await Promise.all(
+    // //   materirombel.toJSON().map(async (d) => {
+    // const rekap = await MRekap.query()
+    //   .with("rekaprombel", (builder) => {
+    //     builder
+    //       .with("rekapnilai", (builder) => {
+    //         builder.with("user", (builder) => {
+    //           builder.select("id", "nama");
+    //         });
+    //       })
+    //       .withCount("rekapnilai as total", (builder) => {
+    //         builder.where(
+    //           "nilai",
+    //           "<",
+    //           `${pelajaran.toJSON().mataPelajaran.kkm}`
+    //         );
+    //       })
+    //       .with("tugas")
+    //       .where({ dihapus: 0 });
+    //     // .andWhere({ m_rombel_id: rombel_id });
+    //   })
+    //   .with("materi", (builder) => {
+    //     builder.with("mataPelajaran");
+    //   })
+    //   .where({ id: rekap_id })
+    //   .andWhere({ dihapus: 0 })
+    //   .first();
+    // //   })
+    // // );
+
+    const tugas = await MTugas.query().where({ m_user_id: user.id }).fetch();
+
+    return response.ok({
+      materirombel,
+      // rekap,
+      tugas,
+      tugasdata,
     });
   }
 
@@ -13108,6 +13179,16 @@ class MainController {
       m_rekap_id: rekapnilai_id,
       dihapus: 0,
     });
+
+    const tugasdata = await MTimeline.query()
+      .with("listSiswaDinilai", (builder) => {
+        builder
+          .with("user")
+          .whereNotNull("nilai");
+          })
+      .where({m_tugas_id:m_tugas_id})
+      .fetch();
+    
 
     const data = await MRombel.query()
       .with("anggotaRombel", (builder) => {
