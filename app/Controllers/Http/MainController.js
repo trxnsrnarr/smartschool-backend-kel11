@@ -14065,12 +14065,144 @@ class MainController {
     let workbook = new Excel.Workbook();
     let worksheet = workbook.addWorksheet(`Rekap Mata Pelajaran`);
     worksheet.getCell("A1").value = "Rekap Mata Pelajaran";
-    worksheet.getCell("A3").value = sekolah.nama;
-    worksheet.getCell("A2").value = ta.tahun;
+    worksheet.getCell("A2").value = sekolah.nama;
+    worksheet.getCell("A3").value = ta.tahun;
 
+    worksheet.addConditionalFormatting({
+      ref: `A1:G2`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 16,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: `A3:G3`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+    worksheet.mergeCells(`A1:G1`);
+    worksheet.mergeCells(`A2:G2`);
+    worksheet.mergeCells(`A3:G3`);
+    worksheet.addConditionalFormatting({
+      ref: `A5:G5`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
     await Promise.all(
-      mapel.toJSON().map(async (d) => {
+      mapel.toJSON().map(async (d, idx) => {
+        worksheet.addConditionalFormatting({
+          ref: `B${(idx + 1) * 1 + 5}:G${(idx + 1) * 1 + 5}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet.addConditionalFormatting({
+          ref: `A${(idx + 1) * 1 + 5}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
         worksheet.getRow(5).values = [
+          "No",
           "Nama Guru",
           "Whatsapp",
           "Nama",
@@ -14080,6 +14212,7 @@ class MainController {
         ];
 
         worksheet.columns = [
+          { key: "no" },
           { key: "guru" },
           { key: "whatsapp" },
           { key: "nama" },
@@ -14089,6 +14222,7 @@ class MainController {
         ];
 
         let row = worksheet.addRow({
+          no: `${idx + 1}`,
           guru: d.user ? d.user.nama : "-",
           whatsapp: d.user ? d.user.whatsapp : "-",
           nama: d ? d.nama : "-",
@@ -19295,12 +19429,12 @@ class MainController {
         worksheet.getCell("A5").value = `dibuka : ${d.waktuawal}`;
         worksheet.getCell("A6").value = `ditutup : ${d.waktuakhir}`;
         worksheet.getCell("A7").value = `Keterangan : ${d.keterangan}`;
-        worksheet.mergeCells(`A1:I1`);
-        worksheet.mergeCells(`A2:I2`);
-        worksheet.mergeCells(`A3:I3`);
-        worksheet.mergeCells(`A5:I5`);
-        worksheet.mergeCells(`A6:I6`);
-        worksheet.mergeCells(`A7:I7`);
+        worksheet.mergeCells(`A1:J1`);
+        worksheet.mergeCells(`A2:J2`);
+        worksheet.mergeCells(`A3:J3`);
+        worksheet.mergeCells(`A5:J5`);
+        worksheet.mergeCells(`A6:J6`);
+        worksheet.mergeCells(`A7:J7`);
         worksheet.getColumn("A").width = 28;
         worksheet.getColumn("B").width = 14;
         worksheet.getColumn("C").width = 8;
