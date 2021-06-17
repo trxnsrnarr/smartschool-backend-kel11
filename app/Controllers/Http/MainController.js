@@ -13070,19 +13070,35 @@ class MainController {
       .where({ m_materi_id: materi_id })
       .fetch();
 
-const tugasdata = await MTimeline.query()
-.select("id","m_tugas_id","m_rombel_id","m_user_id")
+    const tugasdata = await MTimeline.query()
+      .select("id", "m_tugas_id", "m_rombel_id", "m_user_id")
       .with("listSiswaDinilai", (builder) => {
         builder
-        .select("id","nilai","m_user_id","m_timeline_id")
-          .with("user",(builder)=>{
-            builder.select("id","nama");
+          .select("id", "nilai", "m_user_id", "m_timeline_id")
+          .with("user", (builder) => {
+            builder.select("id", "nama");
           })
           .whereNotNull("nilai");
-          })
-      .where({m_tugas_id:172})
+      })
+      .where({ m_tugas_id: 172 })
       .fetch();
-    
+
+    const datatugas = await MRombel.query()
+      .with("anggotaRombel", (builder) => {
+        builder.with("user", (builder) => {
+          builder.select("id", "nama").with("tugas", (builder) => {
+            builder
+              .select("id", "nilai", "m_user_id", "m_timeline_id")
+              .with("user", (builder) => {
+                builder.select("id", "nama");
+              })
+              .whereNotNull("nilai");
+          });
+        });
+      })
+      .where({ id: m_rombel_id })
+      .fetch();
+
     // // const rekap = await Promise.all(
     // //   materirombel.toJSON().map(async (d) => {
     // const rekap = await MRekap.query()
@@ -13116,6 +13132,7 @@ const tugasdata = await MTimeline.query()
     const tugas = await MTugas.query().where({ m_user_id: user.id }).fetch();
 
     return response.ok({
+      datatugas,
       materirombel,
       // rekap,
       tugas,
@@ -13180,16 +13197,6 @@ const tugasdata = await MTimeline.query()
       dihapus: 0,
     });
 
-    const tugasdata = await MTimeline.query()
-      .with("listSiswaDinilai", (builder) => {
-        builder
-          .with("user")
-          .whereNotNull("nilai");
-          })
-      .where({m_tugas_id:m_tugas_id})
-      .fetch();
-    
-
     const data = await MRombel.query()
       .with("anggotaRombel", (builder) => {
         builder.with("user", (builder) => {
@@ -13198,6 +13205,49 @@ const tugasdata = await MTimeline.query()
       })
       .where({ id: m_rombel_id })
       .fetch();
+
+    // const tugasdata = await MRombel.query()
+    //   .with("anggotaRombel", (builder) => {
+    //     builder.with("user", (builder) => {
+    //       builder.select("id", "nama").with("tugas", (builder) => {
+    //         builder
+    //           .select("id", "nilai", "m_user_id", "m_timeline_id")
+    //           .with("user", (builder) => {
+    //             builder.select("id", "nama");
+    //           })
+    //           .whereNotNull("nilai");
+    //       });
+    //     });
+    //   })
+    //   .where({ id: m_rombel_id })
+    //   .fetch();
+
+    // if (tugasdata) {
+    //   const all = await Promise.all(
+    //     data.toJSON().map(async (d) => {
+    //       await Promise.all(
+    //         d.anggotaRombel.map(async (e) => {
+    //           const tugasdata = await MTimeline.query()
+    //             .select("id", "m_tugas_id", "m_rombel_id", "m_user_id")
+    //             .with("listSiswaDinilai", (builder) => {
+    //               builder
+    //                 .select("id", "nilai", "m_user_id", "m_timeline_id")
+    //                 .whereNotNull("nilai")
+    //                 .andWhere({ m_user_id: e.m_user_id });
+    //             })
+    //             .where({ m_tugas_id: m_tugas_id })
+    //             .fetch();
+
+    //           await TkRekapNilai.create({
+    //             m_user_id: e.m_user_id,
+    //             nilai: tugasdata.lisSiswaDinilai.nilai,
+    //             m_rekap_rombel_id: `${rekap.id}`,
+    //           });
+    //         })
+    //       );
+    //     })
+    //   );
+    // }
 
     const all = await Promise.all(
       data.toJSON().map(async (d) => {
