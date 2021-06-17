@@ -11960,6 +11960,7 @@ class MainController {
     const { search, searchall } = request.get();
 
     let proyek;
+    let proyekall;
 
     if (search) {
       // ===== service cari proyek ====
@@ -11994,7 +11995,7 @@ class MainController {
     if (searchall) {
       // ===== service cari proyek ====
 
-      proyek = await MProyek.query()
+      proyekall = await MProyek.query()
         .withCount("anggota", (builder) => {
           builder.where({ status: "menerima" });
         })
@@ -12002,7 +12003,7 @@ class MainController {
         .andWhere("nama", "like", `%${searchall}%`)
         .paginate();
     } else {
-      proyek = await MProyek.query()
+      proyekall = await MProyek.query()
         .withCount("anggota", (builder) => {
           builder.where({ status: "menerima" });
         })
@@ -12032,6 +12033,7 @@ class MainController {
       proyek: proyek,
       userPartner: userPartner,
       undangan,
+      proyekall,
     });
   }
 
