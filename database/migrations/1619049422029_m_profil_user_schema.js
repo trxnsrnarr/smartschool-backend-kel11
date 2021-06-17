@@ -19,6 +19,7 @@ class MProfilUserSchema extends Schema {
       table.string("nipd");
       table.string("nuptk");
       table.string("nip");
+      table.enu("gender", ["L", "P"]);
       table.string("status_kepegawaian");
       table.string("jenis_ptk");
       table.string("tugas_tambahan");
@@ -38,6 +39,7 @@ class MProfilUserSchema extends Schema {
       table.string("regency_id", 4).index("regency_id");
       table.string("district_id", 7).index("district_id");
       table.string("village_id", 10).index("village_id");
+      table.string("dusun");
       table.string("kodepos");
 
       // kesehatan
