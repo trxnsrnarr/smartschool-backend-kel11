@@ -491,11 +491,11 @@ Route.post(
 );
 Route.put("/rekap/:materi_id/:rekap_id", "MainController.putRekap");
 Route.delete("/rekap/:materi_id/:rekap_id", "MainController.deleteRekap");
-// Route.get("/rekap/:materi_id/:rekap_id", "MainController.detailRekapNilai");
-Route.get(
-  "/rekap/:materi_id/:rekap_id/:rombel_id",
-  "MainController.detailRekapNilai"
-);
+Route.get("/rekap/:materi_id/:rekap_id", "MainController.detailRekapNilai");
+// Route.get(
+//   "/rekap/:materi_id/:rekap_id/:rombel_id",
+//   "MainController.detailRekapNilai"
+// );
 Route.post(
   "/rekap/:materi_id/:rekapnilai_id",
   "MainController.postRekapRombel"
@@ -520,8 +520,8 @@ Route.post("/gtk/import", "MainController.importGTK");
 Route.post("/absen/rekapdownload", "MainController.downloadRekapAbsen");
 
 // Mutasi Service
-Route.post("/mutasi/importmutasi", "MainController.importMutasi");
-Route.post("/mutasi/downloadmutasi", "MainController.downloadMutasi");
+Route.post("/mutasi/import-mutasi", "MainController.importMutasi");
+Route.post("/mutasi/download-mutasi", "MainController.downloadMutasi");
 
 // Rombel Service
 Route.post("/rombel/import-rombel", "MainController.importRombel");
