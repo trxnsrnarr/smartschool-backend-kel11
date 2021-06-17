@@ -12989,13 +12989,7 @@ class MainController {
       .first();
 
     const materirombel = await TkMateriRombel.query()
-      .with("rombel", (builder) => {
-        builder.with("anggotaRombel", (builder) => {
-          builder.with("user", (builder) => {
-            builder.select("id", "nama");
-          });
-        });
-      })
+      .with("rombel")
       .where({ m_materi_id: materi_id })
       .fetch();
 
@@ -13070,7 +13064,7 @@ class MainController {
     response,
     request,
     auth,
-    params: { rekapnilai_id },
+    params: { rekapnilai_id, materi_id },
   }) {
     const domain = request.headers().origin;
 
@@ -13094,6 +13088,30 @@ class MainController {
       m_rekap_id: rekapnilai_id,
       dihapus: 0,
     });
+
+    const data = await MRombel.query()
+      .with("anggotaRombel", (builder) => {
+        builder.with("user", (builder) => {
+          builder.select("id", "nama");
+        });
+      })
+      .where({ id: m_rombel_id })
+      .fetch();
+
+    const all = await Promise.all(
+      data.toJSON().map(async (d) => {
+        await Promise.all(
+          d.anggotaRombel.map(async (e) => {
+            await TkRekapNilai.create({
+              m_user_id: e.m_user_id,
+              nilai: 0,
+              m_rekap_rombel_id: `${rekap.id}`,
+            });
+          })
+        );
+        // }
+      })
+    );
 
     return response.ok({
       message: messagePostSuccess,
@@ -13269,6 +13287,59 @@ class MainController {
       message: messagePutSuccess,
     });
   }
+
+  // async postRekapNilaisiswa({
+  //   response,
+  //   request,
+  //   auth,
+  //   params: { user_id, rekap_id, materi_id },
+  // }) {
+  //   const domain = request.headers().origin;
+
+  //   const sekolah = await this.getSekolahByDomain(domain);
+
+  //   if (sekolah == "404") {
+  //     return response.notFound({ message: "Sekolah belum terdaftar" });
+  //   }
+
+  //   const user = await auth.getUser();
+
+  //   const { m_rombel_id } = request.post();
+
+  //   const data = await TkMateriRombel.query()
+  //     .with("rombel", (builder) => {
+  //       builder.with("anggotaRombel", (builder) => {
+  //         builder.with("user", (builder) => {
+  //           builder.select("id", "nama");
+  //         });
+  //       });
+  //     })
+  //     .where({ m_materi_id: materi_id })
+  //     .fetch();
+
+  //   let rekap;
+
+  //   const all = await Promise.all(
+  //     data.map(async (d) => {
+  //       await TkRekapNilai.create({
+  //         m_user_id: d.anggotaRombel.user.id,
+  //         nilai: 0,
+  //         m_rekap_rombel_id: rekapnilai_id,
+  //       });
+  //       // }
+  //     })
+  //   );
+
+  //   if (!rekap) {
+  //     return response.ok({
+  //       message: messagePostSuccess,
+  //     });
+  //   }
+
+  //   return response.ok({
+  //     message: messagePutSuccess,
+  //   });
+  // }
 
   // =========== IMPORT GTK SERVICE ================
   async importGTKServices(filelocation, sekolah) {
@@ -13884,9 +13955,139 @@ class MainController {
     let workbook = new Excel.Workbook();
 
     let worksheet = workbook.addWorksheet(`Rekap Mutasi Keuangan`);
-
+    worksheet.addConditionalFormatting({
+      ref: `A1:E2`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 16,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: `A3:E3`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+    worksheet.mergeCells(`A1:E1`);
+    worksheet.mergeCells(`A2:E2`);
+    worksheet.mergeCells(`A3:E3`);
+    worksheet.addConditionalFormatting({
+      ref: `A5:E5`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
     await Promise.all(
-      mutasi.toJSON().map(async (d) => {
+      mutasi.toJSON().map(async (d, idx) => {
+        worksheet.addConditionalFormatting({
+          ref: `B${(idx + 1) * 1 + 5}:E${(idx + 1) * 1 + 5}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet.addConditionalFormatting({
+          ref: `A${(idx + 1) * 1 + 5}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
         worksheet.getRow(5).values = [
           "Tanggal Transaksi",
           "Tipe",
@@ -13904,9 +14105,10 @@ class MainController {
         ];
 
         worksheet.getCell("A1").value = "Rekap Mutasi Keuangan";
-        const awal = moment(`${tanggal_awal}`).format("YYYY-MM-DD");
-        const akhir = moment(`${tanggal_akhir}`).format("YYYY-MM-DD");
+        const awal = moment(`${tanggal_awal}`).format("DD-MM-YYYY");
+        const akhir = moment(`${tanggal_akhir}`).format("DD-MM-YYYY");
         worksheet.getCell("A2").value = sekolah.nama;
+        worksheet.getCell("A3").value = `${awal} sampai ${akhir}`;
 
         let row = worksheet.addRow({
           waktu_dibuat: d ? d.waktu_dibuat : "-",
