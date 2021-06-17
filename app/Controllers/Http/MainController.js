@@ -13070,19 +13070,19 @@ class MainController {
       .where({ m_materi_id: materi_id })
       .fetch();
 
-const tugasdata = await MTimeline.query()
-.select("id","m_tugas_id","m_rombel_id","m_user_id")
+    const tugasdata = await MTimeline.query()
+      .select("id", "m_tugas_id", "m_rombel_id", "m_user_id")
       .with("listSiswaDinilai", (builder) => {
         builder
-        .select("id","nilai","m_user_id","m_timeline_id")
-          .with("user",(builder)=>{
-            builder.select("id","nama");
+          .select("id", "nilai", "m_user_id", "m_timeline_id")
+          .with("user", (builder) => {
+            builder.select("id", "nama");
           })
           .whereNotNull("nilai");
-          })
-      .where({m_tugas_id:172})
+      })
+      .where({ m_tugas_id: 172 })
       .fetch();
-    
+
     // // const rekap = await Promise.all(
     // //   materirombel.toJSON().map(async (d) => {
     // const rekap = await MRekap.query()
@@ -13182,13 +13182,10 @@ const tugasdata = await MTimeline.query()
 
     const tugasdata = await MTimeline.query()
       .with("listSiswaDinilai", (builder) => {
-        builder
-          .with("user")
-          .whereNotNull("nilai");
-          })
-      .where({m_tugas_id:m_tugas_id})
+        builder.with("user").whereNotNull("nilai");
+      })
+      .where({ m_tugas_id: m_tugas_id })
       .fetch();
-    
 
     const data = await MRombel.query()
       .with("anggotaRombel", (builder) => {
