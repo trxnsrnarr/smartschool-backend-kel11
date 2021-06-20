@@ -179,6 +179,25 @@ const romawi = [
   "XIII",
 ];
 
+const monthNames = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+const dateObj = new Date();
+const month = monthNames[dateObj.getMonth()];
+const day = String(dateObj.getDate()).padStart(2, "0");
+const year = dateObj.getFullYear();
+const keluarantanggal = day + "," + month + "," + year;
 class MainController {
   // UTILS
 
@@ -13797,6 +13816,9 @@ class MainController {
     let worksheet = workbook.addWorksheet(`RekapAbsen`);
     const awal = moment(`${tanggal_awal}`).format("DD-MM-YYYY");
     const akhir = moment(`${tanggal_akhir}`).format("DD-MM-YYYY");
+    worksheet.getCell(
+      "A4"
+    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
     worksheet.addConditionalFormatting({
       ref: `A1:G2`,
       rules: [
@@ -14205,7 +14227,9 @@ class MainController {
     worksheet.getCell("A1").value = "Rekap Mata Pelajaran";
     worksheet.getCell("A2").value = sekolah.nama;
     worksheet.getCell("A3").value = ta.tahun;
-
+    worksheet.getCell(
+      "A4"
+    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
     worksheet.addConditionalFormatting({
       ref: `A1:G2`,
       rules: [
@@ -14469,6 +14493,9 @@ class MainController {
     let workbook = new Excel.Workbook();
 
     let worksheet = workbook.addWorksheet(`Rekap Mutasi Keuangan`);
+    worksheet.getCell(
+      "A4"
+    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
     worksheet.addConditionalFormatting({
       ref: `A1:E2`,
       rules: [
@@ -15080,6 +15107,9 @@ class MainController {
         worksheet.getCell("A2").value = sekolah.nama;
         worksheet.getCell("A3").value = ta.tahun;
         worksheet.getCell("A4 ").value = d.nama;
+        worksheet.getCell(
+          "A6"
+        ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
         worksheet.addConditionalFormatting({
           ref: `A1:E4`,
           rules: [
@@ -15279,6 +15309,9 @@ class MainController {
             worksheet.getCell("A5").value = d.nama;
             worksheet.getCell("A6").value = e.rombel.nama;
             worksheet.getCell("A7").value = d.bulan;
+            worksheet.getCell(
+              "A8"
+            ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
             worksheet.mergeCells(`A1:F1`);
             worksheet.mergeCells(`A2:F2`);
             worksheet.mergeCells(`A3:F3`);
@@ -15594,6 +15627,9 @@ class MainController {
     let worksheet = workbook.addWorksheet(`Daftar Alumni`);
     worksheet.mergeCells("A1:P1");
     worksheet.mergeCells("A2:P2");
+    worksheet.getCell(
+      "A3"
+    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
     worksheet.addConditionalFormatting({
       ref: "A1:P2",
       rules: [
@@ -19534,7 +19570,7 @@ class MainController {
     });
   }
 
-  async downloadGelombangPPDB({ response, request }) {
+  async downloadGelombangPPDB({ response, request, auth }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -19544,6 +19580,8 @@ class MainController {
     }
 
     const ta = await this.getTAAktif(sekolah);
+
+    const user = await auth.getUser();
 
     const gelombang = await MGelombangPpdb.query()
       .with("pendaftar", (builder) => {
@@ -19555,7 +19593,25 @@ class MainController {
       .fetch();
 
     // return gelombang;
-
+    // const monthNames = [
+    //   "January",
+    //   "February",
+    //   "March",
+    //   "April",
+    //   "May",
+    //   "June",
+    //   "July",
+    //   "August",
+    //   "September",
+    //   "October",
+    //   "November",
+    //   "December",
+    // ];
+    // const dateObj = new Date();
+    // const month = monthNames[dateObj.getMonth()];
+    // const day = String(dateObj.getDate()).padStart(2, "0");
+    // const year = dateObj.getFullYear();
+    // const output = dat + "," + month + "," + year;
     let workbook = new Excel.Workbook();
 
     await Promise.all(
@@ -19567,6 +19623,9 @@ class MainController {
         worksheet.getCell("A5").value = `dibuka : ${d.waktuawal}`;
         worksheet.getCell("A6").value = `ditutup : ${d.waktuakhir}`;
         worksheet.getCell("A7").value = `Keterangan : ${d.keterangan}`;
+        worksheet.getCell(
+          "A8"
+        ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
         worksheet.mergeCells(`A1:J1`);
         worksheet.mergeCells(`A2:J2`);
         worksheet.mergeCells(`A3:J3`);
