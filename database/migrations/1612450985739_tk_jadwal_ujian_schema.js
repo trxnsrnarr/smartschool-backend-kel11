@@ -7,7 +7,7 @@ class TkJadwalUjianSchema extends Schema {
   up() {
     this.create("tk_jadwal_ujian", (table) => {
       table.increments();
-      table.boolean("dihapus");
+      table.boolean("dihapus").defaultTo(0);
       table.integer("m_rombel_id").unsigned().index("m_rombel_id");
       table
         .foreign("m_rombel_id")

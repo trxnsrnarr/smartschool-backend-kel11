@@ -19,6 +19,13 @@ class MRombel extends Model {
   timeline() {
     return this.hasMany("App/Models/MTimeline");
   }
+
+  materiRombel() {
+    return this.hasMany("App/Models/TkMateriRombel");
+  }
+  jurusan() {
+    return this.belongsTo("App/Models/MJurusan");
+  }
 }
 
 module.exports = MRombel;

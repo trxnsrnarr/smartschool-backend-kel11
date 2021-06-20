@@ -13,7 +13,7 @@ class MGelombangPpdb extends Model {
   }
 
   static get computed() {
-    return ["keterangan"];
+    return ["keterangan","waktuawal","waktuakhir"];
   }
 
   pendaftar() {
@@ -31,6 +31,16 @@ class MGelombangPpdb extends Model {
       return "Sudah Ditutup";
     }
   }
+
+  getWaktuawal({dibuka}){
+    return moment(dibuka).format("DD-MM-YYYY") ;
+  }
+  getWaktuakhir({ditutup}){
+    return moment(ditutup).format("DD-MM-YYYY") ;
+  }
+  // getCreatedAt(created_at) {
+  //   return moment(created_at).format("DD MMMM YYYY");
+  // }
 }
 
 module.exports = MGelombangPpdb;

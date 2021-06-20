@@ -17,7 +17,7 @@ class MAlumniSchema extends Schema {
       table.text("sertifikasi_keahlian");
       table.boolean("purnakarya");
       table.text("deskripsi");
-      table.boolean("dihapus");
+      table.boolean("dihapus").defaultTo(0);
       table.integer("m_user_id").unsigned().index("m_user_id");
       table
         .foreign("m_user_id")

@@ -11,7 +11,13 @@ const MKegiatanGaleri = use("App/Models/MKegiatanGaleri");
 const MProyek = use("App/Models/MProyek");
 const MPerpusKomen = use("App/Models/MPerpusKomen");
 const MRpp = use("App/Models/MRpp");
+const MSikapSiswa = use("App/Models/MSikapSiswa");
+const MSikapRombel = use("App/Models/MSikapRombel");
 const MRekap = use("App/Models/MRekap");
+const MPredikatNilai = use("App/Models/MPredikatNilai");
+const MKeteranganRapor = use("App/Models/MKeteranganRapor");
+const MKeteranganPkl = use("App/Models/MKeteranganPkl");
+const MRaporEkskul = use("App/Models/MRaporEkskul");
 const MRekapRombel = use("App/Models/MRekapRombel");
 const TkRekapNilai = use("App/Models/TkRekapNilai");
 const MGelombangPpdb = use("App/Models/MGelombangPpdb");
@@ -63,6 +69,8 @@ const TkJadwalUjian = use("App/Models/TkJadwalUjian");
 const TkPesertaUjian = use("App/Models/TkPesertaUjian");
 const MUjian = use("App/Models/MUjian");
 const MMateri = use("App/Models/MMateri");
+const MSikapSosial = use("App/Models/MSikapSosial");
+const MSikapSpiritual = use("App/Models/MSikapSpiritual");
 const MSoalKuis = use("App/Models/MSoalKuis");
 const MTimeline = use("App/Models/MTimeline");
 const TkTimeline = use("App/Models/TkTimeline");
@@ -93,6 +101,8 @@ const WordExtractor = require("word-extractor");
 const AdonisGCS = require("adonis-google-cloud-storage");
 const uuid = require("uuid-v4");
 const pdftohtml = require("pdftohtmljs");
+const http = require("http"); // or 'https' for https:// URLs
+const Downloader = require("nodejs-file-downloader");
 
 const PDFDocument = require("pdfkit");
 const fs = require("fs");
@@ -104,7 +114,7 @@ const Firestore = use("App/Models/Firestore");
 const firestore = new Firestore();
 const db = firestore.db();
 const bucket = firestore.bucket();
-
+var striptags = require("striptags");
 // reference to
 const jadwalUjianReference = db.collection("jadwal-ujian");
 
@@ -140,8 +150,8 @@ const rulesUserPut = {
 };
 
 const rulesAnggotaPost = {
-  m_proyek_id: "required",
-  m_user_id: "required",
+  proyek_id: "required",
+  user_id: "required",
   status: "required",
 };
 
@@ -169,8 +179,36 @@ const romawi = [
   "XIII",
 ];
 
+const monthNames = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+const dateObj = new Date();
+const month = monthNames[dateObj.getMonth()];
+const day = String(dateObj.getDate()).padStart(2, "0");
+const year = dateObj.getFullYear();
+const keluarantanggal = day + "," + month + "," + year;
 class MainController {
   // UTILS
+
+  async removeTag(content) {
+    // const removeEl = content.replace(/(<([^>]+)>)/ig, "");
+
+    var html = content;
+
+    return striptags(html);
+  }
+
   async singleUpload({ request, response }) {
     const fileUpload = request.file("file");
 
@@ -2312,13 +2350,27 @@ class MainController {
     let analisisNilai;
     let checkAbsensi = [];
     let judulTugas;
+    let rekap;
 
     if (rombel_id) {
       jadwalMengajar = await MJadwalMengajar.query()
         .with("mataPelajaran")
         .with("rombel", (builder) => {
           builder.with("anggotaRombel", (builder) => {
-            builder.with("user");
+            builder.with("user", (builder) => {
+              builder
+                .with("keteranganRapor")
+                .with("keteranganPkl")
+                .with("raporEkskul")
+                .with("prestasi")
+                .with("sikap", (builder) => {
+                  builder
+                    .with("ditingkatkanSosial")
+                    .with("ditunjukkanSosial")
+                    .with("ditingkatkanSpiritual")
+                    .with("ditunjukkanSpiritual");
+                });
+            });
           });
         })
         .where({ m_rombel_id: rombel_id })
@@ -2330,7 +2382,20 @@ class MainController {
         })
         .with("rombel", (builder) => {
           builder.with("anggotaRombel", (builder) => {
-            builder.with("user");
+            builder.with("user", (builder) => {
+              builder
+                .with("keteranganRapor")
+                .with("keteranganPkl")
+                .with("raporEkskul")
+                .with("prestasi")
+                .with("sikap", (builder) => {
+                  builder
+                    .with("ditingkatkanSosial")
+                    .with("ditunjukkanSosial")
+                    .with("ditingkatkanSpiritual")
+                    .with("ditunjukkanSpiritual");
+                });
+            });
           });
         })
         .where({ id: jadwal_mengajar_id })
@@ -2430,6 +2495,14 @@ class MainController {
           .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
           .andWhere({ m_materi_id: materi.id })
           .first();
+
+        //disini
+        rekap = await MRekap.query()
+          .with("rekaprombel", (builder) => {
+            builder.with("rekapnilai");
+          })
+          .where({ dihapus: 0 })
+          .fetch();
       }
     }
 
@@ -2440,6 +2513,7 @@ class MainController {
       integrasi: sekolah.integrasi,
       checkAbsensi: checkAbsensi.length,
       judulTugas: judulTugas,
+      rekap: rekap,
     });
   }
 
@@ -5874,10 +5948,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    let { absen, keterangan, lampiran, foto_masuk } = request.post();
+    let { absen, keterangan, lampiran, foto_masuk, user_id } = request.post();
 
     lampiran = lampiran ? lampiran.toString() : null;
 
+    let data;
     if (absen != "hadir") {
       return await MAbsen.create({
         m_sekolah_id: sekolah.id,
@@ -5888,9 +5963,9 @@ class MainController {
         lampiran: lampiran,
       });
     } else {
-      await MAbsen.create({
+      data = await MAbsen.create({
         m_sekolah_id: sekolah.id,
-        m_user_id: user.id,
+        m_user_id: user_id ? user_id : user.id,
         role: user.role,
         absen,
         keterangan,
@@ -5899,6 +5974,7 @@ class MainController {
     }
 
     return response.ok({
+      data: data,
       message: messagePostSuccess,
     });
   }
@@ -11893,9 +11969,10 @@ class MainController {
     }
 
     const user = await auth.getUser();
-    const { search } = request.get();
+    const { search, searchall } = request.get();
 
     let proyek;
+    let proyekall;
 
     if (search) {
       // ===== service cari proyek ====
@@ -11927,6 +12004,24 @@ class MainController {
         .whereIn("id", terimaProyekIds)
         .paginate();
     }
+    if (searchall) {
+      // ===== service cari proyek ====
+
+      proyekall = await MProyek.query()
+        .withCount("anggota", (builder) => {
+          builder.where({ status: "menerima" });
+        })
+        .where({ dihapus: 0 })
+        .andWhere("nama", "like", `%${searchall}%`)
+        .paginate();
+    } else {
+      proyekall = await MProyek.query()
+        .withCount("anggota", (builder) => {
+          builder.where({ status: "menerima" });
+        })
+        .where({ dihapus: 0 })
+        .paginate();
+    }
 
     // ===== service cari partner ====
     const cariPartner = await MAnggotaProyek.query()
@@ -11950,6 +12045,7 @@ class MainController {
       proyek: proyek,
       userPartner: userPartner,
       undangan,
+      proyekall,
     });
   }
 
@@ -11972,10 +12068,7 @@ class MainController {
         builder.where({ dihapus: 0 }).orderBy("created_at", "desc");
       })
       .with("anggota", (builder) => {
-        builder
-          .with("user")
-          .where({ dihapus: 0 })
-          .andWhere({ status: "menerima" });
+        builder.with("user").where({ dihapus: 0 });
       })
       .where({ id: proyek_id })
       .first();
@@ -11993,13 +12086,40 @@ class MainController {
   }
 
   async getUser({ response, request, auth }) {
-    const { page } = request.get();
+    const { page, name } = request.get();
 
+    let user;
+    if (name) {
+      user = await User.query()
+        .with("sekolah")
+        .where({ dihapus: 0 })
+        .where("nama", "like", `%${name}%`)
+        .andWhereNot({ role: "admin" })
+        .paginate(page);
+    } else {
+      user = await User.query()
+        .with("sekolah")
+        .where({ dihapus: 0 })
+        .andWhereNot({ role: "admin" })
+        .paginate(page);
+    }
+
+    return response.ok({
+      user: user,
+    });
+  }
+
+  async detailUser({ response, request, auth, params: { user_id } }) {
+    const role = await auth.getUser();
+    if (role.role != "admin") {
+      return response.json({
+        message: messageForbidden,
+      });
+    }
     const user = await User.query()
-      .with("sekolah")
       .where({ dihapus: 0 })
-      .andWhereNot({ role: "admin" })
-      .paginate(page);
+      .where({ id: user_id })
+      .first();
 
     return response.ok({
       user: user,
@@ -12411,7 +12531,12 @@ class MainController {
   }
 
   // ===================== Proyek Pekerjaan Service ===========================
-  async postPekerjaanProyek({ response, request, auth }) {
+  async postPekerjaanProyek({
+    response,
+    request,
+    auth,
+    params: { kategori_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -12422,24 +12547,22 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const {
-      judul,
-      prioritas,
-      status,
-      baras_waktu,
-      deskripsi,
-      m_kategori_pekerjaan_id,
-      urutan,
-    } = request.post();
+    const { judul, prioritas, status, batas_waktu, deskripsi, urutan } =
+      request.post();
+
+    const maxUrutan =
+      (await MPekerjaanProyek.query()
+        .where({ m_kategori_pekerjaan_id: kategori_id })
+        .getMax("urutan")) + 1;
 
     await MPekerjaanProyek.create({
       judul,
       prioritas,
       status,
-      baras_waktu,
+      batas_waktu,
       deskripsi,
-      m_kategori_pekerjaan_id,
-      urutan,
+      m_kategori_pekerjaan_id: kategori_id,
+      urutan: maxUrutan,
       dihapus: 0,
     });
 
@@ -12452,8 +12575,7 @@ class MainController {
     response,
     request,
     auth,
-    params: { proyek_id },
-    params: { pekerjaaan_proyek_id },
+    params: { pekerjaan_proyek_id },
   }) {
     const domain = request.headers().origin;
 
@@ -12469,7 +12591,7 @@ class MainController {
       judul,
       prioritas,
       status,
-      baras_waktu,
+      batas_waktu,
       deskripsi,
       m_kategori_pekerjaan_id,
       urutan,
@@ -12477,12 +12599,12 @@ class MainController {
 
     const pekerjaanProyek = await MPekerjaanProyek.query()
       .where({ id: pekerjaan_proyek_id })
-      .andWhere({ m_user_id: user.id })
+      // .andWhere({ m_user_id: user.id }) // Kolom m_user_id tidak ada di table pekerjaan proyek
       .update({
         judul,
         prioritas,
         status,
-        baras_waktu,
+        batas_waktu,
         deskripsi,
         m_kategori_pekerjaan_id,
         urutan,
@@ -12570,7 +12692,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { anggota_proyek_id, proyek_id, user_id } = request.post();
+    const { anggota_proyek_id, proyek_id, user_id, status } = request.post();
 
     const validation = await validate(
       request.post(),
@@ -12597,7 +12719,7 @@ class MainController {
         await MAnggotaProyek.create({
           m_proyek_id: proyek_id,
           m_user_id: d,
-          status: "undangan",
+          status: status,
           dihapus: 0,
         });
       })
@@ -12702,18 +12824,174 @@ class MainController {
 
     const user = await auth.getUser();
 
+    const pelajaran = await MMateri.query()
+      .with("mataPelajaran")
+      .where({ id: materi_id })
+      .first();
+
+    const sikapsosial = await MSikapSosial.query().fetch();
+    const sikapspiritual = await MSikapSpiritual.query().fetch();
+
+    const tugas = await MTugas.query().where({ m_user_id: user.id }).fetch();
+
     const rekap = await MMateri.query()
-      .with("rekap", (builder) => {
-        builder.where({ dihapus: 0 });
-      })
       .with("jurusan")
       .with("mataPelajaran")
+      .with("rekap", (builder) => {
+        builder
+          .with("rekaprombel", (builder) => {
+            builder.withCount("rekapnilai as total", (builder) => {
+              builder.where(
+                "nilai",
+                "<",
+                `${pelajaran.toJSON().mataPelajaran.kkm}`
+              );
+            });
+          })
+          .where({ dihapus: 0 });
+      })
       .where({ id: materi_id })
       // .andWhere({ dihapus: 0 })
       .first();
 
+    const materirombel = await TkMateriRombel.query()
+      .with("rombel", (builder) => {
+        builder.with("anggotaRombel", (builder) => {
+          builder.with("user", (builder) => {
+            builder
+              .with("sikap", (builder) => {
+                builder
+                  .with("ditingkatkanSosial")
+                  .with("ditunjukkanSosial")
+                  .with("ditingkatkanSpiritual")
+                  .with("ditunjukkanSpiritual");
+              })
+              .select("id", "nama");
+          });
+        });
+      })
+      .where({ m_materi_id: materi_id })
+      .fetch();
+
     return response.ok({
       rekap,
+      materirombel,
+      sikapsosial,
+      sikapspiritual,
+      tugas,
+    });
+  }
+
+  async postSikapRombel({
+    response,
+    request,
+    auth,
+    params: { user_id },
+    params: { rombel_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    // const user = await auth.getUser();
+
+    const { m_sikap_ditunjukkan_id, m_sikap_ditingkatkan_id } = request.post();
+
+    const sikap = await MSikapRombel.create({
+      m_user_id: user_id,
+      m_rombel_id: rombel_id,
+      m_sikap_ditunjukkan_id: m_sikap_ditunjukkan_id.length
+        ? m_sikap_ditunjukkan_id.toString()
+        : null,
+      m_sikap_ditingkatkan_id: m_sikap_ditingkatkan_id.length
+        ? m_sikap_ditingkatkan_id.toString()
+        : null,
+      status: 1,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+  async postRaporSikap({ response, request, auth, params: { user_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const checkSikap = await MSikapSiswa.query()
+      .where({ m_user_id: user_id })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    const {
+      m_sikap_spiritual_ditingkatkan_id,
+      m_sikap_spiritual_ditunjukkan_id,
+      m_sikap_sosial_ditunjukkan_id,
+      m_sikap_sosial_ditingkatkan_id,
+      tipe,
+    } = request.post();
+
+    if (checkSikap) {
+      sikap = await MSikapSiswa.query()
+        .where({ m_user_id: user_id })
+        .update({
+          tipe,
+          m_sikap_sosial_ditunjukkan_id: m_sikap_sosial_ditunjukkan_id.length
+            ? m_sikap_sosial_ditunjukkan_id.toString()
+            : null,
+          m_sikap_sosial_ditingkatkan_id: m_sikap_sosial_ditingkatkan_id.length
+            ? m_sikap_sosial_ditingkatkan_id.toString()
+            : null,
+          m_sikap_spiritual_ditunjukkan_id:
+            m_sikap_spiritual_ditunjukkan_id.length
+              ? m_sikap_spiritual_ditunjukkan_id.toString()
+              : null,
+          m_sikap_spiritual_ditingkatkan_id:
+            m_sikap_spiritual_ditingkatkan_id.length
+              ? m_sikap_spiritual_ditingkatkan_id.toString()
+              : null,
+        });
+    } else {
+      await MSikapSiswa.create({
+        m_user_id: user_id,
+        tipe,
+        m_sikap_sosial_ditunjukkan_id: m_sikap_sosial_ditunjukkan_id.length
+          ? m_sikap_sosial_ditunjukkan_id.toString()
+          : null,
+        m_sikap_sosial_ditingkatkan_id: m_sikap_sosial_ditingkatkan_id.length
+          ? m_sikap_sosial_ditingkatkan_id.toString()
+          : null,
+        m_sikap_spiritual_ditunjukkan_id:
+          m_sikap_spiritual_ditunjukkan_id.length
+            ? m_sikap_spiritual_ditunjukkan_id.toString()
+            : null,
+        m_sikap_spiritual_ditingkatkan_id:
+          m_sikap_spiritual_ditingkatkan_id.length
+            ? m_sikap_spiritual_ditingkatkan_id.toString()
+            : null,
+        status: 1,
+        dihapus: 0,
+      });
+    }
+    if (!sikap) {
+      return response.ok({
+        message: messagePostSuccess,
+      });
+    }
+
+    return response.ok({
+      message: messagePostSuccess,
     });
   }
 
@@ -12723,7 +13001,71 @@ class MainController {
     response,
     request,
     auth,
-    params: { rekapnilai_id },
+    params: { rekap_id },
+    // params: { rombel_id },
+    params: { materi_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+    // const { rombel_id } = request.post();
+    const pelajaran = await MMateri.query()
+      .with("mataPelajaran")
+      .where({ id: materi_id })
+      .first();
+
+    const materirombel = await TkMateriRombel.query()
+      .with("rombel")
+      .where({ m_materi_id: materi_id })
+      .fetch();
+
+    const rekap = await MRekap.query()
+      .with("rekaprombel", (builder) => {
+        builder
+          .with("rekapnilai", (builder) => {
+            builder.with("user", (builder) => {
+              builder.select("id", "nama");
+            });
+          })
+          .withCount("rekapnilai as total", (builder) => {
+            builder.where(
+              "nilai",
+              "<",
+              `${pelajaran.toJSON().mataPelajaran.kkm}`
+            );
+          })
+          .with("tugas")
+          .where({ dihapus: 0 });
+        // .andWhere({ m_rombel_id: rombel_id });
+      })
+      .with("materi", (builder) => {
+        builder.with("mataPelajaran");
+      })
+      .where({ id: rekap_id })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    const tugas = await MTugas.query().where({ m_user_id: user.id }).fetch();
+
+    return response.ok({
+      materirombel,
+      rekap,
+      tugas,
+    });
+  }
+
+  async detailRekapRombel({
+    response,
+    request,
+    auth,
+    // params: { rekap_id },
+    params: { materi_id },
   }) {
     const domain = request.headers().origin;
 
@@ -12735,27 +13077,78 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const rekap = await MRekap.query()
-      .with("rekaprombel", (builder) => {
-        builder
-          .with("rekapnilai", (builder) => {
-            builder.with("user");
-          })
-          .with("tugas")
-          .where({ dihapus: 0 });
-      })
-      .where({ id: rekapnilai_id })
-      .andWhere({ dihapus: 0 })
-      .first();
-
     const materirombel = await TkMateriRombel.query()
       .with("rombel")
-      .where({ id: rekap.m_materi_id })
+      .where({ m_materi_id: materi_id })
       .fetch();
 
+    const tugasdata = await MTimeline.query()
+      .select("id", "m_tugas_id", "m_rombel_id", "m_user_id")
+      .with("listSiswaDinilai", (builder) => {
+        builder
+          .select("id", "nilai", "m_user_id", "m_timeline_id")
+          .with("user", (builder) => {
+            builder.select("id", "nama");
+          })
+          .whereNotNull("nilai");
+      })
+      .where({ m_tugas_id: 172 })
+      .fetch();
+
+    const datatugas = await MRombel.query()
+      .with("anggotaRombel", (builder) => {
+        builder.with("user", (builder) => {
+          builder.select("id", "nama").with("tugas", (builder) => {
+            builder
+              .select("id", "nilai", "m_user_id", "m_timeline_id")
+              .with("user", (builder) => {
+                builder.select("id", "nama");
+              })
+              .whereNotNull("nilai");
+          });
+        });
+      })
+      .where({ id: m_rombel_id })
+      .fetch();
+
+    // // const rekap = await Promise.all(
+    // //   materirombel.toJSON().map(async (d) => {
+    // const rekap = await MRekap.query()
+    //   .with("rekaprombel", (builder) => {
+    //     builder
+    //       .with("rekapnilai", (builder) => {
+    //         builder.with("user", (builder) => {
+    //           builder.select("id", "nama");
+    //         });
+    //       })
+    //       .withCount("rekapnilai as total", (builder) => {
+    //         builder.where(
+    //           "nilai",
+    //           "<",
+    //           `${pelajaran.toJSON().mataPelajaran.kkm}`
+    //         );
+    //       })
+    //       .with("tugas")
+    //       .where({ dihapus: 0 });
+    //     // .andWhere({ m_rombel_id: rombel_id });
+    //   })
+    //   .with("materi", (builder) => {
+    //     builder.with("mataPelajaran");
+    //   })
+    //   .where({ id: rekap_id })
+    //   .andWhere({ dihapus: 0 })
+    //   .first();
+    // //   })
+    // // );
+
+    const tugas = await MTugas.query().where({ m_user_id: user.id }).fetch();
+
     return response.ok({
-      rekap,
+      datatugas,
       materirombel,
+      // rekap,
+      tugas,
+      tugasdata,
     });
   }
 
@@ -12791,7 +13184,7 @@ class MainController {
     response,
     request,
     auth,
-    params: { rekapnilai_id },
+    params: { rekapnilai_id, materi_id },
   }) {
     const domain = request.headers().origin;
 
@@ -12815,6 +13208,80 @@ class MainController {
       m_rekap_id: rekapnilai_id,
       dihapus: 0,
     });
+
+    const tugasdata = await MTimeline.query()
+      .with("listSiswaDinilai", (builder) => {
+        builder.with("user").whereNotNull("nilai");
+      })
+      .where({ m_tugas_id: m_tugas_id })
+      .fetch();
+
+    const data = await MRombel.query()
+      .with("anggotaRombel", (builder) => {
+        builder.with("user", (builder) => {
+          builder.select("id", "nama");
+        });
+      })
+      .where({ id: m_rombel_id })
+      .fetch();
+
+    // const tugasdata = await MRombel.query()
+    //   .with("anggotaRombel", (builder) => {
+    //     builder.with("user", (builder) => {
+    //       builder.select("id", "nama").with("tugas", (builder) => {
+    //         builder
+    //           .select("id", "nilai", "m_user_id", "m_timeline_id")
+    //           .with("user", (builder) => {
+    //             builder.select("id", "nama");
+    //           })
+    //           .whereNotNull("nilai");
+    //       });
+    //     });
+    //   })
+    //   .where({ id: m_rombel_id })
+    //   .fetch();
+
+    // if (tugasdata) {
+    //   const all = await Promise.all(
+    //     data.toJSON().map(async (d) => {
+    //       await Promise.all(
+    //         d.anggotaRombel.map(async (e) => {
+    //           const tugasdata = await MTimeline.query()
+    //             .select("id", "m_tugas_id", "m_rombel_id", "m_user_id")
+    //             .with("listSiswaDinilai", (builder) => {
+    //               builder
+    //                 .select("id", "nilai", "m_user_id", "m_timeline_id")
+    //                 .whereNotNull("nilai")
+    //                 .andWhere({ m_user_id: e.m_user_id });
+    //             })
+    //             .where({ m_tugas_id: m_tugas_id })
+    //             .fetch();
+
+    //           await TkRekapNilai.create({
+    //             m_user_id: e.m_user_id,
+    //             nilai: tugasdata.lisSiswaDinilai.nilai,
+    //             m_rekap_rombel_id: `${rekap.id}`,
+    //           });
+    //         })
+    //       );
+    //     })
+    //   );
+    // }
+
+    const all = await Promise.all(
+      data.toJSON().map(async (d) => {
+        await Promise.all(
+          d.anggotaRombel.map(async (e) => {
+            await TkRekapNilai.create({
+              m_user_id: e.m_user_id,
+              nilai: 0,
+              m_rekap_rombel_id: `${rekap.id}`,
+            });
+          })
+        );
+        // }
+      })
+    );
 
     return response.ok({
       message: messagePostSuccess,
@@ -12990,6 +13457,59 @@ class MainController {
       message: messagePutSuccess,
     });
   }
+
+  // async postRekapNilaisiswa({
+  //   response,
+  //   request,
+  //   auth,
+  //   params: { user_id, rekap_id, materi_id },
+  // }) {
+  //   const domain = request.headers().origin;
+
+  //   const sekolah = await this.getSekolahByDomain(domain);
+
+  //   if (sekolah == "404") {
+  //     return response.notFound({ message: "Sekolah belum terdaftar" });
+  //   }
+
+  //   const user = await auth.getUser();
+
+  //   const { m_rombel_id } = request.post();
+
+  //   const data = await TkMateriRombel.query()
+  //     .with("rombel", (builder) => {
+  //       builder.with("anggotaRombel", (builder) => {
+  //         builder.with("user", (builder) => {
+  //           builder.select("id", "nama");
+  //         });
+  //       });
+  //     })
+  //     .where({ m_materi_id: materi_id })
+  //     .fetch();
+
+  //   let rekap;
+
+  //   const all = await Promise.all(
+  //     data.map(async (d) => {
+  //       await TkRekapNilai.create({
+  //         m_user_id: d.anggotaRombel.user.id,
+  //         nilai: 0,
+  //         m_rekap_rombel_id: rekapnilai_id,
+  //       });
+  //       // }
+  //     })
+  //   );
+
+  //   if (!rekap) {
+  //     return response.ok({
+  //       message: messagePostSuccess,
+  //     });
+  //   }
+
+  //   return response.ok({
+  //     message: messagePutSuccess,
+  //   });
+  // }
 
   // =========== IMPORT GTK SERVICE ================
   async importGTKServices(filelocation, sekolah) {
@@ -13287,12 +13807,178 @@ class MainController {
     let workbook = new Excel.Workbook();
 
     let worksheet = workbook.addWorksheet(`RekapAbsen`);
-    const awal = moment(`${tanggal_awal}`).format("YYYY-MM-DD");
-    const akhir = moment(`${tanggal_akhir}`).format("YYYY-MM-DD");
-
+    const awal = moment(`${tanggal_awal}`).format("DD-MM-YYYY");
+    const akhir = moment(`${tanggal_akhir}`).format("DD-MM-YYYY");
+    worksheet.getCell(
+      "A4"
+    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    worksheet.addConditionalFormatting({
+      ref: `A1:G2`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 16,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: `A3:G3`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+    worksheet.mergeCells(`A1:G1`);
+    worksheet.mergeCells(`A2:G2`);
+    worksheet.mergeCells(`A3:G3`);
+    worksheet.addConditionalFormatting({
+      ref: `A8:G8`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: `A5:G5`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "left",
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
     await Promise.all(
-      rekapAbsenKepsek.map(async (d) => {
+      rekapAbsenKepsek.map(async (d, idx) => {
+        worksheet.addConditionalFormatting({
+          ref: `B${(idx + 1) * 1 + 5}:G${(idx + 1) * 1 + 5}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet.addConditionalFormatting({
+          ref: `A${(idx + 1) * 1 + 5}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
         worksheet.getRow(5).values = [
+          "No",
           "Nama",
           "Hadir",
           "telat",
@@ -13302,6 +13988,7 @@ class MainController {
         ];
 
         worksheet.columns = [
+          { key: "no" },
           { key: "user" },
           { key: "hadir" },
           { key: "telat" },
@@ -13311,10 +13998,11 @@ class MainController {
         ];
 
         worksheet.getCell("A1").value = "Rekap Absen";
-        worksheet.getCell("A2").value = `${awal} sampai ${akhir}`;
-        worksheet.getCell("A3").value = sekolah.nama;
+        worksheet.getCell("A2").value = sekolah.nama;
+        worksheet.getCell("A3").value = `${awal} sampai ${akhir}`;
 
         let row = worksheet.addRow({
+          no: `${idx + 1}`,
           user: d ? d.namaKepsek : "-",
           hadir: d ? d.totalHadir : "-",
           telat: d ? d.totalTelat : "-",
@@ -13326,8 +14014,63 @@ class MainController {
     );
 
     await Promise.all(
-      rekapAbsenGuru.map(async (d) => {
+      rekapAbsenGuru.map(async (d, idx) => {
+        worksheet.addConditionalFormatting({
+          ref: `B${(idx + 1) * 1 + 8}:G${(idx + 1) * 1 + 8}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet.addConditionalFormatting({
+          ref: `A${(idx + 1) * 1 + 8}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
         worksheet.getRow(8).values = [
+          "No",
           "Nama",
           "Hadir",
           "Telat",
@@ -13337,6 +14080,7 @@ class MainController {
         ];
 
         worksheet.columns = [
+          { key: "no" },
           { key: "user" },
           { key: "hadir" },
           { key: "telat" },
@@ -13346,6 +14090,7 @@ class MainController {
         ];
 
         let row = worksheet.addRow({
+          no: `${idx + 1}`,
           user: d ? d.namaGuru : "-",
           hadir: d ? d.totalHadir : "-",
           telat: d ? d.totalTelat : "-",
@@ -13395,6 +14140,9 @@ class MainController {
           .where({ whatsapp: d.whatsapp })
           .andWhere({ dihapus: 0 })
           .first();
+        if (!user) {
+          return;
+        }
 
         await MMataPelajaran.create({
           nama: d.nama,
@@ -13470,12 +14218,146 @@ class MainController {
     let workbook = new Excel.Workbook();
     let worksheet = workbook.addWorksheet(`Rekap Mata Pelajaran`);
     worksheet.getCell("A1").value = "Rekap Mata Pelajaran";
-    worksheet.getCell("A3").value = sekolah.nama;
-    worksheet.getCell("A2").value = ta.tahun;
-
+    worksheet.getCell("A2").value = sekolah.nama;
+    worksheet.getCell("A3").value = ta.tahun;
+    worksheet.getCell(
+      "A4"
+    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    worksheet.addConditionalFormatting({
+      ref: `A1:G2`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 16,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: `A3:G3`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+    worksheet.mergeCells(`A1:G1`);
+    worksheet.mergeCells(`A2:G2`);
+    worksheet.mergeCells(`A3:G3`);
+    worksheet.addConditionalFormatting({
+      ref: `A5:G5`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
     await Promise.all(
-      mapel.toJSON().map(async (d) => {
+      mapel.toJSON().map(async (d, idx) => {
+        worksheet.addConditionalFormatting({
+          ref: `B${(idx + 1) * 1 + 5}:G${(idx + 1) * 1 + 5}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet.addConditionalFormatting({
+          ref: `A${(idx + 1) * 1 + 5}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
         worksheet.getRow(5).values = [
+          "No",
           "Nama Guru",
           "Whatsapp",
           "Nama",
@@ -13485,6 +14367,7 @@ class MainController {
         ];
 
         worksheet.columns = [
+          { key: "no" },
           { key: "guru" },
           { key: "whatsapp" },
           { key: "nama" },
@@ -13494,6 +14377,7 @@ class MainController {
         ];
 
         let row = worksheet.addRow({
+          no: `${idx + 1}`,
           guru: d.user ? d.user.nama : "-",
           whatsapp: d.user ? d.user.whatsapp : "-",
           nama: d ? d.nama : "-",
@@ -13602,9 +14486,142 @@ class MainController {
     let workbook = new Excel.Workbook();
 
     let worksheet = workbook.addWorksheet(`Rekap Mutasi Keuangan`);
-
+    worksheet.getCell(
+      "A4"
+    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    worksheet.addConditionalFormatting({
+      ref: `A1:E2`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 16,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: `A3:E3`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+    worksheet.mergeCells(`A1:E1`);
+    worksheet.mergeCells(`A2:E2`);
+    worksheet.mergeCells(`A3:E3`);
+    worksheet.addConditionalFormatting({
+      ref: `A5:E5`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
     await Promise.all(
-      mutasi.toJSON().map(async (d) => {
+      mutasi.toJSON().map(async (d, idx) => {
+        worksheet.addConditionalFormatting({
+          ref: `B${(idx + 1) * 1 + 5}:E${(idx + 1) * 1 + 5}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet.addConditionalFormatting({
+          ref: `A${(idx + 1) * 1 + 5}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
         worksheet.getRow(5).values = [
           "Tanggal Transaksi",
           "Tipe",
@@ -13622,9 +14639,10 @@ class MainController {
         ];
 
         worksheet.getCell("A1").value = "Rekap Mutasi Keuangan";
-        const awal = moment(`${tanggal_awal}`).format("YYYY-MM-DD");
-        const akhir = moment(`${tanggal_akhir}`).format("YYYY-MM-DD");
+        const awal = moment(`${tanggal_awal}`).format("DD-MM-YYYY");
+        const akhir = moment(`${tanggal_akhir}`).format("DD-MM-YYYY");
         worksheet.getCell("A2").value = sekolah.nama;
+        worksheet.getCell("A3").value = `${awal} sampai ${akhir}`;
 
         let row = worksheet.addRow({
           waktu_dibuat: d ? d.waktu_dibuat : "-",
@@ -13812,20 +14830,26 @@ class MainController {
 
     let colComment = explanation.getColumn("A");
 
+    // let dataRombel = [];
+
     colComment.eachCell(async (cell, rowNumber) => {
       if (rowNumber >= 7) {
         let rombelall = explanation.getCell("B" + rowNumber).value;
         let tingkat = `${rombelall.split(" ")[0]}`;
 
+        // dataRombel.push({
+        //   rombelall: explanation.getCell("B" + rowNumber).value,
+        //   tingkat: `${rombelall.split(" ")[0]}`,
+        // });
+
         const rombelCheck = await MRombel.query()
-          .where({ nama: d.rombel })
-          // .andWhere({ tingkat: tingkatromawi })
+          .where({ nama: rombelall })
           .andWhere({ m_ta_id: ta.id })
           .andWhere({ m_sekolah_id: sekolah.id })
           .first();
 
         if (!rombelCheck) {
-          const createRombel = await MRombel.create({
+          await MRombel.create({
             tingkat: tingkat,
             nama: rombelall,
             kelompok: "reguler",
@@ -13833,10 +14857,32 @@ class MainController {
             m_ta_id: ta.id,
             dihapus: 0,
           });
-          return;
+          return rombelCheck;
         }
       }
     });
+
+    // const rombelResult = await Promise.all(
+    //   dataRombel.map(async (d) => {
+    //     const rombelCheck = await MRombel.query()
+    //       .where({ nama: d.rombel })
+    //       .andWhere({ m_ta_id: ta.id })
+    //       .andWhere({ m_sekolah_id: sekolah.id })
+    //       .first();
+
+    //     if (!rombelCheck) {
+    //       const createRombel = await MRombel.create({
+    //         tingkat: d.tingkat,
+    //         nama: d.rombelall,
+    //         kelompok: "reguler",
+    //         m_sekolah_id: sekolah.id,
+    //         m_ta_id: ta.id,
+    //         dihapus: 0,
+    //       });
+    //       return;
+    //     }
+    //   })
+    // );
 
     let data = [];
 
@@ -13874,19 +14920,6 @@ class MainController {
       }
     });
 
-    // const rombelResult = await Promise.all(
-    //   dataRombel.map(async (d) => {
-    //     const createRombel = await MRombel.create({
-    //       tingkat: d.tingkat,
-    //       nama: d.rombelall,
-    //       kelompok: "reguler",
-    //       m_sekolah_id: sekolah.id,
-    //       m_ta_id: ta.id,
-    //       dihapus: 0,
-    //     });
-    //   })
-    // );
-
     const result = await Promise.all(
       data.map(async (d) => {
         const checkUser = await User.query()
@@ -13903,7 +14936,6 @@ class MainController {
 
         const checkRombel = await MRombel.query()
           .where({ nama: d.rombel })
-          // .andWhere({ tingkat: tingkatromawi })
           .andWhere({ m_ta_id: ta.id })
           .andWhere({ m_sekolah_id: sekolah.id })
           .first();
@@ -13975,7 +15007,7 @@ class MainController {
 
         const checkAnggotaRombel = await MAnggotaRombel.query()
           .where({ dihapus: 0 })
-          .andWhere({ m_user_id: checkUser.id })
+          .andWhere({ m_user_id: checkUser.toJSON().id })
           .andWhere({ m_rombel_id: checkRombel.id })
           .first();
 
@@ -14068,11 +15100,126 @@ class MainController {
         worksheet.getCell("A2").value = sekolah.nama;
         worksheet.getCell("A3").value = ta.tahun;
         worksheet.getCell("A4 ").value = d.nama;
+        worksheet.getCell(
+          "A6"
+        ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+        worksheet.addConditionalFormatting({
+          ref: `A1:E4`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 16,
+                  bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+              },
+            },
+          ],
+        });
+        worksheet.mergeCells(`A1:E1`);
+        worksheet.mergeCells(`A2:E2`);
+        worksheet.mergeCells(`A3:E3`);
+        worksheet.mergeCells(`A4:E4`);
+        worksheet.addConditionalFormatting({
+          ref: `A7:E7`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                fill: {
+                  type: "pattern",
+                  pattern: "solid",
+                  bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
 
         await Promise.all(
-          d.anggotaRombel.map(async (anggota) => {
+          d.anggotaRombel.map(async (anggota, idx) => {
+            worksheet.addConditionalFormatting({
+              ref: `B${(idx + 1) * 1 + 7}:E${(idx + 1) * 1 + 7}`,
+              rules: [
+                {
+                  type: "expression",
+                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                  style: {
+                    font: {
+                      name: "Times New Roman",
+                      family: 4,
+                      size: 11,
+                      // bold: true,
+                    },
+                    alignment: {
+                      vertical: "middle",
+                      horizontal: "left",
+                    },
+                    border: {
+                      top: { style: "thin" },
+                      left: { style: "thin" },
+                      bottom: { style: "thin" },
+                      right: { style: "thin" },
+                    },
+                  },
+                },
+              ],
+            });
+            worksheet.addConditionalFormatting({
+              ref: `A${(idx + 1) * 1 + 7}`,
+              rules: [
+                {
+                  type: "expression",
+                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                  style: {
+                    font: {
+                      name: "Times New Roman",
+                      family: 4,
+                      size: 11,
+                      // bold: true,
+                    },
+                    alignment: {
+                      vertical: "middle",
+                      horizontal: "center",
+                    },
+                    border: {
+                      top: { style: "thin" },
+                      left: { style: "thin" },
+                      bottom: { style: "thin" },
+                      right: { style: "thin" },
+                    },
+                  },
+                },
+              ],
+            });
             // add column headers
             worksheet.getRow(7).values = [
+              "No",
               "Nama",
               "Whatsapp",
               "Gender",
@@ -14080,6 +15227,7 @@ class MainController {
             ];
 
             worksheet.columns = [
+              { key: "no" },
               { key: "user" },
               { key: "whatsapp" },
               { key: "gender" },
@@ -14088,6 +15236,7 @@ class MainController {
 
             // Add row using key mapping to columns
             let row = worksheet.addRow({
+              no: `${idx + 1}`,
               user: anggota.user ? anggota.user.nama : "-",
               whatsapp: anggota.user ? anggota.user.whatsapp : "-",
               gender: anggota.user ? anggota.user.gender : "-",
@@ -14153,6 +15302,107 @@ class MainController {
             worksheet.getCell("A5").value = d.nama;
             worksheet.getCell("A6").value = e.rombel.nama;
             worksheet.getCell("A7").value = d.bulan;
+            worksheet.getCell(
+              "A8"
+            ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+            worksheet.mergeCells(`A1:F1`);
+            worksheet.mergeCells(`A2:F2`);
+            worksheet.mergeCells(`A3:F3`);
+            worksheet.mergeCells(`A5:F5`);
+            worksheet.mergeCells(`A6:F6`);
+            worksheet.mergeCells(`A7:F7`);
+            worksheet.addConditionalFormatting({
+              ref: "A1:F3",
+              rules: [
+                {
+                  type: "expression",
+                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                  style: {
+                    font: {
+                      name: "Times New Roman",
+                      family: 4,
+                      size: 16,
+                      bold: true,
+                    },
+                    alignment: {
+                      vertical: "middle",
+                      horizontal: "center",
+                    },
+                  },
+                },
+              ],
+            });
+            worksheet.addConditionalFormatting({
+              ref: "A5:F7",
+              rules: [
+                {
+                  type: "expression",
+                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                  style: {
+                    font: {
+                      name: "Times New Roman",
+                      family: 4,
+                      size: 14,
+                      // bold: true,
+                    },
+                    alignment: {
+                      vertical: "middle",
+                      horizontal: "center",
+                    },
+                  },
+                },
+              ],
+            });
+            worksheet.getColumn("A").width = 5;
+            worksheet.getColumn("B").width = 28;
+            worksheet.getColumn("C").width = 10;
+            worksheet.addConditionalFormatting({
+              ref: "A9:C9",
+              rules: [
+                {
+                  type: "expression",
+                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                  style: {
+                    font: {
+                      name: "Times New Roman",
+                      family: 4,
+                      size: 14,
+                      bold: true,
+                    },
+                    fill: {
+                      type: "pattern",
+                      pattern: "solid",
+                      bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+                    },
+                    alignment: {
+                      vertical: "middle",
+                      horizontal: "center",
+                    },
+                    border: {
+                      top: { style: "thin" },
+                      left: { style: "thin" },
+                      bottom: { style: "thin" },
+                      right: { style: "thin" },
+                    },
+                  },
+                },
+              ],
+            });
+            worksheet.addConditionalFormatting({
+              ref: "A10:A109",
+              rules: [
+                {
+                  type: "expression",
+                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                  style: {
+                    alignment: {
+                      vertical: "middle",
+                      horizontal: "center",
+                    },
+                  },
+                },
+              ],
+            });
             await Promise.all(
               e.siswa.map(async (anggota, nox) => {
                 // add column headers
@@ -14368,12 +15618,133 @@ class MainController {
 
     let workbook = new Excel.Workbook();
     let worksheet = workbook.addWorksheet(`Daftar Alumni`);
-
+    worksheet.mergeCells("A1:P1");
+    worksheet.mergeCells("A2:P2");
+    worksheet.getCell(
+      "A3"
+    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    worksheet.addConditionalFormatting({
+      ref: "A1:P2",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 16,
+              bold: true,
+            },
+            // fill: {
+            //   type: "pattern",
+            //   pattern: "solid",
+            //   bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            // },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            // border: {
+            //   top: { style: "thin" },
+            //   left: { style: "thin" },
+            //   bottom: { style: "thin" },
+            //   right: { style: "thin" },
+            // },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: "A4:P4",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
     await Promise.all(
       alumni.toJSON().map(async (d, idx) => {
         worksheet.getCell("A1").value = "Rekap Alumni";
         worksheet.getCell("A2").value = sekolah.nama;
-
+        worksheet.addConditionalFormatting({
+          ref: `B${(idx + 1) * 1 + 4}:P${(idx + 1) * 1 + 4}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet.addConditionalFormatting({
+          ref: `A${(idx + 1) * 1 + 4}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
         // add column headers
         worksheet.getRow(4).values = [
           "No",
@@ -14449,16 +15820,22 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
-    let tipeUjian = [
-      { value: "ph", label: "Penilaian Harian" },
-      { value: "pts1", label: "Penilaian Tengah Semester 1" },
-      { value: "pts2", label: "Penilaian Tengah Semester 2" },
-      { value: "pas1", label: "Penilaian Akhir Semester 1" },
-      { value: "pas2", label: "Penilaian Akhir Semester 2" },
-      { value: "us", label: "Ujian Sekolah" },
-      { value: "literasi", label: "AKM - Literasi" },
-      { value: "numerasi", label: "AKM - Numerasi" },
-    ];
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const tasemester = await Mta.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ aktif: 1 })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    const kepsek = await User.query()
+      .where({ role: "kepsek" })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .first();
 
     const ujian = await MUjian.query()
       .with("mataPelajaran", (builder) => {
@@ -14474,37 +15851,221 @@ class MainController {
       .andWhere({ id: ujian_id })
       .first();
 
-    return ujian.toJSON().mataPelajaran.user;
+    // const file = fs.createWriteStream("file.jpg");
+    // const request = http.get(`${sekolah.logo}`, function (response) {
+    //   response.pipe(file);
+    // });
 
-    const jumlahSoal = await MSoalUjian.query()
-      .where({ dihapus: 0 })
-      .andWhere({})
-      .count();
+    (async () => {
+      const downloader = new Downloader({
+        url: `${sekolah.logo}`,
+        directory: "./public/images/", //Sub directories will also be automatically created if they do not exist.
+        fileName: "logo.png",
+        cloneFiles: false,
+      });
+
+      try {
+        await downloader.download();
+      } catch (error) {
+        console.log(error);
+      }
+    })();
 
     let workbook = new Excel.Workbook();
 
-    let worksheet = workbook.addWorksheet(`sheet1`, {
+    let worksheet = workbook.addWorksheet(`KISI-KISI`, {
       properties: { tabColor: { argb: "FFC0000" } },
     });
+
+    const imageId1 = workbook.addImage({
+      filename: "public/images/logo.png",
+      extension: "png",
+    });
+    // worksheet.addImage(imageId1, 'B1:B3');
+    worksheet.addImage(imageId1, {
+      tl: { col: 1.5, row: 0.1 },
+      ext: { width: 100, height: 60 },
+    });
+
+    // looping worksheet
+    await Promise.all(
+      ujian.toJSON().soalUjian.map(async (e, idx) => {
+        // await Promise.all(
+        //   d.soal.map(async (e, idx) => {
+        // add column headers
+
+        worksheet.getRow(22).values = [
+          "No",
+          "KOMPETENSI DASAR",
+          "MATERI",
+          "INDIKATOR PENCAPAIAN KOMPETENSI",
+          "INDIKATOR SOAL",
+          "LEVEL KOGNITIF",
+          "BENTUK SOAL",
+          "TINGKAT KESUKARAN",
+          "SUMBER BUKU",
+          "NO SOAL",
+        ];
+
+        worksheet.getRow(23).values = ["", "", "", "", "", "", "", "", "", ""];
+
+        worksheet.columns = [
+          { key: "No" },
+          { key: "KOMPETENSI_DASAR" },
+          { key: "MATERI" },
+          { key: "INDIKATOR_PENCAPAIAN_KOMPETENSI" },
+          { key: "INDIKATOR SOAL" },
+          { key: "LEVEL_KOGNITIF" },
+          { key: "BENTUK_SOAL" },
+          { key: "TINGKAT_KESUKARAN" },
+          { key: "SUMBER_BUKU" },
+          { key: "NO_SOAL" },
+        ];
+
+        // Add row using key mapping to columns
+        let row = worksheet.addRow({
+          No: `${idx + 1}`,
+          KOMPETENSI_DASAR: e.soal ? e.soal.kd : "-",
+          MATERI: e.soal ? e.soal.kd_konten_materi : "-",
+          INDIKATOR_PENCAPAIAN_KOMPETENSI: e.soal
+            ? e.soal.akm_konteks_materi
+            : "-",
+          INDIKATOR_SOAL: e.soal ? e.soal.akm_konten_materi : "-",
+          LEVEL_KOGNITIF: e.soal ? e.soal.aspek_level : "-",
+          BENTUK_SOAL: e.soal ? e.soal.bentuk : "-",
+          TINGAT_KESUKARAN: e.soal ? e.soal.tahun_masuk : "-",
+          SUMBER_BUKU: e.soal ? e.soal.pekerjaan : "-",
+          NO_SOAL: e.soal ? e.soal.kantor : "-",
+        });
+        // })
+        // );
+      })
+    );
+    // const imageId1 = workbook.addImage({
+    //   filename: `${sekolah.logo_ss}`,
+    //   extension: "png",
+    // });
+    // worksheet.addImage(imageId1, {
+    //   tl: { col: 0, row: 0 },
+    //   ext: { width: 500, height: 200 },
+    // });
+    // const imageId1 = workbook.addImage({
+    // buffer: fs.readFileSync(`${sekolah.logo_ss}`),
+    //   extension: "png",
+    // });
+    // worksheet.addImage(imageId1, {
+    //   tl: { col: 0, row: 0 },
+    //   ext: { width: 30, height: 20 },
+    // });
     worksheet.mergeCells("A1:J1");
     worksheet.mergeCells("A2:J2");
+    worksheet.mergeCells("A3:J3");
     worksheet.mergeCells("A4:J4");
     worksheet.mergeCells("A5:J5");
     worksheet.mergeCells("A21:J21");
-    worksheet.getCell("A1").value = "";
+    worksheet.mergeCells("A22:A23");
+    worksheet.mergeCells("B22:B23");
+    worksheet.mergeCells("C22:C23");
+    worksheet.mergeCells("D22:D23");
+    worksheet.mergeCells("E22:E23");
+    worksheet.mergeCells("F22:F23");
+    worksheet.mergeCells("G22:G23");
+    worksheet.mergeCells("H22:H23");
+    worksheet.mergeCells("I22:I23");
+    worksheet.mergeCells("J22:J23");
+    worksheet.getColumn("A").width = 4;
+    worksheet.getColumn("B").width = 30;
+    worksheet.getColumn("C").width = 17;
+    worksheet.getColumn("D").width = 26;
+    worksheet.getColumn("E").width = 26;
+    worksheet.getColumn("F").width = 9.5;
+    worksheet.getColumn("G").width = 8;
+    worksheet.getColumn("H").width = 12;
+    worksheet.getColumn("I").width = 11;
+    worksheet.getColumn("J").width = 6;
+    // return sekolah;
+    worksheet.getCell("A1").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 16,
+            bold: true,
+          },
+          text: `PEMERINTAH DAERAH PROVINSI ${sekolah.provinsi}`,
+        },
+      ],
+    };
+    worksheet.getCell("A1").alignment = {
+      vertical: "middle",
+      horizontal: "center",
+    };
+    worksheet.getCell("A2").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 20,
+            bold: true,
+          },
+          text: "DINAS PENDIDIKAN",
+        },
+      ],
+    };
+    worksheet.getCell("A2").alignment = {
+      vertical: "middle",
+      horizontal: "center",
+    };
+    worksheet.getCell("A3").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 14,
+            bold: true,
+          },
+          text: `${sekolah.alamat} telp.${sekolah.telp} ${sekolah.kabupaten} - ${sekolah.kode_pos}`,
+        },
+      ],
+    };
+    worksheet.getCell("A3").alignment = {
+      vertical: "middle",
+      horizontal: "center",
+    };
     worksheet.getCell("A4").value = {
       richText: [
         {
-          font: { name: "Times New Roman", family: 4, size: 16, bold: true },
+          font: {
+            name: "Agency FB",
+            family: 4,
+            size: 36,
+            color: { argb: "FFFFFF" },
+          },
           text: "KISI-KISI",
         },
       ],
     };
+
     worksheet.getCell("A4").alignment = {
       vertical: "middle",
       horizontal: "center",
     };
-    worksheet.getCell("A5").value = `${ujian.tipe_format}`;
+    worksheet.getCell("A5").value = {
+      richText: [
+        {
+          font: {
+            name: "Agency FB",
+            family: 4,
+            size: 26,
+            color: { argb: "FFFFFF" },
+          },
+          text: `${ujian.toJSON().tipe_format}`,
+        },
+      ],
+    };
     worksheet.getCell("A5").alignment = {
       vertical: "middle",
       horizontal: "center",
@@ -14512,14 +16073,266 @@ class MainController {
     worksheet.getCell("A4").fill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "FFFFFF" },
+      fgColor: { argb: "FF0000" },
       bgColor: { argb: "FF0000" },
     };
     worksheet.getCell("A5").fill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "FFFFFF" },
+      fgColor: { argb: "FF0000" },
       bgColor: { argb: "FF0000" },
+    };
+    worksheet.getCell("A21").fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "000000" },
+      bgColor: { argb: "000000" },
+    };
+    worksheet.getCell("A22").fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "0000FF" },
+      bgColor: { argb: "0000FF" },
+    };
+
+    worksheet.addConditionalFormatting({
+      ref: "A22:J22",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Agency FB",
+              family: 4,
+              size: 11,
+              bold: true,
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "0000FF", fgColor: { argb: "0000FF" } },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+
+    worksheet.addConditionalFormatting({
+      ref: "A24:A73",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            alignment: {
+              vertical: "top",
+              horizontal: "right",
+            },
+          },
+        },
+      ],
+    });
+
+    worksheet.addConditionalFormatting({
+      ref: "B24:E73",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            alignment: {
+              vertical: "top",
+              horizontal: "left",
+            },
+          },
+        },
+      ],
+    });
+
+    worksheet.addConditionalFormatting({
+      ref: "F24:J73",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            alignment: {
+              vertical: "top",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+
+    worksheet.addConditionalFormatting({
+      ref: "B22:I72",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+            alignment: { wrapText: true },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: "J22:J72",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thick" },
+            },
+            alignment: { wrapText: true },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: "B73:I73",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thick" },
+              right: { style: "thin" },
+            },
+            alignment: { wrapText: true },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: "A22:A72",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              top: { style: "thin" },
+              left: { style: "thick" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+            alignment: { wrapText: true },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: "A1:J1",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              top: { style: "thick" },
+              left: { style: "thick" },
+              // bottom: { style: "thick" },
+              right: { style: "thick" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: "J1:J72",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              // top: { style: "thick" },
+              // left: { style: "thick" },
+              // bottom: { style: "thick" },
+              right: { style: "thick" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: "B73:I73",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              // top: { style: "thick" },
+              // left: { style: "thick" },
+              bottom: { style: "thick" },
+              // right: { style: "thick" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: "A1:A72",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              // top: { style: "thick" },
+              left: { style: "thick" },
+              // bottom: { style: "thick" },
+              // right: { style: "thick" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet.getCell("A1").border = {
+      top: { style: "thick" },
+      left: { style: "thick" },
+      // bottom: {style:'thin'},
+      // right: {style:'thin'}
+    };
+    worksheet.getCell("J1").border = {
+      top: { style: "thick" },
+      // left: {style:'thick'},
+      // bottom: {style:'thin'},
+      right: { style: "thick" },
+    };
+    worksheet.getCell("A73").border = {
+      top: { style: "thin" },
+      left: { style: "thick" },
+      bottom: { style: "thick" },
+      right: { style: "thin" },
+    };
+    worksheet.getCell("J73").border = {
+      top: { style: "thin" },
+      left: { style: "thin" },
+      bottom: { style: "thick" },
+      right: { style: "thick" },
     };
     // worksheet.getRow(5).font = {
     //   name: "Times New Roman",
@@ -14564,7 +16377,7 @@ class MainController {
     worksheet.getCell("B7").value = {
       richText: [
         {
-          font: { name: "Times New Roman", bold: true },
+          font: { name: "Times New Roman", size: 12, bold: true },
           text: "Nama Sekolah                    :",
         },
       ],
@@ -14578,7 +16391,7 @@ class MainController {
     worksheet.getCell("G7").value = {
       richText: [
         {
-          font: { name: "Times New Roman", bold: true },
+          font: { name: "Times New Roman", size: 12, bold: true },
           text: "Tanggal Tes                  :",
         },
       ],
@@ -14590,7 +16403,7 @@ class MainController {
     worksheet.getCell("B8").value = {
       richText: [
         {
-          font: { name: "Times New Roman", bold: true },
+          font: { name: "Times New Roman", size: 12, bold: true },
           text: "Mata Pelajaran                  :",
         },
       ],
@@ -14599,7 +16412,7 @@ class MainController {
       richText: [
         {
           font: { name: "Times New Roman" },
-          text: `${ujian.mataPelajaran.nama}`,
+          text: `${ujian.toJSON().mataPelajaran.nama}`,
         },
       ],
     };
@@ -14607,7 +16420,7 @@ class MainController {
     worksheet.getCell("G8").value = {
       richText: [
         {
-          font: { name: "Times New Roman", bold: true },
+          font: { name: "Times New Roman", size: 12, bold: true },
           text: "Kelas/Ujian                 :",
         },
       ],
@@ -14621,7 +16434,7 @@ class MainController {
     worksheet.getCell("B9").value = {
       richText: [
         {
-          font: { name: "Times New Roman", bold: true },
+          font: { name: "Times New Roman", size: 12, bold: true },
           text: "Kompetensi Keahlian        :",
         },
       ],
@@ -14633,7 +16446,7 @@ class MainController {
     worksheet.getCell("G9").value = {
       richText: [
         {
-          font: { name: "Times New Roman", bold: true },
+          font: { name: "Times New Roman", size: 12, bold: true },
           text: "Bentuk Soal                  :",
         },
       ],
@@ -14650,16 +16463,16 @@ class MainController {
     worksheet.getCell("B10").value = {
       richText: [
         {
-          font: { name: "Times New Roman", bold: true },
+          font: { name: "Times New Roman", size: 12, bold: true },
           text: "Guru Mata Pelajarn         :",
         },
       ],
     };
-    worksheet.getCell("C8").value = {
+    worksheet.getCell("C10").value = {
       richText: [
         {
           font: { name: "Times New Roman" },
-          text: `${ujian.mataPelajaran.user.nama}`,
+          text: `${ujian.toJSON().mataPelajaran.user.nama}`,
         },
       ],
     };
@@ -14667,7 +16480,7 @@ class MainController {
     worksheet.getCell("G10").value = {
       richText: [
         {
-          font: { name: "Times New Roman", bold: true },
+          font: { name: "Times New Roman", size: 12, bold: true },
           text: "Jumlah Soal/Waktu       :",
         },
       ],
@@ -14681,56 +16494,3281 @@ class MainController {
       ],
     };
 
+    worksheet.getCell("B75").value = {
+      richText: [
+        {
+          font: { name: "Calibri" },
+          text: "MENGETAHUI",
+        },
+      ],
+    };
+    worksheet.getCell("B76").value = {
+      richText: [
+        {
+          font: { name: "Calibri" },
+          text: "KEPALA SEKOLAH",
+        },
+      ],
+    };
+    worksheet.getCell("B80").value = {
+      richText: [
+        {
+          font: { name: "Calibri" },
+          text: `${kepsek.nama}`,
+        },
+      ],
+    };
+
+    worksheet.getCell("G75").value = {
+      richText: [
+        {
+          font: { name: "Calibri" },
+          text: "MENGETAHUI",
+        },
+      ],
+    };
+    worksheet.getCell("G76").value = {
+      richText: [
+        {
+          font: { name: "Calibri" },
+          text: "GURU MATA PELAJARAN",
+        },
+      ],
+    };
+    worksheet.getCell("G80").value = {
+      richText: [
+        {
+          font: { name: "Calibri" },
+          text: `${ujian.toJSON().mataPelajaran.user.nama}`,
+        },
+      ],
+    };
+
+    let worksheet2 = workbook.addWorksheet(`Kartu Soal PG`, {
+      properties: { tabColor: { argb: "FFC0000" } },
+    });
+
+    worksheet2.getColumn("A").width = 3;
+    worksheet2.getColumn("B").width = 28;
+    worksheet2.getColumn("C").width = 1.5;
+    worksheet2.getColumn("D").width = 7;
+    worksheet2.getColumn("E").width = 5.5;
+    worksheet2.getColumn("F").width = 33;
+    worksheet2.getColumn("G").width = 42;
+    worksheet2.getColumn("H").width = 31;
+
     await Promise.all(
-      ujian.map(async (d, idx) => {
-        // add column headers
-        worksheet.getRow(22).values = [
-          "No",
-          "KOMPETENSI DASAR",
-          "MATERI",
-          "INDIKATOR PENCAPAIAN KOMPETENSI",
+      ujian.toJSON().soalUjian.map(async (d, idx) => {
+        if (`${d.soal.bentuk}` == "pg") {
+          worksheet2.mergeCells(
+            `B${(idx + 1) * 32 - 30}:H${(idx + 1) * 32 - 30}`
+          );
+          worksheet2.mergeCells(
+            `B${(idx + 1) * 32 - 29}:H${(idx + 1) * 32 - 29}`
+          );
+          worksheet2.mergeCells(
+            `B${(idx + 1) * 32 - 28}:H${(idx + 1) * 32 - 28}`
+          );
+          worksheet2.mergeCells(
+            `B${(idx + 1) * 32 - 27}:H${(idx + 1) * 32 - 27}`
+          );
+          worksheet2.mergeCells(
+            `B${(idx + 1) * 32 - 26}:H${(idx + 1) * 32 - 26}`
+          );
+          worksheet2.mergeCells(
+            `D${(idx + 1) * 32 - 25}:F${(idx + 1) * 32 - 25}`
+          );
+          worksheet2.mergeCells(
+            `D${(idx + 1) * 32 - 24}:F${(idx + 1) * 32 - 24}`
+          );
+          worksheet2.mergeCells(
+            `D${(idx + 1) * 32 - 23}:F${(idx + 1) * 32 - 23}`
+          );
+          worksheet2.mergeCells(
+            `D${(idx + 1) * 32 - 22}:F${(idx + 1) * 32 - 22}`
+          );
+          worksheet2.mergeCells(
+            `G${(idx + 1) * 32 - 25}:H${(idx + 1) * 32 - 25}`
+          );
+          worksheet2.mergeCells(
+            `G${(idx + 1) * 32 - 24}:H${(idx + 1) * 32 - 22}`
+          );
+          worksheet2.mergeCells(
+            `B${(idx + 1) * 32 - 21}:E${(idx + 1) * 32 - 21}`
+          ); //11
+          worksheet2.mergeCells(
+            `F${(idx + 1) * 32 - 21}:G${(idx + 1) * 32 - 21}`
+          ); //11
+          worksheet2.mergeCells(
+            `B${(idx + 1) * 32 - 20}:E${(idx + 1) * 32 - 20}`
+          ); //12
+          worksheet2.mergeCells(
+            `F${(idx + 1) * 32 - 20}:G${(idx + 1) * 32 - 20}`
+          ); //12
+          worksheet2.mergeCells(
+            `C${(idx + 1) * 32 - 19}:D${(idx + 1) * 32 - 18}`
+          ); //1314
+          worksheet2.mergeCells(
+            `E${(idx + 1) * 32 - 19}:G${(idx + 1) * 32 - 19}`
+          ); //13
+          worksheet2.mergeCells(
+            `B${(idx + 1) * 32 - 18}:B${(idx + 1) * 32 - 11}`
+          ); //1421
+          worksheet2.mergeCells(
+            `C${(idx + 1) * 32 - 17}:D${(idx + 1) * 32 - 16}`
+          ); //1516
+          worksheet2.mergeCells(
+            `C${(idx + 1) * 32 - 15}:D${(idx + 1) * 32 - 14}`
+          ); //1718
+          worksheet2.mergeCells(
+            `C${(idx + 1) * 32 - 13}:D${(idx + 1) * 32 - 11}`
+          ); //1921
+          worksheet2.mergeCells(
+            `E${(idx + 1) * 32 - 18}:G${(idx + 1) * 32 - 16}`
+          ); //1416
+          worksheet2.mergeCells(
+            `H${(idx + 1) * 32 - 16}:H${(idx + 1) * 32 - 11}`
+          ); //1621
+          worksheet2.mergeCells(
+            `F${(idx + 1) * 32 - 15}:G${(idx + 1) * 32 - 15}`
+          ); //1717
+          worksheet2.mergeCells(
+            `F${(idx + 1) * 32 - 14}:G${(idx + 1) * 32 - 14}`
+          ); //18
+          worksheet2.mergeCells(
+            `F${(idx + 1) * 32 - 13}:G${(idx + 1) * 32 - 13}`
+          ); //19
+          worksheet2.mergeCells(
+            `F${(idx + 1) * 32 - 12}:G${(idx + 1) * 32 - 12}`
+          ); //20
+          worksheet2.mergeCells(
+            `F${(idx + 1) * 32 - 11}:G${(idx + 1) * 32 - 11}`
+          ); //21
+
+          worksheet2.addImage(imageId1, "B2:C5");
+
+          worksheet2.getCell(`B${(idx + 1) * 32 - 30}`).value = {
+            richText: [
+              {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 16,
+                  bold: true,
+                },
+                text: `PEMERINTAH DAERAH PROVINSI ${sekolah.provinsi}`,
+              },
+            ],
+          };
+          worksheet2.getCell(`B${(idx + 1) * 32 - 30}`).alignment = {
+            vertical: "middle",
+            horizontal: "center",
+          };
+          worksheet2.getCell(`B${(idx + 1) * 32 - 29}`).value = {
+            richText: [
+              {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 20,
+                  bold: true,
+                },
+                text: "CABANG DINAS PENDIDIKAN",
+              },
+            ],
+          };
+          worksheet2.getCell(`B${(idx + 1) * 32 - 29}`).alignment = {
+            vertical: "middle",
+            horizontal: "center",
+          };
+          worksheet2.getCell(`B${(idx + 1) * 32 - 28}`).value = {
+            richText: [
+              {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 14,
+                  bold: true,
+                },
+                text: `${ta.tahun} `,
+              },
+            ],
+          };
+          worksheet2.getCell(`B${(idx + 1) * 32 - 28}`).alignment = {
+            vertical: "middle",
+            horizontal: "center",
+          };
+
+          worksheet2.getCell(`B${(idx + 1) * 32 - 26}`).value = {
+            richText: [
+              {
+                font: {
+                  name: "Arial Narrow",
+                  family: 4,
+                  size: 22,
+                  color: { argb: "000000" },
+                },
+                text: `${ujian.toJSON().tipe_format}`,
+              },
+            ],
+          };
+          worksheet2.getCell(`B${(idx + 1) * 32 - 26}`).alignment = {
+            vertical: "middle",
+            horizontal: "center",
+          };
+          worksheet2.getCell(`B${(idx + 1) * 32 - 26}`).fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "ADD8E6" },
+            bgColor: { argb: "ADD8E6" },
+          };
+          worksheet2.getCell(`G${(idx + 1) * 32 - 25}`).fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "E0FFFF" },
+            bgColor: { argb: "E0FFFF" },
+          };
+          worksheet2.getCell(`G${(idx + 1) * 32 - 25}`).value = {
+            richText: [
+              {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  color: { argb: "000000" },
+                  bold: true,
+                },
+                text: `Kompetensi Dasar`,
+              },
+            ],
+          };
+          // worksheet2.getCell("B29").value = `${ujian.nama}`;
+          worksheet2.getCell(`G${(idx + 1) * 32 - 25}`).alignment = {
+            vertical: "middle",
+            horizontal: "center",
+          };
+          worksheet2.getCell(`G${(idx + 1) * 32 - 24}`).value = {
+            richText: [
+              {
+                font: {
+                  name: "Arial Narrow",
+                  family: 4,
+                  size: 12,
+                  color: { argb: "000000" },
+                  bold: true,
+                },
+                text: `${d.soal.kd}`,
+              },
+            ],
+          };
+          // worksheet2.getCell("B29").value = `${ujian.nama}`;
+          worksheet2.getCell(`G${(idx + 1) * 32 - 24}`).alignment = {
+            vertical: "middle",
+            horizontal: "center",
+          };
+
+          worksheet2.getCell(`B${(idx + 1) * 32 - 25}`).value = {
+            richText: [
+              {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  color: { argb: "000000" },
+                  // bold: true,
+                },
+                text: `Nama Sekolah`,
+              },
+            ],
+          };
+          worksheet2.getCell(
+            `D${(idx + 1) * 32 - 25}`
+          ).value = `${sekolah.nama}`;
+          worksheet2.getCell(`B${(idx + 1) * 32 - 24}`).value = {
+            richText: [
+              {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  color: { argb: "000000" },
+                  // bold: true,
+                },
+                text: `Kelas / Semester`,
+              },
+            ],
+          };
+          worksheet2.getCell(
+            `D${(idx + 1) * 32 - 24}`
+          ).value = `${ujian.tingkat}`;
+          worksheet2.getCell(`B${(idx + 1) * 32 - 23}`).value = {
+            richText: [
+              {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  color: { argb: "000000" },
+                  // bold: true,
+                },
+                text: `Mata Pelajaran`,
+              },
+            ],
+          };
+          worksheet2.getCell(`D${(idx + 1) * 32 - 23}`).value = `${
+            ujian.toJSON().mataPelajaran.nama
+          }`;
+          worksheet2.getCell(`B${(idx + 1) * 32 - 22}`).value = {
+            richText: [
+              {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  color: { argb: "000000" },
+                  // bold: true,
+                },
+                text: `Kompetensi Keahlian`,
+              },
+            ],
+          };
+          worksheet2.getCell(`C${(idx + 1) * 32 - 25}`).value = ":";
+          worksheet2.getCell(`C${(idx + 1) * 32 - 24}`).value = ":";
+          worksheet2.getCell(`C${(idx + 1) * 32 - 23}`).value = ":";
+          worksheet2.getCell(`C${(idx + 1) * 32 - 22}`).value = ":";
+
+          worksheet2.getCell(
+            `B${(idx + 1) * 32 - 21}`
+          ).value = `Materi Pembelajaran`;
+          worksheet2.getCell(
+            `B${(idx + 1) * 32 - 20}`
+          ).value = `${d.soal.kd_konten_materi}`;
+          worksheet2.getCell(
+            `F${(idx + 1) * 32 - 21}`
+          ).value = `Indikator Pencapaian Kompetensi`;
+          worksheet2.getCell(
+            `F${(idx + 1) * 32 - 20}`
+          ).value = `${d.soal.akm_konteks_materi}`;
+          worksheet2.getCell(`H${(idx + 1) * 32 - 21}`).value = `Aspek (Level)`;
+          worksheet2.getCell(
+            `H${(idx + 1) * 32 - 20}`
+          ).value = `${d.soal.aspek_level}`;
+          worksheet2.getCell(
+            `B${(idx + 1) * 32 - 19}`
+          ).value = `Indikator Soal`;
+          worksheet2.getCell(`B${(idx + 1) * 32 - 18}`).value = {
+            richText: [
+              {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  color: { argb: "000000" },
+                  // bold: true,
+                },
+                text: `${d.soal.akm_konten_materi}`,
+              },
+            ],
+          };
+          worksheet2.getCell(`C${(idx + 1) * 32 - 19}`).value = `Nomor`;
+          worksheet2.getCell(`C${(idx + 1) * 32 - 17}`).value = `${idx + 1}`;
+          worksheet2.getCell(
+            `E${(idx + 1) * 32 - 19}`
+          ).value = `Rumusan Butir Soal`;
+          worksheet2.getCell(
+            `E${(idx + 1) * 32 - 17}`
+          ).value = `${d.soal.pertanyaan_ascii}`;
+          worksheet2.getCell(`H${(idx + 1) * 32 - 19}`).value = `BUKU`;
+          worksheet2.getCell(`H${(idx + 1) * 32 - 17}`).value = ``;
+          worksheet2.addConditionalFormatting({
+            ref: `B${(idx + 1) * 32 - 20}:H${(idx + 1) * 32 - 20}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Arial Narrow",
+                    family: 4,
+                    size: 12,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                },
+              },
+            ],
+          });
+          worksheet2.addConditionalFormatting({
+            ref: `B${(idx + 1) * 32 - 18}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Arial Narrow",
+                    family: 4,
+                    size: 12,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                },
+              },
+            ],
+          });
+          worksheet2.addConditionalFormatting({
+            ref: `C${(idx + 1) * 32 - 17}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Arial Narrow",
+                    family: 4,
+                    size: 12,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                },
+              },
+            ],
+          });
+          worksheet2.addConditionalFormatting({
+            ref: `E${(idx + 1) * 32 - 18}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Arial Narrow",
+                    family: 4,
+                    size: 12,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                },
+              },
+            ],
+          });
+          worksheet2.addConditionalFormatting({
+            ref: `B${(idx + 1) * 32 - 21}:H${(idx + 1) * 32 - 21}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 12,
+                    bold: true,
+                  },
+                  fill: {
+                    type: "pattern",
+                    pattern: "solid",
+                    bgColor: { argb: "E0FFFF", fgColor: { argb: "E0FFFF" } },
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                },
+              },
+            ],
+          });
+          worksheet2.addConditionalFormatting({
+            ref: `B${(idx + 1) * 32 - 19}:H${(idx + 1) * 32 - 19}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 12,
+                    bold: true,
+                  },
+                  fill: {
+                    type: "pattern",
+                    pattern: "solid",
+                    bgColor: { argb: "E0FFFF", fgColor: { argb: "E0FFFF" } },
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                },
+              },
+            ],
+          });
+          worksheet2.addConditionalFormatting({
+            ref: `B${(idx + 1) * 32 - 30}:H${(idx + 1) * 32 - 11}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
+                  alignment: { wrapText: true },
+                },
+              },
+            ],
+          });
+
+          worksheet2.getCell(`C${(idx + 1) * 32 - 15}`).value = {
+            richText: [
+              {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  color: { argb: "000000" },
+                  bold: true,
+                },
+                text: `Kunci Jawaban`,
+              },
+            ],
+          };
+          worksheet2.getCell(`C${(idx + 1) * 32 - 13}`).value = {
+            richText: [
+              {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 22,
+                  color: { argb: "000000" },
+                },
+                text: `${d.soal.kj_pg}`,
+              },
+            ],
+          };
+          worksheet2.getCell(`C${(idx + 1) * 32 - 13}`).alignment = {
+            wrapText: true,
+            vertical: "middle",
+            horizontal: "center",
+          };
+
+          worksheet2.addConditionalFormatting({
+            ref: `E${(idx + 1) * 32 - 15}:E${(idx + 1) * 32 - 11}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  alignment: {
+                    wrapText: true,
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 12,
+                    color: { argb: "000000" },
+                  },
+                },
+              },
+            ],
+          });
+          worksheet2.getCell(`E${(idx + 1) * 32 - 15}`).value = `A`;
+          worksheet2.getCell(`E${(idx + 1) * 32 - 14}`).value = `B`;
+          worksheet2.getCell(`E${(idx + 1) * 32 - 13}`).value = `C`;
+          worksheet2.getCell(`E${(idx + 1) * 32 - 12}`).value = `D`;
+          worksheet2.getCell(`E${(idx + 1) * 32 - 11}`).value = `E`;
+          worksheet2.addConditionalFormatting({
+            ref: `F${(idx + 1) * 32 - 15}:F${(idx + 1) * 32 - 11}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  alignment: {
+                    wrapText: true,
+                    vertical: "middle",
+                    horizontal: "left",
+                  },
+                  font: {
+                    name: "Arial Narrow",
+                    family: 4,
+                    size: 9,
+                    color: { argb: "000000" },
+                  },
+                },
+              },
+            ],
+          });
+          worksheet2.getCell(
+            `F${(idx + 1) * 32 - 15}`
+          ).value = `${d.soal.jawaban_a_ascii}`;
+          worksheet2.getCell(
+            `F${(idx + 1) * 32 - 14}`
+          ).value = `${d.soal.jawaban_b_ascii}`;
+          worksheet2.getCell(
+            `F${(idx + 1) * 32 - 13}`
+          ).value = `${d.soal.jawaban_c_ascii}`;
+          worksheet2.getCell(
+            `F${(idx + 1) * 32 - 12}`
+          ).value = `${d.soal.jawaban_d_ascii}`;
+          worksheet2.getCell(
+            `F${(idx + 1) * 32 - 11}`
+          ).value = `${d.soal.jawaban_e_ascii}`;
+
+          worksheet2.addConditionalFormatting({
+            ref: `C${(idx + 1) * 32 - 15}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  alignment: {
+                    wrapText: true,
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                  fill: {
+                    type: "pattern",
+                    pattern: "solid",
+                    bgColor: { argb: "E0FFFF", fgColor: { argb: "E0FFFF" } },
+                  },
+                },
+              },
+            ],
+          });
+
+          worksheet2.getCell(`H${(idx + 1) * 32 - 17}`).value = {
+            richText: [
+              {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  color: { argb: "000000" },
+                  bold: true,
+                },
+                text: `Gambar/Tabel/Grafik/Wacana`,
+              },
+            ],
+          };
+          worksheet2.addConditionalFormatting({
+            ref: `H${(idx + 1) * 32 - 17}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  alignment: {
+                    wrapText: true,
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                  fill: {
+                    type: "pattern",
+                    pattern: "solid",
+                    bgColor: { argb: "E0FFFF", fgColor: { argb: "E0FFFF" } },
+                  },
+                },
+              },
+            ],
+          });
+
+          worksheet2.getCell(`B${(idx + 1) * 32 - 8}`).value = `Mengetahui :`;
+          worksheet2.getCell(`B${(idx + 1) * 32 - 7}`).value = `Kepala Sekolah`;
+          worksheet2.getCell(`B${(idx + 1) * 32 - 3}`).value = `${kepsek.nama}`;
+
+          worksheet2.getCell(`H${(idx + 1) * 32 - 9}`).value = ``;
+          worksheet2.getCell(
+            `H${(idx + 1) * 32 - 7}`
+          ).value = `Guru Mata Pelajaran`;
+          worksheet2.getCell(`H${(idx + 1) * 32 - 3}`).value = `${
+            ujian.toJSON().mataPelajaran.user.nama
+          }`;
+
+          worksheet2.addConditionalFormatting({
+            ref: `B${(idx + 1) * 32 - 10}:B${(idx + 1) * 32 - 4}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  border: {
+                    // top: { style: "thin" },
+                    left: { style: "thin" },
+                    // bottom: { style: "thin" },
+                    // right: { style: "thin" },
+                  },
+                  alignment: {
+                    wrapText: true,
+                    vertical: "middle",
+                    horizontal: "right",
+                  },
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 12,
+                    color: { argb: "000000" },
+                  },
+                },
+              },
+            ],
+          });
+          worksheet2.addConditionalFormatting({
+            ref: `H${(idx + 1) * 32 - 10}:H${(idx + 1) * 32 - 4}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  border: {
+                    // top: { style: "thin" },
+                    // left: { style: "thin" },
+                    // bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
+                  alignment: {
+                    wrapText: true,
+                    vertical: "middle",
+                    horizontal: "left",
+                  },
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 12,
+                    color: { argb: "000000" },
+                  },
+                },
+              },
+            ],
+          });
+          worksheet2.addConditionalFormatting({
+            ref: `C${(idx + 1) * 32 - 3}:G${(idx + 1) * 32 - 3}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  border: {
+                    // top: { style: "thin" },
+                    // left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    // right: { style: "thin" },
+                  },
+                  alignment: {
+                    wrapText: true,
+                    vertical: "middle",
+                    horizontal: "left",
+                  },
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 12,
+                    color: { argb: "000000" },
+                  },
+                },
+              },
+            ],
+          });
+          worksheet2.addConditionalFormatting({
+            ref: `B${(idx + 1) * 32 - 3}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  border: {
+                    // top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    // right: { style: "thin" },
+                  },
+                  alignment: {
+                    wrapText: true,
+                    vertical: "middle",
+                    horizontal: "left",
+                  },
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 12,
+                    color: { argb: "000000" },
+                  },
+                },
+              },
+            ],
+          });
+          worksheet2.addConditionalFormatting({
+            ref: `H${(idx + 1) * 32 - 3}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  border: {
+                    // top: { style: "thin" },
+                    // left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
+                  alignment: {
+                    wrapText: true,
+                    vertical: "middle",
+                    horizontal: "left",
+                  },
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 12,
+                    color: { argb: "000000" },
+                  },
+                },
+              },
+            ],
+          });
+        }
+      })
+    );
+    let worksheet3 = workbook.addWorksheet(`Kartu Soal Essay`, {
+      properties: { tabColor: { argb: "FFC0000" } },
+    });
+
+    //desain worksheet3
+    worksheet3.getColumn("A").width = 3;
+    worksheet3.getColumn("B").width = 28;
+    worksheet3.getColumn("C").width = 1.5;
+    worksheet3.getColumn("D").width = 7;
+    worksheet3.getColumn("E").width = 5.5;
+    worksheet3.getColumn("F").width = 33;
+    worksheet3.getColumn("G").width = 42;
+    worksheet3.getColumn("H").width = 31;
+    // worksheet3.mergeCells("B2:H2");
+    // worksheet3.mergeCells("B3:H3");
+    // worksheet3.mergeCells("B4:H4");
+    // worksheet3.mergeCells("B5:H5");
+    // worksheet3.mergeCells("B6:H6");
+    // worksheet3.mergeCells("D7:F7");
+    // worksheet3.mergeCells("D8:F8");
+    // worksheet3.mergeCells("D9:F9");
+    // worksheet3.mergeCells("D10:F10");
+    // worksheet3.mergeCells("G7:H7");
+    // worksheet3.mergeCells("G8:H10");
+    // worksheet3.mergeCells("B11:E11");
+    // worksheet3.mergeCells("F11:G11");
+    // worksheet3.mergeCells("B12:E12");
+    // worksheet3.mergeCells("F12:G12");
+    // worksheet3.mergeCells("C13:D14");
+    // worksheet3.mergeCells("E13:G13");
+    // worksheet3.mergeCells("B14:B21");
+    // worksheet3.mergeCells("C15:D16");
+    // worksheet3.mergeCells("C17:D21");
+    // worksheet3.mergeCells("E17:G21");
+    // worksheet3.mergeCells("E14:G16");
+    // worksheet3.mergeCells("H16:H21");
+
+    await Promise.all(
+      ujian.toJSON().soalUjian.map(async (d, idx) => {
+        if (`${d.soal.bentuk}` == "esai") {
+          worksheet3.mergeCells(
+            `B${(idx + 1) * 32 - 30}:H${(idx + 1) * 32 - 30}`
+          );
+          worksheet3.mergeCells(
+            `B${(idx + 1) * 32 - 29}:H${(idx + 1) * 32 - 29}`
+          );
+          worksheet3.mergeCells(
+            `B${(idx + 1) * 32 - 28}:H${(idx + 1) * 32 - 28}`
+          );
+          worksheet3.mergeCells(
+            `B${(idx + 1) * 32 - 27}:H${(idx + 1) * 32 - 27}`
+          );
+          worksheet3.mergeCells(
+            `B${(idx + 1) * 32 - 26}:H${(idx + 1) * 32 - 26}`
+          );
+          worksheet3.mergeCells(
+            `D${(idx + 1) * 32 - 25}:F${(idx + 1) * 32 - 25}`
+          );
+          worksheet3.mergeCells(
+            `D${(idx + 1) * 32 - 24}:F${(idx + 1) * 32 - 24}`
+          );
+          worksheet3.mergeCells(
+            `D${(idx + 1) * 32 - 23}:F${(idx + 1) * 32 - 23}`
+          );
+          worksheet3.mergeCells(
+            `D${(idx + 1) * 32 - 22}:F${(idx + 1) * 32 - 22}`
+          );
+          worksheet3.mergeCells(
+            `G${(idx + 1) * 32 - 25}:H${(idx + 1) * 32 - 25}`
+          );
+          worksheet3.mergeCells(
+            `G${(idx + 1) * 32 - 24}:H${(idx + 1) * 32 - 22}`
+          );
+          worksheet3.mergeCells(
+            `B${(idx + 1) * 32 - 21}:E${(idx + 1) * 32 - 21}`
+          ); //11
+          worksheet3.mergeCells(
+            `F${(idx + 1) * 32 - 21}:G${(idx + 1) * 32 - 21}`
+          ); //11
+          worksheet3.mergeCells(
+            `B${(idx + 1) * 32 - 20}:E${(idx + 1) * 32 - 20}`
+          ); //12
+          worksheet3.mergeCells(
+            `F${(idx + 1) * 32 - 20}:G${(idx + 1) * 32 - 20}`
+          ); //12
+          worksheet3.mergeCells(
+            `C${(idx + 1) * 32 - 19}:D${(idx + 1) * 32 - 18}`
+          ); //1314
+          worksheet3.mergeCells(
+            `E${(idx + 1) * 32 - 19}:G${(idx + 1) * 32 - 19}`
+          ); //13
+          worksheet3.mergeCells(
+            `B${(idx + 1) * 32 - 18}:B${(idx + 1) * 32 - 11}`
+          ); //1421
+          worksheet3.mergeCells(
+            `C${(idx + 1) * 32 - 17}:D${(idx + 1) * 32 - 16}`
+          ); //1516
+          worksheet3.mergeCells(
+            `C${(idx + 1) * 32 - 15}:D${(idx + 1) * 32 - 11}`
+          ); //1718
+          // worksheet3.mergeCells(
+          //   `C${(idx + 1) * 32 - 13}:D${(idx + 1) * 32 - 11}`
+          // ); //1921
+          worksheet3.mergeCells(
+            `E${(idx + 1) * 32 - 15}:G${(idx + 1) * 32 - 11}`
+          ); //1718
+          worksheet3.mergeCells(
+            `E${(idx + 1) * 32 - 18}:G${(idx + 1) * 32 - 16}`
+          ); //1416
+          worksheet3.mergeCells(
+            `H${(idx + 1) * 32 - 16}:H${(idx + 1) * 32 - 11}`
+          ); //1621
+          // worksheet3.mergeCells(
+          //   `F${(idx + 1) * 32 - 15}:G${(idx + 1) * 32 - 15}`
+          // ); //1717
+          // worksheet3.mergeCells(
+          //   `F${(idx + 1) * 32 - 14}:G${(idx + 1) * 32 - 14}`
+          // ); //18
+          // worksheet3.mergeCells(
+          //   `F${(idx + 1) * 32 - 13}:G${(idx + 1) * 32 - 13}`
+          // ); //19
+          // worksheet3.mergeCells(
+          //   `F${(idx + 1) * 32 - 12}:G${(idx + 1) * 32 - 12}`
+          // ); //20
+          // worksheet3.mergeCells(
+          //   `F${(idx + 1) * 32 - 11}:G${(idx + 1) * 32 - 11}`
+          // ); //21
+
+          worksheet3.getCell(`B${(idx + 1) * 32 - 30}`).value = {
+            richText: [
+              {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 16,
+                  bold: true,
+                },
+                text: `PEMERINTAH DAERAH PROVINSI ${sekolah.provinsi}`,
+              },
+            ],
+          };
+          worksheet3.getCell(`B${(idx + 1) * 32 - 30}`).alignment = {
+            vertical: "middle",
+            horizontal: "center",
+          };
+          worksheet3.getCell(`B${(idx + 1) * 32 - 29}`).value = {
+            richText: [
+              {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 20,
+                  bold: true,
+                },
+                text: "CABANG DINAS PENDIDIKAN",
+              },
+            ],
+          };
+          worksheet3.getCell(`B${(idx + 1) * 32 - 29}`).alignment = {
+            vertical: "middle",
+            horizontal: "center",
+          };
+          worksheet3.getCell(`B${(idx + 1) * 32 - 28}`).value = {
+            richText: [
+              {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 14,
+                  bold: true,
+                },
+                text: `${ta.tahun} `,
+              },
+            ],
+          };
+          worksheet3.getCell(`B${(idx + 1) * 32 - 28}`).alignment = {
+            vertical: "middle",
+            horizontal: "center",
+          };
+
+          worksheet3.getCell(`B${(idx + 1) * 32 - 26}`).value = {
+            richText: [
+              {
+                font: {
+                  name: "Arial Narrow",
+                  family: 4,
+                  size: 22,
+                  color: { argb: "000000" },
+                },
+                text: `${ujian.toJSON().tipe_format}`,
+              },
+            ],
+          };
+          worksheet3.getCell(`B${(idx + 1) * 32 - 26}`).alignment = {
+            vertical: "middle",
+            horizontal: "center",
+          };
+          worksheet3.getCell(`B${(idx + 1) * 32 - 26}`).fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "ADD8E6" },
+            bgColor: { argb: "ADD8E6" },
+          };
+          worksheet3.getCell(`G${(idx + 1) * 32 - 25}`).fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "E0FFFF" },
+            bgColor: { argb: "E0FFFF" },
+          };
+          worksheet3.getCell(`G${(idx + 1) * 32 - 25}`).value = {
+            richText: [
+              {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  color: { argb: "000000" },
+                  bold: true,
+                },
+                text: `Kompetensi Dasar`,
+              },
+            ],
+          };
+          // worksheet3.getCell("B29").value = `${ujian.nama}`;
+          worksheet3.getCell(`G${(idx + 1) * 32 - 25}`).alignment = {
+            vertical: "middle",
+            horizontal: "center",
+          };
+          worksheet3.getCell(`G${(idx + 1) * 32 - 24}`).value = {
+            richText: [
+              {
+                font: {
+                  name: "Arial Narrow",
+                  family: 4,
+                  size: 12,
+                  color: { argb: "000000" },
+                  bold: true,
+                },
+                text: `${d.soal.kd}`,
+              },
+            ],
+          };
+          // worksheet3.getCell("B29").value = `${ujian.nama}`;
+          worksheet3.getCell(`G${(idx + 1) * 32 - 24}`).alignment = {
+            vertical: "middle",
+            horizontal: "center",
+          };
+
+          worksheet3.getCell(`B${(idx + 1) * 32 - 25}`).value = {
+            richText: [
+              {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  color: { argb: "000000" },
+                  // bold: true,
+                },
+                text: `Nama Sekolah`,
+              },
+            ],
+          };
+          worksheet3.getCell(
+            `D${(idx + 1) * 32 - 25}`
+          ).value = `${sekolah.nama}`;
+          worksheet3.getCell(`B${(idx + 1) * 32 - 24}`).value = {
+            richText: [
+              {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  color: { argb: "000000" },
+                  // bold: true,
+                },
+                text: `Kelas / Semester`,
+              },
+            ],
+          };
+          worksheet3.getCell(
+            `D${(idx + 1) * 32 - 24}`
+          ).value = `${ujian.tingkat}`;
+          worksheet3.getCell(`B${(idx + 1) * 32 - 23}`).value = {
+            richText: [
+              {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  color: { argb: "000000" },
+                  // bold: true,
+                },
+                text: `Mata Pelajaran`,
+              },
+            ],
+          };
+          worksheet3.getCell(`D${(idx + 1) * 32 - 23}`).value = `${
+            ujian.toJSON().mataPelajaran.nama
+          }`;
+          worksheet3.getCell(`B${(idx + 1) * 32 - 22}`).value = {
+            richText: [
+              {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  color: { argb: "000000" },
+                  // bold: true,
+                },
+                text: `Kompetensi Keahlian`,
+              },
+            ],
+          };
+          worksheet3.getCell(`C${(idx + 1) * 32 - 25}`).value = ":";
+          worksheet3.getCell(`C${(idx + 1) * 32 - 24}`).value = ":";
+          worksheet3.getCell(`C${(idx + 1) * 32 - 23}`).value = ":";
+          worksheet3.getCell(`C${(idx + 1) * 32 - 22}`).value = ":";
+
+          worksheet3.getCell(
+            `B${(idx + 1) * 32 - 21}`
+          ).value = `Materi Pembelajaran`;
+          worksheet3.getCell(
+            `B${(idx + 1) * 32 - 20}`
+          ).value = `${d.soal.kd_konten_materi}`;
+          worksheet3.getCell(
+            `F${(idx + 1) * 32 - 21}`
+          ).value = `Indikator Pencapaian Kompetensi`;
+          worksheet3.getCell(
+            `F${(idx + 1) * 32 - 20}`
+          ).value = `${d.soal.akm_konteks_materi}`;
+          worksheet3.getCell(`H${(idx + 1) * 32 - 21}`).value = `Aspek (Level)`;
+          worksheet3.getCell(
+            `H${(idx + 1) * 32 - 20}`
+          ).value = `${d.soal.level_kognitif}`;
+          worksheet3.getCell(
+            `B${(idx + 1) * 32 - 19}`
+          ).value = `Indikator Soal`;
+          worksheet3.getCell(`B${(idx + 1) * 32 - 18}`).value = {
+            richText: [
+              {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  color: { argb: "000000" },
+                  // bold: true,
+                },
+                text: `${d.soal.akm_konten_materi}`,
+              },
+            ],
+          };
+          worksheet3.getCell(`C${(idx + 1) * 32 - 19}`).value = `Nomor`;
+          worksheet3.getCell(`C${(idx + 1) * 32 - 17}`).value = `${idx + 1}`;
+          worksheet3.getCell(
+            `E${(idx + 1) * 32 - 19}`
+          ).value = `Rumusan Butir Soal`;
+          worksheet3.getCell(
+            `E${(idx + 1) * 32 - 17}`
+          ).value = `${d.soal.pertanyaan_ascii}`;
+          worksheet3.getCell(`H${(idx + 1) * 32 - 19}`).value = `BUKU`;
+          worksheet3.getCell(`H${(idx + 1) * 32 - 17}`).value = ``;
+          worksheet3.addConditionalFormatting({
+            ref: `B${(idx + 1) * 32 - 20}:H${(idx + 1) * 32 - 20}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Arial Narrow",
+                    family: 4,
+                    size: 12,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                },
+              },
+            ],
+          });
+          worksheet3.addConditionalFormatting({
+            ref: `B${(idx + 1) * 32 - 18}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Arial Narrow",
+                    family: 4,
+                    size: 12,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                },
+              },
+            ],
+          });
+          worksheet3.addConditionalFormatting({
+            ref: `C${(idx + 1) * 32 - 17}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Arial Narrow",
+                    family: 4,
+                    size: 12,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                },
+              },
+            ],
+          });
+          worksheet3.addConditionalFormatting({
+            ref: `E${(idx + 1) * 32 - 18}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Arial Narrow",
+                    family: 4,
+                    size: 12,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                },
+              },
+            ],
+          });
+          worksheet3.addConditionalFormatting({
+            ref: `B${(idx + 1) * 32 - 21}:H${(idx + 1) * 32 - 21}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 12,
+                    bold: true,
+                  },
+                  fill: {
+                    type: "pattern",
+                    pattern: "solid",
+                    bgColor: { argb: "E0FFFF", fgColor: { argb: "E0FFFF" } },
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                },
+              },
+            ],
+          });
+          worksheet3.addConditionalFormatting({
+            ref: `B${(idx + 1) * 32 - 19}:H${(idx + 1) * 32 - 19}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 12,
+                    bold: true,
+                  },
+                  fill: {
+                    type: "pattern",
+                    pattern: "solid",
+                    bgColor: { argb: "E0FFFF", fgColor: { argb: "E0FFFF" } },
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                },
+              },
+            ],
+          });
+          worksheet3.addConditionalFormatting({
+            ref: `B${(idx + 1) * 32 - 30}:H${(idx + 1) * 32 - 11}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
+                  alignment: { wrapText: true },
+                },
+              },
+            ],
+          });
+
+          worksheet3.getCell(`C${(idx + 1) * 32 - 15}`).value = {
+            richText: [
+              {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  color: { argb: "000000" },
+                  bold: true,
+                },
+                text: `Kunci Jawaban`,
+              },
+            ],
+          };
+
+          worksheet3.addConditionalFormatting({
+            ref: `E${(idx + 1) * 32 - 15}:E${(idx + 1) * 32 - 11}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  alignment: {
+                    wrapText: true,
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 12,
+                    color: { argb: "000000" },
+                  },
+                },
+              },
+            ],
+          });
+          worksheet3.addConditionalFormatting({
+            ref: `E${(idx + 1) * 32 - 15}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  alignment: {
+                    wrapText: true,
+                    vertical: "middle",
+                    horizontal: "left",
+                  },
+                  font: {
+                    name: "Arial Narrow",
+                    family: 4,
+                    size: 9,
+                    color: { argb: "000000" },
+                  },
+                },
+              },
+            ],
+          });
+          worksheet3.getCell(
+            `F${(idx + 1) * 32 - 15}`
+          ).value = `${d.soal.kj_uraian}`;
+
+          worksheet3.addConditionalFormatting({
+            ref: `C${(idx + 1) * 32 - 15}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  alignment: {
+                    wrapText: true,
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                  fill: {
+                    type: "pattern",
+                    pattern: "solid",
+                    bgColor: { argb: "E0FFFF", fgColor: { argb: "E0FFFF" } },
+                  },
+                },
+              },
+            ],
+          });
+
+          worksheet3.getCell(`H${(idx + 1) * 32 - 17}`).value = {
+            richText: [
+              {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  color: { argb: "000000" },
+                  bold: true,
+                },
+                text: `Gambar/Tabel/Grafik/Wacana`,
+              },
+            ],
+          };
+          worksheet3.addConditionalFormatting({
+            ref: `H${(idx + 1) * 32 - 17}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  alignment: {
+                    wrapText: true,
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                  fill: {
+                    type: "pattern",
+                    pattern: "solid",
+                    bgColor: { argb: "E0FFFF", fgColor: { argb: "E0FFFF" } },
+                  },
+                },
+              },
+            ],
+          });
+
+          worksheet3.getCell(`B${(idx + 1) * 32 - 8}`).value = `Mengetahui :`;
+          worksheet3.getCell(`B${(idx + 1) * 32 - 7}`).value = `Kepala Sekolah`;
+          worksheet3.getCell(`B${(idx + 1) * 32 - 3}`).value = `${kepsek.nama}`;
+
+          worksheet3.getCell(`H${(idx + 1) * 32 - 9}`).value = ``;
+          worksheet3.getCell(
+            `H${(idx + 1) * 32 - 7}`
+          ).value = `Guru Mata Pelajaran`;
+          worksheet3.getCell(`H${(idx + 1) * 32 - 3}`).value = `${
+            ujian.toJSON().mataPelajaran.user.nama
+          }`;
+
+          worksheet3.addConditionalFormatting({
+            ref: `B${(idx + 1) * 32 - 10}:B${(idx + 1) * 32 - 4}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  border: {
+                    // top: { style: "thin" },
+                    left: { style: "thin" },
+                    // bottom: { style: "thin" },
+                    // right: { style: "thin" },
+                  },
+                  alignment: {
+                    wrapText: true,
+                    vertical: "middle",
+                    horizontal: "right",
+                  },
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 12,
+                    color: { argb: "000000" },
+                  },
+                },
+              },
+            ],
+          });
+          worksheet3.addConditionalFormatting({
+            ref: `H${(idx + 1) * 32 - 10}:H${(idx + 1) * 32 - 4}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  border: {
+                    // top: { style: "thin" },
+                    // left: { style: "thin" },
+                    // bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
+                  alignment: {
+                    wrapText: true,
+                    vertical: "middle",
+                    horizontal: "left",
+                  },
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 12,
+                    color: { argb: "000000" },
+                  },
+                },
+              },
+            ],
+          });
+          worksheet3.addConditionalFormatting({
+            ref: `C${(idx + 1) * 32 - 3}:G${(idx + 1) * 32 - 3}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  border: {
+                    // top: { style: "thin" },
+                    // left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    // right: { style: "thin" },
+                  },
+                  alignment: {
+                    wrapText: true,
+                    vertical: "middle",
+                    horizontal: "left",
+                  },
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 12,
+                    color: { argb: "000000" },
+                  },
+                },
+              },
+            ],
+          });
+          worksheet3.addConditionalFormatting({
+            ref: `B${(idx + 1) * 32 - 3}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  border: {
+                    // top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    // right: { style: "thin" },
+                  },
+                  alignment: {
+                    wrapText: true,
+                    vertical: "middle",
+                    horizontal: "left",
+                  },
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 12,
+                    color: { argb: "000000" },
+                  },
+                },
+              },
+            ],
+          });
+          worksheet3.addConditionalFormatting({
+            ref: `H${(idx + 1) * 32 - 3}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  border: {
+                    // top: { style: "thin" },
+                    // left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
+                  alignment: {
+                    wrapText: true,
+                    vertical: "middle",
+                    horizontal: "left",
+                  },
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 12,
+                    color: { argb: "000000" },
+                  },
+                },
+              },
+            ],
+          });
+        }
+      })
+    );
+
+    let worksheet4 = workbook.addWorksheet(`Rumusan Soal`, {
+      properties: { tabColor: { argb: "FFC0000" } },
+    });
+    worksheet4.getColumn("A").width = 4;
+    worksheet4.getColumn("B").width = 32;
+    worksheet4.getColumn("C").width = 84;
+    worksheet4.getColumn("D").width = 11;
+    worksheet4.getColumn("E").width = 11;
+    worksheet4.getColumn("F").width = 11;
+    worksheet4.getColumn("G").width = 11;
+    worksheet4.getColumn("H").width = 11;
+    worksheet4.getColumn("I").width = 11;
+
+    // worksheet4.getColumn("A").width = 4;
+    // worksheet4.getColumn("B").width = 32;
+    // worksheet4.getColumn("C").width = 84;
+    // worksheet4.getColumn("D").width = 11;
+    // worksheet4.getColumn("E").width = 11;
+    // worksheet4.getColumn("F").width = 11;
+    // worksheet4.getColumn("G").width = 11;
+    // worksheet4.getColumn("H").width = 11;
+    // worksheet4.getColumn("I").width = 11;
+
+    // looping worksheet4
+    await Promise.all(
+      ujian.toJSON().soalUjian.map(async (e, idx) => {
+        worksheet4.getRow(6).values = [
+          "NO",
           "INDIKATOR SOAL",
-          "LEVEL KOGNITIF",
-          "BENTUK SOAL",
-          "TINGKAT KESUKARAN",
-          "SUMBER BUKU",
-          "NO SOAL",
+          "RUMUSAN BUTIR SOAL",
+          "PILIHAN JAWABAN",
+          "",
+          "",
+          "",
+          "",
+          "KUNCI JAWABAN",
         ];
-        worksheet.columns = [
+
+        worksheet4.getRow(7).values = ["", "", "", "A", "B", "C", "D", "E", ""];
+
+        worksheet4.columns = [
           { key: "No" },
-          { key: "KOMPETENSI_DASAR" },
-          { key: "MATERI" },
-          { key: "INDIKATOR_PENCAPAIAN_KOMPETENSI" },
-          { key: "INDIKATOR SOAL" },
-          { key: "LEVEL_KOGNITIF" },
-          { key: "BENTUK_SOAL" },
-          { key: "TINGKAT_KESUKARAN" },
-          { key: "SUMBER_BUKU" },
-          { key: "NO_SOAL" },
+          { key: "INDIKATOR_SOAL" },
+          { key: "RUMUSAN_BUTIR_SOAL" },
+          { key: "A" },
+          { key: "B" },
+          { key: "C" },
+          { key: "D" },
+          { key: "E" },
+          { key: "KUNCI_JAWABAN" },
         ];
 
         // Add row using key mapping to columns
-        let row = worksheet.addRow({
-          // no: `${idx + 1}`,
-          // nama: d.user ? d.user.nama : "-",
-          // whatsapp: d.user ? d.user.whatsapp : "-",
-          // email: d.user ? d.user.email : "-",
-          // jeniskelamnin: d.user ? d.user.gender : "-",
-          // tempat_lahir: d.user ? d.user.tempat_lahir : "-",
-          // tanggal_lahir: d.user ? d.user.tanggal_lahir : "-",
-          // tahun_masuk: d ? d.tahun_masuk : "-",
-          // pekerjaan: d ? d.pekerjaan : "-",
-          // kantor: d ? d.kantor : "-",
-          // sektor_industri: d ? d.sektor_industri : "-",
-          // sekolah_lanjutan: d ? d.sekolah_lanjutan : "-",
-          // pengalaman: d ? d.pengalaman : "-",
-          // sertifikasi_keahlian: d ? d.sertifikasi_keahlian : "-",
-          // purnakarya: d ? d.purnakarya : "-",
-          // deskripsi: d ? d.deskripsi : "-",
+        let row = worksheet4.addRow({
+          No: `${idx + 1}`,
+          INDIKATOR_SOAL: e.soal ? e.soal.akm_konten_materi : "-",
+          RUMUSAN_BUTIR_SOAL: e.soal ? e.soal.pertanyaan_ascii : "-",
+          A: e.soal ? e.soal.jawaban_a_ascii : "-",
+          B: e.soal ? e.soal.jawaban_b_ascii : "-",
+          C: e.soal ? e.soal.jawaban_c_ascii : "-",
+          D: e.soal ? e.soal.jawaban_d_ascii : "-",
+          E: e.soal ? e.soal.jawaban_e_ascii : "-",
+          KUNCI_JAWABAN: e.soal ? e.soal.kj_pg : "-",
         });
+        // })
+        // );
       })
     );
+    worksheet4.addImage(imageId1, {
+      tl: { col: 1, row: 0.5 },
+      ext: { width: 100, height: 60 },
+    });
+
+    // desain Worksheet 4
+    // worksheet4.getColumn("A").width = 4;
+    // worksheet4.getColumn("B").width = 32;
+    // worksheet4.getColumn("C").width = 84;
+    // worksheet4.getColumn("D").width = 11;
+    // worksheet4.getColumn("E").width = 11;
+    // worksheet4.getColumn("F").width = 11;
+    // worksheet4.getColumn("G").width = 11;
+    // worksheet4.getColumn("H").width = 11;
+    // worksheet4.getColumn("I").width = 11;
+    worksheet4.mergeCells("A1:I1");
+    worksheet4.mergeCells("A2:I2");
+    worksheet4.mergeCells("A3:I3");
+    worksheet4.mergeCells("A4:I4");
+    worksheet4.mergeCells("A5:I5");
+    worksheet4.mergeCells("A6:A7");
+    worksheet4.mergeCells("B6:B7");
+    worksheet4.mergeCells("C6:C7");
+    worksheet4.mergeCells("D6:H6");
+    worksheet4.mergeCells("I6:I7");
+    worksheet4.addConditionalFormatting({
+      ref: "C8:I57",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+            alignment: {
+              wrapText: true,
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+
+    worksheet4.addConditionalFormatting({
+      ref: "A1:A4",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              // top: { style: "thin" },
+              // left: { style: "thin" },
+              // bottom: { style: "thin" },
+              // right: { style: "thin" },
+            },
+            alignment: {
+              wrapText: true,
+              vertical: "middle",
+              horizontal: "center",
+            },
+            font: {
+              name: "Stencil",
+              family: 4,
+              size: 18,
+              color: { argb: "000000" },
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "32CD32", fgColor: { argb: "32CD32" } },
+            },
+          },
+        },
+      ],
+    });
+    worksheet4.getCell("A1").value = `RUMUSAN BUTIR SOAL`;
+    worksheet4.getCell("A2").value = `${ujian.toJSON().tipe_format}`;
+    worksheet4.getCell("A3").value = `${sekolah.nama}`;
+    worksheet4.getCell("A4").value = `${ta.tahun}`;
+    worksheet4.getCell("A5").fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "000000" },
+      bgColor: { argb: "000000" },
+    };
+    worksheet4.addConditionalFormatting({
+      ref: "A6:I7",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+            font: {
+              name: "Calibri",
+              family: 4,
+              size: 11,
+              bold: true,
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "0000FF", fgColor: { argb: "0000FF" } },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+
+    worksheet4.addConditionalFormatting({
+      ref: "A8:I57",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+    worksheet4.getCell("B60").value = {
+      richText: [
+        {
+          font: { name: "Calibri" },
+          text: "MENGETAHUI",
+        },
+      ],
+    };
+    worksheet4.getCell("B61").value = {
+      richText: [
+        {
+          font: { name: "Calibri" },
+          text: "KEPALA SEKOLAH",
+        },
+      ],
+    };
+    worksheet4.getCell("B66").value = {
+      richText: [
+        {
+          font: { name: "Calibri" },
+          text: `${kepsek.nama}`,
+        },
+      ],
+    };
+
+    worksheet4.getCell("G60").value = {
+      richText: [
+        {
+          font: { name: "Calibri" },
+          text: `${sekolah.kabupaten},`,
+        },
+      ],
+    };
+    worksheet4.getCell("G61").value = {
+      richText: [
+        {
+          font: { name: "Calibri" },
+          text: "GURU MATA PELAJARAN",
+        },
+      ],
+    };
+    worksheet4.getCell("G66").value = {
+      richText: [
+        {
+          font: { name: "Calibri" },
+          text: `${ujian.toJSON().mataPelajaran.user.nama}`,
+        },
+      ],
+    };
+
+    // worksheet4.getColumn("A").width = 4;
+    // worksheet4.getColumn("B").width = 32;
+    // worksheet4.getColumn("C").width = 84;
+    // worksheet4.getColumn("D").width = 11;
+    // worksheet4.getColumn("E").width = 11;
+    // worksheet4.getColumn("F").width = 11;
+    // worksheet4.getColumn("G").width = 11;
+    // worksheet4.getColumn("H").width = 11;
+    // worksheet4.getColumn("I").width = 11;
+
+    let worksheet5 = workbook.addWorksheet(`Naskah Soal`, {
+      properties: { tabColor: { argb: "FFC0000" } },
+    });
+
+    worksheet5.mergeCells("A1:L1");
+    worksheet5.mergeCells("A2:L2");
+    worksheet5.mergeCells("A3:L3");
+    worksheet5.mergeCells("A4:L4");
+    worksheet5.mergeCells("A21:L21");
+    worksheet5.mergeCells("A11:L11");
+    worksheet5.mergeCells("J6:L6");
+    worksheet5.getColumn("A").width = 3;
+    worksheet5.getColumn("B").width = 4.3;
+    worksheet5.getColumn("C").width = 3;
+    worksheet5.getColumn("D").width = 8.5;
+    worksheet5.getColumn("E").width = 7.5;
+    worksheet5.getColumn("F").width = 10;
+    worksheet5.getColumn("G").width = 1.5;
+    worksheet5.getColumn("H").width = 8.5;
+    worksheet5.getColumn("I").width = 8.5;
+    worksheet5.getColumn("J").width = 8.5;
+    worksheet5.getColumn("K").width = 8.5;
+    worksheet5.getColumn("L").width = 12;
+
+    worksheet5.getCell("A1").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 14,
+            color: { argb: "000000" },
+            bold: true,
+          },
+          text: `${ujian.toJSON().tipe_format}`,
+        },
+      ],
+    };
+    worksheet5.getCell("A2").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 14,
+            color: { argb: "000000" },
+            bold: true,
+          },
+          text: `${sekolah.toJSON().tingkat_format}`,
+        },
+      ],
+    };
+
+    worksheet5.getCell("A3").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 16,
+            color: { argb: "000000" },
+            bold: true,
+          },
+          text: `${sekolah.nama}`,
+        },
+      ],
+    };
+    worksheet5.getCell("A4").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 12,
+            color: { argb: "000000" },
+            bold: true,
+          },
+          text: `${ta.tahun}`,
+        },
+      ],
+    };
+    worksheet5.addConditionalFormatting({
+      ref: "A5:L5",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              top: { style: "double" },
+              // left: { style: "thin" },
+              // bottom: { style: "thin" },
+              // right: { style: "thin" },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+    worksheet5.addConditionalFormatting({
+      ref: "A1:A4",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+
+    worksheet5.getCell("G6").value = ":";
+    worksheet5.getCell("G7").value = ":";
+    worksheet5.getCell("G8").value = ":";
+    worksheet5.getCell("G9").value = ":";
+
+    worksheet5.getCell("E6").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 11,
+            color: { argb: "000000" },
+            bold: true,
+          },
+          text: `Mata Pelajaran`,
+        },
+      ],
+    };
+    worksheet5.getCell("H6").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 11,
+            color: { argb: "000000" },
+            bold: true,
+          },
+          text: `${ujian.toJSON().mataPelajaran.nama}`,
+        },
+      ],
+    };
+    worksheet5.getCell("J6").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 11,
+            color: { argb: "000000" },
+            // bold: true,
+          },
+          text: `${ujian.toJSON().mataPelajaran.user.nama}`,
+        },
+      ],
+    };
+    worksheet5.getCell("J6").alignment = {
+      vertical: "middle",
+      horizontal: "center",
+    };
+
+    worksheet5.getCell("E7").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 11,
+            color: { argb: "000000" },
+            bold: true,
+          },
+          text: `Kelas/Semester`,
+        },
+      ],
+    };
+    worksheet5.getCell("H7").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 11,
+            color: { argb: "000000" },
+            bold: true,
+          },
+          text: `${ujian.tingkat}/${tasemester.semester}`,
+        },
+      ],
+    };
+    worksheet5.getCell("E8").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 11,
+            color: { argb: "000000" },
+            bold: true,
+          },
+          text: `Hari/Tanggal`,
+        },
+      ],
+    };
+    worksheet5.getCell("E9").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 11,
+            color: { argb: "000000" },
+            bold: true,
+          },
+          text: `Jumlah Soal/Waktu`,
+        },
+      ],
+    };
+    worksheet5.getCell("H9").value = {
+      richText: [
+        {
+          font: {
+            name: "Times New Roman",
+            family: 4,
+            size: 11,
+            color: { argb: "000000" },
+            bold: true,
+          },
+          text: `${ujian.TotalUjian} soal`,
+        },
+      ],
+    };
+    worksheet5.getCell("A11").value = {
+      richText: [
+        {
+          font: {
+            name: "Arial",
+            family: 4,
+            size: 10,
+            color: { argb: "000000" },
+            bold: true,
+            italic: true,
+          },
+          text: `PETUNJUK`,
+        },
+      ],
+    };
+    worksheet5.addConditionalFormatting({
+      ref: "A11:L11",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            alignment: {
+              vertical: "middle",
+              horizontal: "left",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              // bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet5.addConditionalFormatting({
+      ref: "A11:A20",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            alignment: {
+              vertical: "middle",
+              horizontal: "left",
+            },
+            border: {
+              // top: { style: "thin" },
+              left: { style: "thin" },
+              // bottom: { style: "thin" },
+              // right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet5.addConditionalFormatting({
+      ref: "L11:L20",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            alignment: {
+              vertical: "middle",
+              horizontal: "left",
+            },
+            border: {
+              // top: { style: "thin" },
+              // left: { style: "thin" },
+              // bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+
+    worksheet5.getCell("A12").value = "1.";
+    worksheet5.getCell("B12").value =
+      "a. Tulislah dengan jelas; Nama, Nomor Peserta, Kelas, pada lembar jawaban yang sudah disediakan.";
+    worksheet5.getCell("B13").value =
+      "b. Jawaban dikerjakan dengan cara menghitamkan bulatan kecil sesuai dengan pilihan yang dianggap benar.";
+    worksheet5.getCell("B14").value =
+      "c. Hapuslah jawaban yang dianggap keliru jika anda ingin menggantinya.";
+    worksheet5.getCell("B15").value =
+      "d. Lembar Jawaban tidak boleh kotor, basah atau rusak.";
+    worksheet5.getCell("A16").value = "2.";
+    worksheet5.getCell("B16").value =
+      "Bacalah soal secara teliti sebelum anda menjawabnya.";
+    worksheet5.getCell("A17").value = "3.";
+    worksheet5.getCell("B17").value =
+      "Dahulukan menjawab soal-soal yang dianggap mudah.";
+    worksheet5.getCell("A18").value = "4.";
+    worksheet5.getCell("B18").value =
+      "Mintalah kertas buram kepada pengawas jika diperlukan.";
+    worksheet5.getCell("A19").value = "5.";
+    worksheet5.getCell("B19").value =
+      "Periksa kembali jawaban anda sebelum menyerahkannya kepada pengawas.";
+    worksheet5.getCell("A20").value = "6.";
+    worksheet5.getCell("B20").value = "Berdoalah sebelum mengerjakan soal.";
+    worksheet5.getCell("A21").value =
+      "PILIHLAH SALAH SATU JAWABAN YANG BENAR PADA HURUF A, B, C, D, ATAU D !";
+    worksheet5.addConditionalFormatting({
+      ref: "A12:B20",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Arial",
+              family: 4,
+              size: 8,
+              color: { argb: "000000" },
+              // bold: true,
+              // italic: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "left",
+            },
+          },
+        },
+      ],
+    });
+    worksheet5.addConditionalFormatting({
+      ref: "A21:L21",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            alignment: {
+              vertical: "middle",
+              horizontal: "left",
+            },
+            font: {
+              name: "Arial",
+              family: 4,
+              size: 10,
+              color: { argb: "000000" },
+              bold: true,
+              // italic: true,
+            },
+            border: {
+              top: { style: "thin" },
+              // left: { style: "thin" },
+              // bottom: { style: "thin" },
+              // right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+
+    // looping worksheet 5
+    worksheet5.addImage(imageId1, {
+      tl: { col: 1, row: 0.5 },
+      ext: { width: 100, height: 60 },
+    });
+    await Promise.all(
+      ujian.toJSON().soalUjian.map(async (e, idx) => {
+        // worksheet5.mergeCells(`B${(idx + 1) * 7 + 15}:L${(idx + 1) * 7 + 15}`);
+        worksheet5.addConditionalFormatting({
+          ref: `B${(idx + 1) * 7 + 15}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                alignment: {
+                  wrapText: true,
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                font: {
+                  name: "Arial",
+                  family: 4,
+                  size: 12,
+                  color: { argb: "000000" },
+                  // italic: true,
+                },
+              },
+            },
+          ],
+        });
+        worksheet5.addConditionalFormatting({
+          ref: `C${(idx + 1) * 7 + 16}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                alignment: {
+                  wrapText: true,
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                font: {
+                  name: "Arial",
+                  family: 4,
+                  size: 11,
+                  color: { argb: "000000" },
+                  // italic: true,
+                },
+              },
+            },
+          ],
+        });
+        worksheet5.addConditionalFormatting({
+          ref: `B${(idx + 1) * 7 + 17}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                alignment: {
+                  wrapText: true,
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                font: {
+                  name: "Arial",
+                  family: 4,
+                  size: 11,
+                  color: { argb: "000000" },
+                  // italic: true,
+                },
+              },
+            },
+          ],
+        });
+        worksheet5.addConditionalFormatting({
+          ref: `B${(idx + 1) * 7 + 18}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                alignment: {
+                  wrapText: true,
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                font: {
+                  name: "Arial",
+                  family: 4,
+                  size: 11,
+                  color: { argb: "000000" },
+                  // italic: true,
+                },
+              },
+            },
+          ],
+        });
+        worksheet5.addConditionalFormatting({
+          ref: `B${(idx + 1) * 7 + 19}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                alignment: {
+                  wrapText: true,
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                font: {
+                  name: "Arial",
+                  family: 4,
+                  size: 11,
+                  color: { argb: "000000" },
+                  // italic: true,
+                },
+              },
+            },
+          ],
+        });
+        // , pertanyaan, a, b, c, d,
+        worksheet5.addConditionalFormatting({
+          ref: `B${(idx + 1) * 7 + 20}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                alignment: {
+                  wrapText: true,
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                font: {
+                  name: "Arial",
+                  family: 4,
+                  size: 11,
+                  color: { argb: "000000" },
+                  // italic: true,
+                },
+              },
+            },
+          ],
+        });
+
+        // await Promise.all(
+        //   d.soal.map(async (e, idx) => {
+        // add column headers
+        // pertanyaan = 0;pertanyaan > 22;pertanyaan + 7;a = 0;a > 23;a + 7;b = 0;b > 24;b + 7;c = 0;c > 25;c + 7;d = 0;d > 26;d + 7;e = 0;e > 27;
+        worksheet5.getRow(`${(idx + 1) * 7 + 15}`).values = [
+          `${idx + 1}`,
+          `${e.soal ? e.soal.pertanyaan_ascii : "-"}`,
+        ];
+
+        worksheet5.getRow(`${(idx + 1) * 7 + 16}`).values = [
+          "",
+          "A",
+          `${e.soal ? e.soal.jawaban_a_ascii : "-"}`,
+        ];
+        worksheet5.getRow(`${(idx + 1) * 7 + 17}`).values = [
+          "",
+          "B",
+          `${e.soal ? e.soal.jawaban_b_ascii : "-"}`,
+        ];
+        worksheet5.getRow(`${(idx + 1) * 7 + 18}`).values = [
+          "",
+          "C",
+          `${e.soal ? e.soal.jawaban_c_ascii : "-"}`,
+        ];
+        worksheet5.getRow(`${(idx + 1) * 7 + 19}`).values = [
+          "",
+          "D",
+          `${e.soal ? e.soal.jawaban_d_ascii : "-"}`,
+        ];
+        worksheet5.getRow(`${(idx + 1) * 7 + 20}`).values = [
+          "",
+          "E",
+          `${e.soal ? e.soal.jawaban_e_ascii : "-"}`,
+        ];
+
+        worksheet5.mergeCells(`B${(idx + 1) * 7 + 15}:L${(idx + 1) * 7 + 15}`);
+        worksheet5.mergeCells(`C${(idx + 1) * 7 + 16}:L${(idx + 1) * 7 + 16}`);
+        worksheet5.mergeCells(`C${(idx + 1) * 7 + 17}:L${(idx + 1) * 7 + 17}`);
+        worksheet5.mergeCells(`C${(idx + 1) * 7 + 18}:L${(idx + 1) * 7 + 18}`);
+        worksheet5.mergeCells(`C${(idx + 1) * 7 + 19}:L${(idx + 1) * 7 + 19}`);
+        worksheet5.mergeCells(`C${(idx + 1) * 7 + 20}:L${(idx + 1) * 7 + 20}`);
+      })
+    );
+
+    // return ujian.toJSON().soalUjian.soal;
+
     let namaFile = `/uploads/rekap-Kartu-Ujian.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
+
+  async daftarsekolah({ response, request }) {
+    const sekolah = await MSekolah.query()
+      .select("id", "nama", "page", "logo")
+      .fetch();
+
+    return sekolah;
+  }
+
+  async ubahtipedata({ response, request }) {
+    const post = await MPost.query().fetch();
+    // console.log(`${post.judul}`);
+
+    // let kontenisi = post.konten
+    //   ? Buffer(konten, "base64").toString("ascii").replace("b&", "..........")
+    //   : "";
+
+    // await Promise.all(
+    //   post.toJSON().map(async (d) => {
+    //     d.konten = post.konten
+    //       ? Buffer(konten, "base64")
+    //           .toString("ascii")
+    //           .replace("b&", "..........")
+    //       : "";
+    //     return d;
+    //   })
+    // );
+
+    // const industri = await MIndustri.query().where({ id: industri_id }).update({
+    //   nama,
+    //   klasifikasi,
+    //   jumlah_karyawan,
+    //   tautan,
+    //   galeri,
+    //   deskripsi,
+    //   tahun_kerjasama,
+    // });
+
+    return post.konten
+      ? Buffer(konten, "base64").toString("ascii").replace("b&", "..........")
+      : "";
+  }
+
+  async getBukuInduk({ response, request, auth }) {
+    const user = await auth.getUser();
+
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    const predikat = await MPredikatNilai.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    const rombel = await MRombel.query()
+      .withCount("materiRombel as total", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    return response.ok({
+      predikat: predikat,
+      rombel: rombel,
+    });
+  }
+
+  async detailBukuInduk({ response, request, auth, params: { rombel_id } }) {
+    const user = await auth.getUser();
+
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    const rombel = await MRombel.query()
+      .with("anggotaRombel", (builder) => {
+        builder.with("user");
+      })
+      .with("jurusan")
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ id: rombel_id })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    return response.ok({
+      rombel: rombel,
+    });
+  }
+  async detailBukuIndukSiswa({
+    response,
+    request,
+    auth,
+    params: { rombel_id },
+    params: { user_id },
+  }) {
+    const user = await auth.getUser();
+
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await Mta.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ aktif: 1 })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    const tanggalDistinct = await Database.raw(
+      "SELECT DISTINCT DATE_FORMAT(created_at, '%Y-%m-%d') as tanggalDistinct from m_absen WHERE created_at BETWEEN ? AND  ?",
+      [`${ta.tanggal_awal}`, `${ta.tanggal_akhir}`]
+    );
+
+    const siswa = await User.query()
+      .with("profil")
+      .with("keteranganRapor")
+      .with("keteranganPkl")
+      .with("raporEkskul")
+      .with("prestasi")
+      .with("sikap", (builder) => {
+        builder
+          .with("ditingkatkanSosial")
+          .with("ditunjukkanSosial")
+          .with("ditingkatkanSpiritual")
+          .with("ditunjukkanSpiritual");
+      })
+      .where({ id: user_id })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    const nilai = await TkRekapNilai.query()
+      .with("rekapRombel", (builder) => {
+        builder.with("rekap").where({ dihapus: 0 });
+      })
+      .where({ m_user_id: user_id })
+      .fetch();
+
+    const materiRombel = await TkMateriRombel.query()
+      .with("materi", (builder) => {
+        builder.with("mataPelajaran");
+      })
+      .where({ m_rombel_id: rombel_id })
+      .fetch();
+
+    const predikat = await MPredikatNilai.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    const rombel = await MRombel.query()
+      .with("user")
+      .where({ id: rombel_id })
+      .first();
+
+    const ekskul = await MRombel.query()
+      .with("anggotaRombel", (builder) => {
+        builder.where({ m_user_id: user_id });
+      })
+      .where({ kelompok: "ekskul" })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    const totalHadir = await MAbsen.query()
+      .with("user")
+      .whereBetween("created_at", [`${ta.tanggal_awal}`, `${ta.tanggal_akhir}`])
+      .andWhere({ keterangan: "hadir" })
+      .andWhere({ m_user_id: user_id })
+      .count("* as total");
+    const totalSakit = await MAbsen.query()
+      .with("user")
+      .whereBetween("created_at", [`${ta.tanggal_awal}`, `${ta.tanggal_akhir}`])
+      .andWhere({ keterangan: "sakit" })
+      .andWhere({ m_user_id: user_id })
+      .count("* as total");
+    const totalIzin = await MAbsen.query()
+      .with("user")
+      .whereBetween("created_at", [`${ta.tanggal_awal}`, `${ta.tanggal_akhir}`])
+      .andWhere({ keterangan: "izin" })
+      .andWhere({ m_user_id: user_id })
+      .count("* as total");
+    const totalAlpa =
+      user_id.length -
+      (totalHadir[0].total + totalSakit[0].total + totalIzin[0].total);
+
+    return response.ok({
+      siswa: siswa,
+      ta: ta,
+      nilai: nilai,
+      sekolah: sekolah,
+      materiRombel: materiRombel,
+      predikat: predikat,
+      rombel: rombel,
+      ekskul: ekskul,
+      totalHadir: totalHadir,
+      totalSakit: totalSakit,
+      totalIzin: totalIzin,
+      totalAlpa: totalAlpa,
+      tanggalDistinct: tanggalDistinct,
+    });
+  }
+
+  async detailBukuIndukRapor({
+    response,
+    request,
+    auth,
+    params: { rombel_id },
+  }) {
+    const user = await auth.getUser();
+
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    const rombel = await MRombel.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ id: rombel_id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    const materiRombel = await TkMateriRombel.query()
+      .with("materi", (builder) => {
+        builder.with("mataPelajaran");
+      })
+      .where({ m_rombel_id: rombel_id })
+      .fetch();
+
+    return response.ok({
+      rombel: rombel,
+      materiRombel: materiRombel,
+    });
+  }
+
+  async postPredikat({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      predikat,
+      bb_pengetahuan,
+      ba_pengetahuan,
+      bb_keterampilan,
+      ba_keterampilan,
+      sikap,
+    } = request.post();
+
+    const predikatNilai = await MPredikatNilai.create({
+      predikat,
+      bb_pengetahuan,
+      ba_pengetahuan,
+      bb_keterampilan,
+      ba_keterampilan,
+      sikap,
+      m_sekolah_id: sekolah.id,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putPredikat({ response, request, auth, params: { predikat_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const {
+      predikat,
+      bb_pengetahuan,
+      ba_pengetahuan,
+      bb_keterampilan,
+      ba_keterampilan,
+      sikap,
+    } = request.post();
+
+    const predikatNilai = await MPredikatNilai.query()
+      .where({ id: predikat_id })
+      .update({
+        predikat,
+        bb_pengetahuan,
+        ba_pengetahuan,
+        bb_keterampilan,
+        ba_keterampilan,
+        sikap,
+        dihapus: 0,
+      });
+
+    if (!predikatNilai) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deletePredikat({ response, request, auth, params: { predikat_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const predikat = await MPredikatNilai.query()
+      .where({ id: predikat_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!predikat) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  //rapor service
+
+  // async detailRombelRapor({ response, request, auth, params: { user_id } }) {
+  //   const user = await auth.getUser();
+
+  //   const domain = request.headers().origin;
+
+  //   const sekolah = await this.getSekolahByDomain(domain);
+
+  //   if (sekolah == "404") {
+  //     return response.notFound({ message: "Sekolah belum terdaftar" });
+  //   }
+  //   const rekap = await MRekap.query()
+  //     .with("rekaprombel", (builder) => {
+  //       builder.with("rekapnilai", (builder) => {
+  //         builder.where({ m_user_id: user_id });
+  //       });
+  //     })
+  //     .where({ dihapus: 0 })
+  //     .fetch();
+  //   return response.ok({
+  //     predikat: predikat,
+  //   });
+  // }
+
+  //Tambah Ekskul
+  async postRaporEkskul({
+    response,
+    request,
+    auth,
+    params: { rombel_id },
+    params: { user_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { keterangan } = request.post();
+
+    const raporEkskul = await MRaporEkskul.create({
+      m_rombel_id: rombel_id,
+      keterangan,
+      status: 1,
+      m_user_id: user_id,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putRaporEkskul({ response, request, auth, params: { user_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { keterangan } = request.post();
+
+    const raporEksul = await MRaporEksul.query().where({ id: user_id }).update({
+      keterangan,
+      dihapus: 0,
+    });
+
+    if (!raporEksul) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async postKeteranganRapor({ response, request, auth, params: { user_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { catatan, kelulusan } = request.post();
+
+    const keteranganRapor = await MKeteranganRapor.create({
+      catatan,
+      kelulusan,
+      m_user_id: user.id,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putKeteranganRapor({ response, request, auth, params: { user_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { catatan, kelulusan } = request.post();
+
+    const keteranganRapor = await MKeteranganRapor.query()
+      .where({ id: user_id })
+      .update({
+        catatan,
+        kelulusan,
+        dihapus: 0,
+      });
+
+    if (!keteranganRapor) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+  async postKeteranganPkl({ response, request, auth, params: { user_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { namamitra, tanggal_mulai, tanggal_selesai, keterangan } =
+      request.post();
+
+    const keteranganPkl = await MKeteranganPkl.create({
+      namamitra,
+      tanggal_mulai,
+      tanggal_selesai,
+      keterangan,
+      m_user_id: user.id,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putKeteranganPkl({ response, request, auth, params: { user_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { namamitra, tanggal_mulai, tanggal_selesai, keterangan } =
+      request.post();
+
+    const keteranganPkl = await MKeteranganPkl.query()
+      .where({ id: user_id })
+      .update({
+        namamitra,
+        tanggal_mulai,
+        tanggal_selesai,
+        keterangan,
+        dihapus: 0,
+      });
+
+    if (!keteranganPkl) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async downloadGelombangPPDB({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    const user = await auth.getUser();
+
+    const gelombang = await MGelombangPpdb.query()
+      .with("pendaftar", (builder) => {
+        builder.with("user");
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .fetch();
+
+    // return gelombang;
+    // const monthNames = [
+    //   "January",
+    //   "February",
+    //   "March",
+    //   "April",
+    //   "May",
+    //   "June",
+    //   "July",
+    //   "August",
+    //   "September",
+    //   "October",
+    //   "November",
+    //   "December",
+    // ];
+    // const dateObj = new Date();
+    // const month = monthNames[dateObj.getMonth()];
+    // const day = String(dateObj.getDate()).padStart(2, "0");
+    // const year = dateObj.getFullYear();
+    // const output = dat + "," + month + "," + year;
+    let workbook = new Excel.Workbook();
+
+    await Promise.all(
+      gelombang.toJSON().map(async (d, idx) => {
+        let worksheet = workbook.addWorksheet(`${idx + 1}.${d.nama}`);
+        worksheet.getCell("A1").value = d.nama;
+        worksheet.getCell("A2").value = sekolah.nama;
+        worksheet.getCell("A3").value = ta.tahun;
+        worksheet.getCell("A5").value = `dibuka : ${d.waktuawal}`;
+        worksheet.getCell("A6").value = `ditutup : ${d.waktuakhir}`;
+        worksheet.getCell("A7").value = `Keterangan : ${d.keterangan}`;
+        worksheet.getCell(
+          "A8"
+        ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+        worksheet.mergeCells(`A1:J1`);
+        worksheet.mergeCells(`A2:J2`);
+        worksheet.mergeCells(`A3:J3`);
+        worksheet.mergeCells(`A5:J5`);
+        worksheet.mergeCells(`A6:J6`);
+        worksheet.mergeCells(`A7:J7`);
+        worksheet.getColumn("A").width = 28;
+        worksheet.getColumn("B").width = 14;
+        worksheet.getColumn("C").width = 8;
+        worksheet.getColumn("D").width = 8.5;
+        worksheet.getColumn("E").width = 9;
+        worksheet.getColumn("F").width = 14;
+        worksheet.getColumn("G").width = 10;
+        worksheet.getColumn("H").width = 8;
+        worksheet.getColumn("I").width = 11;
+        worksheet.addConditionalFormatting({
+          ref: "A1:I3",
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 16,
+                  bold: true,
+                },
+                // fill: {
+                //   type: "pattern",
+                //   pattern: "solid",
+                //   bgColor: { argb: "0000FF", fgColor: { argb: "0000FF" } },
+                // },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+              },
+            },
+          ],
+        });
+
+        await Promise.all(
+          d.pendaftar.map(async (anggota, idx) => {
+            // add column headers
+            worksheet.getRow(9).values = [
+              "No",
+              "Nama",
+              "Whatsapp",
+              "Gender",
+              "Bank",
+              "Norek",
+              "Nama Pemilih",
+              "Nominal",
+              "Bukti",
+              "Diverifikasi",
+            ];
+
+            worksheet.columns = [
+              { key: "no" },
+              { key: "user" },
+              { key: "whatsapp" },
+              { key: "gender" },
+              { key: "bank" },
+              { key: "norek" },
+              { key: "nama_pemilik" },
+              { key: "nominal" },
+              { key: "bukti" },
+              { key: "diverifikasi" },
+            ];
+
+            // Add row using key mapping to columns
+            let row = worksheet.addRow({
+              no: `${idx + 1}`,
+              user: anggota.user ? anggota.user.nama : "-",
+              whatsapp: anggota.user ? anggota.user.whatsapp : "-",
+              gender: anggota.user ? anggota.user.gender : "-",
+              bank: anggota ? anggota.bank : "-",
+              norek: anggota ? anggota.norek : "-",
+              nama_pemilik: anggota ? anggota.nama_pemilik : "-",
+              nominal: anggota ? anggota.nominal : "-",
+              bukti: anggota ? anggota.bukti : "-",
+              diverifikasi: anggota ? anggota.diverifikasi : "-",
+            });
+
+            worksheet.addConditionalFormatting({
+              ref: `A9:J9`,
+              rules: [
+                {
+                  type: "expression",
+                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                  style: {
+                    border: {
+                      top: { style: "thin" },
+                      left: { style: "thin" },
+                      bottom: { style: "thin" },
+                      right: { style: "thin" },
+                    },
+                    font: {
+                      name: "Times New Roman",
+                      family: 4,
+                      size: 14,
+                      bold: true,
+                    },
+                    fill: {
+                      type: "pattern",
+                      pattern: "solid",
+                      bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+                    },
+                    alignment: {
+                      vertical: "middle",
+                      horizontal: "center",
+                    },
+                  },
+                },
+              ],
+            });
+            worksheet.addConditionalFormatting({
+              ref: `A${(idx + 1) * 1 + 9}:J${(idx + 1) * 1 + 9}`,
+              rules: [
+                {
+                  type: "expression",
+                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                  style: {
+                    border: {
+                      top: { style: "thin" },
+                      left: { style: "thin" },
+                      bottom: { style: "thin" },
+                      right: { style: "thin" },
+                    },
+                    font: {
+                      name: "Times New Roman",
+                      family: 4,
+                      size: 11,
+                      // bold: true,
+                    },
+                    alignment: {
+                      vertical: "middle",
+                      horizontal: "left",
+                    },
+                  },
+                },
+              ],
+            });
+          })
+        );
+      })
+    );
+
+    let namaFile = `/uploads/rekap-Gelombang PPDB.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);

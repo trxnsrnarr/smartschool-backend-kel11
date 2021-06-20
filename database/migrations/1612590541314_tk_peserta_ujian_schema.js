@@ -13,7 +13,7 @@ class TkJadwalUjianSiswaSchema extends Schema {
       table.integer("nilai");
       table.boolean("selesai");
       table.boolean("dinilai");
-      table.boolean("dihapus");
+      table.boolean("dihapus").defaultTo(0);
       table.integer("m_user_id").unsigned().index("m_user_id");
       table
         .foreign("m_user_id")

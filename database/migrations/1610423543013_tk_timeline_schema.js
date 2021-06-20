@@ -26,7 +26,7 @@ class TkTimelineSchema extends Schema {
         .onDelete("cascade")
         .onUpdate("cascade");
       table.string("absen");
-      table.boolean("dihapus");
+      table.boolean("dihapus").defaultTo(0);
       table.boolean("dikumpulkan");
       table.boolean("dikembalikan");
       table.timestamps();

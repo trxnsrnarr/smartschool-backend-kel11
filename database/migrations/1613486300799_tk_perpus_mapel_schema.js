@@ -7,7 +7,7 @@ class TkPerpusMapelSchema extends Schema {
   up() {
     this.create("tk_perpus_mapel", (table) => {
       table.increments();
-      table.boolean("dihapus");
+      table.boolean("dihapus").defaultTo(0);
       table.integer("m_jurusan_id").unsigned().index("m_jurusan_id");
       table
         .foreign("m_jurusan_id")

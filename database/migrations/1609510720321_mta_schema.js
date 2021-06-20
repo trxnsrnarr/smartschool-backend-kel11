@@ -11,10 +11,16 @@ class MtaSchema extends Schema {
       table.string("semester");
       table.string("nama_kepsek");
       table.string("nip_kepsek");
+      table.date("tanggaL_awal");
+      table.date("tanggaL_keluar");
       table.boolean("aktif");
-      table.boolean("dihapus");
-      table.integer("m_sekolah_id").unsigned().index('m_sekolah_id');
-      table.foreign('m_sekolah_id').references('m_sekolah.id').onDelete('cascade').onUpdate('cascade')
+      table.boolean("dihapus").defaultTo(0);
+      table.integer("m_sekolah_id").unsigned().index("m_sekolah_id");
+      table
+        .foreign("m_sekolah_id")
+        .references("m_sekolah.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
       table.timestamps();
     });
   }

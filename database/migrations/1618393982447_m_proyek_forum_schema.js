@@ -9,7 +9,7 @@ class MProyekForumSchema extends Schema {
       table.increments();
       table.text("deskripsi");
       table.text("lampiran");
-      table.boolean("dihapus");
+      table.boolean("dihapus").defaultTo(0);
       table.integer("m_proyek_id").unsigned().index("m_proyek_id");
       table
         .foreign("m_proyek_id")

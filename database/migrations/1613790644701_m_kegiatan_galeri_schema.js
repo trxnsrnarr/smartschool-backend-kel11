@@ -10,7 +10,7 @@ class MKegiatanGaleriSchema extends Schema {
       table.text("foto");
       table.string("nama");
       table.text("deskripsi");
-      table.boolean("dihapus");
+      table.boolean("dihapus").defaultTo(0);
       table.integer("m_kegiatan_id").unsigned().index("m_kegiatan_id");
       table
         .foreign("m_kegiatan_id")

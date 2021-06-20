@@ -44,6 +44,7 @@ Route.get("/profil-user", "MainController.getProfilUser");
 
 // user
 Route.get("/user", "MainController.getUser");
+Route.get("/user/:user_id", "MainController.detailUser");
 
 // sekolah
 Route.get("/sekolah", "MainController.getSekolah");
@@ -70,6 +71,7 @@ Route.delete("/siswa/:siswa_id", "MainController.deleteSiswa");
 // ppdb
 Route.post("/ppdb/daftar", "MainController.daftarPPDB");
 Route.post("/ppdb/login", "MainController.loginPPDB");
+Route.post("/ppdb/downloadgelombang", "MainController.downloadGelombangPPDB");
 
 // alumni
 Route.get("/alumni", "MainController.getAlumni");
@@ -89,6 +91,7 @@ Route.get("/rombel/:jadwal_mengajar_id", "MainController.detailRombel");
 Route.post("/rombel", "MainController.postRombel");
 Route.put("/rombel/:rombel_id", "MainController.putRombel");
 Route.delete("/rombel/:rombel_id", "MainController.deleteRombel");
+Route.post("/rombel/:rombel_id/:user_id", "MainController.postSikapRombel");
 
 // anggota rombel
 Route.post("/anggota-rombel", "MainController.postAnggotaRombel");
@@ -457,6 +460,16 @@ Route.delete(
 );
 // KOLABORASI SERVICE END
 
+// pekerjaan-proyek
+Route.post(
+  "/pekerjaan-proyek/:kategori_id",
+  "MainController.postPekerjaanProyek"
+);
+Route.put(
+  "/pekerjaan-proyek/:pekerjaan_proyek_id",
+  "MainController.putPekerjaanProyek"
+);
+
 // kategori-pekerjaan
 Route.get("/kategori-pekerjaan", "MainController.getKategoriPekerjaan");
 Route.post("/kategori-pekerjaan", "MainController.postKategoriPekerjaan");
@@ -472,12 +485,18 @@ Route.delete(
 // rekap-nilai
 Route.get("/rekap/:materi_id", "MainController.detailRekap");
 Route.post("/rekap/:materi_id", "MainController.postRekap");
+Route.post(
+  "/rekap/:materi_id/sikap/:m_user_id",
+  "MainController.postRekapSikap"
+);
 Route.put("/rekap/:materi_id/:rekap_id", "MainController.putRekap");
 Route.delete("/rekap/:materi_id/:rekap_id", "MainController.deleteRekap");
-Route.get(
-  "/rekap/:materi_id/:rekapnilai_id",
-  "MainController.detailRekapNilai"
-);
+Route.get("/rekap/:materi_id/rombel/:rekapnilai_id", "MainController.detailRekapRombel");
+Route.get("/rekap/:materi_id/:rekap_id", "MainController.detailRekapNilai");
+// Route.get(
+//   "/rekap/:materi_id/:rekap_id/:rombel_id",
+//   "MainController.detailRekapNilai"
+// );
 Route.post(
   "/rekap/:materi_id/:rekapnilai_id",
   "MainController.postRekapRombel"
@@ -503,7 +522,7 @@ Route.post("/absen/rekapdownload", "MainController.downloadRekapAbsen");
 
 // Mutasi Service
 Route.post("/mutasi/importmutasi", "MainController.importMutasi");
-Route.post("/mutasi/downloadmutasi", "MainController.downloadMutasi");
+Route.post("/mutasi/download-mutasi", "MainController.downloadMutasi");
 
 // Rombel Service
 Route.post("/rombel/import-rombel", "MainController.importRombel");
@@ -516,6 +535,41 @@ Route.post("/alumni/download-alumni", "MainController.downloadAlumni");
 Route.post(
   "/ujian/download-kartu-ujian/:ujian_id",
   "MainController.downloadKartuUjian"
+);
+
+Route.get("/daftar-sekolah", "MainController.daftarsekolah");
+
+//ubah tipe data
+Route.get("/ubahtipedata", "MainController.ubahtipedata");
+
+//predikat service
+Route.post("/predikat", "MainController.postPredikat");
+Route.put("/predikat/:predikat_id", "MainController.putPredikat");
+Route.delete("/predikat/:predikat_id", "MainController.deletePredikat");
+
+//Rapor Service
+Route.get(
+  "/rombel/:jadwal_mengajar_id/rapor/:user_id",
+  "MainController.detailRombelRapor"
+);
+
+Route.post(
+  "/rapor/ekskul/:rombel_id/:user_id",
+  "MainController.postRaporEkskul"
+);
+Route.post("/rapor/kelulusan/:user_id", "MainController.postKeteranganRapor");
+Route.post("/rapor/pkl/:user_id", "MainController.postKeteranganPkl");
+
+//Buku Induk Service
+Route.get("/buku-induk", "MainController.getBukuInduk");
+Route.get("/buku-induk/:rombel_id", "MainController.detailBukuInduk");
+Route.get(
+  "/buku-induk/:rombel_id/:user_id",
+  "MainController.detailBukuIndukSiswa"
+);
+Route.get(
+  "/buku-induk/rapor/:rombel_id",
+  "MainController.detailBukuIndukRapor"
 );
 
 // wildcard (DROP AT BOTTOM OF THE FILE)
