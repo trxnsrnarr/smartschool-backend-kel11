@@ -629,7 +629,7 @@ class MainController {
       semester6,
     } = request.post();
 
-    await User.query().where({ id: user.id }).update({
+    let userPayload = {
       // identitas
       nama,
       nama_panggilan,
@@ -639,7 +639,11 @@ class MainController {
       tempat_lahir,
       tanggal_lahir,
       avatar,
-    });
+    };
+
+    tanggal_lahir == "Invalid date" ? delete userPayload.tanggal_lahir : null;
+
+    await User.query().where({ id: user.id }).update(userPayload);
 
     const check = await MProfilUser.query()
       .select("id")
