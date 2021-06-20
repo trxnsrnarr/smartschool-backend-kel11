@@ -3023,7 +3023,6 @@ class MainController {
       if (!check) {
         const materi = await MMateri.create({
           tingkat,
-          m_jurusan_id: 0,
           m_mata_pelajaran_id,
         });
 
