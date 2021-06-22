@@ -12031,6 +12031,11 @@ class MainController {
 
     // ===== List Undangan =====
     const undangan = await MAnggotaProyek.query()
+      .with("proyek", (builder) => {
+        builder.withCount("anggota", (builder) => {
+          builder.where({ status: "menerima" });
+        });
+      })
       .where({ dihapus: 0 })
       .andWhere({ m_user_id: user.id })
       .andWhere({ status: "undangan" })
