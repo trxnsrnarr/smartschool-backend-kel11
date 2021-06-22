@@ -629,7 +629,7 @@ class MainController {
       semester6,
     } = request.post();
 
-    await User.query().where({ id: user.id }).update({
+    let userPayload = {
       // identitas
       nama,
       nama_panggilan,
@@ -639,7 +639,11 @@ class MainController {
       tempat_lahir,
       tanggal_lahir,
       avatar,
-    });
+    };
+
+    tanggal_lahir == "Invalid date" ? delete userPayload.tanggal_lahir : null;
+
+    await User.query().where({ id: user.id }).update(userPayload);
 
     const check = await MProfilUser.query()
       .select("id")
@@ -2758,37 +2762,19 @@ class MainController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
-    let { page } = request.get();
 
-    page = page ? parseInt(page) : 1;
+    const mataPelajaran = await MMataPelajaran.query()
+      .with("user", (builder) => {
+        builder.select("id", "nama");
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
 
-    const mataPelajaranKelompokA = await MMataPelajaran.query()
-      .with("user", (builder) => {
-        builder.select("id", "nama");
-      })
-      .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta.id })
-      .andWhere({ dihapus: 0 })
-      .andWhere({ kelompok: "A" })
-      .paginate(page);
-    const mataPelajaranKelompokB = await MMataPelajaran.query()
-      .with("user", (builder) => {
-        builder.select("id", "nama");
-      })
-      .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta.id })
-      .andWhere({ dihapus: 0 })
-      .andWhere({ kelompok: "B" })
-      .paginate(page);
-    const mataPelajaranKelompokC = await MMataPelajaran.query()
-      .with("user", (builder) => {
-        builder.select("id", "nama");
-      })
-      .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta.id })
-      .andWhere({ dihapus: 0 })
-      .andWhere({ kelompok: "C" })
-      .paginate(page);
+    const mataPelajaranKelompokA = [];
+    const mataPelajaranKelompokB = [];
+    const mataPelajaranKelompokC = [];
 
     const guru = await User.query()
       .select("nama", "id", "whatsapp", "avatar", "gender")
@@ -2796,6 +2782,18 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .andWhere({ role: "guru" })
       .fetch();
+
+    await Promise.all(
+      mataPelajaran.toJSON().map(async (data) => {
+        if (data.kelompok == "A") {
+          mataPelajaranKelompokA.push(data);
+        } else if (data.kelompok == "B") {
+          mataPelajaranKelompokB.push(data);
+        } else if (data.kelompok == "C") {
+          mataPelajaranKelompokC.push(data);
+        }
+      })
+    );
 
     return response.ok({
       mataPelajaranKelompokA,
@@ -3103,7 +3101,6 @@ class MainController {
       if (!check) {
         const materi = await MMateri.create({
           tingkat,
-          m_jurusan_id: 0,
           m_mata_pelajaran_id,
         });
 
@@ -13215,6 +13212,13 @@ class MainController {
       m_rekap_id: rekapnilai_id,
       dihapus: 0,
     });
+
+    const tugasdata = await MTimeline.query()
+      .with("listSiswaDinilai", (builder) => {
+        builder.with("user").whereNotNull("nilai");
+      })
+      .where({ m_tugas_id: m_tugas_id })
+      .fetch();
 
     const data = await MRombel.query()
       .with("anggotaRombel", (builder) => {
