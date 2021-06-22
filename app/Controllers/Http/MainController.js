@@ -1219,38 +1219,29 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    let { gender, nama, whatsapp, password, avatar } = request.post();
+    let { nama, whatsapp, gender, password, avatar, photos } = request.post();
     whatsapp = whatsapp.trim();
+    photos = JSON.stringify(photos);
 
     let guru;
 
-    if (user.whatsapp != whatsapp) {
-      const check = await User.query().where({ whatsapp: whatsapp }).first();
+    let payload = {
+      whatsapp,
+      nama,
+      gender,
+      avatar,
+      photos,
+    };
 
-      if (check) {
-        return response.forbidden({
-          message: "Akun sudah terdaftar",
-        });
-      }
-    }
+    password ? (payload.password = await Hash.make(password)) : null;
 
-    if (!password) {
-      guru = await User.query().where({ id: guru_id }).update({
-        nama,
-        whatsapp,
-        gender,
-        avatar,
-      });
+    const check = await User.query().where({ whatsapp: whatsapp }).first();
+
+    if (check) {
+      delete payload.whatsapp;
+      guru = await User.query().where({ id: guru_id }).update(payload);
     } else {
-      guru = await User.query()
-        .where({ id: guru_id })
-        .update({
-          nama,
-          whatsapp,
-          gender,
-          password: await Hash.make(password),
-          avatar,
-        });
+      guru = await User.query().where({ id: guru_id }).update(payload);
     }
 
     if (!guru) {
