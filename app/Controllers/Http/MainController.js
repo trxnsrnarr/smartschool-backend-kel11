@@ -20119,20 +20119,13 @@ class MainController {
           `${jadwalMengajar.toJSON().mataPelajaran.kkm}`
         );
       })
-      .withavg("tugas as rata", (builder) => {
-        builder.where(
-          "nilai",
-          "<",
-          `${jadwalMengajar.toJSON().mataPelajaran.kkm}`
-        );
-      })
       .whereIn("id", userIds)
       .fetch();
 
-    return response.ok({
-      jadwalMengajar,
-      analisisNilai,
-    });
+    // return response.ok({
+    //   jadwalMengajar,
+    //   analisisNilai,
+    // });
 
     let workbook = new Excel.Workbook();
 
@@ -20231,6 +20224,10 @@ class MainController {
         //   total += d.tugas.nilai[i];
         // }
         // var avg = total / d.tugas.nilai.length;
+        const ratarata2 = await TkTimeline.query()
+          .where("m_timeline_id", timelineIds)
+          .andWhere({ m_user_id: `${d.id}` })
+          .avg("nilai as ratarata2");
 
         worksheet.getRow(7).values = ["No", "Nama", "Rata-Rata", "Dibawah KKM"];
         worksheet.columns = [
@@ -20242,12 +20239,10 @@ class MainController {
         let row = worksheet.addRow({
           no: `${idx + 1}`,
           user: d ? d.nama : "-",
-          ratarata: `${avg}`,
+          ratarata: `${ratarata2}`,
           dibawahkkm: "-",
         });
-        worksheet.getCell(`C${(idx + 1) * 1 + 7}`).value = {
-          formula: `average(E1:Z1)`,
-        };
+
         // const row = worksheet.getRow(8);
         await Promise.all(
           d.tugas.map(async (e, nox) => {
