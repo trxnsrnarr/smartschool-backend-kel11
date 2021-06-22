@@ -20216,7 +20216,7 @@ class MainController {
         // }
         // var avg = total / d.tugas.nilai.length;
         const ratarata2 = await TkTimeline.query()
-          .where("m_timeline_id", timelineIds)
+          .whereIn("m_timeline_id", timelineIds)
           .andWhere({ m_user_id: `${d.id}` })
           .avg("nilai as ratarata2");
 
