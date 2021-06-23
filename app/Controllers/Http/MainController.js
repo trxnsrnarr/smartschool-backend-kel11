@@ -12229,7 +12229,7 @@ class MainController {
       dihapus: 0,
     });
 
-    await MKategoriPekerjaan.createMany([
+    const kategori = await MKategoriPekerjaan.createMany([
       {
         nama: "Daftar Pekerjaan",
         warna: "#2680eb",
@@ -12254,6 +12254,8 @@ class MainController {
     ]);
 
     return response.ok({
+      proyek,
+      kategori,
       message: messagePostSuccess,
     });
   }
@@ -12345,7 +12347,7 @@ class MainController {
 
     const maxUrutan = await MKategoriPekerjaan.query().getMax("urutan");
 
-    await MKategoriPekerjaan.create({
+    const kategori = await MKategoriPekerjaan.create({
       nama,
       warna,
       urutan: maxUrutan,
@@ -12354,6 +12356,7 @@ class MainController {
     });
 
     return response.ok({
+      kategori,
       message: messagePostSuccess,
     });
   }
@@ -12560,7 +12563,7 @@ class MainController {
         .where({ m_kategori_pekerjaan_id: kategori_id })
         .getMax("urutan")) + 1;
 
-    await MPekerjaanProyek.create({
+    const pekerjaan = await MPekerjaanProyek.create({
       judul,
       prioritas,
       status,
@@ -12572,6 +12575,7 @@ class MainController {
     });
 
     return response.ok({
+      pekerjaan,
       message: messagePostSuccess,
     });
   }
@@ -12631,7 +12635,6 @@ class MainController {
     response,
     request,
     auth,
-    params: { proyek_id },
     params: { pekerjaan_proyek_id },
   }) {
     const domain = request.headers().origin;
@@ -12645,9 +12648,8 @@ class MainController {
     // mengambil data user
     const user = await auth.getUser();
 
-    const pekerjaanProyek = await MProyekForum.query()
+    const pekerjaanProyek = await MPekerjaanProyek.query()
       .where({ id: pekerjaan_proyek_id })
-      .andWhere({ m_user_id: user.id })
       .update({
         dihapus: 1,
       });

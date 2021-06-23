@@ -469,6 +469,10 @@ Route.put(
   "/pekerjaan-proyek/:pekerjaan_proyek_id",
   "MainController.putPekerjaanProyek"
 );
+Route.delete(
+  "/pekerjaan-proyek/:pekerjaan_proyek_id",
+  "MainController.deletePekerjaanProyek"
+);
 
 // kategori-pekerjaan
 Route.get("/kategori-pekerjaan", "MainController.getKategoriPekerjaan");
