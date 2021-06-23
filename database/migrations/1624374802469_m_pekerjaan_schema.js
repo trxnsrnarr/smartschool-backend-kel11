@@ -15,6 +15,10 @@ class MPekerjaanSchema extends Schema {
         .onDelete("cascade")
         .onUpdate("cascade");
       table.text("jenis");
+      table.string("bidang");
+      table.string("kontrak_kerja");
+      table.datetime("mulai_kerja");
+      table.datetime("akhir_kerja");
       table.boolean("dihapus").defaultTo(0);
       table.timestamps();
     });
