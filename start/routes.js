@@ -584,6 +584,14 @@ Route.post(
   "MainController.downloadAnalisisNilai"
 );
 Route.post("/download/experimen", "MainController.downloadExperimen");
+<<<<<<< HEAD
+=======
+
+//CDC Service
+Route.get("/cdc/pekerjaan-saya", "MainController.getPekerjaanSaya");
+Route.get("/cdc/cari-pekerjaan", "MainController.getCariPekerjaan");
+Route.get("/cdc/cari-perusahaan", "MainController.getCariPerusahaan");
+>>>>>>> fc0c8df3b0270c81bfb7aa6f1238a16e0d29ca01
 
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");

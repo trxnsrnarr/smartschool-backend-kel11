@@ -20106,22 +20106,28 @@ class MainController {
       .ids();
 
     const analisisNilai = await User.query()
-      .with("tugas", (builder) => {
-        builder.whereIn("m_timeline_id", timelineIds);
-      })
-      .withCount("tugas", (builder) => {
+      .withCount("tugasnilai as kkm", (builder) => {
         builder.where(
           "nilai",
           "<",
           `${jadwalMengajar.toJSON().mataPelajaran.kkm}`
         );
       })
+      .with("tugas", (builder) => {
+        builder.whereIn("m_timeline_id", timelineIds);
+      })
       .whereIn("id", userIds)
       .fetch();
 
+    // const ratarata2 = await TkTimeline.query()
+    //   .whereIn("m_timeline_id", timelineIds)
+    //   .whereIn("m_user_id", userIds)
+    //   .avg("nilai as rata");
+
     // return response.ok({
-    //   jadwalMengajar,
+    //   // jadwalMengajar,
     //   analisisNilai,
+    //   // ratarata2,
     // });
 
     let workbook = new Excel.Workbook();
@@ -20222,9 +20228,9 @@ class MainController {
         // }
         // var avg = total / d.tugas.nilai.length;
         const ratarata2 = await TkTimeline.query()
-          .where("m_timeline_id", timelineIds)
-          .andWhere({ m_user_id: `${d.id}` })
-          .avg("nilai as ratarata2");
+          .where({ m_user_id: `${d.id}` })
+          .whereIn("m_timeline_id", timelineIds)
+          .avg("nilai as rata");
 
         worksheet.getRow(7).values = ["No", "Nama", "Rata-Rata", "Dibawah KKM"];
         worksheet.columns = [
@@ -20236,8 +20242,8 @@ class MainController {
         let row = worksheet.addRow({
           no: `${idx + 1}`,
           user: d ? d.nama : "-",
-          ratarata: `${ratarata2}`,
-          dibawahkkm: "-",
+          ratarata: `${ratarata2[0].rata ? ratarata2[0].rata : "-"}`,
+          dibawahkkm: `${d.__meta__.kkm} Tugas`,
         });
 
         // const row = worksheet.getRow(8);
@@ -20253,11 +20259,55 @@ class MainController {
               `Tugas${nox + 1}`,
               ,
             ];
-            row.getCell([`${(nox + 1) * 1 + 4}`]).value = `${e.nilai}`;
+            row.getCell([`${(nox + 1) * 1 + 4}`]).value = `${
+              e.nilai ? e.nilai : "-"
+            }`;
+            row.getCell([`${(nox + 1) * 1 + 4}`]).border = {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            };
+            worksheet.getColumn([`${(nox + 1) * 1 + 4}`]).fill = {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: {
+                argb: "C0C0C0",
+                fgColor: { argb: "C0C0C0" },
+              },
+            };
             // worksheet.getCell(`E${(nox + 1) * 1 + 8}`).value = e.nilai;
             // worksheet.columns = [
             //   { key: `tugas${nox+1}` },
             // ];
+
+            worksheet.addConditionalFormatting({
+              ref: `${(nox + 1) * 1 + 7}`,
+              rules: [
+                {
+                  type: "expression",
+                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                  style: {
+                    border: {
+                      top: { style: "thin" },
+                      left: { style: "thin" },
+                      bottom: { style: "thin" },
+                      right: { style: "thin" },
+                    },
+                    font: {
+                      name: "Times New Roman",
+                      family: 4,
+                      size: 11,
+                      // bold: true,
+                    },
+                    alignment: {
+                      vertical: "middle",
+                      horizontal: "left",
+                    },
+                  },
+                },
+              ],
+            });
 
             // // Add row using key mapping to columns
             // let row = worksheet.addRow ({
@@ -20269,70 +20319,72 @@ class MainController {
             // });
           })
         );
+
+        worksheet.addConditionalFormatting({
+          ref: `A7:J7`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 14,
+                  bold: true,
+                },
+                fill: {
+                  type: "pattern",
+                  pattern: "solid",
+                  bgColor: {
+                    argb: "C0C0C0",
+                    fgColor: { argb: "C0C0C0" },
+                  },
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+              },
+            },
+          ],
+        });
+
+        worksheet.addConditionalFormatting({
+          ref: `A${(idx + 1) * 1 + 7}:D${(idx + 1) * 1 + 7}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+              },
+            },
+          ],
+        });
       })
     );
-    // worksheet.addConditionalFormatting({
-    //   ref: `A9:J9`,
-    //   rules: [
-    //     {
-    //       type: "expression",
-    //       formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-    //       style: {
-    //         border: {
-    //           top: { style: "thin" },
-    //           left: { style: "thin" },
-    //           bottom: { style: "thin" },
-    //           right: { style: "thin" },
-    //         },
-    //         font: {
-    //           name: "Times New Roman",
-    //           family: 4,
-    //           size: 14,
-    //           bold: true,
-    //         },
-    //         fill: {
-    //           type: "pattern",
-    //           pattern: "solid",
-    //           bgColor: {
-    //             argb: "C0C0C0",
-    //             fgColor: { argb: "C0C0C0" },
-    //           },
-    //         },
-    //         alignment: {
-    //           vertical: "middle",
-    //           horizontal: "center",
-    //         },
-    //       },
-    //     },
-    //   ],
-    // });
-    // worksheet.addConditionalFormatting({
-    //   ref: `A${(idx + 1) * 1 + 9}:J${(idx + 1) * 1 + 9}`,
-    //   rules: [
-    //     {
-    //       type: "expression",
-    //       formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-    //       style: {
-    //         border: {
-    //           top: { style: "thin" },
-    //           left: { style: "thin" },
-    //           bottom: { style: "thin" },
-    //           right: { style: "thin" },
-    //         },
-    //         font: {
-    //           name: "Times New Roman",
-    //           family: 4,
-    //           size: 11,
-    //           // bold: true,
-    //         },
-    //         alignment: {
-    //           vertical: "middle",
-    //           horizontal: "left",
-    //         },
-    //       },
-    //     },
-    //   ],
-    // });
     worksheet.getCell("A1").value = sekolah.nama;
     worksheet.getCell("A2").value = jadwalMengajar.toJSON().rombel.nama;
     worksheet.getCell("A3").value = jadwalMengajar.toJSON().mataPelajaran.nama;
