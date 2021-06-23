@@ -469,6 +469,10 @@ Route.put(
   "/pekerjaan-proyek/:pekerjaan_proyek_id",
   "MainController.putPekerjaanProyek"
 );
+Route.delete(
+  "/pekerjaan-proyek/:pekerjaan_proyek_id",
+  "MainController.deletePekerjaanProyek"
+);
 
 // kategori-pekerjaan
 Route.get("/kategori-pekerjaan", "MainController.getKategoriPekerjaan");
@@ -579,10 +583,7 @@ Route.post(
   "/rombel-download/:jadwal_mengajar_id/download-analisis-nilai",
   "MainController.downloadAnalisisNilai"
 );
-Route.post(
-  "/download/experimen",
-  "MainController.downloadExperimen"
-);
+Route.post("/download/experimen", "MainController.downloadExperimen");
 
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
