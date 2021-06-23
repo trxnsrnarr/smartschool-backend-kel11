@@ -7,6 +7,20 @@ class MPekerjaan extends Model {
   static get table() {
     return "m_pekerjaan";
   }
+
+  perusahaan() {
+    return this.belongsTo("App/Models/MPerusahaan");
+  }
+  informasi() {
+    return this.belongsTo(
+      "App/Models/MInformasiPekerjaan",
+      "id",
+      "m_pekerjaan_id"
+    );
+  }
+  pengumuman() {
+    return this.hasMany("App/Models/MPekerjaanPengumuman");
+  }
 }
 
 module.exports = MPekerjaan;
