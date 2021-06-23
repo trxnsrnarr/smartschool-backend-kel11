@@ -579,10 +579,12 @@ Route.post(
   "/rombel-download/:jadwal_mengajar_id/download-analisis-nilai",
   "MainController.downloadAnalisisNilai"
 );
-Route.post(
-  "/download/experimen",
-  "MainController.downloadExperimen"
-);
+Route.post("/download/experimen", "MainController.downloadExperimen");
+
+//CDC Service
+Route.get("/cdc/pekerjaan-saya", "MainController.getPekerjaanSaya");
+Route.get("/cdc/cari-pekerjaan", "MainController.getCariPekerjaan");
+Route.get("/cdc/cari-perusahaan", "MainController.getCariPerusahaan");
 
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
