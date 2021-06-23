@@ -12558,7 +12558,7 @@ class MainController {
         .where({ m_kategori_pekerjaan_id: kategori_id })
         .getMax("urutan")) + 1;
 
-    await MPekerjaanProyek.create({
+    const pekerjaan = await MPekerjaanProyek.create({
       judul,
       prioritas,
       status,
@@ -12570,6 +12570,7 @@ class MainController {
     });
 
     return response.ok({
+      pekerjaan,
       message: messagePostSuccess,
     });
   }
