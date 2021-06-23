@@ -13,7 +13,6 @@ class MInformasiPekerjaanSchema extends Schema {
         .references("m_pekerjaan.id")
         .onDelete("cascade")
         .onUpdate("cascade");
-      table.string("bidang");
       table.string("pengalaman");
       table.datetime("batas_pengiriman");
       table.string("pendidikan");
@@ -23,9 +22,7 @@ class MInformasiPekerjaanSchema extends Schema {
       table.text("persyaratan_umum");
       table.text("persyaratan_khusus");
       table.string("range_gaji");
-      table.string("kontak_kerja");
-      table.datetime("mulai_kerja");
-      table.datetime("akhir_kerja");
+
       table.boolean("dihapus").defaultTo(0);
       table.timestamps();
     });
