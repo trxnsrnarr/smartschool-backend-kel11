@@ -14200,6 +14200,8 @@ class MainController {
   async downloadMapel({ response, request, auth }) {
     const domain = request.headers().origin;
 
+    const user = await auth.getUser()
+
     const sekolah = await this.getSekolahByDomain(domain);
 
     if (sekolah == "404") {
