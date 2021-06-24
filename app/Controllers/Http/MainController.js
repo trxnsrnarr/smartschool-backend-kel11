@@ -19551,7 +19551,7 @@ class MainController {
       request.post();
 
     const keteranganPkl = await MKeteranganPkl.query()
-      .where({ id: user_id })
+      .where({ m_user_id: user_id })
       .update({
         namamitra,
         tanggal_mulai,
