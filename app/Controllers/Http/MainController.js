@@ -79,6 +79,7 @@ const TkMateriKesimpulan = use("App/Models/TkMateriKesimpulan");
 const MTimelineKomen = use("App/Models/MTimelineKomen");
 const MPerusahaan = use("App/Models/MPerusahaan");
 const MPekerjaan = use("App/Models/MPekerjaan");
+const MInformasiPekerjaan = use("App/Models/MInformasiPekerjaan");
 const MPekerjaanPengumuman = use("App/Models/MPekerjaanPengumuman");
 const MAcaraPerusahaan = use("App/Models/MAcaraPerusahaan");
 const TkStatusPekerjaan = use("App/Models/TkStatusPekerjaan");
@@ -19471,7 +19472,7 @@ class MainController {
     const keteranganRapor = await MKeteranganRapor.create({
       catatan,
       kelulusan,
-      m_user_id: user.id,
+      m_user_id: user_id,
       dihapus: 0,
     });
 
@@ -19492,7 +19493,7 @@ class MainController {
     const { catatan, kelulusan } = request.post();
 
     const keteranganRapor = await MKeteranganRapor.query()
-      .where({ id: user_id })
+      .where({ m_user_id: user_id })
       .update({
         catatan,
         kelulusan,
@@ -19528,7 +19529,7 @@ class MainController {
       tanggal_mulai,
       tanggal_selesai,
       keterangan,
-      m_user_id: user.id,
+      m_user_id: user_id,
       dihapus: 0,
     });
 
@@ -21114,15 +21115,34 @@ class MainController {
       kontrak_kerja,
       mulai_kerja,
       akhir_kerja,
+      jumlah_lowongan,
+      province_id,
+      regency_id,
+      district_id,
+      village_id,
       pengalaman,
       batas_pengiriman,
       pendidikan,
       detail_pendidikan,
       keahlian,
       deskripsi,
-      persyaratan_umum,
       persyaratan_khusus,
       range_gaji,
+      status_jurusan,
+      gender,
+      tb,
+      usia_minimal,
+      usia_maksimal,
+      alamat,
+      kodepos,
+      khusus_alumni,
+      khusus_difabel,
+      buta_warna,
+      kacamata,
+      tes,
+      lokasi_tes,
+      kelengkapan_data,
+      data_nilai,
     } = request.post();
 
     const pekerjaan = await MPekerjaan.create({
@@ -21133,6 +21153,11 @@ class MainController {
       kontrak_kerja,
       mulai_kerja,
       akhir_kerja,
+      jumlah_lowongan,
+      province_id,
+      regency_id,
+      district_id,
+      village_id,
       dihapus: 0,
     });
 
@@ -21144,9 +21169,23 @@ class MainController {
       detail_pendidikan,
       keahlian,
       deskripsi,
-      persyaratan_umum,
       persyaratan_khusus,
       range_gaji,
+      status_jurusan,
+      gender,
+      tb,
+      usia_minimal,
+      usia_maksimal,
+      alamat,
+      kodepos,
+      khusus_alumni,
+      khusus_difabel,
+      buta_warna,
+      kacamata,
+      tes,
+      lokasi_tes,
+      kelengkapan_data,
+      data_nilai,
     });
 
     return response.ok({
@@ -21168,47 +21207,52 @@ class MainController {
     const user = await auth.getUser();
 
     const {
-      nama,
-      logo,
-      bidang,
+      judul,
       province_id,
       regency_id,
       district_id,
       village_id,
-      didirikan,
+      jenis,
+      bidang,
+      kontrak_kerja,
+      mulai_kerja,
+      akhir_kerja,
+      jumlah_lowongan,
+      pengalaman,
+      batas_pengiriman,
+      pendidikan,
+      detail_pendidikan,
+      keahlian,
+      deskripsi,
+      persyaratan_khusus,
+      range_gaji,
+      status_jurusan,
+      gender,
+      tb,
+      usia_minimal,
+      usia_maksimal,
       alamat,
-      telepon,
-      situs,
-      jumlah_pekerja,
-      tentang,
-      budaya,
-      benefit_karyawan,
-      lingkungan_kerja,
-      busana,
-      budaya_kerja,
-      jam_kerja,
-      nama_pj,
-      telepon_pj,
-      email_pj,
-      registrasi_pj,
-      youtube,
-      twitter,
-      instagram,
-      facebook,
-      github,
-      linkedin,
-      behace,
-      dribble,
       kodepos,
-      sampul,
+      khusus_alumni,
+      khusus_difabel,
+      buta_warna,
+      kacamata,
+      tes,
+      lokasi_tes,
+      kelengkapan_data,
+      data_nilai,
     } = request.post();
 
     const pekerjaan = await MPekerjaan.query()
       .where({ id: pekerjaan_id })
       .update({
-        nama,
-        logo,
+        judul,
+        jenis,
         bidang,
+        kontrak_kerja,
+        mulai_kerja,
+        akhir_kerja,
+        jumlah_lowongan,
         province_id,
         regency_id,
         district_id,
@@ -21219,32 +21263,29 @@ class MainController {
     const informasi = await MInformasiPekerjaan.query()
       .where({ m_pekerjaan_id: pekerjaan_id })
       .update({
-        didirikan,
+        pengalaman,
+        batas_pengiriman,
+        pendidikan,
+        detail_pendidikan,
+        keahlian,
+        deskripsi,
+        persyaratan_khusus,
+        range_gaji,
+        status_jurusan,
+        gender,
+        tb,
+        usia_minimal,
+        usia_maksimal,
         alamat,
-        telepon,
-        situs,
-        jumlah_pekerja,
-        tentang,
-        budaya,
-        benefit_karyawan,
-        lingkungan_kerja,
-        busana,
-        budaya_kerja,
-        jam_kerja,
-        nama_pj,
-        telepon_pj,
-        email_pj,
-        registrasi_pj,
-        youtube,
-        twitter,
-        instagram,
-        facebook,
-        github,
-        linkedin,
-        behace,
-        dribble,
         kodepos,
-        sampul,
+        khusus_alumni,
+        khusus_difabel,
+        buta_warna,
+        kacamata,
+        tes,
+        lokasi_tes,
+        kelengkapan_data,
+        data_nilai,
       });
 
     if (!pekerjaan) {
