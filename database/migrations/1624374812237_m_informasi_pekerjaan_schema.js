@@ -13,16 +13,30 @@ class MInformasiPekerjaanSchema extends Schema {
         .references("m_pekerjaan.id")
         .onDelete("cascade")
         .onUpdate("cascade");
+      table.integer("jumlah_lowongan");
       table.string("pengalaman");
       table.datetime("batas_pengiriman");
       table.string("pendidikan");
       table.text("detail_pendidikan");
       table.string("keahlian");
       table.text("deskripsi");
-      table.text("persyaratan_umum");
       table.text("persyaratan_khusus");
       table.string("range_gaji");
-
+      table.string("status_jurusan");
+      table.enu("gender", ["L", "P"]);
+      table.integer("tb");
+      table.integer("usia_minimal");
+      table.integer("usia_maksimal");
+      table.text("alamat");
+      table.string("kodepos");
+      table.boolean("khusus_alumni");
+      table.boolean("khusus_difabel");
+      table.boolean("buta_warna");
+      table.boolean("kacamata");
+      table.boolean("tes");
+      table.text("lokasi_tes");
+      table.boolean("kelengkapan_data");
+      table.boolean("data_nilai");
       table.boolean("dihapus").defaultTo(0);
       table.timestamps();
     });
