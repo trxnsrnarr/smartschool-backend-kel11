@@ -25,7 +25,7 @@ class MSikapRombelSchema extends Schema {
         .index("m_sikap_ditunjukkan_id");
       table
         .foreign("m_sikap_ditunjukkan_id")
-        .references("m_sikap.id")
+        .references("m_sikap_sosial.id")
         .onDelete("cascade")
         .onUpdate("cascade");
       table
@@ -34,7 +34,7 @@ class MSikapRombelSchema extends Schema {
         .index("m_sikap_ditingkatkan_id");
       table
         .foreign("m_sikap_ditingkatkan_id")
-        .references("m_sikap.id")
+        .references("m_sikap_sosial.id")
         .onDelete("cascade")
         .onUpdate("cascade");
       table.boolean("status");

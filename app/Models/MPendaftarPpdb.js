@@ -20,6 +20,22 @@ class MPendaftarPpdb extends Model {
     return diverifikasi ? true : false;
   }
 
+  jurusan1() {
+    return this.belongsTo("App/Models/MJurusan", "m_jurusan_1_id");
+  }
+  jurusan2() {
+    return this.belongsTo("App/Models/MJurusan", "m_jurusan_2_id");
+  }
+  jurusan3() {
+    return this.belongsTo("App/Models/MJurusan", "m_jurusan_3_id");
+  }
+  jurusan4() {
+    return this.belongsTo("App/Models/MJurusan", "m_jurusan_4_id");
+  }
+  jurusan5() {
+    return this.belongsTo("App/Models/MJurusan", "m_jurusan_5_id");
+  }
+
   gelombang() {
     return this.belongsTo("App/Models/MGelombangPpdb");
   }

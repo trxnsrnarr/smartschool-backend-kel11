@@ -5,14 +5,14 @@ const Schema = use("Schema");
 
 class MSikapSchema extends Schema {
   up() {
-    this.create("m_sikap", (table) => {
+    this.create("m_sikap_sosial", (table) => {
       table.increments();
       table.string("sikap");
     });
   }
 
   down() {
-    this.drop("m_sikaps");
+    this.drop("m_sikap_sosial");
   }
 }
 

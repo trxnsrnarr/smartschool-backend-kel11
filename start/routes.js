@@ -491,7 +491,10 @@ Route.post(
 );
 Route.put("/rekap/:materi_id/:rekap_id", "MainController.putRekap");
 Route.delete("/rekap/:materi_id/:rekap_id", "MainController.deleteRekap");
-Route.get("/rekap/:materi_id/rombel/:rekapnilai_id", "MainController.detailRekapRombel");
+Route.get(
+  "/rekap/:materi_id/rombel/:rekapnilai_id",
+  "MainController.detailRekapRombel"
+);
 Route.get("/rekap/:materi_id/:rekap_id", "MainController.detailRekapNilai");
 // Route.get(
 //   "/rekap/:materi_id/:rekap_id/:rombel_id",
@@ -570,6 +573,15 @@ Route.get(
 Route.get(
   "/buku-induk/rapor/:rombel_id",
   "MainController.detailBukuIndukRapor"
+);
+
+Route.post(
+  "/rombel-download/:jadwal_mengajar_id/download-analisis-nilai",
+  "MainController.downloadAnalisisNilai"
+);
+Route.post(
+  "/download/experimen",
+  "MainController.downloadExperimen"
 );
 
 // wildcard (DROP AT BOTTOM OF THE FILE)
