@@ -13,7 +13,6 @@ class MInformasiPekerjaanSchema extends Schema {
         .references("m_pekerjaan.id")
         .onDelete("cascade")
         .onUpdate("cascade");
-      table.integer("jumlah_lowongan");
       table.string("pengalaman");
       table.datetime("batas_pengiriman");
       table.string("pendidikan");

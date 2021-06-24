@@ -14,6 +14,7 @@ class MPekerjaanSchema extends Schema {
         .references("m_perusahaan.id")
         .onDelete("cascade")
         .onUpdate("cascade");
+      table.integer("jumlah_lowongan");
       table.text("jenis");
       table.string("bidang");
       table.string("kontrak_kerja");
