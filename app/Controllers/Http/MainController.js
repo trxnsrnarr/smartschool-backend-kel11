@@ -19893,11 +19893,31 @@ class MainController {
                 ],
               });
             } else {
-              worksheet.getRow(9).values = [
+              worksheet.getRow(10).values = [
                 "No",
                 "Nama",
                 "Whatsapp",
+                "NIPD",
                 "Gender",
+                "NIPD",
+                "Tempat Lahir",
+                "Tanggal Lahir",
+                "Agama",
+                "Alamat",
+                "Kelurahan",
+                "Kecamatan",
+                "Kode Pos",
+                "Email",
+                "Data Ayah",
+                "",
+                "Data Ibu",
+                "",
+                "Data Wali",
+                "",
+                "Kebutuhan Khusus",
+                "Sekolah Asal",
+                "Berat Badan",
+                "Tinggi Badan",
                 "Bank",
                 "Norek",
                 "Nama Pemilih",
@@ -19909,7 +19929,27 @@ class MainController {
                 { key: "no" },
                 { key: "user" },
                 { key: "whatsapp" },
+                { key: "nipd" },
                 { key: "gender" },
+                { key: "nisn" },
+                { key: "tempat_lahir" },
+                { key: "tanggal_lahir" },
+                { key: "agama" },
+                { key: "alamat" },
+                { key: "kelurahan" },
+                { key: "kecamatan" },
+                { key: "kode_pos" },
+                { key: "email" },
+                { key: "nama_ayah" },
+                { key: "pekerjaan_ayah" },
+                { key: "nama_ibu" },
+                { key: "pekerjaan_ibu" },
+                { key: "nama_wali" },
+                { key: "pekerjaan_wali" },
+                { key: "kebutuhan_khusus" },
+                { key: "sekolah_asal" },
+                { key: "berat_badan" },
+                { key: "tinggi_badan" },
                 { key: "bank" },
                 { key: "norek" },
                 { key: "nama_pemilik" },
@@ -19923,7 +19963,55 @@ class MainController {
                 no: `${idx + 1}`,
                 user: anggota.user ? anggota.user.nama : "-",
                 whatsapp: anggota.user ? anggota.user.whatsapp : "-",
+                nipd: anggota.user.profil ? anggota.user.profil.nipd : "-",
                 gender: anggota.user ? anggota.user.gender : "-",
+                nisn: anggota.user.profil ? anggota.user.profil.nisn : "-",
+                tempat_lahir: anggota.user.profil
+                  ? anggota.user.profil.tempat_lahir
+                  : "-",
+                tanggal_lahir: anggota.user.profil
+                  ? anggota.user.profil.tanggal_lahir
+                  : "-",
+                agama: anggota.user.profil ? anggota.user.profil.agama : "-",
+                alamat: anggota.user.profil ? anggota.user.profil.alamat : "-",
+                kelurahan: anggota.user.profil
+                  ? anggota.user.profil.regency_id
+                  : "-",
+                kecamatan: anggota.user.profil
+                  ? anggota.user.profil.district_id
+                  : "-",
+                kode_pos: anggota.user.profil
+                  ? anggota.user.profil.kodepos
+                  : "-",
+                email: anggota.user.profil ? anggota.user.email : "-",
+                nama_ayah: anggota.user.profil
+                  ? anggota.user.profil.nama_ayah
+                  : "-",
+                pekerjaan_ayah: anggota.user.profil
+                  ? anggota.user.profil.pekerjaan_ayah
+                  : "-",
+                nama_ibu: anggota.user.profil
+                  ? anggota.user.profil.nama_ibu
+                  : "-",
+                pekerjaan_ibu: anggota.user.profil
+                  ? anggota.user.profil.pekerjaan_ibu
+                  : "-",
+                nama_wali: anggota.user.profil
+                  ? anggota.user.profil.nama_wali
+                  : "-",
+                pekerjaan_wali: anggota.user.profil
+                  ? anggota.user.profil.pekerjaan_wali
+                  : "-",
+                kebutuhan_khusus: anggota.user.profil
+                  ? anggota.user.profil.disabilitas
+                  : "-",
+                sekolah_asal: anggota.user.profil
+                  ? anggota.user.profil.asal_sekolah
+                  : "-",
+                berat_badan: anggota.user.profil ? anggota.user.profil.bb : "-",
+                tinggi_badan: anggota.user.profil
+                  ? anggota.user.profil.tb
+                  : "-",
                 bank: anggota ? anggota.bank : "-",
                 norek: anggota ? anggota.norek : "-",
                 nama_pemilik: anggota ? anggota.nama_pemilik : "-",
@@ -19932,68 +20020,68 @@ class MainController {
                 diverifikasi: anggota ? anggota.diverifikasi : "-",
               });
 
-              // worksheet.addConditionalFormatting({
-              //   ref: `A9:J9`,
-              //   rules: [
-              //     {
-              //       type: "expression",
-              //       formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-              //       style: {
-              //         border: {
-              //           top: { style: "thin" },
-              //           left: { style: "thin" },
-              //           bottom: { style: "thin" },
-              //           right: { style: "thin" },
-              //         },
-              //         font: {
-              //           name: "Times New Roman",
-              //           family: 4,
-              //           size: 14,
-              //           bold: true,
-              //         },
-              //         fill: {
-              //           type: "pattern",
-              //           pattern: "solid",
-              //           bgColor: {
-              //             argb: "C0C0C0",
-              //             fgColor: { argb: "C0C0C0" },
-              //           },
-              //         },
-              //         alignment: {
-              //           vertical: "middle",
-              //           horizontal: "center",
-              //         },
-              //       },
-              //     },
-              //   ],
-              // });
-              // worksheet.addConditionalFormatting({
-              //   ref: `A${(idx + 1) * 1 + 9}:J${(idx + 1) * 1 + 9}`,
-              //   rules: [
-              //     {
-              //       type: "expression",
-              //       formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-              //       style: {
-              //         border: {
-              //           top: { style: "thin" },
-              //           left: { style: "thin" },
-              //           bottom: { style: "thin" },
-              //           right: { style: "thin" },
-              //         },
-              //         font: {
-              //           name: "Times New Roman",
-              //           family: 4,
-              //           size: 11,
-              //           // bold: true,
-              //         },
-              //         alignment: {
-              //           vertical: "middle",
-              //           horizontal: "left",
-              //         },
-              //       },
-              //     },
-              //   ],
-              // });
+              worksheet.addConditionalFormatting({
+                ref: `A10:AD11`,
+                rules: [
+                  {
+                    type: "expression",
+                    formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                    style: {
+                      border: {
+                        top: { style: "thin" },
+                        left: { style: "thin" },
+                        bottom: { style: "thin" },
+                        right: { style: "thin" },
+                      },
+                      font: {
+                        name: "Times New Roman",
+                        family: 4,
+                        size: 14,
+                        bold: true,
+                      },
+                      fill: {
+                        type: "pattern",
+                        pattern: "solid",
+                        bgColor: {
+                          argb: "C0C0C0",
+                          fgColor: { argb: "C0C0C0" },
+                        },
+                      },
+                      alignment: {
+                        vertical: "middle",
+                        horizontal: "center",
+                      },
+                    },
+                  },
+                ],
+              });
+              worksheet.addConditionalFormatting({
+                ref: `A${(idx + 1) * 1 + 11}:AD${(idx + 1) * 1 + 11}`,
+                rules: [
+                  {
+                    type: "expression",
+                    formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                    style: {
+                      border: {
+                        top: { style: "thin" },
+                        left: { style: "thin" },
+                        bottom: { style: "thin" },
+                        right: { style: "thin" },
+                      },
+                      font: {
+                        name: "Times New Roman",
+                        family: 4,
+                        size: 11,
+                        // bold: true,
+                      },
+                      alignment: {
+                        vertical: "middle",
+                        horizontal: "left",
+                      },
+                    },
+                  },
+                ],
+              });
             }
           })
         );
@@ -20997,6 +21085,198 @@ class MainController {
       });
 
     if (!perusahaan) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async postPekerjaan({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      judul,
+      m_perusahaan_id,
+      jenis,
+      bidang,
+      kontrak_kerja,
+      mulai_kerja,
+      akhir_kerja,
+      pengalaman,
+      batas_pengiriman,
+      pendidikan,
+      detail_pendidikan,
+      keahlian,
+      deskripsi,
+      persyaratan_umum,
+      persyaratan_khusus,
+      range_gaji,
+    } = request.post();
+
+    const pekerjaan = await MPekerjaan.create({
+      judul,
+      m_perusahaan_id,
+      jenis,
+      bidang,
+      kontrak_kerja,
+      mulai_kerja,
+      akhir_kerja,
+      dihapus: 0,
+    });
+
+    const informasi = await MInformasiPekerjaan.create({
+      m_pekerjaan_id: pekerjaan.id,
+      pengalaman,
+      batas_pengiriman,
+      pendidikan,
+      detail_pendidikan,
+      keahlian,
+      deskripsi,
+      persyaratan_umum,
+      persyaratan_khusus,
+      range_gaji,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  // ============ POST Rekap Tugas =================
+
+  async putPekerjaan({ response, request, auth, params: { pekerjaan_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      nama,
+      logo,
+      bidang,
+      province_id,
+      regency_id,
+      district_id,
+      village_id,
+      didirikan,
+      alamat,
+      telepon,
+      situs,
+      jumlah_pekerja,
+      tentang,
+      budaya,
+      benefit_karyawan,
+      lingkungan_kerja,
+      busana,
+      budaya_kerja,
+      jam_kerja,
+      nama_pj,
+      telepon_pj,
+      email_pj,
+      registrasi_pj,
+      youtube,
+      twitter,
+      instagram,
+      facebook,
+      github,
+      linkedin,
+      behace,
+      dribble,
+      kodepos,
+      sampul,
+    } = request.post();
+
+    const pekerjaan = await MPekerjaan.query()
+      .where({ id: pekerjaan_id })
+      .update({
+        nama,
+        logo,
+        bidang,
+        province_id,
+        regency_id,
+        district_id,
+        village_id,
+        dihapus: 0,
+      });
+
+    const informasi = await MInformasiPekerjaan.query()
+      .where({ m_pekerjaan_id: pekerjaan_id })
+      .update({
+        didirikan,
+        alamat,
+        telepon,
+        situs,
+        jumlah_pekerja,
+        tentang,
+        budaya,
+        benefit_karyawan,
+        lingkungan_kerja,
+        busana,
+        budaya_kerja,
+        jam_kerja,
+        nama_pj,
+        telepon_pj,
+        email_pj,
+        registrasi_pj,
+        youtube,
+        twitter,
+        instagram,
+        facebook,
+        github,
+        linkedin,
+        behace,
+        dribble,
+        kodepos,
+        sampul,
+      });
+
+    if (!pekerjaan) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deletePekerjaan({ response, request, auth, params: { pekerjaan_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    // mengambil data user
+    const user = await auth.getUser();
+
+    const pekerjaan = await MPekerjaan.query()
+      .where({ id: pekerjaan_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!pekerjaan) {
       return response.notFound({
         message: messageNotFound,
       });
