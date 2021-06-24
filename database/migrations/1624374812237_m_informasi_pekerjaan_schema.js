@@ -22,6 +22,7 @@ class MInformasiPekerjaanSchema extends Schema {
       table.text("persyaratan_khusus");
       table.string("range_gaji");
       table.string("status_jurusan");
+      table.text("jurusan");
       table.enu("gender", ["L", "P"]);
       table.integer("tb");
       table.integer("usia_minimal");
