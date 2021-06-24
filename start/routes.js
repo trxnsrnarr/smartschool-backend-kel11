@@ -564,6 +564,7 @@ Route.post(
   "/rapor/ekskul/:rombel_id/:user_id",
   "MainController.postRaporEkskul"
 );
+Route.put("/rapor/ekskul/:rombel_id/:user_id", "MainController.putRaporEkskul");
 Route.post("/rapor/kelulusan/:user_id", "MainController.postKeteranganRapor");
 Route.put("/rapor/kelulusan/:user_id", "MainController.putKeteranganRapor");
 Route.post("/rapor/pkl/:user_id", "MainController.postKeteranganPkl");
@@ -585,6 +586,10 @@ Route.post(
   "/rombel-download/:jadwal_mengajar_id/download-analisis-nilai",
   "MainController.downloadAnalisisNilai"
 );
+Route.post(
+  "/rombel-download/:jadwal_mengajar_id/download-performa-tugas",
+  "MainController.downloadPerformaTugas"
+);
 Route.post("/download/experimen", "MainController.downloadExperimen");
 
 //CDC Service
@@ -592,7 +597,7 @@ Route.get("/cdc/pekerjaan-saya", "MainController.getPekerjaanSaya");
 Route.get("/cdc/cari-pekerjaan", "MainController.getCariPekerjaan");
 Route.get("/cdc/cari-perusahaan", "MainController.getCariPerusahaan");
 Route.get(
-  "/cdc/pekerjaan-saya/pekerjaan_id",
+  "/cdc/pekerjaan-saya/:pekerjaan_id",
   "MainController.detailPekerjaanSaya"
 );
 Route.get(
@@ -606,11 +611,14 @@ Route.get(
 Route.get("/cdc/acara", "MainController.getAcaraPerusahaan");
 Route.get("/cdc/acara/:acara_id", "MainController.detailAcaraPerusahaan");
 Route.post("/cdc/acara", "MainControler.postAcaraPerusahaan");
-Route.put("/cdc/acara/acara_id", "MainControler.putAcaraPerusahaan");
-Route.delete("/cdc/acara/acara_id", "MainControler.deleteAcaraPerusahaan");
+Route.put("/cdc/acara/:acara_id", "MainControler.putAcaraPerusahaan");
+Route.delete("/cdc/acara/:acara_id", "MainControler.deleteAcaraPerusahaan");
 
 Route.post("/cdc/perusahaan", "MainControler.postPerusahaan");
-Route.put("/cdc/perusahaan/perusahaan_id", "MainControler.putPerusahaan");
-Route.delete("/cdc/perusahaan/perusahaan_id", "MainControler.deletePerusahaan");
+Route.put("/cdc/perusahaan/:perusahaan_id", "MainControler.putPerusahaan");
+Route.delete(
+  "/cdc/perusahaan/:perusahaan_id",
+  "MainControler.deletePerusahaan"
+);
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
