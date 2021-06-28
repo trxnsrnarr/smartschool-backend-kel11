@@ -84,6 +84,9 @@ const MInformasiPekerjaan = use("App/Models/MInformasiPekerjaan");
 const MPekerjaanPengumuman = use("App/Models/MPekerjaanPengumuman");
 const MAcaraPerusahaan = use("App/Models/MAcaraPerusahaan");
 const TkStatusPekerjaan = use("App/Models/TkStatusPekerjaan");
+const MKotakMasuk = use("App/Models/MKotakMasuk");
+const MKotakMasukKomen = use("App/Models/MKotakMasukKomen");
+const TkTipeSurel = use("App/Models/TkTipeSurel");
 
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
@@ -2350,6 +2353,9 @@ class MainController {
       .where({ m_sekolah_id: sekolah.id })
       .fetch();
 
+    const sikapsosial = await MSikapSosial.query().fetch();
+    const sikapspiritual = await MSikapSpiritual.query().fetch();
+
     const { rombel_id, kode_hari } = request.get();
 
     let jadwalMengajar;
@@ -2528,6 +2534,8 @@ class MainController {
       judulTugas: judulTugas,
       rekap: rekap,
       industri: industri,
+      sikapsosial: sikapsosial,
+      sikapspiritual: sikapspiritual,
     });
   }
 
@@ -21756,7 +21764,7 @@ class MainController {
     });
   }
 
-  async postAcaraPerusahaan({ response, request, auth }) {
+  async postSurel({ response, request, auth }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -21767,18 +21775,31 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { judul, foto, lokasi, deskripsi, waktu_awal, waktu_akhir } =
-      request.post();
+    const { nama, subject, isi, lampiran, email } = request.post();
 
-    const acara = await MAcaraPerusahaan.create({
-      judul,
-      foto,
-      lokasi,
-      deskripsi,
-      waktu_awal,
-      waktu_akhir,
-      m_perusahaan_id: perusahaan_id,
+    const tujuan = await User.query()
+      .where({ email: email })
+      .andWhere({ dihapus: 0 })
+      .ids();
+
+    const surel = await MKotakMasuk.create({
+      nama,
+      subject,
+      m_user_pengirim_id: user.id,
+      m_user_tujuan_id: tujuan,
+      isi,
+      lampiran,
       dihapus: 0,
+    });
+
+    const masuk = await TkTipeSurel.create({
+      m_kotak_masuk_id: surel.id,
+      tipe: "masuk",
+    });
+
+    const terkirim = await TkTipeSurel.create({
+      m_kotak_masuk_id: surel.id,
+      tipe: "terkirim",
     });
 
     return response.ok({
@@ -21788,7 +21809,7 @@ class MainController {
 
   // ============ POST Rekap Tugas =================
 
-  async putAcaraPerusahaan({ response, request, auth, params: { acara_id } }) {
+  async putSurel({ response, request, auth, params: { surel_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -21799,22 +21820,17 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { judul, foto, lokasi, deskripsi, waktu_awal, waktu_akhir } =
-      request.post();
+    const { nama, subject, isi, lampiran, email } = request.post();
 
-    const acara = await MAcaraPerusahaaan.query()
-      .where({ id: acara_id })
-      .update({
-        judul,
-        foto,
-        lokasi,
-        deskripsi,
-        waktu_awal,
-        waktu_akhir,
-        dihapus: 0,
-      });
+    const surel = await MKotakMasuk.query().where({ id: surel_id }).update({
+      nama,
+      subject,
+      isi,
+      lampiran,
+      dihapus: 0,
+    });
 
-    if (!acara) {
+    if (!surel) {
       return response.notFound({
         message: messageNotFound,
       });
@@ -21825,12 +21841,7 @@ class MainController {
     });
   }
 
-  async deleteAcaraPerusahaan({
-    response,
-    request,
-    auth,
-    params: { acara_id },
-  }) {
+  async deleteSurel({ response, request, auth, params: { surel_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -21842,13 +21853,17 @@ class MainController {
     // mengambil data user
     const user = await auth.getUser();
 
-    const acara = await MAcaraPerusahaan.query()
-      .where({ id: acara_id })
+    const surel = await MKotakMasuk.query().where({ id: surel_id }).update({
+      dihapus: 1,
+    });
+
+    const tipe = await TkTipeSurel.query()
+      .where({ m_kotak_masuk_id: surel_id })
       .update({
         dihapus: 1,
       });
 
-    if (!acara) {
+    if (!surel) {
       return response.notFound({
         message: messageNotFound,
       });
