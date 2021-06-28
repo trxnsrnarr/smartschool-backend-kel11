@@ -19509,6 +19509,38 @@ class MainController {
       message: messagePutSuccess,
     });
   }
+
+  async deleteKeteranganRapor({
+    response,
+    request,
+    auth,
+    params: { user_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const keteranganrapor = await MKeteranganRapor.query()
+      .where({ id: user_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!keteranganrapor) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
   async postKeteranganPkl({ response, request, auth, params: { user_id } }) {
     const domain = request.headers().origin;
 
@@ -19580,6 +19612,31 @@ class MainController {
 
     return response.ok({
       message: messagePutSuccess,
+    });
+  }
+  async deleteKeteranganPkl({ response, request, auth, params: { pkl_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const keteranganpkl = await MKeteranganPkl.query()
+      .where({ id: pkl_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!keteranganpkl) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
     });
   }
 
