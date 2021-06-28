@@ -102,13 +102,13 @@ class User extends Model {
     return this.hasOne("App/Models/MKeteranganRapor", "id", "m_user_id");
   }
   keteranganPkl() {
-    return this.hasOne("App/Models/MKeteranganPkl", "id", "m_user_id");
+    return this.hasMany("App/Models/MKeteranganPkl", "id", "m_user_id");
   }
   raporEkskul() {
-    return this.hasOne("App/Models/MRaporEkskul", "id", "m_user_id");
+    return this.hasMany("App/Models/MRaporEkskul", "id", "m_user_id");
   }
   prestasi() {
-    return this.hasOne("App/Models/MPrestasi", "id", "m_user_id");
+    return this.hasMany("App/Models/MPrestasi", "id", "m_user_id");
   }
 }
 
