@@ -2364,13 +2364,7 @@ class MainController {
                 .with("keteranganPkl")
                 .with("raporEkskul")
                 .with("prestasi")
-                .with("sikap", (builder) => {
-                  builder
-                    .with("ditingkatkanSosial")
-                    .with("ditunjukkanSosial")
-                    .with("ditingkatkanSpiritual")
-                    .with("ditunjukkanSpiritual");
-                });
+                .with("sikap");
             });
           });
         })
@@ -2389,13 +2383,7 @@ class MainController {
                 .with("keteranganPkl")
                 .with("raporEkskul")
                 .with("prestasi")
-                .with("sikap", (builder) => {
-                  builder
-                    .with("ditingkatkanSosial")
-                    .with("ditunjukkanSosial")
-                    .with("ditingkatkanSpiritual")
-                    .with("ditunjukkanSpiritual");
-                });
+                .with("sikap");
             });
           });
         })
@@ -12935,8 +12923,6 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
-
     const checkSikap = await MSikapSiswa.query()
       .where({ m_user_id: user_id })
       .andWhere({ dihapus: 0 })
@@ -12949,6 +12935,8 @@ class MainController {
       m_sikap_sosial_ditingkatkan_id,
       tipe,
     } = request.post();
+
+    let sikap;
 
     if (checkSikap) {
       sikap = await MSikapSiswa.query()
@@ -12971,7 +12959,7 @@ class MainController {
               : null,
         });
     } else {
-      await MSikapSiswa.create({
+      sikap = await MSikapSiswa.create({
         m_user_id: user_id,
         tipe,
         m_sikap_sosial_ditunjukkan_id: m_sikap_sosial_ditunjukkan_id.length
