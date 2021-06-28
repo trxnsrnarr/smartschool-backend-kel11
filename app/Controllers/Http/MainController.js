@@ -6,6 +6,7 @@ const District = use("App/Models/District");
 const Village = use("App/Models/Village");
 const Sekolah = use("App/Models/Sekolah");
 const MSekolah = use("App/Models/MSekolah");
+const MSekolahIndustri = use("App/Models/MSekolahIndustri");
 const MSarpras = use("App/Models/MSarpras");
 const MKegiatanGaleri = use("App/Models/MKegiatanGaleri");
 const MProyek = use("App/Models/MProyek");
@@ -2344,6 +2345,11 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
+    const industri = await MSekolahIndustri.query()
+      .with("industri")
+      .where({ m_sekolah_id: sekolah.id })
+      .fetch();
+
     const { rombel_id, kode_hari } = request.get();
 
     let jadwalMengajar;
@@ -2503,6 +2509,7 @@ class MainController {
       checkAbsensi: checkAbsensi.length,
       judulTugas: judulTugas,
       rekap: rekap,
+      industri: industri,
     });
   }
 
@@ -21644,5 +21651,7 @@ class MainController {
       message: messagePutSuccess,
     });
   }
+
+  // ====================================== Surel Service ==========================================
 }
 module.exports = MainController;
