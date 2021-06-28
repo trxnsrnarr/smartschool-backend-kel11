@@ -9,10 +9,10 @@ class MKotakMasukKomenSchema extends Schema {
       table.increments();
       table.text("komen");
       table.boolean("dihapus").defaultTo(0);
-      table.integer("m_kotan_masuk_id").unsigned().index("m_kotan_masuk_id");
+      table.integer("m_kotak_masuk_id").unsigned().index("m_kotak_masuk_id");
       table
-        .foreign("m_kotan_masuk_id")
-        .references("m_kotan_masuk.id")
+        .foreign("m_kotak_masuk_id")
+        .references("m_kotak_masuk.id")
         .onDelete("cascade")
         .onUpdate("cascade");
       table.integer("m_user_id").unsigned().index("m_user_id");
