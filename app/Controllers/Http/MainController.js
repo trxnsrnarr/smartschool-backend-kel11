@@ -12450,7 +12450,7 @@ class MainController {
   }
 
   // ===================== Forum Proyek Service ===========================
-  async postProyekForum({ response, request, auth }) {
+  async postProyekForum({ response, request, auth, params: { proyek_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -12461,18 +12461,19 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { deskripsi, lampiran, m_proyek_id, m_user_id } = request.post();
+    const { deskripsi, lampiran, m_user_id } = request.post();
 
-    await MProyekForum.create({
+    const forum = await MProyekForum.create({
       deskripsi,
-      lampiran,
-      m_proyek_id,
+      lampiran: lampiran ? lampiran : "",
+      m_proyek_id: parseInt(proyek_id),
       m_user_id,
       dihapus: 0,
     });
 
     return response.ok({
       message: messagePostSuccess,
+      forum,
     });
   }
 
