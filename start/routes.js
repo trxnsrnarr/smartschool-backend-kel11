@@ -92,6 +92,7 @@ Route.post("/rombel", "MainController.postRombel");
 Route.put("/rombel/:rombel_id", "MainController.putRombel");
 Route.delete("/rombel/:rombel_id", "MainController.deleteRombel");
 Route.post("/rombel/:rombel_id/:user_id", "MainController.postSikapRombel");
+Route.post("/rapor-sikap/:user_id", "MainController.postRaporSikap");
 
 // anggota rombel
 Route.post("/anggota-rombel", "MainController.postAnggotaRombel");
@@ -570,8 +571,13 @@ Route.put(
 );
 Route.post("/rapor/kelulusan/:user_id", "MainController.postKeteranganRapor");
 Route.put("/rapor/kelulusan/:user_id", "MainController.putKeteranganRapor");
+Route.delete(
+  "/rapor/kelulusan/:user_id",
+  "MainController.deleteKeteranganRapor"
+);
 Route.post("/rapor/pkl/:user_id", "MainController.postKeteranganPkl");
 Route.put("/rapor/pkl/:pkl_id", "MainController.putKeteranganPkl");
+Route.delete("/rapor/pkl/:pkl_id", "MainController.deleteKeteranganPkl");
 
 //Buku Induk Service
 Route.get("/buku-induk", "MainController.getBukuInduk");
