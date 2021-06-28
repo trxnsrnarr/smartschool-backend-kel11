@@ -5,14 +5,10 @@ const Model = use("Model");
 
 class MSurel extends Model {
   static get table() {
-    return "m_kotak_masuk";
+    return "m_surel";
   }
   komen() {
-    return this.hasMany(
-      "App/Models/MKotakMasukKomen",
-      "id",
-      "m_kotak_masuk_id"
-    );
+    return this.hasMany("App/Models/MSurelKomen", "id", "m_surel_id");
   }
 }
 

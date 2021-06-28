@@ -7,8 +7,7 @@ class MSurelSchema extends Schema {
   up() {
     this.create("m_surel", (table) => {
       table.increments();
-      table.string("nama");
-      table.string("subject");
+      table.string("perihal");
       table
         .integer("m_user_pengirim_id")
         .unsigned()
@@ -25,7 +24,7 @@ class MSurelSchema extends Schema {
         .onDelete("cascade")
         .onUpdate("cascade");
       table.text("isi");
-      table.text("lmapiran");
+      table.text("lampiran");
       table.boolean("dihapus").defaultTo(0);
       table.timestamps();
     });

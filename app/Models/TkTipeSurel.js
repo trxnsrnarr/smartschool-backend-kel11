@@ -8,8 +8,8 @@ class TkTipeSurel extends Model {
     return "tk_tipe_surel";
   }
 
-  kotak() {
-    return this.belongsTo("App/Models/MKotakMasuk");
+  surel() {
+    return this.belongsTo("App/Models/MSurel");
   }
 }
 
