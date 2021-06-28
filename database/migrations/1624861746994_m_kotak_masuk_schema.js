@@ -5,7 +5,7 @@ const Schema = use("Schema");
 
 class MKotakMasukSchema extends Schema {
   up() {
-    this.create("m_kotak_masuks", (table) => {
+    this.create("m_kotak_masuk", (table) => {
       table.increments();
       table.string("tipe");
       table.string("nama");
@@ -33,7 +33,7 @@ class MKotakMasukSchema extends Schema {
   }
 
   down() {
-    this.drop("m_kotak_masuks");
+    this.drop("m_kotak_masuk");
   }
 }
 
