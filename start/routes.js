@@ -564,7 +564,10 @@ Route.post(
   "/rapor/ekskul/:rombel_id/:user_id",
   "MainController.postRaporEkskul"
 );
-Route.put("/rapor/ekskul/:rombel_id/:user_id", "MainController.putRaporEkskul");
+Route.put(
+  "/rapor/ekskul/:rombel_id/:ekskul_id",
+  "MainController.putRaporEkskul"
+);
 Route.post("/rapor/kelulusan/:user_id", "MainController.postKeteranganRapor");
 Route.put("/rapor/kelulusan/:user_id", "MainController.putKeteranganRapor");
 Route.post("/rapor/pkl/:user_id", "MainController.postKeteranganPkl");
