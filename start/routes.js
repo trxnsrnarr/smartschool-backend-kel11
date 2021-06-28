@@ -629,5 +629,9 @@ Route.delete(
   "/cdc/perusahaan/:perusahaan_id",
   "MainControler.deletePerusahaan"
 );
+
+//Surel Service
+Route.post("/surel", "MainController.postSurel");
+
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");

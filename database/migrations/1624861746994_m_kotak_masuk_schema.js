@@ -7,7 +7,6 @@ class MKotakMasukSchema extends Schema {
   up() {
     this.create("m_kotak_masuk", (table) => {
       table.increments();
-      table.string("tipe");
       table.string("nama");
       table.string("subject");
       table

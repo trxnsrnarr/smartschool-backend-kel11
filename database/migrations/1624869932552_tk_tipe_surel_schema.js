@@ -1,19 +1,27 @@
-'use strict'
+"use strict";
 
 /** @type {import('@adonisjs/lucid/src/Schema')} */
-const Schema = use('Schema')
+const Schema = use("Schema");
 
 class TkTipeSurelSchema extends Schema {
-  up () {
-    this.create('tk_tipe_surels', (table) => {
-      table.increments()
-      table.timestamps()
-    })
+  up() {
+    this.create("tk_tipe_surel", (table) => {
+      table.increments();
+      table.integer("m_kotak_masuk_id").unsigned().index("m_kotak_masuk_id");
+      table
+        .foreign("m_kotak_masuk_id")
+        .references("m_kotak_masuk.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
+      table.string("tipe");
+      table.boolean("dihapus").defaultTo(0);
+      table.timestamps();
+    });
   }
 
-  down () {
-    this.drop('tk_tipe_surels')
+  down() {
+    this.drop("tk_tipe_surel");
   }
 }
 
-module.exports = TkTipeSurelSchema
+module.exports = TkTipeSurelSchema;
