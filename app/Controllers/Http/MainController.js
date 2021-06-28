@@ -2366,11 +2366,19 @@ class MainController {
           builder.with("anggotaRombel", (builder) => {
             builder.with("user", (builder) => {
               builder
-                .with("keteranganRapor")
-                .with("keteranganPkl")
+                .with("keteranganRapor", (builder) => {
+                  builder.where({ dihapus: 0 });
+                })
+                .with("keteranganPkl", (builder) => {
+                  builder.where({ dihapus: 0 });
+                })
                 .with("raporEkskul")
-                .with("prestasi")
-                .with("sikap");
+                .with("prestasi", (builder) => {
+                  builder.where({ dihapus: 0 });
+                })
+                .with("sikap", (builder) => {
+                  builder.where({ dihapus: 0 });
+                });
             });
           });
         })
@@ -2385,11 +2393,21 @@ class MainController {
           builder.with("anggotaRombel", (builder) => {
             builder.with("user", (builder) => {
               builder
-                .with("keteranganRapor")
-                .with("keteranganPkl")
-                .with("raporEkskul")
-                .with("prestasi")
-                .with("sikap");
+                .with("keteranganRapor", (builder) => {
+                  builder.where({ dihapus: 0 });
+                })
+                .with("keteranganPkl", (builder) => {
+                  builder.where({ dihapus: 0 });
+                })
+                .with("raporEkskul", (builder) => {
+                  builder.where({ dihapus: 0 });
+                })
+                .with("prestasi", (builder) => {
+                  builder.where({ dihapus: 0 });
+                })
+                .with("sikap", (builder) => {
+                  builder.where({ dihapus: 0 });
+                });
             });
           });
         })
@@ -21710,5 +21728,134 @@ class MainController {
   }
 
   // ====================================== Surel Service ==========================================
+
+  async detailAcaraPerusahaan({
+    response,
+    request,
+    auth,
+    params: { acara_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+    // const { rombel_id } = request.post();
+    const acara = await MAcaraPerusahaan.query()
+      .with("perusahaan")
+      .where({ id: acara_id })
+      .first();
+
+    return response.ok({
+      perusahaan,
+    });
+  }
+
+  async postAcaraPerusahaan({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { judul, foto, lokasi, deskripsi, waktu_awal, waktu_akhir } =
+      request.post();
+
+    const acara = await MAcaraPerusahaan.create({
+      judul,
+      foto,
+      lokasi,
+      deskripsi,
+      waktu_awal,
+      waktu_akhir,
+      m_perusahaan_id: perusahaan_id,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  // ============ POST Rekap Tugas =================
+
+  async putAcaraPerusahaan({ response, request, auth, params: { acara_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { judul, foto, lokasi, deskripsi, waktu_awal, waktu_akhir } =
+      request.post();
+
+    const acara = await MAcaraPerusahaaan.query()
+      .where({ id: acara_id })
+      .update({
+        judul,
+        foto,
+        lokasi,
+        deskripsi,
+        waktu_awal,
+        waktu_akhir,
+        dihapus: 0,
+      });
+
+    if (!acara) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteAcaraPerusahaan({
+    response,
+    request,
+    auth,
+    params: { acara_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    // mengambil data user
+    const user = await auth.getUser();
+
+    const acara = await MAcaraPerusahaan.query()
+      .where({ id: acara_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!acara) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
 }
 module.exports = MainController;
