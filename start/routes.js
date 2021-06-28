@@ -568,7 +568,7 @@ Route.put("/rapor/ekskul/:rombel_id/:user_id", "MainController.putRaporEkskul");
 Route.post("/rapor/kelulusan/:user_id", "MainController.postKeteranganRapor");
 Route.put("/rapor/kelulusan/:user_id", "MainController.putKeteranganRapor");
 Route.post("/rapor/pkl/:user_id", "MainController.postKeteranganPkl");
-Route.put("/rapor/pkl/:user_id", "MainController.putKeteranganPkl");
+Route.put("/rapor/pkl/:pkl_id", "MainController.putKeteranganPkl");
 
 //Buku Induk Service
 Route.get("/buku-induk", "MainController.getBukuInduk");

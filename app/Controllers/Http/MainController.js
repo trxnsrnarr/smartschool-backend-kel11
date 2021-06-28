@@ -14204,7 +14204,7 @@ class MainController {
   async downloadMapel({ response, request, auth }) {
     const domain = request.headers().origin;
 
-    const user = await auth.getUser()
+    const user = await auth.getUser();
 
     const sekolah = await this.getSekolahByDomain(domain);
 
@@ -19549,7 +19549,7 @@ class MainController {
     });
   }
 
-  async putKeteranganPkl({ response, request, auth, params: { user_id } }) {
+  async putKeteranganPkl({ response, request, auth, params: { pkl_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -19567,7 +19567,7 @@ class MainController {
 
     const lama = moment(diff).format(`MM`);
     const keteranganPkl = await MKeteranganPkl.query()
-      .where({ m_user_id: user_id })
+      .where({ id: pkl_id })
       .update({
         namamitra,
         tanggal_mulai,
