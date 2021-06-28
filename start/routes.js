@@ -571,8 +571,13 @@ Route.put(
 );
 Route.post("/rapor/kelulusan/:user_id", "MainController.postKeteranganRapor");
 Route.put("/rapor/kelulusan/:user_id", "MainController.putKeteranganRapor");
+Route.delete(
+  "/rapor/kelulusan/:user_id",
+  "MainController.deleteKeteranganRapor"
+);
 Route.post("/rapor/pkl/:user_id", "MainController.postKeteranganPkl");
 Route.put("/rapor/pkl/:pkl_id", "MainController.putKeteranganPkl");
+Route.delete("/rapor/pkl/:pkl_id", "MainController.deleteKeteranganPkl");
 
 //Buku Induk Service
 Route.get("/buku-induk", "MainController.getBukuInduk");
