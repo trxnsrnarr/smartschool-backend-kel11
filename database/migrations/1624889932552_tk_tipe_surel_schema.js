@@ -7,10 +7,10 @@ class TkTipeSurelSchema extends Schema {
   up() {
     this.create("tk_tipe_surel", (table) => {
       table.increments();
-      table.integer("m_kotak_masuk_id").unsigned().index("m_kotak_masuk_id");
+      table.integer("m_surel_id").unsigned().index("m_surel_id");
       table
-        .foreign("m_kotak_masuk_id")
-        .references("m_kotak_masuk.id")
+        .foreign("m_surel_id")
+        .references("m_surel.id")
         .onDelete("cascade")
         .onUpdate("cascade");
       table.string("tipe");
