@@ -86,6 +86,8 @@ const MAcaraPerusahaan = use("App/Models/MAcaraPerusahaan");
 const TkStatusPekerjaan = use("App/Models/TkStatusPekerjaan");
 const MKotakMasuk = use("App/Models/MKotakMasuk");
 const MKotakMasukKomen = use("App/Models/MKotakMasukKomen");
+const MSurel = use("App/Models/MSurel");
+const MSurelKomen = use("App/Models/MSurelKomen");
 const TkTipeSurel = use("App/Models/TkTipeSurel");
 
 const MBuku = use("App/Models/MBuku");
@@ -21775,16 +21777,15 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { nama, subject, isi, lampiran, email } = request.post();
+    const { perihal, isi, lampiran, email } = request.post();
 
     const tujuan = await User.query()
       .where({ email: email })
       .andWhere({ dihapus: 0 })
       .ids();
 
-    const surel = await MKotakMasuk.create({
-      nama,
-      subject,
+    const surel = await MSurel.create({
+      perihal,
       m_user_pengirim_id: user.id,
       m_user_tujuan_id: tujuan,
       isi,
@@ -21793,12 +21794,12 @@ class MainController {
     });
 
     const masuk = await TkTipeSurel.create({
-      m_kotak_masuk_id: surel.id,
+      m_surel_id: surel.id,
       tipe: "masuk",
     });
 
     const terkirim = await TkTipeSurel.create({
-      m_kotak_masuk_id: surel.id,
+      m_surel_id: surel.id,
       tipe: "terkirim",
     });
 
@@ -21820,11 +21821,10 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { nama, subject, isi, lampiran, email } = request.post();
+    const { perihal, isi, lampiran, email } = request.post();
 
-    const surel = await MKotakMasuk.query().where({ id: surel_id }).update({
-      nama,
-      subject,
+    const surel = await MSurel.query().where({ id: surel_id }).update({
+      perihal,
       isi,
       lampiran,
       dihapus: 0,
@@ -21853,12 +21853,12 @@ class MainController {
     // mengambil data user
     const user = await auth.getUser();
 
-    const surel = await MKotakMasuk.query().where({ id: surel_id }).update({
+    const surel = await MSurel.query().where({ id: surel_id }).update({
       dihapus: 1,
     });
 
     const tipe = await TkTipeSurel.query()
-      .where({ m_kotak_masuk_id: surel_id })
+      .where({ m_surel_id: surel_id })
       .update({
         dihapus: 1,
       });
