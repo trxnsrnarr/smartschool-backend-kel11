@@ -12979,39 +12979,51 @@ class MainController {
         .where({ m_user_id: user_id })
         .update({
           tipe,
-          m_sikap_sosial_ditunjukkan_id: m_sikap_sosial_ditunjukkan_id.length
-            ? m_sikap_sosial_ditunjukkan_id.toString()
+          m_sikap_sosial_ditunjukkan_id: m_sikap_sosial_ditunjukkan_id
+            ? m_sikap_sosial_ditunjukkan_id.length
+              ? m_sikap_sosial_ditunjukkan_id.toString()
+              : null
             : null,
-          m_sikap_sosial_ditingkatkan_id: m_sikap_sosial_ditingkatkan_id.length
-            ? m_sikap_sosial_ditingkatkan_id.toString()
+          m_sikap_sosial_ditingkatkan_id: m_sikap_sosial_ditingkatkan_id
+            ? m_sikap_sosial_ditingkatkan_id.length
+              ? m_sikap_sosial_ditingkatkan_id.toString()
+              : null
             : null,
-          m_sikap_spiritual_ditunjukkan_id:
-            m_sikap_spiritual_ditunjukkan_id.length
+          m_sikap_spiritual_ditunjukkan_id: m_sikap_spiritual_ditunjukkan_id
+            ? m_sikap_spiritual_ditunjukkan_id.length
               ? m_sikap_spiritual_ditunjukkan_id.toString()
-              : null,
-          m_sikap_spiritual_ditingkatkan_id:
-            m_sikap_spiritual_ditingkatkan_id.length
+              : null
+            : null,
+          m_sikap_spiritual_ditingkatkan_id: m_sikap_spiritual_ditingkatkan_id
+            ? m_sikap_spiritual_ditingkatkan_id.length
               ? m_sikap_spiritual_ditingkatkan_id.toString()
-              : null,
+              : null
+            : null,
         });
     } else {
       sikap = await MSikapSiswa.create({
         m_user_id: user_id,
         tipe,
-        m_sikap_sosial_ditunjukkan_id: m_sikap_sosial_ditunjukkan_id.length
-          ? m_sikap_sosial_ditunjukkan_id.toString()
+        m_sikap_sosial_ditunjukkan_id: m_sikap_sosial_ditunjukkan_id
+          ? m_sikap_sosial_ditunjukkan_id.length
+            ? m_sikap_sosial_ditunjukkan_id.toString()
+            : null
           : null,
-        m_sikap_sosial_ditingkatkan_id: m_sikap_sosial_ditingkatkan_id.length
-          ? m_sikap_sosial_ditingkatkan_id.toString()
+        m_sikap_sosial_ditingkatkan_id: m_sikap_sosial_ditingkatkan_id
+          ? m_sikap_sosial_ditingkatkan_id.length
+            ? m_sikap_sosial_ditingkatkan_id.toString()
+            : null
           : null,
-        m_sikap_spiritual_ditunjukkan_id:
-          m_sikap_spiritual_ditunjukkan_id.length
+        m_sikap_spiritual_ditunjukkan_id: m_sikap_spiritual_ditunjukkan_id
+          ? m_sikap_spiritual_ditunjukkan_id.length
             ? m_sikap_spiritual_ditunjukkan_id.toString()
-            : null,
-        m_sikap_spiritual_ditingkatkan_id:
-          m_sikap_spiritual_ditingkatkan_id.length
+            : null
+          : null,
+        m_sikap_spiritual_ditingkatkan_id: m_sikap_spiritual_ditingkatkan_id
+          ? m_sikap_spiritual_ditingkatkan_id.length
             ? m_sikap_spiritual_ditingkatkan_id.toString()
-            : null,
+            : null
+          : null,
         status: 1,
         dihapus: 0,
       });
