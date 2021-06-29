@@ -21740,12 +21740,7 @@ class MainController {
 
   // ====================================== Surel Service ==========================================
 
-  async detailAcaraPerusahaan({
-    response,
-    request,
-    auth,
-    params: { acara_id },
-  }) {
+  async getSurel({ response, request, auth }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -21755,14 +21750,118 @@ class MainController {
     }
 
     const user = await auth.getUser();
-    // const { rombel_id } = request.post();
-    const acara = await MAcaraPerusahaan.query()
-      .with("perusahaan")
-      .where({ id: acara_id })
-      .first();
+
+    const { tipe, search } = request.get();
+
+    let surel;
+
+    const jumlahDraf = await TkTipeSurel.query()
+      .where({ dihapus: 0 })
+      .andWhere({ dibaca: 0 })
+      .andWhere({ tipe: "draf" })
+      .count("* as total");
+
+    const jumlahMasuk = await TkTipeSurel.query()
+      .where({ dihapus: 0 })
+      .andWhere({ dibaca: 0 })
+      .andWhere({ tipe: "masuk" })
+      .count("* as total");
+
+    if (search) {
+      // ===== service cari Perusahaan ====
+      if (tipe == "terkirim") {
+        surel = await TkTipeSurel.query()
+          .with("surel", (builder) => {
+            builder
+              .withCount("komen", (builder) => {
+                builder.where({ dihapus: 0 });
+              })
+              .where({ dihapus: 0 })
+              .andWhere({ m_user_pengirim_id: user.id })
+              .andWhere("perihal", "like", `%${search}%`);
+          })
+          .where({ dihapus: 0 })
+          .andWhere({ tipe: "terkirim" })
+          .paginate();
+      } else if (tipe == "masuk") {
+        surel = await TkTipeSurel.query()
+          .with("surel", (builder) => {
+            builder
+              .withCount("komen", (builder) => {
+                builder.where({ dihapus: 0 });
+              })
+
+              .where({ dihapus: 0 })
+              .andWhere({ m_user_tujuan_id: user.id })
+              .andWhere("perihal", "like", `%${search}%`);
+          })
+          .where({ dihapus: 0 })
+          .andWhere({ tipe: "masuk" })
+          .paginate();
+      } else if (tipe == "draf") {
+        surel = await TkTipeSurel.query()
+          .with("surel", (builder) => {
+            builder
+              .withCount("komen", (builder) => {
+                builder.where({ dihapus: 0 });
+              })
+
+              .where({ dihapus: 0 })
+              .andWhere({ m_user_pengirim_id: user.id })
+              .andWhere("perihal", "like", `%${search}%`);
+          })
+          .where({ dihapus: 0 })
+          .andWhere({ tipe: "draf" })
+          .paginate();
+      }
+    } else {
+      // ===== service Perusahaan saya ====
+      if (tipe == "terkirim") {
+        surel = await TkTipeSurel.query()
+          .with("surel", (builder) => {
+            builder
+              .withCount("komen", (builder) => {
+                builder.where({ dihapus: 0 });
+              })
+              .where({ dihapus: 0 })
+              .andWhere({ m_user_pengirim_id: user.id });
+          })
+          .where({ dihapus: 0 })
+          .andWhere({ tipe: "terkirim" })
+          .paginate();
+      } else if (tipe == "masuk") {
+        surel = await TkTipeSurel.query()
+          .with("surel", (builder) => {
+            builder
+              .withCount("komen", (builder) => {
+                builder.where({ dihapus: 0 });
+              })
+              .where({ dihapus: 0 })
+              .andWhere({ m_user_tujuan_id: user.id });
+          })
+          .where({ dihapus: 0 })
+          .andWhere({ tipe: "masuk" })
+          .paginate();
+      } else if (tipe == "draf") {
+        surel = await TkTipeSurel.query()
+          .with("surel", (builder) => {
+            builder
+              .withCount("komen", (builder) => {
+                builder.where({ dihapus: 0 });
+              })
+              .where({ dihapus: 0 })
+              .andWhere({ m_user_pengirim_id: user.id });
+          })
+          .where({ dihapus: 0 })
+          .andWhere({ tipe: "draf" })
+          .paginate();
+      }
+    }
 
     return response.ok({
-      perusahaan,
+      surel,
+      jumlahMasuk,
+      jumlahDraf,
     });
   }
 
@@ -21808,9 +21907,89 @@ class MainController {
     });
   }
 
+  async postSurelDraf({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { perihal, isi, lampiran, email } = request.post();
+
+    const tujuan = await User.query()
+      .where({ email: email })
+      .andWhere({ dihapus: 0 })
+      .ids();
+
+    const surel = await MSurel.create({
+      perihal,
+      m_user_pengirim_id: user.id,
+      m_user_tujuan_id: tujuan,
+      isi,
+      lampiran,
+      dihapus: 0,
+    });
+
+    const draf = await TkTipeSurel.create({
+      m_surel_id: surel.id,
+      tipe: "draf",
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
   // ============ POST Rekap Tugas =================
 
   async putSurel({ response, request, auth, params: { surel_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { perihal, isi, lampiran, email } = request.post();
+
+    const surel = await MSurel.query().where({ id: surel_id }).update({
+      perihal,
+      isi,
+      lampiran,
+      dihapus: 0,
+    });
+
+    const hapus = await TkTipeSurel.find(surel_id).delete();
+
+    const masuk = await TkTipeSurel.create({
+      m_surel_id: surel.id,
+      tipe: "masuk",
+    });
+
+    const terkirim = await TkTipeSurel.create({
+      m_surel_id: surel.id,
+      tipe: "terkirim",
+    });
+
+    if (!surel) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async putSurelDraf({ response, request, auth, params: { surel_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -21864,6 +22043,72 @@ class MainController {
       });
 
     if (!surel) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async deleteSurelTipe({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    // mengambil data user
+    const user = await auth.getUser();
+
+    const { tipe_surel_id } = request.post();
+
+    const tipe = await Promise.all(
+      tipe_surel_id.toJSON().map(async (d) => {
+        await TkTipeSurel.query().where({ id: tipe_surel_id }).update({
+          dihapus: 1,
+        });
+      })
+    );
+
+    if (!tipe) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async putSurelTipe({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    // mengambil data user
+    const user = await auth.getUser();
+
+    const { tipe_surel_id } = request.post();
+
+    const tipe = await Promise.all(
+      tipe_surel_id.toJSON().map(async (d) => {
+        await TkTipeSurel.query().where({ id: d }).update({
+          tipe: "draf",
+        });
+      })
+    );
+
+    if (!tipe) {
       return response.notFound({
         message: messageNotFound,
       });
