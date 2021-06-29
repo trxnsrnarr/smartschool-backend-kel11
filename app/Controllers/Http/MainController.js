@@ -13054,7 +13054,78 @@ class MainController {
     const sikap = await MSikapSiswa.query()
       .where({ m_user_id: user_id })
       .update({
-        dihapus: 0,
+        m_sikap_sosial_ditunjukkan_id: null,
+        m_sikap_sosial_ditingkatkan_id: null,
+      });
+
+    if (!sikap) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async deleteRaporSikapSosial({
+    response,
+    request,
+    auth,
+    params: { user_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    // mengambil data user
+    // const user = await auth.getUser();
+
+    const sikap = await MSikapSiswa.query()
+      .where({ m_user_id: user_id })
+      .update({
+        m_sikap_sosial_ditunjukkan_id: null,
+        m_sikap_sosial_ditingkatkan_id: null,
+      });
+
+    if (!sikap) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async deleteRaporSikapSpiritual({
+    response,
+    request,
+    auth,
+    params: { user_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    // mengambil data user
+    // const user = await auth.getUser();
+
+    const sikap = await MSikapSiswa.query()
+      .where({ m_user_id: user_id })
+      .update({
+        m_sikap_spiritual_ditunjukkan_id: null,
+        m_sikap_spiritual_ditingkatkan_id: null,
       });
 
     if (!sikap) {
@@ -22202,7 +22273,7 @@ class MainController {
     });
   }
 
-  async postSurelKomrn({ response, request, auth, params: { surel_id } }) {
+  async postSurelKomen({ response, request, auth, params: { surel_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -22215,7 +22286,7 @@ class MainController {
 
     const { komen, lampiran } = request.post();
 
-    const komen = await MSurelKomen.create({
+    const surelKomen = await MSurelKomen.create({
       komen,
       lampiran,
       m_user_id: user.id,

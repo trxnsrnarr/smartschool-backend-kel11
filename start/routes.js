@@ -94,7 +94,14 @@ Route.delete("/rombel/:rombel_id", "MainController.deleteRombel");
 Route.post("/rombel/:rombel_id/:user_id", "MainController.postSikapRombel");
 Route.post("/rapor-sikap/:user_id", "MainController.postRaporSikap");
 Route.delete("/rapor-sikap/:user_id", "MainController.deleteRaporSikap");
-
+Route.delete(
+  "/rapor-sikap/sosial/:user_id",
+  "MainController.deleteRaporSikapSosial"
+);
+Route.delete(
+  "/rapor-sikap/spiritual/:user_id",
+  "MainController.deleteRaporSikapSpiritual"
+);
 // anggota rombel
 Route.post("/anggota-rombel", "MainController.postAnggotaRombel");
 Route.post("/anggota-rombel/import", "MainController.importAnggotaRombel");
