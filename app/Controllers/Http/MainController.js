@@ -13027,6 +13027,35 @@ class MainController {
     });
   }
 
+  async deleteRaporSikap({ response, request, auth, params: { user_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    // mengambil data user
+    const user = await auth.getUser();
+
+    const sikap = await MSikapSiswa.query()
+      .where({ m_user_id: user_id })
+      .update({
+        dihapus: 0,
+      });
+
+    if (!sikap) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
   // ============ Detail Rekap Nilai ============
 
   async detailRekapNilai({
