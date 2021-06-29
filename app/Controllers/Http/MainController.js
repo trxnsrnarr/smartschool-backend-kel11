@@ -21876,7 +21876,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { perihal, isi, lampiran, email } = request.post();
+    const { nama, perihal, isi, lampiran, email } = request.post();
 
     const tujuan = await User.query()
       .where({ email: email })
@@ -21884,9 +21884,10 @@ class MainController {
       .ids();
 
     const surel = await MSurel.create({
+      nama,
       perihal,
       m_user_pengirim_id: user.id,
-      m_user_tujuan_id: tujuan,
+      m_user_tujuan_id: `${tujuan ? tujuan : "-"}`,
       isi,
       lampiran,
       dihapus: 0,
@@ -21918,7 +21919,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { perihal, isi, lampiran, email } = request.post();
+    const { nama, perihal, isi, lampiran, email } = request.post();
 
     const tujuan = await User.query()
       .where({ email: email })
@@ -21926,9 +21927,10 @@ class MainController {
       .ids();
 
     const surel = await MSurel.create({
+      nama,
       perihal,
       m_user_pengirim_id: user.id,
-      m_user_tujuan_id: tujuan,
+      m_user_tujuan_id: `${tujuan ? tujuan : "-"}`,
       isi,
       lampiran,
       dihapus: 0,
@@ -21957,14 +21959,22 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { perihal, isi, lampiran, email } = request.post();
+    const { nama, perihal, isi, lampiran, email } = request.post();
+    const tujuan = await User.query()
+      .where({ email: email })
+      .andWhere({ dihapus: 0 })
+      .ids();
 
-    const surel = await MSurel.query().where({ id: surel_id }).update({
-      perihal,
-      isi,
-      lampiran,
-      dihapus: 0,
-    });
+    const surel = await MSurel.query()
+      .where({ id: surel_id })
+      .update({
+        nama,
+        perihal,
+        m_user_tujuan_id: `${tujuan ? tujuan : "-"}`,
+        isi,
+        lampiran,
+        dihapus: 0,
+      });
 
     const hapus = await TkTipeSurel.find(surel_id).delete();
 
@@ -22000,14 +22010,21 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { perihal, isi, lampiran, email } = request.post();
-
-    const surel = await MSurel.query().where({ id: surel_id }).update({
-      perihal,
-      isi,
-      lampiran,
-      dihapus: 0,
-    });
+    const { nama, perihal, isi, lampiran, email } = request.post();
+    const tujuan = await User.query()
+      .where({ email: email })
+      .andWhere({ dihapus: 0 })
+      .ids();
+    const surel = await MSurel.query()
+      .where({ id: surel_id })
+      .update({
+        nama,
+        perihal,
+        m_user_tujuan_id: `${tujuan ? tujuan : "-"}`,
+        isi,
+        lampiran,
+        dihapus: 0,
+      });
 
     if (!surel) {
       return response.notFound({
@@ -22069,7 +22086,7 @@ class MainController {
 
     const tipe = await Promise.all(
       tipe_surel_id.toJSON().map(async (d) => {
-        await TkTipeSurel.query().where({ id: tipe_surel_id }).update({
+        await TkTipeSurel.query().where({ id: d }).update({
           dihapus: 1,
         });
       })
@@ -22086,7 +22103,7 @@ class MainController {
     });
   }
 
-  async putSurelTipe({ response, request, auth }) {
+  async dibacaSurelTipe({ response, request, auth }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -22103,7 +22120,7 @@ class MainController {
     const tipe = await Promise.all(
       tipe_surel_id.toJSON().map(async (d) => {
         await TkTipeSurel.query().where({ id: d }).update({
-          tipe: "draf",
+          dibaca: 1,
         });
       })
     );
