@@ -631,6 +631,7 @@ Route.delete(
 );
 
 //Surel Service
+Route.get("/surel", "MainController.getSurel");
 Route.post("/surel", "MainController.postSurel");
 
 // wildcard (DROP AT BOTTOM OF THE FILE)
