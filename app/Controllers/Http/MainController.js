@@ -22113,15 +22113,17 @@ class MainController {
         dihapus: 0,
       });
 
-    const hapus = await TkTipeSurel.find(surel_id).delete();
+    const hapus = await TkTipeSurel.query()
+      .where({ m_surel_id: surel_id })
+      .delete();
 
     const masuk = await TkTipeSurel.create({
-      m_surel_id: surel.id,
+      m_surel_id: surel_id,
       tipe: "masuk",
     });
 
     const terkirim = await TkTipeSurel.create({
-      m_surel_id: surel.id,
+      m_surel_id: surel_id,
       tipe: "terkirim",
     });
 
@@ -22222,7 +22224,7 @@ class MainController {
     const { tipe_surel_id } = request.post();
 
     const tipe = await Promise.all(
-      tipe_surel_id.toJSON().map(async (d) => {
+      tipe_surel_id.map(async (d) => {
         await TkTipeSurel.query().where({ id: d }).update({
           dihapus: 1,
         });
@@ -22255,7 +22257,7 @@ class MainController {
     const { tipe_surel_id } = request.post();
 
     const tipe = await Promise.all(
-      tipe_surel_id.toJSON().map(async (d) => {
+      tipe_surel_id.map(async (d) => {
         await TkTipeSurel.query().where({ id: d }).update({
           dibaca: 1,
         });
@@ -22268,9 +22270,7 @@ class MainController {
       });
     }
 
-    return response.ok({
-      message: messageDeleteSuccess,
-    });
+    return response.ok({});
   }
 
   async postSurelKomen({ response, request, auth, params: { surel_id } }) {
