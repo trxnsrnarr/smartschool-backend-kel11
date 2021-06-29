@@ -21906,6 +21906,31 @@ class MainController {
     });
   }
 
+  async detailSurel({ response, request, auth, params: { surel_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+    // const { rombel_id } = request.post();
+    const surel = await MSurel.query()
+      .with("komen", (builder) => {
+        builder.with("user", (builder) => {
+          builder.select("id", "nama");
+        });
+      })
+      .where({ id: surel_id })
+      .first();
+
+    return response.ok({
+      surel,
+    });
+  }
+
   async postSurel({ response, request, auth }) {
     const domain = request.headers().origin;
 
@@ -22174,6 +22199,32 @@ class MainController {
 
     return response.ok({
       message: messageDeleteSuccess,
+    });
+  }
+
+  async postSurelKomrn({ response, request, auth, params: { surel_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { komen, lampiran } = request.post();
+
+    const komen = await MSurelKomen.create({
+      komen,
+      lampiran,
+      m_user_id: user.id,
+      m_surel_id: surel_id,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
     });
   }
 }
