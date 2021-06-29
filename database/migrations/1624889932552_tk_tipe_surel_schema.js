@@ -14,6 +14,7 @@ class TkTipeSurelSchema extends Schema {
         .onDelete("cascade")
         .onUpdate("cascade");
       table.string("tipe");
+      table.boolean("dibaca").defaultTo(0);
       table.boolean("dihapus").defaultTo(0);
       table.timestamps();
     });

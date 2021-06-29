@@ -21,6 +21,7 @@ class MSurelKomenSchema extends Schema {
         .references("m_user.id")
         .onDelete("cascade")
         .onUpdate("cascade");
+      table.text("lampiran");
       table.timestamps();
     });
   }
