@@ -7,6 +7,7 @@ class MSurelSchema extends Schema {
   up() {
     this.create("m_surel", (table) => {
       table.increments();
+      table.string("nama");
       table.string("perihal");
       table
         .integer("m_user_pengirim_id")
