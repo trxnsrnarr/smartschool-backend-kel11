@@ -93,6 +93,7 @@ Route.put("/rombel/:rombel_id", "MainController.putRombel");
 Route.delete("/rombel/:rombel_id", "MainController.deleteRombel");
 Route.post("/rombel/:rombel_id/:user_id", "MainController.postSikapRombel");
 Route.post("/rapor-sikap/:user_id", "MainController.postRaporSikap");
+Route.delete("/rapor-sikap/:user_id", "MainController.deleteRaporSikap");
 
 // anggota rombel
 Route.post("/anggota-rombel", "MainController.postAnggotaRombel");
