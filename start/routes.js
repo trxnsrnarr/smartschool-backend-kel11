@@ -640,7 +640,14 @@ Route.delete(
 
 //Surel Service
 Route.get("/surel", "MainController.getSurel");
+Route.get("/surel/:surel_id", "MainController.detailSurel");
 Route.post("/surel", "MainController.postSurel");
+Route.post("/surel-draf", "MainController.postSurelDraf");
+Route.put("/surel/:surel_id", "MainController.putSurel");
+Route.put("/surel-draf/:surel_id", "MainController.putSurelDraf");
+Route.delete("/surel-tipe", "MainController.deleteSurelTipe");
+Route.put("/surel-dibaca", "MainController.dibacaSurelTipe");
+Route.post("/surel-komen/:surel_id", "MainController.postSurelKomen");
 
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
