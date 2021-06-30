@@ -12251,12 +12251,22 @@ class MainController {
       dihapus: 0,
     });
 
-    await MAnggotaProyek.create({
+    const anggota = await MAnggotaProyek.create({
       m_proyek_id: proyek.id,
       m_user_id: user.id,
       status: "menerima",
       dihapus: 0,
     });
+    await anggota.role().createMany([
+      {
+        role: "Pemilik",
+        dihapus: 0,
+      },
+      {
+        role: "Admin",
+        dihapus: 0,
+      },
+    ]);
 
     const kategori = await MKategoriPekerjaan.createMany([
       {
@@ -12784,7 +12794,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { status } = request.post();
+    const { status, role = "Anggota" } = request.post();
 
     const anggota = await MAnggotaProyek.query()
       .where({ id: anggota_proyek_id })
@@ -12793,6 +12803,14 @@ class MainController {
       .update({
         status,
       });
+
+    if (status == "menerima") {
+      await MAnggotaProyekRole.create({
+        m_anggota_proyek_id: anggota_proyek_id,
+        role: role,
+        dihapus: 0,
+      });
+    }
 
     if (!anggota) {
       return response.notFound({
