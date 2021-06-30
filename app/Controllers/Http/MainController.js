@@ -12957,7 +12957,7 @@ class MainController {
       message: messagePostSuccess,
     });
   }
-  async postRaporSikap({ response, request, auth, params: { user_id } }) {
+  async postRaporSikapSosial({ response, request, auth, params: { user_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -12972,8 +12972,6 @@ class MainController {
       .first();
 
     const {
-      m_sikap_spiritual_ditingkatkan_id,
-      m_sikap_spiritual_ditunjukkan_id,
       m_sikap_sosial_ditunjukkan_id,
       m_sikap_sosial_ditingkatkan_id,
       tipe,
@@ -12996,16 +12994,6 @@ class MainController {
               ? m_sikap_sosial_ditingkatkan_id.toString()
               : null
             : null,
-          m_sikap_spiritual_ditunjukkan_id: m_sikap_spiritual_ditunjukkan_id
-            ? m_sikap_spiritual_ditunjukkan_id.length
-              ? m_sikap_spiritual_ditunjukkan_id.toString()
-              : null
-            : null,
-          m_sikap_spiritual_ditingkatkan_id: m_sikap_spiritual_ditingkatkan_id
-            ? m_sikap_spiritual_ditingkatkan_id.length
-              ? m_sikap_spiritual_ditingkatkan_id.toString()
-              : null
-            : null,
         });
     } else {
       sikap = await MSikapSiswa.create({
@@ -13021,6 +13009,63 @@ class MainController {
             ? m_sikap_sosial_ditingkatkan_id.toString()
             : null
           : null,
+        status: 1,
+        dihapus: 0,
+      });
+    }
+    if (!sikap) {
+      return response.ok({
+        message: messagePostSuccess,
+      });
+    }
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async postRaporSikapSpiritual({ response, request, auth, params: { user_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const checkSikap = await MSikapSiswa.query()
+      .where({ m_user_id: user_id })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    const {
+      m_sikap_spiritual_ditingkatkan_id,
+      m_sikap_spiritual_ditunjukkan_id,
+      tipe,
+    } = request.post();
+
+    let sikap;
+
+    if (checkSikap) {
+      sikap = await MSikapSiswa.query()
+        .where({ m_user_id: user_id })
+        .update({
+          tipe,
+          m_sikap_spiritual_ditunjukkan_id: m_sikap_spiritual_ditunjukkan_id
+            ? m_sikap_spiritual_ditunjukkan_id.length
+              ? m_sikap_spiritual_ditunjukkan_id.toString()
+              : null
+            : null,
+          m_sikap_spiritual_ditingkatkan_id: m_sikap_spiritual_ditingkatkan_id
+            ? m_sikap_spiritual_ditingkatkan_id.length
+              ? m_sikap_spiritual_ditingkatkan_id.toString()
+              : null
+            : null,
+        });
+    } else {
+      sikap = await MSikapSiswa.create({
+        m_user_id: user_id,
+        tipe,
         m_sikap_spiritual_ditunjukkan_id: m_sikap_spiritual_ditunjukkan_id
           ? m_sikap_spiritual_ditunjukkan_id.length
             ? m_sikap_spiritual_ditunjukkan_id.toString()
@@ -22020,14 +22065,19 @@ class MainController {
 
     const user = await auth.getUser();
 
+    const useremail = await User.query()
+    .where({id:user.id})
+    .first()
+
+
+    // return useremail;
+
     const { nama, perihal, isi, lampiran, email } = request.post();
 
     const tujuan = await User.query()
       .where({ email: email })
       .andWhere({ dihapus: 0 })
       .ids();
-
-      return tujuan;
 
     const surel = await MSurel.create({
       nama,
@@ -22049,19 +22099,19 @@ class MainController {
       tipe: "terkirim",
     });
 
-    const gmail = await Mail.raw(`${perihal}` ,(message)=>{
-      message
-      .to(email)
-      .from(user.email,nama)
-      .subject(perihal)
-      .text(`${isi} ${lampiran}`)
-    })
+    // const gmail = await Mail.raw(`${perihal}` ,(message)=>{
+    //   message
+    //   .to(email)
+    //   .from(useremail.email)
+    //   .subject(perihal)
+    //   .text(`${isi} ${lampiran}`)
+    // })
 
-    if (gmail) {
-      return response.ok({
-        message: messageEmailSuccess,
-      });
-    }
+    // if (gmail) {
+    //   return response.ok({
+    //     message: messageEmailSuccess,
+    //   });
+    // }
 
     return response.ok({
       message: messagePostSuccess,
