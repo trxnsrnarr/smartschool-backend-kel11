@@ -93,7 +93,15 @@ Route.put("/rombel/:rombel_id", "MainController.putRombel");
 Route.delete("/rombel/:rombel_id", "MainController.deleteRombel");
 Route.post("/rombel/:rombel_id/:user_id", "MainController.postSikapRombel");
 Route.post("/rapor-sikap/:user_id", "MainController.postRaporSikap");
-
+Route.delete("/rapor-sikap/:user_id", "MainController.deleteRaporSikap");
+Route.delete(
+  "/rapor-sikap/sosial/:user_id",
+  "MainController.deleteRaporSikapSosial"
+);
+Route.delete(
+  "/rapor-sikap/spiritual/:user_id",
+  "MainController.deleteRaporSikapSpiritual"
+);
 // anggota rombel
 Route.post("/anggota-rombel", "MainController.postAnggotaRombel");
 Route.post("/anggota-rombel/import", "MainController.importAnggotaRombel");
@@ -629,5 +637,17 @@ Route.delete(
   "/cdc/perusahaan/:perusahaan_id",
   "MainControler.deletePerusahaan"
 );
+
+//Surel Service
+Route.get("/surel", "MainController.getSurel");
+Route.get("/surel/:surel_id", "MainController.detailSurel");
+Route.post("/surel", "MainController.postSurel");
+Route.post("/surel-draf", "MainController.postSurelDraf");
+Route.put("/surel/:surel_id", "MainController.putSurel");
+Route.put("/surel-draf/:surel_id", "MainController.putSurelDraf");
+Route.delete("/surel-tipe", "MainController.deleteSurelTipe");
+Route.put("/surel-dibaca", "MainController.dibacaSurelTipe");
+Route.post("/surel-komen/:surel_id", "MainController.postSurelKomen");
+
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");

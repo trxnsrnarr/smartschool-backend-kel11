@@ -3,12 +3,12 @@
 /** @type {import('@adonisjs/lucid/src/Schema')} */
 const Schema = use("Schema");
 
-class MKotakMasukSchema extends Schema {
+class MSurelSchema extends Schema {
   up() {
-    this.create("m_kotak_masuk", (table) => {
+    this.create("m_surel", (table) => {
       table.increments();
       table.string("nama");
-      table.string("subject");
+      table.string("perihal");
       table
         .integer("m_user_pengirim_id")
         .unsigned()
@@ -25,15 +25,15 @@ class MKotakMasukSchema extends Schema {
         .onDelete("cascade")
         .onUpdate("cascade");
       table.text("isi");
-      table.text("lmapiran");
+      table.text("lampiran");
       table.boolean("dihapus").defaultTo(0);
       table.timestamps();
     });
   }
 
   down() {
-    this.drop("m_kotak_masuk");
+    this.drop("m_surel");
   }
 }
 
-module.exports = MKotakMasukSchema;
+module.exports = MSurelSchema;

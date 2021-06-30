@@ -84,6 +84,11 @@ const MInformasiPekerjaan = use("App/Models/MInformasiPekerjaan");
 const MPekerjaanPengumuman = use("App/Models/MPekerjaanPengumuman");
 const MAcaraPerusahaan = use("App/Models/MAcaraPerusahaan");
 const TkStatusPekerjaan = use("App/Models/TkStatusPekerjaan");
+const MKotakMasuk = use("App/Models/MKotakMasuk");
+const MKotakMasukKomen = use("App/Models/MKotakMasukKomen");
+const MSurel = use("App/Models/MSurel");
+const MSurelKomen = use("App/Models/MSurelKomen");
+const TkTipeSurel = use("App/Models/TkTipeSurel");
 
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
@@ -2350,6 +2355,9 @@ class MainController {
       .where({ m_sekolah_id: sekolah.id })
       .fetch();
 
+    const sikapsosial = await MSikapSosial.query().fetch();
+    const sikapspiritual = await MSikapSpiritual.query().fetch();
+
     const { rombel_id, kode_hari } = request.get();
 
     let jadwalMengajar;
@@ -2366,11 +2374,19 @@ class MainController {
           builder.with("anggotaRombel", (builder) => {
             builder.with("user", (builder) => {
               builder
-                .with("keteranganRapor")
-                .with("keteranganPkl")
+                .with("keteranganRapor", (builder) => {
+                  builder.where({ dihapus: 0 });
+                })
+                .with("keteranganPkl", (builder) => {
+                  builder.where({ dihapus: 0 });
+                })
                 .with("raporEkskul")
-                .with("prestasi")
-                .with("sikap");
+                .with("prestasi", (builder) => {
+                  builder.where({ dihapus: 0 });
+                })
+                .with("sikap", (builder) => {
+                  builder.where({ dihapus: 0 });
+                });
             });
           });
         })
@@ -2385,11 +2401,21 @@ class MainController {
           builder.with("anggotaRombel", (builder) => {
             builder.with("user", (builder) => {
               builder
-                .with("keteranganRapor")
-                .with("keteranganPkl")
-                .with("raporEkskul")
-                .with("prestasi")
-                .with("sikap");
+                .with("keteranganRapor", (builder) => {
+                  builder.where({ dihapus: 0 });
+                })
+                .with("keteranganPkl", (builder) => {
+                  builder.where({ dihapus: 0 });
+                })
+                .with("raporEkskul", (builder) => {
+                  builder.where({ dihapus: 0 });
+                })
+                .with("prestasi", (builder) => {
+                  builder.where({ dihapus: 0 });
+                })
+                .with("sikap", (builder) => {
+                  builder.where({ dihapus: 0 });
+                });
             });
           });
         })
@@ -2510,6 +2536,8 @@ class MainController {
       judulTugas: judulTugas,
       rekap: rekap,
       industri: industri,
+      sikapsosial: sikapsosial,
+      sikapspiritual: sikapspiritual,
     });
   }
 
@@ -12956,39 +12984,51 @@ class MainController {
         .where({ m_user_id: user_id })
         .update({
           tipe,
-          m_sikap_sosial_ditunjukkan_id: m_sikap_sosial_ditunjukkan_id.length
-            ? m_sikap_sosial_ditunjukkan_id.toString()
+          m_sikap_sosial_ditunjukkan_id: m_sikap_sosial_ditunjukkan_id
+            ? m_sikap_sosial_ditunjukkan_id.length
+              ? m_sikap_sosial_ditunjukkan_id.toString()
+              : null
             : null,
-          m_sikap_sosial_ditingkatkan_id: m_sikap_sosial_ditingkatkan_id.length
-            ? m_sikap_sosial_ditingkatkan_id.toString()
+          m_sikap_sosial_ditingkatkan_id: m_sikap_sosial_ditingkatkan_id
+            ? m_sikap_sosial_ditingkatkan_id.length
+              ? m_sikap_sosial_ditingkatkan_id.toString()
+              : null
             : null,
-          m_sikap_spiritual_ditunjukkan_id:
-            m_sikap_spiritual_ditunjukkan_id.length
+          m_sikap_spiritual_ditunjukkan_id: m_sikap_spiritual_ditunjukkan_id
+            ? m_sikap_spiritual_ditunjukkan_id.length
               ? m_sikap_spiritual_ditunjukkan_id.toString()
-              : null,
-          m_sikap_spiritual_ditingkatkan_id:
-            m_sikap_spiritual_ditingkatkan_id.length
+              : null
+            : null,
+          m_sikap_spiritual_ditingkatkan_id: m_sikap_spiritual_ditingkatkan_id
+            ? m_sikap_spiritual_ditingkatkan_id.length
               ? m_sikap_spiritual_ditingkatkan_id.toString()
-              : null,
+              : null
+            : null,
         });
     } else {
       sikap = await MSikapSiswa.create({
         m_user_id: user_id,
         tipe,
-        m_sikap_sosial_ditunjukkan_id: m_sikap_sosial_ditunjukkan_id.length
-          ? m_sikap_sosial_ditunjukkan_id.toString()
+        m_sikap_sosial_ditunjukkan_id: m_sikap_sosial_ditunjukkan_id
+          ? m_sikap_sosial_ditunjukkan_id.length
+            ? m_sikap_sosial_ditunjukkan_id.toString()
+            : null
           : null,
-        m_sikap_sosial_ditingkatkan_id: m_sikap_sosial_ditingkatkan_id.length
-          ? m_sikap_sosial_ditingkatkan_id.toString()
+        m_sikap_sosial_ditingkatkan_id: m_sikap_sosial_ditingkatkan_id
+          ? m_sikap_sosial_ditingkatkan_id.length
+            ? m_sikap_sosial_ditingkatkan_id.toString()
+            : null
           : null,
-        m_sikap_spiritual_ditunjukkan_id:
-          m_sikap_spiritual_ditunjukkan_id.length
+        m_sikap_spiritual_ditunjukkan_id: m_sikap_spiritual_ditunjukkan_id
+          ? m_sikap_spiritual_ditunjukkan_id.length
             ? m_sikap_spiritual_ditunjukkan_id.toString()
-            : null,
-        m_sikap_spiritual_ditingkatkan_id:
-          m_sikap_spiritual_ditingkatkan_id.length
+            : null
+          : null,
+        m_sikap_spiritual_ditingkatkan_id: m_sikap_spiritual_ditingkatkan_id
+          ? m_sikap_spiritual_ditingkatkan_id.length
             ? m_sikap_spiritual_ditingkatkan_id.toString()
-            : null,
+            : null
+          : null,
         status: 1,
         dihapus: 0,
       });
@@ -13001,6 +13041,106 @@ class MainController {
 
     return response.ok({
       message: messagePostSuccess,
+    });
+  }
+
+  async deleteRaporSikap({ response, request, auth, params: { user_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    // mengambil data user
+    const user = await auth.getUser();
+
+    const sikap = await MSikapSiswa.query()
+      .where({ m_user_id: user_id })
+      .update({
+        m_sikap_sosial_ditunjukkan_id: null,
+        m_sikap_sosial_ditingkatkan_id: null,
+      });
+
+    if (!sikap) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async deleteRaporSikapSosial({
+    response,
+    request,
+    auth,
+    params: { user_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    // mengambil data user
+    // const user = await auth.getUser();
+
+    const sikap = await MSikapSiswa.query()
+      .where({ m_user_id: user_id })
+      .update({
+        m_sikap_sosial_ditunjukkan_id: null,
+        m_sikap_sosial_ditingkatkan_id: null,
+      });
+
+    if (!sikap) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async deleteRaporSikapSpiritual({
+    response,
+    request,
+    auth,
+    params: { user_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    // mengambil data user
+    // const user = await auth.getUser();
+
+    const sikap = await MSikapSiswa.query()
+      .where({ m_user_id: user_id })
+      .update({
+        m_sikap_spiritual_ditunjukkan_id: null,
+        m_sikap_spiritual_ditingkatkan_id: null,
+      });
+
+    if (!sikap) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
     });
   }
 
@@ -21716,5 +21856,452 @@ class MainController {
   }
 
   // ====================================== Surel Service ==========================================
+
+  async getSurel({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { tipe, search } = request.get();
+
+    let surel;
+
+    const jumlahDraf = await TkTipeSurel.query()
+      .where({ dihapus: 0 })
+      .andWhere({ dibaca: 0 })
+      .andWhere({ tipe: "draf" })
+      .count("* as total");
+
+    const jumlahMasuk = await TkTipeSurel.query()
+      .where({ dihapus: 0 })
+      .andWhere({ dibaca: 0 })
+      .andWhere({ tipe: "masuk" })
+      .count("* as total");
+
+    if (search) {
+      // ===== service cari Perusahaan ====
+      if (tipe == "terkirim") {
+        surel = await TkTipeSurel.query()
+          .with("surel", (builder) => {
+            builder
+              .withCount("komen", (builder) => {
+                builder.where({ dihapus: 0 });
+              })
+              .where({ dihapus: 0 })
+              .andWhere({ m_user_pengirim_id: user.id })
+              .andWhere("perihal", "like", `%${search}%`);
+          })
+          .where({ dihapus: 0 })
+          .andWhere({ tipe: "terkirim" })
+          .paginate();
+      } else if (tipe == "masuk") {
+        surel = await TkTipeSurel.query()
+          .with("surel", (builder) => {
+            builder
+              .withCount("komen", (builder) => {
+                builder.where({ dihapus: 0 });
+              })
+
+              .where({ dihapus: 0 })
+              .andWhere({ m_user_tujuan_id: user.id })
+              .andWhere("perihal", "like", `%${search}%`);
+          })
+          .where({ dihapus: 0 })
+          .andWhere({ tipe: "masuk" })
+          .paginate();
+      } else if (tipe == "draf") {
+        surel = await TkTipeSurel.query()
+          .with("surel", (builder) => {
+            builder
+              .withCount("komen", (builder) => {
+                builder.where({ dihapus: 0 });
+              })
+
+              .where({ dihapus: 0 })
+              .andWhere({ m_user_pengirim_id: user.id })
+              .andWhere("perihal", "like", `%${search}%`);
+          })
+          .where({ dihapus: 0 })
+          .andWhere({ tipe: "draf" })
+          .paginate();
+      }
+    } else {
+      // ===== service Perusahaan saya ====
+      if (tipe == "terkirim") {
+        surel = await TkTipeSurel.query()
+          .with("surel", (builder) => {
+            builder
+              .withCount("komen", (builder) => {
+                builder.where({ dihapus: 0 });
+              })
+              .where({ dihapus: 0 })
+              .andWhere({ m_user_pengirim_id: user.id });
+          })
+          .where({ dihapus: 0 })
+          .andWhere({ tipe: "terkirim" })
+          .paginate();
+      } else if (tipe == "masuk") {
+        surel = await TkTipeSurel.query()
+          .with("surel", (builder) => {
+            builder
+              .withCount("komen", (builder) => {
+                builder.where({ dihapus: 0 });
+              })
+              .where({ dihapus: 0 })
+              .andWhere({ m_user_tujuan_id: user.id });
+          })
+          .where({ dihapus: 0 })
+          .andWhere({ tipe: "masuk" })
+          .paginate();
+      } else if (tipe == "draf") {
+        surel = await TkTipeSurel.query()
+          .with("surel", (builder) => {
+            builder
+              .withCount("komen", (builder) => {
+                builder.where({ dihapus: 0 });
+              })
+              .where({ dihapus: 0 })
+              .andWhere({ m_user_pengirim_id: user.id });
+          })
+          .where({ dihapus: 0 })
+          .andWhere({ tipe: "draf" })
+          .paginate();
+      }
+    }
+
+    return response.ok({
+      surel,
+      jumlahMasuk,
+      jumlahDraf,
+    });
+  }
+
+  async detailSurel({ response, request, auth, params: { surel_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+    // const { rombel_id } = request.post();
+    const surel = await MSurel.query()
+      .with("komen", (builder) => {
+        builder.with("user", (builder) => {
+          builder.select("id", "nama");
+        });
+      })
+      .where({ id: surel_id })
+      .first();
+
+    return response.ok({
+      surel,
+    });
+  }
+
+  async postSurel({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { nama, perihal, isi, lampiran, email } = request.post();
+
+    const tujuan = await User.query()
+      .where({ email: email })
+      .andWhere({ dihapus: 0 })
+      .ids();
+
+    const surel = await MSurel.create({
+      nama,
+      perihal,
+      m_user_pengirim_id: user.id,
+      m_user_tujuan_id: `${tujuan ? tujuan : "-"}`,
+      isi,
+      lampiran,
+      dihapus: 0,
+    });
+
+    const masuk = await TkTipeSurel.create({
+      m_surel_id: surel.id,
+      tipe: "masuk",
+    });
+
+    const terkirim = await TkTipeSurel.create({
+      m_surel_id: surel.id,
+      tipe: "terkirim",
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async postSurelDraf({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { nama, perihal, isi, lampiran, email } = request.post();
+
+    const tujuan = await User.query()
+      .where({ email: email })
+      .andWhere({ dihapus: 0 })
+      .ids();
+
+    const surel = await MSurel.create({
+      nama,
+      perihal,
+      m_user_pengirim_id: user.id,
+      m_user_tujuan_id: `${tujuan ? tujuan : "-"}`,
+      isi,
+      lampiran,
+      dihapus: 0,
+    });
+
+    const draf = await TkTipeSurel.create({
+      m_surel_id: surel.id,
+      tipe: "draf",
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  // ============ POST Rekap Tugas =================
+
+  async putSurel({ response, request, auth, params: { surel_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { nama, perihal, isi, lampiran, email } = request.post();
+    const tujuan = await User.query()
+      .where({ email: email })
+      .andWhere({ dihapus: 0 })
+      .ids();
+
+    const surel = await MSurel.query()
+      .where({ id: surel_id })
+      .update({
+        nama,
+        perihal,
+        m_user_tujuan_id: `${tujuan ? tujuan : "-"}`,
+        isi,
+        lampiran,
+        dihapus: 0,
+      });
+
+    const hapus = await TkTipeSurel.query()
+      .where({ m_surel_id: surel_id })
+      .delete();
+
+    const masuk = await TkTipeSurel.create({
+      m_surel_id: surel_id,
+      tipe: "masuk",
+    });
+
+    const terkirim = await TkTipeSurel.create({
+      m_surel_id: surel_id,
+      tipe: "terkirim",
+    });
+
+    if (!surel) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async putSurelDraf({ response, request, auth, params: { surel_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { nama, perihal, isi, lampiran, email } = request.post();
+    const tujuan = await User.query()
+      .where({ email: email })
+      .andWhere({ dihapus: 0 })
+      .ids();
+    const surel = await MSurel.query()
+      .where({ id: surel_id })
+      .update({
+        nama,
+        perihal,
+        m_user_tujuan_id: `${tujuan ? tujuan : "-"}`,
+        isi,
+        lampiran,
+        dihapus: 0,
+      });
+
+    if (!surel) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteSurel({ response, request, auth, params: { surel_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    // mengambil data user
+    const user = await auth.getUser();
+
+    const surel = await MSurel.query().where({ id: surel_id }).update({
+      dihapus: 1,
+    });
+
+    const tipe = await TkTipeSurel.query()
+      .where({ m_surel_id: surel_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!surel) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async deleteSurelTipe({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    // mengambil data user
+    const user = await auth.getUser();
+
+    const { tipe_surel_id } = request.post();
+
+    const tipe = await Promise.all(
+      tipe_surel_id.map(async (d) => {
+        await TkTipeSurel.query().where({ id: d }).update({
+          dihapus: 1,
+        });
+      })
+    );
+
+    if (!tipe) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async dibacaSurelTipe({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    // mengambil data user
+    const user = await auth.getUser();
+
+    const { tipe_surel_id } = request.post();
+
+    const tipe = await Promise.all(
+      tipe_surel_id.map(async (d) => {
+        await TkTipeSurel.query().where({ id: d }).update({
+          dibaca: 1,
+        });
+      })
+    );
+
+    if (!tipe) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({});
+  }
+
+  async postSurelKomen({ response, request, auth, params: { surel_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { komen, lampiran } = request.post();
+
+    const surelKomen = await MSurelKomen.create({
+      komen,
+      lampiran,
+      m_user_id: user.id,
+      m_surel_id: surel_id,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
 }
 module.exports = MainController;
