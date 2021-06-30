@@ -106,6 +106,7 @@ const PDFExtract = require("pdf.js-extract").PDFExtract;
 const Hash = use("Hash");
 const Helpers = use("Helpers");
 const axios = require("axios");
+// const Mail = use("Mail");
 const { validate } = use("Validator");
 const slugify = require("slugify");
 const Excel = require("exceljs");
@@ -144,6 +145,7 @@ const messagePutSuccess = "Data berhasil diubah";
 const messageDeleteSuccess = "Data berhasil dihapus";
 const messageNotFound = "Data tidak ditemukan";
 const messageForbidden = "Dilarang, anda bukan seorang admin";
+const messageEmailSuccess = "Data berhasil dikirim ke email";
 const pesanSudahDitambahkan = "Data sudah ditambahkan";
 
 // RULES
@@ -22020,11 +22022,13 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .ids();
 
+      return tujuan;
+
     const surel = await MSurel.create({
       nama,
       perihal,
       m_user_pengirim_id: user.id,
-      m_user_tujuan_id: `${tujuan ? tujuan : "-"}`,
+      m_user_tujuan_id: `${tujuan ? tujuan : null}`,
       isi,
       lampiran,
       dihapus: 0,
@@ -22039,6 +22043,20 @@ class MainController {
       m_surel_id: surel.id,
       tipe: "terkirim",
     });
+
+    const gmail = await Mail.raw(`${perihal}` ,(message)=>{
+      message
+      .to(email)
+      .from(user.email,nama)
+      .subject(perihal)
+      .text(`${isi} ${lampiran}`)
+    })
+
+    if (gmail) {
+      return response.ok({
+        message: messageEmailSuccess,
+      });
+    }
 
     return response.ok({
       message: messagePostSuccess,
