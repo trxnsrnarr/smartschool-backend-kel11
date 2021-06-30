@@ -92,7 +92,8 @@ Route.post("/rombel", "MainController.postRombel");
 Route.put("/rombel/:rombel_id", "MainController.putRombel");
 Route.delete("/rombel/:rombel_id", "MainController.deleteRombel");
 Route.post("/rombel/:rombel_id/:user_id", "MainController.postSikapRombel");
-Route.post("/rapor-sikap/:user_id", "MainController.postRaporSikap");
+Route.post("/rapor-sikap/sosial/:user_id", "MainController.postRaporSikapSosial");
+Route.post("/rapor-sikap/spiritual/:user_id", "MainController.postRaporSikapSpiritual");
 Route.delete("/rapor-sikap/:user_id", "MainController.deleteRaporSikap");
 Route.delete(
   "/rapor-sikap/sosial/:user_id",
