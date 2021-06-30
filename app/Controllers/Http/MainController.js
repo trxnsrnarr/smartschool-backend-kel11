@@ -12069,7 +12069,12 @@ class MainController {
         builder.where({ dihapus: 0 }).orderBy("created_at", "desc");
       })
       .with("anggota", (builder) => {
-        builder.with("user").where({ dihapus: 0 });
+        builder
+          .with("user", (builder) => {
+            builder.with("sekolah");
+          })
+          .with("role")
+          .where({ dihapus: 0 });
       })
       .where({ id: proyek_id })
       .first();
