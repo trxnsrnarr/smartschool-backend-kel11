@@ -53,7 +53,9 @@
     "uuid-v4": "^0.1.0",
     "word-extractor": "^0.3.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "nodemon": "^2.0.8"
+  },
   "autoload": {
     "App": "./app"
   }
