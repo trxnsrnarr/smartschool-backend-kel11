@@ -11328,6 +11328,46 @@ class MainController {
 
     let { nama, jenis, bulan, tipe_ujian, nominal, tanggal_dibuat, rombel_id } =
       request.post();
+      if(bulan){
+
+        const rules = {
+        nama:"required",
+        bulan:"required",
+        nominal:"required",
+        tanggal_dibuat:"required",
+        rombel_id:"required",
+      }
+      const message={
+        "nama.required":"Nama harus diisi",
+        "bulan.required":"Bulan harus dipilih",
+        "nominal.required":"Nominal harus diisi",
+        "tanggal_dibuat.required":"Tanggal dibuat harus diisi",
+        "rombel_id.required":"Bagikan harus dipilih",
+      }
+      const validation = await validate(request.all(),rules,message);
+      if(validation.fails()){
+        return response.unprocessableEntity(validation.messages());
+      }
+    }else if(tipe_ujian){
+      const rules = {
+        nama:"required",
+      tipe_ujian:"required",
+      nominal:"required",
+      tanggal_dibuat:"required",
+      rombel_id:"required",
+    }
+    const message={
+      "nama.required":"Nama harus diisi",
+      "tipe_ujian.required":"Tipe ujian harus dipilih",
+      "nominal.required":"Nominal harus diisi",
+      "tanggal_dibuat.required":"Tanggal dibuat harus diisi",
+        "rombel_id.required":"Bagikan harus dipilih",
+    }
+    const validation = await validate(request.all(),rules,message);
+    if(validation.fails()){
+      return response.unprocessableEntity(validation.messages());
+    }
+    }
 
     rombel_id = rombel_id.length ? rombel_id : [];
 
@@ -11395,6 +11435,47 @@ class MainController {
     }
 
     let { nama, jenis, bulan, tipe_ujian, nominal, rombel_id } = request.post();
+
+    if(bulan){
+
+      const rules = {
+      nama:"required",
+      bulan:"required",
+      nominal:"required",
+      tanggal_dibuat:"required",
+      rombel_id:"required",
+    }
+    const message={
+      "nama.required":"Nama harus diisi",
+      "bulan.required":"Bulan harus dipilih",
+      "nominal.required":"Nominal harus diisi",
+      "tanggal_dibuat.required":"Tanggal dibuat harus diisi",
+      "rombel_id.required":"Bagikan harus dipilih",
+    }
+    const validation = await validate(request.all(),rules,message);
+    if(validation.fails()){
+      return response.unprocessableEntity(validation.messages());
+    }
+  }else if(tipe_ujian){
+    const rules = {
+      nama:"required",
+    tipe_ujian:"required",
+    nominal:"required",
+    tanggal_dibuat:"required",
+    rombel_id:"required",
+  }
+  const message={
+    "nama.required":"Nama harus diisi",
+    "tipe_ujian.required":"Tipe ujian harus dipilih",
+    "nominal.required":"Nominal harus diisi",
+    "tanggal_dibuat.required":"Tanggal dibuat harus diisi",
+      "rombel_id.required":"Bagikan harus dipilih",
+  }
+  const validation = await validate(request.all(),rules,message);
+  if(validation.fails()){
+    return response.unprocessableEntity(validation.messages());
+  }
+  }
 
     rombel_id = rombel_id.length ? rombel_id : [];
 
@@ -11484,6 +11565,16 @@ class MainController {
     const user = await auth.getUser();
 
     const { kategori } = request.post();
+    const rules = {
+      kategori:"required",
+    }
+    const message={
+      "kategori.required":"Kategori harus diisi",
+    }
+    const validation = await validate(request.all(),rules,message);
+    if(validation.fails()){
+      return response.unprocessableEntity(validation.messages());
+    }
 
     await MPembayaranKategori.create({
       kategori,
@@ -11623,6 +11714,25 @@ class MainController {
 
     let { bank, norek, nama_pemilik, nominal, bukti, m_pembayaran_siswa_id } =
       request.post();
+
+      const rules = {
+        bank:"required",
+        norek:"required",
+        nama_pemilik:"required",
+        nominal:"required",
+        bukti:"required",
+      }
+      const message={
+        "bank.required":"Bank harus diisi",
+        "norek.required":"Norek harus diisi",
+        "nama_pemilik.required":"Nama pemilik harus diisi",
+        "nominal.required":"Nominal harus diisi",
+        "bukti.required":"Bukti harus diisi",
+      }
+      const validation = await validate(request.all(),rules,message);
+      if(validation.fails()){
+        return response.unprocessableEntity(validation.messages());
+      }
 
     const pembayaran = await MRiwayatPembayaranSiswa.create({
       bank,
@@ -11796,6 +11906,23 @@ class MainController {
 
     const { tipe, nama, kategori, nominal, waktu_dibuat } = request.post();
 
+    const rules = {
+      nama:"required",
+      tipe:"required",
+      kategori:"required",
+      nominal:"required",
+    }
+    const message={
+      "tipe.required":"Tipe harus dipilih",
+      "nama.required":"Nama harus diisi",
+      "kategori.required":"Kategori harus diisi",
+      "nominal.required":"Nominal harus diisi",
+    }
+    const validation = await validate(request.all(),rules,message);
+    if(validation.fails()){
+      return response.unprocessableEntity(validation.messages());
+    }
+
     const mutasi = await MMutasi.create({
       tipe,
       nama,
@@ -11821,6 +11948,23 @@ class MainController {
     }
 
     const { tipe, nama, kategori, nominal, waktu_dibuat } = request.post();
+    const rules = {
+      nama:"required",
+      tipe:"required",
+      kategori:"required",
+      nominal:"required",
+    }
+    const message={
+      "tipe.required":"Tipe harus dipilih",
+      "nama.required":"Nama harus diisi",
+      "kategori.required":"Kategori harus diisi",
+      "nominal.required":"Nominal harus diisi",
+    }
+    const validation = await validate(request.all(),rules,message);
+    if(validation.fails()){
+      return response.unprocessableEntity(validation.messages());
+    }
+
 
     const mutasi = await MMutasi.query().where({ id: mutasi_id }).update({
       tipe,
@@ -11896,6 +12040,30 @@ class MainController {
       tahun_kerjasama,
     } = request.post();
 
+    const rules = {
+      nama:"required",
+      klasifikasi:"required",
+      jumlah_karyawan:"required",
+      tautan:"required",
+      galeri:"required",
+      deskripsi:"required",
+      tahun_kerjasama:"required",
+    }
+    const message={
+      "nama.required":"Nama harus diisi",
+      "klasifikasi.required":"Klasifikasi harus diisi",
+      "jumlah_karyawan.required":"Jumlah karyawan harus diisi",
+      "tautan.required":"Tautan harus diisi",
+      "galeri.required":"Galeri harus diisi",
+      "deskripsi.required":"Deskripsi harus diisi",
+      "tahun_kerjasama.required":"Tahun kerjasama harus diisi",
+    }
+    const validation = await validate(request.all(),rules,message);
+    if(validation.fails()){
+      return response.unprocessableEntity(validation.messages());
+    }
+
+
     galeri = galeri ? galeri.toJSON() : null;
     deskripsi = deskripsi ? Buffer(deskripsi).toString("base64") : null;
     tautan = tautan ? JSON.stringify(tautan) : null;
@@ -11935,6 +12103,29 @@ class MainController {
       deskripsi,
       tahun_kerjasama,
     } = request.post();
+
+    const rules = {
+      nama:"required",
+      klasifikasi:"required",
+      jumlah_karyawan:"required",
+      tautan:"required",
+      galeri:"required",
+      deskripsi:"required",
+      tahun_kerjasama:"required",
+    }
+    const message={
+      "nama.required":"Nama harus diisi",
+      "klasifikasi.required":"Klasifikasi harus diisi",
+      "jumlah_karyawan.required":"Jumlah karyawan harus diisi",
+      "tautan.required":"Tautan harus diisi",
+      "galeri.required":"Galeri harus diisi",
+      "deskripsi.required":"Deskripsi harus diisi",
+      "tahun_kerjasama.required":"Tahun kerjasama harus diisi",
+    }
+    const validation = await validate(request.all(),rules,message);
+    if(validation.fails()){
+      return response.unprocessableEntity(validation.messages());
+    }
 
     galeri = galeri ? galeri.toJSON() : null;
     deskripsi = deskripsi ? Buffer(deskripsi).toString("base64") : null;
@@ -12242,6 +12433,21 @@ class MainController {
     const { nama, privasi, deskripsi, banner, m_status_proyek_id } =
       request.post();
 
+      const rules = {
+        nama:"required",
+        privasi:"required",
+        deskripsi:"required",
+      }
+      const message={
+        "nama.required":"Nama harus diisi",
+        "privasi.required":"Privasi harus dipilih",
+        "deskripsi.required":"Deskripsi harus diisi",
+      }
+      const validation = await validate(request.all(),rules,message);
+      if(validation.fails()){
+        return response.unprocessableEntity(validation.messages());
+      }
+
     const proyek = await MProyek.create({
       nama,
       privasi,
@@ -12304,6 +12510,21 @@ class MainController {
 
     const { nama, privasi, deskripsi, banner, m_status_proyek_id } =
       request.post();
+
+      const rules = {
+        nama:"required",
+        privasi:"required",
+        deskripsi:"required",
+      }
+      const message={
+        "nama.required":"Nama harus diisi",
+        "privasi.required":"Privasi harus dipilih",
+        "deskripsi.required":"Deskripsi harus diisi",
+      }
+      const validation = await validate(request.all(),rules,message);
+      if(validation.fails()){
+        return response.unprocessableEntity(validation.messages());
+      }
 
     const proyek = await MProyek.query()
       .where({ id: proyek_id })
