@@ -12943,7 +12943,7 @@ class MainController {
     if(validation.fails()){
       return response.unprocessableEntity(validation.messages());
     }
-    
+
     const sikap = await MSikapRombel.create({
       m_user_id: user_id,
       m_rombel_id: rombel_id,
@@ -19782,7 +19782,7 @@ class MainController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const raporEksul = await MRaporEksul.query()
+    const raporEksul = await MRaporEkskul.query()
       .where({ id: ekskul_id })
       .update({
         keterangan,
