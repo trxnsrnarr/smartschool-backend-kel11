@@ -19473,6 +19473,28 @@ class MainController {
       ba_keterampilan,
       sikap,
     } = request.post();
+    
+    const rules = {
+      predikat:"required",
+      bb_pengetahuan:"required",
+      ba_pengetahuan:"required",
+      bb_keterampilan:"required",
+      ba_keterampilan:"required",
+      sikap:"required",
+    }
+    const message={
+      "keterangan.required":"Keterangan harus diisi",
+      "predikat.required":"Predikat harus diisi",
+      "bb_pengetahuan.required":"Batas bawah pengetahuan harus diisi",
+      "ba_pengetahuan.required":"Batas atas pengetahuan harus diisi",
+      "bb_keterampilan.required":"Batas bawah keterampilan harus diisi",
+      "ba_keterampilan.required":"Batas atas keterampilan harus diisi",
+      "sikap.required":"Sikap harus diisi",
+    }
+    const validation = await validate(request.all(),rules,message);
+    if(validation.fails()){
+      return response.unprocessableEntity(validation.messages());
+    }
 
     const predikatNilai = await MPredikatNilai.create({
       predikat,
@@ -19507,6 +19529,28 @@ class MainController {
       ba_keterampilan,
       sikap,
     } = request.post();
+
+    const rules = {
+      predikat:"required",
+      bb_pengetahuan:"required",
+      ba_pengetahuan:"required",
+      bb_keterampilan:"required",
+      ba_keterampilan:"required",
+      sikap:"required",
+    }
+    const message={
+      "keterangan.required":"Keterangan harus diisi",
+      "predikat.required":"Predikat harus diisi",
+      "bb_pengetahuan.required":"Batas bawah pengetahuan harus diisi",
+      "ba_pengetahuan.required":"Batas atas pengetahuan harus diisi",
+      "bb_keterampilan.required":"Batas bawah keterampilan harus diisi",
+      "ba_keterampilan.required":"Batas atas keterampilan harus diisi",
+      "sikap.required":"Sikap harus diisi",
+    }
+    const validation = await validate(request.all(),rules,message);
+    if(validation.fails()){
+      return response.unprocessableEntity(validation.messages());
+    }
 
     const predikatNilai = await MPredikatNilai.query()
       .where({ id: predikat_id })
