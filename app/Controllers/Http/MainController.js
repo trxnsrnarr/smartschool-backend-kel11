@@ -12943,12 +12943,16 @@ class MainController {
     const sikap = await MSikapRombel.create({
       m_user_id: user_id,
       m_rombel_id: rombel_id,
-      m_sikap_ditunjukkan_id: m_sikap_ditunjukkan_id.length
+      m_sikap_ditunjukkan_id: m_sikap_ditunjukkan_id
+      ? m_sikap_ditunjukkan_id.length
         ? m_sikap_ditunjukkan_id.toString()
-        : null,
-      m_sikap_ditingkatkan_id: m_sikap_ditingkatkan_id.length
+        : null
+      : null,
+    m_sikap_ditingkatkan_id: m_sikap_ditingkatkan_id
+      ? m_sikap_ditingkatkan_id.length
         ? m_sikap_ditingkatkan_id.toString()
-        : null,
+        : null
+      : null,
       status: 1,
       dihapus: 0,
     });
@@ -22073,6 +22077,24 @@ class MainController {
     // return useremail;
 
     const { nama, perihal, isi, lampiran, email } = request.post();
+    const rules = {
+      nama: "required",
+      perihal:"required",
+      email: "required|email",
+      isi:"required"
+    }
+    const message={
+      "nama.required": "Nama harus diisi",
+      "perihal.required":"Perihal harus diisi",
+      "email.required": "Alamat email harus diisi",
+      "email.email":"Alamat email harus benar",
+      "isi.required":"Pesan harus diisi",
+    }
+    const validation = await validate(request.all(),rules,message);
+if(validation.fails()){
+  return response.unprocessableEntity(validation.messages());
+}
+
 
     const tujuan = await User.query()
       .where({ email: email })
@@ -22170,6 +22192,26 @@ class MainController {
     const user = await auth.getUser();
 
     const { nama, perihal, isi, lampiran, email } = request.post();
+
+    const rules = {
+      nama: "required",
+      perihal:"required",
+      email: "required|email",
+      isi:"required",
+    }
+    const message={
+      "nama.required": "Nama harus diisi",
+      "email.required": "Alamat email harus diisi",
+      "email.email":"Alamat email harus benar",
+      "perihal.required":"Perihal harus diisi",
+      "isi.required":"Pesan harus diisi",
+    }
+    const validation = await validate(request.all(),rules,message);
+if(validation.fails()){
+  return response.unprocessableEntity(validation.messages());
+}
+
+
     const tujuan = await User.query()
       .where({ email: email })
       .andWhere({ dihapus: 0 })
