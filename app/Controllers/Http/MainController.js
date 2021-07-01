@@ -12869,7 +12869,6 @@ class MainController {
       .first();
 
     const sikapsosial = await MSikapSosial.query().fetch();
-    const sikapspiritual = await MSikapSpiritual.query().fetch();
 
     const tugas = await MTugas.query().where({ m_user_id: user.id }).fetch();
 
@@ -12898,13 +12897,7 @@ class MainController {
         builder.with("anggotaRombel", (builder) => {
           builder.with("user", (builder) => {
             builder
-              .with("sikap", (builder) => {
-                builder
-                  .with("ditingkatkanSosial")
-                  .with("ditunjukkanSosial")
-                  .with("ditingkatkanSpiritual")
-                  .with("ditunjukkanSpiritual");
-              })
+              .with("rekapSikap")
               .select("id", "nama");
           });
         });
@@ -12916,7 +12909,6 @@ class MainController {
       rekap,
       materirombel,
       sikapsosial,
-      sikapspiritual,
       tugas,
     });
   }
@@ -19609,6 +19601,16 @@ class MainController {
     const user = await auth.getUser();
 
     const { keterangan } = request.post();
+    const rules = {
+      keterangan:"required"
+    }
+    const message={
+      "keterangan.required":"Keterangan harus diisi",
+    }
+    const validation = await validate(request.all(),rules,message);
+    if(validation.fails()){
+      return response.unprocessableEntity(validation.messages());
+    }
 
     const raporEkskul = await MRaporEkskul.create({
       m_rombel_id: rombel_id,
@@ -19633,6 +19635,16 @@ class MainController {
     }
 
     const { keterangan } = request.post();
+    const rules = {
+      keterangan:"required"
+    }
+    const message={
+      "keterangan.required":"Keterangan harus diisi",
+    }
+    const validation = await validate(request.all(),rules,message);
+    if(validation.fails()){
+      return response.unprocessableEntity(validation.messages());
+    }
 
     const raporEksul = await MRaporEksul.query()
       .where({ id: ekskul_id })
@@ -19664,6 +19676,16 @@ class MainController {
     const user = await auth.getUser();
 
     const { catatan, kelulusan } = request.post();
+    const rules = {
+      kelulusan:"required"
+    }
+    const message={
+      "kelulusan.required":"Kelulusan harus diisi",
+    }
+    const validation = await validate(request.all(),rules,message);
+    if(validation.fails()){
+      return response.unprocessableEntity(validation.messages());
+    }
 
     const keteranganRapor = await MKeteranganRapor.create({
       catatan,
@@ -19687,6 +19709,16 @@ class MainController {
     }
 
     const { catatan, kelulusan } = request.post();
+    const rules = {
+      kelulusan:"required"
+    }
+    const message={
+      "kelulusan.required":"Kekelulusan harus diisi",
+    }
+    const validation = await validate(request.all(),rules,message);
+    if(validation.fails()){
+      return response.unprocessableEntity(validation.messages());
+    }
 
     const keteranganRapor = await MKeteranganRapor.query()
       .where({ m_user_id: user_id })
