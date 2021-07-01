@@ -12259,16 +12259,10 @@ class MainController {
       status: "menerima",
       dihapus: 0,
     });
-    await anggota.role().createMany([
-      {
-        role: "Pemilik",
-        dihapus: 0,
-      },
-      {
-        role: "Admin",
-        dihapus: 0,
-      },
-    ]);
+    await anggota.role().create({
+      role: "Pemilik",
+      dihapus: 0,
+    });
 
     const kategori = await MKategoriPekerjaan.createMany([
       {
@@ -12800,18 +12794,27 @@ class MainController {
 
     const anggota = await MAnggotaProyek.query()
       .where({ id: anggota_proyek_id })
-      .andWhere({ m_user_id: user.id })
       .andWhere({ dihapus: 0 })
       .update({
         status,
       });
 
     if (status == "menerima") {
-      await MAnggotaProyekRole.create({
-        m_anggota_proyek_id: anggota_proyek_id,
-        role: role,
-        dihapus: 0,
-      });
+      const update = await MAnggotaProyekRole.query()
+        .where({
+          m_anggota_proyek_id: anggota_proyek_id,
+        })
+        .update({
+          role: role,
+          dihapus: 0,
+        });
+      if (!update) {
+        await MAnggotaProyekRole.create({
+          m_anggota_proyek_id: anggota_proyek_id,
+          role: role,
+          dihapus: 0,
+        });
+      }
     }
 
     if (!anggota) {
@@ -13042,7 +13045,12 @@ class MainController {
     });
   }
 
-  async postRaporSikapSpiritual({ response, request, auth, params: { user_id } }) {
+  async postRaporSikapSpiritual({
+    response,
+    request,
+    auth,
+    params: { user_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -22083,10 +22091,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const useremail = await User.query()
-    .where({id:user.id})
-    .first()
-
+    const useremail = await User.query().where({ id: user.id }).first();
 
     // return useremail;
 
