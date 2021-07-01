@@ -12931,7 +12931,19 @@ class MainController {
     // const user = await auth.getUser();
 
     const { m_sikap_ditunjukkan_id, m_sikap_ditingkatkan_id } = request.post();
-
+    const rules = {
+      m_sikap_ditingkatkan_id:"required",
+      m_sikap_ditunjukkan_id:"required",
+    }
+    const message={
+      "m_sikap_ditingkatkan_id.required":"Pilih salah satu sikap yang ditingkatkan",
+      "m_sikap_ditunjukkan_id.required":"Pilih salah satu sikap yang ditunjukkan",
+    }
+    const validation = await validate(request.all(),rules,message);
+    if(validation.fails()){
+      return response.unprocessableEntity(validation.messages());
+    }
+    
     const sikap = await MSikapRombel.create({
       m_user_id: user_id,
       m_rombel_id: rombel_id,
@@ -12972,7 +12984,18 @@ class MainController {
       m_sikap_sosial_ditingkatkan_id,
       tipe,
     } = request.post();
-
+    const rules = {
+      m_sikap_sosial_ditingkatkan_id:"required",
+      m_sikap_sosial_ditunjukkan_id:"required",
+    }
+    const message={
+      "m_sikap_sosial_ditingkatkan_id.required":"Pilih salah satu sikap yang ditingkatkan",
+      "m_sikap_sosial_ditunjukkan_id.required":"Pilih salah satu sikap yang ditunjukkan",
+    } 
+    const validation = await validate(request.all(),rules,message);
+    if(validation.fails()){
+      return response.unprocessableEntity(validation.messages());
+    }
     let sikap;
 
     if (checkSikap) {
@@ -13039,6 +13062,19 @@ class MainController {
       m_sikap_spiritual_ditunjukkan_id,
       tipe,
     } = request.post();
+    const rules = {
+      m_sikap_spiritual_ditingkatkan_id:"required",
+      m_sikap_spiritual_ditunjukkan_id:"required",
+    }
+    const message={
+      "m_sikap_spiritual_ditingkatkan_id.required":"Pilih salah satu sikap yang ditingkatkan",
+      "m_sikap_spiritual_ditunjukkan_id.required":"Pilih salah satu sikap yang ditunjukkan",
+    }
+    const validation = await validate(request.all(),rules,message);
+    if(validation.fails()){
+      return response.unprocessableEntity(validation.messages());
+    }
+  
 
     let sikap;
 
