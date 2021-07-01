@@ -19752,6 +19752,24 @@ class MainController {
     const { namamitra, tanggal_mulai, tanggal_selesai, keterangan } =
       request.post();
 
+      const rules = {
+        namamitra: "required",
+        tanggal_mulai:"required",
+        tanggal_selesai: "required",
+        keterangan:"required"
+      }
+      const message={
+        "namamitra.required": "Nama Perusahaan harus diisi",
+        "tanggal_mulai.required": "Tanggal Mulai harus diisi",
+        "tanggal_selesai.required":"Tanggal Selesai harus benar",
+        "keterangan.required":"Keterangan harus diisi",
+      }
+      const validation = await validate(request.all(),rules,message);
+      if(validation.fails()){
+        return response.unprocessableEntity(validation.messages());
+      }
+   
+
     const date1 = moment(`${tanggal_mulai}`);
     const date2 = moment(`${tanggal_selesai}`);
     const diff = date2.diff(date1);
@@ -19784,6 +19802,23 @@ class MainController {
 
     const { namamitra, tanggal_mulai, tanggal_selesai, keterangan } =
       request.post();
+      const rules = {
+        namamitra: "required",
+        tanggal_mulai:"required",
+        tanggal_selesai: "required",
+        keterangan:"required"
+      }
+      const message={
+        "namamitra.required": "Nama Perusahaan harus diisi",
+        "tanggal_mulai.required": "Tanggal Mulai harus diisi",
+        "tanggal_selesai.required":"Tanggal Selesai harus benar",
+        "keterangan.required":"Keterangan harus diisi",
+      }
+      const validation = await validate(request.all(),rules,message);
+  if(validation.fails()){
+    return response.unprocessableEntity(validation.messages());
+  }
+  
 
     const date1 = moment(`${tanggal_mulai}`);
     const date2 = moment(`${tanggal_selesai}`);
@@ -20480,17 +20515,6 @@ class MainController {
       .whereIn("id", userIds)
       .fetch();
 
-    // const ratarata2 = await TkTimeline.query()
-    //   .whereIn("m_timeline_id", timelineIds)
-    //   .whereIn("m_user_id", userIds)
-    //   .avg("nilai as rata");
-
-    // return response.ok({
-    //   // jadwalMengajar,
-    //   analisisNilai,
-    //   // ratarata2,
-    // });
-
     let workbook = new Excel.Workbook();
 
     let worksheet = workbook.addWorksheet(`Analisis Nilai`);
@@ -20543,51 +20567,10 @@ class MainController {
       ],
     });
 
-    //  await Promise.all(
-    //       analisisNilai.toJSON().map(async (d, idx) => {
-    //         worksheet.getRow(7).values = ["No", "Nama", "Rata-Rata", "Dibawah KKM","Tugas1","Tugas2","Tugas3","Tugas4","Tugas5"];
-    //         worksheet.columns = [
-    //           { key: "no" },
-    //           { key: "user" },
-    //           { key: "ratarata" },
-    //           { key: "dibawahkkm" },
-    //           { key: "tugas1" },
-    //           { key: "tugas2" },
-    //           { key: "tugas3" },
-    //           { key: "tugas4" },
-    //           { key: "tugas5" },
-    //           { key: `tugas${nox+1}` },
-    //         ];
-
-    //         // Add row using key mapping to columns
-    //         let row = worksheet.addRow({
-    //           no: `${idx + 1}`,
-    //           user: d ? d.nama : "-",
-    //           ratarata: "-",
-    //           dibawahkkm: "-",
-
-    //         });
-    //           await Promise.all(
-    //           d.tugas.map(async (e,nox) => {
-    // worksheet.columns = [{ key: `tugas${nox + 1}` }];
-
-    //             let column = worksheet.addColumn({
-    //              tugas1: e ? e.nilai : "-",
-    //               tugas2: e ? e.nilai : "-",
-    //               tugas3: e ? e.nilai : "-",
-    //               tugas4: e ? e.nilai : "-",
-    //               tugas5: e ? e.nilai : "-",
-    //             })
-    //           }));
-
+   
     // add column headers
     await Promise.all(
       analisisNilai.toJSON().map(async (d, idx) => {
-        // var total = 0;
-        // for (var i = 0; i < d.tugas.length; i++) {
-        //   total += d.tugas.nilai[i];
-        // }
-        // var avg = total / d.tugas.nilai.length;
         const ratarata2 = await TkTimeline.query()
           .where({ m_user_id: `${d.id}` })
           .whereIn("m_timeline_id", timelineIds)
@@ -21103,6 +21086,7 @@ class MainController {
       perusahaan,
     });
   }
+
   async getAcaraPerusahaan({ response, request, auth }) {
     const domain = request.headers().origin;
 
@@ -21277,8 +21261,6 @@ class MainController {
     });
   }
 
-  // ============ POST Rekap Tugas =================
-
   async putAcaraPerusahaan({ response, request, auth, params: { acara_id } }) {
     const domain = request.headers().origin;
 
@@ -21442,8 +21424,6 @@ class MainController {
       message: messagePostSuccess,
     });
   }
-
-  // ============ POST Rekap Tugas =================
 
   async putPerusahaan({ response, request, auth, params: { perusahaan_id } }) {
     const domain = request.headers().origin;
