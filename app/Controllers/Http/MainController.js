@@ -13356,6 +13356,19 @@ class MainController {
     const user = await auth.getUser();
 
     const { judul, teknik, tipe } = request.post();
+    const rules = {
+      judul:"required",
+      
+    }
+    const message={
+      "judul.required":"Judul Tugas harus diisi",
+      
+    }
+    const validation = await validate(request.all(),rules,message);
+    if(validation.fails()){
+      return response.unprocessableEntity(validation.messages());
+    }
+  
 
     const rekap = await MRekap.create({
       judul,
@@ -13390,6 +13403,20 @@ class MainController {
 
     const { di_ss, judul, tanggal, m_tugas_id, m_rombel_id, m_rekap_id } =
       request.post();
+      if(m_tugas_id){
+      const rules = {
+        judul:"required",
+        tanggal:"required",
+      }
+      const message={
+        "judul.required":"Judul Tugas harus diisi",
+        "tanggal.required":"Tanggal Tugas harus diisi",
+      }
+      const validation = await validate(request.all(),rules,message);
+      if(validation.fails()){
+        return response.unprocessableEntity(validation.messages());
+      }
+    }
 
     const rekap = await MRekapRombel.create({
       di_ss,
@@ -13492,7 +13519,19 @@ class MainController {
     const user = await auth.getUser();
 
     const { judul, teknik } = request.post();
-
+    const rules = {
+      judul:"required",
+      
+    }
+    const message={
+      "judul.required":"Judul harus diisi",
+      
+    }
+    const validation = await validate(request.all(),rules,message);
+    if(validation.fails()){
+      return response.unprocessableEntity(validation.messages());
+    }
+  
     const rekap = await MRekap.query().where({ id: rekap_id }).update({
       judul,
       teknik,
@@ -13510,7 +13549,7 @@ class MainController {
     });
   }
 
-  async putRekapRombel({ response, request, auth, params: { rekap_id } }) {
+  async putRekapRombel({ response, request, auth, params: { rekaprombel_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -13523,10 +13562,27 @@ class MainController {
 
     const { judul, tanggal, m_tugas_id } = request.post();
 
-    const rekap = await MRekapRombel.query().where({ id: rekap_id }).update({
+    if(!m_tugas_id){
+
+      const rules = {
+        judul:"required",
+        tanggal:"required",
+      }
+      const message={
+        "judul.required":"Judul Tugas harus diisi",
+        "tanggal.required":"Tanggal Tugas harus diisi",
+      }
+      const validation = await validate(request.all(),rules,message);
+      if(validation.fails()){
+        return response.unprocessableEntity(validation.messages());
+      }
+    }
+
+
+    const rekap = await MRekapRombel.query().where({ id: rekaprombel_id }).update({
       judul,
       tanggal,
-      m_tugas_Id,
+      m_tugas_id,
       dihapus: 0,
     });
 
@@ -19473,7 +19529,7 @@ class MainController {
       ba_keterampilan,
       sikap,
     } = request.post();
-    
+
     const rules = {
       predikat:"required",
       bb_pengetahuan:"required",
