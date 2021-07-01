@@ -12372,6 +12372,19 @@ class MainController {
     const user = await auth.getUser();
 
     let { nama, warna, m_proyek_id } = request.post();
+    const rules = {
+      nama:"required",
+      warna:"required",
+    }
+    const message={
+      "nama.required":"Nama harus diisi",
+      "warna.required":"Warna harus dipilih",
+    }
+    const validation = await validate(request.all(),rules,message);
+    if(validation.fails()){
+      return response.unprocessableEntity(validation.messages());
+    }
+
     warna = warna
       ? warna
       : `#${Math.floor(Math.random() * 16777215).toString(16)}`;
@@ -12409,6 +12422,18 @@ class MainController {
     const user = await auth.getUser();
 
     const { nama, warna, m_proyek_id } = request.post();
+    const rules = {
+      nama:"required",
+      warna:"required",
+    }
+    const message={
+      "nama.required":"Nama harus diisi",
+      "warna.required":"Warna harus dipilih",
+    }
+    const validation = await validate(request.all(),rules,message);
+    if(validation.fails()){
+      return response.unprocessableEntity(validation.messages());
+    }
 
     const kategoriPekerjaan = await MKategoriPekerjaan.query()
       .where({ id: proyek_id })
@@ -12479,6 +12504,18 @@ class MainController {
     const user = await auth.getUser();
 
     const { deskripsi, lampiran, m_user_id } = request.post();
+    const rules = {
+      deskripsi:"required",
+      
+    }
+    const message={
+      "deskripsi.required":"Deskripsi harus diisi",
+      
+    }
+    const validation = await validate(request.all(),rules,message);
+    if(validation.fails()){
+      return response.unprocessableEntity(validation.messages());
+    }
 
     const forum = await MProyekForum.create({
       deskripsi,
@@ -12512,6 +12549,19 @@ class MainController {
     const user = await auth.getUser();
 
     const { deskripsi, lampiran, m_proyek_id } = request.post();
+    const rules = {
+      deskripsi:"required",
+      
+    }
+    const message={
+      "deskripsi.required":"Deskripsi harus diisi",
+      
+    }
+    const validation = await validate(request.all(),rules,message);
+    if(validation.fails()){
+      return response.unprocessableEntity(validation.messages());
+    }
+
 
     const proyekForum = await MProyekForum.query()
       .where({ id: proyekForum_id })
