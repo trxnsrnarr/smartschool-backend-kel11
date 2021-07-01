@@ -520,7 +520,7 @@ Route.post(
 );
 Route.put(
   "/rekap/:materi_id/:rekapnilai_id/:rekaprombel_id",
-  "MainController.postRekapRombel"
+  "MainController.putRekapRombel"
 );
 Route.delete(
   "/rekap/:materi_id/:rekapnilai_id/:rekaprombel_id",
