@@ -89,6 +89,9 @@ const MKotakMasukKomen = use("App/Models/MKotakMasukKomen");
 const MSurel = use("App/Models/MSurel");
 const MSurelKomen = use("App/Models/MSurelKomen");
 const TkTipeSurel = use("App/Models/TkTipeSurel");
+const MBarang = use("App/Models/MBarang");
+const MLokasi = use("App/Models/MLokasi");
+
 
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
@@ -22948,7 +22951,7 @@ if(validation.fails()){
 
 
   // SARANA PRASARANA SERVICE
-  async getSarana({ response, request, auth }) {
+  async getLokasi({ response, request, auth }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -22957,17 +22960,17 @@ if(validation.fails()){
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const sarpras = await MSarpras.query()
+    const lokasi = await MLokasi.query()
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .fetch();
 
     return response.ok({
-      sarpras: sarpras,
+      lokasi: lokasi,
     });
   }
 
-  async detailSarana({ response, request, params: { sarpras_id } }) {
+  async detailLokasi({ response, request, params: { lokasi_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -22976,10 +22979,50 @@ if(validation.fails()){
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const sarpras = await MSarpras.query().where({ id: sarpras_id }).first();
+    const lokasi = await MLokasi.query().with("barang").where({ id: lokasi_id }).first();
 
     return response.ok({
-      sarpras: sarpras,
+      lokasi: lokasi,
+    });
+  }
+
+  async getBarang({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const barang = await MBarang.query()
+      .with("lokasi")
+      .where({ dihapus: 0 })
+      .fetch();
+
+    const jumlah_barang = await MBarang.query()
+      .where({nama})
+      .count("* as total")
+
+    return response.ok({
+      barang: barang,
+      jumlah_barang
+    });
+  }
+
+  async detailBarang({ response, request, params: { barang_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const barang = await MBarang.query().with("lokasi").where({ id: barang_id }).first();
+
+    return response.ok({
+      barang: barang,
     });
   }
 
