@@ -10437,6 +10437,34 @@ class MainController {
       tag,
       cover,
     } = request.post();
+    const rules = {
+      judul:"required",
+      deskripsi:"required",
+      penulis:"required",
+      penerbit:"required",
+      tahun_terbit:"required",
+      isbn:"required",
+      m_mata_pelajaran_id:"required",
+      tag:"required",
+      buku:"required",
+      cover:"required",
+    }
+    const message={
+      "judul.required":"Judul harus diisi",
+      "deskripsi.required":"Deskripsi harus diisi",
+      "penulis.required":"Penulis harus diisi",
+      "penerbit.required":"Penerbit harus diisi",
+      "tahun_terbit.required":"Tahun Penerbit harus diisi",
+      "isbn.required":"Nomor ISBN harus diisi",
+      "m_mata_pelajaran_id.required":"Mata Pelajaran Terkait harus diisi",
+      "tag.required":"Tag harus diisi",
+      "buku.required":"Buku harus diisi",
+      "cover.required":"Cover harus diisi",
+    }
+    const validation = await validate(request.all(),rules,message);
+    if(validation.fails()){
+      return response.unprocessableEntity(validation.messages());
+    }
     // let bukuBuffer = fs.readFileSync(new URL(`file:///${buku}`));
     // const bukuData = await pdf(bukuBuffer, {
     //   //replaces all occurrences of whitespace with standard spaces (0x20). The default value is `false`.
@@ -10561,6 +10589,34 @@ class MainController {
       tag,
       cover,
     } = request.post();
+    const rules = {
+      judul:"required",
+      deskripsi:"required",
+      penulis:"required",
+      penerbit:"required",
+      tahun_terbit:"required",
+      isbn:"required",
+      m_mata_pelajaran_id:"required",
+      tag:"required",
+      buku:"required",
+      cover:"required",
+    }
+    const message={
+      "judul.required":"Judul harus diisi",
+      "deskripsi.required":"Deskripsi harus diisi",
+      "penulis.required":"Penulis harus diisi",
+      "penerbit.required":"Penerbit harus diisi",
+      "tahun_terbit.required":"Tahun Penerbit harus diisi",
+      "isbn.required":"Nomor ISBN harus diisi",
+      "m_mata_pelajaran_id.required":"Mata Pelajaran Terkait harus diisi",
+      "tag.required":"Tag harus diisi",
+      "buku.required":"Buku harus diisi",
+      "cover.required":"Cover harus diisi",
+    }
+    const validation = await validate(request.all(),rules,message);
+    if(validation.fails()){
+      return response.unprocessableEntity(validation.messages());
+    }
     // let bukuBuffer = fs.readFileSync(new URL(`file:///${buku}`));
     // const bukuData = await pdf(bukuBuffer, {
     //   //replaces all occurrences of whitespace with standard spaces (0x20). The default value is `false`.
@@ -10908,6 +10964,24 @@ class MainController {
 
     const { judul, moda, deskripsi, lampiran, tingkat, m_mata_pelajaran_id } =
       request.post();
+      const rules = {
+        judul:"required",
+        moda:"required",
+        deskripsi:"required",
+        tingkat:"required",
+        lampiran:"required",
+      }
+      const message={
+        "judul.required":"Judul RPP harus diisi",
+        "moda.required":"Moda RPP harus dipilih",
+        "deskripsi.required":"Deskripsi harus diisi",
+        "tingkat.required":"Tingkat/Kelas harus diisi",
+        "lampiran.required":"Lampiran RPP harus diisi",
+      }
+      const validation = await validate(request.all(),rules,message);
+      if(validation.fails()){
+        return response.unprocessableEntity(validation.messages());
+      }
 
     await MRpp.create({
       judul,
@@ -10945,6 +11019,25 @@ class MainController {
 
     const { judul, moda, deskripsi, lampiran, tingkat, m_mata_pelajaran_id } =
       request.post();
+
+      const rules = {
+        judul:"required",
+        moda:"required",
+        deskripsi:"required",
+        tingkat:"required",
+        lampiran:"required",
+      }
+      const message={
+        "judul.required":"Judul RPP harus diisi",
+        "moda.required":"Moda RPP harus dipilih",
+        "deskripsi.required":"Deskripsi harus diisi",
+        "tingkat.required":"Tingkat/Kelas harus diisi",
+        "lampiran.required":"Lampiran RPP harus diisi",
+      }
+      const validation = await validate(request.all(),rules,message);
+      if(validation.fails()){
+        return response.unprocessableEntity(validation.messages());
+      }
 
     const rpp = await MRpp.query().where({ id: rpp_id }).update({
       judul,
@@ -11107,6 +11200,8 @@ class MainController {
     });
   }
 
+  // Validasi sampai sini
+
   async putRekSekolah({ response, request }) {
     const domain = request.headers().origin;
 
@@ -11117,6 +11212,25 @@ class MainController {
     }
 
     const { bank, norek, nama, saldo } = request.post();
+    
+    const rules = {
+      bank:"required",
+      bulan:"required",
+      nominal:"required",
+      tanggal_dibuat:"required",
+      rombel_id:"required",
+    }
+    const message={
+      "bank.required":"Bank harus dipilih",
+      "bulan.required":"Bulan harus dipilih",
+      "nominal.required":"Nominal harus diisi",
+      "tanggal_dibuat.required":"Tanggal dibuat harus diisi",
+      "rombel_id.required":"Bagikan harus dipilih",
+    }
+    const validation = await validate(request.all(),rules,message);
+    if(validation.fails()){
+      return response.unprocessableEntity(validation.messages());
+    }
 
     const check = await MRekSekolah.query()
       .where({ dihapus: 0 })
@@ -16424,7 +16538,7 @@ class MainController {
       try {
         await downloader.download();
       } catch (error) {
-        console.log(error);
+        // console.log(error);
       }
     })();
 
@@ -19570,7 +19684,6 @@ class MainController {
 
   async ubahtipedata({ response, request }) {
     const post = await MPost.query().fetch();
-    // console.log(`${post.judul}`);
 
     // let kontenisi = post.konten
     //   ? Buffer(konten, "base64").toString("ascii").replace("b&", "..........")
