@@ -16274,7 +16274,7 @@ class MainController {
     return await this.importAlumniServices(`tmp/uploads/${fname}`, sekolah);
   }
 
-  async downloadAlumni({ response, request }) {
+  async downloadAlumni({ response, request,auth }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -16282,6 +16282,7 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
+    const user = await auth.getUser();
 
     const alumni = await MAlumni.query()
       .with("user", (builder) => {
@@ -22961,6 +22962,9 @@ if(validation.fails()){
     }
 
     const lokasi = await MLokasi.query()
+    .withCount("barang as total",(builder)=>{
+      builder.where({dihapus:0})
+    })
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .fetch();
@@ -22999,14 +23003,18 @@ if(validation.fails()){
       .with("lokasi")
       .where({ dihapus: 0 })
       .fetch();
-
-    const jumlah_barang = await MBarang.query()
-      .where({nama})
-      .count("* as total")
+    
+    const result = await Promise.all(
+    barang.toJSON().map(async (d) => {
+      const jumlah_barang = await MBarang.query()
+        .where({nama:d.nama})
+        .count("* as total")
+    }));
 
     return response.ok({
       barang: barang,
-      jumlah_barang
+      // jumlah_barang,
+      result,
     });
   }
 
@@ -23133,9 +23141,9 @@ if(validation.fails()){
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
-      return response.forbidden({ message: messageForbidden });
-    }
+    // if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    //   return response.forbidden({ message: messageForbidden });
+    // }
 
     const lokasi = await MLokasi.query().where({ id: lokasi_id }).update({
       dihapus: 1,
@@ -23163,7 +23171,7 @@ if(validation.fails()){
 
     const user = await auth.getUser();
 
-    const { kode_barang, nama, merk, tahun_beli, asal,harga, deskripsi,status,kepemilikan } = request.post();
+    const { kode_barang, nama, merk, tahun_beli, asal,harga, deskripsi,status,kepemilikan,m_lokasi_id } = request.post();
     const rules = {
       kode_barang:"required",
       nama: "required",
@@ -23201,6 +23209,7 @@ if(validation.fails()){
       deskripsi,
       status,
       kepemilikan,
+      m_lokasi_id,
       dihapus: 0,
       
     });
@@ -23303,6 +23312,528 @@ if(validation.fails()){
     });
   }
 
+   // =========== IMPORT Alumni SERVICE ================
+   async importLokasiServices(filelocation, sekolah) {
+    var workbook = new Excel.Workbook();
+
+    workbook = await workbook.xlsx.readFile(filelocation);
+
+    let explanation = workbook.getWorksheet("Daftar Lokasi");
+
+    let colComment = explanation.getColumn("A");
+
+    let data = [];
+
+    colComment.eachCell(async (cell, rowNumber) => {
+      if (rowNumber >= 8) {
+        data.push({
+          jenis: explanation.getCell("B" + rowNumber).value,
+          no_regis: explanation.getCell("C" + rowNumber).value,
+          nama: explanation.getCell("D" + rowNumber).value,
+          lebar: explanation.getCell("E" + rowNumber).value,
+          panjang: explanation.getCell("F" + rowNumber).value,
+          
+        });
+      }
+    });
+
+    const result = await Promise.all(
+      data.map(async (d) => {
+        const lokasi = await MLokasi.create({
+          jenis: d.jenis,
+          nama: d.nama,
+          no_regis: d.no_regis,
+          lebar: d.lebar,
+          panjang: d.panjang,
+          m_sekolah_id: sekolah.id,
+          dihapus: 0,
+        });
+
+        return;
+      })
+    );
+
+    return result;
+  }
+
+  async importLokasi({ request, response, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let file = request.file("file");
+    let fname = `import-excel.${file.extname}`;
+
+    //move uploaded file into custom folder
+    await file.move(Helpers.tmpPath("/uploads"), {
+      name: fname,
+      overwrite: true,
+    });
+
+    if (!file.moved()) {
+      return fileUpload.error();
+    }
+
+    return await this.importLokasiServices(`tmp/uploads/${fname}`, sekolah);
+  }
+
+  async downloadLokasi({ response, request,auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const lokasi = await MLokasi.query()
+      .where({ dihapus: 0 })
+      .fetch();
+
+    let workbook = new Excel.Workbook();
+    let worksheet = workbook.addWorksheet(`Daftar Lokasi`);
+    worksheet.mergeCells("A1:F1");
+    worksheet.mergeCells("A2:F2");
+    worksheet.getCell(
+      "A3"
+    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    worksheet.addConditionalFormatting({
+      ref: "A1:F2",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 16,
+              bold: true,
+            },
+            // fill: {
+            //   type: "pattern",
+            //   pattern: "solid",
+            //   bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            // },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            // border: {
+            //   top: { style: "thin" },
+            //   left: { style: "thin" },
+            //   bottom: { style: "thin" },
+            //   right: { style: "thin" },
+            // },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: "A4:F4",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+    await Promise.all(
+      lokasi.toJSON().map(async (d, idx) => {
+        worksheet.getCell("A1").value = "Rekap Lokasi";
+        worksheet.getCell("A2").value = sekolah.nama;
+        worksheet.addConditionalFormatting({
+          ref: `B${(idx + 1) * 1 + 4}:F${(idx + 1) * 1 + 4}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet.addConditionalFormatting({
+          ref: `A${(idx + 1) * 1 + 4}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        // add column headers
+        worksheet.getRow(4).values = [
+          "No",
+          "Jenis",
+          "Nama",
+          "Nomor Registrasi",
+          "Lebar",
+          "Panjang",
+        ];
+        worksheet.columns = [
+          { key: "no" },
+          { key: "jenis" },
+          { key: "nama" },
+          { key: "no_regis" },
+          { key: "lebar" },
+          { key: "panjang" },
+        ];
+
+        // Add row using key mapping to columns
+        let row = worksheet.addRow({
+          no: `${idx + 1}`,
+          jenis: d ? d.jenis : "-",
+          nama: d ? d.nama : "-",
+          no_regis: d ? d.no_regis : "-",
+          lebar: d ? d.lebar : "-",
+          panjang: d ? d.panjang : "-",
+        });
+      })
+    );
+    let namaFile = `/uploads/rekap-Lokasi.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
+
+  async importBarangServices(filelocation, sekolah) {
+    var workbook = new Excel.Workbook();
+
+    workbook = await workbook.xlsx.readFile(filelocation);
+
+    let explanation = workbook.getWorksheet("Daftar Barang");
+
+    let colComment = explanation.getColumn("A");
+
+    let data = [];
+
+    colComment.eachCell(async (cell, rowNumber) => {
+      if (rowNumber >= 8) {
+        data.push({
+          kode_barang: explanation.getCell("B" + rowNumber).value,
+          nama: explanation.getCell("D" + rowNumber).value,
+          merk: explanation.getCell("C" + rowNumber).value,
+          tahun_beli: explanation.getCell("E" + rowNumber).value,
+          asal: explanation.getCell("F" + rowNumber).value,
+          harga: explanation.getCell("F" + rowNumber).value,
+          deskripsi: explanation.getCell("F" + rowNumber).value,
+          status: explanation.getCell("F" + rowNumber).value,
+          kepemilikan: explanation.getCell("F" + rowNumber).value,
+        });
+      }
+    });
+
+    const result = await Promise.all(
+      data.map(async (d) => {
+        const barang = await MBarang.create({
+          kode_barang: d.kode_barang,
+          nama: d.nama,
+          merk: d.merk,
+          tahun_beli: d.tahun_beli,
+          asal: d.asal,
+          harga: d.harga,
+          deskripsi: d.deskripsi,
+          status: d.status,
+          kepemilikan: d.kepemilikan,
+          dihapus: 0,
+        });
+
+        return;
+      })
+    );
+
+    return result;
+  }
+
+  async importBarang({ request, response, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let file = request.file("file");
+    let fname = `import-excel.${file.extname}`;
+
+    //move uploaded file into custom folder
+    await file.move(Helpers.tmpPath("/uploads"), {
+      name: fname,
+      overwrite: true,
+    });
+
+    if (!file.moved()) {
+      return fileUpload.error();
+    }
+
+    return await this.importBarangServices(`tmp/uploads/${fname}`, sekolah);
+  }
+
+  async downloadBarang({ response, request,auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const barang = await MBarang.query()
+      .with("lokasi", (builder) => {
+        builder.where({ m_sekolah_id: sekolah.id }).andWhere({dihapus:0});
+      })
+      .where({ dihapus: 0 })
+      .fetch();
+
+    let workbook = new Excel.Workbook();
+    let worksheet = workbook.addWorksheet(`Daftar Barang`);
+    worksheet.mergeCells("A1:K1");
+    worksheet.mergeCells("A2:K2");
+    worksheet.getCell(
+      "A3"
+    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    worksheet.addConditionalFormatting({
+      ref: "A1:K2",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 16,
+              bold: true,
+            },
+            // fill: {
+            //   type: "pattern",
+            //   pattern: "solid",
+            //   bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            // },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            // border: {
+            //   top: { style: "thin" },
+            //   left: { style: "thin" },
+            //   bottom: { style: "thin" },
+            //   right: { style: "thin" },
+            // },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: "A4:K4",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+    await Promise.all(
+      barang.toJSON().map(async (d, idx) => {
+        worksheet.getCell("A1").value = "Rekap Barang";
+        worksheet.getCell("A2").value = sekolah.nama;
+        worksheet.addConditionalFormatting({
+          ref: `B${(idx + 1) * 1 + 4}:K${(idx + 1) * 1 + 4}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet.addConditionalFormatting({
+          ref: `A${(idx + 1) * 1 + 4}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        // add column headers
+        worksheet.getRow(4).values = [
+          "No",
+          "Kode Barang",
+          "Nama",
+          "Merk",
+          "Tahun dibeli",
+          "Asal",
+          "Harga",
+          "Deskripsi",
+          "Status",
+          "Kepemilikan",
+          "Lokasi",
+        ];
+        worksheet.columns = [
+          { key: "no" },
+          { key: "kode_barang" },
+          { key: "nama" },
+          { key: "merk" },
+          { key: "tahun_beli" },
+          { key: "asal" },
+          { key: "harga" },
+          { key: "deskripsi" },
+          { key: "status" },
+          { key: "kepemilikan" },
+          { key: "lokasi" },
+        ];
+
+        // Add row using key mapping to columns
+        let row = worksheet.addRow({
+          no: `${idx + 1}`,
+          kode_barang: d ? d.kode_barang : "-",
+          nama: d ? d.nama : "-",
+          merk: d ? d.merk : "-",
+          tahun_beli: d ? d.tahun_beli : "-",
+          asal: d ? d.asal : "-",
+          harga: d ? d.harga : "-",
+          deskripsi: d ? d.deskripsi : "-",
+          status: d ? d.status : "-",
+          kepemilikan: d ? d.kepemilikan : "-",
+          lokasi: d.lokasi ? d.lokasi.nama : "-",
+        });
+      })
+    );
+    let namaFile = `/uploads/rekap-Barang.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
 
 }
 module.exports = MainController;
