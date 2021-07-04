@@ -23325,7 +23325,7 @@ if(validation.fails()){
     let data = [];
 
     colComment.eachCell(async (cell, rowNumber) => {
-      if (rowNumber >= 8) {
+      if (rowNumber >= 5) {
         data.push({
           jenis: explanation.getCell("B" + rowNumber).value,
           no_regis: explanation.getCell("C" + rowNumber).value,
@@ -23574,17 +23574,17 @@ if(validation.fails()){
     let data = [];
 
     colComment.eachCell(async (cell, rowNumber) => {
-      if (rowNumber >= 8) {
+      if (rowNumber >= 5) {
         data.push({
           kode_barang: explanation.getCell("B" + rowNumber).value,
-          nama: explanation.getCell("D" + rowNumber).value,
-          merk: explanation.getCell("C" + rowNumber).value,
+          nama: explanation.getCell("C" + rowNumber).value,
+          merk: explanation.getCell("D" + rowNumber).value,
           tahun_beli: explanation.getCell("E" + rowNumber).value,
           asal: explanation.getCell("F" + rowNumber).value,
-          harga: explanation.getCell("F" + rowNumber).value,
-          deskripsi: explanation.getCell("F" + rowNumber).value,
-          status: explanation.getCell("F" + rowNumber).value,
-          kepemilikan: explanation.getCell("F" + rowNumber).value,
+          harga: explanation.getCell("G" + rowNumber).value,
+          deskripsi: explanation.getCell("H" + rowNumber).value,
+          status: explanation.getCell("I" + rowNumber).value,
+          kepemilikan: explanation.getCell("J" + rowNumber).value,
         });
       }
     });
