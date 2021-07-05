@@ -4759,7 +4759,7 @@ class MainController {
     });
   }
 
-  // Belum Validasi
+  // Belum Validasi tidak perlu
   async postTopik({ response, request, auth }) {
     const domain = request.headers().origin;
 
