@@ -650,5 +650,23 @@ Route.delete("/surel-tipe", "MainController.deleteSurelTipe");
 Route.put("/surel-dibaca", "MainController.dibacaSurelTipe");
 Route.post("/surel-komen/:surel_id", "MainController.postSurelKomen");
 
+// Sarana Service
+Route.get("/sarana","MainController.getBarang");
+Route.get("/sarana/:barang_id","MainController.detailBarang");
+Route.post("/sarana","MainController.postBarang");
+Route.put("/sarana/:barang_id","MainController.putBarang");
+Route.delete("/sarana/:barang_id","MainController.deleteBarang");
+Route.post("/sarana/import","MainController.importBarang");
+Route.post("/sarana/download","MainController.downloadBarang");
+
+// prasarana Service
+Route.get("/prasarana","MainController.getLokasi");
+Route.get("/prasarana/:lokasi_id","MainController.detailLokasi");
+Route.post("/prasarana","MainController.postLokasi");
+Route.put("/prasarana/:lokasi_id","MainController.putLokasi");
+Route.delete("/prasarana/:lokasi_id","MainController.deleteLokasi");
+Route.post("/prasarana/import","MainController.importLokasi");
+Route.post("/prasarana/download","MainController.downloadLokasi");
+
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
