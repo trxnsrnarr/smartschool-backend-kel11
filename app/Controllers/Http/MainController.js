@@ -109,7 +109,7 @@ const PDFExtract = require("pdf.js-extract").PDFExtract;
 const Hash = use("Hash");
 const Helpers = use("Helpers");
 const axios = require("axios");
-// const Mail = use("Mail");
+const Mail = use("Mail");
 const { validate } = use("Validator");
 const slugify = require("slugify");
 const Excel = require("exceljs");
@@ -1242,22 +1242,6 @@ class MainController {
     }
 
     const { gender, nama, whatsapp, password, avatar } = request.post();
-    const rules = {
-      nama:"required",
-      whatsapp:"required",
-      gender:"required",
-      password:"required",
-    }
-    const message={
-      "nama.required":"Nama harus diisi",
-      "whatsapp.required":"Whatsapp harus diisi",
-      "gender.required":"Jenis Kelamin harus diisi",
-      "password.required":"Password harus diisi",
-    }
-    const validation = await validate(request.all(),rules,message);
-    if(validation.fails()){
-      return response.unprocessableEntity(validation.messages());
-    }
 
     const validation = await validate(
       request.post(),
@@ -1487,20 +1471,6 @@ class MainController {
     }
 
     const { nama, whatsapp, password, gender, avatar } = request.post();
-    const rules = {
-      nama:"required",
-      whatsapp:"required",
-      gender:"required",
-    }
-    const message={
-      "nama.required":"Nama harus diisi",
-      "whatsapp.required":"Whatsapp harus diisi",
-      "gender.required":"Jenis Kelamin harus diisi",
-    }
-    const validation = await validate(request.all(),rules,message);
-    if(validation.fails()){
-      return response.unprocessableEntity(validation.messages());
-    }
 
     const validation = await validate(
       request.post(),
@@ -12181,7 +12151,7 @@ class MainController {
     });
 
 
-    // email Service
+  //   // email Service
   //   const userIds = await MAnggotaRombel.query()
   //   .with("user")
   //   .where({ m_rombel_id: rombel_id })
@@ -12189,20 +12159,22 @@ class MainController {
 
   //  const result = await Promise.all(
   //     userIds.toJSON().map(async (d) => {
-  //        const gmail = await Mail.send(`emails.tugas`,d,(message)=>{
-  //          message
-  //          .to("raihanvans@gmail.com")
-  //          .from(d.user.email)
-  //          .subject(d.user.nama)
-  //          .text(`${d.user.nama} `)
-  //        })
-                   
-  //        if (gmail) {
-  //          return response.ok({
-  //            message: messageEmailSuccess,
-  //          });
-  //        }
-  //       return d.user.nama;
+  //       if(d.user.email != null){
+  //         const gmail = await Mail.send(`emails.spp`,d,(message)=>{
+  //           message
+  //           .to("raihanvans@gmail.com")
+  //           .from("no-reply@smarteschool.id")
+  //           .subject("Pembayaran SPP")
+  //           .text(`${d.user.nama} `)
+  //         })
+          
+  //         if (gmail) {
+  //           return response.ok({
+  //             message: messageEmailSuccess,
+  //           });
+  //         }
+  //         // return d.user.nama;
+  //       }
   //     })
   //   );
 
@@ -12218,8 +12190,7 @@ class MainController {
         //    });
         //  }
 
-    // return result;
-
+  
     if (rombel_id.length) {
       await Promise.all(
         rombel_id.map(async (d) => {
@@ -12238,38 +12209,48 @@ class MainController {
               m_sekolah_id: sekolah.id,
             });
 
-            const userIds = await MAnggotaRombel.query()
-              .where({ m_rombel_id: d })
-              .pluck("m_user_id");
+            // const userIds = await MAnggotaRombel.query()
+            //   .where({ m_rombel_id: d })
+            //   .pluck("m_user_id");
+
+              const userIds = await MAnggotaRombel.query()
+              .with("user")
+              .where({ m_rombel_id: rombel_id })
+              .fetch();
 
             await Promise.all(
-              userIds.map(async (user) => {
+              userIds.toJSON().map(async (e) => {
                 await MPembayaranSiswa.create({
                   status: "belum lunas",
                   dihapus: 0,
-                  m_user_id: user,
+                  m_user_id: e.m_user_id,
                   tk_pembayaran_rombel_id: tkPembayaran.id,
                   m_sekolah_id: sekolah.id,
                 });
-                 // const gmail = await Mail.raw(`${perihal}` ,(message)=>{
-                 //   message
-                 //   .to(email)
-                 //   .from(useremail.email)
-                 //   .subject(perihal)
-                 //   .text(`${isi} ${lampiran}`)
-                 // })
-                           
-                 // if (gmail) {
-                 //   return response.ok({
-                 //     message: messageEmailSuccess,
-                 //   });
-                 // }
+                if(e.user.email != null){
+                  const gmail = await Mail.send(`emails.spp`,e,(message)=>{
+                    message
+                    .to(`${e.user.email}`)
+                    .from("no-reply@smarteschool.id")
+                    .subject("Pembayaran SPP")
+                  })
+                  
+                  if (gmail) {
+                    return response.ok({
+                      message: messageEmailSuccess,
+                    });
+                  }
+                  // return d.user.nama;
+                }
               })
             );
           }
         })
       );
     }
+
+    // return result;
+
 
     return response.ok({
       message: messagePostSuccess,
@@ -23251,6 +23232,21 @@ class MainController {
           .where({ dihapus: 0 })
           .andWhere({ tipe: "draf" })
           .paginate();
+      }else if (tipe == "arsip") {
+        surel = await TkTipeSurel.query()
+          .with("surel", (builder) => {
+            builder
+              .withCount("komen", (builder) => {
+                builder.where({ dihapus: 0 });
+              })
+
+              .where({ dihapus: 0 })
+              .andWhere({ m_user_pengirim_id: user.id })
+              .andWhere("perihal", "like", `%${search}%`);
+          })
+          .where({ dihapus: 0 })
+          .andWhere({ tipe: "arsip" })
+          .paginate();
       }
     } else {
       // ===== service Perusahaan saya ====
@@ -23292,6 +23288,21 @@ class MainController {
           })
           .where({ dihapus: 0 })
           .andWhere({ tipe: "draf" })
+          .paginate();
+      } else if (tipe == "arsip") {
+        surel = await TkTipeSurel.query()
+          .with("surel", (builder) => {
+            builder
+              .withCount("komen", (builder) => {
+                builder.where({ dihapus: 0 });
+              })
+
+              .where({ dihapus: 0 })
+              .andWhere({ m_user_pengirim_id: user.id })
+              .andWhere("perihal", "like", `%${search}%`);
+          })
+          .where({ dihapus: 0 })
+          .andWhere({ tipe: "arsip" })
           .paginate();
       }
     }
@@ -23684,6 +23695,38 @@ if(validation.fails()){
     });
   }
 
+  async putSurelArsip({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    // mengambil data user
+    const user = await auth.getUser();
+
+    const { tipe_surel_id } = request.post();
+
+    const tipe = await Promise.all(
+      tipe_surel_id.map(async (d) => {
+        await TkTipeSurel.query().where({ id: d }).update({
+          tipe:"arsip",
+        });
+      })
+    );
+
+    if (!tipe) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
 
   // SARANA PRASARANA SERVICE
   async getLokasi({ response, request, auth }) {
