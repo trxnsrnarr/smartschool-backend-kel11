@@ -1493,12 +1493,12 @@ class MainController {
       "whatsapp.required": "Whatsapp harus diisi",
       "gender.required": "Jenis Kelamin harus diisi",
     };
-    const validation = await validate(request.all(), rules, message);
+    let validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const validation = await validate(
+    validation = await validate(
       request.post(),
       rulesUserPost,
       messagesUser
