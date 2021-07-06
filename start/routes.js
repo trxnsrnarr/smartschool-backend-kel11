@@ -649,6 +649,7 @@ Route.put("/surel-draf/:surel_id", "MainController.putSurelDraf");
 Route.delete("/surel-tipe", "MainController.deleteSurelTipe");
 Route.put("/surel-dibaca", "MainController.dibacaSurelTipe");
 Route.post("/surel-komen/:surel_id", "MainController.postSurelKomen");
+Route.put("/surel-arsip", "MainController.putSurelArsip");
 
 // Sarana Service
 Route.get("/sarana","MainController.getBarang");
