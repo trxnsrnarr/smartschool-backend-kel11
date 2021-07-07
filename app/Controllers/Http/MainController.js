@@ -23386,8 +23386,18 @@ class MainController {
     }
 
     const user = await auth.getUser();
+
+    const dibaca =  await TkTipeSurel.query().where({ m_surel_id: surel_id }).update({
+      dibaca: 1,
+    });
     // const { rombel_id } = request.post();
     const surel = await MSurel.query()
+      .with("userPengirim",(builder)=>{
+        builder.select("id","nama","email");
+      })
+      .with("userTujuan",(builder)=>{
+        builder.select("id","nama","email");
+      })
       .with("komen", (builder) => {
         builder.with("user", (builder) => {
           builder.select("id", "nama");
