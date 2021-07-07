@@ -23254,6 +23254,9 @@ class MainController {
         surel = await TkTipeSurel.query()
           .with("surel", (builder) => {
             builder
+            .with("userPengirim",(builder)=>{
+              builder.select("id","nama","email");
+            })
               .withCount("komen", (builder) => {
                 builder.where({ dihapus: 0 });
               })
@@ -23268,6 +23271,9 @@ class MainController {
         surel = await TkTipeSurel.query()
           .with("surel", (builder) => {
             builder
+            .with("userPengirim",(builder)=>{
+              builder.select("id","nama","email");
+            })
               .withCount("komen", (builder) => {
                 builder.where({ dihapus: 0 });
               })
@@ -23283,6 +23289,9 @@ class MainController {
         surel = await TkTipeSurel.query()
           .with("surel", (builder) => {
             builder
+            .with("userPengirim",(builder)=>{
+              builder.select("id","nama","email");
+            })
               .withCount("komen", (builder) => {
                 builder.where({ dihapus: 0 });
               })
@@ -23298,6 +23307,9 @@ class MainController {
         surel = await TkTipeSurel.query()
           .with("surel", (builder) => {
             builder
+            .with("userPengirim",(builder)=>{
+              builder.select("id","nama","email");
+            })
               .withCount("komen", (builder) => {
                 builder.where({ dihapus: 0 });
               })
@@ -23316,6 +23328,9 @@ class MainController {
         surel = await TkTipeSurel.query()
           .with("surel", (builder) => {
             builder
+            .with("userPengirim",(builder)=>{
+              builder.select("id","nama","email");
+            })
               .withCount("komen", (builder) => {
                 builder.where({ dihapus: 0 });
               })
@@ -23329,6 +23344,9 @@ class MainController {
         surel = await TkTipeSurel.query()
           .with("surel", (builder) => {
             builder
+            .with("userPengirim",(builder)=>{
+              builder.select("id","nama","email");
+            })
               .withCount("komen", (builder) => {
                 builder.where({ dihapus: 0 });
               })
@@ -23342,6 +23360,9 @@ class MainController {
         surel = await TkTipeSurel.query()
           .with("surel", (builder) => {
             builder
+            .with("userPengirim",(builder)=>{
+              builder.select("id","nama","email");
+            })
               .withCount("komen", (builder) => {
                 builder.where({ dihapus: 0 });
               })
@@ -23355,6 +23376,9 @@ class MainController {
         surel = await TkTipeSurel.query()
           .with("surel", (builder) => {
             builder
+            .with("userPengirim",(builder)=>{
+              builder.select("id","nama","email");
+            })
               .withCount("komen", (builder) => {
                 builder.where({ dihapus: 0 });
               })
