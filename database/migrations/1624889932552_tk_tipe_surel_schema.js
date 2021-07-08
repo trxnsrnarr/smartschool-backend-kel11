@@ -20,6 +20,12 @@ class TkTipeSurelSchema extends Schema {
         .onDelete("cascade")
         .onUpdate("cascade");
       table.string("tipe");
+      table.integer("m_folder_arsip_id").unsigned().index("m_folder_arsip_id");
+      table
+        .foreign("m_folder_arsip_id")
+        .references("m_folder_arsip.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
       table.boolean("dibaca").defaultTo(0);
       table.boolean("dihapus").defaultTo(0);
       table.timestamps();
