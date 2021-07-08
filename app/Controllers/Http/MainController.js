@@ -23266,6 +23266,7 @@ class MainController {
           })
           .where({ dihapus: 0 })
           .andWhere({ tipe: "terkirim" })
+          .andWhere({ m_user_id: user.id })
           .paginate();
       } else if (tipe == "masuk") {
         surel = await TkTipeSurel.query()
@@ -23284,6 +23285,7 @@ class MainController {
           })
           .where({ dihapus: 0 })
           .andWhere({ tipe: "masuk" })
+          .andWhere({ m_user_id: user.id })
           .paginate();
       } else if (tipe == "draf") {
         surel = await TkTipeSurel.query()
@@ -23302,6 +23304,7 @@ class MainController {
           })
           .where({ dihapus: 0 })
           .andWhere({ tipe: "draf" })
+          .andWhere({ m_user_id: user.id })
           .paginate();
       }else if (tipe == "arsip") {
         surel = await TkTipeSurel.query()
@@ -23320,6 +23323,7 @@ class MainController {
           })
           .where({ dihapus: 0 })
           .andWhere({ tipe: "arsip" })
+          .andWhere({ m_user_id: user.id })
           .paginate();
       }
     } else {
@@ -23339,6 +23343,7 @@ class MainController {
           })
           .where({ dihapus: 0 })
           .andWhere({ tipe: "terkirim" })
+          .andWhere({ m_user_id: user.id })
           .paginate();
       } else if (tipe == "masuk") {
         surel = await TkTipeSurel.query()
@@ -23355,6 +23360,7 @@ class MainController {
           })
           .where({ dihapus: 0 })
           .andWhere({ tipe: "masuk" })
+          .andWhere({ m_user_id: user.id })
           .paginate();
       } else if (tipe == "draf") {
         surel = await TkTipeSurel.query()
@@ -23371,6 +23377,7 @@ class MainController {
           })
           .where({ dihapus: 0 })
           .andWhere({ tipe: "draf" })
+          .andWhere({ m_user_id: user.id })
           .paginate();
       } else if (tipe == "arsip") {
         surel = await TkTipeSurel.query()
@@ -23389,6 +23396,7 @@ class MainController {
           })
           .where({ dihapus: 0 })
           .andWhere({ tipe: "arsip" })
+          .andWhere({ m_user_id: user.id })
           .paginate();
       }
     }
@@ -23487,11 +23495,13 @@ class MainController {
     const masuk = await TkTipeSurel.create({
       m_surel_id: surel.id,
       tipe: "masuk",
+      m_user_id:`${tujuan ? tujuan : null}`,
     });
 
     const terkirim = await TkTipeSurel.create({
       m_surel_id: surel.id,
       tipe: "terkirim",
+      m_user_id: user.id,
     });
 
     // const gmail = await Mail.raw(`${perihal}` ,(message)=>{
@@ -23544,6 +23554,7 @@ class MainController {
     const draf = await TkTipeSurel.create({
       m_surel_id: surel.id,
       tipe: "draf",
+      m_user_id: user.id,
     });
 
     return response.ok({
@@ -23604,15 +23615,17 @@ class MainController {
       .where({ m_surel_id: surel_id })
       .delete();
 
-    const masuk = await TkTipeSurel.create({
-      m_surel_id: surel_id,
-      tipe: "masuk",
-    });
-
-    const terkirim = await TkTipeSurel.create({
-      m_surel_id: surel_id,
-      tipe: "terkirim",
-    });
+      const masuk = await TkTipeSurel.create({
+        m_surel_id: surel_id,
+        tipe: "masuk",
+        m_user_id:`${tujuan ? tujuan : null}`,
+      });
+  
+      const terkirim = await TkTipeSurel.create({
+        m_surel_id: surel_id,
+        tipe: "terkirim",
+        m_user_id: user.id,
+      });
 
     if (!surel) {
       return response.notFound({
