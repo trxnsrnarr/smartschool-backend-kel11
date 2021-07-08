@@ -5222,11 +5222,17 @@ class MainController {
 
         if (list_anggota.length) {
           anggotaRombel = await MAnggotaRombel.query()
+            .with("user", (builder) => {
+              builder.select("id", "email").where({ dihapus: 0 });
+            })
             .where({ m_rombel_id: list_rombel[0] })
             .whereIn("m_user_id", list_anggota)
             .fetch();
         } else {
           anggotaRombel = await MAnggotaRombel.query()
+            .with("user", (builder) => {
+              builder.select("id", "email").where({ dihapus: 0 });
+            })
             .whereIn("m_rombel_id", list_rombel)
             .fetch();
         }
@@ -5242,6 +5248,21 @@ class MainController {
                 m_timeline_id: timeline.id,
                 dihapus: 0,
               });
+              if (d.user.email != null) {
+                const gmail = await Mail.send(`emails.tugas`, d, (message) => {
+                  message
+                    .to(`${d.user.email}`)
+                    .from("no-reply@smarteschool.id")
+                    .subject("Pembayaran SPP");
+                });
+
+                if (gmail) {
+                  return response.ok({
+                    message: messageEmailSuccess,
+                  });
+                }
+                // return d.user.nama;
+              }
             })
           );
         } else {
@@ -5256,6 +5277,25 @@ class MainController {
                       m_timeline_id: t.id,
                       dihapus: 0,
                     });
+                  }
+                  if (d.user.email != null) {
+                    const gmail = await Mail.send(
+                      `emails.tugas`,
+                      d,
+                      (message) => {
+                        message
+                          .to(`${d.user.email}`)
+                          .from("no-reply@smarteschool.id")
+                          .subject("Pembayaran SPP");
+                      }
+                    );
+
+                    if (gmail) {
+                      return response.ok({
+                        message: messageEmailSuccess,
+                      });
+                    }
+                    // return d.user.nama;
                   }
                 })
               );
@@ -5345,10 +5385,16 @@ class MainController {
 
         if (list_anggota) {
           anggotaRombel = await MAnggotaRombel.query()
+            .with("user", (builder) => {
+              builder.select("id", "email").where({ dihapus: 0 });
+            })
             .whereIn("m_user_id", list_anggota)
             .fetch();
         } else {
           anggotaRombel = await MAnggotaRombel.query()
+            .with("user", (builder) => {
+              builder.select("id", "email").where({ dihapus: 0 });
+            })
             .whereIn("m_rombel_id", list_rombel)
             .fetch();
         }
@@ -5363,6 +5409,21 @@ class MainController {
               m_timeline_id: timeline.id,
               dihapus: 0,
             });
+            if (d.user.email != null) {
+              const gmail = await Mail.send(`emails.tugas`, d, (message) => {
+                message
+                  .to(`${d.user.email}`)
+                  .from("no-reply@smarteschool.id")
+                  .subject("Pembayaran SPP");
+              });
+
+              if (gmail) {
+                return response.ok({
+                  message: messageEmailSuccess,
+                });
+              }
+              // return d.user.nama;
+            }
           })
         );
 
@@ -12193,7 +12254,9 @@ class MainController {
             //   .pluck("m_user_id");
 
             const userIds = await MAnggotaRombel.query()
-              .with("user")
+              .with("user", (builder) => {
+                builder.select("id", "email").where({ dihapus: 0 });
+              })
               .where({ m_rombel_id: rombel_id })
               .fetch();
 
@@ -23186,6 +23249,9 @@ class MainController {
         surel = await TkTipeSurel.query()
           .with("surel", (builder) => {
             builder
+              .with("userPengirim", (builder) => {
+                builder.select("id", "nama", "email");
+              })
               .withCount("komen", (builder) => {
                 builder.where({ dihapus: 0 });
               })
@@ -23200,6 +23266,9 @@ class MainController {
         surel = await TkTipeSurel.query()
           .with("surel", (builder) => {
             builder
+              .with("userPengirim", (builder) => {
+                builder.select("id", "nama", "email");
+              })
               .withCount("komen", (builder) => {
                 builder.where({ dihapus: 0 });
               })
@@ -23215,6 +23284,9 @@ class MainController {
         surel = await TkTipeSurel.query()
           .with("surel", (builder) => {
             builder
+              .with("userPengirim", (builder) => {
+                builder.select("id", "nama", "email");
+              })
               .withCount("komen", (builder) => {
                 builder.where({ dihapus: 0 });
               })
@@ -23230,6 +23302,9 @@ class MainController {
         surel = await TkTipeSurel.query()
           .with("surel", (builder) => {
             builder
+              .with("userPengirim", (builder) => {
+                builder.select("id", "nama", "email");
+              })
               .withCount("komen", (builder) => {
                 builder.where({ dihapus: 0 });
               })
@@ -23248,6 +23323,9 @@ class MainController {
         surel = await TkTipeSurel.query()
           .with("surel", (builder) => {
             builder
+              .with("userPengirim", (builder) => {
+                builder.select("id", "nama", "email");
+              })
               .withCount("komen", (builder) => {
                 builder.where({ dihapus: 0 });
               })
@@ -23261,6 +23339,9 @@ class MainController {
         surel = await TkTipeSurel.query()
           .with("surel", (builder) => {
             builder
+              .with("userPengirim", (builder) => {
+                builder.select("id", "nama", "email");
+              })
               .withCount("komen", (builder) => {
                 builder.where({ dihapus: 0 });
               })
@@ -23274,6 +23355,9 @@ class MainController {
         surel = await TkTipeSurel.query()
           .with("surel", (builder) => {
             builder
+              .with("userPengirim", (builder) => {
+                builder.select("id", "nama", "email");
+              })
               .withCount("komen", (builder) => {
                 builder.where({ dihapus: 0 });
               })
@@ -23287,6 +23371,9 @@ class MainController {
         surel = await TkTipeSurel.query()
           .with("surel", (builder) => {
             builder
+              .with("userPengirim", (builder) => {
+                builder.select("id", "nama", "email");
+              })
               .withCount("komen", (builder) => {
                 builder.where({ dihapus: 0 });
               })
@@ -23318,8 +23405,20 @@ class MainController {
     }
 
     const user = await auth.getUser();
+
+    const dibaca = await TkTipeSurel.query()
+      .where({ m_surel_id: surel_id })
+      .update({
+        dibaca: 1,
+      });
     // const { rombel_id } = request.post();
     const surel = await MSurel.query()
+      .with("userPengirim", (builder) => {
+        builder.select("id", "nama", "email");
+      })
+      .with("userTujuan", (builder) => {
+        builder.select("id", "nama", "email");
+      })
       .with("komen", (builder) => {
         builder.with("user", (builder) => {
           builder.select("id", "nama");

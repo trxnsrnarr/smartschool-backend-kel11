@@ -14,42 +14,10 @@ class MSikapSiswaSchema extends Schema {
         .references("m_user.id")
         .onDelete("cascade")
         .onUpdate("cascade");
-      table
-        .integer("m_sikap_sosial_ditunjukkan_id")
-        .unsigned()
-        .index("m_sikap_sosial_ditunjukkan_id");
-      table
-        .foreign("m_sikap_sosial_ditunjukkan_id")
-        .references("m_sikap_sosial.id")
-        .onDelete("cascade")
-        .onUpdate("cascade");
-      table
-        .integer("m_sikap_sosial_ditingkatkan_id")
-        .unsigned()
-        .index("m_sikap_sosial_ditingkatkan_id");
-      table
-        .foreign("m_sikap_sosial_ditingkatkan_id")
-        .references("m_sikap_sosial.id")
-        .onDelete("cascade")
-        .onUpdate("cascade");
-      table
-        .integer("m_sikap_spiritual_ditunjukkan_id")
-        .unsigned()
-        .index("m_sikap_spiritual_ditunjukkan_id");
-      table
-        .foreign("m_sikap_spiritual_ditunjukkan_id")
-        .references("m_sikap_spiritual.id")
-        .onDelete("cascade")
-        .onUpdate("cascade");
-      table
-        .integer("m_sikap_spiritual_ditingkatkan_id")
-        .unsigned()
-        .index("m_sikap_spiritual_ditingkatkan_id");
-      table
-        .foreign("m_sikap_spiritual_ditingkatkan_id")
-        .references("m_sikap_spiritual.id")
-        .onDelete("cascade")
-        .onUpdate("cascade");
+      table.string("m_sikap_sosial_ditunjukkan_id");
+      table.string("m_sikap_sosial_ditingkatkan_id");
+      table.string("m_sikap_spiritual_ditunjukkan_id");
+      table.string("m_sikap_spiritual_ditingkatkan_id");
       table.boolean("status");
       table.boolean("dihapus").defaultTo(0);
       table.timestamps();
