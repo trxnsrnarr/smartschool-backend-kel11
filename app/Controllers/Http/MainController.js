@@ -23228,6 +23228,39 @@ class MainController {
 
     const user = await auth.getUser();
 
+    const check = await MFolderArsip.query()
+      .where({dihapus:0})
+      .andWhere({m_user_id:user.id})
+      .first()
+
+    if(!check){
+      await MFolderArsip.create({
+        nama: "Edaran",
+        pin:1,
+        dihapus: 0,
+        m_user_id: user.id,
+      });
+      await MFolderArsip.create({
+        nama: "Perintah",
+        pin:1,
+        dihapus: 0,
+        m_user_id: user.id,
+      });
+      await MFolderArsip.create({
+        nama: "Undangan",
+        pin:1,
+        dihapus: 0,
+        m_user_id: user.id,
+      });
+      await MFolderArsip.create({
+        nama: "Pengantar",
+        pin:1,
+        dihapus: 0,
+        m_user_id: user.id,
+      });
+  
+    }
+
     const { tipe, search } = request.get();
 
     let surel;
@@ -23803,17 +23836,155 @@ class MainController {
     // mengambil data user
     const user = await auth.getUser();
 
-    const { tipe_surel_id } = request.post();
+    const { tipe_surel_id, arsip_id } = request.post();
 
     const tipe = await Promise.all(
       tipe_surel_id.map(async (d) => {
         await TkTipeSurel.query().where({ id: d }).update({
           tipe: "arsip",
+          m_folder_id: arsip_id,
         });
       })
     );
 
     if (!tipe) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async postFolderArsip({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { nama } = request.post();
+
+    const arsip = await MFolderArsip.create({
+      nama,
+      m_user_id: user.id,
+      pin:0,
+      dihapus: 0,
+    });
+
+    const rules = {
+      nama: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  // ============ POST Rekap Tugas =================
+
+  async putFolderArsip({ response, request, auth, params: { arsip_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { nama } = request.post();
+
+    const rules = {
+      nama: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const arsip = await MFolderArsip.query()
+      .where({ id: arsip_id })
+      .update({
+        nama,
+        dihapus: 0,
+      });
+
+    if (!arsip) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async putPinFolderArsip({ response, request, auth, params: { arsip_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const arsip = await MFolderArsip.query()
+      .where({ id: arsip_id })
+      .update({
+        pin:1,
+        dihapus: 0,
+      });
+
+    if (!arsip) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteFolderArsip({ response, request, auth, params: { arsip_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    // mengambil data user
+    const user = await auth.getUser();
+
+    const arsip = await MFolderArsip.query().where({ id: arsip_id }).update({
+      dihapus: 1,
+    });
+
+    if (!arsip) {
       return response.notFound({
         message: messageNotFound,
       });
