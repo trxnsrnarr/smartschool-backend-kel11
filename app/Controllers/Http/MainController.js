@@ -23235,12 +23235,14 @@ class MainController {
       .where({ dihapus: 0 })
       .andWhere({ dibaca: 0 })
       .andWhere({ tipe: "draf" })
+      .andWhere({ m_user_id : user.id })
       .count("* as total");
 
     const jumlahMasuk = await TkTipeSurel.query()
       .where({ dihapus: 0 })
       .andWhere({ dibaca: 0 })
       .andWhere({ tipe: "masuk" })
+      .andWhere({ m_user_id : user.id })
       .count("* as total");
 
     if (search) {
