@@ -88,6 +88,7 @@ const MKotakMasuk = use("App/Models/MKotakMasuk");
 const MKotakMasukKomen = use("App/Models/MKotakMasukKomen");
 const MSurel = use("App/Models/MSurel");
 const MSurelKomen = use("App/Models/MSurelKomen");
+const MFolderArsip = use("App/Models/MFolderArsip");
 const TkTipeSurel = use("App/Models/TkTipeSurel");
 const MBarang = use("App/Models/MBarang");
 const MLokasi = use("App/Models/MLokasi");
@@ -23245,6 +23246,11 @@ class MainController {
       .andWhere({ m_user_id : user.id })
       .count("* as total");
 
+    const arsip = await MFolderArsip.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_user_id: user.id })
+      .fetch();  
+
     if (search) {
       // ===== service cari Perusahaan ====
       if (tipe == "terkirim") {
@@ -23377,24 +23383,10 @@ class MainController {
           .andWhere({ m_user_id: user.id })
           .paginate();
       } else if (tipe == "arsip") {
-        surel = await TkTipeSurel.query()
-          .with("surel", (builder) => {
-            builder
-              .with("userPengirim", (builder) => {
-                builder.select("id", "nama", "email");
-              })
-              .withCount("komen", (builder) => {
-                builder.where({ dihapus: 0 });
-              })
-
-              .where({ dihapus: 0 })
-              .andWhere({ m_user_pengirim_id: user.id })
-              .andWhere("perihal", "like", `%${search}%`);
-          })
+        surel = await MFolderArsip.query()
           .where({ dihapus: 0 })
-          .andWhere({ tipe: "arsip" })
           .andWhere({ m_user_id: user.id })
-          .paginate();
+          .fetch();
       }
     }
 
@@ -23402,6 +23394,7 @@ class MainController {
       surel,
       jumlahMasuk,
       jumlahDraf,
+      arsip,
     });
   }
 
