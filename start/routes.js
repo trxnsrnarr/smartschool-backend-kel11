@@ -651,9 +651,10 @@ Route.put("/surel-dibaca", "MainController.dibacaSurelTipe");
 Route.post("/surel-komen/:surel_id", "MainController.postSurelKomen");
 Route.put("/surel-arsip", "MainController.putSurelArsip");
 Route.put("/surel-arsip/pin/:arsip_id", "MainController.putPinFolderArsip");
-Route.post("/sarana-arsip","MainController.postFolderArsip");
-Route.put("/sarana-arsip/:arsip_id","MainController.putFolderArsip");
-Route.delete("/sarana-arsip/:arsip_id","MainController.deleteFolderArsip");
+Route.post("/surel-arsip","MainController.postFolderArsip");
+Route.put("/surel-arsip/:arsip_id","MainController.putFolderArsip");
+Route.delete("/surel-arsip/:arsip_id","MainController.deleteFolderArsip");
+Route.get("/surel-arsip/:arsip_id","MainController.detailArsipSurel");
 
 // Sarana Service
 Route.get("/sarana","MainController.getBarang");
