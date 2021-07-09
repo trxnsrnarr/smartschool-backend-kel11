@@ -11,6 +11,9 @@ class MFolderArsip extends Model {
       sekolah() {
         return this.belongsTo("App/Models/MSekolah");
       }
+      tipe() {
+        return this.hasMany("App/Models/TkTipeSurel");
+      }
 }
 
 module.exports = MFolderArsip
