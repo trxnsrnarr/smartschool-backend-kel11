@@ -23283,6 +23283,12 @@ class MainController {
       .andWhere({ m_user_id: user.id })
       .count("* as total");
 
+    const jumlahArsip = await MFolderArsip.query()
+      .where({ dihapus: 0 })
+      .andWhere({ pin: 1 })
+      .andWhere({ m_user_id: user.id })
+      .count("* as total");
+
     const arsip = await MFolderArsip.query()
       .withCount("tipe as total", (builder) => {
         builder.where({ dihapus: 0 });
@@ -23349,25 +23355,6 @@ class MainController {
           .andWhere({ tipe: "draf" })
           .andWhere({ m_user_id: user.id })
           .paginate();
-      } else if (tipe == "arsip") {
-        surel = await TkTipeSurel.query()
-          .with("surel", (builder) => {
-            builder
-              .with("userPengirim", (builder) => {
-                builder.select("id", "nama", "email");
-              })
-              .withCount("komen", (builder) => {
-                builder.where({ dihapus: 0 });
-              })
-
-              .where({ dihapus: 0 })
-              .andWhere({ m_user_pengirim_id: user.id })
-              .andWhere("perihal", "like", `%${search}%`);
-          })
-          .where({ dihapus: 0 })
-          .andWhere({ tipe: "arsip" })
-          .andWhere({ m_user_id: user.id })
-          .paginate();
       }
     } else {
       // ===== service Perusahaan saya ====
@@ -23422,11 +23409,6 @@ class MainController {
           .andWhere({ tipe: "draf" })
           .andWhere({ m_user_id: user.id })
           .paginate();
-      } else if (tipe == "arsip") {
-        surel = await MFolderArsip.query()
-          .where({ dihapus: 0 })
-          .andWhere({ m_user_id: user.id })
-          .fetch();
       }
     }
 
@@ -23435,6 +23417,7 @@ class MainController {
       jumlahMasuk,
       jumlahDraf,
       arsip,
+      jumlahArsip,
     });
   }
 
