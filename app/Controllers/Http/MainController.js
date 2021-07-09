@@ -23842,7 +23842,7 @@ class MainController {
       tipe_surel_id.map(async (d) => {
         await TkTipeSurel.query().where({ id: d }).update({
           tipe: "arsip",
-          m_folder_id: arsip_id,
+          m_folder_arsip_id: arsip_id,
         });
       })
     );
@@ -23894,8 +23894,6 @@ class MainController {
       message: messagePostSuccess,
     });
   }
-
-  // ============ POST Rekap Tugas =================
 
   async putFolderArsip({ response, request, auth, params: { arsip_id } }) {
     const domain = request.headers().origin;
@@ -23992,6 +23990,57 @@ class MainController {
 
     return response.ok({
       message: messageDeleteSuccess,
+    });
+  }
+
+  async detailArsipSurel({ response, request, auth, params: { arsip_id }  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const jumlahDraf = await TkTipeSurel.query()
+      .where({ dihapus: 0 })
+      .andWhere({ dibaca: 0 })
+      .andWhere({ tipe: "draf" })
+      .andWhere({ m_user_id : user.id })
+      .count("* as total");
+
+    const jumlahMasuk = await TkTipeSurel.query()
+      .where({ dihapus: 0 })
+      .andWhere({ dibaca: 0 })
+      .andWhere({ tipe: "masuk" })
+      .andWhere({ m_user_id : user.id })
+      .count("* as total");
+
+    const arsip = await MFolderArsip.query()
+    .with("tipe",(builder)=>{
+      builder.with("surel", (builder) => {
+        builder
+          .with("userPengirim", (builder) => {
+            builder.select("id", "nama", "email");
+          })
+          .withCount("komen", (builder) => {
+            builder.where({ dihapus: 0 });
+          })
+          .where({ dihapus: 0 })
+          .andWhere({ m_user_pengirim_id: user.id });
+      }).where({dihapus:0});
+    })
+      .where({ dihapus: 0 })
+      .andWhere({id:arsip_id})
+      .andWhere({ m_user_id: user.id })
+      .first();  
+
+    return response.ok({
+      jumlahMasuk,
+      jumlahDraf,
+      arsip,
     });
   }
 
