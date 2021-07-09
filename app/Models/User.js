@@ -98,7 +98,7 @@ class User extends Model {
   sikap() {
     return this.hasOne("App/Models/MSikapSiswa", "id", "m_user_id");
   }
-  rekapSikap(){
+  rekapSikap() {
     return this.hasOne("App/Models/MSikapRombel", "id", "m_user_id");
   }
   keteranganRapor() {
@@ -112,6 +112,9 @@ class User extends Model {
   }
   prestasi() {
     return this.hasMany("App/Models/MPrestasi", "id", "m_user_id");
+  }
+  pelanggaranSiswa() {
+    return this.hasMany("App/Models/TkSiswaPelanggaran", "id", "m_user_id");
   }
 }
 
