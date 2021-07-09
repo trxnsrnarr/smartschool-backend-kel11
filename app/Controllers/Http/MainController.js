@@ -23229,36 +23229,35 @@ class MainController {
     const user = await auth.getUser();
 
     const check = await MFolderArsip.query()
-      .where({dihapus:0})
-      .andWhere({m_user_id:user.id})
-      .first()
+      .where({ dihapus: 0 })
+      .andWhere({ m_user_id: user.id })
+      .first();
 
-    if(!check){
+    if (!check) {
       await MFolderArsip.create({
         nama: "Edaran",
-        pin:1,
+        pin: 1,
         dihapus: 0,
         m_user_id: user.id,
       });
       await MFolderArsip.create({
         nama: "Perintah",
-        pin:1,
+        pin: 1,
         dihapus: 0,
         m_user_id: user.id,
       });
       await MFolderArsip.create({
         nama: "Undangan",
-        pin:1,
+        pin: 1,
         dihapus: 0,
         m_user_id: user.id,
       });
       await MFolderArsip.create({
         nama: "Pengantar",
-        pin:1,
+        pin: 1,
         dihapus: 0,
         m_user_id: user.id,
       });
-  
     }
 
     const { tipe, search } = request.get();
@@ -23269,20 +23268,20 @@ class MainController {
       .where({ dihapus: 0 })
       .andWhere({ dibaca: 0 })
       .andWhere({ tipe: "draf" })
-      .andWhere({ m_user_id : user.id })
+      .andWhere({ m_user_id: user.id })
       .count("* as total");
 
     const jumlahMasuk = await TkTipeSurel.query()
       .where({ dihapus: 0 })
       .andWhere({ dibaca: 0 })
       .andWhere({ tipe: "masuk" })
-      .andWhere({ m_user_id : user.id })
+      .andWhere({ m_user_id: user.id })
       .count("* as total");
 
     const arsip = await MFolderArsip.query()
       .where({ dihapus: 0 })
       .andWhere({ m_user_id: user.id })
-      .fetch();  
+      .fetch();
 
     if (search) {
       // ===== service cari Perusahaan ====
@@ -23520,7 +23519,7 @@ class MainController {
     const masuk = await TkTipeSurel.create({
       m_surel_id: surel.id,
       tipe: "masuk",
-      m_user_id:`${tujuan ? tujuan : null}`,
+      m_user_id: `${tujuan ? tujuan : null}`,
     });
 
     const terkirim = await TkTipeSurel.create({
@@ -23640,17 +23639,17 @@ class MainController {
       .where({ m_surel_id: surel_id })
       .delete();
 
-      const masuk = await TkTipeSurel.create({
-        m_surel_id: surel_id,
-        tipe: "masuk",
-        m_user_id:`${tujuan ? tujuan : null}`,
-      });
-  
-      const terkirim = await TkTipeSurel.create({
-        m_surel_id: surel_id,
-        tipe: "terkirim",
-        m_user_id: user.id,
-      });
+    const masuk = await TkTipeSurel.create({
+      m_surel_id: surel_id,
+      tipe: "masuk",
+      m_user_id: `${tujuan ? tujuan : null}`,
+    });
+
+    const terkirim = await TkTipeSurel.create({
+      m_surel_id: surel_id,
+      tipe: "terkirim",
+      m_user_id: user.id,
+    });
 
     if (!surel) {
       return response.notFound({
@@ -23874,7 +23873,7 @@ class MainController {
     const arsip = await MFolderArsip.create({
       nama,
       m_user_id: user.id,
-      pin:0,
+      pin: 0,
       dihapus: 0,
     });
 
@@ -23888,7 +23887,6 @@ class MainController {
     if (validation.fails()) {
       return response.unprocessableEntity(validation.messages());
     }
-
 
     return response.ok({
       message: messagePostSuccess,
@@ -23919,12 +23917,10 @@ class MainController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const arsip = await MFolderArsip.query()
-      .where({ id: arsip_id })
-      .update({
-        nama,
-        dihapus: 0,
-      });
+    const arsip = await MFolderArsip.query().where({ id: arsip_id }).update({
+      nama,
+      dihapus: 0,
+    });
 
     if (!arsip) {
       return response.notFound({
@@ -23948,12 +23944,10 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const arsip = await MFolderArsip.query()
-      .where({ id: arsip_id })
-      .update({
-        pin:1,
-        dihapus: 0,
-      });
+    const arsip = await MFolderArsip.query().where({ id: arsip_id }).update({
+      pin: 1,
+      dihapus: 0,
+    });
 
     if (!arsip) {
       return response.notFound({
@@ -23993,7 +23987,7 @@ class MainController {
     });
   }
 
-  async detailArsipSurel({ response, request, auth, params: { arsip_id }  }) {
+  async detailArsipSurel({ response, request, auth, params: { arsip_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -24008,34 +24002,36 @@ class MainController {
       .where({ dihapus: 0 })
       .andWhere({ dibaca: 0 })
       .andWhere({ tipe: "draf" })
-      .andWhere({ m_user_id : user.id })
+      .andWhere({ m_user_id: user.id })
       .count("* as total");
 
     const jumlahMasuk = await TkTipeSurel.query()
       .where({ dihapus: 0 })
       .andWhere({ dibaca: 0 })
       .andWhere({ tipe: "masuk" })
-      .andWhere({ m_user_id : user.id })
+      .andWhere({ m_user_id: user.id })
       .count("* as total");
 
     const arsip = await MFolderArsip.query()
-    .with("tipe",(builder)=>{
-      builder.with("surel", (builder) => {
+      .with("tipe", (builder) => {
         builder
-          .with("userPengirim", (builder) => {
-            builder.select("id", "nama", "email");
+          .with("surel", (builder) => {
+            builder
+              .with("userPengirim", (builder) => {
+                builder.select("id", "nama", "email");
+              })
+              .withCount("komen", (builder) => {
+                builder.where({ dihapus: 0 });
+              })
+              .where({ dihapus: 0 })
+              .andWhere({ m_user_pengirim_id: user.id });
           })
-          .withCount("komen", (builder) => {
-            builder.where({ dihapus: 0 });
-          })
-          .where({ dihapus: 0 })
-          .andWhere({ m_user_pengirim_id: user.id });
-      }).where({dihapus:0});
-    })
+          .where({ dihapus: 0 });
+      })
       .where({ dihapus: 0 })
-      .andWhere({id:arsip_id})
+      .andWhere({ id: arsip_id })
       .andWhere({ m_user_id: user.id })
-      .first();  
+      .first();
 
     return response.ok({
       jumlahMasuk,
