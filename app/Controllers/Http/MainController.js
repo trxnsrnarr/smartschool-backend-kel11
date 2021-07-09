@@ -23284,7 +23284,7 @@ class MainController {
       .count("* as total");
 
     const arsip = await MFolderArsip.query()
-      .with("tipe as total", (builder) => {
+      .withCount("tipe as total", (builder) => {
         builder.where({ dihapus: 0 });
       })
       .where({ dihapus: 0 })
