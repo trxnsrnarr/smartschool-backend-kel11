@@ -22295,7 +22295,44 @@ class MainController {
       .with("anggotaRombel", (builder) => {
         builder
           .with("user", (builder) => {
-            builder.with("pelanggaranSiswa");
+            builder.select("id", "nama").with("pelanggaranSiswa", (builder) => {
+              builder.where({ dihapus: 0 });
+            });
+          })
+          .where({ dihapus: 0 });
+      })
+      .withCount("anggotaRombel as total", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ id: rombel_id })
+      .first();
+
+    return response.ok({
+      rombel,
+    });
+  }
+
+  async detailTataTertibSiswa({ response, request, params: { user_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    const rombel = await MRombel.query()
+      .with("anggotaRombel", (builder) => {
+        builder
+          .with("user", (builder) => {
+            builder.select("id", "nama").with("pelanggaranSiswa", (builder) => {
+              builder.where({ dihapus: 0 });
+            });
           })
           .where({ dihapus: 0 });
       })

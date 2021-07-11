@@ -693,5 +693,42 @@ Route.delete(
   "MainController.deleteKategoriPelanggaran"
 );
 
+//pelanggaran
+Route.get(
+  "/tatatertib/kategori/:kategori_id",
+  "MainController.detailKategoriPelanggaran"
+);
+Route.post(
+  "/tatatertib/pelanggaran/:kategori_id",
+  "MainController.postPelanggaran"
+);
+Route.put(
+  "/tatatertib/pelanggaran/:pelanggaran_id",
+  "MainController.putPelanggaran"
+);
+Route.delete(
+  "/tatatertib/pelanggaran/:pelanggaran_id",
+  "MainController.deletePelanggaran"
+);
+
+//Sanksi Pelanggaran
+Route.get("/tatatertib/sanksi", "MainController.getSanksiPelanggaran");
+Route.post("/tatatertib/sanksi", "MainController.postSanksiPelanggaran");
+Route.put(
+  "/tatatertib/sanksi/:sanksi_id",
+  "MainController.putSanksiPelanggaran"
+);
+Route.delete(
+  "/tatatertib/sanksi/:sanksi_id",
+  "MainController.deleteSanksiPelanggaran"
+);
+
+//Sanksi Pelanggaran
+Route.get("/tatatertib/rombel", "MainController.getTataTertibRombel");
+Route.get(
+  "/tatatertib/rombel/:rombel_id",
+  "MainController.detailTataTertibRombel"
+);
+
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
