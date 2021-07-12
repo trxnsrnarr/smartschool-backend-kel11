@@ -97,6 +97,8 @@ const MPelanggaran = use("App/Models/MPelanggaran");
 const MSanksiPelanggaran = use("App/Models/MSanksiPelanggaran");
 const MSanksiSiswa = use("App/Models/MSanksiSiswa");
 const TkSiswaPelanggaran = use("App/Models/TkSiswaPelanggaran");
+const MBabPeraturan = use("App/Models/MBabPeraturan");
+const MPasalPeraturan = use("App/Models/MPasalPeraturan");
 
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
@@ -20101,6 +20103,12 @@ class MainController {
 
     const user = await auth.getUser();
 
+    const pin = await MFolderArsip.query()
+      .where({ dihapus: 0 })
+      .andWhere({ pin: 1 })
+      .andWhere({ m_user_id: user.id })
+      .count("* as total");
+
     const check = await MFolderArsip.query()
       .where({ dihapus: 0 })
       .andWhere({ m_user_id: user.id })
@@ -20286,6 +20294,7 @@ class MainController {
       jumlahDraf,
       arsip,
       jumlahArsip,
+      pin,
     });
   }
 
@@ -22267,6 +22276,7 @@ class MainController {
     const ta = await this.getTAAktif(sekolah);
 
     const rombel = await MRombel.query()
+      .select("id", "nama", "tingkat")
       .withCount("anggotaRombel as total", (builder) => {
         builder.where({ dihapus: 0 });
       })
@@ -22275,8 +22285,27 @@ class MainController {
       .andWhere({ m_ta_id: ta.id })
       .fetch();
 
+    const siswa = await User.query()
+      .with("pelanggaranSiswa")
+      .with("anggotaRombel", (builder) => {
+        builder
+          .select("id", "m_rombel_id", "m_user_id")
+          .with("rombel", (builder) => {
+            builder
+              .select("id", "nama")
+              .where({ m_ta_id: ta.id })
+              .andWhere({ m_sekolah_id: sekolah.id });
+          });
+      })
+      .select("id", "nama", "whatsapp")
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ role: "siswa" })
+      .fetch();
+
     return response.ok({
       rombel,
+      siswa,
     });
   }
 
@@ -22292,13 +22321,23 @@ class MainController {
     const ta = await this.getTAAktif(sekolah);
 
     const rombel = await MRombel.query()
+      .select("id", "nama")
       .with("anggotaRombel", (builder) => {
         builder
           .with("user", (builder) => {
-            builder.select("id", "nama").with("pelanggaranSiswa", (builder) => {
-              builder.where({ dihapus: 0 });
-            });
+            builder
+              .select("id", "nama")
+              .withCount("pelanggaranSiswa as Total", (builder) => {
+                builder.where({ dihapus: 0 });
+              })
+              .with("pelanggaranSiswa", (builder) => {
+                builder.where({ dihapus: 0 });
+              })
+              .with("sanksiSiswa", (builder) => {
+                builder.where({ dihapus: 0 });
+              });
           })
+          .select("id", "m_user_id", "m_rombel_id")
           .where({ dihapus: 0 });
       })
       .withCount("anggotaRombel as total", (builder) => {
@@ -22326,27 +22365,324 @@ class MainController {
 
     const ta = await this.getTAAktif(sekolah);
 
-    const rombel = await MRombel.query()
-      .with("anggotaRombel", (builder) => {
-        builder
-          .with("user", (builder) => {
-            builder.select("id", "nama").with("pelanggaranSiswa", (builder) => {
-              builder.where({ dihapus: 0 });
-            });
-          })
-          .where({ dihapus: 0 });
+    const siswa = await User.query()
+      .select("id", "nama")
+      .withCount("pelanggaranSiswa as Total", (builder) => {
+        builder.where({ dihapus: 0 });
       })
-      .withCount("anggotaRombel as total", (builder) => {
+      .with("pelanggaranSiswa", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .with("sanksiSiswa", (builder) => {
         builder.where({ dihapus: 0 });
       })
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta.id })
-      .andWhere({ id: rombel_id })
+      .andWhere({ id: user_id })
       .first();
 
     return response.ok({
-      rombel,
+      siswa,
+    });
+  }
+
+  async postPelanggaranSiswa({ response, request, auth, params: { user_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { m_pelanggaran_id, catatan, tanggal_pelanggaran } = request.post();
+    const rules = {
+      nama: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const siswa = await TkSiswaPelanggaran.create({
+      m_pelanggaran_id,
+      catatan,
+      tanggal_pelanggaran,
+      m_user_pelapor_id: user.id,
+      m_user_id: user_id,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  // Peraturan Service
+  async getBabPeraturan({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const bab = await MBabPeraturan.query()
+      .withCount("pasal as total", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
+    return response.ok({
+      bab,
+    });
+  }
+
+  async postBabPeraturan({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { nama } = request.post();
+    const rules = {
+      nama: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const bab = await MBabPeraturan.create({
+      nama,
+      m_sekolah_id: sekolah.id,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putBabPeraturan({ response, request, auth, params: { bab_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { nama } = request.post();
+    const rules = {
+      nama: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const bab = await MBabPeraturan.query().where({ id: bab_id }).update({
+      nama,
+    });
+
+    if (!bab) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteBabPeraturan({ response, request, auth, params: { bab_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    // if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    //   return response.forbidden({ message: messageForbidden });
+    // }
+
+    const bab = await MBabPeraturan.query().where({ id: bab_id }).update({
+      dihapus: 1,
+    });
+
+    if (!bab) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  // Peraturan Service
+  async detailBabPeraturan({ response, request, auth, params: { bab_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const bab = await MBabPeraturan.query()
+      .with("pasal", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ id: bab_id })
+      .first();
+
+    return response.ok({
+      bab,
+    });
+  }
+
+  async postPasalPeraturan({ response, request, auth, params: { bab_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { nama, isi, foto } = request.post();
+    const rules = {
+      nama: "required",
+      isi: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+      "isi.required": "Isi harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const pasal = await MPasalPeraturan.create({
+      nama,
+      isi,
+      foto,
+      m_bab_id: bab_id,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putPasalPeraturan({ response, request, auth, params: { pasal_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { nama, isi, foto } = request.post();
+    const rules = {
+      nama: "required",
+      isi: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+      "isi.required": "Isi harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const pasal = await MPasalPeraturan.query().where({ id: pasal_id }).update({
+      nama,
+      isi,
+      foto,
+    });
+
+    if (!pasal) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deletePasalPeraturan({
+    response,
+    request,
+    auth,
+    params: { pasal_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    // if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    //   return response.forbidden({ message: messageForbidden });
+    // }
+
+    const pasal = await MPasalPeraturan.query().where({ id: pasal_id }).update({
+      dihapus: 1,
+    });
+
+    if (!pasal) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
     });
   }
 }
