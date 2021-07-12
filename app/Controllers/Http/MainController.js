@@ -22365,6 +22365,14 @@ class MainController {
 
     const ta = await this.getTAAktif(sekolah);
 
+    const pelanggaran = await MKategoriPelanggaran.query()
+      .with("pelanggaran", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
     const siswa = await User.query()
       .select("id", "nama")
       .withCount("pelanggaranSiswa as Total", (builder) => {
@@ -22383,6 +22391,7 @@ class MainController {
 
     return response.ok({
       siswa,
+      pelanggaran,
     });
   }
 
@@ -22397,12 +22406,19 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { m_pelanggaran_id, catatan, tanggal_pelanggaran } = request.post();
+    const { m_pelanggaran_id, catatan, tanggal_pelanggaran, poin } =
+      request.post();
     const rules = {
-      nama: "required",
+      m_pelanggaran_id: "required",
+      catatan: "required",
+      tanggal_pelanggaran: "required",
+      poin: "required",
     };
     const message = {
-      "nama.required": "Nama harus diisi",
+      "m_pelanggaran_id.required": "Bentuk Pelanggaran harus diisi",
+      "catatan.required": "Catatan harus diisi",
+      "tanggal_pelanggaran.required": "Tanggal Pelanggaran harus diisi",
+      "poin.required": "Poin harus diisi",
     };
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
@@ -22413,6 +22429,7 @@ class MainController {
       m_pelanggaran_id,
       catatan,
       tanggal_pelanggaran,
+      poin,
       m_user_pelapor_id: user.id,
       m_user_id: user_id,
       dihapus: 0,
@@ -22420,6 +22437,99 @@ class MainController {
 
     return response.ok({
       message: messagePostSuccess,
+    });
+  }
+
+  async putPelanggaranSiswa({
+    response,
+    request,
+    auth,
+    params: { pelanggaran_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { m_pelanggaran_id, catatan, tanggal_pelanggaran, poin } =
+      request.post();
+    const rules = {
+      m_pelanggaran_id: "required",
+      catatan: "required",
+      tanggal_pelanggaran: "required",
+      poin: "required",
+    };
+    const message = {
+      "m_pelanggaran_id.required": "Bentuk Pelanggaran harus diisi",
+      "catatan.required": "Catatan harus diisi",
+      "tanggal_pelanggaran.required": "Tanggal Pelanggaran harus diisi",
+      "poin.required": "Poin harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const pelanggaran = await TkSiswaPelanggaran.query()
+      .where({ id: pelanggaran_id })
+      .update({
+        m_pelanggaran_id,
+        catatan,
+        tanggal_pelanggaran,
+        poin,
+        dihapus: 0,
+      });
+
+    if (!pelanggaran) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deletePelanggaranSiswa({
+    response,
+    request,
+    auth,
+    params: { pelanggaran_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    // if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    //   return response.forbidden({ message: messageForbidden });
+    // }
+
+    const pelanggaran = await TkSiswaPelanggaran.query()
+      .where({ id: pelanggaran_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!pelanggaran) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
     });
   }
 
