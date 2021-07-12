@@ -22126,8 +22126,22 @@ class MainController {
       .andWhere({ m_sekolah_id: sekolah.id })
       .fetch();
 
+    const siswa = await Promise.all(
+      sanksi.toJSON().map(async (d) => {
+        const siswa = await MSanksiSiswa.query()
+          .with("user", (builder) => {
+            builder.select("id", "nama").where({ dihapus: 0 });
+          })
+          .where({ dihapus: 0 })
+          .andWhere({ m_sanksi_pelanggaran_id: d.id })
+          .fetch();
+        return siswa;
+      })
+    );
+
     return response.ok({
       sanksi,
+      siswa,
     });
   }
 
@@ -22523,6 +22537,117 @@ class MainController {
       });
 
     if (!pelanggaran) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async postSanksiSiswa({ response, request, auth, params: { user_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { m_sanksi_pelanggaran_id, keterangan, lampiran } = request.post();
+    const rules = {
+      m_sanksi_pelanggaran_id: "required",
+      keterangan: "required",
+    };
+    const message = {
+      "m_sanksi_pelanggaran_id.required": "Sanksi harus diisi",
+      "keterangan.required": "Keterangan harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const siswa = await MSanksiSiswa.create({
+      m_sanksi_pelanggaran_id,
+      keterangan,
+      lampiran,
+      m_user_id: user_id,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putSanksiSiswa({ response, request, auth, params: { sanksi_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { m_sanksi_pelanggaran_id, keterangan, lampiran } = request.post();
+    const rules = {
+      m_sanksi_pelanggaran_id: "required",
+      keterangan: "required",
+    };
+    const message = {
+      "m_sanksi_pelanggaran_id.required": "Sanksi harus diisi",
+      "keterangan.required": "Keterangan harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const sanksi = await MSanksiSiswa.query().where({ id: sanksi_id }).update({
+      m_sanksi_pelanggaran_id,
+      keterangan,
+      lampiran,
+      dihapus: 0,
+    });
+
+    if (!sanksi) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteSanksiSiswa({ response, request, auth, params: { sanksi_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    // if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    //   return response.forbidden({ message: messageForbidden });
+    // }
+
+    const sanksi = await MSanksiSiswa.query().where({ id: sanksi_id }).update({
+      dihapus: 1,
+    });
+
+    if (!sanksi) {
       return response.notFound({
         message: messageNotFound,
       });
