@@ -730,6 +730,15 @@ Route.get(
   "MainController.detailTataTertibRombel"
 );
 Route.get("/tatatertib/siswa/:user_id", "MainController.detailTataTertibSiswa");
+Route.post("/tatatertib/siswa/:user_id", "MainController.postPelanggaranSiswa");
+Route.put(
+  "/tatatertib/siswa/pelanggaran/:pelanggaran_id",
+  "MainController.putPelanggaranSiswa"
+);
+Route.delete(
+  "/tatatertib/siswa/pelanggaran/:pelanggaran_id",
+  "MainController.deletePelanggaranSiswa"
+);
 
 //Peraturan Service
 Route.get("/tatatertib/peraturan", "MainController.getBabPeraturan");
