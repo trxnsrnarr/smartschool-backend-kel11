@@ -116,6 +116,12 @@ class User extends Model {
   pelanggaranSiswa() {
     return this.hasMany("App/Models/TkSiswaPelanggaran", "id", "m_user_id");
   }
+  anggotaRombel() {
+    return this.belongsTo("App/Models/MAnggotaRombel", "id", "m_user_id");
+  }
+  sanksiSiswa() {
+    return this.hasMany("App/Models/MSanksiSiswa", "id", "m_user_id");
+  }
 }
 
 module.exports = User;

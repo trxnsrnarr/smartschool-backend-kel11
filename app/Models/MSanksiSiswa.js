@@ -13,7 +13,7 @@ class MSanksiSiswa extends Model {
   }
 
   user() {
-    return this.belongsTo("App/Models/User");
+    return this.belongsTo("App/Models/User", "m_user_id");
   }
 }
 
