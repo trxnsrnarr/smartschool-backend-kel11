@@ -99,6 +99,7 @@ const MSanksiSiswa = use("App/Models/MSanksiSiswa");
 const TkSiswaPelanggaran = use("App/Models/TkSiswaPelanggaran");
 const MBabPeraturan = use("App/Models/MBabPeraturan");
 const MPasalPeraturan = use("App/Models/MPasalPeraturan");
+const MBukuTamu = use("App/Models/MBukuTamu");
 
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
@@ -5263,7 +5264,7 @@ class MainController {
                   message
                     .to(`${d.user.email}`)
                     .from("no-reply@smarteschool.id")
-                    .subject("Pembayaran SPP");
+                    .subject("Tugas Baru di SmartSchool");
                 });
 
                 if (gmail) {
@@ -5296,7 +5297,7 @@ class MainController {
                         message
                           .to(`${d.user.email}`)
                           .from("no-reply@smarteschool.id")
-                          .subject("Pembayaran SPP");
+                          .subject("Tugas Baru di SmartSchool");
                       }
                     );
 
@@ -5803,6 +5804,9 @@ class MainController {
       });
 
       const anggotaRombel = await MAnggotaRombel.query()
+        .with("user", (builder) => {
+          builder.select("id", "email").where({ dihapus: 0 });
+        })
         .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
         .fetch();
 
@@ -5816,6 +5820,21 @@ class MainController {
             m_timeline_id: timeline.id,
             dihapus: 0,
           });
+          if (d.user.email != null) {
+            const gmail = await Mail.send(`emails.pertemuan`, d, (message) => {
+              message
+                .to(`${d.user.email}`)
+                .from("no-reply@smarteschool.id")
+                .subject("Pertemuan Baru di SmartSchool");
+            });
+
+            if (gmail) {
+              return response.ok({
+                message: messageEmailSuccess,
+              });
+            }
+            // return d.user.nama;
+          }
         })
       );
 
@@ -20868,6 +20887,8 @@ class MainController {
 
     const user = await auth.getUser();
 
+    const { tanggal_awal, tanggal_akhir } = request.post();
+
     const jumlahDraf = await TkTipeSurel.query()
       .where({ dihapus: 0 })
       .andWhere({ dibaca: 0 })
@@ -20881,28 +20902,52 @@ class MainController {
       .andWhere({ tipe: "masuk" })
       .andWhere({ m_user_id: user.id })
       .count("* as total");
-
-    const arsip = await MFolderArsip.query()
-      .with("tipe", (builder) => {
-        builder
-          .with("surel", (builder) => {
-            builder
-              .with("userPengirim", (builder) => {
-                builder.select("id", "nama", "email");
-              })
-              .withCount("komen", (builder) => {
-                builder.where({ dihapus: 0 });
-              })
-              .where({ dihapus: 0 })
-              .andWhere({ m_user_pengirim_id: user.id });
-          })
-          .where({ dihapus: 0 });
-      })
-      .where({ dihapus: 0 })
-      .andWhere({ id: arsip_id })
-      .andWhere({ m_user_id: user.id })
-      .first();
-
+    let arsip;
+    if (tanggal_awal) {
+      arsip = await MFolderArsip.query()
+        .with("tipe", (builder) => {
+          builder
+            .with("surel", (builder) => {
+              builder
+                .with("userPengirim", (builder) => {
+                  builder.select("id", "nama", "email");
+                })
+                .withCount("komen", (builder) => {
+                  builder.where({ dihapus: 0 });
+                })
+                .where({ dihapus: 0 })
+                .andWhere({ m_user_pengirim_id: user.id });
+            })
+            .whereBetween("created_at", [`${tanggal_awal}`, `${tanggal_akhir}`])
+            .andWhere({ dihapus: 0 });
+        })
+        .where({ dihapus: 0 })
+        .andWhere({ id: arsip_id })
+        .andWhere({ m_user_id: user.id })
+        .first();
+    } else {
+      arsip = await MFolderArsip.query()
+        .with("tipe", (builder) => {
+          builder
+            .with("surel", (builder) => {
+              builder
+                .with("userPengirim", (builder) => {
+                  builder.select("id", "nama", "email");
+                })
+                .withCount("komen", (builder) => {
+                  builder.where({ dihapus: 0 });
+                })
+                .where({ dihapus: 0 })
+                .andWhere({ m_user_pengirim_id: user.id });
+            })
+            .where({ dihapus: 0 });
+        })
+        .where({ dihapus: 0 })
+        .andWhere({ id: arsip_id })
+        .andWhere({ m_user_id: user.id })
+        .first();
+    }
+    // .whereBetween("created_at", [`${tanggal_awal}`, `${tanggal_akhir}`])
     return response.ok({
       jumlahMasuk,
       jumlahDraf,
@@ -21821,6 +21866,35 @@ class MainController {
 
   // Tata Tertib Service
 
+  async getTataTertib({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const kategori = await MKategoriPelanggaran.query()
+      .withCount("pelanggaran as total", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .with("pelanggaran", (builder) => {
+        builder
+          .withCount("siswa", (builder) => {
+            builder.where({ dihapus: 0 });
+          })
+          .where({ dihapus: 0 });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
+    return response.ok({
+      kategori,
+    });
+  }
+
   //Pelanggaran Service
   async getKategoriPelanggaran({ response, request, auth }) {
     const domain = request.headers().origin;
@@ -22387,6 +22461,11 @@ class MainController {
       .andWhere({ m_sekolah_id: sekolah.id })
       .fetch();
 
+    const sanksi = await MSanksiPelanggaran.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
     const siswa = await User.query()
       .select("id", "nama")
       .withCount("pelanggaranSiswa as Total", (builder) => {
@@ -22406,6 +22485,7 @@ class MainController {
     return response.ok({
       siswa,
       pelanggaran,
+      sanksi,
     });
   }
 
@@ -22918,6 +22998,78 @@ class MainController {
 
     return response.ok({
       message: messageDeleteSuccess,
+    });
+  }
+
+  async postBukuTamu({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      nama,
+      no_hp,
+      instansi,
+      bidang,
+      alamat,
+      province_id,
+      regency_id,
+      kodepos,
+      keterangan,
+      ttd,
+    } = request.post();
+    const rules = {
+      nama: "required",
+      no_hp: "required",
+      instansi: "required",
+      bidang: "required",
+      alamat: "required",
+      province_id: "required",
+      regency_id: "required",
+      kodepos: "required",
+      keterangan: "required",
+      ttd: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+      "no_hp.required": "Nomor Telepon harus diisi",
+      "instansi.required": "Asal Instansi harus diisi",
+      "bidang.required": "Bidang harus diisi",
+      "alamat.required": "Alamat harus diisi",
+      "province_id.required": "Provinsi harus diisi",
+      "regency_id.required": "Kota/Kabupaten harus diisi",
+      "kodepos.required": "Kode Pos harus diisi",
+      "keterangan.required": "Keterangan harus diisi",
+      "ttd.required": "Tanda Tangan harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const buku = await MBukuTamu.create({
+      nama,
+      no_hp,
+      instansi,
+      bidang,
+      alamat,
+      province_id,
+      regency_id,
+      kodepos,
+      keterangan,
+      ttd,
+      m_sekolah_id: sekolah.id,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
     });
   }
 }
