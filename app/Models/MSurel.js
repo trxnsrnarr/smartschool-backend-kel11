@@ -8,11 +8,11 @@ class MSurel extends Model {
     return "m_surel";
   }
   userPengirim(){
-    return this.belongsTo("App/Models/User", "id", "m_user_pengirim_id");
+    return this.belongsTo("App/Models/User", "m_user_pengirim_id", "id");
   }
   
   userTujuan(){
-    return this.belongsTo("App/Models/User", "id", "m_user_tujuan_id");
+    return this.belongsTo("App/Models/User", "m_user_tujuan_id", "id");
   }
   komen() {
     return this.hasMany("App/Models/MSurelKomen", "id", "m_surel_id");

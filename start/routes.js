@@ -92,8 +92,14 @@ Route.post("/rombel", "MainController.postRombel");
 Route.put("/rombel/:rombel_id", "MainController.putRombel");
 Route.delete("/rombel/:rombel_id", "MainController.deleteRombel");
 Route.post("/rombel/:rombel_id/:user_id", "MainController.postSikapRombel");
-Route.post("/rapor-sikap/sosial/:user_id", "MainController.postRaporSikapSosial");
-Route.post("/rapor-sikap/spiritual/:user_id", "MainController.postRaporSikapSpiritual");
+Route.post(
+  "/rapor-sikap/sosial/:user_id",
+  "MainController.postRaporSikapSosial"
+);
+Route.post(
+  "/rapor-sikap/spiritual/:user_id",
+  "MainController.postRaporSikapSpiritual"
+);
 Route.delete("/rapor-sikap/:user_id", "MainController.deleteRaporSikap");
 Route.delete(
   "/rapor-sikap/sosial/:user_id",
@@ -650,24 +656,118 @@ Route.delete("/surel-tipe", "MainController.deleteSurelTipe");
 Route.put("/surel-dibaca", "MainController.dibacaSurelTipe");
 Route.post("/surel-komen/:surel_id", "MainController.postSurelKomen");
 Route.put("/surel-arsip", "MainController.putSurelArsip");
+Route.put("/surel-arsip/pin/:arsip_id", "MainController.putPinFolderArsip");
+Route.post("/surel-arsip", "MainController.postFolderArsip");
+Route.put("/surel-arsip/:arsip_id", "MainController.putFolderArsip");
+Route.delete("/surel-arsip/:arsip_id", "MainController.deleteFolderArsip");
+Route.get("/surel-arsip/:arsip_id", "MainController.detailArsipSurel");
 
 // Sarana Service
-Route.get("/sarana","MainController.getBarang");
-Route.get("/sarana/:barang_id","MainController.detailBarang");
-Route.post("/sarana","MainController.postBarang");
-Route.put("/sarana/:barang_id","MainController.putBarang");
-Route.delete("/sarana/:barang_id","MainController.deleteBarang");
-Route.post("/sarana/import","MainController.importBarang");
-Route.post("/sarana/download","MainController.downloadBarang");
+Route.get("/sarana", "MainController.getBarang");
+Route.get("/sarana/:barang_id", "MainController.detailBarang");
+Route.post("/sarana", "MainController.postBarang");
+Route.put("/sarana/:barang_id", "MainController.putBarang");
+Route.delete("/sarana/:barang_id", "MainController.deleteBarang");
+Route.post("/sarana/import", "MainController.importBarang");
+Route.post("/sarana/download", "MainController.downloadBarang");
 
 // prasarana Service
-Route.get("/prasarana","MainController.getLokasi");
-Route.get("/prasarana/:lokasi_id","MainController.detailLokasi");
-Route.post("/prasarana","MainController.postLokasi");
-Route.put("/prasarana/:lokasi_id","MainController.putLokasi");
-Route.delete("/prasarana/:lokasi_id","MainController.deleteLokasi");
-Route.post("/prasarana/import","MainController.importLokasi");
-Route.post("/prasarana/download","MainController.downloadLokasi");
+Route.get("/prasarana", "MainController.getLokasi");
+Route.get("/prasarana/:lokasi_id", "MainController.detailLokasi");
+Route.post("/prasarana", "MainController.postLokasi");
+Route.put("/prasarana/:lokasi_id", "MainController.putLokasi");
+Route.delete("/prasarana/:lokasi_id", "MainController.deleteLokasi");
+Route.post("/prasarana/import", "MainController.importLokasi");
+Route.post("/prasarana/download", "MainController.downloadLokasi");
+
+// Tata Tertib Service
+// Kategori Pelanggaran
+Route.get("/tatatertib/kategori", "MainController.getKategoriPelanggaran");
+Route.post("/tatatertib/kategori", "MainController.postKategoriPelanggaran");
+Route.put(
+  "/tatatertib/kategori/:kategori_id",
+  "MainController.putKategoriPelanggaran"
+);
+Route.delete(
+  "/tatatertib/kategori/:kategori_id",
+  "MainController.deleteKategoriPelanggaran"
+);
+
+//pelanggaran
+Route.get(
+  "/tatatertib/kategori/:kategori_id",
+  "MainController.detailKategoriPelanggaran"
+);
+Route.post(
+  "/tatatertib/pelanggaran/:kategori_id",
+  "MainController.postPelanggaran"
+);
+Route.put(
+  "/tatatertib/pelanggaran/:pelanggaran_id",
+  "MainController.putPelanggaran"
+);
+Route.delete(
+  "/tatatertib/pelanggaran/:pelanggaran_id",
+  "MainController.deletePelanggaran"
+);
+
+//Sanksi Pelanggaran
+Route.get("/tatatertib/sanksi", "MainController.getSanksiPelanggaran");
+Route.post("/tatatertib/sanksi", "MainController.postSanksiPelanggaran");
+Route.put(
+  "/tatatertib/sanksi/:sanksi_id",
+  "MainController.putSanksiPelanggaran"
+);
+Route.delete(
+  "/tatatertib/sanksi/:sanksi_id",
+  "MainController.deleteSanksiPelanggaran"
+);
+
+//Data Siswa
+Route.get("/tatatertib/rombel", "MainController.getTataTertibRombel");
+Route.get(
+  "/tatatertib/rombel/:rombel_id",
+  "MainController.detailTataTertibRombel"
+);
+Route.get("/tatatertib/siswa/:user_id", "MainController.detailTataTertibSiswa");
+Route.post("/tatatertib/siswa/:user_id", "MainController.postPelanggaranSiswa");
+Route.put(
+  "/tatatertib/siswa/pelanggaran/:pelanggaran_id",
+  "MainController.putPelanggaranSiswa"
+);
+Route.delete(
+  "/tatatertib/siswa/pelanggaran/:pelanggaran_id",
+  "MainController.deletePelanggaranSiswa"
+);
+
+Route.post("/tatatertib/siswa/sanksi/:user_id", "MainController.postSanksiSiswa");
+Route.put(
+  "/tatatertib/siswa/sanksi/:sanksi_id",
+  "MainController.putSanksiSiswa"
+);
+Route.delete(
+  "/tatatertib/siswa/sanksi/:sanksi_id",
+  "MainController.deleteSanksiSiswa"
+);
+
+//Peraturan Service
+Route.get("/tatatertib/peraturan", "MainController.getBabPeraturan");
+Route.post("/tatatertib/peraturan", "MainController.postBabPeraturan");
+Route.put("/tatatertib/peraturan/:bab_id", "MainController.putBabPeraturan");
+Route.delete(
+  "/tatatertib/peraturan/:bab_id",
+  "MainController.deleteBabPeraturan"
+);
+Route.get("/tatatertib/peraturan/:bab_id", "MainController.detailBabPeraturan");
+Route.post(
+  "/tatatertib/peraturan/:bab_id",
+  "MainController.postPasalPeraturan"
+);
+Route.put("/tatatertib/pasal/:pasal_id", "MainController.putPasalPeraturan");
+Route.delete(
+  "/tatatertib/pasal/:pasal_id",
+  "MainController.deletePasalPeraturan"
+);
 
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
