@@ -1255,7 +1255,7 @@ class MainController {
 
     const { gender, nama, whatsapp, password, avatar } = request.post();
 
-    validation = await validate(request.post(), rulesUserPost, messagesUser);
+    let validation = await validate(request.post(), rulesUserPost, messagesUser);
 
     if (validation.fails()) {
       return response.unprocessableEntity(validation.messages());
@@ -5111,22 +5111,26 @@ class MainController {
 
     await Promise.all(
       timelineTugas.toJSON().map(async (d) => {
-        if (d.tugas.draft) {
-          tugasDraf.push(d);
-        } else if (
-          moment(d.tugas.tanggal_pembagian).format("YYYY-MM-DD") <= hari_ini &&
-          moment(d.tugas.tanggal_pengumpulan).format("YYYY-MM-DD") >= hari_ini
-        ) {
-          tugasSaatIni.push(d);
-        } else if (
-          moment(d.tugas.tanggal_pembagian).format("YYYY-MM-DD") >= hari_ini &&
-          moment(d.tugas.waktu_pembagian).format("HH:mm") >= jam_saat_ini
-        ) {
-          tugasTerjadwal.push(d);
-        } else if (
-          moment(d.tugas.tanggal_pengumpulan).format("YYYY-MM-DD") <= hari_ini
-        ) {
-          tugasSelesai.push(d);
+        if (d.tugas) {
+          if (d.tugas.draft) {
+            tugasDraf.push(d);
+          } else if (
+            moment(d.tugas.tanggal_pembagian).format("YYYY-MM-DD") <=
+              hari_ini &&
+            moment(d.tugas.tanggal_pengumpulan).format("YYYY-MM-DD") >= hari_ini
+          ) {
+            tugasSaatIni.push(d);
+          } else if (
+            moment(d.tugas.tanggal_pembagian).format("YYYY-MM-DD") >=
+              hari_ini &&
+            moment(d.tugas.waktu_pembagian).format("HH:mm") >= jam_saat_ini
+          ) {
+            tugasTerjadwal.push(d);
+          } else if (
+            moment(d.tugas.tanggal_pengumpulan).format("YYYY-MM-DD") <= hari_ini
+          ) {
+            tugasSelesai.push(d);
+          }
         }
       })
     );
