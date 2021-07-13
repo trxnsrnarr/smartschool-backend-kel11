@@ -27,6 +27,7 @@ class TkSiswaPelanggaranSchema extends Schema {
         .onUpdate("cascade");
       table.string("catatan");
       table.datetime("tanggal_pelanggaran");
+      table.integer("poin");
       table.boolean("dihapus").defaultTo(0);
       table.timestamps();
     });

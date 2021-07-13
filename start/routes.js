@@ -723,11 +723,50 @@ Route.delete(
   "MainController.deleteSanksiPelanggaran"
 );
 
-//Sanksi Pelanggaran
+//Data Siswa
 Route.get("/tatatertib/rombel", "MainController.getTataTertibRombel");
 Route.get(
   "/tatatertib/rombel/:rombel_id",
   "MainController.detailTataTertibRombel"
+);
+Route.get("/tatatertib/siswa/:user_id", "MainController.detailTataTertibSiswa");
+Route.post("/tatatertib/siswa/:user_id", "MainController.postPelanggaranSiswa");
+Route.put(
+  "/tatatertib/siswa/pelanggaran/:pelanggaran_id",
+  "MainController.putPelanggaranSiswa"
+);
+Route.delete(
+  "/tatatertib/siswa/pelanggaran/:pelanggaran_id",
+  "MainController.deletePelanggaranSiswa"
+);
+
+Route.post("/tatatertib/siswa/sanksi/:user_id", "MainController.postSanksiSiswa");
+Route.put(
+  "/tatatertib/siswa/sanksi/:sanksi_id",
+  "MainController.putSanksiSiswa"
+);
+Route.delete(
+  "/tatatertib/siswa/sanksi/:sanksi_id",
+  "MainController.deleteSanksiSiswa"
+);
+
+//Peraturan Service
+Route.get("/tatatertib/peraturan", "MainController.getBabPeraturan");
+Route.post("/tatatertib/peraturan", "MainController.postBabPeraturan");
+Route.put("/tatatertib/peraturan/:bab_id", "MainController.putBabPeraturan");
+Route.delete(
+  "/tatatertib/peraturan/:bab_id",
+  "MainController.deleteBabPeraturan"
+);
+Route.get("/tatatertib/peraturan/:bab_id", "MainController.detailBabPeraturan");
+Route.post(
+  "/tatatertib/peraturan/:bab_id",
+  "MainController.postPasalPeraturan"
+);
+Route.put("/tatatertib/pasal/:pasal_id", "MainController.putPasalPeraturan");
+Route.delete(
+  "/tatatertib/pasal/:pasal_id",
+  "MainController.deletePasalPeraturan"
 );
 
 // wildcard (DROP AT BOTTOM OF THE FILE)
