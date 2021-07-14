@@ -5511,8 +5511,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { m_jadwal_mengajar_id, absen, hari_ini, waktu_saat_ini } =
-      request.get();
+    const { m_jadwal_mengajar_id, absen } = request.get();
 
     const jadwalMengajar = await MJadwalMengajar.query()
       .with("rombel")
@@ -5555,25 +5554,40 @@ class MainController {
       await Promise.all(
         timeline.toJSON().map(async (d) => {
           if (d.tipe == "tugas") {
-            if (
-              moment(
-                `${d.timeline.tugas.tanggal_pengumpulan} ${d.timeline.tugas.waktu_pengumpulan}`
-              ).format("YYYY-MM-DD HH:mm:ss") >= waktu_saat_ini
-            ) {
-              timelineData.push({ ...d, sudah_lewat: true });
-            } else {
-              timelineData.push({ ...d, sudah_lewat: false });
+            if (d.timeline.tugas) {
+              if (
+                `${moment(d.timeline.tugas.tanggal_pembagian).format(
+                  "YYYY-MM-DD"
+                )} ${moment(
+                  d.timeline.tugas.waktu_pembagian,
+                  "HH:mm:ss"
+                ).format("HH:mm:ss")}` <= moment().format("YYYY-MM-DD HH:mm:ss")
+              ) {
+                if (
+                  `${moment(d.timeline.tugas.tanggal_pengumpulan).format(
+                    "YYYY-MM-DD"
+                  )} ${moment(
+                    d.timeline.tugas.waktu_pengumpulan,
+                    "HH:mm:ss"
+                  ).format("HH:mm:ss")}` >=
+                  moment().format("YYYY-MM-DD HH:mm:ss")
+                ) {
+                  timelineData.push({ ...d, sudah_lewat: true });
+                } else {
+                  timelineData.push({ ...d, sudah_lewat: false });
+                }
+              }
             }
           } else {
             if (d.tipe == "diskusi") {
               if (
                 moment(d.tanggal_pembagian).format("YYYY-MM-DD") <=
-                moment(waktu_saat_ini).format("YYYY-MM-DD")
+                moment().format("YYYY-MM-DD")
               ) {
                 timelineData.push({ ...d });
               } else if (
                 moment(d.tanggal_pembagian).format("YYYY-MM-DD") >
-                moment(waktu_saat_ini).format("YYYY-MM-DD")
+                moment().format("YYYY-MM-DD")
               ) {
                 return;
               } else {
@@ -5607,8 +5621,8 @@ class MainController {
         .fetch();
     } else {
       const tugasIds = await MTugas.query()
-        .where("tanggal_pembagian", "<=", hari_ini)
-        .andWhere("tanggal_pengumpulan", ">=", hari_ini)
+        .where("tanggal_pembagian", "<=", moment().format("YYYY-MM-DD"))
+        .andWhere("tanggal_pengumpulan", ">=", moment().format("YYYY-MM-DD"))
         .andWhere({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .ids();
