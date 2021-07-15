@@ -774,7 +774,11 @@ Route.delete(
 );
 
 // Buku Tamu Service
+Route.get("/buku-tamu", "MainController.getBukuTamu");
+Route.get("/buku-tamu/:buku_id", "MainController.detailBukuTamu");
+Route.get("/post-buku-tamu", "MainController.getPostBukuTamu");
 Route.post("/buku-tamu", "MainController.postBukuTamu");
+Route.post("/buku-tamu/download", "MainController.downloadBukuTamu");
 
 // changeBase64ToAscii
 Route.post("/ascii", "MainController.changeBase64ToAscii");
