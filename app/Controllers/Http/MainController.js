@@ -3499,7 +3499,7 @@ class MainController {
       post = await MPost.create({
         judul,
         slug,
-        konten: konten ? Buffer(konten).toString("base64") : "",
+        konten: konten,
         banner,
         disembunyikan: 1,
         dihapus: 0,
@@ -3510,7 +3510,7 @@ class MainController {
       post = await MPost.create({
         judul,
         slug,
-        konten: konten ? Buffer(konten).toString("base64") : "",
+        konten: konten,
         banner,
         disembunyikan: 0,
         dihapus: 0,
@@ -3574,25 +3574,21 @@ class MainController {
     let post;
 
     if (disembunyikan) {
-      post = await MPost.query()
-        .where({ id: post_id })
-        .update({
-          judul,
-          konten: konten ? Buffer(konten).toString("base64") : "",
-          banner,
-          disembunyikan: 1,
-          dihapus: 0,
-        });
+      post = await MPost.query().where({ id: post_id }).update({
+        judul,
+        konten: konten,
+        banner,
+        disembunyikan: 1,
+        dihapus: 0,
+      });
     } else {
-      post = await MPost.query()
-        .where({ id: post_id })
-        .update({
-          judul,
-          konten: konten ? Buffer(konten).toString("base64") : "",
-          banner,
-          disembunyikan: 0,
-          dihapus: 0,
-        });
+      post = await MPost.query().where({ id: post_id }).update({
+        judul,
+        konten: konten,
+        banner,
+        disembunyikan: 0,
+        dihapus: 0,
+      });
     }
 
     if (!post) {
@@ -5266,19 +5262,16 @@ class MainController {
                 dihapus: 0,
               });
               if (d.user.email != null) {
-                const gmail = await Mail.send(`emails.tugas`, d, (message) => {
-                  message
-                    .to(`${d.user.email}`)
-                    .from("no-reply@smarteschool.id")
-                    .subject("Tugas Baru di SmartSchool");
-                });
-
-                if (gmail) {
-                  return response.ok({
-                    message: messageEmailSuccess,
-                  });
-                }
-                // return d.user.nama;
+                const gmail = await Mail.send(
+                  `emails.tugas`,
+                  user.toJSON(),
+                  (message) => {
+                    message
+                      .to(`${d.user.email}`)
+                      .from("no-reply@smarteschool.id")
+                      .subject("Tugas Baru di SmartSchool");
+                  }
+                );
               }
             })
           );
@@ -5298,7 +5291,7 @@ class MainController {
                   if (d.user.email != null) {
                     const gmail = await Mail.send(
                       `emails.tugas`,
-                      d,
+                      user.toJSON(),
                       (message) => {
                         message
                           .to(`${d.user.email}`)
@@ -5306,13 +5299,6 @@ class MainController {
                           .subject("Tugas Baru di SmartSchool");
                       }
                     );
-
-                    if (gmail) {
-                      return response.ok({
-                        message: messageEmailSuccess,
-                      });
-                    }
-                    // return d.user.nama;
                   }
                 })
               );
@@ -5675,8 +5661,6 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { waktu_saat_ini } = request.get();
-
     if (user.role == "siswa") {
       const timeline = await TkTimeline.query()
         .with("timeline", (builder) => {
@@ -5702,7 +5686,8 @@ class MainController {
           `${timeline.toJSON().timeline.tugas.tanggal_pengumpulan} ${
             timeline.toJSON().timeline.tugas.waktu_pengumpulan
           }`
-        ).format("YYYY-MM-DD HH:mm:ss") >= waktu_saat_ini
+        ).format("YYYY-MM-DD HH:mm:ss") >=
+          moment().format("YYYY-MM-DD HH:mm:ss")
       ) {
         sudah_lewat = true;
       }
@@ -5802,6 +5787,7 @@ class MainController {
     } = request.post();
 
     const jadwalMengajar = await MJadwalMengajar.query()
+      .with("mataPelajaran")
       .where({ id: m_jadwal_mengajar_id })
       .first();
 
@@ -5816,7 +5802,7 @@ class MainController {
         m_user_id: user.id,
         m_rombel_id: jadwalMengajar.m_rombel_id,
         tipe,
-        deskripsi: deskripsi ? Buffer(deskripsi).toString("base64") : "",
+        deskripsi: deskripsi,
         gmeet,
         tanggal_dibuat,
         dihapus: 0,
@@ -5841,19 +5827,19 @@ class MainController {
             dihapus: 0,
           });
           if (d.user.email != null) {
-            const gmail = await Mail.send(`emails.pertemuan`, d, (message) => {
-              message
-                .to(`${d.user.email}`)
-                .from("no-reply@smarteschool.id")
-                .subject("Pertemuan Baru di SmartSchool");
-            });
-
-            if (gmail) {
-              return response.ok({
-                message: messageEmailSuccess,
-              });
-            }
-            // return d.user.nama;
+            try {
+              const gmail = await Mail.send(
+                `emails.pertemuan`,
+                user.toJSON(),
+                jadwalMengajar.toJSON(),
+                (message) => {
+                  message
+                    .to(`${d.user.email}`)
+                    .from("no-reply@smarteschool.id")
+                    .subject("Pertemuan Baru di SmartSchool");
+                }
+              );
+            } catch (error) {}
           }
         })
       );
@@ -5863,7 +5849,7 @@ class MainController {
       timeline = await MTimeline.create({
         m_user_id: user.id,
         m_rombel_id: jadwalMengajar.m_rombel_id,
-        deskripsi: deskripsi ? Buffer(deskripsi).toString("base64") : "",
+        deskripsi: deskripsi,
         lampiran: lampiran.toString(),
         tipe,
         dihapus: 0,
@@ -5930,14 +5916,12 @@ class MainController {
     }
 
     if (tipe == "diskusi") {
-      timeline = await MTimeline.query()
-        .where({ id: timeline_id })
-        .update({
-          m_jadwal_mengajar_id,
-          deskripsi: deskripsi ? Buffer(deskripsi).toString("base64") : "",
-          lampiran: lampiran.toString(),
-          tipe,
-        });
+      timeline = await MTimeline.query().where({ id: timeline_id }).update({
+        m_jadwal_mengajar_id,
+        deskripsi: deskripsi,
+        lampiran: lampiran.toString(),
+        tipe,
+      });
     }
 
     if (tipe == "absen") {
@@ -5954,7 +5938,7 @@ class MainController {
           .update({
             rpp: rpp ? rpp.toString() : "",
             jurnal,
-            deskripsi: deskripsi ? Buffer(deskripsi).toString("base64") : "",
+            deskripsi: deskripsi,
             gmeet,
           });
       }
@@ -7453,31 +7437,6 @@ class MainController {
       ? JSON.stringify(soal_menjodohkan)
       : null;
 
-    jawaban_a =
-      typeof jawaban_a !== "object"
-        ? Buffer(jawaban_a).toString("base64")
-        : null;
-    jawaban_b =
-      typeof jawaban_b !== "object"
-        ? Buffer(jawaban_b).toString("base64")
-        : null;
-    jawaban_c =
-      typeof jawaban_c !== "object"
-        ? Buffer(jawaban_c).toString("base64")
-        : null;
-    jawaban_d =
-      typeof jawaban_d !== "object"
-        ? Buffer(jawaban_d).toString("base64")
-        : null;
-    jawaban_e =
-      typeof jawaban_e !== "object"
-        ? Buffer(jawaban_e).toString("base64")
-        : null;
-    pembahasan =
-      typeof pembahasan !== "object"
-        ? Buffer(pembahasan).toString("base64")
-        : null;
-
     const soalUjian = await MSoalUjian.create({
       kd,
       kd_konten_materi,
@@ -7487,7 +7446,7 @@ class MainController {
       akm_konteks_materi,
       akm_proses_kognitif,
       audio,
-      pertanyaan: pertanyaan ? Buffer(pertanyaan).toString("base64") : "",
+      pertanyaan,
       jawaban_a,
       jawaban_b,
       jawaban_c,
@@ -7562,19 +7521,15 @@ class MainController {
           // akm_konten_materi,
           // akm_konteks_materi,
           // akm_proses_kognitif,
-          pertanyaan: d.pertanyaan
-            ? Buffer(d.pertanyaan).toString("base64")
-            : "",
-          jawaban_a: d.jawaban_a ? Buffer(d.jawaban_a).toString("base64") : "",
-          jawaban_b: d.jawaban_b ? Buffer(d.jawaban_b).toString("base64") : "",
-          jawaban_c: d.jawaban_c ? Buffer(d.jawaban_c).toString("base64") : "",
-          jawaban_d: d.jawaban_d ? Buffer(d.jawaban_d).toString("base64") : "",
-          jawaban_e: d.jawaban_e ? Buffer(d.jawaban_e).toString("base64") : "",
+          pertanyaan: d.pertanyaan,
+          jawaban_a: d.jawaban_a,
+          jawaban_b: d.jawaban_b,
+          jawaban_c: d.jawaban_c,
+          jawaban_d: d.jawaban_d,
+          jawaban_e: d.jawaban_e,
           kj_pg: d.kj_pg,
           // rubrik_kj: JSON.stringify(rubrik_kj),
-          pembahasan: d.pembahasan
-            ? Buffer(d.pembahasan).toString("base64")
-            : "",
+          pembahasan: d.pembahasan,
           nilai_soal: d.nilai_soal,
           m_user_id: user.id,
           dihapus: 0,
@@ -7678,31 +7633,6 @@ class MainController {
       ? JSON.stringify(soal_menjodohkan)
       : null;
 
-    jawaban_a =
-      typeof jawaban_a !== "object"
-        ? Buffer(jawaban_a).toString("base64")
-        : null;
-    jawaban_b =
-      typeof jawaban_b !== "object"
-        ? Buffer(jawaban_b).toString("base64")
-        : null;
-    jawaban_c =
-      typeof jawaban_c !== "object"
-        ? Buffer(jawaban_c).toString("base64")
-        : null;
-    jawaban_d =
-      typeof jawaban_d !== "object"
-        ? Buffer(jawaban_d).toString("base64")
-        : null;
-    jawaban_e =
-      typeof jawaban_e !== "object"
-        ? Buffer(jawaban_e).toString("base64")
-        : null;
-    pembahasan =
-      typeof pembahasan !== "object"
-        ? Buffer(pembahasan).toString("base64")
-        : null;
-
     const soalUjian = await MSoalUjian.query()
       .where({ id: soal_ujian_id })
       .update({
@@ -7714,7 +7644,7 @@ class MainController {
         akm_konteks_materi,
         akm_proses_kognitif,
         audio,
-        pertanyaan: pertanyaan ? Buffer(pertanyaan).toString("base64") : "",
+        pertanyaan,
         jawaban_a,
         jawaban_b,
         jawaban_c,
@@ -11969,15 +11899,11 @@ class MainController {
       bank: "required",
       bulan: "required",
       nominal: "required",
-      tanggal_dibuat: "required",
-      rombel_id: "required",
     };
     const message = {
       "bank.required": "Bank harus dipilih",
       "bulan.required": "Bulan harus dipilih",
       "nominal.required": "Nominal harus diisi",
-      "tanggal_dibuat.required": "Tanggal dibuat harus diisi",
-      "rombel_id.required": "Bagikan harus dipilih",
     };
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
@@ -12319,19 +12245,20 @@ class MainController {
                   m_sekolah_id: sekolah.id,
                 });
                 if (e.user.email != null) {
-                  const gmail = await Mail.send(`emails.spp`, e, (message) => {
-                    message
-                      .to(`${e.user.email}`)
-                      .from("no-reply@smarteschool.id")
-                      .subject("Pembayaran SPP");
-                  });
-
-                  if (gmail) {
-                    return response.ok({
-                      message: messageEmailSuccess,
-                    });
+                  try {
+                    const gmail = await Mail.send(
+                      `emails.spp`,
+                      pembayaran.toJSON(),
+                      (message) => {
+                        message
+                          .to(`${e.user.email}`)
+                          .from("no-reply@smarteschool.id")
+                          .subject("Pembayaran SPP");
+                      }
+                    );
+                  } catch (error) {
+                    // console.log(error);
                   }
-                  // return d.user.nama;
                 }
               })
             );
@@ -15045,6 +14972,9 @@ class MainController {
       }
     });
 
+    let dataUpdated;
+    let dataCreated;
+
     const result = await Promise.all(
       data.map(async (d) => {
         const checkUser = await User.query()
@@ -15052,46 +14982,68 @@ class MainController {
           .andWhere({ dihapus: 0 })
           .first();
 
+        let payload = {
+          nuptk: d.nuptk,
+          nip: d.nip,
+          status_kepegawaian: d.status_kepegawaian,
+          jenis_ptk: d.jenis_ptk,
+          agama: d.agama,
+          alamat: d.alamat,
+          rt: d.rt,
+          rw: d.rw,
+          dusun: d.dusun,
+          kodepos: d.kode_pos,
+          tugas_tambahan: d.tugas_tambahan,
+        };
+
         let kecamatan1 = `${d.kecamatan.split(" ")[1]}`;
         let kecamatan2 = d ? d.kecamatan.split(" ")[2] : "";
         let kecamatans = kecamatan1.concat(" ", kecamatan2 ? kecamatan2 : "");
+
         const districtIds = await District.query()
           .with("regency")
           .where({ name: kecamatans })
           .first();
 
-        const villageIds = await Village.query()
-          .where({ name: d.kelurahan })
-          .andWhere({ district_id: districtIds.id })
-          .first();
+        let villageIds;
 
-        // return villageIds;
-
-        if (checkUser) {
-          await MProfilUser.create({
-            nuptk: d.nuptk,
-            gender: d.gender,
-            tempat_lahir: d.tempat_lahir,
-            tanggal_lahir: d.tanggal_lahir,
-            nip: d.nip,
-            status_kepegawaian: d.status_kepegawaian,
-            jenis_ptk: d.jenis_ptk,
-            agama: d.agama,
-            alamat: d.alamat,
-            rt: d.rt,
-            rw: d.rw,
-            dusun: d.dusun,
+        if (districtIds) {
+          payload = {
+            ...payload,
             village_id: villageIds ? villageIds.id : "",
             district_id: districtIds.id,
             regency_id: districtIds.regency_id,
             province_id: districtIds.toJSON().regency.province_id,
-            kodepos: d.kode_pos,
-            tugas_tambahan: d.tugas_tambahan,
-          });
-          return {
-            message: `${d.nama} ${d.whatsapp} sudah terdaftar`,
-            error: true,
           };
+
+          villageIds = await Village.query()
+            .where({ name: d.kelurahan })
+            .andWhere({ district_id: districtIds.id })
+            .first();
+
+          if (villageIds) {
+            payload = {
+              ...payload,
+              village_id: villageIds ? villageIds.id : "",
+            };
+          }
+        }
+
+        if (checkUser) {
+          const checkProfil = await MProfilUser.query()
+            .select("id")
+            .where({ m_user_id: checkUser.id })
+            .first();
+
+          if (checkProfil) {
+            await MProfilUser.query()
+              .where({ id: checkProfil.id })
+              .update(payload);
+          } else {
+            await MProfilUser.create(payload);
+          }
+
+          return dataUpdated++;
         }
 
         await User.create({
@@ -15102,33 +15054,16 @@ class MainController {
           role: "guru",
           m_sekolah_id: sekolah.id,
           dihapus: 0,
-        });
-        await MProfilUser.create({
-          nuptk: d.nuptk,
-          gender: d.gender,
           tempat_lahir: d.tempat_lahir,
           tanggal_lahir: d.tanggal_lahir,
-          nip: d.nip,
-          status_kepegawaian: d.status_kepegawaian,
-          jenis_ptk: d.jenis_ptk,
-          agama: d.agama,
-          alamat: d.alamat,
-          rt: d.rt,
-          rw: d.rw,
-          dusun: d.dusun,
-          village_id: villageIds.id,
-          district_id: districtIds.id,
-          regency_id: districtIds.regency_id,
-          province_id: districtIds.toJSON().regency.province_id,
-          kodepos: d.kode_pos,
-          tugas_tambahan: d.tugas_tambahan,
         });
+        await MProfilUser.create(payload);
 
-        return;
+        return dataCreated++;
       })
     );
 
-    return result;
+    return { dataCreated, dataUpdated };
   }
 
   async importGTK({ request, response }) {
@@ -23023,6 +22958,70 @@ class MainController {
     });
   }
 
+  async getBukuTamu({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { tanggal } = request.post();
+
+    let buku;
+
+    if (tanggal) {
+      buku = await MBukuTamu.query()
+        .whereBetween("tanggal_dibuat", [`${tanggal}`, `${tanggal}`])
+        .andWhere({ dihapus: 0 })
+        .fetch();
+    } else {
+      buku = await MBukuTamu.query().where({ dihapus: 0 }).fetch();
+    }
+
+    return response.ok({
+      buku,
+    });
+  }
+
+  async detailBukuTamu({ response, request, auth, params: { buku_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const buku = await MBukuTamu.query()
+      .where({ dihapus: 0 })
+      .andWhere({ id: buku_id })
+      .first();
+
+    return response.ok({
+      buku,
+    });
+  }
+
+  async getPostBukuTamu({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    // const provinsi = Province.query().fetch();
+    // const kota = Regency.query().fetch();
+
+    return response.ok({
+      provinsi,
+      kota,
+    });
+  }
+
   async postBukuTamu({ response, request, auth }) {
     const domain = request.headers().origin;
 
@@ -23045,6 +23044,7 @@ class MainController {
       kodepos,
       keterangan,
       ttd,
+      tanggal_dibuat,
     } = request.post();
     const rules = {
       nama: "required",
@@ -23075,6 +23075,28 @@ class MainController {
       return response.unprocessableEntity(validation.messages());
     }
 
+    const jadwalMengajar = await MJadwalMengajar.query()
+      .with("mataPelajaran")
+      .where({ id: 14521 })
+      .first();
+
+    const data = [jadwalMengajar, user];
+
+    const gmail = await Mail.send(
+      `emails.sppbayar`,
+      user.toJSON(),
+      (message) => {
+        message
+          .to(`raihanvans@gmail.com`)
+          .from("no-reply@smarteschool.id")
+          .subject("SPP terkonfirmasi");
+      }
+    );
+    if (gmail) {
+      return response.ok({
+        message: messageEmailSuccess,
+      });
+    }
     const buku = await MBukuTamu.create({
       nama,
       no_hp,
@@ -23086,6 +23108,7 @@ class MainController {
       kodepos,
       keterangan,
       ttd,
+      tanggal_dibuat,
       m_sekolah_id: sekolah.id,
       dihapus: 0,
     });
@@ -23093,6 +23116,206 @@ class MainController {
     return response.ok({
       message: messagePostSuccess,
     });
+  }
+  async downloadBukuTamu({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const buku = await MBukuTamu.query().where({ dihapus: 0 }).fetch();
+
+    // const province = await this.getProvince("1");
+    // return province;
+
+    let workbook = new Excel.Workbook();
+    let worksheet = workbook.addWorksheet(`Daftar Buku Tamu`);
+    worksheet.mergeCells("A1:L1");
+    worksheet.mergeCells("A2:L2");
+    worksheet.getCell(
+      "A3"
+    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    worksheet.addConditionalFormatting({
+      ref: "A1:L2",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 16,
+              bold: true,
+            },
+            // fill: {
+            //   type: "pattern",
+            //   pattern: "solid",
+            //   bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            // },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            // border: {
+            //   top: { style: "thin" },
+            //   left: { style: "thin" },
+            //   bottom: { style: "thin" },
+            //   right: { style: "thin" },
+            // },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: "A4:L4",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet.getCell("A1").value = "Rekap Buku Tamu";
+    worksheet.getCell("A2").value = sekolah.nama;
+    await Promise.all(
+      buku.toJSON().map(async (d, idx) => {
+        // add column headers
+        worksheet.getRow(4).values = [
+          "No",
+          "Nama",
+          "Nomor Telepon",
+          "Asal Instansi",
+          "Bidang Instansi",
+          "Alamat",
+          "Provinsi",
+          "Regency",
+          "Kode Pos",
+          "Tanggal Kehadiran",
+          "Keterangan",
+          "Tanda Tangan",
+        ];
+        worksheet.columns = [
+          { key: "no" },
+          { key: "nama" },
+          { key: "no_hp" },
+          { key: "instansi" },
+          { key: "bidang" },
+          { key: "alamat" },
+          { key: "province_id" },
+          { key: "regency_id" },
+          { key: "kodepos" },
+          { key: "created_at" },
+          { key: "keterangan" },
+          { key: "ttd" },
+        ];
+
+        // Add row using key mapping to columns
+        let row = worksheet.addRow({
+          no: `${idx + 1}`,
+          nama: d ? d.nama : "-",
+          instansi: d ? d.instansi : "-",
+          no_hp: d ? d.no_hp : "-",
+          bidang: d ? d.bidang : "-",
+          alamat: d ? d.alamat : "-",
+          province_id: d ? d.province_id : "-",
+          regency_id: d ? d.regency_id : "-",
+          deskripsi: d ? d.deskripsi : "-",
+          created_at: d ? d.created_at : "-",
+          kodepos: d ? d.kodepos : "-",
+          keterangan: d ? d.keterangan : "-",
+          ttd: d ? d.ttd : "-",
+        });
+        worksheet.addConditionalFormatting({
+          ref: `B${(idx + 1) * 1 + 4}:L${(idx + 1) * 1 + 4}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet.addConditionalFormatting({
+          ref: `A${(idx + 1) * 1 + 4}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+      })
+    );
+    let namaFile = `/uploads/rekap-Buku-Tamu-${keluarantanggal}.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
   }
 }
 module.exports = MainController;
