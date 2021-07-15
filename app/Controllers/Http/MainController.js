@@ -5268,19 +5268,16 @@ class MainController {
                 dihapus: 0,
               });
               if (d.user.email != null) {
-                const gmail = await Mail.send(`emails.tugas`, d, (message) => {
-                  message
-                    .to(`${d.user.email}`)
-                    .from("no-reply@smarteschool.id")
-                    .subject("Tugas Baru di SmartSchool");
-                });
-
-                if (gmail) {
-                  return response.ok({
-                    message: messageEmailSuccess,
-                  });
-                }
-                // return d.user.nama;
+                const gmail = await Mail.send(
+                  `emails.tugas`,
+                  user.toJSON(),
+                  (message) => {
+                    message
+                      .to(`${d.user.email}`)
+                      .from("no-reply@smarteschool.id")
+                      .subject("Tugas Baru di SmartSchool");
+                  }
+                );
               }
             })
           );
@@ -5300,7 +5297,7 @@ class MainController {
                   if (d.user.email != null) {
                     const gmail = await Mail.send(
                       `emails.tugas`,
-                      d,
+                      user.toJSON(),
                       (message) => {
                         message
                           .to(`${d.user.email}`)
@@ -5308,13 +5305,6 @@ class MainController {
                           .subject("Tugas Baru di SmartSchool");
                       }
                     );
-
-                    if (gmail) {
-                      return response.ok({
-                        message: messageEmailSuccess,
-                      });
-                    }
-                    // return d.user.nama;
                   }
                 })
               );
@@ -5804,6 +5794,7 @@ class MainController {
     } = request.post();
 
     const jadwalMengajar = await MJadwalMengajar.query()
+      .with("mataPelajaran")
       .where({ id: m_jadwal_mengajar_id })
       .first();
 
@@ -5843,19 +5834,19 @@ class MainController {
             dihapus: 0,
           });
           if (d.user.email != null) {
-            const gmail = await Mail.send(`emails.pertemuan`, d, (message) => {
-              message
-                .to(`${d.user.email}`)
-                .from("no-reply@smarteschool.id")
-                .subject("Pertemuan Baru di SmartSchool");
-            });
-
-            if (gmail) {
-              return response.ok({
-                message: messageEmailSuccess,
-              });
-            }
-            // return d.user.nama;
+            try {
+              const gmail = await Mail.send(
+                `emails.pertemuan`,
+                user.toJSON(),
+                jadwalMengajar.toJSON(),
+                (message) => {
+                  message
+                    .to(`${d.user.email}`)
+                    .from("no-reply@smarteschool.id")
+                    .subject("Pertemuan Baru di SmartSchool");
+                }
+              );
+            } catch (error) {}
           }
         })
       );
@@ -12317,19 +12308,20 @@ class MainController {
                   m_sekolah_id: sekolah.id,
                 });
                 if (e.user.email != null) {
-                  const gmail = await Mail.send(`emails.spp`, e, (message) => {
-                    message
-                      .to(`${e.user.email}`)
-                      .from("no-reply@smarteschool.id")
-                      .subject("Pembayaran SPP");
-                  });
-
-                  if (gmail) {
-                    return response.ok({
-                      message: messageEmailSuccess,
-                    });
+                  try {
+                    const gmail = await Mail.send(
+                      `emails.spp`,
+                      pembayaran.toJSON(),
+                      (message) => {
+                        message
+                          .to(`${e.user.email}`)
+                          .from("no-reply@smarteschool.id")
+                          .subject("Pembayaran SPP");
+                      }
+                    );
+                  } catch (error) {
+                    // console.log(error);
                   }
-                  // return d.user.nama;
                 }
               })
             );
@@ -23074,8 +23066,8 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const provinsi = Province.query().fetch();
-    const kota = Regency.query().fetch();
+    // const provinsi = Province.query().fetch();
+    // const kota = Regency.query().fetch();
 
     return response.ok({
       provinsi,
@@ -23136,12 +23128,23 @@ class MainController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const gmail = await Mail.send(`emails.spp`, user, (message) => {
-      message
-        .to(`raihanvans@gmail.com`)
-        .from("no-reply@smarteschool.id")
-        .subject("Pembayaran SPP");
-    });
+    const jadwalMengajar = await MJadwalMengajar.query()
+      .with("mataPelajaran")
+      .where({ id: 14521 })
+      .first();
+
+    const data = [jadwalMengajar, user];
+
+    const gmail = await Mail.send(
+      `emails.sppbayar`,
+      user.toJSON(),
+      (message) => {
+        message
+          .to(`raihanvans@gmail.com`)
+          .from("no-reply@smarteschool.id")
+          .subject("SPP terkonfirmasi");
+      }
+    );
     if (gmail) {
       return response.ok({
         message: messageEmailSuccess,
