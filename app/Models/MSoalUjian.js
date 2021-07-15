@@ -35,80 +35,11 @@ class MSoalUjian extends Model {
   }
 
   static get computed() {
-    return [
-      "pertanyaan_ascii",
-      "jawaban_a_ascii",
-      "jawaban_b_ascii",
-      "jawaban_c_ascii",
-      "jawaban_d_ascii",
-      "jawaban_e_ascii",
-      "aspek_level",
-    ];
+    return ["aspek_level"];
   }
 
   getAspekLevel({ level_kognitif }) {
     return level_kognitif ? level_kognitif.toUpperCase() : "";
-  }
-
-  getPertanyaanAscii({ pertanyaan }) {
-    var regex = /(<([^>]+)>)/gi,
-      body = pertanyaan,
-      result = body.replace(regex, "");
-
-    var nbsp = /\&nbsp;/gi,
-      body1 = result,
-      result1 = body1.replace(nbsp, "");
-    return result1;
-  }
-
-  getJawabanAAscii({ jawaban_a }) {
-    var regex = /(<([^>]+)>)/gi,
-      body = jawaban_a,
-      result = body.replace(regex, "");
-
-    var nbsp = /\&nbsp;/gi,
-      body1 = result,
-      result1 = body1.replace(nbsp, "");
-    return result1;
-  }
-  getJawabanBAscii({ jawaban_b }) {
-    var regex = /(<([^>]+)>)/gi,
-      body = jawaban_b,
-      result = body.replace(regex, "");
-    var nbsp = /\&nbsp;/gi,
-      body1 = result,
-      result1 = body1.replace(nbsp, "");
-    return result1;
-  }
-  getJawabanCAscii({ jawaban_c }) {
-    var regex = /(<([^>]+)>)/gi,
-      body = jawaban_c,
-      result = body.replace(regex, "");
-
-    var nbsp = /\&nbsp;/gi,
-      body1 = result,
-      result1 = body1.replace(nbsp, "");
-    return result1;
-  }
-  getJawabanDAscii({ jawaban_d }) {
-    var regex = /(<([^>]+)>)/gi,
-      body = jawaban_d,
-      result = body.replace(regex, "");
-
-    var nbsp = /\&nbsp;/gi,
-      body1 = result,
-      result1 = body1.replace(nbsp, "");
-    return result1;
-  }
-  getJawabanEAscii({ jawaban_e }) {
-    var regex = /(<([^>]+)>)/gi,
-      body = jawaban_e,
-      result = body.replace(regex, "");
-
-    var nbsp = /\&nbsp;/gi,
-      body1 = result,
-      result1 = body1.replace(nbsp, "");
-    return result1;
   }
 }
 

@@ -23043,36 +23043,44 @@ class MainController {
   }
 
   async changeBase64ToAscii({ response, request, auth }) {
-    const data = await MTimeline.query()
-      .select("id", "deskripsi")
-      .where("id", ">", 877)
-      .fetch();
-
     // const data = await MPost.query().select("id", "konten").fetch();
 
-    // const data = await MSoalUjian.query().select("id",
-    // 'pertanyaan',
-    // 'jawaban_a',
-    // 'jawaban_b',
-    // 'jawaban_c',
-    // 'jawaban_d',
-    // 'jawaban_e',
-    // 'pembahasan',
-    // ).fetch()
+    // const data = await MSoalUjian.query()
+    //   .select(
+    //     "id",
+    //     "pertanyaan",
+    //     "jawaban_a",
+    //     "jawaban_b",
+    //     "jawaban_c",
+    //     "jawaban_d",
+    //     "jawaban_e",
+    //     "pembahasan"
+    //   )
+    //   .whereBetween("id", [9001, 10000])
+    //   .fetch();
 
     return await Promise.all(
       data.toJSON().map(async (d, idx) => {
-        const check = await MTimeline.query()
-          .where({ id: d.id })
-          .update({
-            deskripsi: Buffer(d.deskripsi, "base64").toString("ascii"),
-          });
-
-        if (check) {
-          return "berhasil";
-        } else {
-          return "gagal";
-        }
+        // try {
+        //   const check = await MSoalUjian.query()
+        //     .where({ id: d.id })
+        //     .update({
+        //       pertanyaan: Buffer(d.pertanyaan).toString("base64"),
+        //       jawaban_a: Buffer(d.jawaban_a).toString("base64"),
+        //       jawaban_b: Buffer(d.jawaban_b).toString("base64"),
+        //       jawaban_c: Buffer(d.jawaban_c).toString("base64"),
+        //       jawaban_d: Buffer(d.jawaban_d).toString("base64"),
+        //       jawaban_e: Buffer(d.jawaban_e).toString("base64"),
+        //       pembahasan: Buffer(d.pembahasan).toString("base64"),
+        //     });
+        // } catch (err) {
+        //   console.log(err);
+        // }
+        // if (check) {
+        //   return "berhasil";
+        // } else {
+        //   return "gagal";
+        // }
       })
     );
   }
