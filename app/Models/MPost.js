@@ -19,12 +19,6 @@ class MPost extends Model {
     return this.belongsTo("App/Models/User", "m_user_id");
   }
 
-  getKonten(konten) {
-    return konten
-      ? Buffer(konten, "base64").toString("ascii").replace("b&", "..........")
-      : "";
-  }
-
   getCreatedAt(created_at) {
     return moment(created_at).format("DD MMMM YYYY");
   }

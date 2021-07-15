@@ -95,10 +95,6 @@ class MTimeline extends Model {
   getRpp(rpp) {
     return rpp ? rpp.split(",") : [];
   }
-
-  getDeskripsi(deskripsi) {
-    return deskripsi ? Buffer(deskripsi, "base64").toString("ascii") : "";
-  }
 }
 
 module.exports = MTimeline;
