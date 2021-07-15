@@ -681,6 +681,7 @@ Route.post("/prasarana/import", "MainController.importLokasi");
 Route.post("/prasarana/download", "MainController.downloadLokasi");
 
 // Tata Tertib Service
+Route.get("/tatatertib", "MainController.getTataTertib");
 // Kategori Pelanggaran
 Route.get("/tatatertib/kategori", "MainController.getKategoriPelanggaran");
 Route.post("/tatatertib/kategori", "MainController.postKategoriPelanggaran");
@@ -740,7 +741,10 @@ Route.delete(
   "MainController.deletePelanggaranSiswa"
 );
 
-Route.post("/tatatertib/siswa/sanksi/:user_id", "MainController.postSanksiSiswa");
+Route.post(
+  "/tatatertib/siswa/sanksi/:user_id",
+  "MainController.postSanksiSiswa"
+);
 Route.put(
   "/tatatertib/siswa/sanksi/:sanksi_id",
   "MainController.putSanksiSiswa"
@@ -768,6 +772,13 @@ Route.delete(
   "/tatatertib/pasal/:pasal_id",
   "MainController.deletePasalPeraturan"
 );
+
+// Buku Tamu Service
+Route.get("/buku-tamu", "MainController.getBukuTamu");
+Route.get("/buku-tamu/:buku_id", "MainController.detailBukuTamu");
+Route.get("/post-buku-tamu", "MainController.getPostBukuTamu");
+Route.post("/buku-tamu", "MainController.postBukuTamu");
+Route.post("/buku-tamu/download", "MainController.downloadBukuTamu");
 
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
