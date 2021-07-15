@@ -776,5 +776,8 @@ Route.delete(
 // Buku Tamu Service
 Route.post("/buku-tamu", "MainController.postBukuTamu");
 
+// changeBase64ToAscii
+Route.post("/ascii", "MainController.changeBase64ToAscii");
+
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
