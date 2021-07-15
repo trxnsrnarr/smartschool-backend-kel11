@@ -16567,6 +16567,8 @@ class MainController {
   async downloadRombel({ response, request, auth }) {
     const domain = request.headers().origin;
 
+    const user = await auth.getUser()
+
     const sekolah = await this.getSekolahByDomain(domain);
 
     if (sekolah == "404") {
@@ -16744,7 +16746,7 @@ class MainController {
         );
       })
     );
-    let namaFile = `/uploads/rekap-Rombel.xlsx`;
+    let namaFile = `/uploads/rekap-rombel-${new Date().getTime()}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
