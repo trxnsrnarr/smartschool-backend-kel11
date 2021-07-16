@@ -38,6 +38,7 @@
     "html-escaper": "^3.0.3",
     "moment": "^2.29.1",
     "mysql": "^2.18.1",
+    "node-cron": "^3.0.0",
     "node-fetch": "^2.6.1",
     "nodejs-file-downloader": "^4.6.0",
     "pdf-image": "^2.0.0",
