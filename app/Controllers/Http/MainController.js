@@ -5267,18 +5267,22 @@ class MainController {
                 m_timeline_id: timeline.id,
                 dihapus: 0,
               });
-              if (d.user.email != null) {
-                const gmail = await Mail.send(
-                  `emails.tugas`,
-                  user.toJSON(),
-                  (message) => {
-                    message
-                      .to(`${d.user.email}`)
-                      .from("no-reply@smarteschool.id")
-                      .subject("Tugas Baru di SmartSchool");
-                  }
-                );
-              }
+
+              // try {
+              // if (d.user.email != null) {
+              //   const gmail = await Mail.send(
+              //     `emails.tugas`,
+              //     user.toJSON(),
+              //     (message) => {
+              //       message
+              //         .to(`${d.user.email}`)
+              //         .from("no-reply@smarteschool.id")
+              //         .subject("Tugas Baru di SmartSchool");
+              //     }
+              //   );
+              // }
+
+              // } catch (error) {}
             })
           );
         } else {
@@ -5294,18 +5298,21 @@ class MainController {
                       dihapus: 0,
                     });
                   }
-                  if (d.user.email != null) {
-                    const gmail = await Mail.send(
-                      `emails.tugas`,
-                      user.toJSON(),
-                      (message) => {
-                        message
-                          .to(`${d.user.email}`)
-                          .from("no-reply@smarteschool.id")
-                          .subject("Tugas Baru di SmartSchool");
-                      }
-                    );
-                  }
+                  // try {
+                  // if (d.user.email != null) {
+                  //   const gmail = await Mail.send(
+                  //     `emails.tugas`,
+                  //     user.toJSON(),
+                  //     (message) => {
+                  //       message
+                  //         .to(`${d.user.email}`)
+                  //         .from("no-reply@smarteschool.id")
+                  //         .subject("Tugas Baru di SmartSchool");
+                  //     }
+                  //   );
+                  // }
+
+                  // } catch (error) {}
                 })
               );
             })
@@ -5833,21 +5840,21 @@ class MainController {
             m_timeline_id: timeline.id,
             dihapus: 0,
           });
-          if (d.user.email != null) {
-            try {
-              const gmail = await Mail.send(
-                `emails.pertemuan`,
-                user.toJSON(),
-                jadwalMengajar.toJSON(),
-                (message) => {
-                  message
-                    .to(`${d.user.email}`)
-                    .from("no-reply@smarteschool.id")
-                    .subject("Pertemuan Baru di SmartSchool");
-                }
-              );
-            } catch (error) {}
-          }
+          // if (d.user.email != null) {
+          //   try {
+          //     const gmail = await Mail.send(
+          //       `emails.pertemuan`,
+          //       user.toJSON(),
+          //       jadwalMengajar.toJSON(),
+          //       (message) => {
+          //         message
+          //           .to(`${d.user.email}`)
+          //           .from("no-reply@smarteschool.id")
+          //           .subject("Pertemuan Baru di SmartSchool");
+          //       }
+          //     );
+          //   } catch (error) {}
+          // }
         })
       );
 
