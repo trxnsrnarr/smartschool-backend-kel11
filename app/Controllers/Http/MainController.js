@@ -134,6 +134,7 @@ const PDFDocument = require("pdfkit");
 const fs = require("fs");
 const fetch = require("node-fetch");
 const pdf = require("pdf-parse");
+const htmlEscaper = require("html-escaper");
 
 // firestore
 const Firestore = use("App/Models/Firestore");
@@ -3820,14 +3821,14 @@ class MainController {
 
     workbook = await workbook.xlsx.readFile(filelocation);
 
-    let explanation = workbook.getWorksheet("Sheet 1");
+    let explanation = workbook.getWorksheet("Sheet1");
 
     let colComment = explanation.getColumn("A");
 
     let data = [];
 
     colComment.eachCell(async (cell, rowNumber) => {
-      if (rowNumber >= 2) {
+      if (rowNumber >= 8) {
         data.push({
           nama: explanation.getCell("A" + rowNumber).value,
           whatsapp: explanation.getCell("B" + rowNumber).value,
@@ -5802,7 +5803,7 @@ class MainController {
         m_user_id: user.id,
         m_rombel_id: jadwalMengajar.m_rombel_id,
         tipe,
-        deskripsi: deskripsi,
+        deskripsi: htmlEscaper.escape(deskripsi),
         gmeet,
         tanggal_dibuat,
         dihapus: 0,
@@ -5849,7 +5850,7 @@ class MainController {
       timeline = await MTimeline.create({
         m_user_id: user.id,
         m_rombel_id: jadwalMengajar.m_rombel_id,
-        deskripsi: deskripsi,
+        deskripsi: htmlEscaper.escape(deskripsi),
         lampiran: lampiran.toString(),
         tipe,
         dihapus: 0,
@@ -5916,12 +5917,14 @@ class MainController {
     }
 
     if (tipe == "diskusi") {
-      timeline = await MTimeline.query().where({ id: timeline_id }).update({
-        m_jadwal_mengajar_id,
-        deskripsi: deskripsi,
-        lampiran: lampiran.toString(),
-        tipe,
-      });
+      timeline = await MTimeline.query()
+        .where({ id: timeline_id })
+        .update({
+          m_jadwal_mengajar_id,
+          deskripsi: htmlEscaper.escape(deskripsi),
+          lampiran: lampiran.toString(),
+          tipe,
+        });
     }
 
     if (tipe == "absen") {
@@ -5938,7 +5941,7 @@ class MainController {
           .update({
             rpp: rpp ? rpp.toString() : "",
             jurnal,
-            deskripsi: deskripsi,
+            deskripsi: htmlEscaper.escape(deskripsi),
             gmeet,
           });
       }
@@ -7446,12 +7449,12 @@ class MainController {
       akm_konteks_materi,
       akm_proses_kognitif,
       audio,
-      pertanyaan,
-      jawaban_a,
-      jawaban_b,
-      jawaban_c,
-      jawaban_d,
-      jawaban_e,
+      pertanyaan: htmlEscaper.escape(pertanyaan),
+      jawaban_a: htmlEscaper.escape(jawaban_a),
+      jawaban_b: htmlEscaper.escape(jawaban_b),
+      jawaban_c: htmlEscaper.escape(jawaban_c),
+      jawaban_d: htmlEscaper.escape(jawaban_d),
+      jawaban_e: htmlEscaper.escape(jawaban_e),
       kj_pg,
       kj_uraian,
       jawaban_pg_kompleks,
@@ -7460,7 +7463,7 @@ class MainController {
       opsi_a_uraian,
       opsi_b_uraian,
       rubrik_kj: JSON.stringify(rubrik_kj),
-      pembahasan,
+      pembahasan: htmlEscaper.escape(pembahasan),
       nilai_soal,
       m_user_id: user.id,
       dihapus: 0,
@@ -7521,15 +7524,15 @@ class MainController {
           // akm_konten_materi,
           // akm_konteks_materi,
           // akm_proses_kognitif,
-          pertanyaan: d.pertanyaan,
-          jawaban_a: d.jawaban_a,
-          jawaban_b: d.jawaban_b,
-          jawaban_c: d.jawaban_c,
-          jawaban_d: d.jawaban_d,
-          jawaban_e: d.jawaban_e,
+          pertanyaan: htmlEscaper.escape(d.pertanyaan),
+          jawaban_a: htmlEscaper.escape(d.jawaban_a),
+          jawaban_b: htmlEscaper.escape(d.jawaban_b),
+          jawaban_c: htmlEscaper.escape(d.jawaban_c),
+          jawaban_d: htmlEscaper.escape(d.jawaban_d),
+          jawaban_e: htmlEscaper.escape(d.jawaban_e),
           kj_pg: d.kj_pg,
           // rubrik_kj: JSON.stringify(rubrik_kj),
-          pembahasan: d.pembahasan,
+          pembahasan: htmlEscaper.escape(d.pembahasan),
           nilai_soal: d.nilai_soal,
           m_user_id: user.id,
           dihapus: 0,
@@ -7644,12 +7647,12 @@ class MainController {
         akm_konteks_materi,
         akm_proses_kognitif,
         audio,
-        pertanyaan,
-        jawaban_a,
-        jawaban_b,
-        jawaban_c,
-        jawaban_d,
-        jawaban_e,
+        pertanyaan: htmlEscaper.escape(pertanyaan),
+        jawaban_a: htmlEscaper.escape(jawaban_a),
+        jawaban_b: htmlEscaper.escape(jawaban_b),
+        jawaban_c: htmlEscaper.escape(jawaban_c),
+        jawaban_d: htmlEscaper.escape(jawaban_d),
+        jawaban_e: htmlEscaper.escape(jawaban_e),
         kj_pg,
         kj_uraian,
         jawaban_pg_kompleks,
@@ -7658,7 +7661,7 @@ class MainController {
         opsi_a_uraian,
         opsi_b_uraian,
         rubrik_kj: JSON.stringify(rubrik_kj),
-        pembahasan,
+        pembahasan: htmlEscaper.escape(pembahasan),
         nilai_soal,
       });
 
@@ -16502,7 +16505,7 @@ class MainController {
   async downloadRombel({ response, request, auth }) {
     const domain = request.headers().origin;
 
-    const user = await auth.getUser()
+    const user = await auth.getUser();
 
     const sekolah = await this.getSekolahByDomain(domain);
 

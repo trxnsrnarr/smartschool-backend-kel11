@@ -3,6 +3,8 @@
 /** @type {typeof import('@adonisjs/lucid/src/Lucid/Model')} */
 const Model = use("Model");
 
+const htmlEscaper = require("html-escaper");
+
 class MSoalUjian extends Model {
   static get table() {
     return "m_soal_ujian";
@@ -20,6 +22,9 @@ class MSoalUjian extends Model {
 
   getBentuk(bentuk) {
     return bentuk ? bentuk.toLowerCase() : "";
+  }
+  getPertanyaan(pertanyaan) {
+    return pertanyaan ? htmlEscaper.unescape(pertanyaan) : "";
   }
   getLevelKognitif(level_kognitif) {
     return level_kognitif ? level_kognitif.toLowerCase() : "";
