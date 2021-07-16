@@ -712,6 +712,17 @@ Route.delete(
   "MainController.deletePelanggaran"
 );
 
+// Penghargaan
+Route.post("/tatatertib/penghargaan", "MainController.postPenghargaan");
+Route.put(
+  "/tatatertib/penghargaan/:penghargaan_id",
+  "MainController.putPenghargaan"
+);
+Route.delete(
+  "/tatatertib/penghargaan/:penghargaan_id",
+  "MainController.deletePenghargaan"
+);
+
 //Sanksi Pelanggaran
 Route.get("/tatatertib/sanksi", "MainController.getSanksiPelanggaran");
 Route.post("/tatatertib/sanksi", "MainController.postSanksiPelanggaran");
@@ -782,6 +793,8 @@ Route.post("/buku-tamu/download", "MainController.downloadBukuTamu");
 
 // changeBase64ToAscii
 Route.post("/ascii", "MainController.changeBase64ToAscii");
+
+Route.post("uji-coba/cron", "MainController.postCron");
 
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
