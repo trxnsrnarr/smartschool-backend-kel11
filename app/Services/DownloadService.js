@@ -393,7 +393,9 @@ class DownloadService {
           ).value = `Rumusan Butir Soal`;
           worksheet2.getCell(
             `E${(idx + 1) * 32 - 17}`
-          ).value = `${d.soal.pertanyaan_ascii}`;
+          ).value = `${d.soal.pertanyaan
+            .replace(/(<([^>]+)>)/gi, "")
+            .replace(/\&nbsp;/gi, "")}`;
           worksheet2.getCell(`H${(idx + 1) * 32 - 19}`).value = `BUKU`;
           worksheet2.getCell(`H${(idx + 1) * 32 - 17}`).value = ``;
           worksheet2.addConditionalFormatting({
@@ -631,19 +633,29 @@ class DownloadService {
           });
           worksheet2.getCell(
             `F${(idx + 1) * 32 - 15}`
-          ).value = `${d.soal.jawaban_a_ascii}`;
+          ).value = `${d.soal.jawaban_a
+            .replace(/(<([^>]+)>)/gi, "")
+            .replace(/\&nbsp;/gi, "")}`;
           worksheet2.getCell(
             `F${(idx + 1) * 32 - 14}`
-          ).value = `${d.soal.jawaban_b_ascii}`;
+          ).value = `${d.soal.jawaban_b
+            .replace(/(<([^>]+)>)/gi, "")
+            .replace(/\&nbsp;/gi, "")}`;
           worksheet2.getCell(
             `F${(idx + 1) * 32 - 13}`
-          ).value = `${d.soal.jawaban_c_ascii}`;
+          ).value = `${d.soal.jawaban_c
+            .replace(/(<([^>]+)>)/gi, "")
+            .replace(/\&nbsp;/gi, "")}`;
           worksheet2.getCell(
             `F${(idx + 1) * 32 - 12}`
-          ).value = `${d.soal.jawaban_d_ascii}`;
+          ).value = `${d.soal.jawaban_d
+            .replace(/(<([^>]+)>)/gi, "")
+            .replace(/\&nbsp;/gi, "")}`;
           worksheet2.getCell(
             `F${(idx + 1) * 32 - 11}`
-          ).value = `${d.soal.jawaban_e_ascii}`;
+          ).value = `${d.soal.jawaban_e
+            .replace(/(<([^>]+)>)/gi, "")
+            .replace(/\&nbsp;/gi, "")}`;
 
           worksheet2.addConditionalFormatting({
             ref: `C${(idx + 1) * 32 - 15}`,
@@ -1178,7 +1190,9 @@ class DownloadService {
           ).value = `Rumusan Butir Soal`;
           worksheet3.getCell(
             `E${(idx + 1) * 32 - 17}`
-          ).value = `${d.soal.pertanyaan_ascii}`;
+          ).value = `${d.soal.pertanyaan
+            .replace(/(<([^>]+)>)/gi, "")
+            .replace(/\&nbsp;/gi, "")}`;
           worksheet3.getCell(`H${(idx + 1) * 32 - 19}`).value = `BUKU`;
           worksheet3.getCell(`H${(idx + 1) * 32 - 17}`).value = ``;
           worksheet3.addConditionalFormatting({
@@ -1639,12 +1653,36 @@ class DownloadService {
         worksheet4.addRow({
           No: `${idx + 1}`,
           INDIKATOR_SOAL: d.soal ? d.soal.akm_konten_materi : "-",
-          RUMUSAN_BUTIR_SOAL: d.soal ? d.soal.pertanyaan_ascii : "-",
-          A: d.soal ? d.soal.jawaban_a_ascii : "-",
-          B: d.soal ? d.soal.jawaban_b_ascii : "-",
-          C: d.soal ? d.soal.jawaban_c_ascii : "-",
-          D: d.soal ? d.soal.jawaban_d_ascii : "-",
-          E: d.soal ? d.soal.jawaban_e_ascii : "-",
+          RUMUSAN_BUTIR_SOAL: d.soal
+            ? d.soal.pertanyaan
+                .replace(/(<([^>]+)>)/gi, "")
+                .replace(/\&nbsp;/gi, "")
+            : "-",
+          A: d.soal
+            ? d.soal.jawaban_a
+                .replace(/(<([^>]+)>)/gi, "")
+                .replace(/\&nbsp;/gi, "")
+            : "-",
+          B: d.soal
+            ? d.soal.jawaban_b
+                .replace(/(<([^>]+)>)/gi, "")
+                .replace(/\&nbsp;/gi, "")
+            : "-",
+          C: d.soal
+            ? d.soal.jawaban_c
+                .replace(/(<([^>]+)>)/gi, "")
+                .replace(/\&nbsp;/gi, "")
+            : "-",
+          D: d.soal
+            ? d.soal.jawaban_d
+                .replace(/(<([^>]+)>)/gi, "")
+                .replace(/\&nbsp;/gi, "")
+            : "-",
+          E: d.soal
+            ? d.soal.jawaban_e
+                .replace(/(<([^>]+)>)/gi, "")
+                .replace(/\&nbsp;/gi, "")
+            : "-",
           KUNCI_JAWABAN: d.soal ? d.soal.kj_pg : "-",
         });
 
@@ -1793,33 +1831,69 @@ class DownloadService {
 
         worksheet5.getRow(`${(idx + 1) * 7 + 15}`).values = [
           `${idx + 1}`,
-          `${d.soal ? d.soal.pertanyaan_ascii : "-"}`,
+          `${
+            d.soal
+              ? d.soal.pertanyaan
+                  .replace(/(<([^>]+)>)/gi, "")
+                  .replace(/\&nbsp;/gi, "")
+              : "-"
+          }`,
         ];
 
         worksheet5.getRow(`${(idx + 1) * 7 + 16}`).values = [
           "",
           "A",
-          `${d.soal ? d.soal.jawaban_a_ascii : "-"}`,
+          `${
+            d.soal
+              ? d.soal.jawaban_a
+                  .replace(/(<([^>]+)>)/gi, "")
+                  .replace(/\&nbsp;/gi, "")
+              : "-"
+          }`,
         ];
         worksheet5.getRow(`${(idx + 1) * 7 + 17}`).values = [
           "",
           "B",
-          `${d.soal ? d.soal.jawaban_b_ascii : "-"}`,
+          `${
+            d.soal
+              ? d.soal.jawaban_b
+                  .replace(/(<([^>]+)>)/gi, "")
+                  .replace(/\&nbsp;/gi, "")
+              : "-"
+          }`,
         ];
         worksheet5.getRow(`${(idx + 1) * 7 + 18}`).values = [
           "",
           "C",
-          `${d.soal ? d.soal.jawaban_c_ascii : "-"}`,
+          `${
+            d.soal
+              ? d.soal.jawaban_c
+                  .replace(/(<([^>]+)>)/gi, "")
+                  .replace(/\&nbsp;/gi, "")
+              : "-"
+          }`,
         ];
         worksheet5.getRow(`${(idx + 1) * 7 + 19}`).values = [
           "",
           "D",
-          `${d.soal ? d.soal.jawaban_d_ascii : "-"}`,
+          `${
+            d.soal
+              ? d.soal.jawaban_d
+                  .replace(/(<([^>]+)>)/gi, "")
+                  .replace(/\&nbsp;/gi, "")
+              : "-"
+          }`,
         ];
         worksheet5.getRow(`${(idx + 1) * 7 + 20}`).values = [
           "",
           "E",
-          `${d.soal ? d.soal.jawaban_e_ascii : "-"}`,
+          `${
+            d.soal
+              ? d.soal.jawaban_e
+                  .replace(/(<([^>]+)>)/gi, "")
+                  .replace(/\&nbsp;/gi, "")
+              : "-"
+          }`,
         ];
 
         worksheet5.mergeCells(`B${(idx + 1) * 7 + 15}:L${(idx + 1) * 7 + 15}`);
