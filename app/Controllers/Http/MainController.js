@@ -94,6 +94,7 @@ const MBarang = use("App/Models/MBarang");
 const MLokasi = use("App/Models/MLokasi");
 const MKategoriPelanggaran = use("App/Models/MKategoriPelanggaran");
 const MPelanggaran = use("App/Models/MPelanggaran");
+const MPenghargaan = use("App/Models/MPenghargaan");
 const MSanksiPelanggaran = use("App/Models/MSanksiPelanggaran");
 const MSanksiSiswa = use("App/Models/MSanksiSiswa");
 const TkSiswaPelanggaran = use("App/Models/TkSiswaPelanggaran");
@@ -129,6 +130,7 @@ const uuid = require("uuid-v4");
 const pdftohtml = require("pdftohtmljs");
 const http = require("http"); // or 'https' for https:// URLs
 const Downloader = require("nodejs-file-downloader");
+const cron = require("node-cron");
 
 const PDFDocument = require("pdfkit");
 const fs = require("fs");
@@ -16509,7 +16511,7 @@ class MainController {
   async downloadRombel({ response, request, auth }) {
     const domain = request.headers().origin;
 
-    const user = await auth.getUser()
+    const user = await auth.getUser();
 
     const sekolah = await this.getSekolahByDomain(domain);
 
@@ -21839,6 +21841,11 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
+    const penghargaan = await MPenghargaan.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
     const kategori = await MKategoriPelanggaran.query()
       .withCount("pelanggaran as total", (builder) => {
         builder.where({ dihapus: 0 });
@@ -21856,6 +21863,7 @@ class MainController {
 
     return response.ok({
       kategori,
+      penghargaan,
     });
   }
 
@@ -22425,6 +22433,11 @@ class MainController {
       .andWhere({ m_sekolah_id: sekolah.id })
       .fetch();
 
+    const penghargaan = await MPenghargaan.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
     const sanksi = await MSanksiPelanggaran.query()
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
@@ -22450,6 +22463,7 @@ class MainController {
       siswa,
       pelanggaran,
       sanksi,
+      penghargaan,
     });
   }
 
@@ -22965,6 +22979,128 @@ class MainController {
     });
   }
 
+  async postPenghargaan({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { tingkat, poin } = request.post();
+    const rules = {
+      tingkat: "required",
+      poin: "required",
+    };
+    const message = {
+      "tingkat.required": "Tingkat harus diisi",
+      "poin.required": "Poin harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const penghargaan = await MPenghargaan.create({
+      tingkat,
+      poin,
+      m_sekolah_id: sekolah.id,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putPenghargaan({
+    response,
+    request,
+    auth,
+    params: { penghargaan_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { tingkat, poin } = request.post();
+    const rules = {
+      tingkat: "required",
+      poin: "required",
+    };
+    const message = {
+      "tingkat.required": "Tingkat harus diisi",
+      "poin.required": "Poin harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const penghargaan = await MPenghargaan.query()
+      .where({ id: penghargaan_id })
+      .update({
+        tingkat,
+        poin,
+      });
+
+    if (!penghargaan) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deletePenghargaan({
+    response,
+    request,
+    auth,
+    params: { penghargaan_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    // if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    //   return response.forbidden({ message: messageForbidden });
+    // }
+
+    const penghargaan = await MPenghargaan.query()
+      .where({ id: penghargaan_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!penghargaan) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
   async getBukuTamu({ response, request, auth }) {
     const domain = request.headers().origin;
 
@@ -23323,6 +23459,71 @@ class MainController {
     await workbook.xlsx.writeFile(`public${namaFile}`);
 
     return namaFile;
+  }
+
+  async postCron({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { date, time } = request.post();
+
+    const jadwalMengajar = await MJadwalMengajar.query()
+      .with("mataPelajaran")
+      .where({ id: 14521 })
+      .first();
+
+    const tanggal = moment(date).format(`DD`);
+    const bulan = moment(date).format(`M`);
+    const waktu = `${date} ${time}`;
+    const jam = moment(waktu).format(`H`);
+    const menit = moment(waktu).format(`mm`);
+
+    // return response.ok({
+    //   tanggal,
+    //   bulan,
+    //   waktu,
+    //   jam,
+    //   menit,
+    // });
+    // const data = [jadwalMengajar, user];
+
+    const task = cron.schedule(
+      `${menit} ${jam} ${tanggal} ${bulan} *`,
+      () => {
+        Mail.send(`emails.sppbayar`, user.toJSON(), (message) => {
+          message
+            .to(`raihanvans@gmail.com`)
+            .from("no-reply@smarteschool.id")
+            .subject("SPP terkonfirmasi");
+        });
+      },
+      {
+        scheduled: true,
+        timezone: "Asia/Jakarta",
+      }
+    );
+
+    // const gmail = await Mail.send(
+    //   `emails.sppbayar`,
+    //   user.toJSON(),
+    //   (message) => {
+    //     message
+    //       .to(`raihanvans@gmail.com`)
+    //       .from("no-reply@smarteschool.id")
+    //       .subject("SPP terkonfirmasi");
+    //   }
+    // );
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
   }
 }
 module.exports = MainController;
