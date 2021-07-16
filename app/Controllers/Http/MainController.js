@@ -3501,7 +3501,7 @@ class MainController {
       post = await MPost.create({
         judul,
         slug,
-        konten: konten ? Buffer(konten).toString("base64") : "",
+        konten: konten,
         banner,
         disembunyikan: 1,
         dihapus: 0,
@@ -3512,7 +3512,7 @@ class MainController {
       post = await MPost.create({
         judul,
         slug,
-        konten: konten ? Buffer(konten).toString("base64") : "",
+        konten: konten,
         banner,
         disembunyikan: 0,
         dihapus: 0,
@@ -3576,25 +3576,21 @@ class MainController {
     let post;
 
     if (disembunyikan) {
-      post = await MPost.query()
-        .where({ id: post_id })
-        .update({
-          judul,
-          konten: konten ? Buffer(konten).toString("base64") : "",
-          banner,
-          disembunyikan: 1,
-          dihapus: 0,
-        });
+      post = await MPost.query().where({ id: post_id }).update({
+        judul,
+        konten: konten,
+        banner,
+        disembunyikan: 1,
+        dihapus: 0,
+      });
     } else {
-      post = await MPost.query()
-        .where({ id: post_id })
-        .update({
-          judul,
-          konten: konten ? Buffer(konten).toString("base64") : "",
-          banner,
-          disembunyikan: 0,
-          dihapus: 0,
-        });
+      post = await MPost.query().where({ id: post_id }).update({
+        judul,
+        konten: konten,
+        banner,
+        disembunyikan: 0,
+        dihapus: 0,
+      });
     }
 
     if (!post) {
@@ -5674,8 +5670,6 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { waktu_saat_ini } = request.get();
-
     if (user.role == "siswa") {
       const timeline = await TkTimeline.query()
         .with("timeline", (builder) => {
@@ -5701,7 +5695,8 @@ class MainController {
           `${timeline.toJSON().timeline.tugas.tanggal_pengumpulan} ${
             timeline.toJSON().timeline.tugas.waktu_pengumpulan
           }`
-        ).format("YYYY-MM-DD HH:mm:ss") >= waktu_saat_ini
+        ).format("YYYY-MM-DD HH:mm:ss") >=
+          moment().format("YYYY-MM-DD HH:mm:ss")
       ) {
         sudah_lewat = true;
       }
@@ -5816,7 +5811,7 @@ class MainController {
         m_user_id: user.id,
         m_rombel_id: jadwalMengajar.m_rombel_id,
         tipe,
-        deskripsi: deskripsi ? Buffer(deskripsi).toString("base64") : "",
+        deskripsi: deskripsi,
         gmeet,
         tanggal_dibuat,
         dihapus: 0,
@@ -5863,7 +5858,7 @@ class MainController {
       timeline = await MTimeline.create({
         m_user_id: user.id,
         m_rombel_id: jadwalMengajar.m_rombel_id,
-        deskripsi: deskripsi ? Buffer(deskripsi).toString("base64") : "",
+        deskripsi: deskripsi,
         lampiran: lampiran.toString(),
         tipe,
         dihapus: 0,
@@ -5930,14 +5925,12 @@ class MainController {
     }
 
     if (tipe == "diskusi") {
-      timeline = await MTimeline.query()
-        .where({ id: timeline_id })
-        .update({
-          m_jadwal_mengajar_id,
-          deskripsi: deskripsi ? Buffer(deskripsi).toString("base64") : "",
-          lampiran: lampiran.toString(),
-          tipe,
-        });
+      timeline = await MTimeline.query().where({ id: timeline_id }).update({
+        m_jadwal_mengajar_id,
+        deskripsi: deskripsi,
+        lampiran: lampiran.toString(),
+        tipe,
+      });
     }
 
     if (tipe == "absen") {
@@ -5954,7 +5947,7 @@ class MainController {
           .update({
             rpp: rpp ? rpp.toString() : "",
             jurnal,
-            deskripsi: deskripsi ? Buffer(deskripsi).toString("base64") : "",
+            deskripsi: deskripsi,
             gmeet,
           });
       }
@@ -7453,31 +7446,6 @@ class MainController {
       ? JSON.stringify(soal_menjodohkan)
       : null;
 
-    jawaban_a =
-      typeof jawaban_a !== "object"
-        ? Buffer(jawaban_a).toString("base64")
-        : null;
-    jawaban_b =
-      typeof jawaban_b !== "object"
-        ? Buffer(jawaban_b).toString("base64")
-        : null;
-    jawaban_c =
-      typeof jawaban_c !== "object"
-        ? Buffer(jawaban_c).toString("base64")
-        : null;
-    jawaban_d =
-      typeof jawaban_d !== "object"
-        ? Buffer(jawaban_d).toString("base64")
-        : null;
-    jawaban_e =
-      typeof jawaban_e !== "object"
-        ? Buffer(jawaban_e).toString("base64")
-        : null;
-    pembahasan =
-      typeof pembahasan !== "object"
-        ? Buffer(pembahasan).toString("base64")
-        : null;
-
     const soalUjian = await MSoalUjian.create({
       kd,
       kd_konten_materi,
@@ -7487,7 +7455,7 @@ class MainController {
       akm_konteks_materi,
       akm_proses_kognitif,
       audio,
-      pertanyaan: pertanyaan ? Buffer(pertanyaan).toString("base64") : "",
+      pertanyaan,
       jawaban_a,
       jawaban_b,
       jawaban_c,
@@ -7562,19 +7530,15 @@ class MainController {
           // akm_konten_materi,
           // akm_konteks_materi,
           // akm_proses_kognitif,
-          pertanyaan: d.pertanyaan
-            ? Buffer(d.pertanyaan).toString("base64")
-            : "",
-          jawaban_a: d.jawaban_a ? Buffer(d.jawaban_a).toString("base64") : "",
-          jawaban_b: d.jawaban_b ? Buffer(d.jawaban_b).toString("base64") : "",
-          jawaban_c: d.jawaban_c ? Buffer(d.jawaban_c).toString("base64") : "",
-          jawaban_d: d.jawaban_d ? Buffer(d.jawaban_d).toString("base64") : "",
-          jawaban_e: d.jawaban_e ? Buffer(d.jawaban_e).toString("base64") : "",
+          pertanyaan: d.pertanyaan,
+          jawaban_a: d.jawaban_a,
+          jawaban_b: d.jawaban_b,
+          jawaban_c: d.jawaban_c,
+          jawaban_d: d.jawaban_d,
+          jawaban_e: d.jawaban_e,
           kj_pg: d.kj_pg,
           // rubrik_kj: JSON.stringify(rubrik_kj),
-          pembahasan: d.pembahasan
-            ? Buffer(d.pembahasan).toString("base64")
-            : "",
+          pembahasan: d.pembahasan,
           nilai_soal: d.nilai_soal,
           m_user_id: user.id,
           dihapus: 0,
@@ -7678,31 +7642,6 @@ class MainController {
       ? JSON.stringify(soal_menjodohkan)
       : null;
 
-    jawaban_a =
-      typeof jawaban_a !== "object"
-        ? Buffer(jawaban_a).toString("base64")
-        : null;
-    jawaban_b =
-      typeof jawaban_b !== "object"
-        ? Buffer(jawaban_b).toString("base64")
-        : null;
-    jawaban_c =
-      typeof jawaban_c !== "object"
-        ? Buffer(jawaban_c).toString("base64")
-        : null;
-    jawaban_d =
-      typeof jawaban_d !== "object"
-        ? Buffer(jawaban_d).toString("base64")
-        : null;
-    jawaban_e =
-      typeof jawaban_e !== "object"
-        ? Buffer(jawaban_e).toString("base64")
-        : null;
-    pembahasan =
-      typeof pembahasan !== "object"
-        ? Buffer(pembahasan).toString("base64")
-        : null;
-
     const soalUjian = await MSoalUjian.query()
       .where({ id: soal_ujian_id })
       .update({
@@ -7714,7 +7653,7 @@ class MainController {
         akm_konteks_materi,
         akm_proses_kognitif,
         audio,
-        pertanyaan: pertanyaan ? Buffer(pertanyaan).toString("base64") : "",
+        pertanyaan,
         jawaban_a,
         jawaban_b,
         jawaban_c,
@@ -15042,6 +14981,9 @@ class MainController {
       }
     });
 
+    let dataUpdated;
+    let dataCreated;
+
     const result = await Promise.all(
       data.map(async (d) => {
         const checkUser = await User.query()
@@ -15049,46 +14991,68 @@ class MainController {
           .andWhere({ dihapus: 0 })
           .first();
 
+        let payload = {
+          nuptk: d.nuptk,
+          nip: d.nip,
+          status_kepegawaian: d.status_kepegawaian,
+          jenis_ptk: d.jenis_ptk,
+          agama: d.agama,
+          alamat: d.alamat,
+          rt: d.rt,
+          rw: d.rw,
+          dusun: d.dusun,
+          kodepos: d.kode_pos,
+          tugas_tambahan: d.tugas_tambahan,
+        };
+
         let kecamatan1 = `${d.kecamatan.split(" ")[1]}`;
         let kecamatan2 = d ? d.kecamatan.split(" ")[2] : "";
         let kecamatans = kecamatan1.concat(" ", kecamatan2 ? kecamatan2 : "");
+
         const districtIds = await District.query()
           .with("regency")
           .where({ name: kecamatans })
           .first();
 
-        const villageIds = await Village.query()
-          .where({ name: d.kelurahan })
-          .andWhere({ district_id: districtIds.id })
-          .first();
+        let villageIds;
 
-        // return villageIds;
-
-        if (checkUser) {
-          await MProfilUser.create({
-            nuptk: d.nuptk,
-            gender: d.gender,
-            tempat_lahir: d.tempat_lahir,
-            tanggal_lahir: d.tanggal_lahir,
-            nip: d.nip,
-            status_kepegawaian: d.status_kepegawaian,
-            jenis_ptk: d.jenis_ptk,
-            agama: d.agama,
-            alamat: d.alamat,
-            rt: d.rt,
-            rw: d.rw,
-            dusun: d.dusun,
+        if (districtIds) {
+          payload = {
+            ...payload,
             village_id: villageIds ? villageIds.id : "",
             district_id: districtIds.id,
             regency_id: districtIds.regency_id,
             province_id: districtIds.toJSON().regency.province_id,
-            kodepos: d.kode_pos,
-            tugas_tambahan: d.tugas_tambahan,
-          });
-          return {
-            message: `${d.nama} ${d.whatsapp} sudah terdaftar`,
-            error: true,
           };
+
+          villageIds = await Village.query()
+            .where({ name: d.kelurahan })
+            .andWhere({ district_id: districtIds.id })
+            .first();
+
+          if (villageIds) {
+            payload = {
+              ...payload,
+              village_id: villageIds ? villageIds.id : "",
+            };
+          }
+        }
+
+        if (checkUser) {
+          const checkProfil = await MProfilUser.query()
+            .select("id")
+            .where({ m_user_id: checkUser.id })
+            .first();
+
+          if (checkProfil) {
+            await MProfilUser.query()
+              .where({ id: checkProfil.id })
+              .update(payload);
+          } else {
+            await MProfilUser.create(payload);
+          }
+
+          return dataUpdated++;
         }
 
         await User.create({
@@ -15099,33 +15063,16 @@ class MainController {
           role: "guru",
           m_sekolah_id: sekolah.id,
           dihapus: 0,
-        });
-        await MProfilUser.create({
-          nuptk: d.nuptk,
-          gender: d.gender,
           tempat_lahir: d.tempat_lahir,
           tanggal_lahir: d.tanggal_lahir,
-          nip: d.nip,
-          status_kepegawaian: d.status_kepegawaian,
-          jenis_ptk: d.jenis_ptk,
-          agama: d.agama,
-          alamat: d.alamat,
-          rt: d.rt,
-          rw: d.rw,
-          dusun: d.dusun,
-          village_id: villageIds.id,
-          district_id: districtIds.id,
-          regency_id: districtIds.regency_id,
-          province_id: districtIds.toJSON().regency.province_id,
-          kodepos: d.kode_pos,
-          tugas_tambahan: d.tugas_tambahan,
         });
+        await MProfilUser.create(payload);
 
-        return;
+        return dataCreated++;
       })
     );
 
-    return result;
+    return { dataCreated, dataUpdated };
   }
 
   async importGTK({ request, response }) {
