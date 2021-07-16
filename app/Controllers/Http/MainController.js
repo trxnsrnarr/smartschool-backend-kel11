@@ -13869,7 +13869,8 @@ class MainController {
     const isAdmin = await MAnggotaProyekRole.query()
       .where({ m_anggota_proyek_id: anggota_proyek_id })
       .andWhere({ dihapus: 0 })
-      .andWhere({ role: "Admin" })
+      .orWhere({ role: "Admin" })
+      .orWhere({ role: "Pemilik" })
       .fetch();
 
     if (!isAdmin) {
