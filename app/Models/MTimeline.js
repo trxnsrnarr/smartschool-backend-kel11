@@ -6,6 +6,8 @@ const moment = require("moment");
 require("moment/locale/id");
 moment.locale("id");
 
+const htmlEscaper = require("html-escaper");
+
 class MTimeline extends Model {
   // static castDates(field, value) {
   //   if (["created_at", "updated_at"].indexOf(field) > -1) {
@@ -94,6 +96,10 @@ class MTimeline extends Model {
 
   getRpp(rpp) {
     return rpp ? rpp.split(",") : [];
+  }
+
+  getDeskripsi(deskripsi) {
+    return deskripsi ? htmlEscaper.unescape(deskripsi) : "";
   }
 }
 
