@@ -2,6 +2,7 @@
 
 /** @type {typeof import('@adonisjs/lucid/src/Lucid/Model')} */
 const Model = use("Model");
+const htmlEscaper = require("html-escaper");
 
 class MAlumni extends Model {
   static get table() {
@@ -9,7 +10,7 @@ class MAlumni extends Model {
   }
   // ini masih buffer
   getDeskripsi(deskripsi) {
-    return deskripsi ? Buffer(deskripsi, "base64").toString("ascii") : "";
+    return deskripsi ? htmlEscaper.unescape(pertanyaan) : "";
   }
 
   user() {

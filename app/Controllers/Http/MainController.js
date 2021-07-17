@@ -1800,7 +1800,7 @@ class MainController {
         : null,
       pengalaman: pengalaman.length ? pengalaman.toString() : null,
       purnakarya,
-      deskripsi: deskripsi ? Buffer(deskripsi).toString("base64") : "",
+      deskripsi: htmlEscaper.escape(deskripsi),
       dihapus: 0,
       m_user_id: user.id,
     });
@@ -1881,7 +1881,7 @@ class MainController {
           : null,
         pengalaman: pengalaman.length ? pengalaman.toString() : null,
         purnakarya,
-        deskripsi: deskripsi ? Buffer(deskripsi).toString("base64") : "",
+        deskripsi: htmlEscaper.escape(deskripsi),
       });
 
     if (!alumni) {
