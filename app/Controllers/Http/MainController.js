@@ -12916,9 +12916,9 @@ class MainController {
     if (validation.fails()) {
       return response.unprocessableEntity(validation.messages());
     }
-    // ini masih buffer
+    // ini masih buffer aneh
     galeri = galeri ? galeri.toJSON() : null;
-    deskripsi = deskripsi ? Buffer(deskripsi).toString("base64") : null;
+    deskripsi = deskripsi ? htmlEscaper.unescape(deskripsi) : null;
     tautan = tautan ? JSON.stringify(tautan) : null;
 
     await MIndustri.create({
@@ -12979,9 +12979,9 @@ class MainController {
     if (validation.fails()) {
       return response.unprocessableEntity(validation.messages());
     }
-    // ini masih buffer
+    // ini masih buffer aneh
     galeri = galeri ? galeri.toJSON() : null;
-    deskripsi = deskripsi ? Buffer(deskripsi).toString("base64") : null;
+    deskripsi = deskripsi ? htmlEscaper.unescape(deskripsi) : null;
     tautan = tautan ? JSON.stringify(tautan) : null;
 
     const industri = await MIndustri.query().where({ id: industri_id }).update({
