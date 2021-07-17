@@ -7,7 +7,7 @@ class MInformasiSekolah extends Model {
   static get table() {
     return "m_informasi_sekolah";
   }
-
+  // ini masih buffer
   getDeskripsiSingkat(deskripsi_singkat) {
     return deskripsi_singkat
       ? Buffer(deskripsi_singkat, "base64").toString("ascii")

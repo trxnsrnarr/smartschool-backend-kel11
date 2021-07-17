@@ -34,7 +34,7 @@ class TkMateriKesimpulan extends Model {
       ? `${moment(waktu_selesai).diff(waktu_mulai, "minutes")} menit`
       : null;
   }
-
+  // ini masih buffer
   getKesimpulan(kesimpulan) {
     return kesimpulan ? Buffer(kesimpulan, "base64").toString("ascii") : "";
   }

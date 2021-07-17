@@ -7,7 +7,7 @@ class MAlumni extends Model {
   static get table() {
     return "m_alumni";
   }
-
+  // ini masih buffer
   getDeskripsi(deskripsi) {
     return deskripsi ? Buffer(deskripsi, "base64").toString("ascii") : "";
   }
