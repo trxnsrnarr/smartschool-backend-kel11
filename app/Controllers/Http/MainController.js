@@ -2748,12 +2748,10 @@ class MainController {
 
     const { tingkat, kode, m_jurusan_id, m_user_id, kelompok } = request.post();
     const rules = {
-      tingkat: "required",
       kode: "required",
       m_user_id: "required",
     };
     const message = {
-      "tingkat.required": "Tingkat harus diisi",
       "kode.required": "Kode  harus diisi",
       "m_user_id.required": "Wali Kelas harus dipilih",
     };
@@ -2828,12 +2826,10 @@ class MainController {
 
     const { tingkat, kode, m_jurusan_id, m_user_id, kelompok } = request.post();
     const rules = {
-      tingkat: "required",
       kode: "required",
       m_user_id: "required",
     };
     const message = {
-      "tingkat.required": "Tingkat harus diisi",
       "kode.required": "Kode  harus diisi",
       "m_user_id.required": "Wali Kelas harus dipilih",
     };
@@ -3832,11 +3828,10 @@ class MainController {
     colComment.eachCell(async (cell, rowNumber) => {
       if (rowNumber >= 8) {
         data.push({
-          nama: explanation.getCell("A" + rowNumber).value,
-          whatsapp: explanation.getCell("B" + rowNumber).value,
-          gender: explanation.getCell("C" + rowNumber).value,
-          role: explanation.getCell("D" + rowNumber).value,
-          password: explanation.getCell("E" + rowNumber).value,
+          nama: explanation.getCell("B" + rowNumber).value,
+          whatsapp: explanation.getCell("C" + rowNumber).value,
+          gender: explanation.getCell("D" + rowNumber).value,
+          role: explanation.getCell("E" + rowNumber).value,
         });
       }
     });
@@ -3852,7 +3847,7 @@ class MainController {
             nama: d.nama,
             whatsapp: d.whatsapp,
             gender: d.gender,
-            password: await Hash.make(`${d.password}`),
+            password: await Hash.make(`smartschool`),
             role: "siswa",
             m_sekolah_id: sekolah.id,
             dihapus: 0,
