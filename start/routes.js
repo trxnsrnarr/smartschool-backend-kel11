@@ -735,6 +735,16 @@ Route.delete(
   "MainController.deleteSanksiPelanggaran"
 );
 
+Route.post("/tatatertib/siswa/prestasi", "MainController.postPenghargaanSiswa");
+Route.put(
+  "/tatatertib/siswa/prestasi/:penghargaan_id",
+  "MainController.putPenghargaanSiswa"
+);
+Route.delete(
+  "/tatatertib/siswa/prestasi/:penghargaan_id",
+  "MainController.deletePenghargaanSiswa"
+);
+
 //Data Siswa
 Route.get("/tatatertib/rombel", "MainController.getTataTertibRombel");
 Route.get(
