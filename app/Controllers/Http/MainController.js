@@ -1785,7 +1785,7 @@ class MainController {
       tanggal_lahir,
       dihapus: 0,
     });
-    // ini masih buffer
+    // ini sudah buffer
     const alumni = await MAlumni.create({
       jurusan,
       tahun_masuk,
@@ -1864,7 +1864,7 @@ class MainController {
       gender,
       tanggal_lahir,
     });
-    // ini masih buffer
+    // ini sudah buffer
     const alumni = await MAlumni.query()
       .where({ m_user_id: alumni_id })
       .update({
