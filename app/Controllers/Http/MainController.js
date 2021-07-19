@@ -17447,7 +17447,11 @@ class MainController {
       .with("profil")
       .with("keteranganRapor")
       .with("keteranganPkl")
-      .with("raporEkskul")
+      .with("raporEkskul", (builder) => {
+        builder.with("rombel", (builder) => {
+          builder.select("id", "nama");
+        });
+      })
       .with("prestasi")
       .with("sikap", (builder) => {
         builder
@@ -23084,6 +23088,209 @@ class MainController {
     // }
 
     const penghargaan = await MPenghargaan.query()
+      .where({ id: penghargaan_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!penghargaan) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async postPenghargaanSiswa({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      nama,
+      tingkat,
+      peringkat,
+      lembaga,
+      tanggal_terbit,
+      sertifikat_kadaluarsa,
+      tanggal_kadaluarsa,
+      id_sertifikat,
+      lampiran,
+      user_id,
+    } = request.post();
+    // const rules = {
+    //   tingkat: "required",
+    //   poin: "required",
+    // };
+    // const message = {
+    //   "tingkat.required": "Tingkat harus diisi",
+    //   "poin.required": "Poin harus diisi",
+    // };
+    // const validation = await validate(request.all(), rules, message);
+    // if (validation.fails()) {
+    //   return response.unprocessableEntity(validation.messages());
+    // }
+    user_id = user_id.length ? user_id : [];
+
+    if (user_id.length) {
+      await Promise.all(
+        user_id.map(async (d) => {
+          const check = await TkPembayaranRombel.query()
+            .where({ dihapus: 0 })
+            .andWhere({ m_pembayaran_id: pembayaran.id })
+            .andWhere({ m_user_id: d })
+            .andWhere({ m_sekolah_id: sekolah.id })
+            .first();
+
+          if (!check) {
+            const tkPembayaran = await TkPembayaranRombel.create({
+              dihapus: 0,
+              m_pembayaran_id: pembayaran.id,
+              m_user_id: d,
+              m_sekolah_id: sekolah.id,
+            });
+
+            // const userIds = await MAnggotaRombel.query()
+            //   .where({ m_user_id: d })
+            //   .pluck("m_user_id");
+
+            const userIds = await MAnggotaRombel.query()
+              .with("user", (builder) => {
+                builder.select("id", "email").where({ dihapus: 0 });
+              })
+              .where({ m_user_id: user_id })
+              .fetch();
+
+            await Promise.all(
+              userIds.toJSON().map(async (e) => {
+                await MPembayaranSiswa.create({
+                  status: "belum lunas",
+                  dihapus: 0,
+                  m_user_id: e.m_user_id,
+                  tk_pembayaran_user_id: tkPembayaran.id,
+                  m_sekolah_id: sekolah.id,
+                });
+                if (e.user.email != null) {
+                  try {
+                    const gmail = await Mail.send(
+                      `emails.spp`,
+                      pembayaran.toJSON(),
+                      (message) => {
+                        message
+                          .to(`${e.user.email}`)
+                          .from("no-reply@smarteschool.id")
+                          .subject("Pembayaran SPP");
+                      }
+                    );
+                  } catch (error) {
+                    // console.log(error);
+                  }
+                }
+              })
+            );
+          }
+        })
+      );
+    }
+    return user_id;
+
+    const penghargaan = await MPrestasi.create({
+      nama,
+      tingkat,
+      peringkat,
+      lembaga,
+      tanggal_terbit,
+      sertifikat_kadaluarsa,
+      tanggal_kadaluarsa,
+      id_sertifikat,
+      lampiran,
+      m_sekolah_id: sekolah.id,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putPenghargaanSiswa({
+    response,
+    request,
+    auth,
+    params: { penghargaan_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { tingkat, poin } = request.post();
+    const rules = {
+      tingkat: "required",
+      poin: "required",
+    };
+    const message = {
+      "tingkat.required": "Tingkat harus diisi",
+      "poin.required": "Poin harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const penghargaan = await MPrestasi.query()
+      .where({ id: penghargaan_id })
+      .update({
+        tingkat,
+        poin,
+      });
+
+    if (!penghargaan) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deletePenghargaanSiswa({
+    response,
+    request,
+    auth,
+    params: { penghargaan_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    // if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    //   return response.forbidden({ message: messageForbidden });
+    // }
+
+    const penghargaan = await MPrestasi.query()
       .where({ id: penghargaan_id })
       .update({
         dihapus: 1,
