@@ -5031,11 +5031,11 @@ class MainController {
 
     const { m_jadwal_mengajar_id, hari_ini, jam_saat_ini } = request.get();
 
-    if (user.role == "siswa") {
-      return response.ok({
-        message: "siswa",
-      });
-    }
+    // if (user.role == "siswa") {
+    //   return response.ok({
+    //     message: "siswa",
+    //   });
+    // }
 
     const jadwalMengajar = await MJadwalMengajar.query()
       .with("rombel")
