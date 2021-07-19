@@ -5532,7 +5532,7 @@ class MainController {
             });
         })
         .with("user")
-        .where({ m_user_id: user.id })
+        // .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .whereIn("m_timeline_id", timelineIds)
         .orderBy("id", "desc")
