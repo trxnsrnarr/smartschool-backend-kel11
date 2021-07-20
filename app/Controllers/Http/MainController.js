@@ -23193,7 +23193,6 @@ class MainController {
       tanggal_kadaluarsa,
       id_sertifikat,
       lampiran,
-      user_id,
     } = request.post();
     // const rules = {
     //   tingkat: "required",
