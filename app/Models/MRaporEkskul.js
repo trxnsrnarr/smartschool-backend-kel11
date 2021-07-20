@@ -7,6 +7,9 @@ class MRaporEkskul extends Model {
   static get table() {
     return "m_rapor_ekskul";
   }
+  rombel() {
+    return this.belongsTo("App/Models/MRombel");
+  }
 }
 
 module.exports = MRaporEkskul;

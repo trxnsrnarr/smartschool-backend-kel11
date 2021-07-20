@@ -27,6 +27,8 @@ class MProfilUserSchema extends Schema {
       table.string("kelas_diterima");
       table.date("telp_rumah");
       table.string("asal_sekolah");
+      table.string("status_keluarga");
+      table.integer("anak_ke");
 
       // alamat
       table.text("alamat");

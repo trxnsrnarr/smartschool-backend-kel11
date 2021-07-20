@@ -31,7 +31,7 @@ class MTopik extends Model {
   materiKesimpulan() {
     return this.hasOne("App/Models/TkMateriKesimpulan");
   }
-
+  // ini masih buffer
   getKonten(konten) {
     return konten
       ? Buffer(konten, "base64").toString("ascii").replace("b&", "..........")

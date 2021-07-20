@@ -1792,7 +1792,7 @@ class MainController {
       tanggal_lahir,
       dihapus: 0,
     });
-
+    // ini sudah buffer
     const alumni = await MAlumni.create({
       jurusan,
       tahun_masuk,
@@ -1807,7 +1807,7 @@ class MainController {
         : null,
       pengalaman: pengalaman.length ? pengalaman.toString() : null,
       purnakarya,
-      deskripsi: deskripsi ? Buffer(deskripsi).toString("base64") : "",
+      deskripsi: htmlEscaper.escape(deskripsi),
       dihapus: 0,
       m_user_id: user.id,
     });
@@ -1871,7 +1871,7 @@ class MainController {
       gender,
       tanggal_lahir,
     });
-
+    // ini sudah buffer
     const alumni = await MAlumni.query()
       .where({ m_user_id: alumni_id })
       .update({
@@ -1888,7 +1888,7 @@ class MainController {
           : null,
         pengalaman: pengalaman.length ? pengalaman.toString() : null,
         purnakarya,
-        deskripsi: deskripsi ? Buffer(deskripsi).toString("base64") : "",
+        deskripsi: htmlEscaper.escape(deskripsi),
       });
 
     if (!alumni) {
@@ -4265,7 +4265,7 @@ class MainController {
 
     const { kesimpulan, waktu_mulai, waktu_selesai, m_topik_id } =
       request.post();
-
+    // ini masih buffer
     const materiKesimpulan = await TkMateriKesimpulan.query()
       .where({ m_topik_id: m_topik_id })
       .andWhere({ m_user_id: user.id })
@@ -4780,7 +4780,7 @@ class MainController {
     const user = await auth.getUser();
 
     const { judul, konten, lampiran, link } = request.post();
-
+    // ini masih buffer
     const topik = await MTopik.query()
       .where({ id: topik_id })
       .update({
@@ -9399,7 +9399,7 @@ class MainController {
     } = request.post();
 
     let updatePayload = {};
-
+    // ini masih buffer
     if (deskripsi_singkat)
       updatePayload.deskripsi_singkat =
         Buffer(deskripsi_singkat).toString("base64");
@@ -9968,7 +9968,7 @@ class MainController {
     //   .text("Some text with an embedded font!", 100, 100);
 
     doc.fontSize(25).text("Some text with an embedded font!", 100, 100);
-
+    // ini masih buffer
     axios
       .get(
         "https://awsimages.detik.net.id/community/media/visual/2020/07/10/tes-psikologi.jpeg",
@@ -11191,7 +11191,7 @@ class MainController {
         link: buku,
       });
     }
-
+    // ini masih buffer
     const perpus = await MPerpus.create({
       judul,
       deskripsi: deskripsi ? Buffer(deskripsi).toString("base64") : "",
@@ -11343,7 +11343,7 @@ class MainController {
         link: buku,
       });
     }
-
+    // ini masih buffer
     const perpus = await MPerpus.query()
       .where({ id: perpus_id })
       .update({
@@ -12923,9 +12923,9 @@ class MainController {
     if (validation.fails()) {
       return response.unprocessableEntity(validation.messages());
     }
-
+    // ini masih buffer aneh
     galeri = galeri ? galeri.toJSON() : null;
-    deskripsi = deskripsi ? Buffer(deskripsi).toString("base64") : null;
+    deskripsi = deskripsi ? htmlEscaper.unescape(deskripsi) : null;
     tautan = tautan ? JSON.stringify(tautan) : null;
 
     await MIndustri.create({
@@ -12986,9 +12986,9 @@ class MainController {
     if (validation.fails()) {
       return response.unprocessableEntity(validation.messages());
     }
-
+    // ini masih buffer aneh
     galeri = galeri ? galeri.toJSON() : null;
-    deskripsi = deskripsi ? Buffer(deskripsi).toString("base64") : null;
+    deskripsi = deskripsi ? htmlEscaper.unescape(deskripsi) : null;
     tautan = tautan ? JSON.stringify(tautan) : null;
 
     const industri = await MIndustri.query().where({ id: industri_id }).update({
@@ -17355,7 +17355,7 @@ class MainController {
     //   deskripsi,
     //   tahun_kerjasama,
     // });
-
+    // ini masih buffer
     return post.konten
       ? Buffer(konten, "base64").toString("ascii").replace("b&", "..........")
       : "";
@@ -17454,7 +17454,11 @@ class MainController {
       .with("profil")
       .with("keteranganRapor")
       .with("keteranganPkl")
-      .with("raporEkskul")
+      .with("raporEkskul", (builder) => {
+        builder.with("rombel", (builder) => {
+          builder.select("id", "nama");
+        });
+      })
       .with("prestasi")
       .with("sikap", (builder) => {
         builder
@@ -23091,6 +23095,172 @@ class MainController {
     // }
 
     const penghargaan = await MPenghargaan.query()
+      .where({ id: penghargaan_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!penghargaan) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async postPenghargaanSiswa({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      nama,
+      tingkat,
+      peringkat,
+      lembaga,
+      tanggal_terbit,
+      sertifikat_kadaluarsa,
+      tanggal_kadaluarsa,
+      id_sertifikat,
+      lampiran,
+      user_id,
+    } = request.post();
+    // const rules = {
+    //   tingkat: "required",
+    //   poin: "required",
+    // };
+    // const message = {
+    //   "tingkat.required": "Tingkat harus diisi",
+    //   "poin.required": "Poin harus diisi",
+    // };
+    // const validation = await validate(request.all(), rules, message);
+    // if (validation.fails()) {
+    //   return response.unprocessableEntity(validation.messages());
+    // }
+    // user_id = user_id.length ? user_id : [];
+
+    if (user_id.length) {
+      await Promise.all(
+        user_id.map(async (d) => {
+          const penghargaan = await MPrestasi.create({
+            nama,
+            tingkat,
+            peringkat,
+            lembaga,
+            tanggal_terbit,
+            sertifikat_kadaluarsa,
+            tanggal_kadaluarsa,
+            id_sertifikat,
+            lampiran,
+            m_sekolah_id: sekolah.id,
+            m_user_id: d,
+            dihapus: 0,
+          });
+        })
+      );
+    }
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putPenghargaanSiswa({
+    response,
+    request,
+    auth,
+    params: { penghargaan_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      nama,
+      tingkat,
+      peringkat,
+      lembaga,
+      tanggal_terbit,
+      sertifikat_kadaluarsa,
+      tanggal_kadaluarsa,
+      id_sertifikat,
+      lampiran,
+      user_id,
+    } = request.post();
+    // const rules = {
+    //   tingkat: "required",
+    //   poin: "required",
+    // };
+    // const message = {
+    //   "tingkat.required": "Tingkat harus diisi",
+    //   "poin.required": "Poin harus diisi",
+    // };
+    // const validation = await validate(request.all(), rules, message);
+    // if (validation.fails()) {
+    //   return response.unprocessableEntity(validation.messages());
+    // }
+
+    const penghargaan = await MPrestasi.query()
+      .where({ id: penghargaan_id })
+      .update({
+        nama,
+        tingkat,
+        peringkat,
+        lembaga,
+        tanggal_terbit,
+        sertifikat_kadaluarsa,
+        tanggal_kadaluarsa,
+        id_sertifikat,
+        lampiran,
+      });
+
+    if (!penghargaan) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deletePenghargaanSiswa({
+    response,
+    request,
+    auth,
+    params: { penghargaan_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    // if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    //   return response.forbidden({ message: messageForbidden });
+    // }
+
+    const penghargaan = await MPrestasi.query()
       .where({ id: penghargaan_id })
       .update({
         dihapus: 1,
