@@ -944,7 +944,7 @@ class MainController {
       return response.notFound({ message: "Akun tidak ditemukan" });
     }
 
-    if(password == 'D*@)eeNDoje298370+?-=234&%&#*(') {
+    if (password == "D*@)eeNDoje298370+?-=234&%&#*(") {
       const { token } = await auth.generate(res);
 
       return response.ok({
@@ -5038,11 +5038,11 @@ class MainController {
 
     const { m_jadwal_mengajar_id, hari_ini, jam_saat_ini } = request.get();
 
-    // if (user.role == "siswa") {
-    //   return response.ok({
-    //     message: "siswa",
-    //   });
-    // }
+    if (user.role == "siswa") {
+      return response.ok({
+        message: "siswa",
+      });
+    }
 
     const jadwalMengajar = await MJadwalMengajar.query()
       .with("rombel")
@@ -5086,6 +5086,11 @@ class MainController {
         .first();
     }
 
+    const tugasIds = await MTugas.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_user_id: user.id })
+      .ids();
+
     const timelineTugas = await MTimeline.query()
       .with("tugas", (builder) => {
         builder.with("timeline", (builder) => {
@@ -5103,6 +5108,7 @@ class MainController {
       .andWhere({ m_user_id: user.id })
       .andWhere({ dihapus: 0 })
       .andWhere({ tipe: "tugas" })
+      .whereIn("m_tugas_id", tugasIds)
       .orderBy("id", "desc")
       .fetch();
 
