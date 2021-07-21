@@ -598,12 +598,12 @@ Route.delete("/rapor/pkl/:pkl_id", "MainController.deleteKeteranganPkl");
 Route.get("/buku-induk", "MainController.getBukuInduk");
 Route.get("/buku-induk/:rombel_id", "MainController.detailBukuInduk");
 Route.get(
-  "/buku-induk/:rombel_id/:user_id",
-  "MainController.detailBukuIndukSiswa"
-);
-Route.get(
   "/buku-induk/rapor/:rombel_id",
   "MainController.detailBukuIndukRapor"
+);
+Route.get(
+  "/buku-induk/:rombel_id/:user_id",
+  "MainController.detailBukuIndukSiswa"
 );
 
 Route.post(
@@ -805,6 +805,7 @@ Route.post("/buku-tamu/download", "MainController.downloadBukuTamu");
 Route.post("/ascii", "MainController.changeBase64ToAscii");
 
 Route.post("uji-coba/cron", "MainController.postCron");
+Route.post("/download/monev", "MainController.downloadMonev");
 
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
