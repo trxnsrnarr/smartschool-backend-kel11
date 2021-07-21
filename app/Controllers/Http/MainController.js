@@ -17484,6 +17484,13 @@ class MainController {
       .where({ m_user_id: user_id })
       .fetch();
 
+    const ulangan = await TkPesertaUjian.query()
+      .with("rekapRombel", (builder) => {
+        builder.with("rekap").where({ dihapus: 0 });
+      })
+      .where({ m_user_id: user_id })
+      .fetch();
+
     const materiRombel = await TkMateriRombel.query()
       .with("materi", (builder) => {
         builder.with("mataPelajaran");
@@ -23705,6 +23712,267 @@ class MainController {
     return response.ok({
       message: messagePostSuccess,
     });
+  }
+
+  async downloadMonev({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    const user = await auth.getUser();
+
+    const { tanggal_awal, tanggal_akhir } = request.post();
+
+    const tanggalDistinct = await Database.raw(
+      "SELECT DISTINCT DATE_FORMAT(created_at, '%Y-%m-%d') as tanggalDistinct from m_absen WHERE created_at BETWEEN ? AND  ?",
+      [tanggal_awal, tanggal_akhir]
+    );
+
+    const hari_awal = moment(tanggal_awal).format(`dddd`);
+
+    const jamMengajar = await MJamMengajar.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ istirahat: 0 })
+      .andWhere({ hari: hari_awal })
+      .first();
+
+    const jadwalMengajar = await MJadwalMengajar.query()
+      .with("mataPelajaran", (builder) => {
+        builder
+          .with("user", (builder) => {
+            builder.select("id", "nama");
+          })
+          .select("id", "nama", "m_user_id");
+      })
+      .select(
+        "id",
+        "m_mata_pelajaran_id",
+        "m_ta_id",
+        "m_sekolah_id",
+        "m_jam_mengajar_id"
+      )
+      .whereNotNull("m_mata_pelajaran_id")
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ m_jam_mengajar_id: jamMengajar.id })
+      .fetch();
+
+    // return jadwalMengajar;
+
+    const timeline = await Promise.all(
+      jadwalMengajar.toJSON().map(async (d) => {
+        if (d.mataPelajaran.m_user_id != null) {
+          const timeline = await MTimeline.query()
+            .with("user", (builder) => {
+              builder.select("id", "nama").with("mataPelajaran");
+            })
+            .whereNotNull("id")
+            .andWhere({ tipe: "absen" })
+            .andWhere({ tanggal_pembagian: tanggal_awal })
+            .andWhere({ m_user_id: d.mataPelajaran.m_user_id })
+            .first();
+
+          return timeline;
+        }
+      })
+    );
+    // return response.ok({
+    //   // jadwalMengajar,
+    //   timeline,
+    // });
+    // const province = await this.getProvince("1");
+    // return province;
+
+    let workbook = new Excel.Workbook();
+    let worksheet = workbook.addWorksheet(`${tanggal_awal}`);
+    worksheet.mergeCells("A1:L1");
+    worksheet.mergeCells("A2:L2");
+    worksheet.getCell(
+      "A3"
+    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    worksheet.addConditionalFormatting({
+      ref: "A1:L2",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 16,
+              bold: true,
+            },
+            // fill: {
+            //   type: "pattern",
+            //   pattern: "solid",
+            //   bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            // },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            // border: {
+            //   top: { style: "thin" },
+            //   left: { style: "thin" },
+            //   bottom: { style: "thin" },
+            //   right: { style: "thin" },
+            // },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: "A4:L4",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet.getCell("A1").value = "Rekap Buku Tamu";
+    worksheet.getCell("A2").value = sekolah.nama;
+    await Promise.all(
+      jadwalMengajar.toJSON().map(async (d, idx) => {
+        // add column headers
+        worksheet.getRow(4).values = [
+          "No",
+          "Nama",
+          "Nomor Telepon",
+          "Asal Instansi",
+          "Bidang Instansi",
+          "Alamat",
+          "Provinsi",
+          "Regency",
+          "Kode Pos",
+          "Tanggal Kehadiran",
+          "Keterangan",
+          "Tanda Tangan",
+        ];
+        worksheet.columns = [
+          { key: "no" },
+          { key: "nama" },
+          { key: "no_hp" },
+          { key: "instansi" },
+          { key: "bidang" },
+          { key: "alamat" },
+          { key: "province_id" },
+          { key: "regency_id" },
+          { key: "kodepos" },
+          { key: "created_at" },
+          { key: "keterangan" },
+          { key: "ttd" },
+        ];
+
+        // Add row using key mapping to columns
+        let row = worksheet.addRow({
+          no: `${idx + 1}`,
+          nama: d ? d.nama : "-",
+          instansi: d ? d.instansi : "-",
+          no_hp: d ? d.no_hp : "-",
+          bidang: d ? d.bidang : "-",
+          alamat: d ? d.alamat : "-",
+          province_id: d ? d.province_id : "-",
+          regency_id: d ? d.regency_id : "-",
+          deskripsi: d ? d.deskripsi : "-",
+          created_at: d ? d.created_at : "-",
+          kodepos: d ? d.kodepos : "-",
+          keterangan: d ? d.keterangan : "-",
+          ttd: d ? d.ttd : "-",
+        });
+        worksheet.addConditionalFormatting({
+          ref: `B${(idx + 1) * 1 + 4}:L${(idx + 1) * 1 + 4}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet.addConditionalFormatting({
+          ref: `A${(idx + 1) * 1 + 4}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+      })
+    );
+    let namaFile = `/uploads/rekap-Buku-Tamu-${keluarantanggal}.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
   }
 }
 module.exports = MainController;
