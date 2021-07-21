@@ -17451,7 +17451,9 @@ class MainController {
           builder.select("id", "nama");
         });
       })
-      .with("prestasi")
+      .with("prestasi", (builder) => {
+        builder.with("tingkatPrestasi").where({ dihapus: 0 });
+      })
       .with("sikap", (builder) => {
         builder
           .with("ditingkatkanSosial")
