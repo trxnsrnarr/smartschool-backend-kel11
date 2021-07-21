@@ -17471,10 +17471,40 @@ class MainController {
       .fetch();
 
     const ulangan = await TkPesertaUjian.query()
-      .with("rekapRombel", (builder) => {
-        builder.with("rekap").where({ dihapus: 0 });
+      .with("jadwalUjian", (builder) => {
+        builder
+          .with("jadwalUjian", (builder) => {
+            builder
+              .with("ujian", (builder) => {
+                builder
+                  .with("mataPelajaran")
+                  .select(
+                    "id",
+                    "nama",
+                    "tipe",
+                    "tingkat",
+                    "dihapus",
+                    "m_mata_pelajaran_id"
+                  );
+              })
+              .select("id", "m_ujian_id", "dihapus", "kkm")
+              .where({ dihapus: 0 });
+          })
+          .where({ dihapus: 0 });
       })
+      .select(
+        "id",
+        "nilai",
+        "m_user_id",
+        "tk_jadwal_ujian_id",
+        "dihapus",
+        "selesai",
+        "dinilai"
+      )
       .where({ m_user_id: user_id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ selesai: 1 })
+      .andWhere({ dinilai: 1 })
       .fetch();
 
     const materiRombel = await TkMateriRombel.query()
@@ -17538,6 +17568,7 @@ class MainController {
       totalIzin: totalIzin,
       totalAlpa: totalAlpa,
       tanggalDistinct: tanggalDistinct,
+      ulangan: ulangan,
     });
   }
 
