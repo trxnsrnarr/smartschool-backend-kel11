@@ -12,7 +12,7 @@ class MPrestasi extends Model {
     return this.belongsTo("App/Models/User", "m_user_id");
   }
   tingkatPrestasi() {
-    return this.belongsTo("App/Models/MPenghargaan");
+    return this.belongsTo("App/Models/MPenghargaan", "tingkat", "id");
   }
 }
 
