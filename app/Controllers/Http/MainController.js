@@ -23743,7 +23743,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const ta = await this.getTAAktif(sekolah);
+    const ta = await Mta.query().where({ m_sekolah_id: sekolah.id }).first();
 
     const user = await auth.getUser();
 
@@ -23807,27 +23807,26 @@ class MainController {
     //   // jadwalMengajar,
     //   timeline,
     // });
-    // const province = await this.getProvince("1");
-    // return province;
 
     let workbook = new Excel.Workbook();
     let worksheet = workbook.addWorksheet(`${tanggal_awal}`);
-    worksheet.mergeCells("A1:L1");
-    worksheet.mergeCells("A2:L2");
-    worksheet.getCell(
-      "A3"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    worksheet.mergeCells("A1:K1");
+    worksheet.mergeCells("A2:K2");
+    worksheet.mergeCells("A3:K3");
+    // worksheet.getCell(
+    //   "A10"
+    // ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
     worksheet.addConditionalFormatting({
-      ref: "A1:L2",
+      ref: "A1:K3",
       rules: [
         {
           type: "expression",
           formulae: ["MOD(ROW()+COLUMN(),1)=0"],
           style: {
             font: {
-              name: "Times New Roman",
+              name: "Calibri",
               family: 4,
-              size: 16,
+              size: 14,
               bold: true,
             },
             // fill: {
@@ -23850,7 +23849,39 @@ class MainController {
       ],
     });
     worksheet.addConditionalFormatting({
-      ref: "A4:L4",
+      ref: "A5:K9",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Calibri",
+              family: 4,
+              size: 13,
+              bold: true,
+            },
+            // fill: {
+            //   type: "pattern",
+            //   pattern: "solid",
+            //   bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            // },
+            alignment: {
+              vertical: "middle",
+              horizontal: "left",
+            },
+            // border: {
+            //   top: { style: "thin" },
+            //   left: { style: "thin" },
+            //   bottom: { style: "thin" },
+            //   right: { style: "thin" },
+            // },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: "A11:K11",
       rules: [
         {
           type: "expression",
@@ -23865,11 +23896,12 @@ class MainController {
             fill: {
               type: "pattern",
               pattern: "solid",
-              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+              bgColor: { argb: "ffff00", fgColor: { argb: "ffff00" } },
             },
             alignment: {
               vertical: "middle",
               horizontal: "center",
+              wrapText: true,
             },
             border: {
               top: { style: "thin" },
@@ -23881,72 +23913,91 @@ class MainController {
         },
       ],
     });
-    worksheet.getCell("A1").value = "Rekap Buku Tamu";
-    worksheet.getCell("A2").value = sekolah.nama;
+    worksheet.getCell("A1").value =
+      "MONITORING KEGIATAN PEMBELAJARAN DIRUMAH (HOME LEARNING)";
+    worksheet.getCell(
+      "A2"
+    ).value = `DALAM RANGKA MENINGKATKAN KEWASPADAAN PENYEBARAN COVID 19`;
+    worksheet.getCell(
+      "A3"
+    ).value = `SUDIN PENDIDIKAN WILAYAH ${sekolah.kabupaten}`;
+    worksheet.getCell("B5").value = `HARI/TANGGAL`;
+    worksheet.getCell("B6").value = `NAMA PETUGAS MONITORING`;
+    worksheet.getCell("B7").value = `NAMA SEKOLAH`;
+    worksheet.getCell("B8").value = `NAMA KEPALA SEKOLAH`;
+    worksheet.getCell("B9").value = `ALAMAT SEKOLAH`;
+
+    worksheet.getCell("D5").value = `:`;
+    worksheet.getCell("D6").value = `:`;
+    worksheet.getCell("D7").value = `:`;
+    worksheet.getCell("D8").value = `:`;
+    worksheet.getCell("D9").value = `:`;
+
+    worksheet.getCell("E5").value = `${keluarantanggal}`;
+    worksheet.getCell("E6").value = `${user.nama}`;
+    worksheet.getCell("E7").value = `${sekolah.nama}`;
+    worksheet.getCell("E8").value = `${ta.nama_kepsek}`;
+    worksheet.getCell("E9").value = `${sekolah.alamat}`;
     await Promise.all(
       jadwalMengajar.toJSON().map(async (d, idx) => {
         // add column headers
-        worksheet.getRow(4).values = [
+        worksheet.getRow(11).values = [
           "No",
-          "Nama",
-          "Nomor Telepon",
-          "Asal Instansi",
-          "Bidang Instansi",
-          "Alamat",
-          "Provinsi",
-          "Regency",
-          "Kode Pos",
-          "Tanggal Kehadiran",
-          "Keterangan",
-          "Tanda Tangan",
+          "Nama Guru",
+          "Mengajar Kelas",
+          "Jumlah Siswa",
+          "Mapel dan Tujuan Pembelajaran",
+          "Materi Pembelajaran",
+          "Mode/Teknik Pembelajaran",
+          "Jumlah Siswa yang Mengikuti",
+          "Hasil Pembelajaran",
+          "Jumlah Siswa yang Tidak Mengikuti",
+          "Kendala dan Tindak Lanjut",
         ];
         worksheet.columns = [
           { key: "no" },
           { key: "nama" },
-          { key: "no_hp" },
-          { key: "instansi" },
-          { key: "bidang" },
-          { key: "alamat" },
-          { key: "province_id" },
-          { key: "regency_id" },
-          { key: "kodepos" },
-          { key: "created_at" },
-          { key: "keterangan" },
-          { key: "ttd" },
+          { key: "kelas" },
+          { key: "jumsiswa" },
+          { key: "mapel" },
+          { key: "materi" },
+          { key: "moda" },
+          { key: "jsiswa" },
+          { key: "hasil" },
+          { key: "jsiswax" },
+          { key: "kendala" },
         ];
 
         // Add row using key mapping to columns
         let row = worksheet.addRow({
           no: `${idx + 1}`,
           nama: d ? d.nama : "-",
-          instansi: d ? d.instansi : "-",
-          no_hp: d ? d.no_hp : "-",
-          bidang: d ? d.bidang : "-",
-          alamat: d ? d.alamat : "-",
-          province_id: d ? d.province_id : "-",
-          regency_id: d ? d.regency_id : "-",
-          deskripsi: d ? d.deskripsi : "-",
-          created_at: d ? d.created_at : "-",
-          kodepos: d ? d.kodepos : "-",
-          keterangan: d ? d.keterangan : "-",
-          ttd: d ? d.ttd : "-",
+          kelas: d ? d.instansi : "-",
+          jumsiswa: d ? d.province_id : "-",
+          mapel: d ? d.no_hp : "-",
+          materi: d ? d.bidang : "-",
+          moda: d ? d.alamat : "-",
+          jsiswa: d ? d.province_id : "-",
+          hasil: d ? d.regency_id : "-",
+          jsiswax: d ? d.deskripsi : "-",
+          kendala: d ? d.created_at : "-",
         });
         worksheet.addConditionalFormatting({
-          ref: `B${(idx + 1) * 1 + 4}:L${(idx + 1) * 1 + 4}`,
+          ref: `B${(idx + 1) * 1 + 11}:K${(idx + 1) * 1 + 11}`,
           rules: [
             {
               type: "expression",
               formulae: ["MOD(ROW()+COLUMN(),1)=0"],
               style: {
                 font: {
-                  name: "Times New Roman",
+                  name: "Calibri",
                   family: 4,
                   size: 11,
                   // bold: true,
                 },
                 alignment: {
                   vertical: "middle",
-                  horizontal: "left",
+                  horizontal: "center",
                 },
                 border: {
                   top: { style: "thin" },
@@ -23959,14 +24010,14 @@ class MainController {
           ],
         });
         worksheet.addConditionalFormatting({
-          ref: `A${(idx + 1) * 1 + 4}`,
+          ref: `A${(idx + 1) * 1 + 11}`,
           rules: [
             {
               type: "expression",
               formulae: ["MOD(ROW()+COLUMN(),1)=0"],
               style: {
                 font: {
-                  name: "Times New Roman",
+                  name: "Calibri",
                   family: 4,
                   size: 11,
                   // bold: true,
@@ -23987,7 +24038,7 @@ class MainController {
         });
       })
     );
-    let namaFile = `/uploads/rekap-Buku-Tamu-${keluarantanggal}.xlsx`;
+    let namaFile = `/uploads/rekap-Monev-${keluarantanggal}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
