@@ -5609,9 +5609,7 @@ class MainController {
         .fetch();
     } else {
       const tugasIds = await MTugas.query()
-        .where("tanggal_pembagian", "<=", hari_ini)
-        .andWhere("tanggal_pengumpulan", ">=", hari_ini)
-        .andWhere({ m_user_id: user.id })
+        .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .ids();
 
@@ -5643,7 +5641,7 @@ class MainController {
         .where({ m_rombel_id: jadwalMengajar.toJSON().rombel.id })
         .andWhere({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
-        // .orWhereIn("m_tugas_id", tugasIds)
+        .whereIn("m_tugas_id", tugasIds)
         // .orWhereIn("id", timelineLainnya)
         .orderBy("id", "desc")
         .fetch();
