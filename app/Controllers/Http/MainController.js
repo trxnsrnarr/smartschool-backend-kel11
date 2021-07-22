@@ -101,6 +101,8 @@ const TkSiswaPelanggaran = use("App/Models/TkSiswaPelanggaran");
 const MBabPeraturan = use("App/Models/MBabPeraturan");
 const MPasalPeraturan = use("App/Models/MPasalPeraturan");
 const MBukuTamu = use("App/Models/MBukuTamu");
+const MKategoriMapel = use("App/Models/MKategoriMapel");
+const TkMapelRapor = use("App/Models/TkMapelRapor");
 
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
@@ -17590,6 +17592,11 @@ class MainController {
 
     const ta = await this.getTAAktif(sekolah);
 
+    const check = await MKategoriMapel.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_rombel_id: rombel_id })
+      .first();
+
     const rombel = await MRombel.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ m_ta_id: ta.id })
@@ -17604,9 +17611,48 @@ class MainController {
       .where({ m_rombel_id: rombel_id })
       .fetch();
 
+    if (!check) {
+      const kategori = await MKategoriMapel.create({
+        nama: "Muatan Nasional",
+        dihapus: 0,
+        m_rombel_id: rombel_id,
+      });
+      await MKategoriMapel.create({
+        nama: "Muatan Kewilayahan",
+        dihapus: 0,
+        m_rombel_id: rombel_id,
+      });
+      await MKategoriMapel.create({
+        nama: "Muatan Peminatan Kejurusan",
+        dihapus: 0,
+        m_rombel_id: rombel_id,
+      });
+
+      const result = await Promise.all(
+        materiRombel.toJSON().map(async (d, idx) => {
+          await TkMapelRapor.create({
+            nama: d.materi.mataPelajaran ? d.materi.mataPelajaran.nama : "-",
+            kkm2: d.materi.mataPelajaran ? d.materi.mataPelajaran.kkm : "0",
+            m_mata_pelajaran_id: d.materi ? d.materi.m_mata_pelajaran_id : null,
+            m_kategori_mapel_id: kategori.id,
+            dihapus: 0,
+            urutan: idx + 1,
+          });
+        })
+      );
+    }
+
+    const kategoriMapel = await MKategoriMapel.query()
+      .with("mapelRapor", (builder) => {
+        builder.with("mataPelajaran").where({ dihapus: 0 });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_rombel_id: rombel_id })
+      .fetch();
+
     return response.ok({
       rombel: rombel,
-      materiRombel: materiRombel,
+      kategoriMapel: kategoriMapel,
     });
   }
 
