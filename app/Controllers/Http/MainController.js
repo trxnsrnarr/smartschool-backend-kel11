@@ -24278,15 +24278,24 @@ class MainController {
       .andWhere({ id: rombel_id })
       .fetch();
 
+    const rombelNama = await MRombel.query()
+      .select("id", "nama", "dihapus", "m_sekolah_id", "m_ta_id")
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ id: rombel_id })
+      .first();
+    // return rombel;
     let workbook = new Excel.Workbook();
-    let worksheet = workbook.addWorksheet(`${rombel.nama}`);
+    let worksheet = workbook.addWorksheet(`${rombelNama.nama}`);
     worksheet.mergeCells("A1:H1");
     worksheet.mergeCells("A2:H2");
+    worksheet.mergeCells("A3:H3");
     worksheet.getCell(
-      "A4"
+      "A5"
     ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
     worksheet.addConditionalFormatting({
-      ref: "A1:H2",
+      ref: "A1:H3",
       rules: [
         {
           type: "expression",
@@ -24318,7 +24327,7 @@ class MainController {
       ],
     });
     worksheet.addConditionalFormatting({
-      ref: "A5:H5",
+      ref: "A6:H6",
       rules: [
         {
           type: "expression",
@@ -24349,14 +24358,16 @@ class MainController {
         },
       ],
     });
-    worksheet.getCell("A1").value = "Rekap Absensi Siswa";
-    worksheet.getCell("A2").value = sekolah.nama;
+    const tanggalFormat = moment(tanggal).format("DD MMMM YYYY");
+    worksheet.getCell("A1").value = `Rekap Absensi ${rombelNama.nama}`;
+    worksheet.getCell("A2").value = `${tanggalFormat}`;
+    worksheet.getCell("A3").value = sekolah.nama;
     await Promise.all(
       rombel.toJSON().map(async (d) => {
         await Promise.all(
           d.anggotaRombel.map(async (anggota, idx) => {
             // add column headers
-            worksheet.getRow(5).values = [
+            worksheet.getRow(6).values = [
               "Nama",
               "Absen",
               "Keterangan",
@@ -24433,7 +24444,7 @@ class MainController {
             });
 
             worksheet.addConditionalFormatting({
-              ref: `B${(idx + 1) * 1 + 5}:H${(idx + 1) * 1 + 5}`,
+              ref: `B${(idx + 1) * 1 + 6}:H${(idx + 1) * 1 + 6}`,
               rules: [
                 {
                   type: "expression",
@@ -24460,7 +24471,7 @@ class MainController {
               ],
             });
             worksheet.addConditionalFormatting({
-              ref: `A${(idx + 1) * 1 + 5}`,
+              ref: `A${(idx + 1) * 1 + 6}`,
               rules: [
                 {
                   type: "expression",
