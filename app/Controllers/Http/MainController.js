@@ -24107,7 +24107,7 @@ class MainController {
     return namaFile;
   }
 
-  async downloadAbsenSiswa({ response, request, auth }) {
+  async downloadAbsenRombel({ response, request, auth }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);

@@ -389,10 +389,11 @@ Route.delete(
 // absen
 Route.get("/absen", "MainController.getAbsen");
 Route.get("/absen/me", "MainController.meAbsen");
-Route.get("/absen/:absen_id", "MainController.detailAbsen");
 Route.post("/absen", "MainController.postAbsen");
 Route.put("/absen/:absen_id", "MainController.putAbsen");
 Route.post("/absen/download-absen", "MainController.downloadAbsen");
+Route.post("/absen/rombel", "MainController.downloadAbsenRombel");
+Route.get("/absen/:absen_id", "MainController.detailAbsen");
 
 // test
 Route.get("/test", "MainController.downloadPendaftarPPDB");
@@ -806,7 +807,6 @@ Route.post("/ascii", "MainController.changeBase64ToAscii");
 
 Route.post("uji-coba/cron", "MainController.postCron");
 Route.post("/download/monev", "MainController.downloadMonev");
-Route.post("/download/absen/siswa", "MainController.downloadAbsenSiswa");
 
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
