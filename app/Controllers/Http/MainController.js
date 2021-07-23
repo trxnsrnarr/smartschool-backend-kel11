@@ -17655,6 +17655,145 @@ class MainController {
       kategoriMapel: kategoriMapel,
     });
   }
+  async putMapelRapor({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { urutan, nama, kkm, mapelRapor_id } = request.post();
+
+    const mapelRapor = await TkMapelRapor.query()
+      .where({ id: mapelRapor_id })
+      .update({
+        urutan,
+        nama,
+        kkm,
+        dihapus: 0,
+      });
+
+    if (!mapelRapor) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+  async putMapelRaporKKM({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { kkm, mapel_id } = request.post();
+
+    const mapel = await MMataPelajaran.query().where({ id: mapel_id }).update({
+      kkm,
+      dihapus: 0,
+    });
+
+    if (!mapel) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+  async putKategoriMapel({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { nama, kategoriMapel_id } = request.post();
+
+    const kategoriMapel = await MKategoriMapel.query()
+      .where({ id: kategoriMapel_id })
+      .update({
+        nama,
+        dihapus: 0,
+      });
+
+    if (!kategoriMapel) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteMapelRapor({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { mapelRapor_id } = request.post();
+
+    const mapelRapor = await TkMapelRapor.query()
+      .where({ id: mapelRapor_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!mapelRapor) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+  async deleteKategoriMapel({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { kategoriMapel_id } = request.post();
+
+    const kategoriMapel = await MKategoriMapel.query()
+      .where({ id: kategoriMapel_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!kategoriMapel) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
 
   async postPredikat({ response, request, auth }) {
     const domain = request.headers().origin;

@@ -602,6 +602,14 @@ Route.get(
   "/buku-induk/rapor/:rombel_id",
   "MainController.detailBukuIndukRapor"
 );
+Route.put("/buku-induk/rapor/kategori", "MainController.putKategoriMapel");
+Route.put("/buku-induk/rapor/kkm", "MainController.putMapelRaporKKM");
+Route.delete(
+  "/buku-induk/rapor/kategori",
+  "MainController.deleteKategoriMapel"
+);
+Route.put("/buku-induk/rapor/mapel", "MainController.putMapelRapor");
+Route.delete("/buku-induk/rapor/mapel", "MainController.deleteMapelRapor");
 Route.get(
   "/buku-induk/:rombel_id/:user_id",
   "MainController.detailBukuIndukSiswa"
