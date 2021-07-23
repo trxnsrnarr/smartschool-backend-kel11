@@ -5641,8 +5641,8 @@ class MainController {
         .where({ m_rombel_id: jadwalMengajar.toJSON().rombel.id })
         .andWhere({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
-        .whereIn("m_tugas_id", tugasIds)
-        // .orWhereIn("id", timelineLainnya)
+        // .whereIn("m_tugas_id", tugasIds)
+        // .andWhereIn("id", timelineLainnya)
         .orderBy("id", "desc")
         .fetch();
     }
