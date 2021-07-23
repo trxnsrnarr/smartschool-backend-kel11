@@ -4267,12 +4267,11 @@ class MainController {
 
     const { kesimpulan, waktu_mulai, waktu_selesai, m_topik_id } =
       request.post();
-    // ini masih buffer
     const materiKesimpulan = await TkMateriKesimpulan.query()
       .where({ m_topik_id: m_topik_id })
       .andWhere({ m_user_id: user.id })
       .update({
-        kesimpulan: kesimpulan ? Buffer(kesimpulan).toString("base64") : "",
+        kesimpulan: kesimpulan ? htmlEscaper.escape(kesimpulan) : "",
         waktu_selesai,
       });
 
@@ -4782,12 +4781,11 @@ class MainController {
     const user = await auth.getUser();
 
     const { judul, konten, lampiran, link } = request.post();
-    // ini masih buffer
     const topik = await MTopik.query()
       .where({ id: topik_id })
       .update({
         judul,
-        konten: konten ? Buffer(konten).toString("base64") : "",
+        konten: konten ? htmlEscaper.escape(konten) : "",
         lampiran: lampiran.toString(),
         link: link.toString(),
       });
@@ -5545,7 +5543,8 @@ class MainController {
             })
             .with("komen", (builder) => {
               builder.with("user").where({ dihapus: 0 });
-            });
+            })
+            .with("user");
         })
         .with("user")
         .where({ m_user_id: user.id })
@@ -5621,6 +5620,7 @@ class MainController {
 
       const timelineLainnya = await MTimeline.query()
         .where({ dihapus: 0 })
+        .andWhere('m_rombel_id', jadwalMengajar.toJSON().rombel.id)
         .whereIn("m_user_id", userIds)
         .ids();
 
@@ -5644,7 +5644,7 @@ class MainController {
         .andWhere({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         // .whereIn("m_tugas_id", tugasIds)
-        // .andWhereIn("id", timelineLainnya)
+        .orWhereIn("id", timelineLainnya)
         .orderBy("id", "desc")
         .fetch();
     }
@@ -12915,7 +12915,6 @@ class MainController {
     if (validation.fails()) {
       return response.unprocessableEntity(validation.messages());
     }
-    // ini masih buffer aneh
     galeri = galeri ? galeri.toJSON() : null;
     deskripsi = deskripsi ? htmlEscaper.unescape(deskripsi) : null;
     tautan = tautan ? JSON.stringify(tautan) : null;
@@ -12978,7 +12977,6 @@ class MainController {
     if (validation.fails()) {
       return response.unprocessableEntity(validation.messages());
     }
-    // ini masih buffer aneh
     galeri = galeri ? galeri.toJSON() : null;
     deskripsi = deskripsi ? htmlEscaper.unescape(deskripsi) : null;
     tautan = tautan ? JSON.stringify(tautan) : null;
@@ -17318,39 +17316,6 @@ class MainController {
       .fetch();
 
     return sekolah;
-  }
-
-  async ubahtipedata({ response, request }) {
-    const post = await MPost.query().fetch();
-
-    // let kontenisi = post.konten
-    //   ? Buffer(konten, "base64").toString("ascii").replace("b&", "..........")
-    //   : "";
-
-    // await Promise.all(
-    //   post.toJSON().map(async (d) => {
-    //     d.konten = post.konten
-    //       ? Buffer(konten, "base64")
-    //           .toString("ascii")
-    //           .replace("b&", "..........")
-    //       : "";
-    //     return d;
-    //   })
-    // );
-
-    // const industri = await MIndustri.query().where({ id: industri_id }).update({
-    //   nama,
-    //   klasifikasi,
-    //   jumlah_karyawan,
-    //   tautan,
-    //   galeri,
-    //   deskripsi,
-    //   tahun_kerjasama,
-    // });
-    // ini masih buffer
-    return post.konten
-      ? Buffer(konten, "base64").toString("ascii").replace("b&", "..........")
-      : "";
   }
 
   async getBukuInduk({ response, request, auth }) {
@@ -24246,6 +24211,27 @@ class MainController {
     await workbook.xlsx.writeFile(`public${namaFile}`);
 
     return namaFile;
+  }
+
+  async changeBase64ToAscii({ response, request, auth }) {
+    const data = await TkMateriKesimpulan.query()
+      .select("id", "kesimpulan")
+      .whereBetween("id", [40001, 50000])
+      .fetch();
+
+    await Promise.all(
+      data.toJSON().map(async (d) => {
+        await TkMateriKesimpulan.query()
+          .where("id", d.id)
+          .update({
+            kesimpulan: d.kesimpulan
+              ? Buffer(d.kesimpulan, "base64").toString("ascii")
+              : "",
+          });
+      })
+    );
+
+    return "sukses";
   }
 
   async downloadAbsenRombel({ response, request, auth }) {

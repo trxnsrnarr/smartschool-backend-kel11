@@ -3,6 +3,8 @@
 /** @type {typeof import('@adonisjs/lucid/src/Lucid/Model')} */
 const Model = use("Model");
 
+const htmlEscaper = require("html-escaper");
+
 class MTopik extends Model {
   static get table() {
     return "m_topik";
@@ -31,11 +33,8 @@ class MTopik extends Model {
   materiKesimpulan() {
     return this.hasOne("App/Models/TkMateriKesimpulan");
   }
-  // ini masih buffer
   getKonten(konten) {
-    return konten
-      ? Buffer(konten, "base64").toString("ascii").replace("b&", "..........")
-      : "";
+    return konten ? htmlEscaper.unescape(konten) : "";
   }
 }
 
