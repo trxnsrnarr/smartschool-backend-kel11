@@ -393,6 +393,10 @@ Route.post("/absen", "MainController.postAbsen");
 Route.put("/absen/:absen_id", "MainController.putAbsen");
 Route.post("/absen/download-absen", "MainController.downloadAbsen");
 Route.post("/absen/rombel", "MainController.downloadAbsenRombel");
+Route.post(
+  "/absen/rombel/tanggal",
+  "MainController.downloadAbsenRombelTanggal"
+);
 Route.get("/absen/:absen_id", "MainController.detailAbsen");
 
 // test

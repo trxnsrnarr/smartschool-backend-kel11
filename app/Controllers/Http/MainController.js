@@ -17625,14 +17625,16 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { urutan, nama, kkm, mapelRapor_id } = request.post();
+    const { urutan, nama, kkm2, mapelRapor_id, m_kategori_mapel_id } =
+      request.post();
 
     const mapelRapor = await TkMapelRapor.query()
       .where({ id: mapelRapor_id })
       .update({
         urutan,
         nama,
-        kkm,
+        kkm2,
+        m_kategori_mapel_id,
         dihapus: 0,
       });
 
@@ -24343,6 +24345,271 @@ class MainController {
     const tanggalFormat = moment(tanggal).format("DD MMMM YYYY");
     worksheet.getCell("A1").value = `Rekap Absensi ${rombelNama.nama}`;
     worksheet.getCell("A2").value = `${tanggalFormat}`;
+    worksheet.getCell("A3").value = sekolah.nama;
+    await Promise.all(
+      rombel.toJSON().map(async (d) => {
+        await Promise.all(
+          d.anggotaRombel.map(async (anggota, idx) => {
+            // add column headers
+            worksheet.getRow(6).values = [
+              "Nama",
+              "Absen",
+              "Keterangan",
+              "Lampiran",
+              "Foto Masuk",
+              "Waktu Masuk",
+              "Foto Pulang",
+              "Waktu Pulang",
+            ];
+
+            worksheet.columns = [
+              { key: "user" },
+              { key: "absen" },
+              { key: "keterangan" },
+              { key: "lampiran" },
+              { key: "foto_masuk" },
+              { key: "created_at" },
+              { key: "foto_pulang" },
+              { key: "waktu_pulang" },
+            ];
+
+            // Add row using key mapping to columns
+            let row = worksheet.addRow({
+              user: anggota.user ? anggota.user.nama : "-",
+              absen: anggota.user
+                ? anggota.user.absen
+                  ? anggota.user.absen.length
+                    ? anggota.user.absen[0].absen
+                    : "-"
+                  : "-"
+                : "-",
+              keterangan: anggota.user
+                ? anggota.user.absen
+                  ? anggota.user.absen.length
+                    ? anggota.user.absen[0].keterangan
+                    : "-"
+                  : "-"
+                : "-",
+              lampiran: anggota.user
+                ? anggota.user.absen
+                  ? anggota.user.absen.length
+                    ? anggota.user.absen[0].lampiran
+                    : "-"
+                  : "-"
+                : "-",
+              foto_masuk: anggota.user
+                ? anggota.user.absen
+                  ? anggota.user.absen.length
+                    ? anggota.user.absen[0].foto_masuk
+                    : "-"
+                  : "-"
+                : "-",
+              created_at: anggota.user
+                ? anggota.user.absen
+                  ? anggota.user.absen.length
+                    ? anggota.user.absen[0].created_at
+                    : "-"
+                  : "-"
+                : "-",
+              foto_pulang: anggota.user
+                ? anggota.user.absen
+                  ? anggota.user.absen.length
+                    ? anggota.user.absen[0].foto_pulang
+                    : "-"
+                  : "-"
+                : "-",
+              waktu_pulang: anggota.user
+                ? anggota.user.absen
+                  ? anggota.user.absen.length
+                    ? anggota.user.absen[0].waktu_pulang
+                    : "-"
+                  : "-"
+                : "-",
+            });
+
+            worksheet.addConditionalFormatting({
+              ref: `B${(idx + 1) * 1 + 6}:H${(idx + 1) * 1 + 6}`,
+              rules: [
+                {
+                  type: "expression",
+                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                  style: {
+                    font: {
+                      name: "Times New Roman",
+                      family: 4,
+                      size: 11,
+                      // bold: true,
+                    },
+                    alignment: {
+                      vertical: "middle",
+                      horizontal: "left",
+                    },
+                    border: {
+                      top: { style: "thin" },
+                      left: { style: "thin" },
+                      bottom: { style: "thin" },
+                      right: { style: "thin" },
+                    },
+                  },
+                },
+              ],
+            });
+            worksheet.addConditionalFormatting({
+              ref: `A${(idx + 1) * 1 + 6}`,
+              rules: [
+                {
+                  type: "expression",
+                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                  style: {
+                    font: {
+                      name: "Times New Roman",
+                      family: 4,
+                      size: 11,
+                      // bold: true,
+                    },
+                    alignment: {
+                      vertical: "middle",
+                      horizontal: "center",
+                    },
+                    border: {
+                      top: { style: "thin" },
+                      left: { style: "thin" },
+                      bottom: { style: "thin" },
+                      right: { style: "thin" },
+                    },
+                  },
+                },
+              ],
+            });
+          })
+        );
+      })
+    );
+
+    let namaFile = `/uploads/rekap-absen-siswa-${keluarantanggal}.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
+
+  async downloadAbsenRombelTanggal({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+    const user = await auth.getUser();
+    const { tanggal_awal, tanggal_akhir, rombel_id } = request.post();
+
+    const rombel = await MRombel.query()
+      .with("user")
+      .with("anggotaRombel", (builder) => {
+        builder.with("user", (builder) => {
+          builder.with("absen", (builder) => {
+            builder.whereBetween("created_at", [tanggal_awal, tanggal_akhir]);
+          });
+        });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ id: rombel_id })
+      .fetch();
+
+    const rombelNama = await MRombel.query()
+      .select("id", "nama", "dihapus", "m_sekolah_id", "m_ta_id")
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ id: rombel_id })
+      .first();
+    // return rombel;
+    let workbook = new Excel.Workbook();
+    let worksheet = workbook.addWorksheet(`${rombelNama.nama}`);
+    worksheet.mergeCells("A1:H1");
+    worksheet.mergeCells("A2:H2");
+    worksheet.mergeCells("A3:H3");
+    worksheet.getCell(
+      "A5"
+    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    worksheet.addConditionalFormatting({
+      ref: "A1:H3",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 16,
+              bold: true,
+            },
+            // fill: {
+            //   type: "pattern",
+            //   pattern: "solid",
+            //   bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            // },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            // border: {
+            //   top: { style: "thin" },
+            //   left: { style: "thin" },
+            //   bottom: { style: "thin" },
+            //   right: { style: "thin" },
+            // },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: "A6:H6",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+    const tanggalFormat = moment(tanggal_awal).format("DD MMMM YYYY");
+    const tanggalFormatAkhir = moment(tanggal_akhir).format("DD MMMM YYYY");
+    worksheet.getCell("A1").value = `Rekap Absensi ${rombelNama.nama}`;
+    worksheet.getCell("A2").value = `${tanggalFormat} - ${tanggalFormatAkhir}`;
     worksheet.getCell("A3").value = sekolah.nama;
     await Promise.all(
       rombel.toJSON().map(async (d) => {
