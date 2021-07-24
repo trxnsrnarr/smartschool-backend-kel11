@@ -2758,11 +2758,9 @@ class MainController {
     const { tingkat, kode, m_jurusan_id, m_user_id, kelompok } = request.post();
     const rules = {
       kode: "required",
-      m_user_id: "required",
     };
     const message = {
       "kode.required": "Kode  harus diisi",
-      "m_user_id.required": "Wali Kelas harus dipilih",
     };
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
@@ -2836,11 +2834,9 @@ class MainController {
     const { tingkat, kode, m_jurusan_id, m_user_id, kelompok } = request.post();
     const rules = {
       kode: "required",
-      m_user_id: "required",
     };
     const message = {
       "kode.required": "Kode  harus diisi",
-      "m_user_id.required": "Wali Kelas harus dipilih",
     };
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
