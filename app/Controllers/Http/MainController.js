@@ -5543,7 +5543,8 @@ class MainController {
             })
             .with("komen", (builder) => {
               builder.with("user").where({ dihapus: 0 });
-            });
+            })
+            .with("user");
         })
         .with("user")
         .where({ m_user_id: user.id })
@@ -5619,6 +5620,7 @@ class MainController {
 
       const timelineLainnya = await MTimeline.query()
         .where({ dihapus: 0 })
+        .andWhere('m_rombel_id', jadwalMengajar.toJSON().rombel.id)
         .whereIn("m_user_id", userIds)
         .ids();
 
@@ -5642,7 +5644,7 @@ class MainController {
         .andWhere({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         // .whereIn("m_tugas_id", tugasIds)
-        // .andWhereIn("id", timelineLainnya)
+        .orWhereIn("id", timelineLainnya)
         .orderBy("id", "desc")
         .fetch();
     }
