@@ -5640,7 +5640,7 @@ class MainController {
 
       const timelineLainnya = await MTimeline.query()
         .where({ dihapus: 0 })
-        .andWhere('m_rombel_id', jadwalMengajar.toJSON().rombel.id)
+        .andWhere("m_rombel_id", jadwalMengajar.toJSON().rombel.id)
         .whereIn("m_user_id", userIds)
         .ids();
 
@@ -17326,17 +17326,17 @@ class MainController {
 
     let logoFileName = `logo-${new Date().getTime()}.png`;
 
-    const downloader = new Downloader({
-      url: `${sekolah.logo}`,
-      directory: "./public/tmp/",
-      fileName: logoFileName,
-      cloneFiles: false,
-    });
-
     try {
+      const downloader = new Downloader({
+        url: `${sekolah.logo}`,
+        directory: "./public/tmp/",
+        fileName: logoFileName,
+        cloneFiles: false,
+      });
+
       await downloader.download();
     } catch (error) {
-      // console.log(error);
+      logoFileName = "logo.png";
     }
 
     return await DownloadService.kartuUjian(

@@ -391,11 +391,13 @@ class DownloadService {
           worksheet2.getCell(
             `E${(idx + 1) * 32 - 19}`
           ).value = `Rumusan Butir Soal`;
-          worksheet2.getCell(
-            `E${(idx + 1) * 32 - 17}`
-          ).value = `${d.soal.pertanyaan
-            .replace(/(<([^>]+)>)/gi, "")
-            .replace(/\&nbsp;/gi, "")}`;
+          worksheet2.getCell(`E${(idx + 1) * 32 - 17}`).value = `${
+            d.soal
+              ? d.soal.pertanyaan
+                  .replace(/(<([^>]+)>)/gi, "")
+                  .replace(/\&nbsp;/gi, "")
+              : "-"
+          }`;
           worksheet2.getCell(`H${(idx + 1) * 32 - 19}`).value = `BUKU`;
           worksheet2.getCell(`H${(idx + 1) * 32 - 17}`).value = ``;
           worksheet2.addConditionalFormatting({
@@ -631,31 +633,41 @@ class DownloadService {
               },
             ],
           });
-          worksheet2.getCell(
-            `F${(idx + 1) * 32 - 15}`
-          ).value = `${d.soal.jawaban_a
-            .replace(/(<([^>]+)>)/gi, "")
-            .replace(/\&nbsp;/gi, "")}`;
-          worksheet2.getCell(
-            `F${(idx + 1) * 32 - 14}`
-          ).value = `${d.soal.jawaban_b
-            .replace(/(<([^>]+)>)/gi, "")
-            .replace(/\&nbsp;/gi, "")}`;
-          worksheet2.getCell(
-            `F${(idx + 1) * 32 - 13}`
-          ).value = `${d.soal.jawaban_c
-            .replace(/(<([^>]+)>)/gi, "")
-            .replace(/\&nbsp;/gi, "")}`;
-          worksheet2.getCell(
-            `F${(idx + 1) * 32 - 12}`
-          ).value = `${d.soal.jawaban_d
-            .replace(/(<([^>]+)>)/gi, "")
-            .replace(/\&nbsp;/gi, "")}`;
-          worksheet2.getCell(
-            `F${(idx + 1) * 32 - 11}`
-          ).value = `${d.soal.jawaban_e
-            .replace(/(<([^>]+)>)/gi, "")
-            .replace(/\&nbsp;/gi, "")}`;
+          worksheet2.getCell(`F${(idx + 1) * 32 - 15}`).value = `${
+            d.soal
+              ? d.soal.jawaban_a
+                  .replace(/(<([^>]+)>)/gi, "")
+                  .replace(/\&nbsp;/gi, "")
+              : "-"
+          }`;
+          worksheet2.getCell(`F${(idx + 1) * 32 - 14}`).value = `${
+            d.soal
+              ? d.soal.jawaban_b
+                  .replace(/(<([^>]+)>)/gi, "")
+                  .replace(/\&nbsp;/gi, "")
+              : "-"
+          }`;
+          worksheet2.getCell(`F${(idx + 1) * 32 - 13}`).value = `${
+            d.soal
+              ? d.soal.jawaban_c
+                  .replace(/(<([^>]+)>)/gi, "")
+                  .replace(/\&nbsp;/gi, "")
+              : "-"
+          }`;
+          worksheet2.getCell(`F${(idx + 1) * 32 - 12}`).value = `${
+            d.soal
+              ? d.soal.jawaban_d
+                  .replace(/(<([^>]+)>)/gi, "")
+                  .replace(/\&nbsp;/gi, "")
+              : "-"
+          }`;
+          worksheet2.getCell(`F${(idx + 1) * 32 - 11}`).value = `${
+            d.soal
+              ? d.soal.jawaban_e
+                  .replace(/(<([^>]+)>)/gi, "")
+                  .replace(/\&nbsp;/gi, "")
+              : "-"
+          }`;
 
           worksheet2.addConditionalFormatting({
             ref: `C${(idx + 1) * 32 - 15}`,
@@ -1188,11 +1200,13 @@ class DownloadService {
           worksheet3.getCell(
             `E${(idx + 1) * 32 - 19}`
           ).value = `Rumusan Butir Soal`;
-          worksheet3.getCell(
-            `E${(idx + 1) * 32 - 17}`
-          ).value = `${d.soal.pertanyaan
-            .replace(/(<([^>]+)>)/gi, "")
-            .replace(/\&nbsp;/gi, "")}`;
+          worksheet3.getCell(`E${(idx + 1) * 32 - 17}`).value = `${
+            d.soal
+              ? d.soal.pertanyaan
+                  .replace(/(<([^>]+)>)/gi, "")
+                  .replace(/\&nbsp;/gi, "")
+              : "-"
+          }`;
           worksheet3.getCell(`H${(idx + 1) * 32 - 19}`).value = `BUKU`;
           worksheet3.getCell(`H${(idx + 1) * 32 - 17}`).value = ``;
           worksheet3.addConditionalFormatting({
