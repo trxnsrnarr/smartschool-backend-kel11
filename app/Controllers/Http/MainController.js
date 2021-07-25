@@ -6941,15 +6941,17 @@ class MainController {
           .where({ tingkat: tingkat })
           .andWhere({ dihapus: 0 })
           .whereIn("m_user_id", userIds)
-          .whereIn("tipe", tipeUjian);
-        orderBy("id", "desc").fetch();
+          .whereIn("tipe", tipeUjian)
+          .orderBy("id", "desc")
+          .fetch();
       } else {
         ujianTingkat = await MUjian.query()
           .select("id", "nama")
           .where({ tingkat: tingkat })
           .andWhere({ dihapus: 0 })
-          .andWhere({ m_user_id: user.id });
-        orderBy("id", "desc").fetch();
+          .andWhere({ m_user_id: user.id })
+          .orderBy("id", "desc")
+          .fetch();
       }
 
       let ujianDetail;
@@ -6997,8 +6999,9 @@ class MainController {
         builder.where({ dihapus: 0 });
       })
       .where({ dihapus: 0 })
-      .andWhere({ m_user_id: user.id });
-    orderBy("id", "desc").fetch();
+      .andWhere({ m_user_id: user.id })
+      .orderBy("id", "desc")
+      .fetch();
 
     let tingkatData = [];
 
@@ -7795,23 +7798,26 @@ class MainController {
           .with("ujian")
           .where({ m_user_id: user.id })
           .andWhere({ dihapus: 0 })
-          .andWhere("waktu_dibuka", ">", hari_ini);
-        orderBy("id", "desc").fetch();
+          .andWhere("waktu_dibuka", ">", hari_ini)
+          .orderBy("id", "desc")
+          .fetch();
       } else if (status == "berlangsung") {
         jadwalUjian = await MJadwalUjian.query()
           .with("ujian")
           .where({ m_user_id: user.id })
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_dibuka", "<=", hari_ini)
-          .andWhere("waktu_ditutup", ">=", hari_ini);
-        orderBy("id", "desc").fetch();
+          .andWhere("waktu_ditutup", ">=", hari_ini)
+          .orderBy("id", "desc")
+          .fetch();
       } else if (status == "sudah-selesai") {
         jadwalUjian = await MJadwalUjian.query()
           .with("ujian")
           .where({ m_user_id: user.id })
           .andWhere({ dihapus: 0 })
-          .andWhere("waktu_ditutup", "<=", hari_ini);
-        orderBy("id", "desc").fetch();
+          .andWhere("waktu_ditutup", "<=", hari_ini)
+          .orderBy("id", "desc")
+          .fetch();
       }
 
       const jadwalUjianDataFormat = [];
@@ -7937,23 +7943,26 @@ class MainController {
           .with("ujian")
           .where({ m_user_id: user.id })
           .andWhere({ dihapus: 0 })
-          .andWhere("waktu_dibuka", ">", hari_ini);
-        orderBy("id", "desc").fetch();
+          .andWhere("waktu_dibuka", ">", hari_ini)
+          .orderBy("id", "desc")
+          .fetch();
       } else if (status == "berlangsung") {
         jadwalUjian = await MJadwalUjian.query()
           .with("ujian")
           .where({ m_user_id: user.id })
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_dibuka", "<=", hari_ini)
-          .andWhere("waktu_ditutup", ">=", hari_ini);
-        orderBy("id", "desc").fetch();
+          .andWhere("waktu_ditutup", ">=", hari_ini)
+          .orderBy("id", "desc")
+          .fetch();
       } else if (status == "sudah-selesai") {
         jadwalUjian = await MJadwalUjian.query()
           .with("ujian")
           .where({ m_user_id: user.id })
           .andWhere({ dihapus: 0 })
-          .andWhere("waktu_ditutup", "<=", hari_ini);
-        orderBy("id", "desc").fetch();
+          .andWhere("waktu_ditutup", "<=", hari_ini)
+          .orderBy("id", "desc")
+          .fetch();
       }
 
       const jadwalUjianDataFormat = [];
@@ -8083,8 +8092,9 @@ class MainController {
             builder.with("ujian").where("waktu_dibuka", ">", hari_ini);
           })
           .where({ dihapus: 0 })
-          .whereIn("m_rombel_id", anggotaRombel);
-        orderBy("id", "desc").fetch();
+          .whereIn("m_rombel_id", anggotaRombel)
+          .orderBy("id", "desc")
+          .fetch();
       } else if (status == "berlangsung") {
         jadwalUjian = await TkJadwalUjian.query()
           .with("jadwalUjian", (builder) => {
@@ -8095,8 +8105,9 @@ class MainController {
           })
           .with("peserta")
           .where({ dihapus: 0 })
-          .whereIn("m_rombel_id", anggotaRombel);
-        orderBy("id", "desc").fetch();
+          .whereIn("m_rombel_id", anggotaRombel)
+          .orderBy("id", "desc")
+          .fetch();
       } else if (status == "sudah-selesai") {
         jadwalUjian = await TkJadwalUjian.query()
           .with("jadwalUjian", (builder) => {
@@ -8106,8 +8117,9 @@ class MainController {
             builder.where({ m_user_id: user.id });
           })
           .where({ dihapus: 0 })
-          .whereIn("m_rombel_id", anggotaRombel);
-        orderBy("id", "desc").fetch();
+          .whereIn("m_rombel_id", anggotaRombel)
+          .orderBy("id", "desc")
+          .fetch();
       }
 
       return response.ok({
