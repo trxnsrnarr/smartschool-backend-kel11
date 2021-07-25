@@ -9153,20 +9153,27 @@ class MainController {
         .where({ id: jawaban_ujian_siswa_id })
         .first();
 
-      await jadwalUjianReference
-        .doc(`${jawabanUjianSiswaData.toJSON().pesertaUjian.doc_id}`)
-        .set(
-          {
-            tk_jadwal_ujian_id:
-              jawabanUjianSiswaData.toJSON().pesertaUjian.tk_jadwal_ujian_id,
-            user_id: jawabanUjianSiswaData.toJSON().pesertaUjian.m_user_id,
-            progress:
-              jawabanUjianSiswaData.toJSON().pesertaUjian.__meta__.totalDijawab,
-          },
-          { merge: true }
-        );
+      // await jadwalUjianReference
+      //   .doc(`${jawabanUjianSiswaData.toJSON().pesertaUjian.doc_id}`)
+      //   .set(
+      //     {
+      //       tk_jadwal_ujian_id:
+      //         jawabanUjianSiswaData.toJSON().pesertaUjian.tk_jadwal_ujian_id,
+      //       user_id: jawabanUjianSiswaData.toJSON().pesertaUjian.m_user_id,
+      //       progress:
+      //         jawabanUjianSiswaData.toJSON().pesertaUjian.__meta__.totalDijawab,
+      //     },
+      //     { merge: true }
+      //   );
 
-      return response.noContent();
+      return response.ok({
+        doc_id: jawabanUjianSiswaData.toJSON().pesertaUjian.doc_id,
+        tk_jadwal_ujian_id:
+          jawabanUjianSiswaData.toJSON().pesertaUjian.tk_jadwal_ujian_id,
+        user_id: jawabanUjianSiswaData.toJSON().pesertaUjian.m_user_id,
+        progress:
+          jawabanUjianSiswaData.toJSON().pesertaUjian.__meta__.totalDijawab,
+      });
     }
   }
 
