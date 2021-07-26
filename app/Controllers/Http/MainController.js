@@ -7018,8 +7018,8 @@ class MainController {
       { value: "pas1", label: "Penilaian Akhir Semester 1" },
       { value: "pas2", label: "Penilaian Akhir Semester 2" },
       { value: "us", label: "Ujian Sekolah" },
-      { value: "literasi", label: "AKM - Literasi" },
-      { value: "numerasi", label: "AKM - Numerasi" },
+      // { value: "literasi", label: "AKM - Literasi" },
+      // { value: "numerasi", label: "AKM - Numerasi" },
     ];
 
     return response.ok({
@@ -7335,8 +7335,8 @@ class MainController {
       { value: "pas1", label: "Penilaian Akhir Semester 1" },
       { value: "pas2", label: "Penilaian Akhir Semester 2" },
       { value: "us", label: "Ujian Sekolah" },
-      { value: "literasi", label: "AKM - Literasi" },
-      { value: "numerasi", label: "AKM - Numerasi" },
+      // { value: "literasi", label: "AKM - Literasi" },
+      // { value: "numerasi", label: "AKM - Numerasi" },
     ];
 
     return response.ok({
