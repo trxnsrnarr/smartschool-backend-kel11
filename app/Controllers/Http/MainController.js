@@ -5616,7 +5616,7 @@ class MainController {
 
       const timelineLainnya = await MTimeline.query()
         .where({ dihapus: 0 })
-        .andWhere('m_rombel_id', jadwalMengajar.toJSON().rombel.id)
+        .andWhere("m_rombel_id", jadwalMengajar.toJSON().rombel.id)
         .whereIn("m_user_id", userIds)
         .ids();
 
@@ -17616,6 +17616,88 @@ class MainController {
       kategoriMapel: kategoriMapel,
     });
   }
+
+  async postKategoriMapel({ response, request, auth, params: { rombel_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { nama } = request.post();
+    // const rules = {
+    //   tingkat: "required",
+    //   poin: "required",
+    // };
+    // const message = {
+    //   "tingkat.required": "Tingkat harus diisi",
+    //   "poin.required": "Poin harus diisi",
+    // };
+    // const validation = await validate(request.all(), rules, message);
+    // if (validation.fails()) {
+    //   return response.unprocessableEntity(validation.messages());
+    // }
+    // user_id = user_id.length ? user_id : [];
+    await MKategoriMapel.create({
+      nama,
+      dihapus: 0,
+      m_rombel_id: rombel_id,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putMapelRaporKKMAll({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { kkm, kkm2, mapelRapor_id } = request.post();
+    const mapelRaporGet = await TkMapelRapor.query()
+      .where({ id: mapelRapor_id })
+      .first();
+
+    const mapelRapor = await TkMapelRapor.query()
+      .where({ id: mapelRapor_id })
+      .update({
+        kkm2,
+      });
+
+    const mapel = await MMataPelajaran.query()
+      .where({
+        id: mapelRaporGet.m_mata_pelajaran_id,
+      })
+      .update({
+        kkm,
+      });
+
+    if (!mapelRapor) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    if (!mapel) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
   async putMapelRapor({ response, request, auth }) {
     const domain = request.headers().origin;
 
@@ -24533,6 +24615,12 @@ class MainController {
       .andWhere({ m_ta_id: ta.id })
       .andWhere({ id: rombel_id })
       .first();
+
+    const allTanggal = await MTimeline.query()
+      .whereBetween("tanggal_pembagian", [tanggal_awal, tanggal_akhir])
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
     // return rombel;
     let workbook = new Excel.Workbook();
     let worksheet = workbook.addWorksheet(`${rombelNama.nama}`);
