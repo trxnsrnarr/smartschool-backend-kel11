@@ -5372,25 +5372,39 @@ class MainController {
       let timeline;
 
       if (list_anggota) {
-        timeline = await MTimeline.create({
-          m_user_id: user.id,
-          m_rombel_id: list_rombel[0],
-          m_tugas_id: tugas.id,
-          tipe: "tugas",
-          dihapus: 0,
-        });
+        const check = await MTimeline.query()
+          .where({ m_user_id: user.id })
+          .andWhere({ m_rombel_id: list_rombel[0] })
+          .andWhere({ m_tugas_id: tugas.id })
+          .first();
+        if (!check) {
+          timeline = await MTimeline.create({
+            m_user_id: user.id,
+            m_rombel_id: list_rombel[0],
+            m_tugas_id: tugas.id,
+            tipe: "tugas",
+            dihapus: 0,
+          });
+        }
       } else {
         const timelineData = [];
 
         await Promise.all(
-          list_rombel.map((d) => {
-            timelineData.push({
-              m_user_id: user.id,
-              m_rombel_id: d,
-              m_tugas_id: tugas.id,
-              tipe: "tugas",
-              dihapus: 0,
-            });
+          list_rombel.map(async (d) => {
+            const check = await MTimeline.query()
+              .where({ m_user_id: user.id })
+              .andWhere({ m_rombel_id: d })
+              .andWhere({ m_tugas_id: tugas.id })
+              .first();
+            if (!check) {
+              timelineData.push({
+                m_user_id: user.id,
+                m_rombel_id: d,
+                m_tugas_id: tugas.id,
+                tipe: "tugas",
+                dihapus: 0,
+              });
+            }
           })
         );
 
@@ -5420,26 +5434,33 @@ class MainController {
 
         await Promise.all(
           anggotaRombel.toJSON().map(async (d) => {
-            userIds.push({
-              m_user_id: d.m_user_id,
-              tipe: "tugas",
-              m_timeline_id: timeline.id,
-              dihapus: 0,
-            });
-            if (d.user.email != null) {
-              const gmail = await Mail.send(`emails.tugas`, d, (message) => {
-                message
-                  .to(`${d.user.email}`)
-                  .from("no-reply@smarteschool.id")
-                  .subject("Pembayaran SPP");
+            const check = await TkTimeline.query()
+              .where({ m_user_id: d.m_user_id })
+              .andWhere({ m_timeline_id: timeline.id })
+              .andWhere({ tipe: "tugas" })
+              .first();
+            if (!check) {
+              userIds.push({
+                m_user_id: d.m_user_id,
+                tipe: "tugas",
+                m_timeline_id: timeline.id,
+                dihapus: 0,
               });
-
-              if (gmail) {
-                return response.ok({
-                  message: messageEmailSuccess,
+              if (d.user.email != null) {
+                const gmail = await Mail.send(`emails.tugas`, d, (message) => {
+                  message
+                    .to(`${d.user.email}`)
+                    .from("no-reply@smarteschool.id")
+                    .subject("Pembayaran SPP");
                 });
+
+                if (gmail) {
+                  return response.ok({
+                    message: messageEmailSuccess,
+                  });
+                }
+                // return d.user.nama;
               }
-              // return d.user.nama;
             }
           })
         );
@@ -5554,14 +5575,16 @@ class MainController {
       await Promise.all(
         timeline.toJSON().map(async (d) => {
           if (d.tipe == "tugas") {
-            if (
-              moment(
-                `${d.timeline.tugas.tanggal_pengumpulan} ${d.timeline.tugas.waktu_pengumpulan}`
-              ).format("YYYY-MM-DD HH:mm:ss") >= waktu_saat_ini
-            ) {
-              timelineData.push({ ...d, sudah_lewat: true });
-            } else {
-              timelineData.push({ ...d, sudah_lewat: false });
+            if (d.timeline.tugas) {
+              if (
+                moment(
+                  `${d.timeline.tugas.tanggal_pengumpulan} ${d.timeline.tugas.waktu_pengumpulan}`
+                ).format("YYYY-MM-DD HH:mm:ss") >= waktu_saat_ini
+              ) {
+                timelineData.push({ ...d, sudah_lewat: true });
+              } else {
+                timelineData.push({ ...d, sudah_lewat: false });
+              }
             }
           } else {
             if (d.tipe == "diskusi") {
@@ -5579,7 +5602,8 @@ class MainController {
                 timelineData.push({ ...d });
               }
             } else {
-              timelineData.push({ ...d });
+              if (moment(waktu_saat_ini) > moment(d.timeline.tanggal_pembagian))
+                timelineData.push({ ...d });
             }
           }
         })
@@ -5784,6 +5808,7 @@ class MainController {
       hari_ini,
       tanggal_dibuat,
       tanggal_pembagian,
+      tanggal_akhir,
     } = request.post();
 
     const jadwalMengajar = await MJadwalMengajar.query()
@@ -5807,6 +5832,7 @@ class MainController {
         tanggal_dibuat,
         dihapus: 0,
         tanggal_pembagian,
+        tanggal_akhir,
       });
 
       const anggotaRombel = await MAnggotaRombel.query()
@@ -5904,6 +5930,9 @@ class MainController {
       waktu_pengumpulan,
       dikumpulkan,
       tanggal_pembagian,
+      tanggal_akhir,
+      siswa_id,
+      tk_id,
       nilai,
     } = request.post();
 
@@ -5927,7 +5956,18 @@ class MainController {
     }
 
     if (tipe == "absen") {
-      if (user.role == "siswa") {
+      if (siswa_id) {
+        timeline = await TkTimeline.query()
+          .where({ id: tk_id })
+          .andWhere({ m_user_id: siswa_id })
+          .update({
+            lampiran: lampiran.toString(),
+            absen: absen,
+            keterangan: keterangan,
+            waktu_absen: waktu_absen,
+          });
+        return;
+      } else if (user.role == "siswa") {
         timeline = await TkTimeline.query().where({ id: timeline_id }).update({
           lampiran: lampiran.toString(),
           absen: absen,
@@ -5941,6 +5981,8 @@ class MainController {
             rpp: rpp ? rpp.toString() : "",
             jurnal,
             deskripsi: htmlEscaper.escape(deskripsi),
+            tanggal_pembagian,
+            tanggal_akhir,
             gmeet,
           });
       }
@@ -6900,6 +6942,7 @@ class MainController {
           .andWhere({ dihapus: 0 })
           .whereIn("m_user_id", userIds)
           .whereIn("tipe", tipeUjian)
+          .orderBy("id", "desc")
           .fetch();
       } else {
         ujianTingkat = await MUjian.query()
@@ -6907,6 +6950,7 @@ class MainController {
           .where({ tingkat: tingkat })
           .andWhere({ dihapus: 0 })
           .andWhere({ m_user_id: user.id })
+          .orderBy("id", "desc")
           .fetch();
       }
 
@@ -6956,6 +7000,7 @@ class MainController {
       })
       .where({ dihapus: 0 })
       .andWhere({ m_user_id: user.id })
+      .orderBy("id", "desc")
       .fetch();
 
     let tingkatData = [];
@@ -6973,8 +7018,8 @@ class MainController {
       { value: "pas1", label: "Penilaian Akhir Semester 1" },
       { value: "pas2", label: "Penilaian Akhir Semester 2" },
       { value: "us", label: "Ujian Sekolah" },
-      { value: "literasi", label: "AKM - Literasi" },
-      { value: "numerasi", label: "AKM - Numerasi" },
+      // { value: "literasi", label: "AKM - Literasi" },
+      // { value: "numerasi", label: "AKM - Numerasi" },
     ];
 
     return response.ok({
@@ -7290,8 +7335,8 @@ class MainController {
       { value: "pas1", label: "Penilaian Akhir Semester 1" },
       { value: "pas2", label: "Penilaian Akhir Semester 2" },
       { value: "us", label: "Ujian Sekolah" },
-      { value: "literasi", label: "AKM - Literasi" },
-      { value: "numerasi", label: "AKM - Numerasi" },
+      // { value: "literasi", label: "AKM - Literasi" },
+      // { value: "numerasi", label: "AKM - Numerasi" },
     ];
 
     return response.ok({
@@ -7754,6 +7799,7 @@ class MainController {
           .where({ m_user_id: user.id })
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_dibuka", ">", hari_ini)
+          .orderBy("id", "desc")
           .fetch();
       } else if (status == "berlangsung") {
         jadwalUjian = await MJadwalUjian.query()
@@ -7762,6 +7808,7 @@ class MainController {
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_dibuka", "<=", hari_ini)
           .andWhere("waktu_ditutup", ">=", hari_ini)
+          .orderBy("id", "desc")
           .fetch();
       } else if (status == "sudah-selesai") {
         jadwalUjian = await MJadwalUjian.query()
@@ -7769,6 +7816,7 @@ class MainController {
           .where({ m_user_id: user.id })
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_ditutup", "<=", hari_ini)
+          .orderBy("id", "desc")
           .fetch();
       }
 
@@ -7896,6 +7944,7 @@ class MainController {
           .where({ m_user_id: user.id })
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_dibuka", ">", hari_ini)
+          .orderBy("id", "desc")
           .fetch();
       } else if (status == "berlangsung") {
         jadwalUjian = await MJadwalUjian.query()
@@ -7904,6 +7953,7 @@ class MainController {
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_dibuka", "<=", hari_ini)
           .andWhere("waktu_ditutup", ">=", hari_ini)
+          .orderBy("id", "desc")
           .fetch();
       } else if (status == "sudah-selesai") {
         jadwalUjian = await MJadwalUjian.query()
@@ -7911,6 +7961,7 @@ class MainController {
           .where({ m_user_id: user.id })
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_ditutup", "<=", hari_ini)
+          .orderBy("id", "desc")
           .fetch();
       }
 
@@ -8042,6 +8093,7 @@ class MainController {
           })
           .where({ dihapus: 0 })
           .whereIn("m_rombel_id", anggotaRombel)
+          .orderBy("id", "desc")
           .fetch();
       } else if (status == "berlangsung") {
         jadwalUjian = await TkJadwalUjian.query()
@@ -8054,6 +8106,7 @@ class MainController {
           .with("peserta")
           .where({ dihapus: 0 })
           .whereIn("m_rombel_id", anggotaRombel)
+          .orderBy("id", "desc")
           .fetch();
       } else if (status == "sudah-selesai") {
         jadwalUjian = await TkJadwalUjian.query()
@@ -8065,6 +8118,7 @@ class MainController {
           })
           .where({ dihapus: 0 })
           .whereIn("m_rombel_id", anggotaRombel)
+          .orderBy("id", "desc")
           .fetch();
       }
 
@@ -9111,20 +9165,27 @@ class MainController {
         .where({ id: jawaban_ujian_siswa_id })
         .first();
 
-      await jadwalUjianReference
-        .doc(`${jawabanUjianSiswaData.toJSON().pesertaUjian.doc_id}`)
-        .set(
-          {
-            tk_jadwal_ujian_id:
-              jawabanUjianSiswaData.toJSON().pesertaUjian.tk_jadwal_ujian_id,
-            user_id: jawabanUjianSiswaData.toJSON().pesertaUjian.m_user_id,
-            progress:
-              jawabanUjianSiswaData.toJSON().pesertaUjian.__meta__.totalDijawab,
-          },
-          { merge: true }
-        );
+      // await jadwalUjianReference
+      //   .doc(`${jawabanUjianSiswaData.toJSON().pesertaUjian.doc_id}`)
+      //   .set(
+      //     {
+      //       tk_jadwal_ujian_id:
+      //         jawabanUjianSiswaData.toJSON().pesertaUjian.tk_jadwal_ujian_id,
+      //       user_id: jawabanUjianSiswaData.toJSON().pesertaUjian.m_user_id,
+      //       progress:
+      //         jawabanUjianSiswaData.toJSON().pesertaUjian.__meta__.totalDijawab,
+      //     },
+      //     { merge: true }
+      //   );
 
-      return response.noContent();
+      return response.ok({
+        doc_id: jawabanUjianSiswaData.toJSON().pesertaUjian.doc_id,
+        tk_jadwal_ujian_id:
+          jawabanUjianSiswaData.toJSON().pesertaUjian.tk_jadwal_ujian_id,
+        user_id: jawabanUjianSiswaData.toJSON().pesertaUjian.m_user_id,
+        progress:
+          jawabanUjianSiswaData.toJSON().pesertaUjian.__meta__.totalDijawab,
+      });
     }
   }
 
@@ -17284,17 +17345,17 @@ class MainController {
 
     let logoFileName = `logo-${new Date().getTime()}.png`;
 
-    const downloader = new Downloader({
-      url: `${sekolah.logo}`,
-      directory: "./public/tmp/",
-      fileName: logoFileName,
-      cloneFiles: false,
-    });
-
     try {
+      const downloader = new Downloader({
+        url: `${sekolah.logo}`,
+        directory: "./public/tmp/",
+        fileName: logoFileName,
+        cloneFiles: false,
+      });
+
       await downloader.download();
     } catch (error) {
-      // console.log(error);
+      logoFileName = "logo.png";
     }
 
     return await DownloadService.kartuUjian(

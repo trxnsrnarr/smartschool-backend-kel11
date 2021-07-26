@@ -5,9 +5,12 @@ const Schema = use("Schema");
 
 class MSikapSchema extends Schema {
   up() {
-    this.create("m_sikap_sosial", (table) => {
-      table.increments();
-      table.string("sikap");
+    this.hasTable("m_sikap_sosial").then((exist) => {
+      if (!exist)
+        this.create("m_sikap_sosial", (table) => {
+          table.increments();
+          table.string("sikap");
+        });
     });
   }
 

@@ -26,6 +26,24 @@ class MSoalUjian extends Model {
   getPertanyaan(pertanyaan) {
     return pertanyaan ? htmlEscaper.unescape(pertanyaan) : "";
   }
+  getPembahasan(pembahasan) {
+    return pembahasan ? htmlEscaper.unescape(pembahasan) : "";
+  }
+  getJawabanA(jawaban_a) {
+    return jawaban_a ? htmlEscaper.unescape(jawaban_a) : "";
+  }
+  getJawabanB(jawaban_b) {
+    return jawaban_b ? htmlEscaper.unescape(jawaban_b) : "";
+  }
+  getJawabanC(jawaban_c) {
+    return jawaban_c ? htmlEscaper.unescape(jawaban_c) : "";
+  }
+  getJawabanD(jawaban_d) {
+    return jawaban_d ? htmlEscaper.unescape(jawaban_d) : "";
+  }
+  getJawabanE(jawaban_e) {
+    return jawaban_e ? htmlEscaper.unescape(jawaban_e) : "";
+  }
   getLevelKognitif(level_kognitif) {
     return level_kognitif ? level_kognitif.toLowerCase() : "";
   }
