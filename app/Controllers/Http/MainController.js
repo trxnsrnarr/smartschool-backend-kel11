@@ -5375,16 +5375,18 @@ class MainController {
         const check = await MTimeline.query()
           .where({ m_user_id: user.id })
           .andWhere({ m_rombel_id: list_rombel[0] })
-          .andWhere({ m_tugas_id: tugas.id })
+          .andWhere({ m_tugas_id: tugas_id })
           .first();
         if (!check) {
           timeline = await MTimeline.create({
             m_user_id: user.id,
             m_rombel_id: list_rombel[0],
-            m_tugas_id: tugas.id,
+            m_tugas_id: tugas_id,
             tipe: "tugas",
             dihapus: 0,
           });
+        } else {
+          timeline = check;
         }
       } else {
         const timelineData = [];
@@ -5394,13 +5396,13 @@ class MainController {
             const check = await MTimeline.query()
               .where({ m_user_id: user.id })
               .andWhere({ m_rombel_id: d })
-              .andWhere({ m_tugas_id: tugas.id })
+              .andWhere({ m_tugas_id: tugas_id })
               .first();
             if (!check) {
               timelineData.push({
                 m_user_id: user.id,
                 m_rombel_id: d,
-                m_tugas_id: tugas.id,
+                m_tugas_id: tugas_id,
                 tipe: "tugas",
                 dihapus: 0,
               });
