@@ -17318,10 +17318,7 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    const kepsek = await User.query()
-      .where({ role: "kepsek" })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .first();
+    const kepsek = ta.nama_kepsek;
 
     const ujian = await MUjian.query()
       .with("mataPelajaran", (builder) => {
@@ -24040,104 +24037,41 @@ class MainController {
       [tanggal_awal, tanggal_akhir]
     );
 
-    // const hari = await Promise.all(
-    //   tanggalDistinct.map(async (d) => {
-    //     const hari_awal = moment(d.tanggalDistinct).format(`dddd`);
-    //     return hari_awal;
-    //   })
-    // );
+    let workbook = new Excel.Workbook();
 
-    // return hari;
-
-    // const jamMengajar = await MJamMengajar.query()
-    //   .where({ m_sekolah_id: sekolah.id })
-    //   .andWhere({ m_ta_id: ta.id })
-    //   .andWhere({ istirahat: 0 })
-    //   .andWhere({ hari: hari_awal })
-    //   .first();
-
-    const jadwalMengajar = await MJadwalMengajar.query()
-      .with("mataPelajaran", (builder) => {
-        builder
+    await Promise.all(
+      tanggalDistinct[0].map(async (e) => {
+        const checkDataTimeline = await MTimeline.query()
           .with("user", (builder) => {
-            builder.select("id", "nama").with("pertemuan", (builder) => {
+            builder.select("id", "nama").with("mataPelajaran", (builder) => {
               builder
-                .where({ tipe: "absen" })
-                .andWhere({ tanggal_pembagian: tanggal_awal });
+                .where({ dihapus: 0 })
+                .andWhere({ m_sekolah_id: sekolah.id });
             });
           })
-          .select("id", "nama", "m_user_id");
-      })
-      .select(
-        "id",
-        "m_mata_pelajaran_id",
-        "m_ta_id",
-        "m_sekolah_id",
-        "m_jam_mengajar_id"
-      )
-      .whereNotNull("m_mata_pelajaran_id")
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta.id })
-      // .andWhere({ m_jam_mengajar_id: jamMengajar.id })
-      .fetch();
-
-    // return jadwalMengajar;
-    // return tanggalDistinct[0];
-
-    const tanggal = await Promise.all(
-      tanggalDistinct[0].map(async (e) => {
-        const timeline = await Promise.all(
-          jadwalMengajar.toJSON().map(async (d) => {
-            const timeline1 = await MTimeline.query()
-              .with("user", (builder) => {
-                builder
-                  .select("id", "nama")
-                  .with("mataPelajaran", (builder) => {
-                    builder
-                      .where({ dihapus: 0 })
-                      .andWhere({ m_sekolah_id: sekolah.id });
-                  });
-              })
-              .with("rombel", (builder) => {
-                builder.withCount("anggotaRombel as totalSiswa", (builder) => {
-                  builder.where({ dihapus: 0 });
-                });
-              })
-              .withCount("tkTimeline as total", (builder) => {
-                builder
-                  .where({ tipe: "absen" })
-                  .andWhere({ absen: "hadir" })
-                  .andWhere({ dihapus: 0 });
-              })
-              .withCount("tkTimeline as totalAlpa", (builder) => {
-                builder
-                  .whereNot({ absen: "hadir" })
-                  .andWhere({ tipe: "absen" })
-                  .andWhere({ dihapus: 0 });
-              })
-              .where({ m_user_id: d.mataPelajaran.m_user_id })
-              .whereNotNull("id")
-              .andWhere({ tipe: "absen" })
-              .andWhere({ tanggal_pembagian: e.tanggalDistinct })
-              .first();
-
-            return timeline1;
+          .with("rombel", (builder) => {
+            builder.withCount("anggotaRombel as totalSiswa", (builder) => {
+              builder.where({ dihapus: 0 });
+            });
           })
-        );
-        const data123 = timeline.filter((d) => d != null);
-        return data123;
-      })
-    );
-    // return tanggal;
+          .withCount("tkTimeline as total", (builder) => {
+            builder
+              .where({ tipe: "absen" })
+              .andWhere({ absen: "hadir" })
+              .andWhere({ dihapus: 0 });
+          })
+          .withCount("tkTimeline as totalAlpa", (builder) => {
+            builder
+              .whereNot({ absen: "hadir" })
+              .andWhere({ tipe: "absen" })
+              .andWhere({ dihapus: 0 });
+          })
+          .where({ tipe: "absen" })
+          .whereNotNull("id")
+          .andWhere({ tanggal_pembagian: e.tanggalDistinct })
+          .fetch();
 
-    // return data;
-    const data = tanggal.filter((timeline) => timeline != null);
-    let workbook = new Excel.Workbook();
-    await Promise.all(
-      data.map(async (A, nox) => {
-        const hariIni = moment(A[0].toJSON().tanggal_pembagian).format(
-          `DD-MMMM-YYYY`
-        );
+        const hariIni = moment(e.tanggalDistinct).format(`DD-MMMM-YYYY`);
         let worksheet = workbook.addWorksheet(`${hariIni}`);
         worksheet.mergeCells("A1:K1");
         worksheet.mergeCells("A2:K2");
@@ -24280,8 +24214,12 @@ class MainController {
         worksheet.getColumn("J").width = 12;
         worksheet.getColumn("K").width = 19;
 
+        const dataFilter = await Promise.all(
+          checkDataTimeline.toJSON().filter((timeline) => timeline != null)
+        );
+
         await Promise.all(
-          A.map(async (d, idx) => {
+          dataFilter.map(async (d, idx) => {
             // add column headers
             worksheet.getRow(11).values = [
               "No",
@@ -24291,9 +24229,9 @@ class MainController {
               "Mapel dan Tujuan Pembelajaran",
               "Materi Pembelajaran",
               "Mode/Teknik Pembelajaran",
-              "Jumlah Siswa yang Mengikuti",
+              "Jumlah Siswa Hadir",
               "Hasil Pembelajaran",
-              "Jumlah Siswa yang Tidak Mengikuti",
+              "Jumlah Siswa Alpa",
               "Kendala dan Tindak Lanjut",
             ];
 
@@ -24314,24 +24252,20 @@ class MainController {
             // Add row using key mapping to columns
             let row = worksheet.addRow({
               no: `${idx + 1}`,
-              nama: d.toJSON().user ? d.toJSON().user.nama : "-",
-              kelas: d.toJSON().rombel ? d.toJSON().rombel.nama : "-",
-              jumsiswa: d.toJSON().rombel.__meta__
-                ? d.toJSON().rombel.__meta__.totalSiswa
-                : "-",
-              mapel: d.toJSON().user.mataPelajaran[0]
-                ? d.toJSON().user.mataPelajaran[0].nama
+              nama: d.user ? d.user.nama : "-",
+              kelas: d.rombel ? d.rombel.nama : "-",
+              jumsiswa: d.rombel.__meta__ ? d.rombel.__meta__.totalSiswa : "-",
+              mapel: d.user.mataPelajaran[0]
+                ? d.user.mataPelajaran[0].nama
                 : "-",
               materi: d ? d.jurnal : "-",
               moda: "Smarteschool",
-              jsiswa: d.toJSON().__meta__ ? d.toJSON().__meta__.total : "-",
+              jsiswa: d.__meta__ ? d.__meta__.total : "-",
               hasil: d ? d.jurnal : "-",
-              jsiswax: d.toJSON().__meta__
-                ? d.toJSON().__meta__.totalAlpa
-                : "-",
+              jsiswax: d.__meta__ ? d.__meta__.totalAlpa : "-",
               kendala: "-",
             });
-            if (idx == A.length - 1) {
+            if (idx == dataFilter.length - 1) {
               worksheet.getCell(`A${idx + 16}`).value = `Kepala....`;
               worksheet.getCell(`A${idx + 23}`).value = `…………………………………………………….`;
               worksheet.getCell(`A${idx + 24}`).value = `NIP :`;
@@ -24432,6 +24366,7 @@ class MainController {
         );
       })
     );
+
     let namaFile = `/uploads/rekap-Monev-${keluarantanggal}.xlsx`;
 
     // save workbook to disk

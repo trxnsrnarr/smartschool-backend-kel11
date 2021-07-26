@@ -729,7 +729,7 @@ class DownloadService {
 
           worksheet2.getCell(`B${(idx + 1) * 32 - 8}`).value = `Mengetahui :`;
           worksheet2.getCell(`B${(idx + 1) * 32 - 7}`).value = `Kepala Sekolah`;
-          worksheet2.getCell(`B${(idx + 1) * 32 - 3}`).value = `${kepsek.nama}`;
+          worksheet2.getCell(`B${(idx + 1) * 32 - 3}`).value = `${kepsek}`;
 
           worksheet2.getCell(`H${(idx + 1) * 32 - 9}`).value = ``;
           worksheet2.getCell(
@@ -1483,7 +1483,7 @@ class DownloadService {
 
           worksheet3.getCell(`B${(idx + 1) * 32 - 8}`).value = `Mengetahui :`;
           worksheet3.getCell(`B${(idx + 1) * 32 - 7}`).value = `Kepala Sekolah`;
-          worksheet3.getCell(`B${(idx + 1) * 32 - 3}`).value = `${kepsek.nama}`;
+          worksheet3.getCell(`B${(idx + 1) * 32 - 3}`).value = `${kepsek}`;
 
           worksheet3.getCell(`H${(idx + 1) * 32 - 9}`).value = ``;
           worksheet3.getCell(
@@ -2480,7 +2480,7 @@ class DownloadService {
       richText: [
         {
           font: { name: "Calibri" },
-          text: `${kepsek.nama}`,
+          text: `${kepsek}`,
         },
       ],
     };
@@ -2704,7 +2704,7 @@ class DownloadService {
       richText: [
         {
           font: { name: "Calibri" },
-          text: `${kepsek.nama}`,
+          text: `${kepsek}`,
         },
       ],
     };
