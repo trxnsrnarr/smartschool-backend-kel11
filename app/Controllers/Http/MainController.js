@@ -424,15 +424,7 @@ class MainController {
       return response.notFound({ message: "Akun tidak ditemukan" });
     }
 
-    if (role == "warga-sekolah") {
-      return response.ok(res);
-    }
-
-    if (res.role == "admin") {
-      return response.ok(res);
-    }
-
-    if (res.role == "kepsek") {
+    if (role == "warga-sekolah" || res.role == "admin") {
       return response.ok(res);
     }
 
