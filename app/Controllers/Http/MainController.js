@@ -17714,7 +17714,12 @@ class MainController {
     });
   }
 
-  async putMapelRaporKKMAll({ response, request, auth }) {
+  async putMapelRaporKKMAll({
+    response,
+    request,
+    auth,
+    params: { mapelRapor_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -17723,7 +17728,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { kkm, kkm2, mapelRapor_id } = request.post();
+    const { kkm, kkm2 } = request.post();
     const mapelRaporGet = await TkMapelRapor.query()
       .where({ id: mapelRapor_id })
       .first();
@@ -24056,7 +24061,11 @@ class MainController {
       .with("mataPelajaran", (builder) => {
         builder
           .with("user", (builder) => {
-            builder.select("id", "nama");
+            builder.select("id", "nama").with("pertemuan", (builder) => {
+              builder
+                .where({ tipe: "absen" })
+                .andWhere({ tanggal_pembagian: tanggal_awal });
+            });
           })
           .select("id", "nama", "m_user_id");
       })
@@ -24077,8 +24086,8 @@ class MainController {
 
     const timeline = await Promise.all(
       jadwalMengajar.toJSON().map(async (d) => {
-        if (d.mataPelajaran.m_user_id != null) {
-          const timeline = await MTimeline.query()
+        if (d.mataPelajaran.user.pertemuan != null) {
+          const timeline1 = await MTimeline.query()
             .with("user", (builder) => {
               builder.select("id", "nama").with("mataPelajaran");
             })
@@ -24099,20 +24108,18 @@ class MainController {
                 .andWhere({ tipe: "absen" })
                 .andWhere({ dihapus: 0 });
             })
+            .where({ m_user_id: d.mataPelajaran.m_user_id })
             .whereNotNull("id")
             .andWhere({ tipe: "absen" })
             .andWhere({ tanggal_pembagian: tanggal_awal })
-            .andWhere({ m_user_id: d.mataPelajaran.m_user_id })
             .first();
 
-          return timeline;
+          return timeline1;
         }
       })
     );
-    // return response.ok({
-    //   // jadwalMengajar,
-    //   timeline,
-    // });
+
+    const data = timeline.filter((d) => d != null);
 
     let workbook = new Excel.Workbook();
     let worksheet = workbook.addWorksheet(`${tanggal_awal}`);
@@ -24245,7 +24252,7 @@ class MainController {
     worksheet.getCell("E8").value = `${ta.nama_kepsek}`;
     worksheet.getCell("E9").value = `${sekolah.alamat}`;
     await Promise.all(
-      timeline.map(async (d, idx) => {
+      data.map(async (d, idx) => {
         // add column headers
         worksheet.getRow(11).values = [
           "No",
@@ -24277,7 +24284,7 @@ class MainController {
         // Add row using key mapping to columns
         let row = worksheet.addRow({
           no: `${idx + 1}`,
-          nama: d ? d.user.nama : "-",
+          nama: d.user ? d.user.nama : "-",
           kelas: d ? d.rombel.nama : "-",
           jumsiswa: d ? d.rombel.__meta__.totalSiswa : "-",
           mapel: d ? d.user.mataPelajaran.nama : "-",
