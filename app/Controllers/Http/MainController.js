@@ -7829,7 +7829,7 @@ class MainController {
       .where({ m_soal_ujian_id: soal_ujian_id })
       .delete();
 
-    if (!soalUjian || !tkSoalUjian) {
+    if (soalUjian == 0 || tkSoalUjian == 0) {
       return response.notFound({
         message: messageNotFound,
       });
