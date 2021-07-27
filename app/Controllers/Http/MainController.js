@@ -7139,6 +7139,7 @@ class MainController {
     const soalUjianIds = await TkSoalUjian.query()
       .with("soal")
       .where({ m_ujian_id: ujian_id })
+      .andWhere({ dihapus: 0 })
       .fetch();
 
     let jumlahSoalPg = 0;
