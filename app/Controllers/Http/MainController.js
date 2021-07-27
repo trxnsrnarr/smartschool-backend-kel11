@@ -7822,15 +7822,11 @@ class MainController {
 
     const soalUjian = await MSoalUjian.query()
       .where({ id: soal_ujian_id })
-      .update({
-        dihapus: 1,
-      });
+      .delete();
 
     const tkSoalUjian = await TkSoalUjian.query()
       .where({ m_soal_ujian_id: soal_ujian_id })
-      .update({
-        dihapus: 1,
-      });
+      .delete();
 
     if (!soalUjian || !tkSoalUjian) {
       return response.notFound({
