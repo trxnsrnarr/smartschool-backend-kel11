@@ -607,7 +607,7 @@ Route.get(
   "MainController.detailBukuIndukRapor"
 );
 Route.post(
-  "/buku-induk/rapor/kategori/rombel_id",
+  "/buku-induk/rapor/kategori/:rombel_id",
   "MainController.postKategoriMapel"
 );
 Route.put("/buku-induk/rapor/kategori", "MainController.putKategoriMapel");
@@ -620,7 +620,10 @@ Route.delete(
   "/buku-induk/rapor/kategori",
   "MainController.deleteKategoriMapel"
 );
-Route.put("/buku-induk/rapor/mapel", "MainController.putMapelRapor");
+Route.put(
+  "/buku-induk/rapor/mapel/:mapelRapor_id",
+  "MainController.putMapelRapor"
+);
 Route.delete("/buku-induk/rapor/mapel", "MainController.deleteMapelRapor");
 Route.get(
   "/buku-induk/:rombel_id/:user_id",
