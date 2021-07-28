@@ -17680,12 +17680,14 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { nama } = request.post();
+    const { nama, warna } = request.post();
     const rules = {
       nama: "required",
+      warna: "required",
     };
     const message = {
       "nama.required": "Nama harus diisi",
+      "warna.required": "warma harus diisi",
     };
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
@@ -17694,6 +17696,7 @@ class MainController {
     // user_id = user_id.length ? user_id : [];
     await MKategoriMapel.create({
       nama,
+      warna,
       dihapus: 0,
       m_rombel_id: rombel_id,
     });
@@ -17762,8 +17765,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { urutan, nama, kkm2, m_kategori_mapel_id } =
-      request.post();
+    const { urutan, nama, kkm2, m_kategori_mapel_id } = request.post();
 
     const mapelRapor = await TkMapelRapor.query()
       .where({ id: mapelRapor_id })
@@ -17811,7 +17813,7 @@ class MainController {
       message: messagePutSuccess,
     });
   }
-  async putKategoriMapel({ response, request, auth }) {
+  async putKategoriMapel({ response, request, auth,params:{kategoriMapel_id} }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -17820,12 +17822,13 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { nama, kategoriMapel_id } = request.post();
+    const { nama, warna } = request.post();
 
     const kategoriMapel = await MKategoriMapel.query()
       .where({ id: kategoriMapel_id })
       .update({
         nama,
+        warna,
         dihapus: 0,
       });
 

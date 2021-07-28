@@ -610,7 +610,10 @@ Route.post(
   "/buku-induk/rapor/kategori/:rombel_id",
   "MainController.postKategoriMapel"
 );
-Route.put("/buku-induk/rapor/kategori", "MainController.putKategoriMapel");
+Route.put(
+  "/buku-induk/rapor/kategori/:kategoriMapel_id",
+  "MainController.putKategoriMapel"
+);
 Route.put("/buku-induk/rapor/kkm", "MainController.putMapelRaporKKM");
 Route.put(
   "/buku-induk/rapor/kkmAll/:mapelRapor_id",
