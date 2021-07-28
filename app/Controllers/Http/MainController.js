@@ -17753,7 +17753,7 @@ class MainController {
     });
   }
 
-  async putMapelRapor({ response, request, auth }) {
+  async putMapelRapor({ response, request, auth, params: { mapelRapor_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -17762,7 +17762,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { urutan, nama, kkm2, mapelRapor_id, m_kategori_mapel_id } =
+    const { urutan, nama, kkm2, m_kategori_mapel_id } =
       request.post();
 
     const mapelRapor = await TkMapelRapor.query()
