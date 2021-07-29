@@ -17334,6 +17334,29 @@ class MainController {
       .andWhere({ id: ujian_id })
       .first();
 
+    const esai = await TkSoalUjian.query()
+      .with("soal", (builder) => {
+        builder.where({ bentuk: "esai" });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_ujian_id: ujian_id })
+      .fetch();
+
+    const esaiSoal = await Promise.all(
+      esai.toJSON().map(async (d) => {
+        const esai = await MSoalUjian.query()
+          .where({ dihapus: 0 })
+          .andWhere({ bentuk: "esai" })
+          .andWhere({ id: d.m_soal_ujian_id })
+          .first();
+
+        return esai;
+      })
+    );
+
+    const esaiFilter = esaiSoal.filter((d) => d != null);
+    // worksheet 1
+
     let logoFileName = `logo-${new Date().getTime()}.png`;
 
     try {
@@ -17354,6 +17377,8 @@ class MainController {
       ta,
       kepsek,
       ujian,
+      esaiFilter,
+      keluarantanggal,
       logoFileName
     );
   }
@@ -17813,7 +17838,12 @@ class MainController {
       message: messagePutSuccess,
     });
   }
-  async putKategoriMapel({ response, request, auth,params:{kategoriMapel_id} }) {
+  async putKategoriMapel({
+    response,
+    request,
+    auth,
+    params: { kategoriMapel_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
