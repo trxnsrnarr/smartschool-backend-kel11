@@ -5673,7 +5673,11 @@ class MainController {
               )
                 if (
                   moment(
-                    `${d.timeline.tugas.tanggal_pengumpulan} ${d.timeline.tugas.waktu_pengumpulan}`
+                    `${moment(d.timeline.tugas.tanggal_pengumpulan)
+                      .add(7, "hours")
+                      .format("YYYY-MM-DD")} ${
+                      d.timeline.tugas.waktu_pengumpulan
+                    }`
                   ).format("YYYY-MM-DD HH:mm:ss") >= waktu_saat_ini
                 ) {
                   timelineData.push({ ...d, sudah_lewat: true });
