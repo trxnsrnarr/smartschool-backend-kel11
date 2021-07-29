@@ -5483,18 +5483,21 @@ class MainController {
               .andWhere({ m_tugas_id: tugas_id })
               .first();
             if (!check) {
-              timelineData.push({
+              const newTimeline = await MTimeline.create({
                 m_user_id: user.id,
                 m_rombel_id: d,
                 m_tugas_id: tugas_id,
                 tipe: "tugas",
                 dihapus: 0,
               });
+              timelineData.push(newTimeline);
+            } else {
+              timelineData.push(check);
             }
           })
         );
 
-        timeline = await MTimeline.createMany(timelineData);
+        timeline = timelineData;
       }
 
       if (timeline) {
@@ -5664,13 +5667,27 @@ class MainController {
             if (d.timeline.tugas) {
               if (
                 moment(
-                  `${d.timeline.tugas.tanggal_pengumpulan} ${d.timeline.tugas.waktu_pengumpulan}`
-                ).format("YYYY-MM-DD HH:mm:ss") >= waktu_saat_ini
-              ) {
-                timelineData.push({ ...d, sudah_lewat: true });
-              } else {
-                timelineData.push({ ...d, sudah_lewat: false });
-              }
+                  moment(d.timeline.tugas.tanggal_pembagian)
+                    .add(7, "hours")
+                    .format("YYYY-MM-DD") +
+                    " " +
+                    d.timeline.tugas.waktu_pembagian
+                ) <= moment().utcOffset(7) ||
+                d.timeline.tugas.waktu_pembagian == null
+              )
+                if (
+                  moment(
+                    `${moment(d.timeline.tugas.tanggal_pengumpulan)
+                      .add(7, "hours")
+                      .format("YYYY-MM-DD")} ${
+                      d.timeline.tugas.waktu_pengumpulan
+                    }`
+                  ).format("YYYY-MM-DD HH:mm:ss") >= waktu_saat_ini
+                ) {
+                  timelineData.push({ ...d, sudah_lewat: true });
+                } else {
+                  timelineData.push({ ...d, sudah_lewat: false });
+                }
             }
           } else {
             if (d.tipe == "diskusi") {
@@ -7139,6 +7156,7 @@ class MainController {
     const soalUjianIds = await TkSoalUjian.query()
       .with("soal")
       .where({ m_ujian_id: ujian_id })
+      .andWhere({ dihapus: 0 })
       .fetch();
 
     let jumlahSoalPg = 0;
@@ -7822,24 +7840,20 @@ class MainController {
 
     const soalUjian = await MSoalUjian.query()
       .where({ id: soal_ujian_id })
-      .update({
-        dihapus: 1,
-      });
+      .delete();
 
     const tkSoalUjian = await TkSoalUjian.query()
       .where({ m_soal_ujian_id: soal_ujian_id })
-      .update({
-        dihapus: 1,
-      });
+      .delete();
 
-    if (!soalUjian || !tkSoalUjian) {
-      return response.notFound({
-        message: messageNotFound,
+    if (soalUjian > 0 || tkSoalUjian > 0) {
+      return response.ok({
+        message: messageDeleteSuccess,
       });
     }
 
-    return response.ok({
-      message: messageDeleteSuccess,
+    return response.notFound({
+      message: messageNotFound,
     });
   }
 
