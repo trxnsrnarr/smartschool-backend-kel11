@@ -8,6 +8,7 @@ class MKategoriMapelSchema extends Schema {
     this.create("m_kategori_mapel", (table) => {
       table.increments();
       table.string("nama");
+      table.string("warna");
       table.integer("m_rombel_id").unsigned().index("m_rombel_id");
       table
         .foreign("m_rombel_id")
