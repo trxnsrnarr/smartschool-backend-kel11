@@ -5483,18 +5483,21 @@ class MainController {
               .andWhere({ m_tugas_id: tugas_id })
               .first();
             if (!check) {
-              timelineData.push({
+              const newTimeline = await MTimeline.create({
                 m_user_id: user.id,
                 m_rombel_id: d,
                 m_tugas_id: tugas_id,
                 tipe: "tugas",
                 dihapus: 0,
               });
+              timelineData.push(newTimeline);
+            } else {
+              timelineData.push(check);
             }
           })
         );
 
-        timeline = await MTimeline.createMany(timelineData);
+        timeline = timelineData;
       }
 
       if (timeline) {
