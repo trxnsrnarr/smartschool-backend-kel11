@@ -5664,13 +5664,20 @@ class MainController {
             if (d.timeline.tugas) {
               if (
                 moment(
-                  `${d.timeline.tugas.tanggal_pengumpulan} ${d.timeline.tugas.waktu_pengumpulan}`
-                ).format("YYYY-MM-DD HH:mm:ss") >= waktu_saat_ini
-              ) {
-                timelineData.push({ ...d, sudah_lewat: true });
-              } else {
-                timelineData.push({ ...d, sudah_lewat: false });
-              }
+                  moment(d.timeline.tugas.tanggal_pembagian)
+                    .add(7, "hours")
+                    .format("YYYY-MM-DD") + d.timeline.tugas.waktu_pembagian
+                ) >= moment().utcOffset(7)
+              )
+                if (
+                  moment(
+                    `${d.timeline.tugas.tanggal_pengumpulan} ${d.timeline.tugas.waktu_pengumpulan}`
+                  ).format("YYYY-MM-DD HH:mm:ss") >= waktu_saat_ini
+                ) {
+                  timelineData.push({ ...d, sudah_lewat: true });
+                } else {
+                  timelineData.push({ ...d, sudah_lewat: false });
+                }
             }
           } else {
             if (d.tipe == "diskusi") {
