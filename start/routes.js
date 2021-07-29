@@ -607,20 +607,26 @@ Route.get(
   "MainController.detailBukuIndukRapor"
 );
 Route.post(
-  "/buku-induk/rapor/kategori/rombel_id",
+  "/buku-induk/rapor/kategori/:rombel_id",
   "MainController.postKategoriMapel"
 );
-Route.put("/buku-induk/rapor/kategori", "MainController.putKategoriMapel");
+Route.put(
+  "/buku-induk/rapor/kategori/:kategoriMapel_id",
+  "MainController.putKategoriMapel"
+);
 Route.put("/buku-induk/rapor/kkm", "MainController.putMapelRaporKKM");
 Route.put(
   "/buku-induk/rapor/kkmAll/:mapelRapor_id",
   "MainController.putMapelRaporKKMAll"
 );
 Route.delete(
-  "/buku-induk/rapor/kategori",
+  "/buku-induk/rapor/kategori/:kategoriMapel_id",
   "MainController.deleteKategoriMapel"
 );
-Route.put("/buku-induk/rapor/mapel", "MainController.putMapelRapor");
+Route.put(
+  "/buku-induk/rapor/mapel/:mapelRapor_id",
+  "MainController.putMapelRapor"
+);
 Route.delete("/buku-induk/rapor/mapel", "MainController.deleteMapelRapor");
 Route.get(
   "/buku-induk/:rombel_id/:user_id",

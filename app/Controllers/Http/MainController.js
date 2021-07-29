@@ -17423,6 +17423,29 @@ class MainController {
       .andWhere({ id: ujian_id })
       .first();
 
+    const esai = await TkSoalUjian.query()
+      .with("soal", (builder) => {
+        builder.where({ bentuk: "esai" });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_ujian_id: ujian_id })
+      .fetch();
+
+    const esaiSoal = await Promise.all(
+      esai.toJSON().map(async (d) => {
+        const esai = await MSoalUjian.query()
+          .where({ dihapus: 0 })
+          .andWhere({ bentuk: "esai" })
+          .andWhere({ id: d.m_soal_ujian_id })
+          .first();
+
+        return esai;
+      })
+    );
+
+    const esaiFilter = esaiSoal.filter((d) => d != null);
+    // worksheet 1
+
     let logoFileName = `logo-${new Date().getTime()}.png`;
 
     try {
@@ -17443,6 +17466,8 @@ class MainController {
       ta,
       kepsek,
       ujian,
+      esaiFilter,
+      keluarantanggal,
       logoFileName
     );
   }
@@ -17769,12 +17794,14 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { nama } = request.post();
+    const { nama, warna } = request.post();
     const rules = {
       nama: "required",
+      warna: "required",
     };
     const message = {
       "nama.required": "Nama harus diisi",
+      "warna.required": "warma harus diisi",
     };
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
@@ -17783,6 +17810,7 @@ class MainController {
     // user_id = user_id.length ? user_id : [];
     await MKategoriMapel.create({
       nama,
+      warna,
       dihapus: 0,
       m_rombel_id: rombel_id,
     });
@@ -17842,7 +17870,7 @@ class MainController {
     });
   }
 
-  async putMapelRapor({ response, request, auth }) {
+  async putMapelRapor({ response, request, auth, params: { mapelRapor_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -17851,8 +17879,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { urutan, nama, kkm2, mapelRapor_id, m_kategori_mapel_id } =
-      request.post();
+    const { urutan, nama, kkm2, m_kategori_mapel_id } = request.post();
 
     const mapelRapor = await TkMapelRapor.query()
       .where({ id: mapelRapor_id })
@@ -17900,7 +17927,12 @@ class MainController {
       message: messagePutSuccess,
     });
   }
-  async putKategoriMapel({ response, request, auth }) {
+  async putKategoriMapel({
+    response,
+    request,
+    auth,
+    params: { kategoriMapel_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -17909,12 +17941,13 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { nama, kategoriMapel_id } = request.post();
+    const { nama, warna } = request.post();
 
     const kategoriMapel = await MKategoriMapel.query()
       .where({ id: kategoriMapel_id })
       .update({
         nama,
+        warna,
         dihapus: 0,
       });
 
@@ -17956,7 +17989,12 @@ class MainController {
       message: messageDeleteSuccess,
     });
   }
-  async deleteKategoriMapel({ response, request, auth }) {
+  async deleteKategoriMapel({
+    response,
+    request,
+    auth,
+    params: { kategoriMapel_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -17964,8 +18002,6 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
-
-    const { kategoriMapel_id } = request.post();
 
     const kategoriMapel = await MKategoriMapel.query()
       .where({ id: kategoriMapel_id })
