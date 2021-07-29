@@ -134,6 +134,10 @@ Route.put("/jam-mengajar/:jam_mengajar_id", "MainController.putJamMengajar");
 
 // jadwal mengajar
 Route.get("/jadwal-mengajar", "MainController.getJadwalMengajar");
+Route.get(
+  "/jadwal-mengajar/pertemuan",
+  "MainController.getJadwalMengajarPertemuan"
+);
 Route.put(
   "/jadwal-mengajar/:jadwal_mengajar_id",
   "MainController.putJadwalMengajar"

@@ -34,6 +34,7 @@ class MTimelineSchema extends Schema {
       table.string("lampiran");
       table.datetime("tanggal_dibuat");
       table.datetime("tanggal_pembagian");
+      table.datetime("tanggal_akhir");
       table.timestamps();
     });
   }
