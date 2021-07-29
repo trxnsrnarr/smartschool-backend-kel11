@@ -620,7 +620,7 @@ Route.put(
   "MainController.putMapelRaporKKMAll"
 );
 Route.delete(
-  "/buku-induk/rapor/kategori",
+  "/buku-induk/rapor/kategori/:kategoriMapel_id",
   "MainController.deleteKategoriMapel"
 );
 Route.put(
