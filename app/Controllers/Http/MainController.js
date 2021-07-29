@@ -5672,6 +5672,8 @@ class MainController {
                     .format("YYYY-MM-DD") +
                     " " +
                     d.timeline.tugas.waktu_pembagian
+                    ? d.timeline.tugas.waktu_pembagian
+                    : ""
                 ) <= moment().utcOffset(7)
               )
                 if (
