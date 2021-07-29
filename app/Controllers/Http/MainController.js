@@ -5673,7 +5673,7 @@ class MainController {
                     " " +
                     d.timeline.tugas.waktu_pembagian
                     ? d.timeline.tugas.waktu_pembagian
-                    : ""
+                    : "00:00:00"
                 ) <= moment().utcOffset(7)
               )
                 if (
