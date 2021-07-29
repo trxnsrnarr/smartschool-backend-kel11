@@ -5667,7 +5667,7 @@ class MainController {
                   moment(d.timeline.tugas.tanggal_pembagian)
                     .add(7, "hours")
                     .format("YYYY-MM-DD") + d.timeline.tugas.waktu_pembagian
-                ) >= moment().utcOffset(7)
+                ) <= moment().utcOffset(7)
               )
                 if (
                   moment(
