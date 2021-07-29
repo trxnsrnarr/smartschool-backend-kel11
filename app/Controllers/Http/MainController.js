@@ -17900,7 +17900,12 @@ class MainController {
       message: messageDeleteSuccess,
     });
   }
-  async deleteKategoriMapel({ response, request, auth }) {
+  async deleteKategoriMapel({
+    response,
+    request,
+    auth,
+    params: { kategoriMapel_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -17908,8 +17913,6 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
-
-    const { kategoriMapel_id } = request.post();
 
     const kategoriMapel = await MKategoriMapel.query()
       .where({ id: kategoriMapel_id })
