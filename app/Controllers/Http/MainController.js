@@ -5987,7 +5987,7 @@ class MainController {
     }
 
     const timeline = await MTimeline.query()
-    .with('user')
+      .with("user")
       .with("rombel")
       .with("komen", (builder) => {
         builder.with("user").where({ dihapus: 0 });
