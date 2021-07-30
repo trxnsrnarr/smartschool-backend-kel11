@@ -6203,10 +6203,17 @@ class MainController {
       nilai,
     } = request.post();
 
-    const jadwalMengajar = await MJadwalMengajar.query()
-      .with("mataPelajaran")
-      .where({ id: m_jadwal_mengajar_id })
-      .first();
+    if (
+      tipe !== "nilai" &&
+      tipe !== "tugas" &&
+      user.role !== "siswa" &&
+      !siswa_id
+    ) {
+      const jadwalMengajar = await MJadwalMengajar.query()
+        .with("mataPelajaran")
+        .where({ id: m_jadwal_mengajar_id })
+        .first();
+    }
 
     let timeline;
 
