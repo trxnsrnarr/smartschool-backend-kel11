@@ -1023,7 +1023,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -1092,7 +1096,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -1166,7 +1174,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -1253,7 +1265,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -1296,7 +1312,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -1361,7 +1381,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -1479,7 +1503,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -1518,7 +1546,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -1583,7 +1615,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -1952,7 +1988,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -2240,7 +2280,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -2303,7 +2347,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -2743,7 +2791,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -2819,7 +2871,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -2878,7 +2934,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -2949,7 +3009,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -3057,7 +3121,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -3119,7 +3187,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -3180,7 +3252,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -3298,7 +3374,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -3727,7 +3807,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -3764,7 +3848,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -3941,7 +4029,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -5391,18 +5483,21 @@ class MainController {
               .andWhere({ m_tugas_id: tugas_id })
               .first();
             if (!check) {
-              timelineData.push({
+              const newTimeline = await MTimeline.create({
                 m_user_id: user.id,
                 m_rombel_id: d,
                 m_tugas_id: tugas_id,
                 tipe: "tugas",
                 dihapus: 0,
               });
+              timelineData.push(newTimeline);
+            } else {
+              timelineData.push(check);
             }
           })
         );
 
-        timeline = await MTimeline.createMany(timelineData);
+        timeline = timelineData;
       }
 
       if (timeline) {
@@ -5572,13 +5667,27 @@ class MainController {
             if (d.timeline.tugas) {
               if (
                 moment(
-                  `${d.timeline.tugas.tanggal_pengumpulan} ${d.timeline.tugas.waktu_pengumpulan}`
-                ).format("YYYY-MM-DD HH:mm:ss") >= waktu_saat_ini
-              ) {
-                timelineData.push({ ...d, sudah_lewat: true });
-              } else {
-                timelineData.push({ ...d, sudah_lewat: false });
-              }
+                  moment(d.timeline.tugas.tanggal_pembagian)
+                    .add(7, "hours")
+                    .format("YYYY-MM-DD") +
+                    " " +
+                    d.timeline.tugas.waktu_pembagian
+                ) <= moment().utcOffset(7) ||
+                d.timeline.tugas.waktu_pembagian == null
+              )
+                if (
+                  moment(
+                    `${moment(d.timeline.tugas.tanggal_pengumpulan)
+                      .add(7, "hours")
+                      .format("YYYY-MM-DD")} ${
+                      d.timeline.tugas.waktu_pengumpulan
+                    }`
+                  ).format("YYYY-MM-DD HH:mm:ss") >= waktu_saat_ini
+                ) {
+                  timelineData.push({ ...d, sudah_lewat: true });
+                } else {
+                  timelineData.push({ ...d, sudah_lewat: false });
+                }
             }
           } else {
             if (d.tipe == "diskusi") {
@@ -7047,6 +7156,7 @@ class MainController {
     const soalUjianIds = await TkSoalUjian.query()
       .with("soal")
       .where({ m_ujian_id: ujian_id })
+      .andWhere({ dihapus: 0 })
       .fetch();
 
     let jumlahSoalPg = 0;
@@ -7730,24 +7840,20 @@ class MainController {
 
     const soalUjian = await MSoalUjian.query()
       .where({ id: soal_ujian_id })
-      .update({
-        dihapus: 1,
-      });
+      .delete();
 
     const tkSoalUjian = await TkSoalUjian.query()
       .where({ m_soal_ujian_id: soal_ujian_id })
-      .update({
-        dihapus: 1,
-      });
+      .delete();
 
-    if (!soalUjian || !tkSoalUjian) {
-      return response.notFound({
-        message: messageNotFound,
+    if (soalUjian > 0 || tkSoalUjian > 0) {
+      return response.ok({
+        message: messageDeleteSuccess,
       });
     }
 
-    return response.ok({
-      message: messageDeleteSuccess,
+    return response.notFound({
+      message: messageNotFound,
     });
   }
 
@@ -9214,7 +9320,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -9259,7 +9369,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -9308,7 +9422,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -9406,7 +9524,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -9568,7 +9690,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -9650,7 +9776,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -9690,7 +9820,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -9734,7 +9868,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -9850,7 +9988,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -9910,7 +10052,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -9973,7 +10119,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -10243,7 +10393,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -10288,7 +10442,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -10333,7 +10491,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -10393,7 +10555,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -10441,7 +10607,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -10496,7 +10666,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -10528,7 +10702,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -10578,7 +10756,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -10635,7 +10817,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -10702,7 +10888,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -10749,7 +10939,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -10801,7 +10995,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -11535,141 +11733,28 @@ class MainController {
     });
   }
 
-  async detailRpp({ response, request, auth, params: { ujian_id } }) {
+  async detailRpp({ response, request, auth, params: { rpp_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
+
+    const user = await auth.getUser();
 
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const ujian = await MUjian.query()
-      .with("soalUjian", (builder) => {
-        builder
-          .with("soal", (builder) => {
-            builder.where({ dihapus: 0 });
-          })
-          .where({ dihapus: 0 });
-      })
-      .where({ id: ujian_id })
+    const rpp = await MRpp.query()
+      .with("mataPelajaran")
+      .with("user")
+      .with("sekolah")
+      .where({ dihapus: 0 })
+      .andWhere({ m_user_id: user.id })
+      .andWhere({ id: rpp_id })
       .first();
 
-    const soalUjianIds = await TkSoalUjian.query()
-      .with("soal")
-      .where({ m_ujian_id: ujian_id })
-      .fetch();
-
-    let jumlahSoalPg = 0;
-
-    let jumlahSoalEsai = 0;
-
-    await Promise.all(
-      soalUjianIds.toJSON().map(async (d) => {
-        if (d.soal.bentuk == "pg") {
-          jumlahSoalPg = jumlahSoalPg + 1;
-        } else if (d.soal.bentuk == "esai") {
-          jumlahSoalEsai = jumlahSoalEsai + 1;
-        }
-      })
-    );
-
-    let kontenMateri = [];
-    let konteksMateri = [];
-    let prosesKognitif = [];
-    let levelKognitif = [];
-    let bentukSoal = [];
-
-    if (ujian.tipe == "literasi") {
-      kontenMateri = [
-        { value: "teks_informasi", label: "Teks Informasi" },
-        { value: "teks_fiksi", label: "Teks Fiksi" },
-        { value: "bilangan", label: "Bilangan" },
-      ];
-
-      konteksMateri = [
-        { value: "personal", label: "Personal" },
-        { value: "sosbud", label: "Sosial Budaya" },
-        { value: "saintifik", label: "Saintifik" },
-      ];
-
-      prosesKognitif = [
-        { value: "menemukan_informasi", label: "Menemukan Informasi" },
-        {
-          value: "interpretasi_integrasi",
-          label: "Interpretasi dan Integrasi",
-        },
-        { value: "evaluasi_refleksi", label: "Evaluasi dan Refleksi" },
-      ];
-
-      bentukSoal = [
-        { value: "pg", label: "Pilihan Ganda" },
-        { value: "pg_kompleks", label: "Pilihan Ganda Kompleks" },
-        { value: "esai", label: "Isian" },
-        { value: "uraian", label: "Uraian" },
-        { value: "menjodohkan", label: "Menjodohkan" },
-      ];
-    } else if (ujian.tipe == "numerasi") {
-      kontenMateri = [
-        { value: "geometri_pengukuran", label: "Geometri dan Pengukuran" },
-        { value: "data_ketidakpastian", label: "Data dan Ketidakpastian" },
-        { value: "aljabar", label: "Aljabar" },
-      ];
-
-      konteksMateri = [
-        { value: "personal", label: "Personal" },
-        { value: "sosbud", label: "Sosial Budaya" },
-        { value: "saintifik", label: "Saintifik" },
-      ];
-
-      prosesKognitif = [
-        { value: "pemahaman", label: "Pemahaman" },
-        { value: "penerapan", label: "Penerapan" },
-        { value: "penalaran", label: "Penalaran" },
-      ];
-
-      bentukSoal = [
-        { value: "pg", label: "Pilihan Ganda" },
-        { value: "pg_kompleks", label: "Pilihan Ganda Kompleks" },
-        { value: "esai", label: "Isian" },
-        { value: "uraian", label: "Uraian" },
-        { value: "menjodohkan", label: "Menjodohkan" },
-      ];
-    } else {
-      levelKognitif = [
-        { value: "c1", label: "Mengingat" },
-        { value: "c2", label: "Memahami" },
-        { value: "c3", label: "Menerapkan" },
-        { value: "c4", label: "Menganalisis" },
-        { value: "c5", label: "Mengevaluasi" },
-        { value: "c6", label: "Mengkreasi" },
-      ];
-      bentukSoal = [
-        { value: "pg", label: "Pilihan Ganda" },
-        { value: "esai", label: "Esai" },
-        { value: "esai", label: "Isian" },
-      ];
-    }
-
-    let tingkatData;
-
-    if (sekolah.tingkat == "SMK") {
-      tingkatData = ["X", "XI", "XII", "XIII"];
-    } else if (sekolah.tingkat == "SMP") {
-      tingkatData = ["VII", "VIII", "IX"];
-    }
-
     return response.ok({
-      ujian: ujian,
-      kontenMateri,
-      konteksMateri,
-      prosesKognitif,
-      bentukSoal,
-      levelKognitif,
-      jumlahSoalPg: jumlahSoalPg,
-      jumlahSoalEsai: jumlahSoalEsai,
-      // filter
-      tingkat: tingkatData,
+      rpp,
     });
   }
 
@@ -12682,7 +12767,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -21503,7 +21592,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    // if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    // if ((user.role != "admin" || user.role  == 'kurikulum') || user.m_sekolah_id != sekolah.id) {
     //   return response.forbidden({ message: messageForbidden });
     // }
 
@@ -21676,7 +21765,11 @@ class MainController {
 
     const user = await auth.getUser();
 
-    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -22399,7 +22492,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    // if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    // if ((user.role != "admin" || user.role  == 'kurikulum') || user.m_sekolah_id != sekolah.id) {
     //   return response.forbidden({ message: messageForbidden });
     // }
 
@@ -22521,7 +22614,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    // if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    // if ((user.role != "admin" || user.role  == 'kurikulum') || user.m_sekolah_id != sekolah.id) {
     //   return response.forbidden({ message: messageForbidden });
     // }
 
@@ -22689,7 +22782,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    // if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    // if ((user.role != "admin" || user.role  == 'kurikulum') || user.m_sekolah_id != sekolah.id) {
     //   return response.forbidden({ message: messageForbidden });
     // }
 
@@ -22969,7 +23062,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    // if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    // if ((user.role != "admin" || user.role  == 'kurikulum') || user.m_sekolah_id != sekolah.id) {
     //   return response.forbidden({ message: messageForbidden });
     // }
 
@@ -23082,7 +23175,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    // if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    // if ((user.role != "admin" || user.role  == 'kurikulum') || user.m_sekolah_id != sekolah.id) {
     //   return response.forbidden({ message: messageForbidden });
     // }
 
@@ -23207,7 +23300,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    // if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    // if ((user.role != "admin" || user.role  == 'kurikulum') || user.m_sekolah_id != sekolah.id) {
     //   return response.forbidden({ message: messageForbidden });
     // }
 
@@ -23345,7 +23438,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    // if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    // if ((user.role != "admin" || user.role  == 'kurikulum') || user.m_sekolah_id != sekolah.id) {
     //   return response.forbidden({ message: messageForbidden });
     // }
 
@@ -23465,7 +23558,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    // if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    // if ((user.role != "admin" || user.role  == 'kurikulum') || user.m_sekolah_id != sekolah.id) {
     //   return response.forbidden({ message: messageForbidden });
     // }
 
@@ -23631,7 +23724,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    // if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
+    // if ((user.role != "admin" || user.role  == 'kurikulum') || user.m_sekolah_id != sekolah.id) {
     //   return response.forbidden({ message: messageForbidden });
     // }
 
