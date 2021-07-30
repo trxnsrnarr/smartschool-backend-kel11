@@ -5171,7 +5171,7 @@ class MainController {
       .andWhere({ m_user_id: user.id })
       .ids();
 
-    const timelineTugas = await MTimeline.query()
+    const timeline1 = await MTimeline.query()
       .with("tugas", (builder) => {
         builder.with("timeline", (builder) => {
           builder.with("tkTimeline").with("rombel");
@@ -5189,8 +5189,34 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .andWhere({ tipe: "tugas" })
       .whereIn("m_tugas_id", tugasIds)
+      .whereNull("m_mata_pelajaran_id")
       .orderBy("id", "desc")
       .fetch();
+
+    const timeline2 = await MTimeline.query()
+      .with("tugas", (builder) => {
+        builder.with("timeline", (builder) => {
+          builder.with("tkTimeline").with("rombel");
+        });
+      })
+      .withCount("komen as total_komen", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .withCount("tkTimeline as total_respon", (builder) => {
+        builder.whereNotNull("waktu_pengumpulan");
+      })
+      .withCount("tkTimeline as total_siswa")
+      .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
+      .andWhere({ m_user_id: user.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ tipe: "tugas" })
+      .andWhere({ m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id })
+      .whereIn("m_tugas_id", tugasIds)
+      .whereNotNull("m_mata_pelajaran_id")
+      .orderBy("id", "desc")
+      .fetch();
+
+    const timelineTugas = [...timeline2.toJSON(), ...timeline1.toJSON()];
 
     const tugasSaatIni = [];
     const tugasTerjadwal = [];
@@ -5199,7 +5225,7 @@ class MainController {
     const tugasDraf = [];
 
     await Promise.all(
-      timelineTugas.toJSON().map(async (d) => {
+      timelineTugas.map(async (d) => {
         if (d.tugas) {
           if (d.tugas.draft) {
             tugasDraf.push(d);
@@ -5247,6 +5273,7 @@ class MainController {
     const user = await auth.getUser();
 
     const {
+      m_jadwal_mengajar_id,
       judul,
       instruksi,
       tanggal_pembagian,
@@ -5277,6 +5304,10 @@ class MainController {
     //   return response.unprocessableEntity(validation.messages());
     // }
 
+    const jadwalMengajar = await MJadwalMengajar.query()
+      .where({ id: m_jadwal_mengajar_id })
+      .first();
+
     const tugas = await MTugas.create({
       judul,
       instruksi,
@@ -5300,6 +5331,7 @@ class MainController {
           m_user_id: user.id,
           m_rombel_id: list_rombel[0],
           m_tugas_id: tugas.id,
+          m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id,
           tipe: "tugas",
           dihapus: 0,
         });
@@ -5312,6 +5344,7 @@ class MainController {
               m_user_id: user.id,
               m_rombel_id: d,
               m_tugas_id: tugas.id,
+              m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id,
               tipe: "tugas",
               dihapus: 0,
             });
@@ -5425,6 +5458,7 @@ class MainController {
     const user = await auth.getUser();
 
     const {
+      m_jadwal_mengajar_id,
       judul,
       instruksi,
       tanggal_pembagian,
@@ -5438,6 +5472,10 @@ class MainController {
       list_anggota,
       list_rombel,
     } = request.post();
+
+    const jadwalMengajar = await MJadwalMengajar.query()
+      .where({ id: m_jadwal_mengajar_id })
+      .first();
 
     const tugas = await MTugas.query().where({ id: tugas_id }).update({
       judul,
@@ -5466,6 +5504,7 @@ class MainController {
             m_user_id: user.id,
             m_rombel_id: list_rombel[0],
             m_tugas_id: tugas_id,
+            m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id,
             tipe: "tugas",
             dihapus: 0,
           });
@@ -5487,6 +5526,7 @@ class MainController {
                 m_user_id: user.id,
                 m_rombel_id: d,
                 m_tugas_id: tugas_id,
+                m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id,
                 tipe: "tugas",
                 dihapus: 0,
               });
@@ -5504,11 +5544,17 @@ class MainController {
         let anggotaRombel;
 
         if (list_anggota) {
+          // anggotaRombel = await MAnggotaRombel.query()
+          //   .with("user", (builder) => {
+          //     builder.select("id", "email").where({ dihapus: 0 });
+          //   })
+          //   .whereIn("m_user_id", list_anggota)
+          //   .fetch();
           anggotaRombel = await MAnggotaRombel.query()
             .with("user", (builder) => {
               builder.select("id", "email").where({ dihapus: 0 });
             })
-            .whereIn("m_user_id", list_anggota)
+            .where("m_rombel_id", list_rombel[0])
             .fetch();
         } else {
           anggotaRombel = await MAnggotaRombel.query()
@@ -5521,14 +5567,33 @@ class MainController {
 
         let userIds = [];
 
+        const check = await TkTimeline.query()
+          .select("m_user_id")
+          .whereIn(
+            "m_user_id",
+            anggotaRombel.toJSON().map((d) => d.user.id)
+          )
+          .andWhere({ m_timeline_id: timeline.id })
+          .andWhere({ tipe: "tugas" })
+          .fetch();
+
+        const exist = [];
+        anggotaRombel.toJSON().map((d) => {
+          exist.push(
+            check.toJSON().findIndex((e) => e.m_user_id == d.user.id) < 0
+          );
+        });
+
+        const dihapus = [];
+        anggotaRombel.toJSON().map((d, idx) => {
+          if (!exist[idx] && !list_anggota.includes(parseInt(d.m_user_id))) {
+            dihapus.push(d.m_user_id);
+          }
+        });
+
         await Promise.all(
-          anggotaRombel.toJSON().map(async (d) => {
-            const check = await TkTimeline.query()
-              .where({ m_user_id: d.m_user_id })
-              .andWhere({ m_timeline_id: timeline.id })
-              .andWhere({ tipe: "tugas" })
-              .first();
-            if (!check) {
+          anggotaRombel.toJSON().map(async (d, idx) => {
+            if (list_anggota.includes(parseInt(d.m_user_id)) && exist[idx]) {
               userIds.push({
                 m_user_id: d.m_user_id,
                 tipe: "tugas",
@@ -5550,6 +5615,11 @@ class MainController {
                 }
                 // return d.user.nama;
               }
+            } else if (dihapus.includes(d.m_user_id)) {
+              await TkTimeline.query()
+                .where({ m_user_id: d.m_user_id })
+                .andWhere({ m_timeline_id: timeline.id })
+                .delete();
             }
           })
         );
@@ -5631,14 +5701,28 @@ class MainController {
     let timeline;
 
     if (user.role == "siswa") {
-      const timelineIds = await MTimeline.query()
-        .where({ m_rombel_id: jadwalMengajar.toJSON().rombel.id })
+      const timelineId1 = await MTimeline.query()
+        .whereNull("m_mata_pelajaran_id")
+        .andWhere({ m_rombel_id: jadwalMengajar.toJSON().rombel.id })
         .andWhere({
           m_user_id: jadwalMengajar.toJSON().mataPelajaran.m_user_id,
         })
         .orWhere({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .ids();
+
+      const timelineId2 = await MTimeline.query()
+        .whereNotNull("m_mata_pelajaran_id")
+        .andWhere({ m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id })
+        .andWhere({ m_rombel_id: jadwalMengajar.toJSON().rombel.id })
+        .andWhere({
+          m_user_id: jadwalMengajar.toJSON().mataPelajaran.m_user_id,
+        })
+        .orWhere({ m_user_id: user.id })
+        .andWhere({ dihapus: 0 })
+        .ids();
+
+      const timelineIds = [...timelineId2, ...timelineId1];
 
       const timeline = await TkTimeline.query()
         .with("timeline", (builder) => {
@@ -5732,22 +5816,23 @@ class MainController {
         .orderBy("id", "desc")
         .fetch();
     } else {
-      const tugasIds = await MTugas.query()
-        .where({ m_user_id: user.id })
-        .andWhere({ dihapus: 0 })
-        .ids();
+      // const tugasIds = await MTugas.query()
+      //   .where({ m_user_id: user.id })
+      //   .andWhere({ dihapus: 0 })
+      //   .ids();
 
       const userIds = await MAnggotaRombel.query()
         .where({ m_rombel_id: jadwalMengajar.toJSON().rombel.id })
         .pluck("m_user_id");
 
       const timelineLainnya = await MTimeline.query()
-        .where({ dihapus: 0 })
+        .whereNull("m_mata_pelajaran_id")
+        .andWhere({ dihapus: 0 })
         .andWhere("m_rombel_id", jadwalMengajar.toJSON().rombel.id)
         .whereIn("m_user_id", userIds)
         .ids();
 
-      timeline = await MTimeline.query()
+      const timeline1 = await MTimeline.query()
         .with("tugas")
         .with("user")
         .with("komen", (builder) => {
@@ -5763,13 +5848,43 @@ class MainController {
         .withCount("komen as total_komen", (builder) => {
           builder.where({ dihapus: 0 });
         })
-        .where({ m_rombel_id: jadwalMengajar.toJSON().rombel.id })
+        .whereNull("m_mata_pelajaran_id")
+        .andWhere({ m_rombel_id: jadwalMengajar.toJSON().rombel.id })
         .andWhere({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         // .whereIn("m_tugas_id", tugasIds)
         .orWhereIn("id", timelineLainnya)
         .orderBy("id", "desc")
         .fetch();
+
+      const timeline2 = await MTimeline.query()
+        .with("tugas")
+        .with("user")
+        .with("komen", (builder) => {
+          builder.with("user").where({ dihapus: 0 });
+        })
+        .withCount("tkTimeline as total_respon", (builder) => {
+          builder.whereNotNull("waktu_pengumpulan");
+        })
+        .withCount("tkTimeline as total_absen", (builder) => {
+          builder.whereNotNull("waktu_absen");
+        })
+        .withCount("tkTimeline as total_siswa")
+        .withCount("komen as total_komen", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .whereNotNull("m_mata_pelajaran_id")
+        .andWhere({
+          m_mata_pelajaran_id: jadwalMengajar.toJSON().mataPelajaran.id,
+        })
+        .andWhere({ m_rombel_id: jadwalMengajar.toJSON().rombel.id })
+        .andWhere({ m_user_id: user.id })
+        .andWhere({ dihapus: 0 })
+        // .whereIn("m_tugas_id", tugasIds)
+        .orderBy("id", "desc")
+        .fetch();
+
+      timeline = [...timeline2.toJSON(), ...timeline1.toJSON()];
     }
 
     return response.ok({
@@ -5931,6 +6046,7 @@ class MainController {
         m_rombel_id: jadwalMengajar.m_rombel_id,
         tipe,
         deskripsi: htmlEscaper.escape(deskripsi),
+        m_mata_pelajaran_id: jadwalMengajar.toJSON().mataPelajaran.id,
         gmeet,
         tanggal_dibuat,
         dihapus: 0,
@@ -5979,6 +6095,7 @@ class MainController {
         m_user_id: user.id,
         m_rombel_id: jadwalMengajar.m_rombel_id,
         deskripsi: htmlEscaper.escape(deskripsi),
+        m_mata_pelajaran_id: jadwalMengajar.toJSON().mataPelajaran.id,
         lampiran: lampiran.toString(),
         tipe,
         dihapus: 0,
@@ -6039,6 +6156,11 @@ class MainController {
       nilai,
     } = request.post();
 
+    const jadwalMengajar = await MJadwalMengajar.query()
+      .with("mataPelajaran")
+      .where({ id: m_jadwal_mengajar_id })
+      .first();
+
     let timeline;
 
     if (tipe == "nilai") {
@@ -6052,6 +6174,7 @@ class MainController {
         .where({ id: timeline_id })
         .update({
           m_jadwal_mengajar_id,
+          m_mata_pelajaran_id: jadwalMengajar.toJSON().mataPelajaran.id,
           deskripsi: htmlEscaper.escape(deskripsi),
           lampiran: lampiran.toString(),
           tipe,
@@ -6086,6 +6209,7 @@ class MainController {
             deskripsi: htmlEscaper.escape(deskripsi),
             tanggal_pembagian,
             tanggal_akhir,
+            m_mata_pelajaran_id: jadwalMengajar.toJSON().mataPelajaran.id,
             gmeet,
           });
       }
