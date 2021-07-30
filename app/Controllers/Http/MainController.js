@@ -3351,6 +3351,52 @@ class MainController {
     });
   }
 
+  async getJadwalMengajarPertemuan({ response, request }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const guruIds = await User.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .ids();
+
+    const pertemuan = await MTimeline.query()
+      .with("user")
+      .with("komen", (builder) => {
+        builder.with("user").where({ dihapus: 0 });
+      })
+      .with("rombel")
+      .withCount("tkTimeline as total_absen", (builder) => {
+        builder.whereNotNull("waktu_absen");
+      })
+      .withCount("tkTimeline as total_siswa")
+      .withCount("komen as total_komen", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .where("tipe", "absen")
+      .andWhere(
+        "tanggal_pembagian",
+        "like",
+        `${moment().format("YYYY-MM-DD")}%`
+      )
+      .whereIn("m_user_id", guruIds)
+      .orderBy("id", "desc")
+      .fetch();
+
+    return response.ok({ pertemuan });
+  }
+
   //belum validasi
   async putJadwalMengajar({
     response,
@@ -5826,6 +5872,7 @@ class MainController {
     }
 
     const timeline = await MTimeline.query()
+    .with('user')
       .with("rombel")
       .with("komen", (builder) => {
         builder.with("user").where({ dihapus: 0 });
