@@ -1,7 +1,15 @@
 const Excel = require("exceljs");
 
 class DownloadService {
-  static async kartuUjian(sekolah, ta, kepsek, ujian, logoFileName) {
+  static async kartuUjian(
+    sekolah,
+    ta,
+    kepsek,
+    ujian,
+    esaiFilter,
+    keluarantanggal,
+    logoFileName
+  ) {
     let workbook = new Excel.Workbook();
 
     let worksheet = workbook.addWorksheet(`KISI-KISI`, {
@@ -884,755 +892,6 @@ class DownloadService {
         // worksheet 3
 
         if (`${d.soal.bentuk}` == "esai") {
-          worksheet3.mergeCells(
-            `B${(idx + 1) * 32 - 30}:H${(idx + 1) * 32 - 30}`
-          );
-          worksheet3.mergeCells(
-            `B${(idx + 1) * 32 - 29}:H${(idx + 1) * 32 - 29}`
-          );
-          worksheet3.mergeCells(
-            `B${(idx + 1) * 32 - 28}:H${(idx + 1) * 32 - 28}`
-          );
-          worksheet3.mergeCells(
-            `B${(idx + 1) * 32 - 27}:H${(idx + 1) * 32 - 27}`
-          );
-          worksheet3.mergeCells(
-            `B${(idx + 1) * 32 - 26}:H${(idx + 1) * 32 - 26}`
-          );
-          worksheet3.mergeCells(
-            `D${(idx + 1) * 32 - 25}:F${(idx + 1) * 32 - 25}`
-          );
-          worksheet3.mergeCells(
-            `D${(idx + 1) * 32 - 24}:F${(idx + 1) * 32 - 24}`
-          );
-          worksheet3.mergeCells(
-            `D${(idx + 1) * 32 - 23}:F${(idx + 1) * 32 - 23}`
-          );
-          worksheet3.mergeCells(
-            `D${(idx + 1) * 32 - 22}:F${(idx + 1) * 32 - 22}`
-          );
-          worksheet3.mergeCells(
-            `G${(idx + 1) * 32 - 25}:H${(idx + 1) * 32 - 25}`
-          );
-          worksheet3.mergeCells(
-            `G${(idx + 1) * 32 - 24}:H${(idx + 1) * 32 - 22}`
-          );
-          worksheet3.mergeCells(
-            `B${(idx + 1) * 32 - 21}:E${(idx + 1) * 32 - 21}`
-          ); //11
-          worksheet3.mergeCells(
-            `F${(idx + 1) * 32 - 21}:G${(idx + 1) * 32 - 21}`
-          ); //11
-          worksheet3.mergeCells(
-            `B${(idx + 1) * 32 - 20}:E${(idx + 1) * 32 - 20}`
-          ); //12
-          worksheet3.mergeCells(
-            `F${(idx + 1) * 32 - 20}:G${(idx + 1) * 32 - 20}`
-          ); //12
-          worksheet3.mergeCells(
-            `C${(idx + 1) * 32 - 19}:D${(idx + 1) * 32 - 18}`
-          ); //1314
-          worksheet3.mergeCells(
-            `E${(idx + 1) * 32 - 19}:G${(idx + 1) * 32 - 19}`
-          ); //13
-          worksheet3.mergeCells(
-            `B${(idx + 1) * 32 - 18}:B${(idx + 1) * 32 - 11}`
-          ); //1421
-          worksheet3.mergeCells(
-            `C${(idx + 1) * 32 - 17}:D${(idx + 1) * 32 - 16}`
-          ); //1516
-          worksheet3.mergeCells(
-            `C${(idx + 1) * 32 - 15}:D${(idx + 1) * 32 - 11}`
-          ); //1718
-          // worksheet3.mergeCells(
-          //   `C${(idx + 1) * 32 - 13}:D${(idx + 1) * 32 - 11}`
-          // ); //1921
-          worksheet3.mergeCells(
-            `E${(idx + 1) * 32 - 15}:G${(idx + 1) * 32 - 11}`
-          ); //1718
-          worksheet3.mergeCells(
-            `E${(idx + 1) * 32 - 18}:G${(idx + 1) * 32 - 16}`
-          ); //1416
-          worksheet3.mergeCells(
-            `H${(idx + 1) * 32 - 16}:H${(idx + 1) * 32 - 11}`
-          ); //1621
-          // worksheet3.mergeCells(
-          //   `F${(idx + 1) * 32 - 15}:G${(idx + 1) * 32 - 15}`
-          // ); //1717
-          // worksheet3.mergeCells(
-          //   `F${(idx + 1) * 32 - 14}:G${(idx + 1) * 32 - 14}`
-          // ); //18
-          // worksheet3.mergeCells(
-          //   `F${(idx + 1) * 32 - 13}:G${(idx + 1) * 32 - 13}`
-          // ); //19
-          // worksheet3.mergeCells(
-          //   `F${(idx + 1) * 32 - 12}:G${(idx + 1) * 32 - 12}`
-          // ); //20
-          // worksheet3.mergeCells(
-          //   `F${(idx + 1) * 32 - 11}:G${(idx + 1) * 32 - 11}`
-          // ); //21
-
-          worksheet3.getCell(`B${(idx + 1) * 32 - 30}`).value = {
-            richText: [
-              {
-                font: {
-                  name: "Times New Roman",
-                  family: 4,
-                  size: 16,
-                  bold: true,
-                },
-                text: `PEMERINTAH DAERAH PROVINSI ${sekolah.provinsi}`,
-              },
-            ],
-          };
-          worksheet3.getCell(`B${(idx + 1) * 32 - 30}`).alignment = {
-            vertical: "middle",
-            horizontal: "center",
-          };
-          worksheet3.getCell(`B${(idx + 1) * 32 - 29}`).value = {
-            richText: [
-              {
-                font: {
-                  name: "Times New Roman",
-                  family: 4,
-                  size: 20,
-                  bold: true,
-                },
-                text: "CABANG DINAS PENDIDIKAN",
-              },
-            ],
-          };
-          worksheet3.getCell(`B${(idx + 1) * 32 - 29}`).alignment = {
-            vertical: "middle",
-            horizontal: "center",
-          };
-          worksheet3.getCell(`B${(idx + 1) * 32 - 28}`).value = {
-            richText: [
-              {
-                font: {
-                  name: "Times New Roman",
-                  family: 4,
-                  size: 14,
-                  bold: true,
-                },
-                text: `${ta.tahun} `,
-              },
-            ],
-          };
-          worksheet3.getCell(`B${(idx + 1) * 32 - 28}`).alignment = {
-            vertical: "middle",
-            horizontal: "center",
-          };
-
-          worksheet3.getCell(`B${(idx + 1) * 32 - 26}`).value = {
-            richText: [
-              {
-                font: {
-                  name: "Arial Narrow",
-                  family: 4,
-                  size: 22,
-                  color: { argb: "000000" },
-                },
-                text: `${ujian.toJSON().tipe_format}`,
-              },
-            ],
-          };
-          worksheet3.getCell(`B${(idx + 1) * 32 - 26}`).alignment = {
-            vertical: "middle",
-            horizontal: "center",
-          };
-          worksheet3.getCell(`B${(idx + 1) * 32 - 26}`).fill = {
-            type: "pattern",
-            pattern: "solid",
-            fgColor: { argb: "ADD8E6" },
-            bgColor: { argb: "ADD8E6" },
-          };
-          worksheet3.getCell(`G${(idx + 1) * 32 - 25}`).fill = {
-            type: "pattern",
-            pattern: "solid",
-            fgColor: { argb: "E0FFFF" },
-            bgColor: { argb: "E0FFFF" },
-          };
-          worksheet3.getCell(`G${(idx + 1) * 32 - 25}`).value = {
-            richText: [
-              {
-                font: {
-                  name: "Times New Roman",
-                  family: 4,
-                  size: 12,
-                  color: { argb: "000000" },
-                  bold: true,
-                },
-                text: `Kompetensi Dasar`,
-              },
-            ],
-          };
-          // worksheet3.getCell("B29").value = `${ujian.nama}`;
-          worksheet3.getCell(`G${(idx + 1) * 32 - 25}`).alignment = {
-            vertical: "middle",
-            horizontal: "center",
-          };
-          worksheet3.getCell(`G${(idx + 1) * 32 - 24}`).value = {
-            richText: [
-              {
-                font: {
-                  name: "Arial Narrow",
-                  family: 4,
-                  size: 12,
-                  color: { argb: "000000" },
-                  bold: true,
-                },
-                text: `${d.soal.kd}`,
-              },
-            ],
-          };
-          // worksheet3.getCell("B29").value = `${ujian.nama}`;
-          worksheet3.getCell(`G${(idx + 1) * 32 - 24}`).alignment = {
-            vertical: "middle",
-            horizontal: "center",
-          };
-
-          worksheet3.getCell(`B${(idx + 1) * 32 - 25}`).value = {
-            richText: [
-              {
-                font: {
-                  name: "Times New Roman",
-                  family: 4,
-                  size: 12,
-                  color: { argb: "000000" },
-                  // bold: true,
-                },
-                text: `Nama Sekolah`,
-              },
-            ],
-          };
-          worksheet3.getCell(
-            `D${(idx + 1) * 32 - 25}`
-          ).value = `${sekolah.nama}`;
-          worksheet3.getCell(`B${(idx + 1) * 32 - 24}`).value = {
-            richText: [
-              {
-                font: {
-                  name: "Times New Roman",
-                  family: 4,
-                  size: 12,
-                  color: { argb: "000000" },
-                  // bold: true,
-                },
-                text: `Kelas / Semester`,
-              },
-            ],
-          };
-          worksheet3.getCell(
-            `D${(idx + 1) * 32 - 24}`
-          ).value = `${ujian.tingkat}`;
-          worksheet3.getCell(`B${(idx + 1) * 32 - 23}`).value = {
-            richText: [
-              {
-                font: {
-                  name: "Times New Roman",
-                  family: 4,
-                  size: 12,
-                  color: { argb: "000000" },
-                  // bold: true,
-                },
-                text: `Mata Pelajaran`,
-              },
-            ],
-          };
-          worksheet3.getCell(`D${(idx + 1) * 32 - 23}`).value = `${
-            ujian.toJSON().mataPelajaran.nama
-          }`;
-          worksheet3.getCell(`B${(idx + 1) * 32 - 22}`).value = {
-            richText: [
-              {
-                font: {
-                  name: "Times New Roman",
-                  family: 4,
-                  size: 12,
-                  color: { argb: "000000" },
-                  // bold: true,
-                },
-                text: `Kompetensi Keahlian`,
-              },
-            ],
-          };
-          worksheet3.getCell(`C${(idx + 1) * 32 - 25}`).value = ":";
-          worksheet3.getCell(`C${(idx + 1) * 32 - 24}`).value = ":";
-          worksheet3.getCell(`C${(idx + 1) * 32 - 23}`).value = ":";
-          worksheet3.getCell(`C${(idx + 1) * 32 - 22}`).value = ":";
-
-          worksheet3.getCell(
-            `B${(idx + 1) * 32 - 21}`
-          ).value = `Materi Pembelajaran`;
-          worksheet3.getCell(
-            `B${(idx + 1) * 32 - 20}`
-          ).value = `${d.soal.kd_konten_materi}`;
-          worksheet3.getCell(
-            `F${(idx + 1) * 32 - 21}`
-          ).value = `Indikator Pencapaian Kompetensi`;
-          worksheet3.getCell(
-            `F${(idx + 1) * 32 - 20}`
-          ).value = `${d.soal.akm_konteks_materi}`;
-          worksheet3.getCell(`H${(idx + 1) * 32 - 21}`).value = `Aspek (Level)`;
-          worksheet3.getCell(
-            `H${(idx + 1) * 32 - 20}`
-          ).value = `${d.soal.level_kognitif}`;
-          worksheet3.getCell(
-            `B${(idx + 1) * 32 - 19}`
-          ).value = `Indikator Soal`;
-          worksheet3.getCell(`B${(idx + 1) * 32 - 18}`).value = {
-            richText: [
-              {
-                font: {
-                  name: "Times New Roman",
-                  family: 4,
-                  size: 12,
-                  color: { argb: "000000" },
-                  // bold: true,
-                },
-                text: `${d.soal.akm_konten_materi}`,
-              },
-            ],
-          };
-          worksheet3.getCell(`C${(idx + 1) * 32 - 19}`).value = `Nomor`;
-          worksheet3.getCell(`C${(idx + 1) * 32 - 17}`).value = `${idx + 1}`;
-          worksheet3.getCell(
-            `E${(idx + 1) * 32 - 19}`
-          ).value = `Rumusan Butir Soal`;
-          worksheet3.getCell(`E${(idx + 1) * 32 - 17}`).value = `${
-            d.soal
-              ? d.soal.pertanyaan
-                  .replace(/(<([^>]+)>)/gi, "")
-                  .replace(/\&nbsp;/gi, "")
-              : "-"
-          }`;
-          worksheet3.getCell(`H${(idx + 1) * 32 - 19}`).value = `BUKU`;
-          worksheet3.getCell(`H${(idx + 1) * 32 - 17}`).value = ``;
-          worksheet3.addConditionalFormatting({
-            ref: `B${(idx + 1) * 32 - 20}:H${(idx + 1) * 32 - 20}`,
-            rules: [
-              {
-                type: "expression",
-                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-                style: {
-                  font: {
-                    name: "Arial Narrow",
-                    family: 4,
-                    size: 12,
-                  },
-                  alignment: {
-                    vertical: "middle",
-                    horizontal: "center",
-                  },
-                },
-              },
-            ],
-          });
-          worksheet3.addConditionalFormatting({
-            ref: `B${(idx + 1) * 32 - 18}`,
-            rules: [
-              {
-                type: "expression",
-                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-                style: {
-                  font: {
-                    name: "Arial Narrow",
-                    family: 4,
-                    size: 12,
-                  },
-                  alignment: {
-                    vertical: "middle",
-                    horizontal: "center",
-                  },
-                },
-              },
-            ],
-          });
-          worksheet3.addConditionalFormatting({
-            ref: `C${(idx + 1) * 32 - 17}`,
-            rules: [
-              {
-                type: "expression",
-                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-                style: {
-                  font: {
-                    name: "Arial Narrow",
-                    family: 4,
-                    size: 12,
-                  },
-                  alignment: {
-                    vertical: "middle",
-                    horizontal: "center",
-                  },
-                },
-              },
-            ],
-          });
-          worksheet3.addConditionalFormatting({
-            ref: `E${(idx + 1) * 32 - 18}`,
-            rules: [
-              {
-                type: "expression",
-                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-                style: {
-                  font: {
-                    name: "Arial Narrow",
-                    family: 4,
-                    size: 12,
-                  },
-                  alignment: {
-                    vertical: "middle",
-                    horizontal: "center",
-                  },
-                },
-              },
-            ],
-          });
-          worksheet3.addConditionalFormatting({
-            ref: `B${(idx + 1) * 32 - 21}:H${(idx + 1) * 32 - 21}`,
-            rules: [
-              {
-                type: "expression",
-                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-                style: {
-                  font: {
-                    name: "Times New Roman",
-                    family: 4,
-                    size: 12,
-                    bold: true,
-                  },
-                  fill: {
-                    type: "pattern",
-                    pattern: "solid",
-                    bgColor: { argb: "E0FFFF", fgColor: { argb: "E0FFFF" } },
-                  },
-                  alignment: {
-                    vertical: "middle",
-                    horizontal: "center",
-                  },
-                },
-              },
-            ],
-          });
-          worksheet3.addConditionalFormatting({
-            ref: `B${(idx + 1) * 32 - 19}:H${(idx + 1) * 32 - 19}`,
-            rules: [
-              {
-                type: "expression",
-                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-                style: {
-                  font: {
-                    name: "Times New Roman",
-                    family: 4,
-                    size: 12,
-                    bold: true,
-                  },
-                  fill: {
-                    type: "pattern",
-                    pattern: "solid",
-                    bgColor: { argb: "E0FFFF", fgColor: { argb: "E0FFFF" } },
-                  },
-                  alignment: {
-                    vertical: "middle",
-                    horizontal: "center",
-                  },
-                },
-              },
-            ],
-          });
-          worksheet3.addConditionalFormatting({
-            ref: `B${(idx + 1) * 32 - 30}:H${(idx + 1) * 32 - 11}`,
-            rules: [
-              {
-                type: "expression",
-                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-                style: {
-                  border: {
-                    top: { style: "thin" },
-                    left: { style: "thin" },
-                    bottom: { style: "thin" },
-                    right: { style: "thin" },
-                  },
-                  alignment: { wrapText: true },
-                },
-              },
-            ],
-          });
-
-          worksheet3.getCell(`C${(idx + 1) * 32 - 15}`).value = {
-            richText: [
-              {
-                font: {
-                  name: "Times New Roman",
-                  family: 4,
-                  size: 12,
-                  color: { argb: "000000" },
-                  bold: true,
-                },
-                text: `Kunci Jawaban`,
-              },
-            ],
-          };
-
-          worksheet3.addConditionalFormatting({
-            ref: `E${(idx + 1) * 32 - 15}:E${(idx + 1) * 32 - 11}`,
-            rules: [
-              {
-                type: "expression",
-                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-                style: {
-                  alignment: {
-                    wrapText: true,
-                    vertical: "middle",
-                    horizontal: "center",
-                  },
-                  font: {
-                    name: "Times New Roman",
-                    family: 4,
-                    size: 12,
-                    color: { argb: "000000" },
-                  },
-                },
-              },
-            ],
-          });
-          worksheet3.addConditionalFormatting({
-            ref: `E${(idx + 1) * 32 - 15}`,
-            rules: [
-              {
-                type: "expression",
-                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-                style: {
-                  alignment: {
-                    wrapText: true,
-                    vertical: "middle",
-                    horizontal: "left",
-                  },
-                  font: {
-                    name: "Arial Narrow",
-                    family: 4,
-                    size: 9,
-                    color: { argb: "000000" },
-                  },
-                },
-              },
-            ],
-          });
-          worksheet3.getCell(
-            `F${(idx + 1) * 32 - 15}`
-          ).value = `${d.soal.kj_uraian}`;
-
-          worksheet3.addConditionalFormatting({
-            ref: `C${(idx + 1) * 32 - 15}`,
-            rules: [
-              {
-                type: "expression",
-                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-                style: {
-                  alignment: {
-                    wrapText: true,
-                    vertical: "middle",
-                    horizontal: "center",
-                  },
-                  fill: {
-                    type: "pattern",
-                    pattern: "solid",
-                    bgColor: { argb: "E0FFFF", fgColor: { argb: "E0FFFF" } },
-                  },
-                },
-              },
-            ],
-          });
-
-          worksheet3.getCell(`H${(idx + 1) * 32 - 17}`).value = {
-            richText: [
-              {
-                font: {
-                  name: "Times New Roman",
-                  family: 4,
-                  size: 12,
-                  color: { argb: "000000" },
-                  bold: true,
-                },
-                text: `Gambar/Tabel/Grafik/Wacana`,
-              },
-            ],
-          };
-          worksheet3.addConditionalFormatting({
-            ref: `H${(idx + 1) * 32 - 17}`,
-            rules: [
-              {
-                type: "expression",
-                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-                style: {
-                  alignment: {
-                    wrapText: true,
-                    vertical: "middle",
-                    horizontal: "center",
-                  },
-                  fill: {
-                    type: "pattern",
-                    pattern: "solid",
-                    bgColor: { argb: "E0FFFF", fgColor: { argb: "E0FFFF" } },
-                  },
-                },
-              },
-            ],
-          });
-
-          worksheet3.getCell(`B${(idx + 1) * 32 - 8}`).value = `Mengetahui :`;
-          worksheet3.getCell(`B${(idx + 1) * 32 - 7}`).value = `Kepala Sekolah`;
-          worksheet3.getCell(`B${(idx + 1) * 32 - 3}`).value = `${kepsek}`;
-
-          worksheet3.getCell(`H${(idx + 1) * 32 - 9}`).value = ``;
-          worksheet3.getCell(
-            `H${(idx + 1) * 32 - 7}`
-          ).value = `Guru Mata Pelajaran`;
-          worksheet3.getCell(`H${(idx + 1) * 32 - 3}`).value = `${
-            ujian.toJSON().mataPelajaran.user.nama
-          }`;
-
-          worksheet3.addConditionalFormatting({
-            ref: `B${(idx + 1) * 32 - 10}:B${(idx + 1) * 32 - 4}`,
-            rules: [
-              {
-                type: "expression",
-                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-                style: {
-                  border: {
-                    // top: { style: "thin" },
-                    left: { style: "thin" },
-                    // bottom: { style: "thin" },
-                    // right: { style: "thin" },
-                  },
-                  alignment: {
-                    wrapText: true,
-                    vertical: "middle",
-                    horizontal: "right",
-                  },
-                  font: {
-                    name: "Times New Roman",
-                    family: 4,
-                    size: 12,
-                    color: { argb: "000000" },
-                  },
-                },
-              },
-            ],
-          });
-          worksheet3.addConditionalFormatting({
-            ref: `H${(idx + 1) * 32 - 10}:H${(idx + 1) * 32 - 4}`,
-            rules: [
-              {
-                type: "expression",
-                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-                style: {
-                  border: {
-                    // top: { style: "thin" },
-                    // left: { style: "thin" },
-                    // bottom: { style: "thin" },
-                    right: { style: "thin" },
-                  },
-                  alignment: {
-                    wrapText: true,
-                    vertical: "middle",
-                    horizontal: "left",
-                  },
-                  font: {
-                    name: "Times New Roman",
-                    family: 4,
-                    size: 12,
-                    color: { argb: "000000" },
-                  },
-                },
-              },
-            ],
-          });
-          worksheet3.addConditionalFormatting({
-            ref: `C${(idx + 1) * 32 - 3}:G${(idx + 1) * 32 - 3}`,
-            rules: [
-              {
-                type: "expression",
-                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-                style: {
-                  border: {
-                    // top: { style: "thin" },
-                    // left: { style: "thin" },
-                    bottom: { style: "thin" },
-                    // right: { style: "thin" },
-                  },
-                  alignment: {
-                    wrapText: true,
-                    vertical: "middle",
-                    horizontal: "left",
-                  },
-                  font: {
-                    name: "Times New Roman",
-                    family: 4,
-                    size: 12,
-                    color: { argb: "000000" },
-                  },
-                },
-              },
-            ],
-          });
-          worksheet3.addConditionalFormatting({
-            ref: `B${(idx + 1) * 32 - 3}`,
-            rules: [
-              {
-                type: "expression",
-                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-                style: {
-                  border: {
-                    // top: { style: "thin" },
-                    left: { style: "thin" },
-                    bottom: { style: "thin" },
-                    // right: { style: "thin" },
-                  },
-                  alignment: {
-                    wrapText: true,
-                    vertical: "middle",
-                    horizontal: "left",
-                  },
-                  font: {
-                    name: "Times New Roman",
-                    family: 4,
-                    size: 12,
-                    color: { argb: "000000" },
-                  },
-                },
-              },
-            ],
-          });
-          worksheet3.addConditionalFormatting({
-            ref: `H${(idx + 1) * 32 - 3}`,
-            rules: [
-              {
-                type: "expression",
-                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-                style: {
-                  border: {
-                    // top: { style: "thin" },
-                    // left: { style: "thin" },
-                    bottom: { style: "thin" },
-                    right: { style: "thin" },
-                  },
-                  alignment: {
-                    wrapText: true,
-                    vertical: "middle",
-                    horizontal: "left",
-                  },
-                  font: {
-                    name: "Times New Roman",
-                    family: 4,
-                    size: 12,
-                    color: { argb: "000000" },
-                  },
-                },
-              },
-            ],
-          });
         }
 
         // worksheet 4
@@ -1916,6 +1175,753 @@ class DownloadService {
         worksheet5.mergeCells(`C${(idx + 1) * 7 + 18}:L${(idx + 1) * 7 + 18}`);
         worksheet5.mergeCells(`C${(idx + 1) * 7 + 19}:L${(idx + 1) * 7 + 19}`);
         worksheet5.mergeCells(`C${(idx + 1) * 7 + 20}:L${(idx + 1) * 7 + 20}`);
+      })
+    );
+
+    //loop Esai
+    await Promise.all(
+      esaiFilter.map(async (d, idx) => {
+        worksheet3.mergeCells(
+          `B${(idx + 1) * 32 - 30}:H${(idx + 1) * 32 - 30}`
+        );
+        worksheet3.mergeCells(
+          `B${(idx + 1) * 32 - 29}:H${(idx + 1) * 32 - 29}`
+        );
+        worksheet3.mergeCells(
+          `B${(idx + 1) * 32 - 28}:H${(idx + 1) * 32 - 28}`
+        );
+        worksheet3.mergeCells(
+          `B${(idx + 1) * 32 - 27}:H${(idx + 1) * 32 - 27}`
+        );
+        worksheet3.mergeCells(
+          `B${(idx + 1) * 32 - 26}:H${(idx + 1) * 32 - 26}`
+        );
+        worksheet3.mergeCells(
+          `D${(idx + 1) * 32 - 25}:F${(idx + 1) * 32 - 25}`
+        );
+        worksheet3.mergeCells(
+          `D${(idx + 1) * 32 - 24}:F${(idx + 1) * 32 - 24}`
+        );
+        worksheet3.mergeCells(
+          `D${(idx + 1) * 32 - 23}:F${(idx + 1) * 32 - 23}`
+        );
+        worksheet3.mergeCells(
+          `D${(idx + 1) * 32 - 22}:F${(idx + 1) * 32 - 22}`
+        );
+        worksheet3.mergeCells(
+          `G${(idx + 1) * 32 - 25}:H${(idx + 1) * 32 - 25}`
+        );
+        worksheet3.mergeCells(
+          `G${(idx + 1) * 32 - 24}:H${(idx + 1) * 32 - 22}`
+        );
+        worksheet3.mergeCells(
+          `B${(idx + 1) * 32 - 21}:E${(idx + 1) * 32 - 21}`
+        ); //11
+        worksheet3.mergeCells(
+          `F${(idx + 1) * 32 - 21}:G${(idx + 1) * 32 - 21}`
+        ); //11
+        worksheet3.mergeCells(
+          `B${(idx + 1) * 32 - 20}:E${(idx + 1) * 32 - 20}`
+        ); //12
+        worksheet3.mergeCells(
+          `F${(idx + 1) * 32 - 20}:G${(idx + 1) * 32 - 20}`
+        ); //12
+        worksheet3.mergeCells(
+          `C${(idx + 1) * 32 - 19}:D${(idx + 1) * 32 - 18}`
+        ); //1314
+        worksheet3.mergeCells(
+          `E${(idx + 1) * 32 - 19}:G${(idx + 1) * 32 - 19}`
+        ); //13
+        worksheet3.mergeCells(
+          `B${(idx + 1) * 32 - 18}:B${(idx + 1) * 32 - 11}`
+        ); //1421
+        worksheet3.mergeCells(
+          `C${(idx + 1) * 32 - 17}:D${(idx + 1) * 32 - 16}`
+        ); //1516
+        worksheet3.mergeCells(
+          `C${(idx + 1) * 32 - 15}:D${(idx + 1) * 32 - 11}`
+        ); //1718
+        // worksheet3.mergeCells(
+        //   `C${(idx + 1) * 32 - 13}:D${(idx + 1) * 32 - 11}`
+        // ); //1921
+        worksheet3.mergeCells(
+          `E${(idx + 1) * 32 - 15}:G${(idx + 1) * 32 - 11}`
+        ); //1718
+        worksheet3.mergeCells(
+          `E${(idx + 1) * 32 - 18}:G${(idx + 1) * 32 - 16}`
+        ); //1416
+        worksheet3.mergeCells(
+          `H${(idx + 1) * 32 - 16}:H${(idx + 1) * 32 - 11}`
+        ); //1621
+        // worksheet3.mergeCells(
+        //   `F${(idx + 1) * 32 - 15}:G${(idx + 1) * 32 - 15}`
+        // ); //1717
+        // worksheet3.mergeCells(
+        //   `F${(idx + 1) * 32 - 14}:G${(idx + 1) * 32 - 14}`
+        // ); //18
+        // worksheet3.mergeCells(
+        //   `F${(idx + 1) * 32 - 13}:G${(idx + 1) * 32 - 13}`
+        // ); //19
+        // worksheet3.mergeCells(
+        //   `F${(idx + 1) * 32 - 12}:G${(idx + 1) * 32 - 12}`
+        // ); //20
+        // worksheet3.mergeCells(
+        //   `F${(idx + 1) * 32 - 11}:G${(idx + 1) * 32 - 11}`
+        // ); //21
+
+        worksheet3.getCell(`B${(idx + 1) * 32 - 30}`).value = {
+          richText: [
+            {
+              font: {
+                name: "Times New Roman",
+                family: 4,
+                size: 16,
+                bold: true,
+              },
+              text: `PEMERINTAH DAERAH PROVINSI ${sekolah.provinsi}`,
+            },
+          ],
+        };
+        worksheet3.getCell(`B${(idx + 1) * 32 - 30}`).alignment = {
+          vertical: "middle",
+          horizontal: "center",
+        };
+        worksheet3.getCell(`B${(idx + 1) * 32 - 29}`).value = {
+          richText: [
+            {
+              font: {
+                name: "Times New Roman",
+                family: 4,
+                size: 20,
+                bold: true,
+              },
+              text: "CABANG DINAS PENDIDIKAN",
+            },
+          ],
+        };
+        worksheet3.getCell(`B${(idx + 1) * 32 - 29}`).alignment = {
+          vertical: "middle",
+          horizontal: "center",
+        };
+        worksheet3.getCell(`B${(idx + 1) * 32 - 28}`).value = {
+          richText: [
+            {
+              font: {
+                name: "Times New Roman",
+                family: 4,
+                size: 14,
+                bold: true,
+              },
+              text: `${ta.tahun} `,
+            },
+          ],
+        };
+        worksheet3.getCell(`B${(idx + 1) * 32 - 28}`).alignment = {
+          vertical: "middle",
+          horizontal: "center",
+        };
+
+        worksheet3.getCell(`B${(idx + 1) * 32 - 26}`).value = {
+          richText: [
+            {
+              font: {
+                name: "Arial Narrow",
+                family: 4,
+                size: 22,
+                color: { argb: "000000" },
+              },
+              text: `${ujian.toJSON().tipe_format}`,
+            },
+          ],
+        };
+        worksheet3.getCell(`B${(idx + 1) * 32 - 26}`).alignment = {
+          vertical: "middle",
+          horizontal: "center",
+        };
+        worksheet3.getCell(`B${(idx + 1) * 32 - 26}`).fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "ADD8E6" },
+          bgColor: { argb: "ADD8E6" },
+        };
+        worksheet3.getCell(`G${(idx + 1) * 32 - 25}`).fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "E0FFFF" },
+          bgColor: { argb: "E0FFFF" },
+        };
+        worksheet3.getCell(`G${(idx + 1) * 32 - 25}`).value = {
+          richText: [
+            {
+              font: {
+                name: "Times New Roman",
+                family: 4,
+                size: 12,
+                color: { argb: "000000" },
+                bold: true,
+              },
+              text: `Kompetensi Dasar`,
+            },
+          ],
+        };
+        // worksheet3.getCell("B29").value = `${ujian.nama}`;
+        worksheet3.getCell(`G${(idx + 1) * 32 - 25}`).alignment = {
+          vertical: "middle",
+          horizontal: "center",
+        };
+        worksheet3.getCell(`G${(idx + 1) * 32 - 24}`).value = {
+          richText: [
+            {
+              font: {
+                name: "Arial Narrow",
+                family: 4,
+                size: 12,
+                color: { argb: "000000" },
+                bold: true,
+              },
+              text: `${d.kd}`,
+            },
+          ],
+        };
+        // worksheet3.getCell("B29").value = `${ujian.nama}`;
+        worksheet3.getCell(`G${(idx + 1) * 32 - 24}`).alignment = {
+          vertical: "middle",
+          horizontal: "center",
+        };
+
+        worksheet3.getCell(`B${(idx + 1) * 32 - 25}`).value = {
+          richText: [
+            {
+              font: {
+                name: "Times New Roman",
+                family: 4,
+                size: 12,
+                color: { argb: "000000" },
+                // bold: true,
+              },
+              text: `Nama Sekolah`,
+            },
+          ],
+        };
+        worksheet3.getCell(`D${(idx + 1) * 32 - 25}`).value = `${sekolah.nama}`;
+        worksheet3.getCell(`B${(idx + 1) * 32 - 24}`).value = {
+          richText: [
+            {
+              font: {
+                name: "Times New Roman",
+                family: 4,
+                size: 12,
+                color: { argb: "000000" },
+                // bold: true,
+              },
+              text: `Kelas / Semester`,
+            },
+          ],
+        };
+        worksheet3.getCell(
+          `D${(idx + 1) * 32 - 24}`
+        ).value = `${ujian.tingkat}`;
+        worksheet3.getCell(`B${(idx + 1) * 32 - 23}`).value = {
+          richText: [
+            {
+              font: {
+                name: "Times New Roman",
+                family: 4,
+                size: 12,
+                color: { argb: "000000" },
+                // bold: true,
+              },
+              text: `Mata Pelajaran`,
+            },
+          ],
+        };
+        worksheet3.getCell(`D${(idx + 1) * 32 - 23}`).value = `${
+          ujian.toJSON().mataPelajaran.nama
+        }`;
+        worksheet3.getCell(`B${(idx + 1) * 32 - 22}`).value = {
+          richText: [
+            {
+              font: {
+                name: "Times New Roman",
+                family: 4,
+                size: 12,
+                color: { argb: "000000" },
+                // bold: true,
+              },
+              text: `Kompetensi Keahlian`,
+            },
+          ],
+        };
+        worksheet3.getCell(`C${(idx + 1) * 32 - 25}`).value = ":";
+        worksheet3.getCell(`C${(idx + 1) * 32 - 24}`).value = ":";
+        worksheet3.getCell(`C${(idx + 1) * 32 - 23}`).value = ":";
+        worksheet3.getCell(`C${(idx + 1) * 32 - 22}`).value = ":";
+
+        worksheet3.getCell(
+          `B${(idx + 1) * 32 - 21}`
+        ).value = `Materi Pembelajaran`;
+        worksheet3.getCell(
+          `B${(idx + 1) * 32 - 20}`
+        ).value = `${d.kd_konten_materi}`;
+        worksheet3.getCell(
+          `F${(idx + 1) * 32 - 21}`
+        ).value = `Indikator Pencapaian Kompetensi`;
+        worksheet3.getCell(
+          `F${(idx + 1) * 32 - 20}`
+        ).value = `${d.akm_konteks_materi}`;
+        worksheet3.getCell(`H${(idx + 1) * 32 - 21}`).value = `Aspek (Level)`;
+        worksheet3.getCell(
+          `H${(idx + 1) * 32 - 20}`
+        ).value = `${d.level_kognitif}`;
+        worksheet3.getCell(`B${(idx + 1) * 32 - 19}`).value = `Indikator Soal`;
+        worksheet3.getCell(`B${(idx + 1) * 32 - 18}`).value = {
+          richText: [
+            {
+              font: {
+                name: "Times New Roman",
+                family: 4,
+                size: 12,
+                color: { argb: "000000" },
+                // bold: true,
+              },
+              text: `${d.akm_konten_materi}`,
+            },
+          ],
+        };
+        worksheet3.getCell(`C${(idx + 1) * 32 - 19}`).value = `Nomor`;
+        worksheet3.getCell(`C${(idx + 1) * 32 - 17}`).value = `${idx + 1}`;
+        worksheet3.getCell(
+          `E${(idx + 1) * 32 - 19}`
+        ).value = `Rumusan Butir Soal`;
+        worksheet3.getCell(`E${(idx + 1) * 32 - 17}`).value = `${
+          d
+            ? d.pertanyaan.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
+            : "-"
+        }`;
+        worksheet3.getCell(`H${(idx + 1) * 32 - 19}`).value = `BUKU`;
+        worksheet3.getCell(`H${(idx + 1) * 32 - 17}`).value = ``;
+        worksheet3.addConditionalFormatting({
+          ref: `B${(idx + 1) * 32 - 20}:H${(idx + 1) * 32 - 20}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Arial Narrow",
+                  family: 4,
+                  size: 12,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+              },
+            },
+          ],
+        });
+        worksheet3.addConditionalFormatting({
+          ref: `B${(idx + 1) * 32 - 18}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Arial Narrow",
+                  family: 4,
+                  size: 12,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+              },
+            },
+          ],
+        });
+        worksheet3.addConditionalFormatting({
+          ref: `C${(idx + 1) * 32 - 17}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Arial Narrow",
+                  family: 4,
+                  size: 12,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+              },
+            },
+          ],
+        });
+        worksheet3.addConditionalFormatting({
+          ref: `E${(idx + 1) * 32 - 18}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Arial Narrow",
+                  family: 4,
+                  size: 12,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+              },
+            },
+          ],
+        });
+        worksheet3.addConditionalFormatting({
+          ref: `B${(idx + 1) * 32 - 21}:H${(idx + 1) * 32 - 21}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  bold: true,
+                },
+                fill: {
+                  type: "pattern",
+                  pattern: "solid",
+                  bgColor: { argb: "E0FFFF", fgColor: { argb: "E0FFFF" } },
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+              },
+            },
+          ],
+        });
+        worksheet3.addConditionalFormatting({
+          ref: `B${(idx + 1) * 32 - 19}:H${(idx + 1) * 32 - 19}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  bold: true,
+                },
+                fill: {
+                  type: "pattern",
+                  pattern: "solid",
+                  bgColor: { argb: "E0FFFF", fgColor: { argb: "E0FFFF" } },
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+              },
+            },
+          ],
+        });
+        worksheet3.addConditionalFormatting({
+          ref: `B${(idx + 1) * 32 - 30}:H${(idx + 1) * 32 - 11}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+                alignment: { wrapText: true },
+              },
+            },
+          ],
+        });
+
+        worksheet3.getCell(`C${(idx + 1) * 32 - 15}`).value = {
+          richText: [
+            {
+              font: {
+                name: "Times New Roman",
+                family: 4,
+                size: 12,
+                color: { argb: "000000" },
+                bold: true,
+              },
+              text: `Kunci Jawaban`,
+            },
+          ],
+        };
+
+        worksheet3.addConditionalFormatting({
+          ref: `E${(idx + 1) * 32 - 15}:E${(idx + 1) * 32 - 11}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                alignment: {
+                  wrapText: true,
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  color: { argb: "000000" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet3.addConditionalFormatting({
+          ref: `E${(idx + 1) * 32 - 15}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                alignment: {
+                  wrapText: true,
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                font: {
+                  name: "Arial Narrow",
+                  family: 4,
+                  size: 9,
+                  color: { argb: "000000" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet3.getCell(`F${(idx + 1) * 32 - 15}`).value = `${d.kj_uraian}`;
+
+        worksheet3.addConditionalFormatting({
+          ref: `C${(idx + 1) * 32 - 15}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                alignment: {
+                  wrapText: true,
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                fill: {
+                  type: "pattern",
+                  pattern: "solid",
+                  bgColor: { argb: "E0FFFF", fgColor: { argb: "E0FFFF" } },
+                },
+              },
+            },
+          ],
+        });
+
+        worksheet3.getCell(`H${(idx + 1) * 32 - 17}`).value = {
+          richText: [
+            {
+              font: {
+                name: "Times New Roman",
+                family: 4,
+                size: 12,
+                color: { argb: "000000" },
+                bold: true,
+              },
+              text: `Gambar/Tabel/Grafik/Wacana`,
+            },
+          ],
+        };
+        worksheet3.addConditionalFormatting({
+          ref: `H${(idx + 1) * 32 - 17}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                alignment: {
+                  wrapText: true,
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                fill: {
+                  type: "pattern",
+                  pattern: "solid",
+                  bgColor: { argb: "E0FFFF", fgColor: { argb: "E0FFFF" } },
+                },
+              },
+            },
+          ],
+        });
+
+        worksheet3.getCell(`B${(idx + 1) * 32 - 8}`).value = `Mengetahui :`;
+        worksheet3.getCell(`B${(idx + 1) * 32 - 7}`).value = `Kepala Sekolah`;
+        worksheet3.getCell(`B${(idx + 1) * 32 - 3}`).value = `${kepsek}`;
+
+        worksheet3.getCell(`H${(idx + 1) * 32 - 9}`).value = ``;
+        worksheet3.getCell(
+          `H${(idx + 1) * 32 - 7}`
+        ).value = `Guru Mata Pelajaran`;
+        worksheet3.getCell(`H${(idx + 1) * 32 - 3}`).value = `${
+          ujian.toJSON().mataPelajaran.user.nama
+        }`;
+
+        worksheet3.addConditionalFormatting({
+          ref: `B${(idx + 1) * 32 - 10}:B${(idx + 1) * 32 - 4}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                border: {
+                  // top: { style: "thin" },
+                  left: { style: "thin" },
+                  // bottom: { style: "thin" },
+                  // right: { style: "thin" },
+                },
+                alignment: {
+                  wrapText: true,
+                  vertical: "middle",
+                  horizontal: "right",
+                },
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  color: { argb: "000000" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet3.addConditionalFormatting({
+          ref: `H${(idx + 1) * 32 - 10}:H${(idx + 1) * 32 - 4}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                border: {
+                  // top: { style: "thin" },
+                  // left: { style: "thin" },
+                  // bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+                alignment: {
+                  wrapText: true,
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  color: { argb: "000000" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet3.addConditionalFormatting({
+          ref: `C${(idx + 1) * 32 - 3}:G${(idx + 1) * 32 - 3}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                border: {
+                  // top: { style: "thin" },
+                  // left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  // right: { style: "thin" },
+                },
+                alignment: {
+                  wrapText: true,
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  color: { argb: "000000" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet3.addConditionalFormatting({
+          ref: `B${(idx + 1) * 32 - 3}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                border: {
+                  // top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  // right: { style: "thin" },
+                },
+                alignment: {
+                  wrapText: true,
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  color: { argb: "000000" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet3.addConditionalFormatting({
+          ref: `H${(idx + 1) * 32 - 3}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                border: {
+                  // top: { style: "thin" },
+                  // left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+                alignment: {
+                  wrapText: true,
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  color: { argb: "000000" },
+                },
+              },
+            },
+          ],
+        });
       })
     );
 
@@ -3143,7 +3149,7 @@ class DownloadService {
       ext: { width: 100, height: 60 },
     });
 
-    let namaFile = `/uploads/kartu-soal-${new Date().getTime()}.xlsx`;
+    let namaFile = `/uploads/kartu-soal-${keluarantanggal}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);

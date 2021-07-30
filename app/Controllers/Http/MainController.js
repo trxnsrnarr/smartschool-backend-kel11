@@ -3351,6 +3351,52 @@ class MainController {
     });
   }
 
+  async getJadwalMengajarPertemuan({ response, request }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const guruIds = await User.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .ids();
+
+    const pertemuan = await MTimeline.query()
+      .with("user")
+      .with("komen", (builder) => {
+        builder.with("user").where({ dihapus: 0 });
+      })
+      .with("rombel")
+      .withCount("tkTimeline as total_absen", (builder) => {
+        builder.whereNotNull("waktu_absen");
+      })
+      .withCount("tkTimeline as total_siswa")
+      .withCount("komen as total_komen", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .where("tipe", "absen")
+      .andWhere(
+        "tanggal_pembagian",
+        "like",
+        `${moment().format("YYYY-MM-DD")}%`
+      )
+      .whereIn("m_user_id", guruIds)
+      .orderBy("id", "desc")
+      .fetch();
+
+    return response.ok({ pertemuan });
+  }
+
   //belum validasi
   async putJadwalMengajar({
     response,
@@ -5941,6 +5987,7 @@ class MainController {
     }
 
     const timeline = await MTimeline.query()
+    .with('user')
       .with("rombel")
       .with("komen", (builder) => {
         builder.with("user").where({ dihapus: 0 });
@@ -11857,141 +11904,28 @@ class MainController {
     });
   }
 
-  async detailRpp({ response, request, auth, params: { ujian_id } }) {
+  async detailRpp({ response, request, auth, params: { rpp_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
+
+    const user = await auth.getUser();
 
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const ujian = await MUjian.query()
-      .with("soalUjian", (builder) => {
-        builder
-          .with("soal", (builder) => {
-            builder.where({ dihapus: 0 });
-          })
-          .where({ dihapus: 0 });
-      })
-      .where({ id: ujian_id })
+    const rpp = await MRpp.query()
+      .with("mataPelajaran")
+      .with("user")
+      .with("sekolah")
+      .where({ dihapus: 0 })
+      .andWhere({ m_user_id: user.id })
+      .andWhere({ id: rpp_id })
       .first();
 
-    const soalUjianIds = await TkSoalUjian.query()
-      .with("soal")
-      .where({ m_ujian_id: ujian_id })
-      .fetch();
-
-    let jumlahSoalPg = 0;
-
-    let jumlahSoalEsai = 0;
-
-    await Promise.all(
-      soalUjianIds.toJSON().map(async (d) => {
-        if (d.soal.bentuk == "pg") {
-          jumlahSoalPg = jumlahSoalPg + 1;
-        } else if (d.soal.bentuk == "esai") {
-          jumlahSoalEsai = jumlahSoalEsai + 1;
-        }
-      })
-    );
-
-    let kontenMateri = [];
-    let konteksMateri = [];
-    let prosesKognitif = [];
-    let levelKognitif = [];
-    let bentukSoal = [];
-
-    if (ujian.tipe == "literasi") {
-      kontenMateri = [
-        { value: "teks_informasi", label: "Teks Informasi" },
-        { value: "teks_fiksi", label: "Teks Fiksi" },
-        { value: "bilangan", label: "Bilangan" },
-      ];
-
-      konteksMateri = [
-        { value: "personal", label: "Personal" },
-        { value: "sosbud", label: "Sosial Budaya" },
-        { value: "saintifik", label: "Saintifik" },
-      ];
-
-      prosesKognitif = [
-        { value: "menemukan_informasi", label: "Menemukan Informasi" },
-        {
-          value: "interpretasi_integrasi",
-          label: "Interpretasi dan Integrasi",
-        },
-        { value: "evaluasi_refleksi", label: "Evaluasi dan Refleksi" },
-      ];
-
-      bentukSoal = [
-        { value: "pg", label: "Pilihan Ganda" },
-        { value: "pg_kompleks", label: "Pilihan Ganda Kompleks" },
-        { value: "esai", label: "Isian" },
-        { value: "uraian", label: "Uraian" },
-        { value: "menjodohkan", label: "Menjodohkan" },
-      ];
-    } else if (ujian.tipe == "numerasi") {
-      kontenMateri = [
-        { value: "geometri_pengukuran", label: "Geometri dan Pengukuran" },
-        { value: "data_ketidakpastian", label: "Data dan Ketidakpastian" },
-        { value: "aljabar", label: "Aljabar" },
-      ];
-
-      konteksMateri = [
-        { value: "personal", label: "Personal" },
-        { value: "sosbud", label: "Sosial Budaya" },
-        { value: "saintifik", label: "Saintifik" },
-      ];
-
-      prosesKognitif = [
-        { value: "pemahaman", label: "Pemahaman" },
-        { value: "penerapan", label: "Penerapan" },
-        { value: "penalaran", label: "Penalaran" },
-      ];
-
-      bentukSoal = [
-        { value: "pg", label: "Pilihan Ganda" },
-        { value: "pg_kompleks", label: "Pilihan Ganda Kompleks" },
-        { value: "esai", label: "Isian" },
-        { value: "uraian", label: "Uraian" },
-        { value: "menjodohkan", label: "Menjodohkan" },
-      ];
-    } else {
-      levelKognitif = [
-        { value: "c1", label: "Mengingat" },
-        { value: "c2", label: "Memahami" },
-        { value: "c3", label: "Menerapkan" },
-        { value: "c4", label: "Menganalisis" },
-        { value: "c5", label: "Mengevaluasi" },
-        { value: "c6", label: "Mengkreasi" },
-      ];
-      bentukSoal = [
-        { value: "pg", label: "Pilihan Ganda" },
-        { value: "esai", label: "Esai" },
-        { value: "esai", label: "Isian" },
-      ];
-    }
-
-    let tingkatData;
-
-    if (sekolah.tingkat == "SMK") {
-      tingkatData = ["X", "XI", "XII", "XIII"];
-    } else if (sekolah.tingkat == "SMP") {
-      tingkatData = ["VII", "VIII", "IX"];
-    }
-
     return response.ok({
-      ujian: ujian,
-      kontenMateri,
-      konteksMateri,
-      prosesKognitif,
-      bentukSoal,
-      levelKognitif,
-      jumlahSoalPg: jumlahSoalPg,
-      jumlahSoalEsai: jumlahSoalEsai,
-      // filter
-      tingkat: tingkatData,
+      rpp,
     });
   }
 
@@ -17660,6 +17594,29 @@ class MainController {
       .andWhere({ id: ujian_id })
       .first();
 
+    const esai = await TkSoalUjian.query()
+      .with("soal", (builder) => {
+        builder.where({ bentuk: "esai" });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_ujian_id: ujian_id })
+      .fetch();
+
+    const esaiSoal = await Promise.all(
+      esai.toJSON().map(async (d) => {
+        const esai = await MSoalUjian.query()
+          .where({ dihapus: 0 })
+          .andWhere({ bentuk: "esai" })
+          .andWhere({ id: d.m_soal_ujian_id })
+          .first();
+
+        return esai;
+      })
+    );
+
+    const esaiFilter = esaiSoal.filter((d) => d != null);
+    // worksheet 1
+
     let logoFileName = `logo-${new Date().getTime()}.png`;
 
     try {
@@ -17680,6 +17637,8 @@ class MainController {
       ta,
       kepsek,
       ujian,
+      esaiFilter,
+      keluarantanggal,
       logoFileName
     );
   }
@@ -18006,12 +17965,14 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { nama } = request.post();
+    const { nama, warna } = request.post();
     const rules = {
       nama: "required",
+      warna: "required",
     };
     const message = {
       "nama.required": "Nama harus diisi",
+      "warna.required": "warma harus diisi",
     };
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
@@ -18020,6 +17981,7 @@ class MainController {
     // user_id = user_id.length ? user_id : [];
     await MKategoriMapel.create({
       nama,
+      warna,
       dihapus: 0,
       m_rombel_id: rombel_id,
     });
@@ -18079,7 +18041,7 @@ class MainController {
     });
   }
 
-  async putMapelRapor({ response, request, auth }) {
+  async putMapelRapor({ response, request, auth, params: { mapelRapor_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -18088,8 +18050,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { urutan, nama, kkm2, mapelRapor_id, m_kategori_mapel_id } =
-      request.post();
+    const { urutan, nama, kkm2, m_kategori_mapel_id } = request.post();
 
     const mapelRapor = await TkMapelRapor.query()
       .where({ id: mapelRapor_id })
@@ -18137,7 +18098,12 @@ class MainController {
       message: messagePutSuccess,
     });
   }
-  async putKategoriMapel({ response, request, auth }) {
+  async putKategoriMapel({
+    response,
+    request,
+    auth,
+    params: { kategoriMapel_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -18146,12 +18112,13 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { nama, kategoriMapel_id } = request.post();
+    const { nama, warna } = request.post();
 
     const kategoriMapel = await MKategoriMapel.query()
       .where({ id: kategoriMapel_id })
       .update({
         nama,
+        warna,
         dihapus: 0,
       });
 
@@ -18193,7 +18160,12 @@ class MainController {
       message: messageDeleteSuccess,
     });
   }
-  async deleteKategoriMapel({ response, request, auth }) {
+  async deleteKategoriMapel({
+    response,
+    request,
+    auth,
+    params: { kategoriMapel_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -18201,8 +18173,6 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
-
-    const { kategoriMapel_id } = request.post();
 
     const kategoriMapel = await MKategoriMapel.query()
       .where({ id: kategoriMapel_id })
