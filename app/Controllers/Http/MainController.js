@@ -17334,6 +17334,29 @@ class MainController {
       .andWhere({ id: ujian_id })
       .first();
 
+    // return ujian;
+    const pg = await TkSoalUjian.query()
+      .with("soal", (builder) => {
+        builder.where({ bentuk: "pg" });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_ujian_id: ujian_id })
+      .fetch();
+
+    const pgSoal = await Promise.all(
+      pg.toJSON().map(async (d) => {
+        const pg = await MSoalUjian.query()
+          .where({ dihapus: 0 })
+          .andWhere({ bentuk: "pg" })
+          .andWhere({ id: d.m_soal_ujian_id })
+          .first();
+
+        return pg;
+      })
+    );
+
+    const pgFilter = pgSoal.filter((d) => d != null);
+
     const esai = await TkSoalUjian.query()
       .with("soal", (builder) => {
         builder.where({ bentuk: "esai" });
@@ -17377,6 +17400,7 @@ class MainController {
       ta,
       kepsek,
       ujian,
+      pgFilter,
       esaiFilter,
       keluarantanggal,
       logoFileName
@@ -24253,7 +24277,413 @@ class MainController {
         const dataFilter = await Promise.all(
           checkDataTimeline.toJSON().filter((timeline) => timeline != null)
         );
+        return dataFilter;
+        await Promise.all(
+          dataFilter.map(async (d, idx) => {
+            // add column headers
+            worksheet.getRow(11).values = [
+              "No",
+              "Nama Guru",
+              "Mengajar Kelas",
+              "Jumlah Siswa",
+              "Mapel dan Tujuan Pembelajaran",
+              "Materi Pembelajaran",
+              "Mode/Teknik Pembelajaran",
+              "Jumlah Siswa Hadir",
+              "Hasil Pembelajaran",
+              "Jumlah Siswa Alpa",
+              "Kendala dan Tindak Lanjut",
+            ];
 
+            worksheet.columns = [
+              { key: "no" },
+              { key: "nama" },
+              { key: "kelas" },
+              { key: "jumsiswa" },
+              { key: "mapel" },
+              { key: "materi" },
+              { key: "moda" },
+              { key: "jsiswa" },
+              { key: "hasil" },
+              { key: "jsiswax" },
+              { key: "kendala" },
+            ];
+
+            // Add row using key mapping to columns
+            let row = worksheet.addRow({
+              no: `${idx + 1}`,
+              nama: d.user ? d.user.nama : "-",
+              kelas: d.rombel ? d.rombel.nama : "-",
+              jumsiswa: d.rombel.__meta__ ? d.rombel.__meta__.totalSiswa : "-",
+              mapel: d.user.mataPelajaran[0]
+                ? d.user.mataPelajaran[0].nama
+                : "-",
+              materi: d ? d.jurnal : "-",
+              moda: "Smarteschool",
+              jsiswa: d.__meta__ ? d.__meta__.total : "-",
+              hasil: d ? d.jurnal : "-",
+              jsiswax: d.__meta__ ? d.__meta__.totalAlpa : "-",
+              kendala: "-",
+            });
+            if (idx == dataFilter.length - 1) {
+              worksheet.getCell(`A${idx + 16}`).value = `Kepala....`;
+              worksheet.getCell(`A${idx + 23}`).value = `…………………………………………………….`;
+              worksheet.getCell(`A${idx + 24}`).value = `NIP :`;
+              worksheet.mergeCells(`I${idx + 15}:K${idx + 15}`);
+              worksheet.mergeCells(`I${idx + 16}:K${idx + 16}`);
+              worksheet.mergeCells(`I${idx + 17}:K${idx + 17}`);
+              worksheet.mergeCells(`I${idx + 18}:K${idx + 18}`);
+              worksheet.mergeCells(`I${idx + 23}:K${idx + 23}`);
+              worksheet.mergeCells(`I${idx + 24}:K${idx + 24}`);
+              worksheet.getCell(`I${idx + 15}`).value = `${hariIni}`;
+              worksheet.getCell(`I${idx + 16}`).value = `Petugas Monitoring`;
+              worksheet.getCell(
+                `I${idx + 17}`
+              ).value = `Kepala Satuan Pelaksana Pendidikan`;
+              worksheet.getCell(
+                `I${idx + 18}`
+              ).value = `Kecamatan ${sekolah.kecamatan}`;
+              worksheet.getCell(`I${idx + 23}`).value = `${user.nama}`;
+              worksheet.getCell(`I${idx + 24}`).value = `NIP : ${user.nip}`;
+              worksheet.addConditionalFormatting({
+                ref: `I${idx + 15}:I${idx + 24}`,
+                rules: [
+                  {
+                    type: "expression",
+                    formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                    style: {
+                      font: {
+                        name: "Calibri",
+                        family: 4,
+                        size: 11,
+                        // bold: true,
+                      },
+                      alignment: {
+                        vertical: "middle",
+                        horizontal: "center",
+                      },
+                    },
+                  },
+                ],
+              });
+            }
+            worksheet.addConditionalFormatting({
+              ref: `B${(idx + 1) * 1 + 11}:K${(idx + 1) * 1 + 11}`,
+              rules: [
+                {
+                  type: "expression",
+                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                  style: {
+                    font: {
+                      name: "Calibri",
+                      family: 4,
+                      size: 11,
+                      // bold: true,
+                    },
+                    alignment: {
+                      vertical: "middle",
+                      horizontal: "center",
+                      wrapText: true,
+                    },
+                    border: {
+                      top: { style: "thin" },
+                      left: { style: "thin" },
+                      bottom: { style: "thin" },
+                      right: { style: "thin" },
+                    },
+                  },
+                },
+              ],
+            });
+            worksheet.addConditionalFormatting({
+              ref: `A${(idx + 1) * 1 + 11}`,
+              rules: [
+                {
+                  type: "expression",
+                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                  style: {
+                    font: {
+                      name: "Calibri",
+                      family: 4,
+                      size: 11,
+                      // bold: true,
+                    },
+                    alignment: {
+                      vertical: "middle",
+                      horizontal: "center",
+                    },
+                    border: {
+                      top: { style: "thin" },
+                      left: { style: "thin" },
+                      bottom: { style: "thin" },
+                      right: { style: "thin" },
+                    },
+                  },
+                },
+              ],
+            });
+          })
+        );
+      })
+    );
+
+    let namaFile = `/uploads/rekap-Monev-${keluarantanggal}.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
+
+  async downloadMonev1({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await Mta.query().where({ m_sekolah_id: sekolah.id }).first();
+
+    const user = await auth.getUser();
+
+    const { tanggal_awal, tanggal_akhir } = request.post();
+
+    const tanggalDistinct = await Database.raw(
+      "SELECT DISTINCT DATE_FORMAT(tanggal_pembagian, '%Y-%m-%d') as tanggalDistinct from m_timeline WHERE tanggal_pembagian BETWEEN ? AND  ? ",
+      [tanggal_awal, tanggal_akhir]
+    );
+
+    const allUser = await User.query()
+      .select("id", "role", "m_sekolah_id", "dihapus")
+      .with("pertemuan", (builder) => {
+        builder.where({ dihapus: 0 });
+        // .andWhere({ tanggal_pembagian: tanggal_awal });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ role: "guru" })
+      .fetch();
+
+    return allUser;
+
+    const checkDataTimeline = await MTimeline.query()
+      .with("user", (builder) => {
+        builder
+          .select("id", "nama", "m_sekolah_id")
+          .with("mataPelajaran", (builder) => {
+            builder
+              .where({ dihapus: 0 })
+              .andWhere({ m_sekolah_id: sekolah.id });
+          });
+      })
+      .with("rombel", (builder) => {
+        builder.withCount("anggotaRombel as totalSiswa", (builder) => {
+          builder.where({ dihapus: 0 });
+        });
+      })
+      .withCount("tkTimeline as total", (builder) => {
+        builder
+          .where({ tipe: "absen" })
+          .andWhere({ absen: "hadir" })
+          .andWhere({ dihapus: 0 });
+      })
+      .withCount("tkTimeline as totalAlpa", (builder) => {
+        builder
+          .whereNot({ absen: "hadir" })
+          .andWhere({ tipe: "absen" })
+          .andWhere({ dihapus: 0 });
+      })
+      .where({ tipe: "absen" })
+      .whereNotNull("id")
+      .andWhere({ tanggal_pembagian: tanggal_awal })
+      .fetch();
+    const dataFilter = await Promise.all(
+      checkDataTimeline.toJSON().filter((timeline) => timeline != null)
+    );
+    return dataFilter;
+    let workbook = new Excel.Workbook();
+
+    await Promise.all(
+      tanggalDistinct[0].map(async (e) => {
+        const checkDataTimeline = await MTimeline.query()
+          .with("user", (builder) => {
+            builder.select("id", "nama").with("mataPelajaran", (builder) => {
+              builder
+                .where({ dihapus: 0 })
+                .andWhere({ m_sekolah_id: sekolah.id });
+            });
+          })
+          .with("rombel", (builder) => {
+            builder.withCount("anggotaRombel as totalSiswa", (builder) => {
+              builder.where({ dihapus: 0 });
+            });
+          })
+          .withCount("tkTimeline as total", (builder) => {
+            builder
+              .where({ tipe: "absen" })
+              .andWhere({ absen: "hadir" })
+              .andWhere({ dihapus: 0 });
+          })
+          .withCount("tkTimeline as totalAlpa", (builder) => {
+            builder
+              .whereNot({ absen: "hadir" })
+              .andWhere({ tipe: "absen" })
+              .andWhere({ dihapus: 0 });
+          })
+          .where({ tipe: "absen" })
+          .whereNotNull("id")
+          .andWhere({ tanggal_pembagian: e.tanggalDistinct })
+          .fetch();
+
+        const hariIni = moment(e.tanggalDistinct).format(`DD-MMMM-YYYY`);
+        let worksheet = workbook.addWorksheet(`${hariIni}`);
+        worksheet.mergeCells("A1:K1");
+        worksheet.mergeCells("A2:K2");
+        worksheet.mergeCells("A3:K3");
+        // worksheet.getCell(
+        //   "A10"
+        // ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+        worksheet.addConditionalFormatting({
+          ref: "A1:K3",
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Calibri",
+                  family: 4,
+                  size: 14,
+                  bold: true,
+                },
+                // fill: {
+                //   type: "pattern",
+                //   pattern: "solid",
+                //   bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+                // },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                // border: {
+                //   top: { style: "thin" },
+                //   left: { style: "thin" },
+                //   bottom: { style: "thin" },
+                //   right: { style: "thin" },
+                // },
+              },
+            },
+          ],
+        });
+        worksheet.addConditionalFormatting({
+          ref: "A5:K9",
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Calibri",
+                  family: 4,
+                  size: 13,
+                  bold: true,
+                },
+                // fill: {
+                //   type: "pattern",
+                //   pattern: "solid",
+                //   bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+                // },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                // border: {
+                //   top: { style: "thin" },
+                //   left: { style: "thin" },
+                //   bottom: { style: "thin" },
+                //   right: { style: "thin" },
+                // },
+              },
+            },
+          ],
+        });
+        worksheet.addConditionalFormatting({
+          ref: "A11:K11",
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  bold: true,
+                },
+                fill: {
+                  type: "pattern",
+                  pattern: "solid",
+                  bgColor: { argb: "ffff00", fgColor: { argb: "ffff00" } },
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                  wrapText: true,
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet.getCell("A1").value =
+          "MONITORING KEGIATAN PEMBELAJARAN DIRUMAH (HOME LEARNING)";
+        worksheet.getCell(
+          "A2"
+        ).value = `DALAM RANGKA MENINGKATKAN KEWASPADAAN PENYEBARAN COVID 19`;
+        worksheet.getCell(
+          "A3"
+        ).value = `SUDIN PENDIDIKAN WILAYAH ${sekolah.kabupaten}`;
+        worksheet.getCell("B5").value = `HARI/TANGGAL`;
+        worksheet.getCell("B6").value = `NAMA PETUGAS MONITORING`;
+        worksheet.getCell("B7").value = `NAMA SEKOLAH`;
+        worksheet.getCell("B8").value = `NAMA KEPALA SEKOLAH`;
+        worksheet.getCell("B9").value = `ALAMAT SEKOLAH`;
+
+        worksheet.getCell("D5").value = `:`;
+        worksheet.getCell("D6").value = `:`;
+        worksheet.getCell("D7").value = `:`;
+        worksheet.getCell("D8").value = `:`;
+        worksheet.getCell("D9").value = `:`;
+
+        worksheet.getCell("E5").value = `${hariIni}`;
+        worksheet.getCell("E6").value = `${user.nama}`;
+        worksheet.getCell("E7").value = `${sekolah.nama}`;
+        worksheet.getCell("E8").value = `${ta.nama_kepsek}`;
+        worksheet.getCell("E9").value = `${sekolah.alamat}`;
+        worksheet.getRow(11).height = 45;
+        worksheet.getColumn("A").width = 13;
+        worksheet.getColumn("B").width = 18;
+        worksheet.getColumn("C").width = 18;
+        worksheet.getColumn("D").width = 13;
+        worksheet.getColumn("E").width = 28;
+        worksheet.getColumn("F").width = 20;
+        worksheet.getColumn("G").width = 18;
+        worksheet.getColumn("H").width = 13;
+        worksheet.getColumn("I").width = 18;
+        worksheet.getColumn("J").width = 12;
+        worksheet.getColumn("K").width = 19;
+
+        const dataFilter = await Promise.all(
+          checkDataTimeline.toJSON().filter((timeline) => timeline != null)
+        );
+        return dataFilter;
         await Promise.all(
           dataFilter.map(async (d, idx) => {
             // add column headers
