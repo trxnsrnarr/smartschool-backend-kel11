@@ -6255,6 +6255,10 @@ class MainController {
           waktu_absen: waktu_absen,
         });
       } else {
+        const jadwalMengajar = await MJadwalMengajar.query()
+          .with("mataPelajaran")
+          .where({ id: m_jadwal_mengajar_id })
+          .first();
         timeline = await MTimeline.query()
           .where({ id: timeline_id })
           .update({
