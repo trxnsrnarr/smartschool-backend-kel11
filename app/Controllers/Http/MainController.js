@@ -1285,16 +1285,22 @@ class MainController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const guru = await User.create({
-      nama,
-      whatsapp,
-      gender,
-      password: await Hash.make(password),
-      role: "guru",
-      m_sekolah_id: sekolah.id,
-      dihapus: 0,
-      avatar,
-    });
+    const check = await User.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ whatsapp: whatsapp })
+      .first();
+    if (!check) {
+      const guru = await User.create({
+        nama,
+        whatsapp,
+        gender,
+        password: await Hash.make(password),
+        role: "guru",
+        m_sekolah_id: sekolah.id,
+        dihapus: 0,
+        avatar,
+      });
+    }
 
     return response.ok({
       message: messagePostSuccess,
@@ -1519,16 +1525,22 @@ class MainController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const siswa = await User.create({
-      nama,
-      whatsapp,
-      gender,
-      password: await Hash.make(password),
-      role: "siswa",
-      m_sekolah_id: sekolah.id,
-      dihapus: 0,
-      avatar,
-    });
+    const check = await User.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ whatsapp: whatsapp })
+      .first();
+    if (!check) {
+      const siswa = await User.create({
+        nama,
+        whatsapp,
+        gender,
+        password: await Hash.make(password),
+        role: "siswa",
+        m_sekolah_id: sekolah.id,
+        dihapus: 0,
+        avatar,
+      });
+    }
 
     return response.ok({
       message: messagePostSuccess,
@@ -5997,7 +6009,10 @@ class MainController {
         builder.with("user");
       })
       .with("listSiswaBelum", (builder) => {
-        builder.with("user").whereNull("waktu_pengumpulan");
+        builder
+          .with("user")
+          .whereNull("waktu_pengumpulan")
+          .orWhere({ dikumpulkan: 0 });
       })
       .with("listSiswaTerkumpul", (builder) => {
         builder
