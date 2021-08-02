@@ -4150,19 +4150,19 @@ class MainController {
         .whereIn("id", materiIds)
         .fetch();
 
-      const materiLainnya = await MMateri.query()
-        .with("user")
-        .with("sekolah")
-        .withCount("bab", (builder) => {
-          builder.where({ dihapus: 0 });
-        })
-        .where({ m_sekolah_id: sekolah.id })
-        .andWhere({ dihapus: 0 })
-        .fetch();
+      // const materiLainnya = await MMateri.query()
+      //   .with("user")
+      //   .with("sekolah")
+      //   .withCount("bab", (builder) => {
+      //     builder.where({ dihapus: 0 });
+      //   })
+      //   .where({ m_sekolah_id: sekolah.id })
+      //   .andWhere({ dihapus: 0 })
+      //   .fetch();
 
       return response.ok({
         materi,
-        materiLainnya,
+        // materiLainnya,
       });
     }
 
@@ -4181,19 +4181,19 @@ class MainController {
       .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
       .fetch();
 
-    const materiLainnya = await MMateri.query()
-      .with("user")
-      .with("sekolah")
-      .withCount("bab", (builder) => {
-        builder.where({ dihapus: 0 });
-      })
-      .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ dihapus: 0 })
-      .fetch();
+    // const materiLainnya = await MMateri.query()
+    //   .with("user")
+    //   .with("sekolah")
+    //   .withCount("bab", (builder) => {
+    //     builder.where({ dihapus: 0 });
+    //   })
+    //   .where({ m_sekolah_id: sekolah.id })
+    //   .andWhere({ dihapus: 0 })
+    //   .fetch();
 
     return response.ok({
       materi,
-      materiLainnya,
+      // materiLainnya,
     });
   }
 
