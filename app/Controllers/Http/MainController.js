@@ -6009,10 +6009,7 @@ class MainController {
         builder.with("user");
       })
       .with("listSiswaBelum", (builder) => {
-        builder
-          .with("user")
-          .whereNull("waktu_pengumpulan")
-          .orWhere({ dikumpulkan: 0 });
+        builder.with("user").whereNull("waktu_pengumpulan");
       })
       .with("listSiswaTerkumpul", (builder) => {
         builder
@@ -6204,6 +6201,7 @@ class MainController {
       jurnal,
       rpp,
       m_jadwal_mengajar_id,
+      m_mata_pelajaran_id,
       tipe,
       lampiran,
       absen,
@@ -6222,7 +6220,8 @@ class MainController {
       tipe !== "nilai" &&
       tipe !== "tugas" &&
       user.role !== "siswa" &&
-      !siswa_id
+      !siswa_id &&
+      tipe !== "absen"
     ) {
       const jadwalMengajar = await MJadwalMengajar.query()
         .with("mataPelajaran")
@@ -6250,6 +6249,8 @@ class MainController {
         });
     }
 
+    let jadwalMengajar;
+
     if (tipe == "absen") {
       if (siswa_id) {
         timeline = await TkTimeline.query()
@@ -6270,10 +6271,12 @@ class MainController {
           waktu_absen: waktu_absen,
         });
       } else {
-        const jadwalMengajar = await MJadwalMengajar.query()
-          .with("mataPelajaran")
-          .where({ id: m_jadwal_mengajar_id })
-          .first();
+        if (!m_mata_pelajaran_id) {
+          jadwalMengajar = await MJadwalMengajar.query()
+            .with("mataPelajaran")
+            .where({ id: m_jadwal_mengajar_id })
+            .first();
+        }
         timeline = await MTimeline.query()
           .where({ id: timeline_id })
           .update({
@@ -6282,7 +6285,8 @@ class MainController {
             deskripsi: htmlEscaper.escape(deskripsi),
             tanggal_pembagian,
             tanggal_akhir,
-            m_mata_pelajaran_id: jadwalMengajar.toJSON().mataPelajaran.id,
+            m_mata_pelajaran_id:
+              jadwalMengajar.toJSON().mataPelajaran.id || m_mata_pelajaran_id,
             gmeet,
           });
       }
