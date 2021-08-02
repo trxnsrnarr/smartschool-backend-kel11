@@ -5765,7 +5765,7 @@ class MainController {
         .andWhere({
           m_user_id: jadwalMengajar.toJSON().mataPelajaran.m_user_id,
         })
-        .orWhere({ m_user_id: user.id })
+        .andWhere({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .ids();
 
@@ -5776,7 +5776,7 @@ class MainController {
         .andWhere({
           m_user_id: jadwalMengajar.toJSON().mataPelajaran.m_user_id,
         })
-        .orWhere({ m_user_id: user.id })
+        .andWhere({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .ids();
 
