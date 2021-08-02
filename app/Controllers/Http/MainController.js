@@ -6223,7 +6223,8 @@ class MainController {
       tipe !== "nilai" &&
       tipe !== "tugas" &&
       user.role !== "siswa" &&
-      !siswa_id
+      !siswa_id &&
+      tipe !== "absen"
     ) {
       const jadwalMengajar = await MJadwalMengajar.query()
         .with("mataPelajaran")
