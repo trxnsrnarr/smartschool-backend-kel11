@@ -5601,7 +5601,7 @@ class MainController {
       if (timeline) {
         let anggotaRombel;
 
-        if (list_anggota) {
+        if (list_anggota.length) {
           // anggotaRombel = await MAnggotaRombel.query()
           //   .with("user", (builder) => {
           //     builder.select("id", "email").where({ dihapus: 0 });
@@ -5651,7 +5651,10 @@ class MainController {
 
         await Promise.all(
           anggotaRombel.toJSON().map(async (d, idx) => {
-            if (list_anggota.includes(parseInt(d.m_user_id)) && exist[idx]) {
+            if (
+              list_anggota.includes(parseInt(d.m_user_id)) ||
+              (list_anggota.length == 0 && exist[idx])
+            ) {
               userIds.push({
                 m_user_id: d.m_user_id,
                 tipe: "tugas",
@@ -5673,11 +5676,11 @@ class MainController {
                 }
                 // return d.user.nama;
               }
-            } else if (dihapus.includes(d.m_user_id)) {
+            } else if (dihapus.includes(d.m_user_id) && list_anggota > 0) {
               await TkTimeline.query()
                 .where({ m_user_id: d.m_user_id })
                 .andWhere({ m_timeline_id: timeline.id })
-                .delete();
+                .update({dihapus: 1});
             }
           })
         );
