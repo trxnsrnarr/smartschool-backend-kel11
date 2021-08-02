@@ -6204,7 +6204,6 @@ class MainController {
       jurnal,
       rpp,
       m_jadwal_mengajar_id,
-      m_mata_pelajaran_id,
       tipe,
       lampiran,
       absen,
@@ -6272,12 +6271,10 @@ class MainController {
           waktu_absen: waktu_absen,
         });
       } else {
-        if (!m_mata_pelajaran_id) {
-          const jadwalMengajar = await MJadwalMengajar.query()
-            .with("mataPelajaran")
-            .where({ id: m_jadwal_mengajar_id })
-            .first();
-        }
+        const jadwalMengajar = await MJadwalMengajar.query()
+          .with("mataPelajaran")
+          .where({ id: m_jadwal_mengajar_id })
+          .first();
         timeline = await MTimeline.query()
           .where({ id: timeline_id })
           .update({
@@ -6286,8 +6283,7 @@ class MainController {
             deskripsi: htmlEscaper.escape(deskripsi),
             tanggal_pembagian,
             tanggal_akhir,
-            m_mata_pelajaran_id:
-              jadwalMengajar.toJSON().mataPelajaran.id || m_mata_pelajaran_id,
+            m_mata_pelajaran_id: jadwalMengajar.toJSON().mataPelajaran.id,
             gmeet,
           });
       }
