@@ -5369,9 +5369,13 @@ class MainController {
     const tugas = await MTugas.create({
       judul,
       instruksi,
-      tanggal_pembagian,
+      tanggal_pembagian: tanggal_pembagian
+        ? moment(tanggal_pengumpulan).add(7, "hours").format("YYYY-MM-DD")
+        : tanggal_pembagian,
       waktu_pembagian,
-      tanggal_pengumpulan,
+      tanggal_pengumpulan: tanggal_pengumpulan
+        ? moment(tanggal_pengumpulan).add(7, "hours").format("YYYY-MM-DD")
+        : tanggal_pengumpulan,
       waktu_pengumpulan,
       kkm,
       lampiran: lampiran.toString(),
@@ -5535,18 +5539,24 @@ class MainController {
       .where({ id: m_jadwal_mengajar_id })
       .first();
 
-    const tugas = await MTugas.query().where({ id: tugas_id }).update({
-      judul,
-      instruksi,
-      tanggal_pembagian,
-      waktu_pembagian,
-      tanggal_pengumpulan,
-      waktu_pengumpulan,
-      kkm,
-      lampiran: lampiran.toString(),
-      link: link.toString(),
-      draft,
-    });
+    const tugas = await MTugas.query()
+      .where({ id: tugas_id })
+      .update({
+        judul,
+        instruksi,
+        tanggal_pembagian: tanggal_pembagian
+          ? moment(tanggal_pembagian).add(7, "hours").format("YYYY-MM-DD")
+          : tanggal_pembagian,
+        waktu_pembagian,
+        tanggal_pengumpulan: tanggal_pengumpulan
+          ? moment(tanggal_pengumpulan).add(7, "hours").format("YYYY-MM-DD")
+          : tanggal_pengumpulan,
+        waktu_pengumpulan,
+        kkm,
+        lampiran: lampiran.toString(),
+        link: link.toString(),
+        draft,
+      });
 
     if (tugas) {
       let timeline;
@@ -5651,10 +5661,7 @@ class MainController {
 
         await Promise.all(
           anggotaRombel.toJSON().map(async (d, idx) => {
-            if (
-              list_anggota.includes(parseInt(d.m_user_id)) ||
-              (list_anggota.length == 0 && exist[idx])
-            ) {
+            if (list_anggota.includes(parseInt(d.m_user_id)) && exist[idx]) {
               userIds.push({
                 m_user_id: d.m_user_id,
                 tipe: "tugas",
@@ -5676,11 +5683,14 @@ class MainController {
                 }
                 // return d.user.nama;
               }
-            } else if (dihapus.includes(d.m_user_id) && list_anggota > 0) {
+            } else if (
+              dihapus.includes(d.m_user_id) &&
+              list_anggota.length > 0
+            ) {
               await TkTimeline.query()
                 .where({ m_user_id: d.m_user_id })
                 .andWhere({ m_timeline_id: timeline.id })
-                .update({ dihapus: 1 });
+                .delete();
             }
           })
         );
