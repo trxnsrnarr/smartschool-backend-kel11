@@ -3990,7 +3990,8 @@ class MainController {
             nama: d.nama,
             whatsapp: d.whatsapp,
             gender: d.gender,
-            password: await Hash.make(`smartschool`),
+            password:
+              "$2y$12$6H07fhHZ.PoJDLTKGJjEVuqLKCknk9cfkNCO7g/FNoq3DxYbaWfdO",
             role: "siswa",
             m_sekolah_id: sekolah.id,
             dihapus: 0,
@@ -5680,7 +5681,7 @@ class MainController {
               await TkTimeline.query()
                 .where({ m_user_id: d.m_user_id })
                 .andWhere({ m_timeline_id: timeline.id })
-                .update({dihapus: 1});
+                .update({ dihapus: 1 });
             }
           })
         );
