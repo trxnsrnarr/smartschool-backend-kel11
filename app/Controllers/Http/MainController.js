@@ -3990,8 +3990,7 @@ class MainController {
             nama: d.nama,
             whatsapp: d.whatsapp,
             gender: d.gender,
-            password:
-              "$2y$12$6H07fhHZ.PoJDLTKGJjEVuqLKCknk9cfkNCO7g/FNoq3DxYbaWfdO",
+            password: "smartschool",
             role: "siswa",
             m_sekolah_id: sekolah.id,
             dihapus: 0,
