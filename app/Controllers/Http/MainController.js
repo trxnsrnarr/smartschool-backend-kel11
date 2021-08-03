@@ -5370,11 +5370,11 @@ class MainController {
       judul,
       instruksi,
       tanggal_pembagian: tanggal_pembagian
-        ? moment(tanggal_pengumpulan).add(7, "hours").format("YYYY-MM-DD")
+        ? moment(tanggal_pengumpulan, "YYYY-MM-DD").format("YYYY-MM-DD")
         : tanggal_pembagian,
       waktu_pembagian,
       tanggal_pengumpulan: tanggal_pengumpulan
-        ? moment(tanggal_pengumpulan).add(7, "hours").format("YYYY-MM-DD")
+        ? moment(tanggal_pengumpulan, "YYYY-MM-DD").format("YYYY-MM-DD")
         : tanggal_pengumpulan,
       waktu_pengumpulan,
       kkm,
