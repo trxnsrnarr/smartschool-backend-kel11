@@ -5370,7 +5370,7 @@ class MainController {
       judul,
       instruksi,
       tanggal_pembagian: tanggal_pembagian
-        ? moment(tanggal_pengumpulan, "YYYY-MM-DD").format("YYYY-MM-DD")
+        ? moment(tanggal_pembagian, "YYYY-MM-DD").format("YYYY-MM-DD")
         : tanggal_pembagian,
       waktu_pembagian,
       tanggal_pengumpulan: tanggal_pengumpulan
