@@ -23965,7 +23965,7 @@ class MainController {
         .andWhere({ dihapus: 0 })
         .fetch();
     } else {
-      buku = await MBukuTamu.query().where({ dihapus: 0 }).fetch();
+      buku = await MBukuTamu.query().where({ dihapus: 0 }).paginate(25);
     }
 
     return response.ok({
