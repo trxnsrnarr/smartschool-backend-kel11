@@ -11665,15 +11665,15 @@ class MainController {
 
     if (m_mata_pelajaran_id) {
       const materi = await MMateri.query()
-        .whereIn("mata_pelajaran_id", m_mata_pelajaran_id)
+        .where({ m_mata_pelajaran_id: m_mata_pelajaran_id })
         .fetch();
 
       await Promise.all(
         materi.toJSON().map(async (d) => {
           await TkPerpusMapel.create({
             m_perpus_id: perpus.id,
-            m_mata_pelajaran_id: d.m_mata_pelajaran_id,
-            m_jurusan_id: d.m_jurusan_id,
+            m_mata_pelajaran_id: m_mata_pelajaran_id,
+            m_jurusan_id: d.m_jurusan_id ? d.m_jurusan_id : null,
             dihapus: 0,
           });
         })
@@ -11819,7 +11819,7 @@ class MainController {
 
     if (m_mata_pelajaran_id) {
       const materi = await MMateri.query()
-        .where("mata_pelajaran_id", m_mata_pelajaran_id)
+        .where({ m_mata_pelajaran_id: m_mata_pelajaran_id })
         .fetch();
 
       await TkPerpusMapel.query().where({ m_perpus_id: perpus_id }).delete();
@@ -11828,8 +11828,8 @@ class MainController {
         materi.toJSON().map(async (d) => {
           await TkPerpusMapel.create({
             m_perpus_id: perpus_id,
-            m_mata_pelajaran_id: d.m_mata_pelajaran_id,
-            m_jurusan_id: d.m_jurusan_id,
+            m_mata_pelajaran_id: m_mata_pelajaran_id,
+            m_jurusan_id: d.m_jurusan_id ? d.m_jurusan_id : null,
             dihapus: 0,
           });
         })
