@@ -37,7 +37,7 @@ module.exports = {
       key: "/d/work/coba/ci_cd/id_rsa",
       ref: "origin/master",
       repo: "git@github.com:rochim26/server-smartschool.git",
-      path: "/root/asdfasdfasdf",
+      path: "/root/adonis_cd",
       "post-deploy": "npm install",
       env: {
         HOST: "0.0.0.0",
