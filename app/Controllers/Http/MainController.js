@@ -2590,7 +2590,7 @@ class MainController {
 
     let tingkat = [];
 
-    if (sekolah.tingkat == "SMK") {
+    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA") {
       tingkat = ["X", "XI", "XII", "XIII"];
     } else if (sekolah.tingkat == "SMP") {
       tingkat = ["VII", "VIII", "IX"];
@@ -3350,7 +3350,7 @@ class MainController {
 
     let tingkatRombel = [];
 
-    if (sekolah.tingkat == "SMK") {
+    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA") {
       tingkatRombel = ["X", "XI", "XII"];
     } else if (sekolah.tingkat == "SMP") {
       tingkatRombel = ["VII", "VIII", "IX"];
@@ -7356,7 +7356,7 @@ class MainController {
 
     let tingkatData = [];
 
-    if (sekolah.tingkat == "SMK") {
+    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA") {
       tingkatData = ["X", "XI", "XII", "XIII"];
     } else if (sekolah.tingkat == "SMP") {
       tingkatData = ["VII", "VIII", "IX"];
@@ -7500,7 +7500,7 @@ class MainController {
 
     let tingkatData;
 
-    if (sekolah.tingkat == "SMK") {
+    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA") {
       tingkatData = ["X", "XI", "XII", "XIII"];
     } else if (sekolah.tingkat == "SMP") {
       tingkatData = ["VII", "VIII", "IX"];
@@ -7674,7 +7674,7 @@ class MainController {
 
     let tingkat = [];
 
-    if (sekolah.tingkat == "SMK") {
+    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA") {
       tingkat = ["X", "XI", "XII", "XIII"];
     } else if (sekolah.tingkat == "SMP") {
       tingkat = ["VII", "VIII", "IX"];
@@ -11974,7 +11974,7 @@ class MainController {
 
     let tingkatData = [];
 
-    if (sekolah.tingkat == "SMK") {
+    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA") {
       tingkatData = ["X", "XI", "XII", "XIII"];
     } else if (sekolah.tingkat == "SMP") {
       tingkatData = ["VII", "VIII", "IX"];
