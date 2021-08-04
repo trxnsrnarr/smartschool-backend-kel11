@@ -2495,32 +2495,30 @@ class MainController {
       const jadwalMengajar = await MJadwalMengajar.query()
         .with("rombel")
         .with("jamMengajar")
-        .with("mataPelajaran")
-        .whereIn("m_rombel_id", rombel)
-        .whereIn("m_jam_mengajar_id", jamMengajarIds)
-        .fetch();
-
-      const rombelMengajar = await MJadwalMengajar.query()
-        .with("rombel")
         .with("mataPelajaran", (builder) => {
-          builder.with("user");
+          builder.with("user").andWhere({dihapus: 0});
         })
+        .whereNotNull("m_mata_pelajaran_id")
         .whereIn("m_rombel_id", rombel)
         .fetch();
 
       const jadwalMengajarData = [];
+      const rombelMengajar = [];
 
       await Promise.all(
         jadwalMengajar.toJSON().map(async (d) => {
-          if (
-            moment(d.jamMengajar.jam_mulai, "HH:mm:ss").format("HH:mm") <=
-              jam_saat_ini &&
-            moment(d.jamMengajar.jam_selesai, "HH:mm:ss").format("HH:mm") >=
-              jam_saat_ini
-          ) {
-            jadwalMengajarData.push({ ...d, aktif: false });
-          } else {
-            jadwalMengajarData.push({ ...d, aktif: false });
+          rombelMengajar.push(d);
+          if (jamMengajarIds.includes(d.m_jam_mengajar_id)) {
+            if (
+              moment(d.jamMengajar.jam_mulai, "HH:mm:ss").format("HH:mm") <=
+                jam_saat_ini &&
+              moment(d.jamMengajar.jam_selesai, "HH:mm:ss").format("HH:mm") >=
+                jam_saat_ini
+            ) {
+              jadwalMengajarData.push({ ...d, aktif: true });
+            } else {
+              jadwalMengajarData.push({ ...d, aktif: false });
+            }
           }
         })
       );
