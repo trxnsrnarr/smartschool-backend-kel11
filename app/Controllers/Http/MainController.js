@@ -7778,12 +7778,18 @@ class MainController {
     if (daftar_soal_ujian_id) {
       let soalUjianData = [];
       if (daftar_soal_ujian_id.length) {
+        const check = await TkSoalUjian.query()
+          .whereIn("m_soal_ujian_id", daftar_soal_ujian_id)
+          .andWhere({ m_ujian_id: m_ujian_id })
+          .fetch();
         daftar_soal_ujian_id.map((d) => {
-          soalUjianData.push({
-            m_ujian_id: m_ujian_id,
-            m_soal_ujian_id: d,
-            dihapus: 0,
-          });
+          if (check.toJSON().findIndex((tk) => tk.m_soal_ujian_id == d) < 0) {
+            soalUjianData.push({
+              m_ujian_id: m_ujian_id,
+              m_soal_ujian_id: d,
+              dihapus: 0,
+            });
+          }
         });
       }
 
