@@ -3975,6 +3975,7 @@ class MainController {
           whatsapp: explanation.getCell("C" + rowNumber).value,
           gender: explanation.getCell("D" + rowNumber).value,
           role: explanation.getCell("E" + rowNumber).value,
+          password: explanation.getCell("F" + rowNumber).value,
         });
       }
     });
@@ -24571,7 +24572,6 @@ class MainController {
         const dataFilter = await Promise.all(
           checkDataTimeline.toJSON().filter((timeline) => timeline != null)
         );
-        return dataFilter;
         await Promise.all(
           dataFilter.map(async (d, idx) => {
             // add column headers
