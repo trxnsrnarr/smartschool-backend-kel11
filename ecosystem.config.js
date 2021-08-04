@@ -38,7 +38,7 @@ module.exports = {
       ref: "origin/master",
       repo: "git@github.com:rochim26/server-smartschool.git",
       path: "/root/adonis_cd",
-      "post-deploy": "npm install",
+      "post-deploy": "pm2 startOrRestart ecosystem.config.js --env production",
       env: {
         HOST: "0.0.0.0",
         PORT: 4000,
