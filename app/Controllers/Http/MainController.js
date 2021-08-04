@@ -3990,7 +3990,7 @@ class MainController {
             nama: d.nama,
             whatsapp: d.whatsapp,
             gender: d.gender,
-            password: await Hash.make(`smartschool`),
+            password: "smartschool",
             role: "siswa",
             m_sekolah_id: sekolah.id,
             dihapus: 0,
@@ -5369,9 +5369,13 @@ class MainController {
     const tugas = await MTugas.create({
       judul,
       instruksi,
-      tanggal_pembagian,
+      tanggal_pembagian: tanggal_pembagian
+        ? moment(tanggal_pembagian, "YYYY-MM-DD").format("YYYY-MM-DD")
+        : tanggal_pembagian,
       waktu_pembagian,
-      tanggal_pengumpulan,
+      tanggal_pengumpulan: tanggal_pengumpulan
+        ? moment(tanggal_pengumpulan, "YYYY-MM-DD").format("YYYY-MM-DD")
+        : tanggal_pengumpulan,
       waktu_pengumpulan,
       kkm,
       lampiran: lampiran.toString(),
@@ -5535,18 +5539,24 @@ class MainController {
       .where({ id: m_jadwal_mengajar_id })
       .first();
 
-    const tugas = await MTugas.query().where({ id: tugas_id }).update({
-      judul,
-      instruksi,
-      tanggal_pembagian,
-      waktu_pembagian,
-      tanggal_pengumpulan,
-      waktu_pengumpulan,
-      kkm,
-      lampiran: lampiran.toString(),
-      link: link.toString(),
-      draft,
-    });
+    const tugas = await MTugas.query()
+      .where({ id: tugas_id })
+      .update({
+        judul,
+        instruksi,
+        tanggal_pembagian: tanggal_pembagian
+          ? moment(tanggal_pembagian).add(7, "hours").format("YYYY-MM-DD")
+          : tanggal_pembagian,
+        waktu_pembagian,
+        tanggal_pengumpulan: tanggal_pengumpulan
+          ? moment(tanggal_pengumpulan).add(7, "hours").format("YYYY-MM-DD")
+          : tanggal_pengumpulan,
+        waktu_pengumpulan,
+        kkm,
+        lampiran: lampiran.toString(),
+        link: link.toString(),
+        draft,
+      });
 
     if (tugas) {
       let timeline;
@@ -5601,7 +5611,7 @@ class MainController {
       if (timeline) {
         let anggotaRombel;
 
-        if (list_anggota) {
+        if (list_anggota.length) {
           // anggotaRombel = await MAnggotaRombel.query()
           //   .with("user", (builder) => {
           //     builder.select("id", "email").where({ dihapus: 0 });
@@ -5673,7 +5683,10 @@ class MainController {
                 }
                 // return d.user.nama;
               }
-            } else if (dihapus.includes(d.m_user_id)) {
+            } else if (
+              dihapus.includes(d.m_user_id) &&
+              list_anggota.length > 0
+            ) {
               await TkTimeline.query()
                 .where({ m_user_id: d.m_user_id })
                 .andWhere({ m_timeline_id: timeline.id })
@@ -6271,12 +6284,12 @@ class MainController {
           waktu_absen: waktu_absen,
         });
       } else {
-        if (!m_mata_pelajaran_id) {
-          jadwalMengajar = await MJadwalMengajar.query()
-            .with("mataPelajaran")
-            .where({ id: m_jadwal_mengajar_id })
-            .first();
-        }
+        // if (!m_mata_pelajaran_id) {
+        //   jadwalMengajar = await MJadwalMengajar.query()
+        //     .with("mataPelajaran")
+        //     .where({ id: m_jadwal_mengajar_id })
+        //     .first();
+        // }
         timeline = await MTimeline.query()
           .where({ id: timeline_id })
           .update({
@@ -6285,8 +6298,8 @@ class MainController {
             deskripsi: htmlEscaper.escape(deskripsi),
             tanggal_pembagian,
             tanggal_akhir,
-            m_mata_pelajaran_id:
-              jadwalMengajar.toJSON().mataPelajaran.id || m_mata_pelajaran_id,
+            // m_mata_pelajaran_id:
+            //   jadwalMengajar.toJSON().mataPelajaran.id || m_mata_pelajaran_id,
             gmeet,
           });
       }
