@@ -5987,6 +5987,7 @@ class MainController {
         .with("komen", (builder) => {
           builder.with("user");
         })
+        .with("user")
         .where({ id: timeline_id })
         .andWhere({ dihapus: 0 })
         .first();
