@@ -1367,7 +1367,10 @@ class MainController {
 
     password ? (payload.password = await Hash.make(password)) : null;
 
-    const check = await User.query().where({ whatsapp: whatsapp }).first();
+    const check = await User.query()
+      .where({ whatsapp: whatsapp })
+      .where({ m_sekolah_id: sekolah.id })
+      .first();
 
     if (check) {
       delete payload.whatsapp;
