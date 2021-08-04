@@ -3975,7 +3975,6 @@ class MainController {
           whatsapp: explanation.getCell("C" + rowNumber).value,
           gender: explanation.getCell("D" + rowNumber).value,
           role: explanation.getCell("E" + rowNumber).value,
-          password: explanation.getCell("F" + rowNumber).value,
         });
       }
     });
