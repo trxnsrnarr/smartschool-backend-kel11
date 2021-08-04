@@ -491,6 +491,7 @@ class MainController {
     let {
       nama,
       whatsapp,
+      email,
       avatar,
       gender,
       tanggal_lahir,
@@ -517,10 +518,20 @@ class MainController {
         });
       }
     }
+    if (user.email != email) {
+      const check = await User.query().where({ email: email }).first();
+
+      if (check) {
+        return response.forbidden({
+          message: "email sudah terdaftar",
+        });
+      }
+    }
 
     const update = await User.query().where({ id: user.id }).update({
       nama,
       whatsapp,
+      email,
       avatar,
       gender,
       // guru
