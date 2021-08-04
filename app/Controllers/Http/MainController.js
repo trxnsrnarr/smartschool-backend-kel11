@@ -2526,7 +2526,7 @@ class MainController {
       const today = new Date();
       const absenHariIni = await MTimeline.query()
         .with("tkTimeline", (builder) => {
-          builder.where({m_user_id: user.id})
+          builder.where({ m_user_id: user.id });
         })
         .where({ tipe: "absen" })
         .whereIn(
@@ -2542,7 +2542,7 @@ class MainController {
           }/${today.getDate()} ${jam_saat_ini}:00`,
         ])
         .fetch();
-        
+
       return response.ok({
         jadwalMengajar: jadwalMengajarData,
         rombelMengajar: rombelMengajar,
