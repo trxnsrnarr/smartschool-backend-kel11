@@ -23979,7 +23979,7 @@ class MainController {
         .andWhere({ dihapus: 0 })
         .fetch();
     } else {
-      buku = await MBukuTamu.query().where({ dihapus: 0 }).fetch();
+      buku = await MBukuTamu.query().where({ dihapus: 0 }).paginate(25);
     }
 
     return response.ok({
@@ -24077,28 +24077,13 @@ class MainController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const jadwalMengajar = await MJadwalMengajar.query()
-      .with("mataPelajaran")
-      .where({ id: 14521 })
-      .first();
+    // const jadwalMengajar = await MJadwalMengajar.query()
+    //   .with("mataPelajaran")
+    //   .where({ id: 14521 })
+    //   .first();
 
-    const data = [jadwalMengajar, user];
+    // const data = [jadwalMengajar, user];
 
-    const gmail = await Mail.send(
-      `emails.sppbayar`,
-      user.toJSON(),
-      (message) => {
-        message
-          .to(`raihanvans@gmail.com`)
-          .from("no-reply@smarteschool.id")
-          .subject("SPP terkonfirmasi");
-      }
-    );
-    if (gmail) {
-      return response.ok({
-        message: messageEmailSuccess,
-      });
-    }
     const buku = await MBukuTamu.create({
       nama,
       no_hp,
@@ -24114,6 +24099,21 @@ class MainController {
       m_sekolah_id: sekolah.id,
       dihapus: 0,
     });
+    // const gmail = await Mail.send(
+    //   `emails.sppbayar`,
+    //   user.toJSON(),
+    //   (message) => {
+    //     message
+    //       .to(`raihanvans@gmail.com`)
+    //       .from("no-reply@smarteschool.id")
+    //       .subject("SPP terkonfirmasi");
+    //   }
+    // );
+    // if (gmail) {
+    //   return response.ok({
+    //     message: messageEmailSuccess,
+    //   });
+    // }
 
     return response.ok({
       message: messagePostSuccess,
