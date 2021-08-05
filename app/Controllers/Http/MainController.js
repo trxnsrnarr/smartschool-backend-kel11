@@ -113,6 +113,7 @@ const MKontak = use("App/Models/MKontak");
 const TkJawabanUjianSiswa = use("App/Models/TkJawabanUjianSiswa");
 const User = use("App/Models/User");
 const DownloadService = use("App/Services/DownloadService");
+const DownloadService2 = use("App/Services/DownloadService2");
 
 const moment = require("moment");
 require("moment/locale/id");
@@ -17868,7 +17869,7 @@ class MainController {
       logoFileName = "logo.png";
     }
 
-    return await DownloadService.kartuUjian(
+    return await DownloadService2.kartuUjian(
       sekolah,
       ta,
       kepsek,
