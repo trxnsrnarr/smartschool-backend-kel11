@@ -6719,19 +6719,19 @@ class MainController {
           const totalHadir = await MAbsen.query()
             .with("user")
             .where("created_at", "like", `%${tanggal}%`)
-            .andWhere({ keterangan: "hadir" })
+            .andWhere({ absen: "hadir" })
             .whereIn("m_user_id", userIds)
             .count("* as total");
           const totalSakit = await MAbsen.query()
             .with("user")
             .where("created_at", "like", `%${tanggal}%`)
-            .andWhere({ keterangan: "sakit" })
+            .andWhere({ absen: "sakit" })
             .whereIn("m_user_id", userIds)
             .count("* as total");
           const totalIzin = await MAbsen.query()
             .with("user")
             .where("created_at", "like", `%${tanggal}%`)
-            .andWhere({ keterangan: "izin" })
+            .andWhere({ absen: "izin" })
             .whereIn("m_user_id", userIds)
             .count("* as total");
           const totalAlpa =
