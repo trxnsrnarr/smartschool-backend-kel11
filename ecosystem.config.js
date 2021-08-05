@@ -4,7 +4,7 @@ module.exports = {
     script: "server.js",
     instances: 1,
     exec_mode: "cluster",
-    env: {
+    env_production: {
       HOST: "0.0.0.0",
       PORT: 4000,
       NODE_ENV: "production",
@@ -39,7 +39,7 @@ module.exports = {
       repo: "git@github.com:rochim26/server-smartschool.git",
       path: "/root/adonis_cd",
       "post-deploy": "npm i",
-      env: {
+      env_production: {
         HOST: "0.0.0.0",
         PORT: 4000,
         NODE_ENV: "production",
