@@ -147,12 +147,12 @@ cellspacing="0" width="100%" style="max-width: 750px;">
                                     </tr>
                                     <tr>
                                         <td bgcolor="#ffffff" align="center"style="padding: 0px 30px 10px 30px; color: #666666; font-family: 'Lato',Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 400;line-height: 25px;margin-bottom: 24px;">
-                                            <p style="margin: 0;margin-bottom: 24px;">{{nama}} menambahkan pertemuan pada kelas {{mataPelajaran.nama}}. Tekan tombol dibawah untuk melihat pertemuan.</p>
+                                            <p style="margin: 0;margin-bottom: 24px;width: 80%;">{{namaguru}} menambahkan pertemuan pada kelas {{mataPelajaran}}. Tekan tombol dibawah untuk melihat pertemuan.</p>
                                         </td>
                                     </tr> <!-- COPY -->
                                     <tr>
                                         <td bgcolor="#ffffff" align="center"style="padding: 0px 30px 20px 30px; color: #000000;  border-radius: 0px 0px 10px 10px;margin-bottom: 24px;">
-                                        <button type="button" class="btn btn-primary" style="margin-bottom: 24px;display: inline-block;font-weight: 400;line-height: 1.5;color: #212529;text-align: center;text-decoration: none;vertical-align: middle;cursor: pointer;-webkit-user-select: none;-moz-user-select: none;user-select: none;background-color: transparent;border: 1px solid transparent;padding: 12px 48px;font-size: 1rem;border-radius: 10px;transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;color: #fff;background-color: #0b5ed7;border-color: #0a58ca;"> Lihat Pertemuan </button>
+                                            <a href="{{ domain.split(';')[0] }}/smartschool/timeline/{{ timelineid }}?hal=pertemuan" type="type" class="btn btn-primary" style="margin-bottom: 24px;display: inline-block;font-weight: 400;line-height: 1.5;color: #212529;text-align: center;text-decoration: none;vertical-align: middle;cursor: pointer;-webkit-user-select: none;-moz-user-select: none;user-select: none;background-color: transparent;border: 1px solid transparent;padding: 12px 48px;font-size: 1rem;border-radius: 10px;transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;color: #fff;background-color: #0b5ed7;border-color: #0a58ca;"> Lihat Pertemuan </a>
                                         </td>
                                     </tr>
                                 </table>
