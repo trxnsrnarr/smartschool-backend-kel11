@@ -2431,7 +2431,9 @@ class MainController {
         .ids();
 
       const jadwalMengajar = await MJadwalMengajar.query()
-        .with("rombel")
+        .with("rombel", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
         .with("jamMengajar")
         .with("mataPelajaran")
         .where({ m_ta_id: ta.id })
@@ -2441,7 +2443,9 @@ class MainController {
         .fetch();
 
       const rombelMengajar = await MJadwalMengajar.query()
-        .with("rombel")
+        .with("rombel", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
         .with("mataPelajaran")
         .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
         .fetch();
@@ -2493,7 +2497,9 @@ class MainController {
         .ids();
 
       const jadwalMengajar = await MJadwalMengajar.query()
-        .with("rombel")
+        .with("rombel", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
         .with("jamMengajar")
         .with("mataPelajaran", (builder) => {
           builder.with("user").andWhere({ dihapus: 0 });
