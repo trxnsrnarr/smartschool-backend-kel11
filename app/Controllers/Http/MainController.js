@@ -1652,6 +1652,9 @@ class MainController {
     const siswa = await User.query().where({ id: siswa_id }).update({
       dihapus: 1,
     });
+    const anggotaRombel = await MAnggotaRombel.query()
+      .where({ m_user_id: siswa_id })
+      .update({ dihapus: 1 });
 
     if (!siswa) {
       return response.notFound({
@@ -2481,6 +2484,7 @@ class MainController {
 
       const rombel = await MAnggotaRombel.query()
         .where({ m_user_id: user.id })
+        .andWhere({ dihapus: 0 })
         .whereIn("m_rombel_id", rombelIds)
         .pluck("m_rombel_id");
 
@@ -2656,7 +2660,7 @@ class MainController {
         .with("mataPelajaran")
         .with("rombel", (builder) => {
           builder.with("anggotaRombel", (builder) => {
-            builder.with("user", (builder) => {
+            builder.where({ dihapus: 0 }).with("user", (builder) => {
               builder
                 .with("keteranganRapor", (builder) => {
                   builder.where({ dihapus: 0 });
@@ -2683,7 +2687,7 @@ class MainController {
         })
         .with("rombel", (builder) => {
           builder.with("anggotaRombel", (builder) => {
-            builder.with("user", (builder) => {
+            builder.where({ dihapus: 0 }).with("user", (builder) => {
               builder
                 .with("keteranganRapor", (builder) => {
                   builder.where({ dihapus: 0 });
@@ -2736,6 +2740,7 @@ class MainController {
 
       const userIds = await MAnggotaRombel.query()
         .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
+        .andWhere({ dihapus: 0 })
         .pluck("m_user_id");
 
       const timelineIds = await MTimeline.query()
@@ -4172,6 +4177,7 @@ class MainController {
       const rombelIdsAnggota = await MAnggotaRombel.query()
         .whereIn("m_rombel_id", rombelIds)
         .andWhere({ m_user_id: user.id })
+        .andWhere({ dihapus: 0 })
         .pluck("m_rombel_id");
 
       const materiIds = await TkMateriRombel.query()
@@ -4874,6 +4880,7 @@ class MainController {
 
       const userIds = await MAnggotaRombel.query()
         .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
+        .andWhere({ dihapus: 0 })
         .pluck("m_user_id");
 
       const user = await User.query()
@@ -5465,6 +5472,7 @@ class MainController {
             })
             .where({ m_rombel_id: list_rombel[0] })
             .whereIn("m_user_id", list_anggota)
+            .andWhere({ dihapus: 0 })
             .fetch();
         } else {
           anggotaRombel = await MAnggotaRombel.query()
@@ -5472,6 +5480,7 @@ class MainController {
               builder.select("id", "email").where({ dihapus: 0 });
             })
             .whereIn("m_rombel_id", list_rombel)
+            .andWhere({ dihapus: 0 })
             .fetch();
         }
 
@@ -5662,6 +5671,7 @@ class MainController {
               builder.select("id", "email").where({ dihapus: 0 });
             })
             .where("m_rombel_id", list_rombel[0])
+            .andWhere({ dihapus: 0 })
             .fetch();
         } else {
           anggotaRombel = await MAnggotaRombel.query()
@@ -5669,6 +5679,7 @@ class MainController {
               builder.select("id", "email").where({ dihapus: 0 });
             })
             .whereIn("m_rombel_id", list_rombel)
+            .andWhere({ dihapus: 0 })
             .fetch();
         }
 
@@ -5933,6 +5944,7 @@ class MainController {
 
       const userIds = await MAnggotaRombel.query()
         .where({ m_rombel_id: jadwalMengajar.toJSON().rombel.id })
+        .andWhere({ dihapus: 0 })
         .pluck("m_user_id");
 
       const timelineLainnya = await MTimeline.query()
@@ -6171,6 +6183,7 @@ class MainController {
           builder.select("id", "email").where({ dihapus: 0 });
         })
         .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
+        .andWhere({ dihapus: 0 })
         .fetch();
 
       let userIds = [];
@@ -6215,6 +6228,7 @@ class MainController {
 
       const anggotaRombel = await MAnggotaRombel.query()
         .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
+        .andWhere({ dihapus: 0 })
         .fetch();
 
       let userIds = [];
@@ -6720,6 +6734,7 @@ class MainController {
         rombel.toJSON().map(async (d) => {
           const userIds = await MAnggotaRombel.query()
             .where({ m_rombel_id: d.id })
+            .andWhere({ dihapus: 0 })
             .pluck("m_user_id");
 
           const totalHadir = await MAbsen.query()
@@ -6792,6 +6807,7 @@ class MainController {
 
       const rombelId = await MAnggotaRombel.query()
         .where({ m_user_id: user.id })
+        .andWhere({ dihapus: 0 })
         .whereIn("m_rombel_id", rombelIds)
         .pluck("m_rombel_id");
 
@@ -6952,7 +6968,7 @@ class MainController {
       const rombel = await MRombel.query()
         .with("user")
         .with("anggotaRombel", (builder) => {
-          builder.with("user", (builder) => {
+          builder.where({ dihapus: 0 }).with("user", (builder) => {
             builder.with("absen", (builder) => {
               builder.where("created_at", "like", `%${tanggal}%`);
             });
@@ -8442,6 +8458,7 @@ class MainController {
 
       const anggotaRombel = await MAnggotaRombel.query()
         .where({ m_user_id: user.id })
+        .andWhere({ dihapus: 0 })
         .whereIn("m_rombel_id", rombelIds)
         .pluck("m_rombel_id");
 
@@ -8524,6 +8541,7 @@ class MainController {
 
       const anggotaRombel = await MAnggotaRombel.query()
         .where({ m_rombel_id: tkJadwalUjian[0] })
+        .andWhere({ dihapus: 0 })
         .pluck("m_user_id");
 
       detailRombel = await MRombel.query()
@@ -8573,6 +8591,7 @@ class MainController {
 
     const anggotaRombel = await MAnggotaRombel.query()
       .where({ m_rombel_id: tkJadwalUjian[0] })
+      .andWhere({ dihapus: 0 })
       .pluck("m_user_id");
 
     const pesertaUjianData = await User.query()
@@ -12635,6 +12654,7 @@ class MainController {
                 builder.select("id", "email").where({ dihapus: 0 });
               })
               .where({ m_rombel_id: rombel_id })
+              .andWhere({ dihapus: 0 })
               .fetch();
 
             await Promise.all(
@@ -14431,7 +14451,7 @@ class MainController {
     const materirombel = await TkMateriRombel.query()
       .with("rombel", (builder) => {
         builder.with("anggotaRombel", (builder) => {
-          builder.with("user", (builder) => {
+          builder.where({ dihapus: 0 }).with("user", (builder) => {
             builder.with("rekapSikap").select("id", "nama");
           });
         });
@@ -14869,7 +14889,7 @@ class MainController {
 
     const datatugas = await MRombel.query()
       .with("anggotaRombel", (builder) => {
-        builder.with("user", (builder) => {
+        builder.where({ dihapus: 0 }).with("user", (builder) => {
           builder.select("id", "nama").with("tugas", (builder) => {
             builder
               .select("id", "nilai", "m_user_id", "m_timeline_id")
@@ -15014,7 +15034,7 @@ class MainController {
 
     const data = await MRombel.query()
       .with("anggotaRombel", (builder) => {
-        builder.with("user", (builder) => {
+        builder.where({ dihapus: 0 }).with("user", (builder) => {
           builder.select("id", "nama");
         });
       })
@@ -16924,7 +16944,7 @@ class MainController {
     const rombel = await MRombel.query()
       .with("user")
       .with("anggotaRombel", (builder) => {
-        builder.with("user");
+        builder.where({ dihapus: 0 }).with("user");
       })
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
@@ -17812,7 +17832,7 @@ class MainController {
 
     const rombel = await MRombel.query()
       .with("anggotaRombel", (builder) => {
-        builder.with("user");
+        builder.where({ dihapus: 0 }).with("user");
       })
       .with("jurusan")
       .where({ m_sekolah_id: sekolah.id })
@@ -17939,7 +17959,7 @@ class MainController {
 
     const ekskul = await MRombel.query()
       .with("anggotaRombel", (builder) => {
-        builder.where({ m_user_id: user_id });
+        builder.where({ dihapus: 0 }).andWhere({ m_user_id: user_id });
       })
       .where({ kelompok: "ekskul" })
       .andWhere({ dihapus: 0 })
@@ -19414,6 +19434,7 @@ class MainController {
 
     const userIds = await MAnggotaRombel.query()
       .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
+      .andWhere({ dihapus: 0 })
       .pluck("m_user_id");
 
     const timelineIds = await MTimeline.query()
@@ -19696,6 +19717,7 @@ class MainController {
 
     const userIds = await MAnggotaRombel.query()
       .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
+      .andWhere({ dihapus: 0 })
       .pluck("m_user_id");
 
     const timeline = await MTimeline.query()
@@ -23087,6 +23109,7 @@ class MainController {
       .with("pelanggaranSiswa")
       .with("anggotaRombel", (builder) => {
         builder
+          .where({ dihapus: 0 })
           .select("id", "m_rombel_id", "m_user_id")
           .with("rombel", (builder) => {
             builder
@@ -23122,6 +23145,7 @@ class MainController {
       .select("id", "nama")
       .with("anggotaRombel", (builder) => {
         builder
+          .where({ dihapus: 0 })
           .with("user", (builder) => {
             builder
               .select("id", "nama")
@@ -25235,7 +25259,7 @@ class MainController {
     const rombel = await MRombel.query()
       .with("user")
       .with("anggotaRombel", (builder) => {
-        builder.with("user", (builder) => {
+        builder.where({ dihapus: 0 }).with("user", (builder) => {
           builder.with("absen", (builder) => {
             builder.where("created_at", "like", `%${tanggal}%`);
           });
@@ -25499,7 +25523,7 @@ class MainController {
     const rombel = await MRombel.query()
       .with("user")
       .with("anggotaRombel", (builder) => {
-        builder.with("user", (builder) => {
+        builder.where({ dihapus: 0 }).with("user", (builder) => {
           builder.with("absen", (builder) => {
             builder.whereBetween("created_at", [tanggal_awal, tanggal_akhir]);
           });
