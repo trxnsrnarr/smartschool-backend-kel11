@@ -5361,7 +5361,11 @@ class MainController {
     // if(validation.fails()){
     //   return response.unprocessableEntity(validation.messages());
     // }
-
+    const tanggal = moment(tanggal_pembagian).format(`DD`);
+    const bulan = moment(tanggal_pembagian).format(`M`);
+    const waktu = `${tanggal_pembagian} ${waktu_pembagian}`;
+    const jam = moment(waktu).format(`H`);
+    const menit = moment(waktu).format(`mm`);
     const jadwalMengajar = await MJadwalMengajar.query()
       .where({ id: m_jadwal_mengajar_id })
       .first();
@@ -5448,21 +5452,26 @@ class MainController {
                 dihapus: 0,
               });
 
-              // try {
-              // if (d.user.email != null) {
-              //   const gmail = await Mail.send(
-              //     `emails.tugas`,
-              //     user.toJSON(),
-              //     (message) => {
-              //       message
-              //         .to(`${d.user.email}`)
-              //         .from("no-reply@smarteschool.id")
-              //         .subject("Tugas Baru di SmartSchool");
-              //     }
-              //   );
-              // }
-
-              // } catch (error) {}
+              try {
+                if (d.user.email != null) {
+                  const task = cron.schedule(
+                    `${menit} ${jam} ${tanggal} ${bulan} *`,
+                    () => {
+                      Mail.send(`emails.tugas`, d.user, (message) => {
+                        message
+                          .to(`${d.user.email}`)
+                          .from("no-reply@smarteschool.id")
+                          .subject("Ada Tugas Baru");
+                      });
+                    },
+                    {
+                      scheduled: true,
+                      timezone: "Asia/Jakarta",
+                    }
+                  );
+                  return task;
+                }
+              } catch (error) {}
             })
           );
         } else {
@@ -5478,21 +5487,26 @@ class MainController {
                       dihapus: 0,
                     });
                   }
-                  // try {
-                  // if (d.user.email != null) {
-                  //   const gmail = await Mail.send(
-                  //     `emails.tugas`,
-                  //     user.toJSON(),
-                  //     (message) => {
-                  //       message
-                  //         .to(`${d.user.email}`)
-                  //         .from("no-reply@smarteschool.id")
-                  //         .subject("Tugas Baru di SmartSchool");
-                  //     }
-                  //   );
-                  // }
-
-                  // } catch (error) {}
+                  try {
+                    if (d.user.email != null) {
+                      const task = cron.schedule(
+                        `${menit} ${jam} ${tanggal} ${bulan} *`,
+                        () => {
+                          Mail.send(`emails.tugas`, d.user, (message) => {
+                            message
+                              .to(`${d.user.email}`)
+                              .from("no-reply@smarteschool.id")
+                              .subject("Ada Tugas Baru");
+                          });
+                        },
+                        {
+                          scheduled: true,
+                          timezone: "Asia/Jakarta",
+                        }
+                      );
+                      return task;
+                    }
+                  } catch (error) {}
                 })
               );
             })
@@ -6100,6 +6114,11 @@ class MainController {
       tanggal_pembagian,
       tanggal_akhir,
     } = request.post();
+    const tanggal = moment(tanggal_pembagian).format(`DD`);
+    const bulan = moment(tanggal_pembagian).format(`M`);
+    const waktu = `${tanggal_pembagian}`;
+    const jam = moment(waktu).format(`H`);
+    const menit = moment(waktu).format(`mm`);
 
     const jadwalMengajar = await MJadwalMengajar.query()
       .with("mataPelajaran")
@@ -6143,21 +6162,30 @@ class MainController {
             m_timeline_id: timeline.id,
             dihapus: 0,
           });
-          // if (d.user.email != null) {
-          //   try {
-          //     const gmail = await Mail.send(
-          //       `emails.pertemuan`,
-          //       user.toJSON(),
-          //       jadwalMengajar.toJSON(),
-          //       (message) => {
-          //         message
-          //           .to(`${d.user.email}`)
-          //           .from("no-reply@smarteschool.id")
-          //           .subject("Pertemuan Baru di SmartSchool");
-          //       }
-          //     );
-          //   } catch (error) {}
-          // }
+        })
+      );
+      await Promise.all(
+        anggotaRombel.toJSON().map(async (d) => {
+          if (d.user.email != null) {
+            try {
+              const task = cron.schedule(
+                `${menit} ${jam} ${tanggal} ${bulan} *`,
+                () => {
+                  Mail.send(`emails.pertemuan`, d.user, (message) => {
+                    message
+                      .to(`${d.user.email}`)
+                      .from("no-reply@smarteschool.id")
+                      .subject("Ada Pertemuan Baru");
+                  });
+                },
+                {
+                  scheduled: true,
+                  timezone: "Asia/Jakarta",
+                }
+              );
+              return task;
+            } catch (error) {}
+          }
         })
       );
 
@@ -15404,6 +15432,14 @@ class MainController {
 
           return dataUpdated++;
         }
+
+        // const tgl_lahir = moment().format("YYYY-MM-DD");
+        // let tgl;
+        // if (tgl_lahir == invaliddate) {
+        //   tgl = null;
+        // } else {
+        //   tgl = tgl_lahir;
+        // }
 
         await User.create({
           nama: d.nama,
