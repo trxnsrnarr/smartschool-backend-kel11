@@ -1531,9 +1531,14 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    const { nama, whatsapp, password, gender, avatar } = request.post();
+    const { nama, whatsapp, password, gender, avatar, m_rombel_id } =
+      request.post();
 
-    validation = await validate(request.post(), rulesUserPost, messagesUser);
+    let validation = await validate(
+      request.post(),
+      rulesUserPost,
+      messagesUser
+    );
 
     if (validation.fails()) {
       return response.unprocessableEntity(validation.messages());
@@ -1553,6 +1558,21 @@ class MainController {
         m_sekolah_id: sekolah.id,
         dihapus: 0,
         avatar,
+      });
+      if (m_rombel_id) {
+        const rombel = await MAnggotaRombel.create({
+          role: "Anggota",
+          dihapus: 0,
+          m_user_id: siswa.toJSON().id,
+          m_rombel_id: m_rombel_id,
+        });
+      }
+    } else if (m_rombel_id) {
+      const rombel = await MAnggotaRombel.create({
+        role: "Anggota",
+        dihapus: 0,
+        m_user_id: check.toJSON().id,
+        m_rombel_id: m_rombel_id,
       });
     }
 
@@ -1649,12 +1669,22 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
+    const { m_rombel_id } = request.post();
+
     const siswa = await User.query().where({ id: siswa_id }).update({
       dihapus: 1,
     });
-    const anggotaRombel = await MAnggotaRombel.query()
-      .where({ m_user_id: siswa_id })
-      .update({ dihapus: 1 });
+
+    if (m_rombel_id) {
+      const anggotaRombel = await MAnggotaRombel.query()
+        .where({ m_user_id: siswa_id })
+        .andWhere({ m_rombel_id: m_rombel_id })
+        .update({ dihapus: 1 });
+    } else {
+      const anggotaRombel = await MAnggotaRombel.query()
+        .where({ m_user_id: siswa_id })
+        .update({ dihapus: 1 });
+    }
 
     if (!siswa) {
       return response.notFound({
