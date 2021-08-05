@@ -5399,8 +5399,13 @@ class MainController {
     const waktu = `${tanggal_pembagian} ${waktu_pembagian}`;
     const jam = moment(waktu).format(`H`);
     const menit = moment(waktu).format(`mm`);
+
     const jadwalMengajar = await MJadwalMengajar.query()
       .where({ id: m_jadwal_mengajar_id })
+      .first();
+
+    const mapel = await MMataPelajaran.query()
+      .where({ id: jadwalMengajar.m_mata_pelajaran_id })
       .first();
 
     const tugas = await MTugas.create({
@@ -5490,12 +5495,22 @@ class MainController {
                   const task = cron.schedule(
                     `${menit} ${jam} ${tanggal} ${bulan} *`,
                     () => {
-                      Mail.send(`emails.tugas`, d.user, (message) => {
-                        message
-                          .to(`${d.user.email}`)
-                          .from("no-reply@smarteschool.id")
-                          .subject("Ada Tugas Baru");
-                      });
+                      Mail.send(
+                        `emails.tugas`,
+                        {
+                          ...sekolah.toJSON(),
+                          timelineid: timeline.id,
+                          namaguru: user.nama,
+                          mataPelajaran: mapel.nama,
+                          judulTugas: judul,
+                        },
+                        (message) => {
+                          message
+                            .to(`${d.user.email}`)
+                            .from("no-reply@smarteschool.id")
+                            .subject("Ada Tugas Baru");
+                        }
+                      );
                     },
                     {
                       scheduled: true,
@@ -5525,12 +5540,22 @@ class MainController {
                       const task = cron.schedule(
                         `${menit} ${jam} ${tanggal} ${bulan} *`,
                         () => {
-                          Mail.send(`emails.tugas`, d.user, (message) => {
-                            message
-                              .to(`${d.user.email}`)
-                              .from("no-reply@smarteschool.id")
-                              .subject("Ada Tugas Baru");
-                          });
+                          Mail.send(
+                            `emails.tugas`,
+                            {
+                              ...sekolah.toJSON(),
+                              timelineid: timeline.id,
+                              namaguru: user.nama,
+                              mataPelajaran: mapel.nama,
+                              judulTugas: judul,
+                            },
+                            (message) => {
+                              message
+                                .to(`${d.user.email}`)
+                                .from("no-reply@smarteschool.id")
+                                .subject("Ada Tugas Baru");
+                            }
+                          );
                         },
                         {
                           scheduled: true,
@@ -6159,6 +6184,10 @@ class MainController {
       .where({ id: m_jadwal_mengajar_id })
       .first();
 
+    const mapel = await MMataPelajaran.query()
+      .where({ id: jadwalMengajar.m_mata_pelajaran_id })
+      .first();
+
     let timeline;
 
     if (tipe == "absen") {
@@ -6205,12 +6234,21 @@ class MainController {
               const task = cron.schedule(
                 `${menit} ${jam} ${tanggal} ${bulan} *`,
                 () => {
-                  Mail.send(`emails.pertemuan`, d.user, (message) => {
-                    message
-                      .to(`${d.user.email}`)
-                      .from("no-reply@smarteschool.id")
-                      .subject("Ada Pertemuan Baru");
-                  });
+                  Mail.send(
+                    `emails.pertemuan`,
+                    {
+                      ...sekolah.toJSON(),
+                      timelineid: timeline.id,
+                      namaguru: user.nama,
+                      mataPelajaran: mapel.nama,
+                    },
+                    (message) => {
+                      message
+                        .to(`${d.user.email}`)
+                        .from("no-reply@smarteschool.id")
+                        .subject("Ada Pertemuan Baru");
+                    }
+                  );
                 },
                 {
                   scheduled: true,
