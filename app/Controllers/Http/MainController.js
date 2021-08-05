@@ -491,6 +491,7 @@ class MainController {
     let {
       nama,
       whatsapp,
+      email,
       avatar,
       gender,
       tanggal_lahir,
@@ -517,10 +518,20 @@ class MainController {
         });
       }
     }
+    if (user.email != email) {
+      const check = await User.query().where({ email: email }).first();
+
+      if (check) {
+        return response.forbidden({
+          message: "email sudah terdaftar",
+        });
+      }
+    }
 
     const update = await User.query().where({ id: user.id }).update({
       nama,
       whatsapp,
+      email,
       avatar,
       gender,
       // guru
@@ -1356,7 +1367,10 @@ class MainController {
 
     password ? (payload.password = await Hash.make(password)) : null;
 
-    const check = await User.query().where({ whatsapp: whatsapp }).first();
+    const check = await User.query()
+      .where({ whatsapp: whatsapp })
+      .where({ m_sekolah_id: sekolah.id })
+      .first();
 
     if (check) {
       delete payload.whatsapp;
@@ -2481,39 +2495,58 @@ class MainController {
       const jadwalMengajar = await MJadwalMengajar.query()
         .with("rombel")
         .with("jamMengajar")
-        .with("mataPelajaran")
-        .whereIn("m_rombel_id", rombel)
-        .whereIn("m_jam_mengajar_id", jamMengajarIds)
-        .fetch();
-
-      const rombelMengajar = await MJadwalMengajar.query()
-        .with("rombel")
         .with("mataPelajaran", (builder) => {
-          builder.with("user");
+          builder.with("user").andWhere({ dihapus: 0 });
         })
+        .whereNotNull("m_mata_pelajaran_id")
         .whereIn("m_rombel_id", rombel)
         .fetch();
 
       const jadwalMengajarData = [];
+      const rombelMengajar = [];
 
       await Promise.all(
         jadwalMengajar.toJSON().map(async (d) => {
-          if (
-            moment(d.jamMengajar.jam_mulai, "HH:mm:ss").format("HH:mm") <=
-              jam_saat_ini &&
-            moment(d.jamMengajar.jam_selesai, "HH:mm:ss").format("HH:mm") >=
-              jam_saat_ini
-          ) {
-            jadwalMengajarData.push({ ...d, aktif: false });
-          } else {
-            jadwalMengajarData.push({ ...d, aktif: false });
+          rombelMengajar.push(d);
+          if (jamMengajarIds.includes(d.m_jam_mengajar_id)) {
+            if (
+              moment(d.jamMengajar.jam_mulai, "HH:mm:ss").format("HH:mm") <=
+                jam_saat_ini &&
+              moment(d.jamMengajar.jam_selesai, "HH:mm:ss").format("HH:mm") >=
+                jam_saat_ini
+            ) {
+              jadwalMengajarData.push({ ...d, aktif: true });
+            } else {
+              jadwalMengajarData.push({ ...d, aktif: false });
+            }
           }
         })
       );
 
+      const today = new Date();
+      const absenHariIni = await MTimeline.query()
+        .with("tkTimeline", (builder) => {
+          builder.where({ m_user_id: user.id });
+        })
+        .where({ tipe: "absen" })
+        .whereIn(
+          "m_rombel_id",
+          jadwalMengajarData
+            .filter((d) => d.aktif == true)
+            .map((d) => d.rombel.id)
+        )
+        .whereBetween("tanggal_pembagian", [
+          `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`,
+          `${today.getFullYear()}/${
+            today.getMonth() + 1
+          }/${today.getDate()} ${jam_saat_ini}:00`,
+        ])
+        .fetch();
+
       return response.ok({
         jadwalMengajar: jadwalMengajarData,
         rombelMengajar: rombelMengajar,
+        absen: absenHariIni,
         rombel,
         userRole: user.role,
       });
@@ -2557,7 +2590,7 @@ class MainController {
 
     let tingkat = [];
 
-    if (sekolah.tingkat == "SMK") {
+    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA") {
       tingkat = ["X", "XI", "XII", "XIII"];
     } else if (sekolah.tingkat == "SMP") {
       tingkat = ["VII", "VIII", "IX"];
@@ -3317,7 +3350,7 @@ class MainController {
 
     let tingkatRombel = [];
 
-    if (sekolah.tingkat == "SMK") {
+    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA") {
       tingkatRombel = ["X", "XI", "XII"];
     } else if (sekolah.tingkat == "SMP") {
       tingkatRombel = ["VII", "VIII", "IX"];
@@ -6001,6 +6034,7 @@ class MainController {
         .with("komen", (builder) => {
           builder.with("user");
         })
+        .with("user")
         .where({ id: timeline_id })
         .andWhere({ dihapus: 0 })
         .first();
@@ -7350,7 +7384,7 @@ class MainController {
 
     let tingkatData = [];
 
-    if (sekolah.tingkat == "SMK") {
+    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA") {
       tingkatData = ["X", "XI", "XII", "XIII"];
     } else if (sekolah.tingkat == "SMP") {
       tingkatData = ["VII", "VIII", "IX"];
@@ -7494,7 +7528,7 @@ class MainController {
 
     let tingkatData;
 
-    if (sekolah.tingkat == "SMK") {
+    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA") {
       tingkatData = ["X", "XI", "XII", "XIII"];
     } else if (sekolah.tingkat == "SMP") {
       tingkatData = ["VII", "VIII", "IX"];
@@ -7668,7 +7702,7 @@ class MainController {
 
     let tingkat = [];
 
-    if (sekolah.tingkat == "SMK") {
+    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA") {
       tingkat = ["X", "XI", "XII", "XIII"];
     } else if (sekolah.tingkat == "SMP") {
       tingkat = ["VII", "VIII", "IX"];
@@ -7805,12 +7839,18 @@ class MainController {
     if (daftar_soal_ujian_id) {
       let soalUjianData = [];
       if (daftar_soal_ujian_id.length) {
+        const check = await TkSoalUjian.query()
+          .whereIn("m_soal_ujian_id", daftar_soal_ujian_id)
+          .andWhere({ m_ujian_id: m_ujian_id })
+          .fetch();
         daftar_soal_ujian_id.map((d) => {
-          soalUjianData.push({
-            m_ujian_id: m_ujian_id,
-            m_soal_ujian_id: d,
-            dihapus: 0,
-          });
+          if (check.toJSON().findIndex((tk) => tk.m_soal_ujian_id == d) < 0) {
+            soalUjianData.push({
+              m_ujian_id: m_ujian_id,
+              m_soal_ujian_id: d,
+              dihapus: 0,
+            });
+          }
         });
       }
 
@@ -11609,11 +11649,11 @@ class MainController {
       judul: "required",
       deskripsi: "required",
       penulis: "required",
-      penerbit: "required",
-      tahun_terbit: "required",
-      isbn: "required",
-      m_mata_pelajaran_id: "required",
-      tag: "required",
+      // penerbit: "optional",
+      // tahun_terbit: "optional",
+      // isbn: "optional",
+      // m_mata_pelajaran_id: "optional",
+      // tag: "optional",
       buku: "required",
       cover: "required",
     };
@@ -11692,15 +11732,15 @@ class MainController {
 
     if (m_mata_pelajaran_id) {
       const materi = await MMateri.query()
-        .whereIn("mata_pelajaran_id", m_mata_pelajaran_id)
+        .where({ m_mata_pelajaran_id: m_mata_pelajaran_id })
         .fetch();
 
       await Promise.all(
         materi.toJSON().map(async (d) => {
           await TkPerpusMapel.create({
             m_perpus_id: perpus.id,
-            m_mata_pelajaran_id: d.m_mata_pelajaran_id,
-            m_jurusan_id: d.m_jurusan_id,
+            m_mata_pelajaran_id: m_mata_pelajaran_id,
+            m_jurusan_id: d.m_jurusan_id ? d.m_jurusan_id : null,
             dihapus: 0,
           });
         })
@@ -11761,11 +11801,11 @@ class MainController {
       judul: "required",
       deskripsi: "required",
       penulis: "required",
-      penerbit: "required",
-      tahun_terbit: "required",
-      isbn: "required",
-      m_mata_pelajaran_id: "required",
-      tag: "required",
+      // penerbit: "optional",
+      // tahun_terbit: "optional",
+      // isbn: "optional",
+      // m_mata_pelajaran_id: "optional",
+      // tag: "optional",
       buku: "required",
       cover: "required",
     };
@@ -11846,7 +11886,7 @@ class MainController {
 
     if (m_mata_pelajaran_id) {
       const materi = await MMateri.query()
-        .where("mata_pelajaran_id", m_mata_pelajaran_id)
+        .where({ m_mata_pelajaran_id: m_mata_pelajaran_id })
         .fetch();
 
       await TkPerpusMapel.query().where({ m_perpus_id: perpus_id }).delete();
@@ -11855,8 +11895,8 @@ class MainController {
         materi.toJSON().map(async (d) => {
           await TkPerpusMapel.create({
             m_perpus_id: perpus_id,
-            m_mata_pelajaran_id: d.m_mata_pelajaran_id,
-            m_jurusan_id: d.m_jurusan_id,
+            m_mata_pelajaran_id: m_mata_pelajaran_id,
+            m_jurusan_id: d.m_jurusan_id ? d.m_jurusan_id : null,
             dihapus: 0,
           });
         })
@@ -11962,7 +12002,7 @@ class MainController {
 
     let tingkatData = [];
 
-    if (sekolah.tingkat == "SMK") {
+    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA") {
       tingkatData = ["X", "XI", "XII", "XIII"];
     } else if (sekolah.tingkat == "SMP") {
       tingkatData = ["VII", "VIII", "IX"];
