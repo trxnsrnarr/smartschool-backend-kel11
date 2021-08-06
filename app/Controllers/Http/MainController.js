@@ -4048,8 +4048,9 @@ class MainController {
         data.push({
           nama: explanation.getCell("B" + rowNumber).value,
           whatsapp: explanation.getCell("C" + rowNumber).value,
-          gender: explanation.getCell("D" + rowNumber).value,
-          role: explanation.getCell("E" + rowNumber).value,
+          email: explanation.getCell("D" + rowNumber).value,
+          gender: explanation.getCell("E" + rowNumber).value,
+          role: explanation.getCell("F" + rowNumber).value,
         });
       }
     });
@@ -4065,6 +4066,7 @@ class MainController {
             nama: d.nama,
             whatsapp: d.whatsapp,
             gender: d.gender,
+            email: d.email,
             password: "smartschool",
             role: "siswa",
             m_sekolah_id: sekolah.id,
@@ -16804,9 +16806,12 @@ class MainController {
         //   rombelall: explanation.getCell("B" + rowNumber).value,
         //   tingkat: `${rombelall.split(" ")[0]}`,
         // });
+        let rombelData = `${romawi[rombelall.split(" ")[0] - 1]} ${
+          rombelall.split(" ")[1]
+        } ${rombelall.split(" ")[2]}`;
 
         const rombelCheck = await MRombel.query()
-          .where({ nama: rombelall })
+          .where({ nama: rombelData })
           .andWhere({ m_ta_id: ta.id })
           .andWhere({ m_sekolah_id: sekolah.id })
           .first();
@@ -16814,7 +16819,7 @@ class MainController {
         if (!rombelCheck) {
           await MRombel.create({
             tingkat: tingkat,
-            nama: rombelall,
+            nama: rombelData,
             kelompok: "reguler",
             m_sekolah_id: sekolah.id,
             m_ta_id: ta.id,
@@ -16889,8 +16894,12 @@ class MainController {
           .where({ whatsapp: d.whatsapp })
           .first();
 
+        let kecamatan1 = `${d.kecamatan.split(" ")[1]}`;
+        let kecamatan2 = d ? d.kecamatan.split(" ")[2] : "";
+        let kecamatans = kecamatan1.concat(" ", kecamatan2 ? kecamatan2 : "");
+
         const districtIds = await District.query()
-          .where({ name: d.kecamatan })
+          .where({ name: kecamatans })
           .first();
 
         const villageIds = await Village.query()
@@ -16903,6 +16912,9 @@ class MainController {
           .andWhere({ m_sekolah_id: sekolah.id })
           .first();
 
+        const tgllahir = moment(d.tanggallahir).format(`YYYY-MM-DD`);
+        // return d.rombel;
+
         if (!checkUser) {
           const createUser = await User.create({
             nama: d.nama,
@@ -16912,7 +16924,7 @@ class MainController {
             password: await Hash.make(`smartschool`),
             role: "siswa",
             tempat_lahir: d.tempatlahir,
-            tanggal_lahir: d.tanggallahir,
+            tanggal_lahir: tgllahir,
             nip: d.nipd,
             nama_ayah: d.namaayah,
             nama_ibu: d.namaibu,
