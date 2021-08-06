@@ -16929,7 +16929,7 @@ class MainController {
             whatsapp: d.whatsapp,
             email: d.email,
             gender: d.jk,
-            password: await Hash.make(`smartschool`),
+            password: 'smartschool',
             role: "siswa",
             tempat_lahir: d.tempatlahir,
             tanggal_lahir: d.tanggallahir,
