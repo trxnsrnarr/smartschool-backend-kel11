@@ -4035,10 +4035,10 @@ class MainController {
   async importAnggotaRombelServices(filelocation, sekolah, m_rombel_id) {
     var workbook = new Excel.Workbook();
 
-    try{
+    try {
       workbook = await workbook.xlsx.readFile(filelocation);
-    } catch(err){
-      return "Format File Tidak Sesuai"
+    } catch (err) {
+      return "Format File Tidak Sesuai";
     }
 
     let explanation = workbook.getWorksheet("Sheet1");
@@ -16929,7 +16929,7 @@ class MainController {
             whatsapp: d.whatsapp,
             email: d.email,
             gender: d.jk,
-            password: 'smartschool',
+            password: "smartschool",
             role: "siswa",
             tempat_lahir: d.tempatlahir,
             tanggal_lahir: d.tanggallahir,
