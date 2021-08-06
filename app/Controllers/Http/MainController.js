@@ -510,24 +510,24 @@ class MainController {
     } = request.post();
     whatsapp = whatsapp.trim();
 
-    if (user.whatsapp != whatsapp) {
-      const check = await User.query().where({ whatsapp: whatsapp }).first();
+    // if (user.whatsapp != whatsapp) {
+    //   const check = await User.query().where({ whatsapp: whatsapp }).first();
 
-      if (check) {
-        return response.forbidden({
-          message: "Akun sudah terdaftar",
-        });
-      }
-    }
-    if (user.email != email) {
-      const check = await User.query().where({ email: email }).first();
+    //   if (check) {
+    //     return response.forbidden({
+    //       message: "Akun sudah terdaftar",
+    //     });
+    //   }
+    // }
+    // if (user.email != email) {
+    //   const check = await User.query().where({ email: email }).first();
 
-      if (check) {
-        return response.forbidden({
-          message: "email sudah terdaftar",
-        });
-      }
-    }
+    //   if (check) {
+    //     return response.forbidden({
+    //       message: "email sudah terdaftar",
+    //     });
+    //   }
+    // }
 
     const update = await User.query().where({ id: user.id }).update({
       nama,
