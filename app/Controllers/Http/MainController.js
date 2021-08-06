@@ -4034,11 +4034,22 @@ class MainController {
   async importAnggotaRombelServices(filelocation, sekolah, m_rombel_id) {
     var workbook = new Excel.Workbook();
 
-    workbook = await workbook.xlsx.readFile(filelocation);
+    try{
+      workbook = await workbook.xlsx.readFile(filelocation);
+    } catch(err){
+      return "Format File Tidak Sesuai"
+    }
 
     let explanation = workbook.getWorksheet("Sheet1");
 
+    if (!explanation) {
+      return "Format File Tidak Sesuai";
+    }
+
     let colComment = explanation.getColumn("A");
+    if (!colComment) {
+      return "Format File Tidak Sesuai";
+    }
 
     let data = [];
 
@@ -4105,7 +4116,7 @@ class MainController {
       })
     );
 
-    return result;
+    return "import Siswa Berhasil";
   }
 
   async importAnggotaRombel({ request, response }) {
@@ -4132,11 +4143,20 @@ class MainController {
       return fileUpload.error();
     }
 
-    return await this.importAnggotaRombelServices(
+    const message = await this.importAnggotaRombelServices(
       `tmp/uploads/${fname}`,
       sekolah,
       m_rombel_id
     );
+
+    if (message == "Format File Tidak Sesuai") {
+      return response.notFound({
+        message,
+      });
+    }
+    return response.ok({
+      message,
+    });
   }
 
   async deleteAnggotaRombel({
