@@ -14923,7 +14923,9 @@ class MainController {
     }
 
     const user = await auth.getUser();
-    // const { rombel_id } = request.post();
+
+    const { rombel_id } = request.get();
+
     const pelajaran = await MMateri.query()
       .with("mataPelajaran")
       .where({ id: materi_id })
@@ -14937,6 +14939,7 @@ class MainController {
     const rekap = await MRekap.query()
       .with("rekaprombel", (builder) => {
         builder
+          .where({ m_rombel_id: rombel_id })
           .with("rekapnilai", (builder) => {
             builder.with("user", (builder) => {
               builder.select("id", "nama");
@@ -14960,7 +14963,16 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .first();
 
-    const tugas = await MTugas.query().where({ m_user_id: user.id }).fetch();
+    const timelineTugas = await MTimeline.query()
+      .where({ m_user_id: user.id })
+      .andWhere({ m_rombel_id: rombel_id })
+      .with("tugas")
+      .fetch();
+    const tugas = timelineTugas
+      .toJSON()
+      .filter((t) => t.tugas != null)
+      .map((t) => t.tugas);
+    // const tugas = await MTugas.query().where({ m_user_id: user.id }).fetch();
 
     return response.ok({
       materirombel,
@@ -15117,37 +15129,50 @@ class MainController {
 
     const { di_ss, judul, tanggal, m_tugas_id, m_rombel_id, m_rekap_id } =
       request.post();
+
+    let rekap;
+    let tugasdata;
     if (m_tugas_id) {
+      tugasdata = await MTimeline.query()
+        .with("listSiswaDinilai", (builder) => {
+          builder.with("user").whereNotNull("nilai");
+        })
+        .with("tugas")
+        .where({ m_tugas_id: m_tugas_id })
+        .first();
+
+      rekap = await MRekapRombel.create({
+        di_ss: 1,
+        judul: tugasdata.toJSON().tugas.judul,
+        tanggal,
+        m_tugas_id: m_tugas_id,
+        m_rombel_id,
+        m_rekap_id: rekapnilai_id,
+        dihapus: 0,
+      });
+    } else {
       const rules = {
         judul: "required",
         tanggal: "required",
       };
       const message = {
-        "judul.required": "Judul Tugas harus diisi",
+        "tugas.required": "Judul TUgas Harus Diisi",
         "tanggal.required": "Tanggal Tugas harus diisi",
       };
       const validation = await validate(request.all(), rules, message);
       if (validation.fails()) {
         return response.unprocessableEntity(validation.messages());
       }
+      rekap = await MRekapRombel.create({
+        di_ss: 0,
+        judul,
+        tanggal,
+        m_tugas_id: null,
+        m_rombel_id,
+        m_rekap_id: rekapnilai_id,
+        dihapus: 0,
+      });
     }
-
-    const rekap = await MRekapRombel.create({
-      di_ss,
-      judul,
-      tanggal,
-      m_tugas_id,
-      m_rombel_id,
-      m_rekap_id: rekapnilai_id,
-      dihapus: 0,
-    });
-
-    const tugasdata = await MTimeline.query()
-      .with("listSiswaDinilai", (builder) => {
-        builder.with("user").whereNotNull("nilai");
-      })
-      .where({ m_tugas_id: m_tugas_id })
-      .fetch();
 
     const data = await MRombel.query()
       .with("anggotaRombel", (builder) => {
@@ -15360,9 +15385,7 @@ class MainController {
 
     const rekap = await MRekapRombel.query()
       .where({ id: rekaprombel_id })
-      .update({
-        dihapus: 1,
-      });
+      .delete();
 
     if (!rekap) {
       return response.notFound({
