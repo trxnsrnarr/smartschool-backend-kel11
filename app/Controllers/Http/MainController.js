@@ -4069,6 +4069,7 @@ class MainController {
       data.map(async (d) => {
         const checkUser = await User.query()
           .where({ whatsapp: d.whatsapp })
+          .andWhere({ m_sekolah_id: sekolah.id })
           .first();
 
         if (!checkUser) {
@@ -14936,42 +14937,75 @@ class MainController {
       .where({ m_materi_id: materi_id })
       .fetch();
 
-    const rekap = await MRekap.query()
-      .with("rekaprombel", (builder) => {
-        builder
-          .where({ m_rombel_id: rombel_id })
-          .with("rekapnilai", (builder) => {
-            builder.with("user", (builder) => {
-              builder.select("id", "nama");
-            });
-          })
-          .withCount("rekapnilai as total", (builder) => {
-            builder.where(
-              "nilai",
-              "<",
-              `${pelajaran.toJSON().mataPelajaran.kkm}`
-            );
-          })
-          .with("tugas")
-          .where({ dihapus: 0 });
-        // .andWhere({ m_rombel_id: rombel_id });
-      })
-      .with("materi", (builder) => {
-        builder.with("mataPelajaran");
-      })
-      .where({ id: rekap_id })
-      .andWhere({ dihapus: 0 })
-      .first();
+    let rekap;
+    let timelineTugas;
+    let tugas;
+    if (rombel_id) {
+      rekap = await MRekap.query()
+        .with("rekaprombel", (builder) => {
+          builder
+            .where({ m_rombel_id: rombel_id })
+            .with("rekapnilai", (builder) => {
+              builder.with("user", (builder) => {
+                builder.select("id", "nama");
+              });
+            })
+            .withCount("rekapnilai as total", (builder) => {
+              builder.where(
+                "nilai",
+                "<",
+                `${pelajaran.toJSON().mataPelajaran.kkm}`
+              );
+            })
+            .with("tugas")
+            .where({ dihapus: 0 });
+          // .andWhere({ m_rombel_id: rombel_id });
+        })
+        .with("materi", (builder) => {
+          builder.with("mataPelajaran");
+        })
+        .where({ id: rekap_id })
+        .andWhere({ dihapus: 0 })
+        .first();
+    } else {
+      rekap = await MRekap.query()
+        .with("rekaprombel", (builder) => {
+          builder
+            .with("rekapnilai", (builder) => {
+              builder.with("user", (builder) => {
+                builder.select("id", "nama");
+              });
+            })
+            .withCount("rekapnilai as total", (builder) => {
+              builder.where(
+                "nilai",
+                "<",
+                `${pelajaran.toJSON().mataPelajaran.kkm}`
+              );
+            })
+            .with("tugas")
+            .where({ dihapus: 0 });
+          // .andWhere({ m_rombel_id: rombel_id });
+        })
+        .with("materi", (builder) => {
+          builder.with("mataPelajaran");
+        })
+        .where({ id: rekap_id })
+        .andWhere({ dihapus: 0 })
+        .first();
+    }
 
-    const timelineTugas = await MTimeline.query()
-      .where({ m_user_id: user.id })
-      .andWhere({ m_rombel_id: rombel_id })
-      .with("tugas")
-      .fetch();
-    const tugas = timelineTugas
-      .toJSON()
-      .filter((t) => t.tugas != null)
-      .map((t) => t.tugas);
+    if (rombel_id) {
+      timelineTugas = await MTimeline.query()
+        .where({ m_user_id: user.id })
+        .andWhere({ m_rombel_id: rombel_id })
+        .with("tugas")
+        .fetch();
+      tugas = timelineTugas
+        .toJSON()
+        .filter((t) => t.tugas != null)
+        .map((t) => t.tugas);
+    }
     // const tugas = await MTugas.query().where({ m_user_id: user.id }).fetch();
 
     return response.ok({
@@ -15428,7 +15462,7 @@ class MainController {
         nilai,
       });
     } else {
-      await TkRekapNilai.create({
+      rekap = await TkRekapNilai.create({
         m_user_id: user_id,
         nilai,
         m_rekap_rombel_id: rekapnilai_id,
@@ -16130,10 +16164,11 @@ class MainController {
         data.push({
           namaGuru: explanation.getCell("B" + rowNumber).value,
           whatsapp: explanation.getCell("C" + rowNumber).value,
-          nama: explanation.getCell("D" + rowNumber).value,
-          kode: explanation.getCell("E" + rowNumber).value,
-          kelompok: explanation.getCell("F" + rowNumber).value,
-          kkm: explanation.getCell("G" + rowNumber).value,
+          email: explanation.getCell("D" + rowNumber).value,
+          nama: explanation.getCell("E" + rowNumber).value,
+          kode: explanation.getCell("F" + rowNumber).value,
+          kelompok: explanation.getCell("G" + rowNumber).value,
+          kkm: explanation.getCell("H" + rowNumber).value,
         });
       }
     });
@@ -16142,9 +16177,29 @@ class MainController {
       data.map(async (d) => {
         const user = await User.query()
           .where({ whatsapp: d.whatsapp })
+          .andWhere({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
           .first();
         if (!user) {
+          const newUser = await User.create({
+            nama: d.nama,
+            whatsapp: d.whatsapp,
+            email: d.email,
+            m_sekolah_id: sekolah.id,
+            password: "smartschool",
+            role: "guru",
+            dihapus: 0,
+          });
+          await MMataPelajaran.create({
+            nama: newUser.nama,
+            kode: newUser.kode,
+            kelompok: newUser.kelompok,
+            kkm: newUser.kkm,
+            m_user_id: user.id,
+            m_sekolah_id: sekolah.id,
+            m_ta_id: ta.id,
+            dihapus: 0,
+          });
           return;
         }
 
