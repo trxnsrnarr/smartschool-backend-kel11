@@ -4060,7 +4060,9 @@ class MainController {
           nama: explanation.getCell("B" + rowNumber).value,
           whatsapp: explanation.getCell("C" + rowNumber).value,
           email:
-            typeof explanation.getCell("D" + rowNumber).value == "object"
+            explanation.getCell("D" + rowNumber).value == null
+              ? ""
+              : typeof explanation.getCell("D" + rowNumber).value == "object"
               ? JSON.parse(explanation.getCell("D" + rowNumber).value).text
               : explanation.getCell("D" + rowNumber).value,
           gender: explanation.getCell("E" + rowNumber).value,
@@ -15571,7 +15573,9 @@ class MainController {
           kode_pos: explanation.getCell("Q" + rowNumber).value,
           whatsapp: explanation.getCell("R" + rowNumber).value,
           email:
-            typeof explanation.getCell("S" + rowNumber).value == "object"
+            explanation.getCell("S" + rowNumber).value == null
+              ? ""
+              : typeof explanation.getCell("S" + rowNumber).value == "object"
               ? JSON.parse(explanation.getCell("S" + rowNumber).value).text
               : explanation.getCell("S" + rowNumber).value,
           tugas_tambahan: explanation.getCell("T" + rowNumber).value,
@@ -16173,7 +16177,9 @@ class MainController {
           namaGuru: explanation.getCell("B" + rowNumber).value,
           whatsapp: explanation.getCell("C" + rowNumber).value,
           email:
-            typeof explanation.getCell("D" + rowNumber).value == "object"
+            explanation.getCell("D" + rowNumber).value == null
+              ? ""
+              : typeof explanation.getCell("D" + rowNumber).value == "object"
               ? JSON.parse(explanation.getCell("D" + rowNumber).value).text
               : explanation.getCell("D" + rowNumber).value,
           nama: explanation.getCell("E" + rowNumber).value,
@@ -16978,7 +16984,9 @@ class MainController {
           kodepos: explanation.getCell("O" + rowNumber).value,
           whatsapp: explanation.getCell("P" + rowNumber).value,
           email:
-            typeof explanation.getCell("Q" + rowNumber).value == "object"
+            explanation.getCell("Q" + rowNumber).value == null
+              ? ""
+              : typeof explanation.getCell("Q" + rowNumber).value == "object"
               ? JSON.parse(explanation.getCell("Q" + rowNumber).value).text
               : explanation.getCell("Q" + rowNumber).value,
           namaayah: explanation.getCell("R" + rowNumber).value,
@@ -17577,7 +17585,9 @@ class MainController {
           nama: explanation.getCell("B" + rowNumber).value,
           whatsapp: explanation.getCell("C" + rowNumber).value,
           email:
-            typeof explanation.getCell("D" + rowNumber).value == "object"
+            explanation.getCell("D" + rowNumber).value == null
+              ? ""
+              : typeof explanation.getCell("D" + rowNumber).value == "object"
               ? JSON.parse(explanation.getCell("D" + rowNumber).value).text
               : explanation.getCell("D" + rowNumber).value,
           gender: explanation.getCell("E" + rowNumber).value,
