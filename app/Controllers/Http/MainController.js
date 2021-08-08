@@ -230,7 +230,11 @@ const dateObj = new Date();
 const month = monthNames[dateObj.getMonth()];
 const day = String(dateObj.getDate()).padStart(2, "0");
 const year = dateObj.getFullYear();
+const hour = dateObj.getHours();
+const minute = dateObj.getMinutes();
+const second = dateObj.getSeconds();
 const keluarantanggal = day + "," + month + "," + year;
+const keluarantanggalseconds = `${day},${month},${year} ${hour}:${minute}:${second}`;
 class MainController {
   // UTILS
 
@@ -25734,7 +25738,7 @@ class MainController {
       })
     );
 
-    let namaFile = `/uploads/rekap-absen-siswa-${keluarantanggal}.xlsx`;
+    let namaFile = `/uploads/rekap-absen-siswa-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
