@@ -4088,7 +4088,7 @@ class MainController {
             whatsapp: d.whatsapp,
             gender: d.gender,
             email: d.email ? d.email : "",
-            password: "smartschool",
+            password: await Hash.make("smartschool"),
             role: "siswa",
             m_sekolah_id: sekolah.id,
             dihapus: 0,
@@ -6309,39 +6309,39 @@ class MainController {
           });
         })
       );
-      await Promise.all(
-        anggotaRombel.toJSON().map(async (d) => {
-          if (d.user.email != null) {
-            try {
-              const task = cron.schedule(
-                `${menit} ${jam} ${tanggal} ${bulan} *`,
-                () => {
-                  Mail.send(
-                    `emails.pertemuan`,
-                    {
-                      ...sekolah.toJSON(),
-                      timelineid: timeline.id,
-                      namaguru: user.nama,
-                      mataPelajaran: mapel.nama,
-                    },
-                    (message) => {
-                      message
-                        .to(`${d.user.email}`)
-                        .from("no-reply@smarteschool.id")
-                        .subject("Ada Pertemuan Baru");
-                    }
-                  );
-                },
-                {
-                  scheduled: true,
-                  timezone: "Asia/Jakarta",
-                }
-              );
-              return task;
-            } catch (error) {}
-          }
-        })
-      );
+      // await Promise.all(
+      //   anggotaRombel.toJSON().map(async (d) => {
+      //     if (d.user.email != null) {
+      //       try {
+      //         const task = cron.schedule(
+      //           `${menit} ${jam} ${tanggal} ${bulan} *`,
+      //           () => {
+      //             Mail.send(
+      //               `emails.pertemuan`,
+      //               {
+      //                 ...sekolah.toJSON(),
+      //                 timelineid: timeline.id,
+      //                 namaguru: user.nama,
+      //                 mataPelajaran: mapel.nama,
+      //               },
+      //               (message) => {
+      //                 message
+      //                   .to(`${d.user.email}`)
+      //                   .from("no-reply@smarteschool.id")
+      //                   .subject("Ada Pertemuan Baru");
+      //               }
+      //             );
+      //           },
+      //           {
+      //             scheduled: true,
+      //             timezone: "Asia/Jakarta",
+      //           }
+      //         );
+      //         return task;
+      //       } catch (error) {}
+      //     }
+      //   })
+      // );
 
       await TkTimeline.createMany(userIds);
     } else if (tipe == "diskusi") {
