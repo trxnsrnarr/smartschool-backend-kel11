@@ -4088,7 +4088,7 @@ class MainController {
             whatsapp: d.whatsapp,
             gender: d.gender,
             email: d.email ? d.email : "",
-            password: "smartschool",
+            password: await Hash.make("smartschool"),
             role: "siswa",
             m_sekolah_id: sekolah.id,
             dihapus: 0,
@@ -18008,16 +18008,18 @@ class MainController {
       logoFileName = "logo.png";
     }
 
-    return await DownloadService2.kartuUjian(
+    const kartusoalFile = await DownloadService2.kartuUjian(
       sekolah,
       ta,
       kepsek,
       ujian,
       pgFilter,
       esaiFilter,
-      keluarantanggal,
+      keluarantanggalseconds,
       logoFileName
     );
+
+    return kartusoalFile;
   }
 
   async daftarsekolah({ response, request }) {
