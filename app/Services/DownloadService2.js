@@ -31,7 +31,10 @@ class DownloadService {
 
     // ADD LOGO
     const logoImage = workbook.addImage({
-      filename: `public/tmp/${logoFileName}`,
+      filename:
+        logoFileName == "logo.png"
+          ? `public/img/${logoFileName}`
+          : `public/tmp/${logoFileName}`,
       extension: "png",
     });
 
