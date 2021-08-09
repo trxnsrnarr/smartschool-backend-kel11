@@ -26179,7 +26179,7 @@ class MainController {
             const createUser1 = await User.create({
               nama: d.nama1,
               whatsapp: d.no1,
-              password: await Hash.make(`siapgpds`),
+              password: `siapgpds`,
               role: "admin",
               tanggal_lahir: tgllahir1,
               m_sekolah_id: sekolahCreate.id,
@@ -26191,7 +26191,7 @@ class MainController {
             const createUser2 = await User.create({
               nama: d.nama2,
               whatsapp: d.no2,
-              password: await Hash.make(`siapgpds`),
+              password: `siapgpds`,
               role: "admin",
               tanggal_lahir: tgllahir2,
               m_sekolah_id: sekolahCreate.id,
@@ -26203,7 +26203,7 @@ class MainController {
             const createUser3 = await User.create({
               nama: d.nama3,
               whatsapp: d.no3,
-              password: await Hash.make(`siapgpds`),
+              password: `siapgpds`,
               role: "admin",
               tanggal_lahir: tgllahir3,
               m_sekolah_id: sekolahCreate.id,
@@ -26215,7 +26215,7 @@ class MainController {
             const createUser4 = await User.create({
               nama: d.nama4,
               whatsapp: d.no4,
-              password: await Hash.make(`siapgpds`),
+              password: `siapgpds`,
               role: "admin",
               tanggal_lahir: tgllahir4,
               m_sekolah_id: sekolahCreate.id,
@@ -26228,7 +26228,7 @@ class MainController {
           const createUser1 = await User.create({
             nama: d.nama1,
             whatsapp: d.no1,
-            password: await Hash.make(`siapgpds`),
+            password: `siapgpds`,
             role: "admin",
             tanggal_lahir: tgllahir1,
             m_sekolah_id: checkSekolah.id,
@@ -26240,7 +26240,7 @@ class MainController {
           const createUser2 = await User.create({
             nama: d.nama2,
             whatsapp: d.no2,
-            password: await Hash.make(`siapgpds`),
+            password: `siapgpds`,
             role: "admin",
             tanggal_lahir: tgllahir2,
             m_sekolah_id: checkSekolah.id,
@@ -26252,7 +26252,7 @@ class MainController {
           const createUser3 = await User.create({
             nama: d.nama3,
             whatsapp: d.no3,
-            password: await Hash.make(`siapgpds`),
+            password: `siapgpds`,
             role: "admin",
             tanggal_lahir: tgllahir3,
             m_sekolah_id: checkSekolah.id,
@@ -26264,7 +26264,7 @@ class MainController {
           const createUser4 = await User.create({
             nama: d.nama4,
             whatsapp: d.no4,
-            password: await Hash.make(`siapgpds`),
+            password: `siapgpds`,
             role: "admin",
             tanggal_lahir: tgllahir4,
             m_sekolah_id: checkSekolah.id,
