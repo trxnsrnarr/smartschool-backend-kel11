@@ -26090,6 +26090,38 @@ class MainController {
           .first();
 
         if (!checkSekolah) {
+          // const tingkat = `${d.sekolah.split(" ")[0]}`;
+          // const tingkat = `${d.sekolah.indexOf("SD")}`;
+          let tingkatSekolah;
+          // if (
+          //   tingkat == "%SD%" ||
+          //   tingkat == "SDS" ||
+          //   tingkat == "SDN" ||
+          //   tingkat == "SDK"
+          // ) {
+          //   tingkatSekolah = "SD";
+          // } else if (
+          //   tingkat == "SMP" ||
+          //   tingkat == "SMPS" ||
+          //   tingkat == "SMPN" ||
+          //   tingkat == "SMPK"
+          // ) {
+          //   tingkatSekolah = "SMP";
+          // }
+          if (
+            d.sekolah.indexOf("SD") == 0 ||
+            d.sekolah.indexOf("Sd") == 0 ||
+            d.sekolah.indexOf("sd") == 0
+          ) {
+            tingkatSekolah = "SD";
+          } else if (
+            d.sekolah.indexOf("SMP") == 0 ||
+            d.sekolah.indexOf("Smp") == 0 ||
+            d.sekolah.indexOf("SMp") == 0 ||
+            d.sekolah.indexOf("smp") == 0
+          ) {
+            tingkatSekolah = "SMP";
+          }
           const sekolahCreate = await MSekolah.create({
             npsn: d.npsn,
             nama: d.sekolah,
@@ -26099,6 +26131,7 @@ class MainController {
               lower: true, // convert to lower case, defaults to `false`
             })}.smarteschool.id`,
             status: "S",
+            tingkat: tingkatSekolah,
             integrasi: "whatsapp",
             diintegrasi: 1,
             trial: 1,
