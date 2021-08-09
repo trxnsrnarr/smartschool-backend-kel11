@@ -591,6 +591,7 @@ class MainController {
       prestasi,
       portofolio,
       bahasa,
+      keahlian,
 
       // identitas
       nama,
@@ -683,12 +684,38 @@ class MainController {
       home,
     };
 
-    pendidikan = pendidikan.length ? pendidikan.toString() : "";
-    pengalaman = pengalaman.length ? pengalaman.toString() : "";
-    prestasi = prestasi.length ? prestasi.toString() : "";
-    portofolio = portofolio.length ? portofolio.toString() : "";
-    bahasa = bahasa.length ? bahasa.toString() : "";
-    keahlian = keahlian.length ? keahlian.toString() : "";
+    pendidikan =
+      typeof pendidikan == "array"
+        ? pendidikan.length
+          ? pendidikan.toString()
+          : ""
+        : "";
+    pengalaman =
+      typeof pengalaman == "array"
+        ? pengalaman.length
+          ? pengalaman.toString()
+          : ""
+        : "";
+    prestasi =
+      typeof prestasi == "array"
+        ? prestasi.length
+          ? prestasi.toString()
+          : ""
+        : "";
+    portofolio =
+      typeof portofolio == "array"
+        ? portofolio.length
+          ? portofolio.toString()
+          : ""
+        : "";
+    bahasa =
+      typeof bahasa == "array" ? (bahasa.length ? bahasa.toString() : "") : "";
+    keahlian =
+      typeof keahlian == "array"
+        ? keahlian.length
+          ? keahlian.toString()
+          : ""
+        : "";
     tanggal_lahir == "Invalid date" ? delete userPayload.tanggal_lahir : null;
 
     await User.query().where({ id: user.id }).update(userPayload);
@@ -26047,6 +26074,255 @@ class MainController {
     await workbook.xlsx.writeFile(`public${namaFile}`);
 
     return namaFile;
+  }
+
+  async importGPDSServices(filelocation, sekolah) {
+    var workbook = new Excel.Workbook();
+
+    try {
+      workbook = await workbook.xlsx.readFile(filelocation);
+    } catch (err) {
+      return "Format File Tidak Sesuai";
+    }
+
+    let explanation = workbook.getWorksheet("Form Responses 1");
+
+    if (!explanation) {
+      return "Format File Tidak Sesuai";
+    }
+
+    let colComment = explanation.getColumn("A");
+    if (!colComment) {
+      return "Format File Tidak Sesuai";
+    }
+    let data = [];
+
+    colComment.eachCell(async (cell, rowNumber) => {
+      if (rowNumber >= 2) {
+        data.push({
+          sekolah: explanation.getCell("B" + rowNumber).value,
+          npsn: explanation.getCell("C" + rowNumber).value,
+          nama1: explanation.getCell("D" + rowNumber).value,
+          no1: explanation.getCell("E" + rowNumber).value,
+          tgl1: explanation.getCell("F" + rowNumber).value,
+          nama2: explanation.getCell("G" + rowNumber).value,
+          no2: explanation.getCell("H" + rowNumber).value,
+          tgl2: explanation.getCell("I" + rowNumber).value,
+          nama3: explanation.getCell("J" + rowNumber).value,
+          no3: explanation.getCell("K" + rowNumber).value,
+          tgl3: explanation.getCell("L" + rowNumber).value,
+          nama4: explanation.getCell("M" + rowNumber).value,
+          no4: explanation.getCell("N" + rowNumber).value,
+          tgl4: explanation.getCell("O" + rowNumber).value,
+        });
+      }
+    });
+    const result = await Promise.all(
+      data.map(async (d) => {
+        const checkSekolah = await MSekolah.query()
+          .where({ npsn: d.npsn })
+          .first();
+
+        const tgllahir1 = moment(d.tgl1).format(`YYYY-MM-DD`);
+        const tgllahir2 = moment(d.tgl2).format(`YYYY-MM-DD`);
+        const tgllahir3 = moment(d.tgl3).format(`YYYY-MM-DD`);
+        const tgllahir4 = moment(d.tgl4).format(`YYYY-MM-DD`);
+
+        const checkUser1 = await User.query()
+          .where({ whatsapp: d.no1 })
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .first();
+
+        const checkUser2 = await User.query()
+          .where({ whatsapp: d.no2 })
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .first();
+
+        const checkUser3 = await User.query()
+          .where({ whatsapp: d.no3 })
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .first();
+
+        const checkUser4 = await User.query()
+          .where({ whatsapp: d.no4 })
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .first();
+
+        if (!checkSekolah) {
+          // const tingkat = `${d.sekolah.split(" ")[0]}`;
+          // const tingkat = `${d.sekolah.indexOf("SD")}`;
+          let tingkatSekolah;
+          // if (
+          //   tingkat == "%SD%" ||
+          //   tingkat == "SDS" ||
+          //   tingkat == "SDN" ||
+          //   tingkat == "SDK"
+          // ) {
+          //   tingkatSekolah = "SD";
+          // } else if (
+          //   tingkat == "SMP" ||
+          //   tingkat == "SMPS" ||
+          //   tingkat == "SMPN" ||
+          //   tingkat == "SMPK"
+          // ) {
+          //   tingkatSekolah = "SMP";
+          // }
+          if (
+            d.sekolah.indexOf("SD") == 0 ||
+            d.sekolah.indexOf("Sd") == 0 ||
+            d.sekolah.indexOf("sd") == 0
+          ) {
+            tingkatSekolah = "SD";
+          } else if (
+            d.sekolah.indexOf("SMP") == 0 ||
+            d.sekolah.indexOf("Smp") == 0 ||
+            d.sekolah.indexOf("SMp") == 0 ||
+            d.sekolah.indexOf("smp") == 0
+          ) {
+            tingkatSekolah = "SMP";
+          }
+          const sekolahCreate = await MSekolah.create({
+            npsn: d.npsn,
+            nama: d.sekolah,
+            domain: `https://${slugify(d.sekolah, {
+              replacement: "", // replace spaces with replacement character, defaults to `-`
+              remove: undefined, // remove characters that match regex, defaults to `undefined`
+              lower: true, // convert to lower case, defaults to `false`
+            })}.smarteschool.id`,
+            status: "S",
+            tingkat: tingkatSekolah,
+            integrasi: "whatsapp",
+            diintegrasi: 1,
+            trial: 1,
+          });
+
+          if (!checkUser1) {
+            const createUser1 = await User.create({
+              nama: d.nama1,
+              whatsapp: d.no1,
+              password: `siapgpds`,
+              role: "admin",
+              tanggal_lahir: tgllahir1,
+              m_sekolah_id: sekolahCreate.id,
+              dihapus: 0,
+            });
+          }
+
+          if (!checkUser2) {
+            const createUser2 = await User.create({
+              nama: d.nama2,
+              whatsapp: d.no2,
+              password: `siapgpds`,
+              role: "admin",
+              tanggal_lahir: tgllahir2,
+              m_sekolah_id: sekolahCreate.id,
+              dihapus: 0,
+            });
+          }
+
+          if (!checkUser3) {
+            const createUser3 = await User.create({
+              nama: d.nama3,
+              whatsapp: d.no3,
+              password: `siapgpds`,
+              role: "admin",
+              tanggal_lahir: tgllahir3,
+              m_sekolah_id: sekolahCreate.id,
+              dihapus: 0,
+            });
+          }
+
+          if (!checkUser4) {
+            const createUser4 = await User.create({
+              nama: d.nama4,
+              whatsapp: d.no4,
+              password: `siapgpds`,
+              role: "admin",
+              tanggal_lahir: tgllahir4,
+              m_sekolah_id: sekolahCreate.id,
+              dihapus: 0,
+            });
+          }
+          return;
+        }
+        if (!checkUser1) {
+          const createUser1 = await User.create({
+            nama: d.nama1,
+            whatsapp: d.no1,
+            password: `siapgpds`,
+            role: "admin",
+            tanggal_lahir: tgllahir1,
+            m_sekolah_id: checkSekolah.id,
+            dihapus: 0,
+          });
+        }
+
+        if (!checkUser2) {
+          const createUser2 = await User.create({
+            nama: d.nama2,
+            whatsapp: d.no2,
+            password: `siapgpds`,
+            role: "admin",
+            tanggal_lahir: tgllahir2,
+            m_sekolah_id: checkSekolah.id,
+            dihapus: 0,
+          });
+        }
+
+        if (!checkUser3) {
+          const createUser3 = await User.create({
+            nama: d.nama3,
+            whatsapp: d.no3,
+            password: `siapgpds`,
+            role: "admin",
+            tanggal_lahir: tgllahir3,
+            m_sekolah_id: checkSekolah.id,
+            dihapus: 0,
+          });
+        }
+
+        if (!checkUser4) {
+          const createUser4 = await User.create({
+            nama: d.nama4,
+            whatsapp: d.no4,
+            password: `siapgpds`,
+            role: "admin",
+            tanggal_lahir: tgllahir4,
+            m_sekolah_id: checkSekolah.id,
+            dihapus: 0,
+          });
+        }
+
+        return;
+      })
+    );
+
+    return result;
+  }
+
+  async importGPDS({ request, response, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let file = request.file("file");
+    let fname = `import-excel.${file.extname}`;
+
+    //move uploaded file into custom folder
+    await file.move(Helpers.tmpPath("/uploads"), {
+      name: fname,
+      overwrite: true,
+    });
+
+    if (!file.moved()) {
+      return fileUpload.error();
+    }
+
+    return await this.importGPDSServices(`tmp/uploads/${fname}`, sekolah);
   }
 }
 module.exports = MainController;
