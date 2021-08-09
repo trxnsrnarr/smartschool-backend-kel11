@@ -26128,26 +26128,6 @@ class MainController {
         const tgllahir3 = moment(d.tgl3).format(`YYYY-MM-DD`);
         const tgllahir4 = moment(d.tgl4).format(`YYYY-MM-DD`);
 
-        const checkUser1 = await User.query()
-          .where({ whatsapp: d.no1 })
-          .andWhere({ m_sekolah_id: sekolah.id })
-          .first();
-
-        const checkUser2 = await User.query()
-          .where({ whatsapp: d.no2 })
-          .andWhere({ m_sekolah_id: sekolah.id })
-          .first();
-
-        const checkUser3 = await User.query()
-          .where({ whatsapp: d.no3 })
-          .andWhere({ m_sekolah_id: sekolah.id })
-          .first();
-
-        const checkUser4 = await User.query()
-          .where({ whatsapp: d.no4 })
-          .andWhere({ m_sekolah_id: sekolah.id })
-          .first();
-
         if (!checkSekolah) {
           // const tingkat = `${d.sekolah.split(" ")[0]}`;
           // const tingkat = `${d.sekolah.indexOf("SD")}`;
@@ -26208,7 +26188,7 @@ class MainController {
             });
           }
 
-          if (!checkUser2) {
+          if (d.no2 !== d.no1) {
             const createUser2 = await User.create({
               nama: d.nama2,
               whatsapp: d.no2,
@@ -26220,7 +26200,7 @@ class MainController {
             });
           }
 
-          if (!checkUser3) {
+          if (d.no3 !== d.no1 && d.no3 !== d.no2) {
             const createUser3 = await User.create({
               nama: d.nama3,
               whatsapp: d.no3,
@@ -26232,7 +26212,7 @@ class MainController {
             });
           }
 
-          if (!checkUser4) {
+          if (d.no4 !== d.no1 && d.no4 !== d.no2 && d.no4 !== d.no3) {
             const createUser4 = await User.create({
               nama: d.nama4,
               whatsapp: d.no4,
@@ -26245,6 +26225,27 @@ class MainController {
           }
           return;
         }
+
+        const checkUser1 = await User.query()
+          .where({ whatsapp: d.no1 })
+          .andWhere({ m_sekolah_id: checkSekolah.id })
+          .first();
+
+        const checkUser2 = await User.query()
+          .where({ whatsapp: d.no2 })
+          .andWhere({ m_sekolah_id: checkSekolah.id })
+          .first();
+
+        const checkUser3 = await User.query()
+          .where({ whatsapp: d.no3 })
+          .andWhere({ m_sekolah_id: checkSekolah.id })
+          .first();
+
+        const checkUser4 = await User.query()
+          .where({ whatsapp: d.no4 })
+          .andWhere({ m_sekolah_id: checkSekolah.id })
+          .first();
+
         if (!checkUser1) {
           const createUser1 = await User.create({
             nama: d.nama1,
@@ -26257,7 +26258,7 @@ class MainController {
           });
         }
 
-        if (!checkUser2) {
+        if (!checkUser2 && d.no2 !== d.no1) {
           const createUser2 = await User.create({
             nama: d.nama2,
             whatsapp: d.no2,
@@ -26269,7 +26270,7 @@ class MainController {
           });
         }
 
-        if (!checkUser3) {
+        if (!checkUser3 && d.no3 !== d.no1 && d.no3 !== d.no2) {
           const createUser3 = await User.create({
             nama: d.nama3,
             whatsapp: d.no3,
@@ -26281,7 +26282,12 @@ class MainController {
           });
         }
 
-        if (!checkUser4) {
+        if (
+          !checkUser4 &&
+          d.no4 !== d.no1 &&
+          d.no4 !== d.no2 &&
+          d.no4 !== d.no3
+        ) {
           const createUser4 = await User.create({
             nama: d.nama4,
             whatsapp: d.no4,
