@@ -230,7 +230,11 @@ const dateObj = new Date();
 const month = monthNames[dateObj.getMonth()];
 const day = String(dateObj.getDate()).padStart(2, "0");
 const year = dateObj.getFullYear();
+const hour = dateObj.getHours();
+const minute = dateObj.getMinutes();
+const second = dateObj.getSeconds();
 const keluarantanggal = day + "," + month + "," + year;
+const keluarantanggalseconds = `${day},${month},${year} ${hour}:${minute}:${second}`;
 class MainController {
   // UTILS
 
@@ -6305,39 +6309,39 @@ class MainController {
           });
         })
       );
-      await Promise.all(
-        anggotaRombel.toJSON().map(async (d) => {
-          if (d.user.email != null) {
-            try {
-              const task = cron.schedule(
-                `${menit} ${jam} ${tanggal} ${bulan} *`,
-                () => {
-                  Mail.send(
-                    `emails.pertemuan`,
-                    {
-                      ...sekolah.toJSON(),
-                      timelineid: timeline.id,
-                      namaguru: user.nama,
-                      mataPelajaran: mapel.nama,
-                    },
-                    (message) => {
-                      message
-                        .to(`${d.user.email}`)
-                        .from("no-reply@smarteschool.id")
-                        .subject("Ada Pertemuan Baru");
-                    }
-                  );
-                },
-                {
-                  scheduled: true,
-                  timezone: "Asia/Jakarta",
-                }
-              );
-              return task;
-            } catch (error) {}
-          }
-        })
-      );
+      // await Promise.all(
+      //   anggotaRombel.toJSON().map(async (d) => {
+      //     if (d.user.email != null) {
+      //       try {
+      //         const task = cron.schedule(
+      //           `${menit} ${jam} ${tanggal} ${bulan} *`,
+      //           () => {
+      //             Mail.send(
+      //               `emails.pertemuan`,
+      //               {
+      //                 ...sekolah.toJSON(),
+      //                 timelineid: timeline.id,
+      //                 namaguru: user.nama,
+      //                 mataPelajaran: mapel.nama,
+      //               },
+      //               (message) => {
+      //                 message
+      //                   .to(`${d.user.email}`)
+      //                   .from("no-reply@smarteschool.id")
+      //                   .subject("Ada Pertemuan Baru");
+      //               }
+      //             );
+      //           },
+      //           {
+      //             scheduled: true,
+      //             timezone: "Asia/Jakarta",
+      //           }
+      //         );
+      //         return task;
+      //       } catch (error) {}
+      //     }
+      //   })
+      // );
 
       await TkTimeline.createMany(userIds);
     } else if (tipe == "diskusi") {
@@ -25734,7 +25738,7 @@ class MainController {
       })
     );
 
-    let namaFile = `/uploads/rekap-absen-siswa-${keluarantanggal}.xlsx`;
+    let namaFile = `/uploads/rekap-absen-siswa-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
