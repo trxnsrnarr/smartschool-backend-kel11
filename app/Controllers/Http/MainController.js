@@ -26176,17 +26176,15 @@ class MainController {
             trial: 1,
           });
 
-          if (!checkUser1) {
-            const createUser1 = await User.create({
-              nama: d.nama1,
-              whatsapp: d.no1,
-              password: `siapgpds`,
-              role: "admin",
-              tanggal_lahir: tgllahir1,
-              m_sekolah_id: sekolahCreate.id,
-              dihapus: 0,
-            });
-          }
+          const createUser1 = await User.create({
+            nama: d.nama1,
+            whatsapp: d.no1,
+            password: `siapgpds`,
+            role: "admin",
+            tanggal_lahir: tgllahir1,
+            m_sekolah_id: sekolahCreate.id,
+            dihapus: 0,
+          });
 
           if (d.no2 !== d.no1) {
             const createUser2 = await User.create({
