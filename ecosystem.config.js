@@ -2,7 +2,7 @@ module.exports = {
   apps: {
     name: "cd-adonis",
     script: "npm",
-    args: "run pm2",
+    args: "run pm2 --env production",
     instances: 1,
     exec_mode: "cluster",
     env_production: {
