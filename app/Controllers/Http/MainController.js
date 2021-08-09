@@ -15452,6 +15452,27 @@ class MainController {
     });
   }
 
+  async getRekapNilai({ response, request, auth, params: { rekaprombel_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    // const user = await auth.getUser();
+
+    const nilai = await TkRekapNilai.query()
+      .select("id", "nilai")
+      .where({ m_rekap_rombel_id: rekaprombel_id })
+      .fetch();
+
+    return response.ok({
+      nilai,
+    });
+  }
+
   async putRekapNilai({
     response,
     request,
