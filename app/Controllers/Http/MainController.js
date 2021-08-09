@@ -591,6 +591,7 @@ class MainController {
       prestasi,
       portofolio,
       bahasa,
+      keahlian,
 
       // identitas
       nama,
