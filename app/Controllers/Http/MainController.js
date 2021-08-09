@@ -601,6 +601,7 @@ class MainController {
       tempat_lahir,
       tanggal_lahir,
       avatar,
+      home,
 
       // informasi
       nisn,
@@ -679,8 +680,15 @@ class MainController {
       tempat_lahir,
       tanggal_lahir,
       avatar,
+      home,
     };
 
+    pendidikan = pendidikan.length ? pendidikan.toString() : "";
+    pengalaman = pengalaman.length ? pengalaman.toString() : "";
+    prestasi = prestasi.length ? prestasi.toString() : "";
+    portofolio = portofolio.length ? portofolio.toString() : "";
+    bahasa = bahasa.length ? bahasa.toString() : "";
+    keahlian = keahlian.length ? keahlian.toString() : "";
     tanggal_lahir == "Invalid date" ? delete userPayload.tanggal_lahir : null;
 
     await User.query().where({ id: user.id }).update(userPayload);
