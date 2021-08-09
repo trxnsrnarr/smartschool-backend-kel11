@@ -683,12 +683,38 @@ class MainController {
       home,
     };
 
-    pendidikan = pendidikan.length ? pendidikan.toString() : "";
-    pengalaman = pengalaman.length ? pengalaman.toString() : "";
-    prestasi = prestasi.length ? prestasi.toString() : "";
-    portofolio = portofolio.length ? portofolio.toString() : "";
-    bahasa = bahasa.length ? bahasa.toString() : "";
-    keahlian = keahlian.length ? keahlian.toString() : "";
+    pendidikan =
+      typeof pendidikan == "array"
+        ? pendidikan.length
+          ? pendidikan.toString()
+          : ""
+        : "";
+    pengalaman =
+      typeof pengalaman == "array"
+        ? pengalaman.length
+          ? pengalaman.toString()
+          : ""
+        : "";
+    prestasi =
+      typeof prestasi == "array"
+        ? prestasi.length
+          ? prestasi.toString()
+          : ""
+        : "";
+    portofolio =
+      typeof portofolio == "array"
+        ? portofolio.length
+          ? portofolio.toString()
+          : ""
+        : "";
+    bahasa =
+      typeof bahasa == "array" ? (bahasa.length ? bahasa.toString() : "") : "";
+    keahlian =
+      typeof keahlian == "array"
+        ? keahlian.length
+          ? keahlian.toString()
+          : ""
+        : "";
     tanggal_lahir == "Invalid date" ? delete userPayload.tanggal_lahir : null;
 
     await User.query().where({ id: user.id }).update(userPayload);
