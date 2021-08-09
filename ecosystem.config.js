@@ -1,7 +1,8 @@
 module.exports = {
   apps: {
     name: "cd-adonis",
-    script: "server.js",
+    script: "npm",
+    args: "run pm2",
     instances: 1,
     exec_mode: "cluster",
     env_production: {

@@ -2494,6 +2494,7 @@ class MainController {
 
       const rombel = await MRombel.query()
         .where({ m_user_id: user.id })
+        .andWhere({ dihapus: 0 })
         .first();
 
       let jamMengajarIds = await MJamMengajar.query()
@@ -7418,7 +7419,7 @@ class MainController {
         })
       );
 
-      let namaFile = `/uploads/rekap-absen-guru.xlsx`;
+      let namaFile = `/uploads/rekap-absen-guru-${keluarantanggalseconds}.xlsx`;
 
       // save workbook to disk
       await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -16189,7 +16190,7 @@ class MainController {
       })
     );
 
-    let namaFile = `/uploads/rekap-absen-guru-tanggal.xlsx`;
+    let namaFile = `/uploads/rekap-absen-guru-tanggal ${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -16504,7 +16505,7 @@ class MainController {
       })
     );
 
-    let namaFile = `/uploads/rekap-mata-pelajaran.xlsx`;
+    let namaFile = `/uploads/rekap-mata-pelajaran-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -16770,7 +16771,7 @@ class MainController {
       })
     );
 
-    let namaFile = `/uploads/rekap-keuangan.xlsx`;
+    let namaFile = `/uploads/rekap-keuangan-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -17597,7 +17598,7 @@ class MainController {
         );
       })
     );
-    let namaFile = `/uploads/rekap-SPP.xlsx`;
+    let namaFile = `/uploads/rekap-SPP-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -17943,7 +17944,7 @@ class MainController {
         });
       })
     );
-    let namaFile = `/uploads/rekap-Alumni.xlsx`;
+    let namaFile = `/uploads/rekap-Alumni-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -19678,7 +19679,7 @@ class MainController {
       })
     );
 
-    let namaFile = `/uploads/rekap-Gelombang PPDB.xlsx`;
+    let namaFile = `/uploads/rekap-Gelombang PPDB ${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -19961,7 +19962,7 @@ class MainController {
     worksheet.getCell(
       "A6"
     ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
-    let namaFile = `/uploads/rekap-Analisis Tugas.xlsx`;
+    let namaFile = `/uploads/rekap-Analisis Tugas ${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -20181,7 +20182,7 @@ class MainController {
     worksheet.getCell(
       "A6"
     ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
-    let namaFile = `/uploads/rekap-PerformaTugas.xlsx`;
+    let namaFile = `/uploads/rekap-PerformaTugas-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -22589,7 +22590,7 @@ class MainController {
         });
       })
     );
-    let namaFile = `/uploads/rekap-Lokasi.xlsx`;
+    let namaFile = `/uploads/rekap-Lokasi-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -22862,7 +22863,7 @@ class MainController {
         });
       })
     );
-    let namaFile = `/uploads/rekap-Barang.xlsx`;
+    let namaFile = `/uploads/rekap-Barang-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
