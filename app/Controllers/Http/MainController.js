@@ -25254,7 +25254,7 @@ class MainController {
         //   .andWhere({ tanggal_pembagian: e.tanggalDistinct })
         //   .fetch();
 
-        const hariIni = moment(e.tanggalDistinct).format(`DD-MMMM-YYYY`);
+        const hariIni = moment(e.tanggalDistinct).format(`DD MMMM YYYY`);
         let worksheet = workbook.addWorksheet(`${hariIni}`);
         worksheet.mergeCells("A1:K1");
         worksheet.mergeCells("A2:K2");
@@ -25417,103 +25417,130 @@ class MainController {
               "Kendala dan Tindak Lanjut",
             ];
 
-            worksheet.columns = [{ key: "no" }, { key: "nama" }];
+            worksheet.columns = [
+              { key: "no" },
+              { key: "nama" },
+              { key: "status" },
+            ];
 
             // Add row using key mapping to columns
-            let row = worksheet.addRow({
-              no: `${idx + 1}`,
-              nama: d ? d.nama : "-",
-            });
-            await Promise.all(
-              d.pertemuan.map(async (a, idx) => {
-                worksheet.getRow(11).values = [
-                  "",
-                  "",
-                  "Mengajar Kelas",
-                  "Jumlah Siswa",
-                  "Mapel dan Tujuan Pembelajaran",
-                  "Materi Pembelajaran",
-                  "Mode/Teknik Pembelajaran",
-                  "Jumlah Siswa Hadir",
-                  "Hasil Pembelajaran",
-                  "Jumlah Siswa Alpa",
-                  "Kendala dan Tindak Lanjut",
-                ];
-
-                worksheet.columns = [
-                  { key: "" },
-                  { key: "nama" },
-                  { key: "kelas" },
-                  { key: "jumsiswa" },
-                  { key: "mapel" },
-                  { key: "materi" },
-                  { key: "moda" },
-                  { key: "jsiswa" },
-                  { key: "hasil" },
-                  { key: "jsiswax" },
-                  { key: "kendala" },
-                ];
-
-                // Add row using key mapping to columns
-                let row = worksheet.addRow({
-                  nama: d ? d.nama : "-",
-                  kelas: a.rombel ? a.rombel.nama : "-",
-                  jumsiswa: a.rombel.__meta__
-                    ? a.rombel.__meta__.totalSiswa
-                    : "-",
-                  mapel: a.user.mataPelajaran ? a.user.mataPelajaran.nama : "-",
-                  materi: a ? a.jurnal : "-",
-                  moda: "Smarteschool",
-                  jsiswa: a.__meta__ ? a.__meta__.total : "-",
-                  hasil: a ? a.jurnal : "-",
-                  jsiswax: a.__meta__ ? a.__meta__.totalAlpa : "-",
-                  kendala: "-",
-                });
-              })
-            );
-            // add column headers
-
-            if (idx == allUser.length - 1) {
-              worksheet.getCell(`A${idx + 16}`).value = `Kepala....`;
-              worksheet.getCell(`A${idx + 23}`).value = `…………………………………………………….`;
-              worksheet.getCell(`A${idx + 24}`).value = `NIP :`;
-              worksheet.mergeCells(`I${idx + 15}:K${idx + 15}`);
-              worksheet.mergeCells(`I${idx + 16}:K${idx + 16}`);
-              worksheet.mergeCells(`I${idx + 17}:K${idx + 17}`);
-              worksheet.mergeCells(`I${idx + 18}:K${idx + 18}`);
-              worksheet.mergeCells(`I${idx + 23}:K${idx + 23}`);
-              worksheet.mergeCells(`I${idx + 24}:K${idx + 24}`);
-              worksheet.getCell(`I${idx + 15}`).value = `${hariIni}`;
-              worksheet.getCell(`I${idx + 16}`).value = `Petugas Monitoring`;
-              worksheet.getCell(
-                `I${idx + 17}`
-              ).value = `Kepala Satuan Pelaksana Pendidikan`;
-              worksheet.getCell(
-                `I${idx + 18}`
-              ).value = `Kecamatan ${sekolah.kecamatan}`;
-              worksheet.getCell(`I${idx + 23}`).value = `${user.nama}`;
-              worksheet.getCell(`I${idx + 24}`).value = `NIP : ${user.nip}`;
-              worksheet.addConditionalFormatting({
-                ref: `I${idx + 15}:I${idx + 24}`,
-                rules: [
-                  {
-                    type: "expression",
-                    formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-                    style: {
-                      font: {
-                        name: "Calibri",
-                        family: 4,
-                        size: 11,
-                        // bold: true,
-                      },
-                      alignment: {
-                        vertical: "middle",
-                        horizontal: "center",
-                      },
-                    },
-                  },
-                ],
+            if (d.pertemuan.length == 0) {
+              let row = worksheet.addRow({
+                no: `${idx + 1}`,
+                nama: d ? d.nama : "-",
+                status: "Guru ini tidak ada Jadwal Mengajar",
               });
+            } else {
+              // let row = worksheet.addRow({
+              //   no: `${idx + 1}`,
+              //   nama: d ? d.nama : "-",
+              // });
+              await Promise.all(
+                d.pertemuan.map(async (a, nox) => {
+                  worksheet.getRow(11).values = [
+                    "",
+                    "",
+                    "Mengajar Kelas",
+                    "Jumlah Siswa",
+                    "Mapel dan Tujuan Pembelajaran",
+                    "Materi Pembelajaran",
+                    "Mode/Teknik Pembelajaran",
+                    "Jumlah Siswa Hadir",
+                    "Hasil Pembelajaran",
+                    "Jumlah Siswa Alpa",
+                    "Kendala dan Tindak Lanjut",
+                  ];
+
+                  worksheet.columns = [
+                    { key: "no" },
+                    { key: "nama" },
+                    { key: "kelas" },
+                    { key: "jumsiswa" },
+                    { key: "mapel" },
+                    { key: "materi" },
+                    { key: "moda" },
+                    { key: "jsiswa" },
+                    { key: "hasil" },
+                    { key: "jsiswax" },
+                    { key: "kendala" },
+                  ];
+
+                  // Add row using key mapping to columns
+                  let row = worksheet.addRow({
+                    no: `${idx + 1}`,
+                    nama: d ? d.nama : "-",
+                    kelas: a.rombel ? a.rombel.nama : "-",
+                    jumsiswa: a.rombel.__meta__
+                      ? a.rombel.__meta__.totalSiswa
+                      : "-",
+                    mapel: a.user.mataPelajaran
+                      ? a.user.mataPelajaran.nama
+                      : "-",
+                    materi: a ? a.jurnal : "-",
+                    moda: "Smarteschool",
+                    jsiswa: a.__meta__ ? a.__meta__.total : "-",
+                    hasil: a ? a.jurnal : "-",
+                    jsiswax: a.__meta__ ? a.__meta__.totalAlpa : "-",
+                    kendala: "-",
+                  });
+
+                  worksheet.addConditionalFormatting({
+                    ref: `B${(idx + 1) * 1 + 11}:K${(idx + 1) * 1 + 11}`,
+                    rules: [
+                      {
+                        type: "expression",
+                        formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                        style: {
+                          font: {
+                            name: "Calibri",
+                            family: 4,
+                            size: 11,
+                            // bold: true,
+                          },
+                          alignment: {
+                            vertical: "middle",
+                            horizontal: "center",
+                            wrapText: true,
+                          },
+                          border: {
+                            top: { style: "thin" },
+                            left: { style: "thin" },
+                            bottom: { style: "thin" },
+                            right: { style: "thin" },
+                          },
+                        },
+                      },
+                    ],
+                  });
+                  worksheet.addConditionalFormatting({
+                    ref: `A${(idx + 1) * 1 + 11}`,
+                    rules: [
+                      {
+                        type: "expression",
+                        formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                        style: {
+                          font: {
+                            name: "Calibri",
+                            family: 4,
+                            size: 11,
+                            // bold: true,
+                          },
+                          alignment: {
+                            vertical: "middle",
+                            horizontal: "center",
+                          },
+                          border: {
+                            top: { style: "thin" },
+                            left: { style: "thin" },
+                            bottom: { style: "thin" },
+                            right: { style: "thin" },
+                          },
+                        },
+                      },
+                    ],
+                  });
+                })
+              );
             }
             worksheet.addConditionalFormatting({
               ref: `B${(idx + 1) * 1 + 11}:K${(idx + 1) * 1 + 11}`,
@@ -25570,6 +25597,50 @@ class MainController {
                 },
               ],
             });
+            // add column headers
+
+            if (idx == allUser.length - 1) {
+              worksheet.getCell(`A${idx + 16}`).value = `Kepala....`;
+              worksheet.getCell(`A${idx + 23}`).value = `…………………………………………………….`;
+              worksheet.getCell(`A${idx + 24}`).value = `NIP :`;
+              worksheet.mergeCells(`I${idx + 15}:K${idx + 15}`);
+              worksheet.mergeCells(`I${idx + 16}:K${idx + 16}`);
+              worksheet.mergeCells(`I${idx + 17}:K${idx + 17}`);
+              worksheet.mergeCells(`I${idx + 18}:K${idx + 18}`);
+              worksheet.mergeCells(`I${idx + 23}:K${idx + 23}`);
+              worksheet.mergeCells(`I${idx + 24}:K${idx + 24}`);
+              worksheet.getCell(`I${idx + 15}`).value = `${hariIni}`;
+              worksheet.getCell(`I${idx + 16}`).value = `Petugas Monitoring`;
+              worksheet.getCell(
+                `I${idx + 17}`
+              ).value = `Kepala Satuan Pelaksana Pendidikan`;
+              worksheet.getCell(
+                `I${idx + 18}`
+              ).value = `Kecamatan ${sekolah.kecamatan}`;
+              worksheet.getCell(`I${idx + 23}`).value = `${user.nama}`;
+              worksheet.getCell(`I${idx + 24}`).value = `NIP : ${user.nip}`;
+              worksheet.addConditionalFormatting({
+                ref: `I${idx + 15}:I${idx + 24}`,
+                rules: [
+                  {
+                    type: "expression",
+                    formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                    style: {
+                      font: {
+                        name: "Calibri",
+                        family: 4,
+                        size: 11,
+                        // bold: true,
+                      },
+                      alignment: {
+                        vertical: "middle",
+                        horizontal: "center",
+                      },
+                    },
+                  },
+                ],
+              });
+            }
           })
         );
       })
