@@ -13,27 +13,27 @@ class MProfilUser extends Model {
   }
 
   getPendidikan(pendidikan) {
-    return pendidikan ? pendidikan.split(",") : [];
+    return pendidikan ? JSON.parse(pendidikan) : [];
   }
 
   getPengalaman(pengalaman) {
-    return pengalaman ? pengalaman.split(",") : [];
+    return pengalaman ? JSON.parse(pengalaman) : [];
   }
 
   getPrestasi(prestasi) {
-    return prestasi ? prestasi.split(",") : [];
+    return prestasi ? JSON.parse(prestasi) : [];
   }
 
   getPortofolio(portofolio) {
-    return portofolio ? portofolio.split(",") : [];
+    return portofolio ? JSON.parse(portofolio) : [];
   }
 
   getBahasa(bahasa) {
-    return bahasa ? bahasa.split(",") : [];
+    return bahasa ? JSON.parse(bahasa) : [];
   }
 
   getKeahlian(keahlian) {
-    return keahlian ? keahlian.split(",") : [];
+    return keahlian ? JSON.parse(keahlian) : [];
   }
 
   getDataBiodata({

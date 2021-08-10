@@ -687,33 +687,33 @@ class MainController {
     pendidikan =
       typeof pendidikan == "array"
         ? pendidikan.length
-          ? pendidikan.toString()
+          ? JSON.stringify(pendidikan)
           : ""
         : "";
     pengalaman =
       typeof pengalaman == "array"
         ? pengalaman.length
-          ? pengalaman.toString()
+          ? JSON.stringify(pengalaman)
           : ""
         : "";
     prestasi =
       typeof prestasi == "array"
         ? prestasi.length
-          ? prestasi.toString()
+          ? JSON.stringify(prestasi)
           : ""
         : "";
     portofolio =
       typeof portofolio == "array"
         ? portofolio.length
-          ? portofolio.toString()
+          ? JSON.stringify(portofolio)
           : ""
         : "";
     bahasa =
-      typeof bahasa == "array" ? (bahasa.length ? bahasa.toString() : "") : "";
+      typeof bahasa == "array" ? (bahasa.length ? JSON.stringify(bahasa) : "") : "";
     keahlian =
       typeof keahlian == "array"
         ? keahlian.length
-          ? keahlian.toString()
+          ? JSON.stringify(keahlian)
           : ""
         : "";
     tanggal_lahir == "Invalid date" ? delete userPayload.tanggal_lahir : null;
