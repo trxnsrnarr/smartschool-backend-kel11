@@ -2675,6 +2675,8 @@ class MainController {
       tingkat = ["X", "XI", "XII", "XIII"];
     } else if (sekolah.tingkat == "SMP") {
       tingkat = ["VII", "VIII", "IX"];
+    } else if (sekolah.tingkat == "SD") {
+      tingkat = ["I", "II", "III", "IV", "V", "VI"];
     }
 
     return response.ok({
@@ -3436,6 +3438,8 @@ class MainController {
       tingkatRombel = ["X", "XI", "XII"];
     } else if (sekolah.tingkat == "SMP") {
       tingkatRombel = ["VII", "VIII", "IX"];
+    } else if (sekolah.tingkat == "SD") {
+      tingkatRombel = ["I", "II", "III", "IV", "V", "VI"];
     }
 
     const { tingkat, hari } = request.get();
@@ -7549,6 +7553,8 @@ class MainController {
       tingkatData = ["X", "XI", "XII", "XIII"];
     } else if (sekolah.tingkat == "SMP") {
       tingkatData = ["VII", "VIII", "IX"];
+    } else if (sekolah.tingkat == "SD") {
+      tingkatData = ["I", "II", "III", "IV", "V", "VI"];
     }
 
     let tipeUjian = [
@@ -7693,6 +7699,8 @@ class MainController {
       tingkatData = ["X", "XI", "XII", "XIII"];
     } else if (sekolah.tingkat == "SMP") {
       tingkatData = ["VII", "VIII", "IX"];
+    } else if (sekolah.tingkat == "SD") {
+      tingkatData = ["I", "II", "III", "IV", "V", "VI"];
     }
 
     return response.ok({
@@ -7867,6 +7875,8 @@ class MainController {
       tingkat = ["X", "XI", "XII", "XIII"];
     } else if (sekolah.tingkat == "SMP") {
       tingkat = ["VII", "VIII", "IX"];
+    } else if (sekolah.tingkat == "SD") {
+      tingkat = ["I", "II", "III", "IV", "V", "VI"];
     }
 
     let tipeUjian = [
@@ -12170,6 +12180,8 @@ class MainController {
       tingkatData = ["X", "XI", "XII", "XIII"];
     } else if (sekolah.tingkat == "SMP") {
       tingkatData = ["VII", "VIII", "IX"];
+    } else if (sekolah.tingkat == "SD") {
+      tingkatData = ["I", "II", "III", "IV", "V", "VI"];
     }
 
     return response.ok({
