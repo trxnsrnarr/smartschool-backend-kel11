@@ -5602,6 +5602,7 @@ class MainController {
                 tipe: "tugas",
                 m_timeline_id: timeline.id,
                 dihapus: 0,
+                dikumpulkan: 0,
               });
 
               try {
@@ -5647,6 +5648,7 @@ class MainController {
                       tipe: "tugas",
                       m_timeline_id: t.id,
                       dihapus: 0,
+                      dikumpulkan: 0,
                     });
                   }
                   try {
@@ -6212,7 +6214,7 @@ class MainController {
         builder.with("user");
       })
       .with("listSiswaBelum", (builder) => {
-        builder.with("user").whereNull("waktu_pengumpulan");
+        builder.with("user").where("dikumpulkan", 0);
       })
       .with("listSiswaTerkumpul", (builder) => {
         builder
@@ -26327,6 +26329,76 @@ class MainController {
     }
 
     return await this.importGPDSServices(`tmp/uploads/${fname}`, sekolah);
+  }
+
+  async getDashboardTugas({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const user = await auth.getUser();
+
+    const { limit = 25, order = "created_at", sort = "desc" } = request.get();
+
+    let timeline;
+    if (user.role == "guru") {
+      const timeline1 = await MTimeline.query()
+        .with("tugas")
+        .with("user")
+        .with("komen", (builder) => {
+          builder.with("user").where({ dihapus: 0 });
+        })
+        .withCount("tkTimeline as total_respon", (builder) => {
+          builder.whereNotNull("waktu_pengumpulan");
+        })
+        .withCount("tkTimeline as total_absen", (builder) => {
+          builder.whereNotNull("waktu_absen");
+        })
+        .withCount("tkTimeline as total_siswa")
+        .withCount("komen as total_komen", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .whereNull("m_mata_pelajaran_id")
+        .andWhere({ m_user_id: user.id })
+        .andWhere({ dihapus: 0 })
+        // .whereIn("m_tugas_id", tugasIds)
+        .orderBy(order, sort)
+        .limit(limit)
+        .fetch();
+
+      const timeline2 = await MTimeline.query()
+        .with("tugas")
+        .with("user")
+        .with("komen", (builder) => {
+          builder.with("user").where({ dihapus: 0 });
+        })
+        .withCount("tkTimeline as total_respon", (builder) => {
+          builder.whereNotNull("waktu_pengumpulan");
+        })
+        .withCount("tkTimeline as total_absen", (builder) => {
+          builder.whereNotNull("waktu_absen");
+        })
+        .withCount("tkTimeline as total_siswa")
+        .withCount("komen as total_komen", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .whereNotNull("m_mata_pelajaran_id")
+        .andWhere({ m_user_id: user.id })
+        .andWhere({ dihapus: 0 })
+        // .whereIn("m_tugas_id", tugasIds)
+        .orderBy(order, sort)
+        .limit(limit)
+        .fetch();
+
+      timeline = [...timeline2.toJSON(), ...timeline1.toJSON()];
+    }
+
+    return response.ok({
+      timeline,
+    });
   }
 }
 module.exports = MainController;
