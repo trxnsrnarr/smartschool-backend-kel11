@@ -234,7 +234,7 @@ const hour = dateObj.getHours();
 const minute = dateObj.getMinutes();
 const second = dateObj.getSeconds();
 const keluarantanggal = day + "," + month + "," + year;
-const keluarantanggalseconds = `${day},${month},${year} ${hour}:${minute}:${second}`;
+const keluarantanggalseconds = `${day},${month},${year} ${hour}-${minute}-${second}`;
 class MainController {
   // UTILS
 
@@ -15785,7 +15785,7 @@ class MainController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
-
+    const user = await auth.getUser();
     const { role, tanggal_awal, tanggal_akhir } = request.post();
 
     const tanggalDistinct = await Database.raw(
@@ -16610,6 +16610,7 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
+    const user = await auth.getUser();
     const { tanggal_awal, tanggal_akhir } = request.post();
 
     const mutasi = await MMutasi.query()
@@ -17410,7 +17411,7 @@ class MainController {
     return namaFile;
   }
 
-  async downloadSPP({ response, request, params: { pembayaran_id } }) {
+  async downloadSPP({ response, request, auth, params: { pembayaran_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -17423,6 +17424,7 @@ class MainController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
+    const user = await auth.getUser();
 
     const pembayaran = await MPembayaran.query()
       .with("rombel", (builder) => {
@@ -25134,87 +25136,111 @@ class MainController {
       [tanggal_awal, tanggal_akhir]
     );
 
-    const allUser = await User.query()
-      .select("id", "role", "m_sekolah_id", "dihapus")
-      .with("pertemuan", (builder) => {
-        builder.where({ dihapus: 0 });
-        // .andWhere({ tanggal_pembagian: tanggal_awal });
-      })
-      .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ role: "guru" })
-      .fetch();
-
-    return allUser;
-
-    const checkDataTimeline = await MTimeline.query()
-      .with("user", (builder) => {
-        builder
-          .select("id", "nama", "m_sekolah_id")
-          .with("mataPelajaran", (builder) => {
-            builder
-              .where({ dihapus: 0 })
-              .andWhere({ m_sekolah_id: sekolah.id });
-          });
-      })
-      .with("rombel", (builder) => {
-        builder.withCount("anggotaRombel as totalSiswa", (builder) => {
-          builder.where({ dihapus: 0 });
-        });
-      })
-      .withCount("tkTimeline as total", (builder) => {
-        builder
-          .where({ tipe: "absen" })
-          .andWhere({ absen: "hadir" })
-          .andWhere({ dihapus: 0 });
-      })
-      .withCount("tkTimeline as totalAlpa", (builder) => {
-        builder
-          .whereNot({ absen: "hadir" })
-          .andWhere({ tipe: "absen" })
-          .andWhere({ dihapus: 0 });
-      })
-      .where({ tipe: "absen" })
-      .whereNotNull("id")
-      .andWhere({ tanggal_pembagian: tanggal_awal })
-      .fetch();
-    const dataFilter = await Promise.all(
-      checkDataTimeline.toJSON().filter((timeline) => timeline != null)
-    );
-    return dataFilter;
+    // const checkDataTimeline = await MTimeline.query()
+    // .with("user", (builder) => {
+    //   builder
+    //     .select("id", "nama", "m_sekolah_id")
+    //     .with("mataPelajaran", (builder) => {
+    //       builder
+    //         .where({ dihapus: 0 })
+    //         .andWhere({ m_sekolah_id: sekolah.id });
+    //     });
+    // })
+    // .with("rombel", (builder) => {
+    //   builder.withCount("anggotaRombel as totalSiswa", (builder) => {
+    //     builder.where({ dihapus: 0 });
+    //   });
+    // })
+    // .withCount("tkTimeline as total", (builder) => {
+    //   builder
+    //     .where({ tipe: "absen" })
+    //     .andWhere({ absen: "hadir" })
+    //     .andWhere({ dihapus: 0 });
+    // })
+    // .withCount("tkTimeline as totalAlpa", (builder) => {
+    //   builder
+    //     .whereNot({ absen: "hadir" })
+    //     .andWhere({ tipe: "absen" })
+    //     .andWhere({ dihapus: 0 });
+    // })
+    // .where({ tipe: "absen" })
+    // .whereNotNull("id")
+    // .andWhere({ tanggal_pembagian: tanggal_awal })
+    // .fetch();
+    // const dataFilter = await Promise.all(
+    //   checkDataTimeline.toJSON().filter((timeline) => timeline != null)
+    // );
+    // return dataFilter;
     let workbook = new Excel.Workbook();
 
     await Promise.all(
       tanggalDistinct[0].map(async (e) => {
-        const checkDataTimeline = await MTimeline.query()
-          .with("user", (builder) => {
-            builder.select("id", "nama").with("mataPelajaran", (builder) => {
-              builder
-                .where({ dihapus: 0 })
-                .andWhere({ m_sekolah_id: sekolah.id });
-            });
-          })
-          .with("rombel", (builder) => {
-            builder.withCount("anggotaRombel as totalSiswa", (builder) => {
-              builder.where({ dihapus: 0 });
-            });
-          })
-          .withCount("tkTimeline as total", (builder) => {
+        const allUser = await User.query()
+          .with("pertemuan", (builder) => {
             builder
+              .with("user", (builder) => {
+                builder.select("id", "nama", "m_sekolah_id");
+              })
+              .with("mataPelajaran", (builder) => {
+                builder
+                  .where({ dihapus: 0 })
+                  .andWhere({ m_sekolah_id: sekolah.id });
+              })
+              .with("rombel", (builder) => {
+                builder.withCount("anggotaRombel as totalSiswa", (builder) => {
+                  builder.where({ dihapus: 0 });
+                });
+              })
+              .withCount("tkTimeline as total", (builder) => {
+                builder
+                  .where({ tipe: "absen" })
+                  .andWhere({ absen: "hadir" })
+                  .andWhere({ dihapus: 0 });
+              })
+              .withCount("tkTimeline as totalAlpa", (builder) => {
+                builder
+                  .whereNot({ absen: "hadir" })
+                  .andWhere({ tipe: "absen" })
+                  .andWhere({ dihapus: 0 });
+              })
               .where({ tipe: "absen" })
-              .andWhere({ absen: "hadir" })
-              .andWhere({ dihapus: 0 });
+              .whereNotNull("id")
+              .andWhere({ tanggal_pembagian: e.tanggalDistinct });
+            // .andWhere({ tanggal_pembagian: tanggal_awal });
           })
-          .withCount("tkTimeline as totalAlpa", (builder) => {
-            builder
-              .whereNot({ absen: "hadir" })
-              .andWhere({ tipe: "absen" })
-              .andWhere({ dihapus: 0 });
-          })
-          .where({ tipe: "absen" })
-          .whereNotNull("id")
-          .andWhere({ tanggal_pembagian: e.tanggalDistinct })
+          .where({ dihapus: 0 })
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .andWhere({ role: "guru" })
           .fetch();
+        // const checkDataTimeline = await MTimeline.query()
+        //   .with("user", (builder) => {
+        //     builder.select("id", "nama").with("mataPelajaran", (builder) => {
+        //       builder
+        //         .where({ dihapus: 0 })
+        //         .andWhere({ m_sekolah_id: sekolah.id });
+        //     });
+        //   })
+        //   .with("rombel", (builder) => {
+        //     builder.withCount("anggotaRombel as totalSiswa", (builder) => {
+        //       builder.where({ dihapus: 0 });
+        //     });
+        //   })
+        //   .withCount("tkTimeline as total", (builder) => {
+        //     builder
+        //       .where({ tipe: "absen" })
+        //       .andWhere({ absen: "hadir" })
+        //       .andWhere({ dihapus: 0 });
+        //   })
+        //   .withCount("tkTimeline as totalAlpa", (builder) => {
+        //     builder
+        //       .whereNot({ absen: "hadir" })
+        //       .andWhere({ tipe: "absen" })
+        //       .andWhere({ dihapus: 0 });
+        //   })
+        //   .where({ tipe: "absen" })
+        //   .whereNotNull("id")
+        //   .andWhere({ tanggal_pembagian: e.tanggalDistinct })
+        //   .fetch();
 
         const hariIni = moment(e.tanggalDistinct).format(`DD-MMMM-YYYY`);
         let worksheet = workbook.addWorksheet(`${hariIni}`);
@@ -25359,13 +25385,12 @@ class MainController {
         worksheet.getColumn("J").width = 12;
         worksheet.getColumn("K").width = 19;
 
-        const dataFilter = await Promise.all(
-          checkDataTimeline.toJSON().filter((timeline) => timeline != null)
-        );
-        return dataFilter;
+        // const dataFilter = await Promise.all(
+        //   checkDataTimeline.toJSON().filter((timeline) => timeline != null)
+        // );
+        // return dataFilter;
         await Promise.all(
-          dataFilter.map(async (d, idx) => {
-            // add column headers
+          allUser.toJSON().map(async (d, idx) => {
             worksheet.getRow(11).values = [
               "No",
               "Nama Guru",
@@ -25380,37 +25405,63 @@ class MainController {
               "Kendala dan Tindak Lanjut",
             ];
 
-            worksheet.columns = [
-              { key: "no" },
-              { key: "nama" },
-              { key: "kelas" },
-              { key: "jumsiswa" },
-              { key: "mapel" },
-              { key: "materi" },
-              { key: "moda" },
-              { key: "jsiswa" },
-              { key: "hasil" },
-              { key: "jsiswax" },
-              { key: "kendala" },
-            ];
+            worksheet.columns = [{ key: "no" }, { key: "nama" }];
 
             // Add row using key mapping to columns
             let row = worksheet.addRow({
               no: `${idx + 1}`,
-              nama: d.user ? d.user.nama : "-",
-              kelas: d.rombel ? d.rombel.nama : "-",
-              jumsiswa: d.rombel.__meta__ ? d.rombel.__meta__.totalSiswa : "-",
-              mapel: d.user.mataPelajaran[0]
-                ? d.user.mataPelajaran[0].nama
-                : "-",
-              materi: d ? d.jurnal : "-",
-              moda: "Smarteschool",
-              jsiswa: d.__meta__ ? d.__meta__.total : "-",
-              hasil: d ? d.jurnal : "-",
-              jsiswax: d.__meta__ ? d.__meta__.totalAlpa : "-",
-              kendala: "-",
+              nama: d ? d.nama : "-",
             });
-            if (idx == dataFilter.length - 1) {
+            await Promise.all(
+              d.pertemuan.map(async (a, idx) => {
+                worksheet.getRow(11).values = [
+                  "",
+                  "",
+                  "Mengajar Kelas",
+                  "Jumlah Siswa",
+                  "Mapel dan Tujuan Pembelajaran",
+                  "Materi Pembelajaran",
+                  "Mode/Teknik Pembelajaran",
+                  "Jumlah Siswa Hadir",
+                  "Hasil Pembelajaran",
+                  "Jumlah Siswa Alpa",
+                  "Kendala dan Tindak Lanjut",
+                ];
+
+                worksheet.columns = [
+                  { key: "" },
+                  { key: "nama" },
+                  { key: "kelas" },
+                  { key: "jumsiswa" },
+                  { key: "mapel" },
+                  { key: "materi" },
+                  { key: "moda" },
+                  { key: "jsiswa" },
+                  { key: "hasil" },
+                  { key: "jsiswax" },
+                  { key: "kendala" },
+                ];
+
+                // Add row using key mapping to columns
+                let row = worksheet.addRow({
+                  nama: d ? d.nama : "-",
+                  kelas: a.rombel ? a.rombel.nama : "-",
+                  jumsiswa: a.rombel.__meta__
+                    ? a.rombel.__meta__.totalSiswa
+                    : "-",
+                  mapel: a.user.mataPelajaran ? a.user.mataPelajaran.nama : "-",
+                  materi: a ? a.jurnal : "-",
+                  moda: "Smarteschool",
+                  jsiswa: a.__meta__ ? a.__meta__.total : "-",
+                  hasil: a ? a.jurnal : "-",
+                  jsiswax: a.__meta__ ? a.__meta__.totalAlpa : "-",
+                  kendala: "-",
+                });
+              })
+            );
+            // add column headers
+
+            if (idx == allUser.length - 1) {
               worksheet.getCell(`A${idx + 16}`).value = `Kepala....`;
               worksheet.getCell(`A${idx + 23}`).value = `…………………………………………………….`;
               worksheet.getCell(`A${idx + 24}`).value = `NIP :`;
@@ -25512,7 +25563,7 @@ class MainController {
       })
     );
 
-    let namaFile = `/uploads/rekap-Monev-${keluarantanggal}.xlsx`;
+    let namaFile = `/uploads/rekap-Monev-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
