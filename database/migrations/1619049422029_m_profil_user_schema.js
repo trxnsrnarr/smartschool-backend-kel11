@@ -13,6 +13,7 @@ class MProfilUserSchema extends Schema {
       table.text("prestasi");
       table.text("portofolio");
       table.text("bahasa");
+      table.text("keahlian");
 
       // informasi
       table.string("nisn");

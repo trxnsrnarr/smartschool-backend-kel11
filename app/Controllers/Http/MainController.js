@@ -591,6 +591,7 @@ class MainController {
       prestasi,
       portofolio,
       bahasa,
+      keahlian,
 
       // identitas
       nama,
@@ -601,6 +602,7 @@ class MainController {
       tempat_lahir,
       tanggal_lahir,
       avatar,
+      home,
 
       // informasi
       nisn,
@@ -679,8 +681,41 @@ class MainController {
       tempat_lahir,
       tanggal_lahir,
       avatar,
+      home,
     };
 
+    pendidikan =
+      typeof pendidikan == "array"
+        ? pendidikan.length
+          ? pendidikan.toString()
+          : ""
+        : "";
+    pengalaman =
+      typeof pengalaman == "array"
+        ? pengalaman.length
+          ? pengalaman.toString()
+          : ""
+        : "";
+    prestasi =
+      typeof prestasi == "array"
+        ? prestasi.length
+          ? prestasi.toString()
+          : ""
+        : "";
+    portofolio =
+      typeof portofolio == "array"
+        ? portofolio.length
+          ? portofolio.toString()
+          : ""
+        : "";
+    bahasa =
+      typeof bahasa == "array" ? (bahasa.length ? bahasa.toString() : "") : "";
+    keahlian =
+      typeof keahlian == "array"
+        ? keahlian.length
+          ? keahlian.toString()
+          : ""
+        : "";
     tanggal_lahir == "Invalid date" ? delete userPayload.tanggal_lahir : null;
 
     await User.query().where({ id: user.id }).update(userPayload);
@@ -1310,7 +1345,7 @@ class MainController {
         nama,
         whatsapp,
         gender,
-        password: await Hash.make(password),
+        password: password,
         role: "guru",
         m_sekolah_id: sekolah.id,
         dihapus: 0,
@@ -1558,7 +1593,7 @@ class MainController {
         nama,
         whatsapp,
         gender,
-        password: await Hash.make(password),
+        password: password,
         role: "siswa",
         m_sekolah_id: sekolah.id,
         dihapus: 0,
@@ -1774,7 +1809,7 @@ class MainController {
       nama,
       nama_ibu,
       whatsapp,
-      password: await Hash.make(password),
+      password: password,
       role: "ppdb",
       m_sekolah_id: sekolah.id,
       dihapus: 0,
@@ -2460,6 +2495,7 @@ class MainController {
 
       const rombel = await MRombel.query()
         .where({ m_user_id: user.id })
+        .andWhere({ dihapus: 0 })
         .first();
 
       let jamMengajarIds = await MJamMengajar.query()
@@ -4088,7 +4124,7 @@ class MainController {
             whatsapp: d.whatsapp,
             gender: d.gender,
             email: d.email ? d.email : "",
-            password: await Hash.make("smartschool"),
+            password: "smartschool",
             role: "siswa",
             m_sekolah_id: sekolah.id,
             dihapus: 0,
@@ -7384,7 +7420,7 @@ class MainController {
         })
       );
 
-      let namaFile = `/uploads/rekap-absen-guru.xlsx`;
+      let namaFile = `/uploads/rekap-absen-guru-${keluarantanggalseconds}.xlsx`;
 
       // save workbook to disk
       await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -15673,7 +15709,7 @@ class MainController {
           nama: d.nama,
           whatsapp: d.whatsapp,
           gender: d.gender,
-          password: await Hash.make(`smartschool`),
+          password: `smartschool`,
           role: "guru",
           m_sekolah_id: sekolah.id,
           dihapus: 0,
@@ -16155,7 +16191,7 @@ class MainController {
       })
     );
 
-    let namaFile = `/uploads/rekap-absen-guru-tanggal.xlsx`;
+    let namaFile = `/uploads/rekap-absen-guru-tanggal ${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -16470,7 +16506,7 @@ class MainController {
       })
     );
 
-    let namaFile = `/uploads/rekap-mata-pelajaran.xlsx`;
+    let namaFile = `/uploads/rekap-mata-pelajaran-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -16736,7 +16772,7 @@ class MainController {
       })
     );
 
-    let namaFile = `/uploads/rekap-keuangan.xlsx`;
+    let namaFile = `/uploads/rekap-keuangan-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -17563,7 +17599,7 @@ class MainController {
         );
       })
     );
-    let namaFile = `/uploads/rekap-SPP.xlsx`;
+    let namaFile = `/uploads/rekap-SPP-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -17909,7 +17945,7 @@ class MainController {
         });
       })
     );
-    let namaFile = `/uploads/rekap-Alumni.xlsx`;
+    let namaFile = `/uploads/rekap-Alumni-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -19644,7 +19680,7 @@ class MainController {
       })
     );
 
-    let namaFile = `/uploads/rekap-Gelombang PPDB.xlsx`;
+    let namaFile = `/uploads/rekap-Gelombang PPDB ${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -19927,7 +19963,7 @@ class MainController {
     worksheet.getCell(
       "A6"
     ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
-    let namaFile = `/uploads/rekap-Analisis Tugas.xlsx`;
+    let namaFile = `/uploads/rekap-Analisis Tugas ${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -20147,7 +20183,7 @@ class MainController {
     worksheet.getCell(
       "A6"
     ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
-    let namaFile = `/uploads/rekap-PerformaTugas.xlsx`;
+    let namaFile = `/uploads/rekap-PerformaTugas-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -22555,7 +22591,7 @@ class MainController {
         });
       })
     );
-    let namaFile = `/uploads/rekap-Lokasi.xlsx`;
+    let namaFile = `/uploads/rekap-Lokasi-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -22828,7 +22864,7 @@ class MainController {
         });
       })
     );
-    let namaFile = `/uploads/rekap-Barang.xlsx`;
+    let namaFile = `/uploads/rekap-Barang-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -26143,7 +26179,7 @@ class MainController {
             const createUser1 = await User.create({
               nama: d.nama1,
               whatsapp: d.no1,
-              password: await Hash.make(`siapgpds`),
+              password: `siapgpds`,
               role: "admin",
               tanggal_lahir: tgllahir1,
               m_sekolah_id: sekolahCreate.id,
@@ -26155,7 +26191,7 @@ class MainController {
             const createUser2 = await User.create({
               nama: d.nama2,
               whatsapp: d.no2,
-              password: await Hash.make(`siapgpds`),
+              password: `siapgpds`,
               role: "admin",
               tanggal_lahir: tgllahir2,
               m_sekolah_id: sekolahCreate.id,
@@ -26167,7 +26203,7 @@ class MainController {
             const createUser3 = await User.create({
               nama: d.nama3,
               whatsapp: d.no3,
-              password: await Hash.make(`siapgpds`),
+              password: `siapgpds`,
               role: "admin",
               tanggal_lahir: tgllahir3,
               m_sekolah_id: sekolahCreate.id,
@@ -26179,7 +26215,7 @@ class MainController {
             const createUser4 = await User.create({
               nama: d.nama4,
               whatsapp: d.no4,
-              password: await Hash.make(`siapgpds`),
+              password: `siapgpds`,
               role: "admin",
               tanggal_lahir: tgllahir4,
               m_sekolah_id: sekolahCreate.id,
@@ -26192,7 +26228,7 @@ class MainController {
           const createUser1 = await User.create({
             nama: d.nama1,
             whatsapp: d.no1,
-            password: await Hash.make(`siapgpds`),
+            password: `siapgpds`,
             role: "admin",
             tanggal_lahir: tgllahir1,
             m_sekolah_id: checkSekolah.id,
@@ -26204,7 +26240,7 @@ class MainController {
           const createUser2 = await User.create({
             nama: d.nama2,
             whatsapp: d.no2,
-            password: await Hash.make(`siapgpds`),
+            password: `siapgpds`,
             role: "admin",
             tanggal_lahir: tgllahir2,
             m_sekolah_id: checkSekolah.id,
@@ -26216,7 +26252,7 @@ class MainController {
           const createUser3 = await User.create({
             nama: d.nama3,
             whatsapp: d.no3,
-            password: await Hash.make(`siapgpds`),
+            password: `siapgpds`,
             role: "admin",
             tanggal_lahir: tgllahir3,
             m_sekolah_id: checkSekolah.id,
@@ -26228,7 +26264,7 @@ class MainController {
           const createUser4 = await User.create({
             nama: d.nama4,
             whatsapp: d.no4,
-            password: await Hash.make(`siapgpds`),
+            password: `siapgpds`,
             role: "admin",
             tanggal_lahir: tgllahir4,
             m_sekolah_id: checkSekolah.id,

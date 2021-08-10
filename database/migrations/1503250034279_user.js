@@ -14,6 +14,7 @@ class UserSchema extends Schema {
       table.date("tanggal_lahir");
       table.string("password");
       table.string("avatar");
+      table.string("home");
       table.string("role");
       table.string("email");
       table.string("agama");
