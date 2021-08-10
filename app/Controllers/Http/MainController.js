@@ -26305,14 +26305,6 @@ class MainController {
   }
 
   async importGPDS({ request, response, auth }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
     let file = request.file("file");
     let fname = `import-excel.${file.extname}`;
 
