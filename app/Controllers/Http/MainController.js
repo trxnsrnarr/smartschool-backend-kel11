@@ -2661,6 +2661,8 @@ class MainController {
       tingkat = ["X", "XI", "XII", "XIII"];
     } else if (sekolah.tingkat == "SMP") {
       tingkat = ["VII", "VIII", "IX"];
+    } else if (sekolah.tingkat == "SD") {
+      tingkat = ["I", "II", "III", "IV", "V", "VI"];
     }
 
     return response.ok({
@@ -3422,6 +3424,8 @@ class MainController {
       tingkatRombel = ["X", "XI", "XII"];
     } else if (sekolah.tingkat == "SMP") {
       tingkatRombel = ["VII", "VIII", "IX"];
+    } else if (sekolah.tingkat == "SD") {
+      tingkatRombel = ["I", "II", "III", "IV", "V", "VI"];
     }
 
     const { tingkat, hari } = request.get();
@@ -5588,6 +5592,7 @@ class MainController {
                 tipe: "tugas",
                 m_timeline_id: timeline.id,
                 dihapus: 0,
+                dikumpulkan: 0,
               });
 
               try {
@@ -5633,6 +5638,7 @@ class MainController {
                       tipe: "tugas",
                       m_timeline_id: t.id,
                       dihapus: 0,
+                      dikumpulkan: 0,
                     });
                   }
                   try {
@@ -6198,7 +6204,7 @@ class MainController {
         builder.with("user");
       })
       .with("listSiswaBelum", (builder) => {
-        builder.with("user").whereNull("waktu_pengumpulan");
+        builder.with("user").where("dikumpulkan", 0);
       })
       .with("listSiswaTerkumpul", (builder) => {
         builder
@@ -7533,6 +7539,8 @@ class MainController {
       tingkatData = ["X", "XI", "XII", "XIII"];
     } else if (sekolah.tingkat == "SMP") {
       tingkatData = ["VII", "VIII", "IX"];
+    } else if (sekolah.tingkat == "SD") {
+      tingkatData = ["I", "II", "III", "IV", "V", "VI"];
     }
 
     let tipeUjian = [
@@ -7677,6 +7685,8 @@ class MainController {
       tingkatData = ["X", "XI", "XII", "XIII"];
     } else if (sekolah.tingkat == "SMP") {
       tingkatData = ["VII", "VIII", "IX"];
+    } else if (sekolah.tingkat == "SD") {
+      tingkatData = ["I", "II", "III", "IV", "V", "VI"];
     }
 
     return response.ok({
@@ -7851,6 +7861,8 @@ class MainController {
       tingkat = ["X", "XI", "XII", "XIII"];
     } else if (sekolah.tingkat == "SMP") {
       tingkat = ["VII", "VIII", "IX"];
+    } else if (sekolah.tingkat == "SD") {
+      tingkat = ["I", "II", "III", "IV", "V", "VI"];
     }
 
     let tipeUjian = [
@@ -12154,6 +12166,8 @@ class MainController {
       tingkatData = ["X", "XI", "XII", "XIII"];
     } else if (sekolah.tingkat == "SMP") {
       tingkatData = ["VII", "VIII", "IX"];
+    } else if (sekolah.tingkat == "SD") {
+      tingkatData = ["I", "II", "III", "IV", "V", "VI"];
     }
 
     return response.ok({
@@ -15462,6 +15476,27 @@ class MainController {
 
     return response.ok({
       message: messageDeleteSuccess,
+    });
+  }
+
+  async getRekapNilai({ response, request, auth, params: { rekaprombel_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    // const user = await auth.getUser();
+
+    const nilai = await TkRekapNilai.query()
+      .select("id", "nilai")
+      .where({ m_rekap_rombel_id: rekaprombel_id })
+      .fetch();
+
+    return response.ok({
+      nilai,
     });
   }
 
@@ -26093,26 +26128,6 @@ class MainController {
         const tgllahir3 = moment(d.tgl3).format(`YYYY-MM-DD`);
         const tgllahir4 = moment(d.tgl4).format(`YYYY-MM-DD`);
 
-        const checkUser1 = await User.query()
-          .where({ whatsapp: d.no1 })
-          .andWhere({ m_sekolah_id: sekolah.id })
-          .first();
-
-        const checkUser2 = await User.query()
-          .where({ whatsapp: d.no2 })
-          .andWhere({ m_sekolah_id: sekolah.id })
-          .first();
-
-        const checkUser3 = await User.query()
-          .where({ whatsapp: d.no3 })
-          .andWhere({ m_sekolah_id: sekolah.id })
-          .first();
-
-        const checkUser4 = await User.query()
-          .where({ whatsapp: d.no4 })
-          .andWhere({ m_sekolah_id: sekolah.id })
-          .first();
-
         if (!checkSekolah) {
           // const tingkat = `${d.sekolah.split(" ")[0]}`;
           // const tingkat = `${d.sekolah.indexOf("SD")}`;
@@ -26161,19 +26176,17 @@ class MainController {
             trial: 1,
           });
 
-          if (!checkUser1) {
-            const createUser1 = await User.create({
-              nama: d.nama1,
-              whatsapp: d.no1,
-              password: `siapgpds`,
-              role: "admin",
-              tanggal_lahir: tgllahir1,
-              m_sekolah_id: sekolahCreate.id,
-              dihapus: 0,
-            });
-          }
+          const createUser1 = await User.create({
+            nama: d.nama1,
+            whatsapp: d.no1,
+            password: `siapgpds`,
+            role: "admin",
+            tanggal_lahir: tgllahir1,
+            m_sekolah_id: sekolahCreate.id,
+            dihapus: 0,
+          });
 
-          if (!checkUser2) {
+          if (d.no2 !== d.no1) {
             const createUser2 = await User.create({
               nama: d.nama2,
               whatsapp: d.no2,
@@ -26185,7 +26198,7 @@ class MainController {
             });
           }
 
-          if (!checkUser3) {
+          if (d.no3 !== d.no1 && d.no3 !== d.no2) {
             const createUser3 = await User.create({
               nama: d.nama3,
               whatsapp: d.no3,
@@ -26197,7 +26210,7 @@ class MainController {
             });
           }
 
-          if (!checkUser4) {
+          if (d.no4 !== d.no1 && d.no4 !== d.no2 && d.no4 !== d.no3) {
             const createUser4 = await User.create({
               nama: d.nama4,
               whatsapp: d.no4,
@@ -26210,6 +26223,27 @@ class MainController {
           }
           return;
         }
+
+        const checkUser1 = await User.query()
+          .where({ whatsapp: d.no1 })
+          .andWhere({ m_sekolah_id: checkSekolah.id })
+          .first();
+
+        const checkUser2 = await User.query()
+          .where({ whatsapp: d.no2 })
+          .andWhere({ m_sekolah_id: checkSekolah.id })
+          .first();
+
+        const checkUser3 = await User.query()
+          .where({ whatsapp: d.no3 })
+          .andWhere({ m_sekolah_id: checkSekolah.id })
+          .first();
+
+        const checkUser4 = await User.query()
+          .where({ whatsapp: d.no4 })
+          .andWhere({ m_sekolah_id: checkSekolah.id })
+          .first();
+
         if (!checkUser1) {
           const createUser1 = await User.create({
             nama: d.nama1,
@@ -26222,7 +26256,7 @@ class MainController {
           });
         }
 
-        if (!checkUser2) {
+        if (!checkUser2 && d.no2 !== d.no1) {
           const createUser2 = await User.create({
             nama: d.nama2,
             whatsapp: d.no2,
@@ -26234,7 +26268,7 @@ class MainController {
           });
         }
 
-        if (!checkUser3) {
+        if (!checkUser3 && d.no3 !== d.no1 && d.no3 !== d.no2) {
           const createUser3 = await User.create({
             nama: d.nama3,
             whatsapp: d.no3,
@@ -26246,7 +26280,12 @@ class MainController {
           });
         }
 
-        if (!checkUser4) {
+        if (
+          !checkUser4 &&
+          d.no4 !== d.no1 &&
+          d.no4 !== d.no2 &&
+          d.no4 !== d.no3
+        ) {
           const createUser4 = await User.create({
             nama: d.nama4,
             whatsapp: d.no4,
@@ -26288,6 +26327,76 @@ class MainController {
     }
 
     return await this.importGPDSServices(`tmp/uploads/${fname}`, sekolah);
+  }
+
+  async getDashboardTugas({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const user = await auth.getUser();
+
+    const { limit = 25, order = "created_at", sort = "desc" } = request.get();
+
+    let timeline;
+    if (user.role == "guru") {
+      const timeline1 = await MTimeline.query()
+        .with("tugas")
+        .with("user")
+        .with("komen", (builder) => {
+          builder.with("user").where({ dihapus: 0 });
+        })
+        .withCount("tkTimeline as total_respon", (builder) => {
+          builder.whereNotNull("waktu_pengumpulan");
+        })
+        .withCount("tkTimeline as total_absen", (builder) => {
+          builder.whereNotNull("waktu_absen");
+        })
+        .withCount("tkTimeline as total_siswa")
+        .withCount("komen as total_komen", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .whereNull("m_mata_pelajaran_id")
+        .andWhere({ m_user_id: user.id })
+        .andWhere({ dihapus: 0 })
+        // .whereIn("m_tugas_id", tugasIds)
+        .orderBy(order, sort)
+        .limit(limit)
+        .fetch();
+
+      const timeline2 = await MTimeline.query()
+        .with("tugas")
+        .with("user")
+        .with("komen", (builder) => {
+          builder.with("user").where({ dihapus: 0 });
+        })
+        .withCount("tkTimeline as total_respon", (builder) => {
+          builder.whereNotNull("waktu_pengumpulan");
+        })
+        .withCount("tkTimeline as total_absen", (builder) => {
+          builder.whereNotNull("waktu_absen");
+        })
+        .withCount("tkTimeline as total_siswa")
+        .withCount("komen as total_komen", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .whereNotNull("m_mata_pelajaran_id")
+        .andWhere({ m_user_id: user.id })
+        .andWhere({ dihapus: 0 })
+        // .whereIn("m_tugas_id", tugasIds)
+        .orderBy(order, sort)
+        .limit(limit)
+        .fetch();
+
+      timeline = [...timeline2.toJSON(), ...timeline1.toJSON()];
+    }
+
+    return response.ok({
+      timeline,
+    });
   }
 }
 module.exports = MainController;

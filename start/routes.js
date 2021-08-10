@@ -513,6 +513,7 @@ Route.delete(
 
 // rekap-nilai
 Route.get("/rekap/:materi_id", "MainController.detailRekap");
+Route.get("/rekap-nilai/:rekaprombel_id", "MainController.getRekapNilai");
 Route.post("/rekap/:materi_id", "MainController.postRekap");
 Route.post(
   "/rekap/:materi_id/sikap/:m_user_id",
