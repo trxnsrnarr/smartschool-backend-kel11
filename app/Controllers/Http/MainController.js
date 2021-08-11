@@ -684,24 +684,24 @@ class MainController {
       home,
     };
 
-    if(pendidikan) {
-      pendidikan = JSON.stringify(pendidikan)
+    if (pendidikan) {
+      pendidikan = JSON.stringify(pendidikan);
     }
-    if(pengalaman) {
-      pengalaman = JSON.stringify(pengalaman)
+    if (pengalaman) {
+      pengalaman = JSON.stringify(pengalaman);
     }
-    if(prestasi) {
-      prestasi = JSON.stringify(prestasi)
+    if (prestasi) {
+      prestasi = JSON.stringify(prestasi);
     }
-    if(portofolio) {
-      portofolio = JSON.stringify(portofolio)
+    if (portofolio) {
+      portofolio = JSON.stringify(portofolio);
     }
-    if(bahasa) {
-      bahasa = JSON.stringify(bahasa)
-    } 
-    if(keahlian) {
-      keahlian = JSON.stringify(keahlian)
-    } 
+    if (bahasa) {
+      bahasa = JSON.stringify(bahasa);
+    }
+    if (keahlian) {
+      keahlian = JSON.stringify(keahlian);
+    }
     tanggal_lahir == "Invalid date" ? delete userPayload.tanggal_lahir : null;
 
     await User.query().where({ id: user.id }).update(userPayload);
