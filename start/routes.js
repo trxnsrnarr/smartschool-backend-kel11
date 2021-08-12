@@ -843,6 +843,7 @@ Route.post("/gpds-username", "MainController.gpdsUsername");
 
 //dashboard
 Route.get("/dashboard/tugas", "MainController.getDashboardTugas");
+Route.get("/dashboard/absen", "MainController.getDashboardAbsen");
 
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
