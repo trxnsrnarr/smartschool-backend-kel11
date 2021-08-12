@@ -840,5 +840,8 @@ Route.post("uji-coba/cron", "MainController.postCron");
 Route.post("/download/monev", "MainController.downloadMonev");
 Route.post("/import/GPDS", "MainController.importGPDS");
 
+//dashboard
+Route.get("/dashboard/tugas", "MainController.getDashboardTugas");
+
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
