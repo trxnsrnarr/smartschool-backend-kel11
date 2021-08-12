@@ -684,38 +684,24 @@ class MainController {
       home,
     };
 
-    pendidikan =
-      typeof pendidikan == "array"
-        ? pendidikan.length
-          ? pendidikan.toString()
-          : ""
-        : "";
-    pengalaman =
-      typeof pengalaman == "array"
-        ? pengalaman.length
-          ? pengalaman.toString()
-          : ""
-        : "";
-    prestasi =
-      typeof prestasi == "array"
-        ? prestasi.length
-          ? prestasi.toString()
-          : ""
-        : "";
-    portofolio =
-      typeof portofolio == "array"
-        ? portofolio.length
-          ? portofolio.toString()
-          : ""
-        : "";
-    bahasa =
-      typeof bahasa == "array" ? (bahasa.length ? bahasa.toString() : "") : "";
-    keahlian =
-      typeof keahlian == "array"
-        ? keahlian.length
-          ? keahlian.toString()
-          : ""
-        : "";
+    if (pendidikan) {
+      pendidikan = JSON.stringify(pendidikan);
+    }
+    if (pengalaman) {
+      pengalaman = JSON.stringify(pengalaman);
+    }
+    if (prestasi) {
+      prestasi = JSON.stringify(prestasi);
+    }
+    if (portofolio) {
+      portofolio = JSON.stringify(portofolio);
+    }
+    if (bahasa) {
+      bahasa = JSON.stringify(bahasa);
+    }
+    if (keahlian) {
+      keahlian = JSON.stringify(keahlian);
+    }
     tanggal_lahir == "Invalid date" ? delete userPayload.tanggal_lahir : null;
 
     await User.query().where({ id: user.id }).update(userPayload);
@@ -5606,6 +5592,7 @@ class MainController {
                 tipe: "tugas",
                 m_timeline_id: timeline.id,
                 dihapus: 0,
+                dikumpulkan: 0,
               });
 
               try {
@@ -5651,6 +5638,7 @@ class MainController {
                       tipe: "tugas",
                       m_timeline_id: t.id,
                       dihapus: 0,
+                      dikumpulkan: 0,
                     });
                   }
                   try {
@@ -6216,7 +6204,7 @@ class MainController {
         builder.with("user");
       })
       .with("listSiswaBelum", (builder) => {
-        builder.with("user").whereNull("waktu_pengumpulan");
+        builder.with("user").where("dikumpulkan", 0);
       })
       .with("listSiswaTerkumpul", (builder) => {
         builder
@@ -26254,13 +26242,8 @@ class MainController {
     const result = await Promise.all(
       data.map(async (d) => {
         const checkSekolah = await MSekolah.query()
-          .where({ npsn: d.npsn })
+          .where({ npsn: d.sekolah })
           .first();
-
-        const tgllahir1 = moment(d.tgl1).format(`YYYY-MM-DD`);
-        const tgllahir2 = moment(d.tgl2).format(`YYYY-MM-DD`);
-        const tgllahir3 = moment(d.tgl3).format(`YYYY-MM-DD`);
-        const tgllahir4 = moment(d.tgl4).format(`YYYY-MM-DD`);
 
         if (!checkSekolah) {
           // const tingkat = `${d.sekolah.split(" ")[0]}`;
@@ -26300,7 +26283,7 @@ class MainController {
             nama: d.sekolah,
             domain: `https://${slugify(d.sekolah, {
               replacement: "", // replace spaces with replacement character, defaults to `-`
-              remove: undefined, // remove characters that match regex, defaults to `undefined`
+                remove: /[*+~.()'"!:@]/g,
               lower: true, // convert to lower case, defaults to `false`
             })}.smarteschool.id`,
             status: "S",
@@ -26309,129 +26292,7 @@ class MainController {
             diintegrasi: 1,
             trial: 1,
           });
-
-          const createUser1 = await User.create({
-            nama: d.nama1,
-            whatsapp: d.no1,
-            password: `siapgpds`,
-            role: "admin",
-            tanggal_lahir: tgllahir1,
-            m_sekolah_id: sekolahCreate.id,
-            dihapus: 0,
-          });
-
-          if (d.no2 !== d.no1) {
-            const createUser2 = await User.create({
-              nama: d.nama2,
-              whatsapp: d.no2,
-              password: `siapgpds`,
-              role: "admin",
-              tanggal_lahir: tgllahir2,
-              m_sekolah_id: sekolahCreate.id,
-              dihapus: 0,
-            });
-          }
-
-          if (d.no3 !== d.no1 && d.no3 !== d.no2) {
-            const createUser3 = await User.create({
-              nama: d.nama3,
-              whatsapp: d.no3,
-              password: `siapgpds`,
-              role: "admin",
-              tanggal_lahir: tgllahir3,
-              m_sekolah_id: sekolahCreate.id,
-              dihapus: 0,
-            });
-          }
-
-          if (d.no4 !== d.no1 && d.no4 !== d.no2 && d.no4 !== d.no3) {
-            const createUser4 = await User.create({
-              nama: d.nama4,
-              whatsapp: d.no4,
-              password: `siapgpds`,
-              role: "admin",
-              tanggal_lahir: tgllahir4,
-              m_sekolah_id: sekolahCreate.id,
-              dihapus: 0,
-            });
-          }
-          return;
         }
-
-        const checkUser1 = await User.query()
-          .where({ whatsapp: d.no1 })
-          .andWhere({ m_sekolah_id: checkSekolah.id })
-          .first();
-
-        const checkUser2 = await User.query()
-          .where({ whatsapp: d.no2 })
-          .andWhere({ m_sekolah_id: checkSekolah.id })
-          .first();
-
-        const checkUser3 = await User.query()
-          .where({ whatsapp: d.no3 })
-          .andWhere({ m_sekolah_id: checkSekolah.id })
-          .first();
-
-        const checkUser4 = await User.query()
-          .where({ whatsapp: d.no4 })
-          .andWhere({ m_sekolah_id: checkSekolah.id })
-          .first();
-
-        if (!checkUser1) {
-          const createUser1 = await User.create({
-            nama: d.nama1,
-            whatsapp: d.no1,
-            password: `siapgpds`,
-            role: "admin",
-            tanggal_lahir: tgllahir1,
-            m_sekolah_id: checkSekolah.id,
-            dihapus: 0,
-          });
-        }
-
-        if (!checkUser2 && d.no2 !== d.no1) {
-          const createUser2 = await User.create({
-            nama: d.nama2,
-            whatsapp: d.no2,
-            password: `siapgpds`,
-            role: "admin",
-            tanggal_lahir: tgllahir2,
-            m_sekolah_id: checkSekolah.id,
-            dihapus: 0,
-          });
-        }
-
-        if (!checkUser3 && d.no3 !== d.no1 && d.no3 !== d.no2) {
-          const createUser3 = await User.create({
-            nama: d.nama3,
-            whatsapp: d.no3,
-            password: `siapgpds`,
-            role: "admin",
-            tanggal_lahir: tgllahir3,
-            m_sekolah_id: checkSekolah.id,
-            dihapus: 0,
-          });
-        }
-
-        if (
-          !checkUser4 &&
-          d.no4 !== d.no1 &&
-          d.no4 !== d.no2 &&
-          d.no4 !== d.no3
-        ) {
-          const createUser4 = await User.create({
-            nama: d.nama4,
-            whatsapp: d.no4,
-            password: `siapgpds`,
-            role: "admin",
-            tanggal_lahir: tgllahir4,
-            m_sekolah_id: checkSekolah.id,
-            dihapus: 0,
-          });
-        }
-
-        return;
       })
     );
 
@@ -26453,6 +26314,107 @@ class MainController {
     }
 
     return await this.importGPDSServices(`tmp/uploads/${fname}`, sekolah);
+  }
+
+  async getDashboardTugas({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const user = await auth.getUser();
+
+    const { limit = 25, order = "created_at", sort = "desc" } = request.get();
+
+    let timeline;
+    if (user.role == "guru") {
+      const timeline1 = await MTimeline.query()
+        .with("tugas")
+        .with("user")
+        .with("komen", (builder) => {
+          builder.with("user").where({ dihapus: 0 });
+        })
+        .withCount("tkTimeline as total_respon", (builder) => {
+          builder.whereNotNull("waktu_pengumpulan");
+        })
+        .withCount("tkTimeline as total_absen", (builder) => {
+          builder.whereNotNull("waktu_absen");
+        })
+        .withCount("tkTimeline as total_siswa")
+        .withCount("komen as total_komen", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .whereNull("m_mata_pelajaran_id")
+        .andWhere({ m_user_id: user.id })
+        .andWhere({ dihapus: 0 })
+        // .whereIn("m_tugas_id", tugasIds)
+        .orderBy(order, sort)
+        .limit(limit)
+        .fetch();
+
+      const timeline2 = await MTimeline.query()
+        .with("tugas")
+        .with("user")
+        .with("komen", (builder) => {
+          builder.with("user").where({ dihapus: 0 });
+        })
+        .withCount("tkTimeline as total_respon", (builder) => {
+          builder.whereNotNull("waktu_pengumpulan");
+        })
+        .withCount("tkTimeline as total_absen", (builder) => {
+          builder.whereNotNull("waktu_absen");
+        })
+        .withCount("tkTimeline as total_siswa")
+        .withCount("komen as total_komen", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .whereNotNull("m_mata_pelajaran_id")
+        .andWhere({ m_user_id: user.id })
+        .andWhere({ dihapus: 0 })
+        // .whereIn("m_tugas_id", tugasIds)
+        .orderBy(order, sort)
+        .limit(limit)
+        .fetch();
+
+      timeline = [...timeline2.toJSON(), ...timeline1.toJSON()];
+    }
+
+    return response.ok({
+      timeline,
+    });
+  }
+
+  async gpdsUsername() {
+    const sekolah = await MSekolah.query()
+      .select("nama", "id")
+      .where("trial", 1)
+      .andWhere("created_at", "like", "%2021-08-10%")
+      .offset(1001)
+      .limit(2000)
+      .fetch();
+
+    const result =  await Promise.all(
+      sekolah.toJSON().map(async (d) => {
+        await User.create({
+          nama: d.nama,
+          whatsapp: slugify(d.nama, {
+            replacement: '-',
+            remove: /[*+~.()'"!:@]/g,
+            lower: true, // convert to lower case, defaults to `false`
+          }),
+          password: `siapgpds`,
+          role: "admin",
+          m_sekolah_id: d.id,
+          dihapus: 0,
+        });
+
+        return 'success'
+      })
+    );
+
+    return result.length
   }
 }
 module.exports = MainController;
