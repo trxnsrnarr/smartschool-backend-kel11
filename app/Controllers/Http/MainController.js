@@ -18052,20 +18052,20 @@ class MainController {
     const esaiFilter = esaiSoal.filter((d) => d != null);
     // worksheet 1
 
-    let logoFileName = `logo-${new Date().getTime()}.png`;
+    // let logoFileName = `logo-${new Date().getTime()}.png`;
 
-    try {
-      const downloader = new Downloader({
-        url: `${sekolah.logo}`,
-        directory: "./public/tmp/",
-        fileName: logoFileName,
-        cloneFiles: false,
-      });
+    // try {
+    //   const downloader = new Downloader({
+    //     url: `${sekolah.logo}`,
+    //     directory: "./public/tmp/",
+    //     fileName: logoFileName,
+    //     cloneFiles: false,
+    //   });
 
-      await downloader.download();
-    } catch (error) {
-      logoFileName = "logo.png";
-    }
+    //   await downloader.download();
+    // } catch (error) {
+    //   logoFileName = "logo.png";
+    // }
 
     const kartusoalFile = await DownloadService2.kartuUjian(
       sekolah,
@@ -18075,7 +18075,7 @@ class MainController {
       pgFilter,
       esaiFilter,
       keluarantanggalseconds,
-      logoFileName
+      // logoFileName
     );
 
     return kartusoalFile;
