@@ -8662,6 +8662,12 @@ class MainController {
           .fetch();
       }
 
+      const ujian = jadwalUjian.toJSON().filter((d) => d.jadwalUjian !== null);
+      if (ujian.length == 0) {
+        return response.notFound({
+          message: messageNotFound,
+        });
+      }
       return response.ok({
         jadwalUjian,
       });
@@ -26413,6 +26419,29 @@ class MainController {
         return false;
       });
       timeline = timelineData;
+    } else if (user.role == "siswa") {
+      const timelineData = await TkTimeline.query()
+        .with("timeline", (builder) => {
+          builder
+            .with("tugas")
+            .withCount("komen as total_komen", (builder) => {
+              builder.where({ dihapus: 0 });
+            })
+            .with("komen", (builder) => {
+              builder.with("user").where({ dihapus: 0 });
+            })
+            .with("user");
+        })
+        .with("user")
+        .where({ m_user_id: user.id })
+        .andWhere({ dihapus: 0 })
+        .orderBy(order, sort)
+        .limit(limit)
+        .fetch();
+
+      timeline = timelineData.toJSON().filter((d) => {
+        return d.timeline.tipe !== "diskusi";
+      });
     }
 
     return response.ok({
@@ -26502,7 +26531,85 @@ class MainController {
         rombel,
       });
     } else if (user.role == "siswa") {
-      return response.ok({});
+      const rombelIds = await MRombel.query()
+        .where({ m_ta_id: ta.id })
+        .andWhere({ dihapus: 0 })
+        .ids();
+
+      const anggotaRombelId = await MAnggotaRombel.query()
+        .where({ m_user_id: user.id })
+        .andWhere({ dihapus: 0 })
+        .whereIn("m_rombel_id", rombelIds)
+        .pluck("m_rombel_id");
+
+      if (!anggotaRombelId) {
+        return response.notFound({
+          message: messageNotFound,
+        });
+      }
+
+      const jamMengajarIds = await MJamMengajar.query()
+        .where({ kode_hari: kode_hari })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .andWhere({ m_ta_id: ta.id })
+        .ids();
+
+      const rombelMengajar = await MJadwalMengajar.query()
+        .with("rombel", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .with("mataPelajaran")
+        .whereIn("m_rombel_id", anggotaRombelId)
+        .whereIn("m_jam_mengajar_id", jamMengajarIds)
+        .fetch();
+
+      const janganUlangRombel = [];
+      const rombel = rombelMengajar.toJSON().filter((d) => {
+        if (!janganUlangRombel.includes(d.m_rombel_id)) {
+          janganUlangRombel.push(d.m_rombel_id);
+          return true;
+        } else {
+          return false;
+        }
+      });
+
+      const jadwalMengajar = await MJadwalMengajar.query()
+        .with("rombel", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .with("jamMengajar")
+        .with("mataPelajaran", (builder) => {
+          builder.with("user").andWhere({ dihapus: 0 });
+        })
+        .whereNotNull("m_mata_pelajaran_id")
+        .whereIn("m_rombel_id", anggotaRombelId)
+        .fetch();
+
+      const today = new Date();
+      const absen = await MTimeline.query()
+        .with("tkTimeline", (builder) => {
+          builder.where({ m_user_id: user.id });
+        })
+        .where({ tipe: "absen" })
+        .whereIn(
+          "m_rombel_id",
+          jadwalMengajar.toJSON().map((d) => d.rombel.id)
+        )
+        .whereBetween("tanggal_pembagian", [
+          `${today.getFullYear()}/${
+            today.getMonth() + 1
+          }/${today.getDate()} 00:00:00`,
+          `${today.getFullYear()}/${today.getMonth() + 1}/${
+            today.getDate() + 1
+          } 00:00:00`,
+        ])
+        .andWhere({ dihapus: 0 })
+        .fetch();
+      
+      return response.ok({
+        absen,
+        rombel,
+      });
     }
   }
 
