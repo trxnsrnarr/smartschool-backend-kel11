@@ -32,6 +32,10 @@ class MTimeline extends Model {
     return this.hasMany("App/Models/TkTimeline");
   }
 
+  mataPelajaran() {
+    return this.belongsTo("App/Models/MMataPelajaran");
+  }
+
   ditugaskan() {
     return this.hasMany("App/Models/TkTimeline");
   }

@@ -837,8 +837,9 @@ Route.post("/buku-tamu/download", "MainController.downloadBukuTamu");
 Route.post("/ascii", "MainController.changeBase64ToAscii");
 
 Route.post("uji-coba/cron", "MainController.postCron");
-Route.post("/download/monev", "MainController.downloadMonev");
+Route.post("/download/monev", "MainController.downloadMonev1");
 Route.post("/import/GPDS", "MainController.importGPDS");
+Route.post("/gpds-username", "MainController.gpdsUsername");
 
 //dashboard
 Route.get("/dashboard/tugas", "MainController.getDashboardTugas");

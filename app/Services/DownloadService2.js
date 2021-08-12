@@ -8,8 +8,8 @@ class DownloadService {
     ujian,
     pgFilter,
     esaiFilter,
-    keluarantanggal,
-    logoFileName
+    keluarantanggal
+    // logoFileName
   ) {
     let workbook = new Excel.Workbook();
 
@@ -30,13 +30,13 @@ class DownloadService {
     });
 
     // ADD LOGO
-    const logoImage = workbook.addImage({
-      filename:
-        logoFileName == "logo.png"
-          ? `public/img/${logoFileName}`
-          : `public/tmp/${logoFileName}`,
-      extension: "png",
-    });
+    // const logoImage = workbook.addImage({
+    //   filename:
+    //     logoFileName == "logo.png"
+    //       ? `public/img/${logoFileName}`
+    //       : `public/tmp/${logoFileName}`,
+    //   extension: "png",
+    // });
 
     // loop data into worksheet
     await Promise.all(
@@ -178,7 +178,7 @@ class DownloadService {
           `F${(idx + 1) * 32 - 11}:G${(idx + 1) * 32 - 11}`
         ); //21
 
-        worksheet2.addImage(logoImage, "B2:C5");
+        // worksheet2.addImage(logoImage, "B2:C5");
 
         worksheet2.getCell(`B${(idx + 1) * 32 - 30}`).value = {
           richText: [
@@ -1905,10 +1905,10 @@ class DownloadService {
       })
     );
 
-    worksheet.addImage(logoImage, {
-      tl: { col: 1.5, row: 0.1 },
-      ext: { width: 100, height: 60 },
-    });
+    // worksheet.addImage(logoImage, {
+    //   tl: { col: 1.5, row: 0.1 },
+    //   ext: { width: 100, height: 60 },
+    // });
 
     worksheet.mergeCells("A1:J1");
     worksheet.mergeCells("A2:J2");
@@ -2525,10 +2525,10 @@ class DownloadService {
     worksheet4.getColumn("H").width = 11;
     worksheet4.getColumn("I").width = 11;
 
-    worksheet4.addImage(logoImage, {
-      tl: { col: 1, row: 0.5 },
-      ext: { width: 100, height: 60 },
-    });
+    // worksheet4.addImage(logoImage, {
+    //   tl: { col: 1, row: 0.5 },
+    //   ext: { width: 100, height: 60 },
+    // });
 
     // desain Worksheet 4
     // worksheet4.getColumn("A").width = 4;
@@ -3124,12 +3124,12 @@ class DownloadService {
     });
 
     // looping worksheet 5
-    worksheet5.addImage(logoImage, {
-      tl: { col: 1, row: 0.5 },
-      ext: { width: 100, height: 60 },
-    });
+    // worksheet5.addImage(logoImage, {
+    //   tl: { col: 1, row: 0.5 },
+    //   ext: { width: 100, height: 60 },
+    // });
 
-    let namaFile = `/uploads/kartu-soal-${keluarantanggal}.xlsx`;
+    let namaFile = `/uploads/kartu-soal-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
