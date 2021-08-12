@@ -8340,7 +8340,7 @@ class MainController {
           .where({ m_user_id: user.id })
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_dibuka", ">", hari_ini)
-          .orderBy("id", "desc")
+          .orderBy("waktu_dibuka", "asc")
           .fetch();
       } else if (status == "berlangsung") {
         jadwalUjian = await MJadwalUjian.query()
@@ -8349,7 +8349,7 @@ class MainController {
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_dibuka", "<=", hari_ini)
           .andWhere("waktu_ditutup", ">=", hari_ini)
-          .orderBy("id", "desc")
+          .orderBy("waktu_dibuka", "asc")
           .fetch();
       } else if (status == "sudah-selesai") {
         jadwalUjian = await MJadwalUjian.query()
@@ -8357,7 +8357,7 @@ class MainController {
           .where({ m_user_id: user.id })
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_ditutup", "<=", hari_ini)
-          .orderBy("id", "desc")
+          .orderBy("waktu_dibuka", "asc")
           .limit(10)
           .fetch();
       }
@@ -8636,7 +8636,7 @@ class MainController {
           })
           .where({ dihapus: 0 })
           .whereIn("m_rombel_id", anggotaRombel)
-          .orderBy("id", "desc")
+          .orderBy("waktu_dibuka", "asc")
           .fetch();
       } else if (status == "berlangsung") {
         jadwalUjian = await TkJadwalUjian.query()
@@ -8649,7 +8649,7 @@ class MainController {
           .with("peserta")
           .where({ dihapus: 0 })
           .whereIn("m_rombel_id", anggotaRombel)
-          .orderBy("id", "desc")
+          .orderBy("waktu_dibuka", "asc")
           .fetch();
       } else if (status == "sudah-selesai") {
         jadwalUjian = await TkJadwalUjian.query()
@@ -8661,7 +8661,7 @@ class MainController {
           })
           .where({ dihapus: 0 })
           .whereIn("m_rombel_id", anggotaRombel)
-          .orderBy("id", "desc")
+          .orderBy("waktu_dibuka", "asc")
           .fetch();
       }
 
@@ -15671,11 +15671,11 @@ class MainController {
           tugas_tambahan: d.tugas_tambahan,
         };
 
-        let kecamatan1
-        let kecamatan2
-        let kecamatans
+        let kecamatan1;
+        let kecamatan2;
+        let kecamatans;
 
-        if(d.kecamatan != null || d.kecamatan != '-') {
+        if (d.kecamatan != null || d.kecamatan != "-") {
           kecamatan1 = `${d.kecamatan.split(" ")[1]}`;
           kecamatan2 = d ? d.kecamatan.split(" ")[2] : "";
           kecamatans = kecamatan1.concat(" ", kecamatan2 ? kecamatan2 : "");
@@ -15683,13 +15683,13 @@ class MainController {
 
         let districtIds;
 
-        if(kecamatans) {
+        if (kecamatans) {
           districtIds = await District.query()
-          .with("regency")
-          .where({ name: kecamatans })
-          .first();
+            .with("regency")
+            .where({ name: kecamatans })
+            .first();
         }
-        
+
         let villageIds;
 
         if (districtIds) {
@@ -15734,7 +15734,7 @@ class MainController {
         const tgl_lahir = moment(d.tanggal_lahir).format("YYYY-MM-DD");
         let tgl;
 
-        if (tgl_lahir == 'Invalid Date') {
+        if (tgl_lahir == "Invalid Date") {
           tgl = null;
         } else {
           tgl = tgl_lahir;
@@ -18088,7 +18088,7 @@ class MainController {
       ujian,
       pgFilter,
       esaiFilter,
-      keluarantanggalseconds,
+      keluarantanggalseconds
       // logoFileName
     );
 
@@ -26361,7 +26361,7 @@ class MainController {
           builder.where({ dihapus: 0 });
         })
         .whereNull("m_mata_pelajaran_id")
-        .whereNot({ tipe : "diskusi"})
+        .whereNot({ tipe: "diskusi" })
         .andWhere({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         // .whereIn("m_tugas_id", tugasIds)
@@ -26385,7 +26385,7 @@ class MainController {
         .withCount("komen as total_komen", (builder) => {
           builder.where({ dihapus: 0 });
         })
-        .whereNot({ tipe : "diskusi"})
+        .whereNot({ tipe: "diskusi" })
         .whereNotNull("m_mata_pelajaran_id")
         .andWhere({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
@@ -26395,11 +26395,118 @@ class MainController {
         .fetch();
 
       timeline = [...timeline2.toJSON(), ...timeline1.toJSON()];
+
+      const timelineData = timeline.filter((d) => {
+        if (d.tipe == "absen") {
+          if (
+            moment(d.tanggal_pertemuan, "DD MMMM YYYY") <
+            moment().subtract(3, "days")
+          ) {
+            return false;
+          } else if (d.__meta__.total_siswa != d.__meta__.total_absen) {
+            return true;
+          } else if (d.jurnal == null) {
+            return false;
+          }
+        } else {
+          if (d.__meta__.total_siswa != d.__meta__.total_respon) {
+            return true;
+          }
+        }
+        return false;
+      });
+      timeline = timelineData;
     }
 
     return response.ok({
       timeline,
     });
+  }
+
+  async getDashboardAbsen({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { kode_hari } = request.get();
+
+    if (user.role == "guru") {
+      const mataPelajaranIds = await MMataPelajaran.query()
+        .where({ m_user_id: user.id })
+        .ids();
+
+      const jamMengajarIds = await MJamMengajar.query()
+        .where({ kode_hari: kode_hari })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .andWhere({ m_ta_id: ta.id })
+        .ids();
+
+      const rombelIds = await MJadwalMengajar.query()
+        .select("m_rombel_id")
+        .with("rombel", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .with("mataPelajaran")
+        .where({ m_ta_id: ta.id })
+        .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
+        .whereIn("m_jam_mengajar_id", jamMengajarIds)
+        .fetch();
+
+      const rombelMengajar = await MJadwalMengajar.query()
+        .with("rombel", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .with("mataPelajaran")
+        .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
+        .whereIn("m_jam_mengajar_id", jamMengajarIds)
+        .fetch();
+
+      const janganUlangRombel = [];
+      const rombel = rombelMengajar.toJSON().filter((d) => {
+        if (!janganUlangRombel.includes(d.m_rombel_id)) {
+          janganUlangRombel.push(d.m_rombel_id);
+          return true;
+        } else {
+          return false;
+        }
+      });
+
+      const noDuplicate = new Set(rombelIds.toJSON().map((d) => d.m_rombel_id));
+
+      const today = new Date();
+      const absen = await MTimeline.query()
+        .where({ tipe: "absen" })
+        .whereIn("m_rombel_id", [...noDuplicate])
+        .whereBetween("tanggal_pembagian", [
+          `${today.getFullYear()}/${
+            today.getMonth() + 1
+          }/${today.getDate()} 00:00:00`,
+          `${today.getFullYear()}/${today.getMonth() + 1}/${
+            today.getDate() + 1
+          } 00:00:00`,
+        ])
+        .andWhere({ dihapus: 0 })
+        .fetch();
+
+      return response.ok({
+        absen,
+        rombel,
+      });
+    } else if (user.role == "siswa") {
+      return response.ok({});
+    }
   }
 
   async gpdsUsername() {
