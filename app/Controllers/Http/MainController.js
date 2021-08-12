@@ -8636,7 +8636,6 @@ class MainController {
           })
           .where({ dihapus: 0 })
           .whereIn("m_rombel_id", anggotaRombel)
-          .orderBy("waktu_dibuka", "asc")
           .fetch();
       } else if (status == "berlangsung") {
         jadwalUjian = await TkJadwalUjian.query()
@@ -8649,7 +8648,6 @@ class MainController {
           .with("peserta")
           .where({ dihapus: 0 })
           .whereIn("m_rombel_id", anggotaRombel)
-          .orderBy("waktu_dibuka", "asc")
           .fetch();
       } else if (status == "sudah-selesai") {
         jadwalUjian = await TkJadwalUjian.query()
@@ -8661,7 +8659,6 @@ class MainController {
           })
           .where({ dihapus: 0 })
           .whereIn("m_rombel_id", anggotaRombel)
-          .orderBy("waktu_dibuka", "asc")
           .fetch();
       }
 
