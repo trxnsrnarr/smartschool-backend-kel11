@@ -26513,9 +26513,9 @@ class MainController {
     const sekolah = await MSekolah.query()
       .select("nama", "id")
       .where("trial", 1)
-      .andWhere("created_at", "like", "%2021-08-10%")
-      .offset(1001)
-      .limit(2000)
+      .andWhere("created_at", "like", "%2021-08-12%")
+      .offset(0)
+      .limit(1000)
       .fetch();
 
     const result = await Promise.all(
