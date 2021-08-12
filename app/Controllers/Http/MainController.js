@@ -26394,7 +26394,21 @@ class MainController {
         .limit(limit)
         .fetch();
 
-      timeline = [...timeline2.toJSON(), ...timeline1.toJSON()];
+      timeline = [...timeline2.toJSON(), ...timeline1.toJSON()]
+      
+      const timelineData = timeline.map(d => {
+        if(d.tipe == "absen"){
+          if(d.__meta__.total_absen != d.__meta__.total_siswa ){
+            return d;
+          }
+        } else if(d.tipe == "tugas") {
+          if(d.__meta__.total_respon != d.__meta__.total_siswa ){
+            return d;
+          }
+        }
+      }).filter((d) => {return d !== null})
+
+      timeline = timelineData
     }
 
     return response.ok({
@@ -26406,9 +26420,9 @@ class MainController {
     const sekolah = await MSekolah.query()
       .select("nama", "id")
       .where("trial", 1)
-      .andWhere("created_at", "like", "%2021-08-10%")
-      .offset(1001)
-      .limit(2000)
+      .andWhere("created_at", "like", "%2021-08-12%")
+      .offset(0)
+      .limit(1000)
       .fetch();
 
     const result =  await Promise.all(
