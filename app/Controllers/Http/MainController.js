@@ -15668,15 +15668,25 @@ class MainController {
           tugas_tambahan: d.tugas_tambahan,
         };
 
-        let kecamatan1 = `${d.kecamatan.split(" ")[1]}`;
-        let kecamatan2 = d ? d.kecamatan.split(" ")[2] : "";
-        let kecamatans = kecamatan1.concat(" ", kecamatan2 ? kecamatan2 : "");
+        let kecamatan1
+        let kecamatan2
+        let kecamatans
 
-        const districtIds = await District.query()
+        if(d.kecamatan != null || d.kecamatan != '-') {
+          kecamatan1 = `${d.kecamatan.split(" ")[1]}`;
+          kecamatan2 = d ? d.kecamatan.split(" ")[2] : "";
+          kecamatans = kecamatan1.concat(" ", kecamatan2 ? kecamatan2 : "");
+        }
+
+        let districtIds;
+
+        if(kecamatans) {
+          districtIds = await District.query()
           .with("regency")
           .where({ name: kecamatans })
           .first();
-
+        }
+        
         let villageIds;
 
         if (districtIds) {
@@ -15718,13 +15728,14 @@ class MainController {
           return dataUpdated++;
         }
 
-        // const tgl_lahir = moment().format("YYYY-MM-DD");
-        // let tgl;
-        // if (tgl_lahir == invaliddate) {
-        //   tgl = null;
-        // } else {
-        //   tgl = tgl_lahir;
-        // }
+        const tgl_lahir = moment(d.tanggal_lahir).format("YYYY-MM-DD");
+        let tgl;
+
+        if (tgl_lahir == 'Invalid Date') {
+          tgl = null;
+        } else {
+          tgl = tgl_lahir;
+        }
 
         await User.create({
           nama: d.nama,
@@ -15735,7 +15746,7 @@ class MainController {
           m_sekolah_id: sekolah.id,
           dihapus: 0,
           tempat_lahir: d.tempat_lahir,
-          tanggal_lahir: d.tanggal_lahir,
+          tanggal_lahir: tgl,
         });
         await MProfilUser.create(payload);
 
