@@ -26212,7 +26212,7 @@ class MainController {
     return namaFile;
   }
 
-  async importGPDSServices(filelocation, sekolah) {
+  async importGPDSServices(filelocation) {
     var workbook = new Excel.Workbook();
 
     try {
@@ -26297,7 +26297,7 @@ class MainController {
             nama: d.sekolah,
             domain: `https://${slugify(d.sekolah, {
               replacement: "", // replace spaces with replacement character, defaults to `-`
-                remove: /[*+~.()'"!:@]/g,
+              remove: /[*+~.()'"!:@]/g,
               lower: true, // convert to lower case, defaults to `false`
             })}.smarteschool.id`,
             status: "S",
@@ -26327,7 +26327,7 @@ class MainController {
       return fileUpload.error();
     }
 
-    return await this.importGPDSServices(`tmp/uploads/${fname}`, sekolah);
+    return await this.importGPDSServices(`tmp/uploads/${fname}`);
   }
 
   async getDashboardTugas({ response, request, auth }) {
@@ -26425,26 +26425,39 @@ class MainController {
       .limit(1000)
       .fetch();
 
-    const result =  await Promise.all(
+    const result = await Promise.all(
       sekolah.toJSON().map(async (d) => {
-        await User.create({
-          nama: d.nama,
-          whatsapp: slugify(d.nama, {
-            replacement: '-',
-            remove: /[*+~.()'"!:@]/g,
-            lower: true, // convert to lower case, defaults to `false`
-          }),
-          password: `siapgpds`,
-          role: "admin",
-          m_sekolah_id: d.id,
-          dihapus: 0,
-        });
-
-        return 'success'
+        const check = await User.query()
+          .where({
+            whatsapp: slugify(d.nama, {
+              replacement: "-",
+              remove: /[*+~.()'"!:@]/g,
+              lower: true, // convert to lower case, defaults to `false`
+            }),
+          })
+          .andWhere({
+            role: "admin",
+          })
+          .first();
+        if (!check) {
+          await User.create({
+            nama: d.nama,
+            whatsapp: slugify(d.nama, {
+              replacement: "-",
+              remove: /[*+~.()'"!:@]/g,
+              lower: true, // convert to lower case, defaults to `false`
+            }),
+            password: `siapgpds`,
+            role: "admin",
+            m_sekolah_id: d.id,
+            dihapus: 0,
+          });
+        }
+        return "success";
       })
     );
 
-    return result.length
+    return result.length;
   }
 }
 module.exports = MainController;
