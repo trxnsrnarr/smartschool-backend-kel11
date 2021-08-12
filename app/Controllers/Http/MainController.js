@@ -8358,6 +8358,7 @@ class MainController {
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_ditutup", "<=", hari_ini)
           .orderBy("id", "desc")
+          .limit(10)
           .fetch();
       }
 
