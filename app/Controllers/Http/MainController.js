@@ -4113,7 +4113,7 @@ class MainController {
             nama: d.nama,
             whatsapp: d.whatsapp,
             gender: d.gender,
-            email: d.email ? d.email : "",
+            // email: d.email ? d.email : "",
             password: "smartschool",
             role: "siswa",
             m_sekolah_id: sekolah.id,
@@ -16276,7 +16276,7 @@ class MainController {
           const newUser = await User.create({
             nama: d.nama,
             whatsapp: d.whatsapp,
-            email: d.email ? d.email : "",
+            // email: d.email ? d.email : "",
             m_sekolah_id: sekolah.id,
             password: "smartschool",
             role: "guru",
@@ -17113,7 +17113,7 @@ class MainController {
           const createUser = await User.create({
             nama: d.nama,
             whatsapp: d.whatsapp,
-            email: d.email ? d.email : "",
+            // email: d.email ? d.email : "",
             gender: d.jk,
             password: "smartschool",
             role: "siswa",
@@ -17715,7 +17715,7 @@ class MainController {
         const user = await User.create({
           nama: d.nama,
           whatsapp: d.whatsapp,
-          email: d.email ? d.email : "",
+          // email: d.email ? d.email : "",
           gender: d.gender,
           role: "alumni",
           m_sekolah_id: sekolah.id,
