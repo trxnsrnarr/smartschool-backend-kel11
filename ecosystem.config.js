@@ -7,7 +7,7 @@ module.exports = {
     exec_mode: "cluster",
     env_production: {
       HOST: "0.0.0.0",
-      PORT: 4000,
+      PORT: 1115,
       NODE_ENV: "production",
       APP_NAME: "smartschool",
       APP_URL: "http://${HOST}:${PORT}",
