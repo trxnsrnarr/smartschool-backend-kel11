@@ -7544,6 +7544,7 @@ class MainController {
     }
 
     let tipeUjian = [
+      { value: "kuis", label: "Kuis" },
       { value: "ph", label: "Penilaian Harian" },
       { value: "pts1", label: "Penilaian Tengah Semester 1" },
       { value: "pts2", label: "Penilaian Tengah Semester 2" },
@@ -7866,6 +7867,7 @@ class MainController {
     }
 
     let tipeUjian = [
+      { value: "kuis", label: "Kuis" },
       { value: "ph", label: "Penilaian Harian" },
       { value: "pts1", label: "Penilaian Tengah Semester 1" },
       { value: "pts2", label: "Penilaian Tengah Semester 2" },
