@@ -26361,6 +26361,7 @@ class MainController {
           builder.where({ dihapus: 0 });
         })
         .whereNull("m_mata_pelajaran_id")
+        .whereNot({ tipe : "diskusi"})
         .andWhere({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         // .whereIn("m_tugas_id", tugasIds)
@@ -26384,6 +26385,7 @@ class MainController {
         .withCount("komen as total_komen", (builder) => {
           builder.where({ dihapus: 0 });
         })
+        .whereNot({ tipe : "diskusi"})
         .whereNotNull("m_mata_pelajaran_id")
         .andWhere({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
