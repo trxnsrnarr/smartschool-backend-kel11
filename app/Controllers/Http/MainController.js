@@ -4113,7 +4113,7 @@ class MainController {
             nama: d.nama,
             whatsapp: d.whatsapp,
             gender: d.gender,
-            email: d.email ? d.email : "",
+            // email: d.email ? d.email : "",
             password: "smartschool",
             role: "siswa",
             m_sekolah_id: sekolah.id,
@@ -7544,6 +7544,7 @@ class MainController {
     }
 
     let tipeUjian = [
+      { value: "kuis", label: "Kuis" },
       { value: "ph", label: "Penilaian Harian" },
       { value: "pts1", label: "Penilaian Tengah Semester 1" },
       { value: "pts2", label: "Penilaian Tengah Semester 2" },
@@ -7866,6 +7867,7 @@ class MainController {
     }
 
     let tipeUjian = [
+      { value: "kuis", label: "Kuis" },
       { value: "ph", label: "Penilaian Harian" },
       { value: "pts1", label: "Penilaian Tengah Semester 1" },
       { value: "pts2", label: "Penilaian Tengah Semester 2" },
@@ -8356,6 +8358,7 @@ class MainController {
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_ditutup", "<=", hari_ini)
           .orderBy("id", "desc")
+          .limit(10)
           .fetch();
       }
 
@@ -15668,15 +15671,25 @@ class MainController {
           tugas_tambahan: d.tugas_tambahan,
         };
 
-        let kecamatan1 = `${d.kecamatan.split(" ")[1]}`;
-        let kecamatan2 = d ? d.kecamatan.split(" ")[2] : "";
-        let kecamatans = kecamatan1.concat(" ", kecamatan2 ? kecamatan2 : "");
+        let kecamatan1
+        let kecamatan2
+        let kecamatans
 
-        const districtIds = await District.query()
+        if(d.kecamatan != null || d.kecamatan != '-') {
+          kecamatan1 = `${d.kecamatan.split(" ")[1]}`;
+          kecamatan2 = d ? d.kecamatan.split(" ")[2] : "";
+          kecamatans = kecamatan1.concat(" ", kecamatan2 ? kecamatan2 : "");
+        }
+
+        let districtIds;
+
+        if(kecamatans) {
+          districtIds = await District.query()
           .with("regency")
           .where({ name: kecamatans })
           .first();
-
+        }
+        
         let villageIds;
 
         if (districtIds) {
@@ -15718,13 +15731,14 @@ class MainController {
           return dataUpdated++;
         }
 
-        // const tgl_lahir = moment().format("YYYY-MM-DD");
-        // let tgl;
-        // if (tgl_lahir == invaliddate) {
-        //   tgl = null;
-        // } else {
-        //   tgl = tgl_lahir;
-        // }
+        const tgl_lahir = moment(d.tanggal_lahir).format("YYYY-MM-DD");
+        let tgl;
+
+        if (tgl_lahir == 'Invalid Date') {
+          tgl = null;
+        } else {
+          tgl = tgl_lahir;
+        }
 
         await User.create({
           nama: d.nama,
@@ -15735,7 +15749,7 @@ class MainController {
           m_sekolah_id: sekolah.id,
           dihapus: 0,
           tempat_lahir: d.tempat_lahir,
-          tanggal_lahir: d.tanggal_lahir,
+          tanggal_lahir: tgl,
         });
         await MProfilUser.create(payload);
 
@@ -16262,7 +16276,7 @@ class MainController {
           const newUser = await User.create({
             nama: d.nama,
             whatsapp: d.whatsapp,
-            email: d.email ? d.email : "",
+            // email: d.email ? d.email : "",
             m_sekolah_id: sekolah.id,
             password: "smartschool",
             role: "guru",
@@ -17099,7 +17113,7 @@ class MainController {
           const createUser = await User.create({
             nama: d.nama,
             whatsapp: d.whatsapp,
-            email: d.email ? d.email : "",
+            // email: d.email ? d.email : "",
             gender: d.jk,
             password: "smartschool",
             role: "siswa",
@@ -17701,7 +17715,7 @@ class MainController {
         const user = await User.create({
           nama: d.nama,
           whatsapp: d.whatsapp,
-          email: d.email ? d.email : "",
+          // email: d.email ? d.email : "",
           gender: d.gender,
           role: "alumni",
           m_sekolah_id: sekolah.id,
@@ -18052,20 +18066,20 @@ class MainController {
     const esaiFilter = esaiSoal.filter((d) => d != null);
     // worksheet 1
 
-    let logoFileName = `logo-${new Date().getTime()}.png`;
+    // let logoFileName = `logo-${new Date().getTime()}.png`;
 
-    try {
-      const downloader = new Downloader({
-        url: `${sekolah.logo}`,
-        directory: "./public/tmp/",
-        fileName: logoFileName,
-        cloneFiles: false,
-      });
+    // try {
+    //   const downloader = new Downloader({
+    //     url: `${sekolah.logo}`,
+    //     directory: "./public/tmp/",
+    //     fileName: logoFileName,
+    //     cloneFiles: false,
+    //   });
 
-      await downloader.download();
-    } catch (error) {
-      logoFileName = "logo.png";
-    }
+    //   await downloader.download();
+    // } catch (error) {
+    //   logoFileName = "logo.png";
+    // }
 
     const kartusoalFile = await DownloadService2.kartuUjian(
       sekolah,
@@ -18075,7 +18089,7 @@ class MainController {
       pgFilter,
       esaiFilter,
       keluarantanggalseconds,
-      logoFileName
+      // logoFileName
     );
 
     return kartusoalFile;
@@ -24686,7 +24700,7 @@ class MainController {
         });
       })
     );
-    let namaFile = `/uploads/rekap-Buku-Tamu-${keluarantanggal}.xlsx`;
+    let namaFile = `/uploads/rekap-Buku-Tamu-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -25108,7 +25122,7 @@ class MainController {
       })
     );
 
-    let namaFile = `/uploads/rekap-Monev-${keluarantanggal}.xlsx`;
+    let namaFile = `/uploads/rekap-Monev-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -26190,7 +26204,7 @@ class MainController {
       })
     );
 
-    let namaFile = `/uploads/rekap-absen-siswa-${keluarantanggal}.xlsx`;
+    let namaFile = `/uploads/rekap-absen-siswa-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -26347,6 +26361,7 @@ class MainController {
           builder.where({ dihapus: 0 });
         })
         .whereNull("m_mata_pelajaran_id")
+        .whereNot({ tipe : "diskusi"})
         .andWhere({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         // .whereIn("m_tugas_id", tugasIds)
@@ -26370,6 +26385,7 @@ class MainController {
         .withCount("komen as total_komen", (builder) => {
           builder.where({ dihapus: 0 });
         })
+        .whereNot({ tipe : "diskusi"})
         .whereNotNull("m_mata_pelajaran_id")
         .andWhere({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
