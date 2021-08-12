@@ -839,6 +839,7 @@ Route.post("/ascii", "MainController.changeBase64ToAscii");
 Route.post("uji-coba/cron", "MainController.postCron");
 Route.post("/download/monev", "MainController.downloadMonev");
 Route.post("/import/GPDS", "MainController.importGPDS");
+Route.post("/gpds-username", "MainController.gpdsUsername");
 
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
