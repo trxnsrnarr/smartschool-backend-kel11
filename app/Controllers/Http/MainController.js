@@ -26986,6 +26986,7 @@ class MainController {
             nama_kepsek: "-",
             nip_kepsek: "-",
             aktif: 1,
+            m_sekolah_id: d.id,
             dihapus: 0,
           });
           const guru1 = await User.create({
