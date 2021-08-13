@@ -18074,7 +18074,7 @@ class MainController {
       ujian,
       pgFilter,
       esaiFilter,
-      keluarantanggalseconds,
+      keluarantanggalseconds
       // logoFileName
     );
 
@@ -26283,7 +26283,7 @@ class MainController {
             nama: d.sekolah,
             domain: `https://${slugify(d.sekolah, {
               replacement: "", // replace spaces with replacement character, defaults to `-`
-                remove: /[*+~.()'"!:@]/g,
+              remove: /[*+~.()'"!:@]/g,
               lower: true, // convert to lower case, defaults to `false`
             })}.smarteschool.id`,
             status: "S",
@@ -26395,12 +26395,12 @@ class MainController {
       .limit(2000)
       .fetch();
 
-    const result =  await Promise.all(
+    const result = await Promise.all(
       sekolah.toJSON().map(async (d) => {
         await User.create({
           nama: d.nama,
           whatsapp: slugify(d.nama, {
-            replacement: '-',
+            replacement: "-",
             remove: /[*+~.()'"!:@]/g,
             lower: true, // convert to lower case, defaults to `false`
           }),
@@ -26410,11 +26410,308 @@ class MainController {
           dihapus: 0,
         });
 
-        return 'success'
+        return "success";
       })
     );
 
-    return result.length
+    return result.length;
+  }
+  async getSurat({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const bab = await MSurat.query()
+      .withCount("pasal as total", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
+    return response.ok({
+      bab,
+    });
+  }
+
+  async postSurat({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { tipe, asal, nomor, tanggal, perihal, keamanan, isi, file } =
+      request.post();
+    const rules = {
+      tipe: "required",
+      asal: "required",
+      nomor: "required",
+      tanggal: "required",
+      perihal: "required",
+      keamanan: "required",
+      isi: "required",
+      file: "required",
+    };
+    const message = {
+      "tipe.required": "Tipe harus diisi",
+      "asal.required": "Asal Surat harus diisi",
+      "nomor.required": "Nomor Surat harus diisi",
+      "tanggal.required": "Tanggal Surat harus diisi",
+      "perihal.required": "Perihal harus diisi",
+      "keamanan.required": "Tingkat Keamanan harus dipilih",
+      "isi.required": "Isi Ringakasan Surat harus diisi",
+      "file.required": "harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const surat = await MSurat.create({
+      tipe,
+      asal,
+      nomor,
+      tanggal,
+      perihal,
+      keamanan,
+      isi,
+      file,
+      m_user_id: user.id,
+      m_sekolah_id: sekolah.id,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putSurat({ response, request, auth, params: { surat_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { tipe, asal, nomor, tanggal, perihal, keamanan, isi, file } =
+      request.post();
+    const rules = {
+      tipe: "required",
+      asal: "required",
+      nomor: "required",
+      tanggal: "required",
+      perihal: "required",
+      keamanan: "required",
+      isi: "required",
+      file: "required",
+    };
+    const message = {
+      "tipe.required": "Tipe harus diisi",
+      "asal.required": "Asal Surat harus diisi",
+      "nomor.required": "Nomor Surat harus diisi",
+      "tanggal.required": "Tanggal Surat harus diisi",
+      "perihal.required": "Perihal harus diisi",
+      "keamanan.required": "Tingkat Keamanan harus dipilih",
+      "isi.required": "Isi Ringakasan Surat harus diisi",
+      "file.required": "harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const surat = await MSurat.query().where({ id: surat_id }).update({
+      tipe,
+      asal,
+      nomor,
+      tanggal,
+      perihal,
+      keamanan,
+      isi,
+      file,
+    });
+
+    if (!surat) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteSurat({ response, request, auth, params: { surat_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const surat = await MSurat.query().where({ id: surat_id }).update({
+      dihapus: 1,
+    });
+
+    if (!surat) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+  async postDisposisi({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      penanganan,
+      tanggal_pembagian,
+      isi,
+      ttd,
+      m_sikap_spiritual_ditunjukkan_id,
+      m_user_id,
+    } = request.post();
+    const rules = {
+      tipe: "required",
+      penanganan: "required",
+      tanggal_pembagian: "required",
+      isi: "required",
+      ttd: "required",
+    };
+    const message = {
+      "tipe.required": "Tipe harus diisi",
+      "penanganan.required": "harus diisi",
+      "tanggal_pembagian.required": "harus diisi",
+      "isi.required": "harus diisi",
+      "ttd.required": "harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const disposisi = await MDisposisi.create({
+      penanganan,
+      tanggal_pembagian,
+      isi,
+      ttd,
+      m_user_id,
+      status: 0,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putDisposisi({ response, request, auth, params: { disposisi_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { penanganan, tanggal_pembagian, isi, ttd, m_user_id } =
+      request.post();
+    const rules = {
+      tipe: "required",
+      penanganan: "required",
+      tanggal_pembagian: "required",
+      isi: "required",
+      ttd: "required",
+    };
+    const message = {
+      "tipe.required": "Tipe harus diisi",
+      "penanganan.required": "harus diisi",
+      "tanggal_pembagian.required": "harus diisi",
+      "isi.required": "harus diisi",
+      "ttd.required": "harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const disposisi = await MDisposisi.query()
+      .where({ id: disposisi_id })
+      .update({
+        penanganan,
+        tanggal_pembagian,
+        isi,
+        ttd,
+        m_user_id,
+      });
+
+    if (!disposisi) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteDisposisi({ response, request, auth, params: { disposisi_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const disposisi = await MDisposisi.query()
+      .where({ id: disposisi_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!disposisi) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
   }
 }
 module.exports = MainController;
