@@ -700,7 +700,7 @@ class MainController {
       bahasa = JSON.stringify(bahasa);
     }
     if (keahlian) {
-      keahlian = JSON.stringify(keahlian);
+      keahlian = keahlian.toString();
     }
     tanggal_lahir == "Invalid date" ? delete userPayload.tanggal_lahir : null;
 
