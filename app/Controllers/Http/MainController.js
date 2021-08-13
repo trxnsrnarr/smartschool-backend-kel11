@@ -25455,7 +25455,7 @@ class MainController {
                 d.pertemuan.map(async (a, nox) => {
                   worksheet.getRow(11).values = [
                     "No",
-                    "Nama",
+                    "Nama Guru",
                     "Mengajar Kelas",
                     "Jumlah Siswa",
                     "Mapel dan Tujuan Pembelajaran",
