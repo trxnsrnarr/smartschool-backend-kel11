@@ -4089,12 +4089,12 @@ class MainController {
         data.push({
           nama: explanation.getCell("B" + rowNumber).value,
           whatsapp: explanation.getCell("C" + rowNumber).value,
-          email:
-            explanation.getCell("D" + rowNumber).value == null
-              ? ""
-              : typeof explanation.getCell("D" + rowNumber).value == "object"
-              ? JSON.parse(explanation.getCell("D" + rowNumber).value).text
-              : explanation.getCell("D" + rowNumber).value,
+          // email:
+          //   explanation.getCell("D" + rowNumber).value == null
+          //     ? ""
+          //     : typeof explanation.getCell("D" + rowNumber).value == "object"
+          //     ? JSON.parse(explanation.getCell("D" + rowNumber).value).text
+          //     : explanation.getCell("D" + rowNumber).value,
           gender: explanation.getCell("E" + rowNumber).value,
           role: explanation.getCell("F" + rowNumber).value,
         });
@@ -6085,7 +6085,11 @@ class MainController {
         .ids();
 
       const timeline1 = await MTimeline.query()
-        .with("tugas")
+        .with("tugas", (builder) => {
+          builder.with("timeline", (builder) => {
+            builder.with("rombel").with("tkTimeline");
+          });
+        })
         .with("user")
         .with("komen", (builder) => {
           builder.with("user").where({ dihapus: 0 });
@@ -6110,7 +6114,11 @@ class MainController {
         .fetch();
 
       const timeline2 = await MTimeline.query()
-        .with("tugas")
+        .with("tugas", (builder) => {
+          builder.with("timeline", (builder) => {
+            builder.with("rombel").with("tkTimeline");
+          });
+        })
         .with("user")
         .with("komen", (builder) => {
           builder.with("user").where({ dihapus: 0 });
@@ -15737,7 +15745,7 @@ class MainController {
         const tgl_lahir = moment(d.tanggal_lahir).format("YYYY-MM-DD");
         let tgl;
 
-        if (tgl_lahir == "Invalid Date") {
+        if (tgl_lahir == "Invalid date") {
           tgl = null;
         } else {
           tgl = tgl_lahir;
@@ -16254,12 +16262,12 @@ class MainController {
         data.push({
           namaGuru: explanation.getCell("B" + rowNumber).value,
           whatsapp: explanation.getCell("C" + rowNumber).value,
-          email:
-            explanation.getCell("D" + rowNumber).value == null
-              ? ""
-              : typeof explanation.getCell("D" + rowNumber).value == "object"
-              ? JSON.parse(explanation.getCell("D" + rowNumber).value).text
-              : explanation.getCell("D" + rowNumber).value,
+          // email:
+          //   explanation.getCell("D" + rowNumber).value == null
+          //     ? ""
+          //     : typeof explanation.getCell("D" + rowNumber).value == "object"
+          //     ? JSON.parse(explanation.getCell("D" + rowNumber).value).text
+          //     : explanation.getCell("D" + rowNumber).value,
           nama: explanation.getCell("E" + rowNumber).value,
           kode: explanation.getCell("F" + rowNumber).value,
           kelompok: explanation.getCell("G" + rowNumber).value,
@@ -17664,12 +17672,12 @@ class MainController {
         data.push({
           nama: explanation.getCell("B" + rowNumber).value,
           whatsapp: explanation.getCell("C" + rowNumber).value,
-          email:
-            explanation.getCell("D" + rowNumber).value == null
-              ? ""
-              : typeof explanation.getCell("D" + rowNumber).value == "object"
-              ? JSON.parse(explanation.getCell("D" + rowNumber).value).text
-              : explanation.getCell("D" + rowNumber).value,
+          // email:
+          //   explanation.getCell("D" + rowNumber).value == null
+          //     ? ""
+          //     : typeof explanation.getCell("D" + rowNumber).value == "object"
+          //     ? JSON.parse(explanation.getCell("D" + rowNumber).value).text
+          //     : explanation.getCell("D" + rowNumber).value,
           gender: explanation.getCell("E" + rowNumber).value,
           tempat_lahir: explanation.getCell("F" + rowNumber).value,
           tanggal_lahir: explanation.getCell("G" + rowNumber).value,
@@ -25222,7 +25230,10 @@ class MainController {
               })
               .where({ tipe: "absen" })
               .whereNotNull("id")
-              .andWhere({ tanggal_pembagian: e.tanggalDistinct });
+              .whereBetween("tanggal_pembagian", [
+                `${e.tanggalDistinct} 00:00:00`,
+                `${e.tanggalDistinct} 23:59:59`,
+              ]);
             // .andWhere({ tanggal_pembagian: tanggal_awal });
           })
           .where({ dihapus: 0 })
