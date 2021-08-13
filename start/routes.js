@@ -1,6 +1,6 @@
 "use strict";
 
-const { route } = require("@adonisjs/framework/src/Route/Manager");
+const { route, RouteGroup } = require("@adonisjs/framework/src/Route/Manager");
 
 /*
 |--------------------------------------------------------------------------
@@ -854,6 +854,8 @@ Route.post("/gpds-username", "MainController.gpdsUsername");
 //dashboard
 Route.get("/dashboard/tugas", "MainController.getDashboardTugas");
 Route.get("/dashboard/absen", "MainController.getDashboardAbsen");
+
+Route.post("/dummyGPDS/GPDS", "MainController.dummyGPDS");
 
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
