@@ -851,5 +851,8 @@ Route.post("/download/monev", "MainController.downloadMonev1");
 Route.post("/import/GPDS", "MainController.importGPDS");
 Route.post("/gpds-username", "MainController.gpdsUsername");
 
+//dashboard
+Route.get("/dashboard/tugas", "MainController.getDashboardTugas");
+
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
