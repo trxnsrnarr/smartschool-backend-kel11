@@ -16,7 +16,7 @@ module.exports = {
   | Function - Receives the current origin and should return one of the above values.
   |
   */
-  origin: "*",
+  origin: ["*", "http://smartschool.smkn6tangsel.sch.id/smartschool"],
 
   /*
   |--------------------------------------------------------------------------
@@ -47,7 +47,7 @@ module.exports = {
   | Function - Receives the current header and should return one of the above values.
   |
   */
-  headers: "*",
+  headers: ["*", "http://smartschool.smkn6tangsel.sch.id/smartschool"],
 
   /*
   |--------------------------------------------------------------------------
