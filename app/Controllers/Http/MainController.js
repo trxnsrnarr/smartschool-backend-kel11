@@ -723,6 +723,7 @@ class MainController {
         prestasi,
         portofolio,
         bahasa,
+        keahlian,
 
         // informasi
         nisn,
@@ -799,6 +800,7 @@ class MainController {
         prestasi,
         portofolio,
         bahasa,
+        keahlian,
 
         // informasi
         nisn,
