@@ -26992,7 +26992,7 @@ class MainController {
               jam_selesai: "07:30:00",
               istirahat: 0,
               m_ta_id: checkta.id,
-              m_sekolah_id: sekolah.id,
+              m_sekolah_id: d.id,
             },
             {
               kode_hari: i,
@@ -27002,7 +27002,7 @@ class MainController {
               jam_selesai: "08:15:00",
               istirahat: 0,
               m_ta_id: checkta.id,
-              m_sekolah_id: sekolah.id,
+              m_sekolah_id: d.id,
             },
             {
               kode_hari: i,
@@ -27012,7 +27012,7 @@ class MainController {
               jam_selesai: "09:00:00",
               istirahat: 0,
               m_ta_id: checkta.id,
-              m_sekolah_id: sekolah.id,
+              m_sekolah_id: d.id,
             },
             {
               kode_hari: i,
@@ -27022,7 +27022,7 @@ class MainController {
               jam_selesai: "09:45:00",
               istirahat: 0,
               m_ta_id: checkta.id,
-              m_sekolah_id: sekolah.id,
+              m_sekolah_id: d.id,
             },
             {
               kode_hari: i,
@@ -27032,7 +27032,7 @@ class MainController {
               jam_selesai: "10:00:00",
               istirahat: 1,
               m_ta_id: checkta.id,
-              m_sekolah_id: sekolah.id,
+              m_sekolah_id: d.id,
             },
             {
               kode_hari: i,
@@ -27042,7 +27042,7 @@ class MainController {
               jam_selesai: "10:45:00",
               istirahat: 0,
               m_ta_id: checkta.id,
-              m_sekolah_id: sekolah.id,
+              m_sekolah_id: d.id,
             },
             {
               kode_hari: i,
@@ -27052,7 +27052,7 @@ class MainController {
               jam_selesai: "11:30:00",
               istirahat: 0,
               m_ta_id: checkta.id,
-              m_sekolah_id: sekolah.id,
+              m_sekolah_id: d.id,
             },
             {
               kode_hari: i,
@@ -27062,7 +27062,7 @@ class MainController {
               jam_selesai: "12:30:00",
               istirahat: 1,
               m_ta_id: checkta.id,
-              m_sekolah_id: sekolah.id,
+              m_sekolah_id: d.id,
             },
             {
               kode_hari: i,
@@ -27072,7 +27072,7 @@ class MainController {
               jam_selesai: "13:15:00",
               istirahat: 0,
               m_ta_id: checkta.id,
-              m_sekolah_id: sekolah.id,
+              m_sekolah_id: d.id,
             },
             {
               kode_hari: i,
@@ -27082,7 +27082,7 @@ class MainController {
               jam_selesai: "14:00:00",
               istirahat: 0,
               m_ta_id: checkta.id,
-              m_sekolah_id: sekolah.id,
+              m_sekolah_id: d.id,
             },
             {
               kode_hari: i,
@@ -27092,7 +27092,7 @@ class MainController {
               jam_selesai: "14:45:00",
               istirahat: 0,
               m_ta_id: checkta.id,
-              m_sekolah_id: sekolah.id,
+              m_sekolah_id: d.id,
             },
             {
               kode_hari: i,
@@ -27102,7 +27102,7 @@ class MainController {
               jam_selesai: "15:30:00",
               istirahat: 0,
               m_ta_id: checkta.id,
-              m_sekolah_id: sekolah.id,
+              m_sekolah_id: d.id,
             },
             {
               kode_hari: i,
@@ -27112,7 +27112,7 @@ class MainController {
               jam_selesai: "15:30:00",
               istirahat: 0,
               m_ta_id: checkta.id,
-              m_sekolah_id: sekolah.id,
+              m_sekolah_id: d.id,
             },
             {
               kode_hari: i,
@@ -27122,7 +27122,7 @@ class MainController {
               jam_selesai: "15:30:00",
               istirahat: 0,
               m_ta_id: checkta.id,
-              m_sekolah_id: sekolah.id,
+              m_sekolah_id: d.id,
             },
             {
               kode_hari: i,
@@ -27132,7 +27132,7 @@ class MainController {
               jam_selesai: "15:30:00",
               istirahat: 0,
               m_ta_id: checkta.id,
-              m_sekolah_id: sekolah.id,
+              m_sekolah_id: d.id,
             },
             {
               kode_hari: i,
@@ -27142,7 +27142,7 @@ class MainController {
               jam_selesai: "15:30:00",
               istirahat: 0,
               m_ta_id: checkta.id,
-              m_sekolah_id: sekolah.id,
+              m_sekolah_id: d.id,
             },
             {
               kode_hari: i,
@@ -27152,7 +27152,7 @@ class MainController {
               jam_selesai: "15:30:00",
               istirahat: 0,
               m_ta_id: checkta.id,
-              m_sekolah_id: sekolah.id,
+              m_sekolah_id: d.id,
             },
             {
               kode_hari: i,
@@ -27162,7 +27162,7 @@ class MainController {
               jam_selesai: "15:30:00",
               istirahat: 0,
               m_ta_id: checkta.id,
-              m_sekolah_id: sekolah.id,
+              m_sekolah_id: d.id,
             },
             {
               kode_hari: i,
@@ -27172,7 +27172,7 @@ class MainController {
               jam_selesai: "15:30:00",
               istirahat: 0,
               m_ta_id: checkta.id,
-              m_sekolah_id: sekolah.id,
+              m_sekolah_id: d.id,
             },
             {
               kode_hari: i,
@@ -27182,7 +27182,7 @@ class MainController {
               jam_selesai: "15:30:00",
               istirahat: 0,
               m_ta_id: checkta.id,
-              m_sekolah_id: sekolah.id,
+              m_sekolah_id: d.id,
             },
             {
               kode_hari: i,
@@ -27192,7 +27192,7 @@ class MainController {
               jam_selesai: "15:30:00",
               istirahat: 0,
               m_ta_id: checkta.id,
-              m_sekolah_id: sekolah.id,
+              m_sekolah_id: d.id,
             },
             {
               kode_hari: i,
@@ -27202,7 +27202,7 @@ class MainController {
               jam_selesai: "15:30:00",
               istirahat: 0,
               m_ta_id: checkta.id,
-              m_sekolah_id: sekolah.id,
+              m_sekolah_id: d.id,
             }
           );
         }
