@@ -26361,6 +26361,7 @@ class MainController {
       const timeline1 = await MTimeline.query()
         .with("tugas")
         .with("user")
+        .with("rombel")
         .with("komen", (builder) => {
           builder.with("user").where({ dihapus: 0 });
         })
@@ -26386,6 +26387,8 @@ class MainController {
       const timeline2 = await MTimeline.query()
         .with("tugas")
         .with("user")
+        .with("rombel")
+        .with("mataPelajaran")
         .with("komen", (builder) => {
           builder.with("user").where({ dihapus: 0 });
         })
@@ -26435,6 +26438,8 @@ class MainController {
         .with("timeline", (builder) => {
           builder
             .with("tugas")
+            .with("rombel")
+            .with("mataPelajaran")
             .withCount("komen as total_komen", (builder) => {
               builder.where({ dihapus: 0 });
             })
