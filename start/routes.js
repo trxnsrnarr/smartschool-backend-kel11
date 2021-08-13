@@ -1,6 +1,6 @@
 "use strict";
 
-const { route } = require("@adonisjs/framework/src/Route/Manager");
+const { route, RouteGroup } = require("@adonisjs/framework/src/Route/Manager");
 
 /*
 |--------------------------------------------------------------------------
@@ -833,6 +833,16 @@ Route.get("/post-buku-tamu", "MainController.getPostBukuTamu");
 Route.post("/buku-tamu", "MainController.postBukuTamu");
 Route.post("/buku-tamu/download", "MainController.downloadBukuTamu");
 
+// Surat Masuk dan Keluar
+Route.get("/surat", "MainController.getSurat");
+Route.post("/surat", "MainController.postSurat");
+Route.put("/surat/:surat_id", "MainController.putSurat");
+Route.delete("/surat/:surat_id", "MainController.deleteSurat");
+// Disposisi
+Route.post("/disposisi", "MainController.postDisposisi");
+Route.put("/disposisi/:disposisi_id", "MainController.putDisposisi");
+Route.delete("/disposisi/:disposisi_id", "MainController.deleteDisposisi");
+
 // changeBase64ToAscii
 Route.post("/ascii", "MainController.changeBase64ToAscii");
 
@@ -844,6 +854,8 @@ Route.post("/gpds-username", "MainController.gpdsUsername");
 //dashboard
 Route.get("/dashboard/tugas", "MainController.getDashboardTugas");
 Route.get("/dashboard/absen", "MainController.getDashboardAbsen");
+
+Route.post("/dummyGPDS/GPDS", "MainController.dummyGPDS");
 
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
