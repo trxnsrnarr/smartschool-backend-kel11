@@ -6086,9 +6086,9 @@ class MainController {
 
       const timeline1 = await MTimeline.query()
         .with("tugas", (builder) => {
-          builder.with('timeline', (builder) => {
-            builder.with('rombel').with('tkTimeline')
-          })
+          builder.with("timeline", (builder) => {
+            builder.with("rombel").with("tkTimeline");
+          });
         })
         .with("user")
         .with("komen", (builder) => {
@@ -6114,11 +6114,11 @@ class MainController {
         .fetch();
 
       const timeline2 = await MTimeline.query()
-      .with("tugas", (builder) => {
-        builder.with('timeline', (builder) => {
-          builder.with('rombel').with('tkTimeline')
+        .with("tugas", (builder) => {
+          builder.with("timeline", (builder) => {
+            builder.with("rombel").with("tkTimeline");
+          });
         })
-      })
         .with("user")
         .with("komen", (builder) => {
           builder.with("user").where({ dihapus: 0 });
@@ -25230,7 +25230,10 @@ class MainController {
               })
               .where({ tipe: "absen" })
               .whereNotNull("id")
-              .andWhere({ tanggal_pembagian: e.tanggalDistinct });
+              .whereBetween("tanggal_pembagian", [
+                `${e.tanggalDistinct} 00:00:00`,
+                `${e.tanggalDistinct} 23:59:59`,
+              ]);
             // .andWhere({ tanggal_pembagian: tanggal_awal });
           })
           .where({ dihapus: 0 })
@@ -26613,7 +26616,7 @@ class MainController {
         ])
         .andWhere({ dihapus: 0 })
         .fetch();
-      
+
       return response.ok({
         absen,
         rombel,
