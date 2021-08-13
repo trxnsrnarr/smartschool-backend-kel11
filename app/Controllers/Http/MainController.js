@@ -25454,8 +25454,8 @@ class MainController {
               await Promise.all(
                 d.pertemuan.map(async (a, nox) => {
                   worksheet.getRow(11).values = [
-                    "",
-                    "",
+                    "No",
+                    "Nama",
                     "Mengajar Kelas",
                     "Jumlah Siswa",
                     "Mapel dan Tujuan Pembelajaran",
