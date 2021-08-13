@@ -6085,7 +6085,11 @@ class MainController {
         .ids();
 
       const timeline1 = await MTimeline.query()
-        .with("tugas")
+        .with("tugas", (builder) => {
+          builder.with('timeline', (builder) => {
+            builder.with('rombel').with('tkTimeline')
+          })
+        })
         .with("user")
         .with("komen", (builder) => {
           builder.with("user").where({ dihapus: 0 });
@@ -6110,7 +6114,11 @@ class MainController {
         .fetch();
 
       const timeline2 = await MTimeline.query()
-        .with("tugas")
+      .with("tugas", (builder) => {
+        builder.with('timeline', (builder) => {
+          builder.with('rombel').with('tkTimeline')
+        })
+      })
         .with("user")
         .with("komen", (builder) => {
           builder.with("user").where({ dihapus: 0 });
@@ -15731,15 +15739,6 @@ class MainController {
           return dataUpdated++;
         }
 
-        const tgl_lahir = moment(d.tanggal_lahir).format("YYYY-MM-DD");
-        let tgl;
-
-        if (tgl_lahir == 'Invalid Date') {
-          tgl = null;
-        } else {
-          tgl = tgl_lahir;
-        }
-
         await User.create({
           nama: d.nama,
           whatsapp: d.whatsapp,
@@ -15749,7 +15748,7 @@ class MainController {
           m_sekolah_id: sekolah.id,
           dihapus: 0,
           tempat_lahir: d.tempat_lahir,
-          tanggal_lahir: tgl,
+          // tanggal_lahir: d.tanggal_lahir,
         });
         await MProfilUser.create(payload);
 
