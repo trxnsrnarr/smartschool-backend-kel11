@@ -4089,12 +4089,12 @@ class MainController {
         data.push({
           nama: explanation.getCell("B" + rowNumber).value,
           whatsapp: explanation.getCell("C" + rowNumber).value,
-          email:
-            explanation.getCell("D" + rowNumber).value == null
-              ? ""
-              : typeof explanation.getCell("D" + rowNumber).value == "object"
-              ? JSON.parse(explanation.getCell("D" + rowNumber).value).text
-              : explanation.getCell("D" + rowNumber).value,
+          // email:
+          //   explanation.getCell("D" + rowNumber).value == null
+          //     ? ""
+          //     : typeof explanation.getCell("D" + rowNumber).value == "object"
+          //     ? JSON.parse(explanation.getCell("D" + rowNumber).value).text
+          //     : explanation.getCell("D" + rowNumber).value,
           gender: explanation.getCell("E" + rowNumber).value,
           role: explanation.getCell("F" + rowNumber).value,
         });
@@ -16250,12 +16250,12 @@ class MainController {
         data.push({
           namaGuru: explanation.getCell("B" + rowNumber).value,
           whatsapp: explanation.getCell("C" + rowNumber).value,
-          email:
-            explanation.getCell("D" + rowNumber).value == null
-              ? ""
-              : typeof explanation.getCell("D" + rowNumber).value == "object"
-              ? JSON.parse(explanation.getCell("D" + rowNumber).value).text
-              : explanation.getCell("D" + rowNumber).value,
+          // email:
+          //   explanation.getCell("D" + rowNumber).value == null
+          //     ? ""
+          //     : typeof explanation.getCell("D" + rowNumber).value == "object"
+          //     ? JSON.parse(explanation.getCell("D" + rowNumber).value).text
+          //     : explanation.getCell("D" + rowNumber).value,
           nama: explanation.getCell("E" + rowNumber).value,
           kode: explanation.getCell("F" + rowNumber).value,
           kelompok: explanation.getCell("G" + rowNumber).value,
@@ -17660,12 +17660,12 @@ class MainController {
         data.push({
           nama: explanation.getCell("B" + rowNumber).value,
           whatsapp: explanation.getCell("C" + rowNumber).value,
-          email:
-            explanation.getCell("D" + rowNumber).value == null
-              ? ""
-              : typeof explanation.getCell("D" + rowNumber).value == "object"
-              ? JSON.parse(explanation.getCell("D" + rowNumber).value).text
-              : explanation.getCell("D" + rowNumber).value,
+          // email:
+          //   explanation.getCell("D" + rowNumber).value == null
+          //     ? ""
+          //     : typeof explanation.getCell("D" + rowNumber).value == "object"
+          //     ? JSON.parse(explanation.getCell("D" + rowNumber).value).text
+          //     : explanation.getCell("D" + rowNumber).value,
           gender: explanation.getCell("E" + rowNumber).value,
           tempat_lahir: explanation.getCell("F" + rowNumber).value,
           tanggal_lahir: explanation.getCell("G" + rowNumber).value,
