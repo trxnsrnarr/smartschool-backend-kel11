@@ -34,7 +34,7 @@ module.exports = {
   deploy: {
     production: {
       user: "root",
-      host: ["149.28.144.177", "45.32.120.76"],
+      host: ["149.28.144.177", "45.32.120.76", "128.199.64.198"],
       key: "/d/work/coba/ci_cd/id_rsa",
       ref: "origin/master",
       repo: "git@github.com:rochim26/server-smartschool.git",
