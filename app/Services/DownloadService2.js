@@ -3129,7 +3129,7 @@ class DownloadService {
     //   ext: { width: 100, height: 60 },
     // });
 
-    let namaFile = `/uploads/kartu-soal-${keluarantanggalseconds}.xlsx`;
+    let namaFile = `/uploads/kartu-soal-${keluarantanggal}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
