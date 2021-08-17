@@ -5514,7 +5514,7 @@ class MainController {
 
     const tugas = await MTugas.create({
       judul,
-      instruksi,
+      instruksi: htmlEscaper.escape(instruksi),
       tanggal_pembagian: tanggal_pembagian
         ? moment(tanggal_pembagian, "YYYY-MM-DD").format("YYYY-MM-DD")
         : tanggal_pembagian,
@@ -5723,7 +5723,7 @@ class MainController {
       .where({ id: tugas_id })
       .update({
         judul,
-        instruksi,
+        instruksi: htmlEscaper.escape(instruksi),
         tanggal_pembagian: tanggal_pembagian
           ? moment(tanggal_pembagian).add(7, "hours").format("YYYY-MM-DD")
           : tanggal_pembagian,
@@ -7561,8 +7561,8 @@ class MainController {
       { value: "pas1", label: "Penilaian Akhir Semester 1" },
       { value: "pas2", label: "Penilaian Akhir Semester 2" },
       { value: "us", label: "Ujian Sekolah" },
-      // { value: "literasi", label: "AKM - Literasi" },
-      // { value: "numerasi", label: "AKM - Numerasi" },
+      { value: "literasi", label: "AKM - Literasi" },
+      { value: "numerasi", label: "AKM - Numerasi" },
     ];
 
     return response.ok({
@@ -7737,7 +7737,6 @@ class MainController {
       nama: "required",
       tipe: "required",
       tingkat: "required",
-      m_mata_pelajaran_id: "required",
     };
     const message = {
       "nama.required": "Nama Ujian harus diisi",
@@ -7786,7 +7785,6 @@ class MainController {
       nama: "required",
       tipe: "required",
       tingkat: "required",
-      m_mata_pelajaran_id: "required",
     };
     const message = {
       "nama.required": "Nama Ujian harus diisi",
@@ -7884,8 +7882,8 @@ class MainController {
       { value: "pas1", label: "Penilaian Akhir Semester 1" },
       { value: "pas2", label: "Penilaian Akhir Semester 2" },
       { value: "us", label: "Ujian Sekolah" },
-      // { value: "literasi", label: "AKM - Literasi" },
-      // { value: "numerasi", label: "AKM - Numerasi" },
+      { value: "literasi", label: "AKM - Literasi" },
+      { value: "numerasi", label: "AKM - Numerasi" },
     ];
 
     return response.ok({
