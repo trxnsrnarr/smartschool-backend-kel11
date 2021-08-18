@@ -2736,7 +2736,8 @@ class MainController {
                 })
                 .with("sikap", (builder) => {
                   builder.where({ dihapus: 0 });
-                });
+                })
+                .with("nilaiUjian");
             });
           });
         })
@@ -18863,6 +18864,9 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
+
+    const user = await User.query().where({ id: user_id }).first();
+
     const rekap = await TkRekapNilai.query()
       .with("rekapRombel", (builder) => {
         builder.with("rekap", (builder) => {
@@ -18947,8 +18951,8 @@ class MainController {
       dataUjian,
       rataUjian,
       nilaiAkhir,
-      rekapUjian,
       ujian,
+      user,
     });
   }
 
