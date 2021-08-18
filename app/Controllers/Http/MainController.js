@@ -2881,8 +2881,8 @@ class MainController {
           .fetch();
       }
 
-      // if (jadwalMengajar.rombel.m_user_id == user.id) {
-      // }
+      if (jadwalMengajar.rombel.m_user_id == user.id) {
+      }
     }
 
     return response.ok({
@@ -18982,6 +18982,13 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
+
+    const jadwalMengajar = await MJadwalMengajar.query()
+      .with("mataPelajaran", (builder) => {
+        builder.with("user");
+      })
+      .where({ id: jadwal_mengajar_id })
+      .first();
 
     const rekap = await TkRekapNilai.query()
       .with("rekapRombel", (builder) => {
