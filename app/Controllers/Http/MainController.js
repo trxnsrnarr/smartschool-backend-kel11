@@ -18855,8 +18855,6 @@ class MainController {
   //rapor service
 
   async detailRombelRapor({ response, request, auth, params: { user_id } }) {
-    const user = await auth.getUser();
-
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
