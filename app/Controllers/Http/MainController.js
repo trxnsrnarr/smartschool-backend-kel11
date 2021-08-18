@@ -1245,12 +1245,27 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const guru = await User.query()
-      .select("nama", "id", "whatsapp", "avatar", "gender")
-      .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ dihapus: 0 })
-      .andWhere({ role: "guru" })
-      .fetch();
+    let { search, page } = request.get();
+
+    page = page ? parseInt(page) : 1;
+    let guru;
+
+    if (search) {
+      guru = await User.query()
+        .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ dihapus: 0 })
+        .andWhere({ role: "guru" })
+        .andWhere("nama", "like", `%${search}%`)
+        .paginate(page, 25);
+    } else {
+      guru = await User.query()
+        .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ dihapus: 0 })
+        .andWhere({ role: "guru" })
+        .paginate(page, 25);
+    }
 
     return response.ok({
       guru: guru,
