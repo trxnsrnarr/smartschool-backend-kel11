@@ -18987,6 +18987,14 @@ class MainController {
       })
     );
     const data = result.filter((d) => d != null);
+    let jumlah0 = 0;
+    result
+      .filter((d) => d != null)
+      .forEach((d) => {
+        jumlah0 += d.nilai;
+      });
+
+    const rataData = jumlah0 / data.length;
 
     const rekapPraktik = await TkRekapNilai.query()
       .with("rekapRombel", (builder) => {
@@ -19012,7 +19020,9 @@ class MainController {
       .forEach((d) => {
         jumlah += d.nilai;
       });
-    const praktik = jumlah / dataUjian.length;
+    const data4 = result1.filter((d) => d != null);
+
+    const praktik = jumlah / data4.length;
 
     const rekapProyek = await TkRekapNilai.query()
       .with("rekapRombel", (builder) => {
@@ -19038,7 +19048,8 @@ class MainController {
       .forEach((d) => {
         jumlah1 += d.nilai;
       });
-    const proyek = jumlah / dataUjian.length;
+    const data1 = result2.filter((d) => d != null);
+    const proyek = jumlah / data1.length;
 
     const rekapPortofolio = await TkRekapNilai.query()
       .with("rekapRombel", (builder) => {
@@ -19064,7 +19075,8 @@ class MainController {
       .forEach((d) => {
         jumlah2 += d.nilai;
       });
-    const portofolio = jumlah / dataUjian.length;
+    const data2 = result3.filter((d) => d != null);
+    const portofolio = jumlah / data2.length;
 
     const rekapProduk = await TkRekapNilai.query()
       .with("rekapRombel", (builder) => {
@@ -19090,10 +19102,12 @@ class MainController {
       .forEach((d) => {
         jumlah3 += d.nilai;
       });
-    const produk = jumlah / dataUjian.length;
+    const data3 = result4.filter((d) => d != null);
+    const produk = jumlah / data3.length;
 
     return response.ok({
       data,
+      rataData,
       user,
       proyek,
       praktik,
