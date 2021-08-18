@@ -26636,7 +26636,7 @@ class MainController {
         .andWhere({ m_ta_id: ta.id })
         .ids();
 
-      const rombelMengajar = await MJadwalMengajar.query()
+      const rombel = await MJadwalMengajar.query()
         .with("rombel", (builder) => {
           builder.where({ dihapus: 0 });
         })
