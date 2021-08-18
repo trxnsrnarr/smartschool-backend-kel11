@@ -26609,6 +26609,7 @@ class MainController {
             today.getDate() + 1
           } 00:00:00`,
         ])
+        .andWhere({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .fetch();
 
