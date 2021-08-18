@@ -18960,7 +18960,7 @@ class MainController {
     auth,
     params: { user_id },
   }) {
-    const user = await User.query().where({ id: user_id }).first();
+    const siswa = await User.query().where({ id: user_id }).first();
 
     const domain = request.headers().origin;
 
@@ -19108,7 +19108,7 @@ class MainController {
     return response.ok({
       data,
       rataData,
-      user,
+      siswa,
       proyek,
       praktik,
       portofolio,
