@@ -26647,6 +26647,9 @@ class MainController {
 
       const janganUlangRombel = [];
       const rombel = rombelMengajar.toJSON().filter((d) => {
+        if (!d.m_mata_pelajaran_id) {
+          return false;
+        }
         if (!janganUlangRombel.includes(d.m_mata_pelajaran_id)) {
           janganUlangRombel.push(d.m_mata_pelajaran_id);
           return true;
