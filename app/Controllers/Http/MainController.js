@@ -26636,7 +26636,7 @@ class MainController {
         .andWhere({ m_ta_id: ta.id })
         .ids();
 
-      const rombel = await MJadwalMengajar.query()
+      const rombelMengajar = await MJadwalMengajar.query()
         .with("rombel", (builder) => {
           builder.where({ dihapus: 0 });
         })
@@ -26644,6 +26644,16 @@ class MainController {
         .whereIn("m_rombel_id", anggotaRombelId)
         .whereIn("m_jam_mengajar_id", jamMengajarIds)
         .fetch();
+
+      const janganUlangRombel = [];
+      const rombel = rombelMengajar.toJSON().filter((d) => {
+        if (!janganUlangRombel.includes(d.m_mata_pelajaran_id)) {
+          janganUlangRombel.push(d.m_mata_pelajaran_id);
+          return true;
+        } else {
+          return false;
+        }
+      });
 
       const jadwalMengajar = await MJadwalMengajar.query()
         .with("rombel", (builder) => {
