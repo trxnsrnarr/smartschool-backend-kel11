@@ -8701,12 +8701,13 @@ class MainController {
           .fetch();
       }
 
-      const ujian = jadwalUjian.toJSON().filter((d) => d.jadwalUjian !== null);
-      if (ujian.length == 0) {
-        return response.notFound({
-          message: messageNotFound,
-        });
-      }
+      // const ujian = jadwalUjian.toJSON().filter((d) => d.jadwalUjian !== null);
+
+      // if (ujian.length == 0) {
+      //   return response.notFound({
+      //     message: messageNotFound,
+      //   });
+      // }
       return response.ok({
         jadwalUjian,
       });
