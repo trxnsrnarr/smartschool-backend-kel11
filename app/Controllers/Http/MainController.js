@@ -18854,7 +18854,12 @@ class MainController {
 
   //rapor service
 
-  async detailRombelRapor({ response, request, auth, params: { user_id } }) {
+  async detailRombelRapor({
+    response,
+    request,
+    auth,
+    params: { user_id, jadwal_mengajar_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -18864,6 +18869,13 @@ class MainController {
     }
 
     const siswa = await User.query().where({ id: user_id }).first();
+
+    const jadwalMengajar = await MJadwalMengajar.query()
+      .with("mataPelajaran", (builder) => {
+        builder.with("user");
+      })
+      .where({ id: jadwal_mengajar_id })
+      .first();
 
     const rekap = await TkRekapNilai.query()
       .with("rekapRombel", (builder) => {
@@ -18951,6 +18963,7 @@ class MainController {
       nilaiAkhir,
       ujian,
       siswa,
+      jadwalMengajar,
     });
   }
 
@@ -18958,7 +18971,7 @@ class MainController {
     response,
     request,
     auth,
-    params: { user_id },
+    params: { user_id, jadwal_mengajar_id },
   }) {
     const siswa = await User.query().where({ id: user_id }).first();
 
@@ -19113,6 +19126,7 @@ class MainController {
       praktik,
       portofolio,
       produk,
+      jadwalMengajar,
     });
   }
 
