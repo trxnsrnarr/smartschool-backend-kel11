@@ -18863,7 +18863,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await User.query().where({ id: user_id }).first();
+    const siswa = await User.query().where({ id: user_id }).first();
 
     const rekap = await TkRekapNilai.query()
       .with("rekapRombel", (builder) => {
@@ -18950,7 +18950,7 @@ class MainController {
       rataUjian,
       nilaiAkhir,
       ujian,
-      user,
+      siswa,
     });
   }
 
