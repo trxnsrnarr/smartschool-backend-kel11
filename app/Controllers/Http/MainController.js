@@ -69,6 +69,7 @@ const MJadwalUjian = use("App/Models/MJadwalUjian");
 const TkJadwalUjian = use("App/Models/TkJadwalUjian");
 const TkPesertaUjian = use("App/Models/TkPesertaUjian");
 const MUjian = use("App/Models/MUjian");
+const MUjianSiswa = use("App/Models/MUjianSiswa");
 const MMateri = use("App/Models/MMateri");
 const MSikapSosial = use("App/Models/MSikapSosial");
 const MSikapSpiritual = use("App/Models/MSikapSpiritual");
@@ -2764,7 +2765,8 @@ class MainController {
                 })
                 .with("sikap", (builder) => {
                   builder.where({ dihapus: 0 });
-                });
+                })
+                .with("nilaiUjian");
             });
           });
         })
@@ -2873,8 +2875,13 @@ class MainController {
             builder.with("rekapnilai");
           })
           .where({ dihapus: 0 })
+          .andWhere({ m_materi_id: materi.id })
+          .andWhere({ tipe: "tugas" })
           .fetch();
       }
+
+      // if (jadwalMengajar.rombel.m_user_id == user.id) {
+      // }
     }
 
     return response.ok({
@@ -18834,28 +18841,145 @@ class MainController {
 
   //rapor service
 
-  // async detailRombelRapor({ response, request, auth, params: { user_id } }) {
-  //   const user = await auth.getUser();
+  async detailRombelRapor({ response, request, auth, params: { user_id } }) {
+    const user = await auth.getUser();
 
-  //   const domain = request.headers().origin;
+    const domain = request.headers().origin;
 
-  //   const sekolah = await this.getSekolahByDomain(domain);
+    const sekolah = await this.getSekolahByDomain(domain);
 
-  //   if (sekolah == "404") {
-  //     return response.notFound({ message: "Sekolah belum terdaftar" });
-  //   }
-  //   const rekap = await MRekap.query()
-  //     .with("rekaprombel", (builder) => {
-  //       builder.with("rekapnilai", (builder) => {
-  //         builder.where({ m_user_id: user_id });
-  //       });
-  //     })
-  //     .where({ dihapus: 0 })
-  //     .fetch();
-  //   return response.ok({
-  //     predikat: predikat,
-  //   });
-  // }
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const rekap = await TkRekapNilai.query()
+      .with("rekapRombel", (builder) => {
+        builder.with("rekap", (builder) => {
+          builder.where({ tipe: "tugas" });
+        });
+      })
+      .where({ m_user_id: user_id })
+      .fetch();
+
+    const rekapUjian = await TkRekapNilai.query()
+      .with("rekapRombel", (builder) => {
+        builder.with("rekap", (builder) => {
+          builder.where({ tipe: "ujian" });
+        });
+      })
+      .where({ m_user_id: user_id })
+      .fetch();
+
+    const ujian = await MUjianSiswa.query()
+      .with("nilaiUAS", (builder) => {
+        builder.select("id", "nilai");
+      })
+      .with("nilaiUTS", (builder) => {
+        builder.select("id", "nilai");
+      })
+      .where({ m_user_id: user_id })
+      .first();
+
+    const result = await Promise.all(
+      rekap.toJSON().map(async (d) => {
+        if (d.rekapRombel.rekap == null) {
+          return;
+        }
+        return d;
+      })
+    );
+
+    const data = result.filter((d) => d != null);
+
+    let jumlah1 = 0;
+
+    result
+      .filter((d) => d != null)
+      .forEach((d) => {
+        jumlah1 += d.nilai;
+      });
+
+    const rata = jumlah1 / data.length;
+
+    const result1 = await Promise.all(
+      rekapUjian.toJSON().map(async (d) => {
+        if (d.rekapRombel.rekap == null) {
+          return;
+        }
+        return d;
+      })
+    );
+
+    const dataUjian = result1.filter((d) => d != null);
+
+    let jumlah = 0;
+
+    result1
+      .filter((d) => d != null)
+      .forEach((d) => {
+        jumlah += d.nilai;
+      });
+
+    const rataUjian = jumlah / dataUjian.length;
+
+    const nilaiAkhir =
+      (rataUjian +
+        rata +
+        ujian.toJSON().nilaiUAS.nilai +
+        ujian.toJSON().nilaiUTS.nilai) /
+      4;
+    // const dataUjian1 =
+    //   result1.reduce((a, b) => a.nilai + b, 0) / result1.length;
+    return response.ok({
+      data,
+      rata,
+      dataUjian,
+      rataUjian,
+      nilaiAkhir,
+      rekapUjian,
+      ujian,
+    });
+  }
+
+  async detailRombelRaporKeterampilan({
+    response,
+    request,
+    auth,
+    params: { user_id },
+  }) {
+    const user = await auth.getUser();
+
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const rekap = await TkRekapNilai.query()
+      .with("rekapRombel", (builder) => {
+        builder.with("rekap", (builder) => {
+          builder.where({ tipe: "keterampilan" });
+        });
+      })
+      .where({ m_user_id: user_id })
+      .fetch();
+
+    const result = await Promise.all(
+      rekap.toJSON().map(async (d) => {
+        if (d.rekapRombel.rekap == null) {
+          return;
+        }
+        return d;
+      })
+    );
+
+    const data = result.filter((d) => d != null);
+
+    return response.ok({
+      data,
+    });
+  }
 
   //Tambah Ekskul
   async postRaporEkskul({
