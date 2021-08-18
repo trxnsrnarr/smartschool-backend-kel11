@@ -856,6 +856,7 @@ Route.get("/dashboard/tugas", "MainController.getDashboardTugas");
 Route.get("/dashboard/absen", "MainController.getDashboardAbsen");
 
 Route.post("/dummyGPDS/GPDS", "MainController.dummyGPDS");
+Route.post("/dummyGPDS/GPDS2", "MainController.dummyGPDS2");
 
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
