@@ -582,9 +582,12 @@ Route.put("/predikat/:predikat_id", "MainController.putPredikat");
 Route.delete("/predikat/:predikat_id", "MainController.deletePredikat");
 
 //Rapor Service
-Route.get("/rapor-nilai/:user_id", "MainController.detailRombelRapor");
 Route.get(
-  "/rapor-keterampilan/:user_id",
+  "/rombel/:jadwal_mengajar_id/rapor-nilai/:user_id",
+  "MainController.detailRombelRapor"
+);
+Route.get(
+  "/rombel/:jadwal_mengajar_id/rapor-keterampilan/:user_id",
   "MainController.detailRombelRaporKeterampilan"
 );
 
