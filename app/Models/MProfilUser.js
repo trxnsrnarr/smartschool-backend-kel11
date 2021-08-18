@@ -33,7 +33,7 @@ class MProfilUser extends Model {
   }
 
   getKeahlian(keahlian) {
-    return keahlian ? JSON.parse(keahlian) : [];
+    return keahlian ? keahlian.split(',') : [];
   }
 
   getDataBiodata({
