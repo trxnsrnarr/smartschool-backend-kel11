@@ -26598,10 +26598,10 @@ class MainController {
         .where({ tipe: "absen" })
         .whereIn("m_rombel_id", [...noDuplicate])
         .whereBetween("tanggal_pembagian", [
-          `${today.getFullYear()}/${
+          `${today.getFullYear()}-${
             today.getMonth() + 1
-          }/${today.getDate()} 00:00:00`,
-          `${today.getFullYear()}/${today.getMonth() + 1}/${
+          }-${today.getDate()} 00:00:00`,
+          `${today.getFullYear()}-${today.getMonth() + 1}-${
             today.getDate() + 1
           } 00:00:00`,
         ])
@@ -26678,10 +26678,10 @@ class MainController {
           jadwalMengajar.toJSON().map((d) => d.rombel.id)
         )
         .whereBetween("tanggal_pembagian", [
-          `${today.getFullYear()}/${
+          `${today.getFullYear()}-${
             today.getMonth() + 1
-          }/${today.getDate()} 00:00:00`,
-          `${today.getFullYear()}/${today.getMonth() + 1}/${
+          }-${today.getDate()} 00:00:00`,
+          `${today.getFullYear()}-${today.getMonth() + 1}-${
             today.getDate() + 1
           } 00:00:00`,
         ])
