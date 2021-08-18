@@ -1820,9 +1820,9 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { search, offset } = request.get();
+    let { search, page } = request.get();
 
-    offset = offset ? parseInt(offset) : 0;
+    page = page ? parseInt(page) : 1;
 
     let alumni;
 
@@ -1833,18 +1833,14 @@ class MainController {
         .andWhere({ dihapus: 0 })
         .andWhere({ role: "alumni" })
         .andWhere("nama", "like", `%${search}%`)
-        .offset(offset)
-        .limit(25)
-        .fetch();
+        .paginate(page, 25);
     } else {
       alumni = await User.query()
         .with("infoAlumni")
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ dihapus: 0 })
         .andWhere({ role: "alumni" })
-        .offset(offset)
-        .limit(25)
-        .fetch();
+        .paginate(page, 25);
     }
 
     return response.ok({
@@ -4714,9 +4710,9 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { search, offset, tingkat, nama_siswa } = request.get();
+    let { search, page, tingkat, nama_siswa } = request.get();
 
-    offset = offset ? parseInt(offset) : 0;
+    page = page ? parseInt(page) : 1;
 
     let prestasi;
 
@@ -4735,18 +4731,14 @@ class MainController {
           .andWhere({ dihapus: 0 })
           .andWhere({ tingkat })
           .whereIn("m_user_id", userIds)
-          .offset(offset)
-          .limit(25)
-          .fetch();
+          .paginate(page, 25);
       } else {
         prestasi = await MPrestasi.query()
           .with("user")
           .where({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
           .whereIn("m_user_id", userIds)
-          .offset(offset)
-          .limit(25)
-          .fetch();
+          .paginate(page, 25);
       }
     } else {
       if (tingkat) {
@@ -4755,17 +4747,13 @@ class MainController {
           .where({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
           .andWhere({ tingkat })
-          .offset(offset)
-          .limit(25)
-          .fetch();
+          .paginate(page, 25);
       } else {
         prestasi = await MPrestasi.query()
           .with("user")
           .where({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
-          .offset(offset)
-          .limit(25)
-          .fetch();
+          .paginate(page, 25);
       }
     }
 
