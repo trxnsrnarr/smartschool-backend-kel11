@@ -26645,16 +26645,6 @@ class MainController {
         .whereIn("m_jam_mengajar_id", jamMengajarIds)
         .fetch();
 
-      const janganUlangRombel = [];
-      const rombel = rombelMengajar.toJSON().filter((d) => {
-        if (!janganUlangRombel.includes(d.m_rombel_id)) {
-          janganUlangRombel.push(d.m_rombel_id);
-          return true;
-        } else {
-          return false;
-        }
-      });
-
       const jadwalMengajar = await MJadwalMengajar.query()
         .with("rombel", (builder) => {
           builder.where({ dihapus: 0 });
