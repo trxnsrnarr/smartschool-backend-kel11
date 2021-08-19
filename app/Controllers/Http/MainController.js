@@ -15267,8 +15267,15 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { di_ss, judul, tanggal, m_tugas_id, m_rombel_id, m_rekap_id } =
-      request.post();
+    const {
+      di_ss,
+      judul,
+      tanggal,
+      m_tugas_id,
+      m_rombel_id,
+      m_rekap_id,
+      teknik,
+    } = request.post();
 
     let rekap;
     let tugasdata;
@@ -15286,6 +15293,29 @@ class MainController {
         judul: tugasdata.toJSON().tugas.judul,
         tanggal,
         m_tugas_id: m_tugas_id,
+        m_rombel_id,
+        m_rekap_id: rekapnilai_id,
+        dihapus: 0,
+      });
+    } else if (teknik) {
+      const rules = {
+        judul: "required",
+        tanggal: "required",
+      };
+      const message = {
+        "tugas.required": "Judul TUgas Harus Diisi",
+        "tanggal.required": "Tanggal Tugas harus diisi",
+      };
+      const validation = await validate(request.all(), rules, message);
+      if (validation.fails()) {
+        return response.unprocessableEntity(validation.messages());
+      }
+      rekap = await MRekapRombel.create({
+        di_ss: 0,
+        judul,
+        tanggal,
+        teknik,
+        m_tugas_id: null,
         m_rombel_id,
         m_rekap_id: rekapnilai_id,
         dihapus: 0,
@@ -15429,7 +15459,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { judul, tanggal, m_tugas_id } = request.post();
+    const { judul, tanggal, m_tugas_id, teknik } = request.post();
 
     let rekap;
     if (m_tugas_id) {
@@ -15446,6 +15476,27 @@ class MainController {
         judul: tugasData.toJSON().tugas.judul,
         tanggal,
         m_tugas_id: m_tugas_id,
+        dihapus: 0,
+      });
+    } else if (teknik) {
+      const rules = {
+        judul: "required",
+        tanggal: "required",
+      };
+      const message = {
+        "judul.required": "Judul Tugas harus diisi",
+        "tanggal.required": "Tanggal Tugas harus diisi",
+      };
+      const validation = await validate(request.all(), rules, message);
+      if (validation.fails()) {
+        return response.unprocessableEntity(validation.messages());
+      }
+      rekap = await MRekapRombel.query().where({ id: rekaprombel_id }).update({
+        di_ss: 0,
+        judul,
+        tanggal,
+        teknik,
+        m_tugas_id: null,
         dihapus: 0,
       });
     } else if (!m_tugas_id) {
