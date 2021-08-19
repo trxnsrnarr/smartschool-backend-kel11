@@ -18973,7 +18973,7 @@ class MainController {
     auth,
     params: { user_id, jadwal_mengajar_id },
   }) {
-    const siswa = await User.query().where({ id: user_id }).first();
+    const siswaKeterampiran = await User.query().where({ id: user_id }).first();
 
     const domain = request.headers().origin;
 
@@ -18983,7 +18983,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const jadwalMengajar = await MJadwalMengajar.query()
+    const jadwalMengajarKeterampiran = await MJadwalMengajar.query()
       .with("mataPelajaran", (builder) => {
         builder.with("user");
       })
@@ -19006,7 +19006,7 @@ class MainController {
         return d;
       })
     );
-    const data = result.filter((d) => d != null);
+    const dataKeterampiran = result.filter((d) => d != null);
     let jumlah0 = 0;
     result
       .filter((d) => d != null)
@@ -19126,14 +19126,174 @@ class MainController {
     const produk = jumlah / data3.length;
 
     return response.ok({
-      data,
+      dataKeterampiran,
       rataData,
-      siswa,
+      siswaKeterampiran,
       proyek,
       praktik,
       portofolio,
       produk,
-      jadwalMengajar,
+      jadwalMengajarKeterampiran,
+    });
+  }
+
+  async detailRaporSiswa({
+    response,
+    request,
+    auth,
+    params: { rombel_id },
+    params: { user_id },
+  }) {
+    const user = await auth.getUser();
+
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await Mta.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ aktif: 1 })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    const tanggalDistinct = await Database.raw(
+      "SELECT DISTINCT DATE_FORMAT(created_at, '%Y-%m-%d') as tanggalDistinct from m_absen WHERE created_at BETWEEN ? AND  ?",
+      [`${ta.tanggal_awal}`, `${ta.tanggal_akhir}`]
+    );
+
+    const siswa = await User.query()
+      .with("profil")
+      .with("keteranganRapor")
+      .with("keteranganPkl")
+      .with("raporEkskul", (builder) => {
+        builder.with("rombel", (builder) => {
+          builder.select("id", "nama");
+        });
+      })
+      .with("prestasi", (builder) => {
+        builder.with("tingkatPrestasi").where({ dihapus: 0 });
+      })
+      .with("sikap", (builder) => {
+        builder
+          .with("ditingkatkanSosial")
+          .with("ditunjukkanSosial")
+          .with("ditingkatkanSpiritual")
+          .with("ditunjukkanSpiritual");
+      })
+      .where({ id: user_id })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    const nilai = await TkRekapNilai.query()
+      .with("rekapRombel", (builder) => {
+        builder.with("rekap").where({ dihapus: 0 });
+      })
+      .where({ m_user_id: user_id })
+      .fetch();
+
+    const ulangan = await TkPesertaUjian.query()
+      .with("jadwalUjian", (builder) => {
+        builder
+          .with("jadwalUjian", (builder) => {
+            builder
+              .with("ujian", (builder) => {
+                builder
+                  .with("mataPelajaran")
+                  .select(
+                    "id",
+                    "nama",
+                    "tipe",
+                    "tingkat",
+                    "dihapus",
+                    "m_mata_pelajaran_id"
+                  );
+              })
+              .select("id", "m_ujian_id", "dihapus", "kkm")
+              .where({ dihapus: 0 });
+          })
+          .where({ dihapus: 0 });
+      })
+      .select(
+        "id",
+        "nilai",
+        "m_user_id",
+        "tk_jadwal_ujian_id",
+        "dihapus",
+        "selesai",
+        "dinilai"
+      )
+      .where({ m_user_id: user_id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ selesai: 1 })
+      .andWhere({ dinilai: 1 })
+      .fetch();
+
+    const materiRombel = await TkMateriRombel.query()
+      .with("materi", (builder) => {
+        builder.with("mataPelajaran");
+      })
+      .where({ m_rombel_id: rombel_id })
+      .fetch();
+
+    const predikat = await MPredikatNilai.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    const rombel = await MRombel.query()
+      .with("user")
+      .where({ id: rombel_id })
+      .first();
+
+    const ekskul = await MRombel.query()
+      .with("anggotaRombel", (builder) => {
+        builder.where({ dihapus: 0 }).andWhere({ m_user_id: user_id });
+      })
+      .where({ kelompok: "ekskul" })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    const totalHadir = await MAbsen.query()
+      .with("user")
+      .whereBetween("created_at", [`${ta.tanggal_awal}`, `${ta.tanggal_akhir}`])
+      .andWhere({ keterangan: "hadir" })
+      .andWhere({ m_user_id: user_id })
+      .count("* as total");
+    const totalSakit = await MAbsen.query()
+      .with("user")
+      .whereBetween("created_at", [`${ta.tanggal_awal}`, `${ta.tanggal_akhir}`])
+      .andWhere({ keterangan: "sakit" })
+      .andWhere({ m_user_id: user_id })
+      .count("* as total");
+    const totalIzin = await MAbsen.query()
+      .with("user")
+      .whereBetween("created_at", [`${ta.tanggal_awal}`, `${ta.tanggal_akhir}`])
+      .andWhere({ keterangan: "izin" })
+      .andWhere({ m_user_id: user_id })
+      .count("* as total");
+    const totalAlpa =
+      user_id.length -
+      (totalHadir[0].total + totalSakit[0].total + totalIzin[0].total);
+
+    return response.ok({
+      siswa: siswa,
+      ta: ta,
+      nilai: nilai,
+      sekolah: sekolah,
+      materiRombel: materiRombel,
+      predikat: predikat,
+      rombel: rombel,
+      ekskul: ekskul,
+      totalHadir: totalHadir,
+      totalSakit: totalSakit,
+      totalIzin: totalIzin,
+      totalAlpa: totalAlpa,
+      tanggalDistinct: tanggalDistinct,
+      ulangan: ulangan,
     });
   }
 
