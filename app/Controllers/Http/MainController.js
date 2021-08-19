@@ -19129,8 +19129,11 @@ class MainController {
     const data3 = result4.filter((d) => d != null);
     const produk = jumlah / data3.length;
 
+    const nilaiAkhir1 = (produk + proyek + portofolio + praktik) / 4;
+
     return response.ok({
       dataKeterampilan,
+      nilaiAkhir1,
       rataData,
       siswaKeterampilan,
       proyek,
