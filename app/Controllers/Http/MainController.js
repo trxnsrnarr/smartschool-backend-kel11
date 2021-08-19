@@ -15222,6 +15222,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
+    const ta = await this.getTAAktif(sekolah);
     const user = await auth.getUser();
 
     const { judul, teknik, tipe } = request.post();
@@ -15241,6 +15242,7 @@ class MainController {
       teknik,
       tipe,
       m_materi_id: materi_id,
+      m_ta_id: ta.id,
       dihapus: 0,
     });
 
