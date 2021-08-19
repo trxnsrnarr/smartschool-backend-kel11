@@ -1246,12 +1246,27 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const guru = await User.query()
-      .select("nama", "id", "whatsapp", "avatar", "gender")
-      .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ dihapus: 0 })
-      .andWhere({ role: "guru" })
-      .fetch();
+    let { search, page } = request.get();
+
+    page = page ? parseInt(page) : 1;
+    let guru;
+
+    if (search) {
+      guru = await User.query()
+        .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ dihapus: 0 })
+        .andWhere({ role: "guru" })
+        .andWhere("nama", "like", `%${search}%`)
+        .paginate(page, 25);
+    } else {
+      guru = await User.query()
+        .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ dihapus: 0 })
+        .andWhere({ role: "guru" })
+        .paginate(page, 25);
+    }
 
     return response.ok({
       guru: guru,
@@ -1821,9 +1836,9 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { search, offset } = request.get();
+    let { search, page } = request.get();
 
-    offset = offset ? parseInt(offset) : 0;
+    page = page ? parseInt(page) : 1;
 
     let alumni;
 
@@ -1834,18 +1849,14 @@ class MainController {
         .andWhere({ dihapus: 0 })
         .andWhere({ role: "alumni" })
         .andWhere("nama", "like", `%${search}%`)
-        .offset(offset)
-        .limit(25)
-        .fetch();
+        .paginate(page, 25);
     } else {
       alumni = await User.query()
         .with("infoAlumni")
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ dihapus: 0 })
         .andWhere({ role: "alumni" })
-        .offset(offset)
-        .limit(25)
-        .fetch();
+        .paginate(page, 25);
     }
 
     return response.ok({
@@ -4722,9 +4733,9 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { search, offset, tingkat, nama_siswa } = request.get();
+    let { search, page, tingkat, nama_siswa } = request.get();
 
-    offset = offset ? parseInt(offset) : 0;
+    page = page ? parseInt(page) : 1;
 
     let prestasi;
 
@@ -4743,18 +4754,14 @@ class MainController {
           .andWhere({ dihapus: 0 })
           .andWhere({ tingkat })
           .whereIn("m_user_id", userIds)
-          .offset(offset)
-          .limit(25)
-          .fetch();
+          .paginate(page, 25);
       } else {
         prestasi = await MPrestasi.query()
           .with("user")
           .where({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
           .whereIn("m_user_id", userIds)
-          .offset(offset)
-          .limit(25)
-          .fetch();
+          .paginate(page, 25);
       }
     } else {
       if (tingkat) {
@@ -4763,17 +4770,13 @@ class MainController {
           .where({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
           .andWhere({ tingkat })
-          .offset(offset)
-          .limit(25)
-          .fetch();
+          .paginate(page, 25);
       } else {
         prestasi = await MPrestasi.query()
           .with("user")
           .where({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
-          .offset(offset)
-          .limit(25)
-          .fetch();
+          .paginate(page, 25);
       }
     }
 
@@ -8710,6 +8713,7 @@ class MainController {
       }
 
       const ujian = jadwalUjian.toJSON().filter((d) => d.jadwalUjian !== null);
+
       if (ujian.length == 0) {
         return response.notFound({
           message: messageNotFound,
@@ -27033,6 +27037,7 @@ class MainController {
             today.getDate() + 1
           } 00:00:00`,
         ])
+        .andWhere({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .fetch();
 

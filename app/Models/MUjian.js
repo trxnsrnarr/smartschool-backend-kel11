@@ -29,6 +29,7 @@ class MUjian extends Model {
     else if (tipe == "us") return "Ujian Sekolah";
     else if (tipe == "literasi") return "AKM - Literasi";
     else if (tipe == "numerasi") return "AKM - Numerasi";
+    else if (tipe == "kuis") return "Kuis";
   }
 }
 
