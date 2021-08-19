@@ -5853,6 +5853,7 @@ class MainController {
                 tipe: "tugas",
                 m_timeline_id: timeline.id,
                 dihapus: 0,
+                dikumpulkan: 0,
               });
               if (d.user.email != null) {
                 const gmail = await Mail.send(`emails.tugas`, d, (message) => {
@@ -15223,6 +15224,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
+    const ta = await this.getTAAktif(sekolah);
     const user = await auth.getUser();
 
     const { judul, teknik, tipe } = request.post();
@@ -15242,6 +15244,7 @@ class MainController {
       teknik,
       tipe,
       m_materi_id: materi_id,
+      m_ta_id: ta.id,
       dihapus: 0,
     });
 
@@ -15268,8 +15271,15 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { di_ss, judul, tanggal, m_tugas_id, m_rombel_id, m_rekap_id } =
-      request.post();
+    const {
+      di_ss,
+      judul,
+      tanggal,
+      m_tugas_id,
+      m_rombel_id,
+      m_rekap_id,
+      teknik,
+    } = request.post();
 
     let rekap;
     let tugasdata;
@@ -15287,6 +15297,29 @@ class MainController {
         judul: tugasdata.toJSON().tugas.judul,
         tanggal,
         m_tugas_id: m_tugas_id,
+        m_rombel_id,
+        m_rekap_id: rekapnilai_id,
+        dihapus: 0,
+      });
+    } else if (teknik) {
+      const rules = {
+        judul: "required",
+        tanggal: "required",
+      };
+      const message = {
+        "tugas.required": "Judul TUgas Harus Diisi",
+        "tanggal.required": "Tanggal Tugas harus diisi",
+      };
+      const validation = await validate(request.all(), rules, message);
+      if (validation.fails()) {
+        return response.unprocessableEntity(validation.messages());
+      }
+      rekap = await MRekapRombel.create({
+        di_ss: 0,
+        judul,
+        tanggal,
+        teknik,
+        m_tugas_id: null,
         m_rombel_id,
         m_rekap_id: rekapnilai_id,
         dihapus: 0,
@@ -15430,7 +15463,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { judul, tanggal, m_tugas_id } = request.post();
+    const { judul, tanggal, m_tugas_id, teknik } = request.post();
 
     let rekap;
     if (m_tugas_id) {
@@ -15447,6 +15480,27 @@ class MainController {
         judul: tugasData.toJSON().tugas.judul,
         tanggal,
         m_tugas_id: m_tugas_id,
+        dihapus: 0,
+      });
+    } else if (teknik) {
+      const rules = {
+        judul: "required",
+        tanggal: "required",
+      };
+      const message = {
+        "judul.required": "Judul Tugas harus diisi",
+        "tanggal.required": "Tanggal Tugas harus diisi",
+      };
+      const validation = await validate(request.all(), rules, message);
+      if (validation.fails()) {
+        return response.unprocessableEntity(validation.messages());
+      }
+      rekap = await MRekapRombel.query().where({ id: rekaprombel_id }).update({
+        di_ss: 0,
+        judul,
+        tanggal,
+        teknik,
+        m_tugas_id: null,
         dihapus: 0,
       });
     } else if (!m_tugas_id) {
@@ -26467,7 +26521,8 @@ class MainController {
         .andWhere({ dihapus: 0 })
         // .whereIn("m_tugas_id", tugasIds)
         .orderBy(order, sort)
-        .limit(limit)
+        .limit(parseInt(limit))
+        .offset(0)
         .fetch();
 
       const timeline2 = await MTimeline.query()
@@ -26494,7 +26549,8 @@ class MainController {
         .andWhere({ dihapus: 0 })
         // .whereIn("m_tugas_id", tugasIds)
         .orderBy(order, sort)
-        .limit(limit)
+        .limit(parseInt(limit))
+        .offset(0)
         .fetch();
 
       timeline = [...timeline2.toJSON(), ...timeline1.toJSON()];
@@ -26538,7 +26594,8 @@ class MainController {
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .orderBy(order, sort)
-        .limit(limit)
+        .limit(parseInt(limit))
+        .offset(0)
         .fetch();
 
       timeline = timelineData.toJSON().filter((d) => {
@@ -26619,6 +26676,7 @@ class MainController {
         .with("rombel", (builder) => {
           builder.where({ dihapus: 0 });
         })
+        .with("jamMengajar")
         .with("mataPelajaran")
         .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
         .whereIn("m_jam_mengajar_id", jamMengajarIds)
@@ -26684,6 +26742,7 @@ class MainController {
         .with("rombel", (builder) => {
           builder.where({ dihapus: 0 });
         })
+        .with("jamMengajar")
         .with("mataPelajaran")
         .whereIn("m_rombel_id", anggotaRombelId)
         .whereIn("m_jam_mengajar_id", jamMengajarIds)
