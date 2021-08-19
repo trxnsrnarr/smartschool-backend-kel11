@@ -22125,7 +22125,7 @@ class MainController {
 
     let lokasi;
 
-    lokasi = await MLokasi.query()
+    lokasi =  MLokasi.query()
               .withCount("barang as total", (builder) => {
                 builder.where({ dihapus: 0 });
               })
@@ -22136,10 +22136,10 @@ class MainController {
         lokasi.andWhere("nama", "like", `%${search}%`)
     }
 
-    lokasi.paginate(page, 25);
+     lokasi.paginate(page, 25);
 
     return response.ok({
-      lokasi: lokasi,
+      lokasi: await lokasi,
     });
   }
 
@@ -22173,12 +22173,12 @@ class MainController {
 
     let { search_lokasi, page_barang, search_barang } = request.get();
 
-    page = page ? parseInt(page) : 1;
+    page_barang = page_barang ? parseInt(page_barang) : 1;
 
     let lokasi;
     let barang;
 
-    lokasi = await MLokasi.query()
+    lokasi =  MLokasi.query()
               .withCount("barang as total", (builder) => {
                 builder.where({ dihapus: 0 });
               })
@@ -22191,7 +22191,7 @@ class MainController {
 
     lokasi.limit(25).fetch();
 
-    barang = await MBarang.query()
+    barang =  MBarang.query()
             .with("lokasi")
             .where({ dihapus: 0 })
 
@@ -22202,8 +22202,8 @@ class MainController {
     barang.paginate(page_barang, 25);
 
     return response.ok({
-      lokasi: lokasi,
-      barang: barang,
+      lokasi: await lokasi,
+      barang: await barang,
     });
   }
 
