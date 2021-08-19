@@ -26631,6 +26631,7 @@ class MainController {
         .with("rombel", (builder) => {
           builder.where({ dihapus: 0 });
         })
+        .with("jamMengajar")
         .with("mataPelajaran")
         .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
         .whereIn("m_jam_mengajar_id", jamMengajarIds)
@@ -26696,6 +26697,7 @@ class MainController {
         .with("rombel", (builder) => {
           builder.where({ dihapus: 0 });
         })
+        .with("jamMengajar")
         .with("mataPelajaran")
         .whereIn("m_rombel_id", anggotaRombelId)
         .whereIn("m_jam_mengajar_id", jamMengajarIds)
