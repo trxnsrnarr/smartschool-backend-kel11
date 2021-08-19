@@ -2748,6 +2748,9 @@ class MainController {
                 .with("sikap", (builder) => {
                   builder.where({ dihapus: 0 });
                 })
+                .with("rekapSikap", (builder) => {
+                  builder.where({ dihapus: 0 });
+                })
                 .with("nilaiUjian");
             });
           });
@@ -2776,6 +2779,9 @@ class MainController {
                   builder.where({ dihapus: 0 });
                 })
                 .with("sikap", (builder) => {
+                  builder.where({ dihapus: 0 });
+                })
+                .with("rekapSikap", (builder) => {
                   builder.where({ dihapus: 0 });
                 })
                 .with("nilaiUjian");
@@ -18907,6 +18913,7 @@ class MainController {
         builder.select("id", "nilai");
       })
       .where({ m_user_id: user_id })
+      .andWhere({ m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id })
       .first();
 
     const result = await Promise.all(
@@ -19129,11 +19136,21 @@ class MainController {
     const data3 = result4.filter((d) => d != null);
     const produk = jumlah / data3.length;
 
-    const nilaiAkhir1 = (produk + proyek + portofolio + praktik) / 4;
+    const nilaiAkhirKeterampilan = await MUjianSiswa.query()
+      .where({ m_user_id: user_id })
+      .andWhere({ m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id })
+      .first();
+
+    if (nilaiAkhirKeterampilan.nilai_keterampilan == null) {
+      await MUjianSiswa.query()
+        .where({ id: nilaiAkhirKeterampilan.id })
+        .update({
+          nilai_keterampilan: rataData,
+        });
+    }
 
     return response.ok({
       dataKeterampilan,
-      nilaiAkhir1,
       rataData,
       siswaKeterampilan,
       proyek,
@@ -19141,6 +19158,7 @@ class MainController {
       portofolio,
       produk,
       jadwalMengajarKeterampilan,
+      nilaiAkhirKeterampilan,
     });
   }
 
