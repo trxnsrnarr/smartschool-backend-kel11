@@ -591,7 +591,7 @@ Route.get(
   "MainController.detailRombelRaporKeterampilan"
 );
 Route.get(
-  "/rapor/:jadwal_mengajar_id/siswa/:user_id",
+  "/rapor/:rombel_id/siswa/:user_id",
   "MainController.detailRaporSiswa"
 );
 
