@@ -18987,7 +18987,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const jadwalMengajarKeterampiran = await MJadwalMengajar.query()
+    const jadwalMengajarKeterampilan = await MJadwalMengajar.query()
       .with("mataPelajaran", (builder) => {
         builder.with("user");
       })
@@ -19010,7 +19010,7 @@ class MainController {
         return d;
       })
     );
-    const dataKeterampiran = result.filter((d) => d != null);
+    const dataKeterampilan = result.filter((d) => d != null);
     let jumlah0 = 0;
     result
       .filter((d) => d != null)
@@ -19018,7 +19018,7 @@ class MainController {
         jumlah0 += d.nilai;
       });
 
-    const rataData = jumlah0 / data.length;
+    const rataData = jumlah0 / dataKeterampilan.length;
 
     const rekapPraktik = await TkRekapNilai.query()
       .with("rekapRombel", (builder) => {
@@ -19130,14 +19130,14 @@ class MainController {
     const produk = jumlah / data3.length;
 
     return response.ok({
-      dataKeterampiran,
+      dataKeterampilan,
       rataData,
-      siswaKeterampiran,
+      siswaKeterampilan,
       proyek,
       praktik,
       portofolio,
       produk,
-      jadwalMengajarKeterampiran,
+      jadwalMengajarKeterampilan,
     });
   }
 
