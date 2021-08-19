@@ -590,6 +590,10 @@ Route.get(
   "/rombel/:jadwal_mengajar_id/rapor-keterampilan/:user_id",
   "MainController.detailRombelRaporKeterampilan"
 );
+Route.get(
+  "/rapor/:jadwal_mengajar_id/siswa/:user_id",
+  "MainController.detailRaporSiswa"
+);
 
 Route.post(
   "/rapor/ekskul/:rombel_id/:user_id",
