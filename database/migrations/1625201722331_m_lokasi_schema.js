@@ -14,6 +14,7 @@ class MLokasiSchema extends Schema {
           table.string("nama");
           table.integer("lebar");
           table.integer("panjang");
+          table.text('foto')
           table.integer("m_sekolah_id").unsigned().index("m_sekolah_id");
           table
             .foreign("m_sekolah_id")

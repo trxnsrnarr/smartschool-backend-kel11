@@ -18,6 +18,7 @@ class MBarangSchema extends Schema {
           table.string("deskripsi");
           table.string("status");
           table.string("kepemilikan");
+          table.integer('jumlah')
           table.integer("m_lokasi_id").unsigned().index("m_lokasi_id");
           table
             .foreign("m_lokasi_id")
