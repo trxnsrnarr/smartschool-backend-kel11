@@ -5852,6 +5852,7 @@ class MainController {
                 tipe: "tugas",
                 m_timeline_id: timeline.id,
                 dihapus: 0,
+                dikumpulkan: 0,
               });
               if (d.user.email != null) {
                 const gmail = await Mail.send(`emails.tugas`, d, (message) => {
@@ -26481,7 +26482,8 @@ class MainController {
         .andWhere({ dihapus: 0 })
         // .whereIn("m_tugas_id", tugasIds)
         .orderBy(order, sort)
-        .limit(limit)
+        .limit(parseInt(limit))
+        .offset(0)
         .fetch();
 
       const timeline2 = await MTimeline.query()
@@ -26508,7 +26510,8 @@ class MainController {
         .andWhere({ dihapus: 0 })
         // .whereIn("m_tugas_id", tugasIds)
         .orderBy(order, sort)
-        .limit(limit)
+        .limit(parseInt(limit))
+        .offset(0)
         .fetch();
 
       timeline = [...timeline2.toJSON(), ...timeline1.toJSON()];
@@ -26552,7 +26555,8 @@ class MainController {
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .orderBy(order, sort)
-        .limit(limit)
+        .limit(parseInt(limit))
+        .offset(0)
         .fetch();
 
       timeline = timelineData.toJSON().filter((d) => {
