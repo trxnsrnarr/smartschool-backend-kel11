@@ -18877,7 +18877,7 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
-
+    const ta = await this.getTAAktif(sekolah);
     const siswa = await User.query().where({ id: user_id }).first();
 
     const jadwalMengajar = await MJadwalMengajar.query()
@@ -18890,7 +18890,7 @@ class MainController {
     const rekap = await TkRekapNilai.query()
       .with("rekapRombel", (builder) => {
         builder.with("rekap", (builder) => {
-          builder.where({ tipe: "tugas" });
+          builder.where({ tipe: "tugas" }).andWhere({ m_ta_id: ta.id });
         });
       })
       .where({ m_user_id: user_id })
@@ -18899,7 +18899,7 @@ class MainController {
     const rekapUjian = await TkRekapNilai.query()
       .with("rekapRombel", (builder) => {
         builder.with("rekap", (builder) => {
-          builder.where({ tipe: "ujian" });
+          builder.where({ tipe: "ujian" }).andWhere({ m_ta_id: ta.id });
         });
       })
       .where({ m_user_id: user_id })
@@ -18966,6 +18966,10 @@ class MainController {
       4;
     // const dataUjian1 =
     //   result1.reduce((a, b) => a.nilai + b, 0) / result1.length;
+    await MUjianSiswa.query().where({ id: nilaiAkhirKeterampilan.id }).update({
+      nilai: nilaiAkhir,
+    });
+
     return response.ok({
       data,
       rata,
@@ -18993,7 +18997,7 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
-
+    const ta = await this.getTAAktif(sekolah);
     const jadwalMengajarKeterampilan = await MJadwalMengajar.query()
       .with("mataPelajaran", (builder) => {
         builder.with("user");
@@ -19004,7 +19008,7 @@ class MainController {
     const rekap = await TkRekapNilai.query()
       .with("rekapRombel", (builder) => {
         builder.with("rekap", (builder) => {
-          builder.where({ tipe: "keterampilan" });
+          builder.where({ tipe: "keterampilan" }).andWhere({ m_ta_id: ta.id });
         });
       })
       .where({ m_user_id: user_id })
@@ -19032,7 +19036,8 @@ class MainController {
         builder.with("rekap", (builder) => {
           builder
             .where({ tipe: "keterampilan" })
-            .andWhere({ teknik: "praktik" });
+            .andWhere({ teknik: "praktik" })
+            .andWhere({ m_ta_id: ta.id });
         });
       })
       .where({ m_user_id: user_id })
@@ -19060,7 +19065,8 @@ class MainController {
         builder.with("rekap", (builder) => {
           builder
             .where({ tipe: "keterampilan" })
-            .andWhere({ teknik: "proyek" });
+            .andWhere({ teknik: "proyek" })
+            .andWhere({ m_ta_id: ta.id });
         });
       })
       .where({ m_user_id: user_id })
@@ -19087,7 +19093,8 @@ class MainController {
         builder.with("rekap", (builder) => {
           builder
             .where({ tipe: "keterampilan" })
-            .andWhere({ teknik: "portofolio" });
+            .andWhere({ teknik: "portofolio" })
+            .andWhere({ m_ta_id: ta.id });
         });
       })
       .where({ m_user_id: user_id })
@@ -19114,7 +19121,8 @@ class MainController {
         builder.with("rekap", (builder) => {
           builder
             .where({ tipe: "keterampilan" })
-            .andWhere({ teknik: "produk" });
+            .andWhere({ teknik: "produk" })
+            .andWhere({ m_ta_id: ta.id });
         });
       })
       .where({ m_user_id: user_id })
@@ -19141,13 +19149,9 @@ class MainController {
       .andWhere({ m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id })
       .first();
 
-    if (nilaiAkhirKeterampilan.nilai_keterampilan == null) {
-      await MUjianSiswa.query()
-        .where({ id: nilaiAkhirKeterampilan.id })
-        .update({
-          nilai_keterampilan: rataData,
-        });
-    }
+    await MUjianSiswa.query().where({ id: nilaiAkhirKeterampilan.id }).update({
+      nilai_keterampilan: rataData,
+    });
 
     return response.ok({
       dataKeterampilan,
@@ -19178,7 +19182,8 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
-
+    const sikapsosial = await MSikapSosial.query().fetch();
+    const sikapspiritual = await MSikapSpiritual.query().fetch();
     const ta = await Mta.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ aktif: 1 })
@@ -19215,7 +19220,11 @@ class MainController {
 
     const nilai = await TkRekapNilai.query()
       .with("rekapRombel", (builder) => {
-        builder.with("rekap").where({ dihapus: 0 });
+        builder
+          .with("rekap", (builder) => {
+            builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id });
+          })
+          .where({ dihapus: 0 });
       })
       .where({ m_user_id: user_id })
       .fetch();
@@ -19319,6 +19328,8 @@ class MainController {
       totalAlpa: totalAlpa,
       tanggalDistinct: tanggalDistinct,
       ulangan: ulangan,
+      sikapsosial,
+      sikapspiritual,
     });
   }
 
