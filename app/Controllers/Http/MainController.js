@@ -18977,7 +18977,7 @@ class MainController {
     auth,
     params: { user_id, jadwal_mengajar_id },
   }) {
-    const siswaKeterampiran = await User.query().where({ id: user_id }).first();
+    const siswaKeterampilan = await User.query().where({ id: user_id }).first();
 
     const domain = request.headers().origin;
 
