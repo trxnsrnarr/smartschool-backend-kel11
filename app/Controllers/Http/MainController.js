@@ -3164,7 +3164,7 @@ class MainController {
       .update({
         jam_mulai: jam_mulai,
         jam_selesai: jam_selesai,
-        istirahat: istirahat
+        istirahat: istirahat,
       });
 
     if (!jamMengajar) {
@@ -22125,18 +22125,18 @@ class MainController {
 
     let lokasi;
 
-    lokasi =  MLokasi.query()
-              .withCount("barang as total", (builder) => {
-                builder.where({ dihapus: 0 });
-              })
-              .where({ dihapus: 0 })
-              .andWhere({ m_sekolah_id: sekolah.id })
+    lokasi = MLokasi.query()
+      .withCount("barang as total", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id });
 
     if (search) {
-        lokasi.andWhere("nama", "like", `%${search}%`)
+      lokasi.andWhere("nama", "like", `%${search}%`);
     }
 
-     lokasi.paginate(page, 25);
+    lokasi.paginate(page, 25);
 
     return response.ok({
       lokasi: await lokasi,
@@ -22178,25 +22178,23 @@ class MainController {
     let lokasi;
     let barang;
 
-    lokasi =  MLokasi.query()
-              .withCount("barang as total", (builder) => {
-                builder.where({ dihapus: 0 });
-              })
-              .where({ dihapus: 0 })
-              .andWhere({ m_sekolah_id: sekolah.id })
+    lokasi = MLokasi.query()
+      .withCount("barang as total", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id });
 
     if (search_lokasi) {
-        lokasi.andWhere("nama", "like", `%${search_lokasi}%`)
+      lokasi.andWhere("nama", "like", `%${search_lokasi}%`);
     }
 
     lokasi.limit(25).fetch();
 
-    barang =  MBarang.query()
-            .with("lokasi")
-            .where({ dihapus: 0 })
+    barang = MBarang.query().with("lokasi").where({ dihapus: 0 });
 
     if (search_barang) {
-        barang.andWhere("nama", "like", `%${search_barang}%`)
+      barang.andWhere("nama", "like", `%${search_barang}%`);
     }
 
     barang.paginate(page_barang, 25);
@@ -22239,7 +22237,7 @@ class MainController {
 
     let { jenis, nama, no_regis, lebar, panjang, foto } = request.post();
 
-    foto = foto ? foto.toString() : null
+    foto = foto ? foto.toString() : null;
 
     const rules = {
       jenis: "required",
@@ -22307,7 +22305,7 @@ class MainController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    foto = foto ? foto.toString() : null
+    foto = foto ? foto.toString() : null;
 
     const lokasi = await MLokasi.query().where({ id: lokasi_id }).update({
       jenis,
@@ -22315,7 +22313,7 @@ class MainController {
       no_regis,
       lebar,
       panjang,
-      foto
+      foto,
     });
 
     if (!lokasi) {
@@ -22422,7 +22420,7 @@ class MainController {
       kepemilikan,
       m_lokasi_id,
       dihapus: 0,
-      jumlah
+      jumlah,
     });
 
     return response.ok({
@@ -22452,7 +22450,7 @@ class MainController {
       status,
       kepemilikan,
       m_lokasi_id,
-      jumlah
+      jumlah,
     } = request.post();
     const rules = {
       kode_barang: "required",
@@ -22492,7 +22490,7 @@ class MainController {
       status,
       kepemilikan,
       m_lokasi_id,
-      jumlah
+      jumlah,
     });
 
     if (!barang) {
