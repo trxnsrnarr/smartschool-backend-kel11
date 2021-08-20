@@ -22136,10 +22136,8 @@ class MainController {
         lokasi.andWhere("nama", "like", `%${search}%`)
     }
 
-     lokasi.paginate(page, 25);
-
     return response.ok({
-      lokasi: await lokasi,
+      lokasi: await lokasi.paginate(page, 25),
     });
   }
 
@@ -22189,8 +22187,6 @@ class MainController {
         lokasi.andWhere("nama", "like", `%${search_lokasi}%`)
     }
 
-    lokasi.limit(25).fetch();
-
     barang =  MBarang.query()
             .with("lokasi")
             .where({ dihapus: 0 })
@@ -22199,11 +22195,9 @@ class MainController {
         barang.andWhere("nama", "like", `%${search_barang}%`)
     }
 
-    barang.paginate(page_barang, 25);
-
     return response.ok({
-      lokasi: await lokasi,
-      barang: await barang,
+      lokasi: await lokasi.limit(25).fetch(),
+      barang: await barang.paginate(page_barang, 25),
     });
   }
 
