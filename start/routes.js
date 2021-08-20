@@ -703,23 +703,25 @@ Route.put("/surel-arsip/:arsip_id", "MainController.putFolderArsip");
 Route.delete("/surel-arsip/:arsip_id", "MainController.deleteFolderArsip");
 Route.get("/surel-arsip/:arsip_id", "MainController.detailArsipSurel");
 
-// Sarana Service
-Route.get("/sarana", "MainController.getBarang");
-Route.get("/sarana/:barang_id", "MainController.detailBarang");
-Route.post("/sarana", "MainController.postBarang");
-Route.put("/sarana/:barang_id", "MainController.putBarang");
-Route.delete("/sarana/:barang_id", "MainController.deleteBarang");
-Route.post("/sarana/import", "MainController.importBarang");
-Route.post("/sarana/download", "MainController.downloadBarang");
 
-// prasarana Service
-Route.get("/prasarana", "MainController.getLokasi");
-Route.get("/prasarana/:lokasi_id", "MainController.detailLokasi");
-Route.post("/prasarana", "MainController.postLokasi");
-Route.put("/prasarana/:lokasi_id", "MainController.putLokasi");
-Route.delete("/prasarana/:lokasi_id", "MainController.deleteLokasi");
-Route.post("/prasarana/import", "MainController.importLokasi");
-Route.post("/prasarana/download", "MainController.downloadLokasi");
+// SARPRAS SERVICE
+// barang Service
+Route.get("/barang", "MainController.getBarang");
+Route.get("/barang/:barang_id", "MainController.detailBarang");
+Route.post("/barang", "MainController.postBarang");
+Route.put("/barang/:barang_id", "MainController.putBarang");
+Route.delete("/barang/:barang_id", "MainController.deleteBarang");
+Route.post("/barang/import", "MainController.importBarang");
+Route.post("/barang/download", "MainController.downloadBarang");
+
+// lokasi Service
+Route.get("/lokasi", "MainController.getLokasi");
+Route.get("/lokasi/:lokasi_id", "MainController.detailLokasi");
+Route.post("/lokasi", "MainController.postLokasi");
+Route.put("/lokasi/:lokasi_id", "MainController.putLokasi");
+Route.delete("/lokasi/:lokasi_id", "MainController.deleteLokasi");
+Route.post("/lokasi/import", "MainController.importLokasi");
+Route.post("/lokasi/download", "MainController.downloadLokasi");
 
 // Tata Tertib Service
 Route.get("/tatatertib", "MainController.getTataTertib");

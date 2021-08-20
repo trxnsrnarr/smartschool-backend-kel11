@@ -3159,7 +3159,7 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    const { jam_mulai, jam_selesai } = request.post();
+    const { jam_mulai, jam_selesai, istirahat } = request.post();
     const rules = {
       jam_mulai: "required",
       jam_selesai: "required",
@@ -3178,6 +3178,7 @@ class MainController {
       .update({
         jam_mulai: jam_mulai,
         jam_selesai: jam_selesai,
+        istirahat: istirahat
       });
 
     if (!jamMengajar) {
@@ -22543,16 +22544,27 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const lokasi = await MLokasi.query()
-      .withCount("barang as total", (builder) => {
-        builder.where({ dihapus: 0 });
-      })
-      .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .fetch();
+    let { search, page } = request.get();
+
+    page = page ? parseInt(page) : 1;
+
+    let lokasi;
+
+    lokasi =  MLokasi.query()
+              .withCount("barang as total", (builder) => {
+                builder.where({ dihapus: 0 });
+              })
+              .where({ dihapus: 0 })
+              .andWhere({ m_sekolah_id: sekolah.id })
+
+    if (search) {
+        lokasi.andWhere("nama", "like", `%${search}%`)
+    }
+
+     lokasi.paginate(page, 25);
 
     return response.ok({
-      lokasi: lokasi,
+      lokasi: await lokasi,
     });
   }
 
@@ -22584,23 +22596,39 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const barang = await MBarang.query()
-      .with("lokasi")
-      .where({ dihapus: 0 })
-      .fetch();
+    let { search_lokasi, page_barang, search_barang } = request.get();
 
-    const result = await Promise.all(
-      barang.toJSON().map(async (d) => {
-        const jumlah_barang = await MBarang.query()
-          .where({ nama: d.nama })
-          .count("* as total");
-      })
-    );
+    page_barang = page_barang ? parseInt(page_barang) : 1;
+
+    let lokasi;
+    let barang;
+
+    lokasi =  MLokasi.query()
+              .withCount("barang as total", (builder) => {
+                builder.where({ dihapus: 0 });
+              })
+              .where({ dihapus: 0 })
+              .andWhere({ m_sekolah_id: sekolah.id })
+
+    if (search_lokasi) {
+        lokasi.andWhere("nama", "like", `%${search_lokasi}%`)
+    }
+
+    lokasi.limit(25).fetch();
+
+    barang =  MBarang.query()
+            .with("lokasi")
+            .where({ dihapus: 0 })
+
+    if (search_barang) {
+        barang.andWhere("nama", "like", `%${search_barang}%`)
+    }
+
+    barang.paginate(page_barang, 25);
 
     return response.ok({
-      barang: barang,
-      // jumlah_barang,
-      result,
+      lokasi: await lokasi,
+      barang: await barang,
     });
   }
 
@@ -22634,7 +22662,10 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { jenis, nama, no_regis, lebar, panjang } = request.post();
+    let { jenis, nama, no_regis, lebar, panjang, foto } = request.post();
+
+    foto = foto ? foto.toString() : null
+
     const rules = {
       jenis: "required",
       nama: "required",
@@ -22659,6 +22690,7 @@ class MainController {
       nama,
       no_regis,
       lebar,
+      foto,
       panjang,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
@@ -22680,7 +22712,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { jenis, nama, no_regis, lebar, panjang } = request.post();
+    let { jenis, nama, no_regis, lebar, panjang, foto } = request.post();
     const rules = {
       jenis: "required",
       nama: "required",
@@ -22700,12 +22732,15 @@ class MainController {
       return response.unprocessableEntity(validation.messages());
     }
 
+    foto = foto ? foto.toString() : null
+
     const lokasi = await MLokasi.query().where({ id: lokasi_id }).update({
       jenis,
       nama,
       no_regis,
       lebar,
       panjang,
+      foto
     });
 
     if (!lokasi) {
@@ -22769,6 +22804,7 @@ class MainController {
       harga,
       deskripsi,
       status,
+      jumlah,
       kepemilikan,
       m_lokasi_id,
     } = request.post();
@@ -22811,6 +22847,7 @@ class MainController {
       kepemilikan,
       m_lokasi_id,
       dihapus: 0,
+      jumlah
     });
 
     return response.ok({
@@ -22840,6 +22877,7 @@ class MainController {
       status,
       kepemilikan,
       m_lokasi_id,
+      jumlah
     } = request.post();
     const rules = {
       kode_barang: "required",
@@ -22879,6 +22917,7 @@ class MainController {
       status,
       kepemilikan,
       m_lokasi_id,
+      jumlah
     });
 
     if (!barang) {
