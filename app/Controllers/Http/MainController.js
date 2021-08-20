@@ -13672,7 +13672,7 @@ class MainController {
     }
 
     const user = await auth.getUser();
-    const { search, searchall } = request.get();
+    const { search, searchall, page } = request.get();
 
     let proyek;
     let proyekall;
@@ -13680,13 +13680,12 @@ class MainController {
     if (search) {
       // ===== service cari proyek ====
 
-      proyek = await MProyek.query()
+      proyek = MProyek.query()
         .withCount("anggota", (builder) => {
           builder.where({ status: "menerima" });
         })
         .where({ dihapus: 0 })
         .andWhere("nama", "like", `%${search}%`)
-        .paginate();
     } else {
       // ===== service proyek saya ====
 
@@ -13698,33 +13697,25 @@ class MainController {
         .pluck("m_proyek_id");
 
       // ambil data dari proyek yg diterima
-      proyek = await MProyek.query()
+      proyek = MProyek.query()
         .withCount("anggota", (builder) => {
           builder.where({ status: "menerima" });
         })
         .where({ dihapus: 0 })
         .andWhere({ m_sekolah_id: sekolah.id })
         .whereIn("id", terimaProyekIds)
-        .paginate();
     }
-    if (searchall) {
-      // ===== service cari proyek ====
 
-      proyekall = await MProyek.query()
-        .withCount("anggota", (builder) => {
-          builder.where({ status: "menerima" });
-        })
-        .where({ dihapus: 0 })
-        .andWhere("nama", "like", `%${searchall}%`)
-        .paginate();
-    } else {
-      proyekall = await MProyek.query()
-        .withCount("anggota", (builder) => {
-          builder.where({ status: "menerima" });
-        })
-        .where({ dihapus: 0 })
-        .paginate();
+    proyekall = MProyek.query()
+      .withCount("anggota", (builder) => {
+        builder.where({ status: "menerima" });
+      })
+      .where({ dihapus: 0 });
+
+    if (searchall) {
+      proyekall.andWhere("nama", "like", `%${searchall}%`);
     }
+
 
     // ===== service cari partner ====
     const cariPartner = await MAnggotaProyek.query()
@@ -13750,10 +13741,10 @@ class MainController {
       .fetch();
 
     return response.ok({
-      proyek: proyek,
+      proyek: await proyek.paginate(parseInt(page), 18),
       userPartner: userPartner,
-      undangan,
-      proyekall,
+      undangan: undangan,
+      proyekall: await proyekall.paginate(parseInt(page), 18),
     });
   }
 
