@@ -8,10 +8,10 @@ class MUjianSiswa extends Model {
     return "m_ujian_siswa";
   }
   nilaiUAS() {
-    return this.belongsTo("App/Models/TkPesertaUjian", "uas_id", "id");
+    return this.belongsTo("App/Models/TkRekapNilai", "uas_id", "id");
   }
   nilaiUTS() {
-    return this.belongsTo("App/Models/TkPesertaUjian", "uts_id", "id");
+    return this.belongsTo("App/Models/TkRekapNilai", "uts_id", "id");
   }
 }
 
