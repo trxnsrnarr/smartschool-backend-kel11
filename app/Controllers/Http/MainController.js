@@ -19272,52 +19272,18 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .first();
 
-    const nilai = await TkRekapNilai.query()
-      .with("rekapRombel", (builder) => {
+    const muatan = await MKategoriMapel.query()
+      .with("mapelRapor", (builder) => {
         builder
-          .with("rekap", (builder) => {
-            builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id });
+          .with("mataPelajaran", (builder) => {
+            builder.with("nilaiSiswa", (builder) => {
+              builder.where({ m_user_id: user_id });
+            });
           })
           .where({ dihapus: 0 });
       })
-      .where({ m_user_id: user_id })
-      .fetch();
-
-    const ulangan = await TkPesertaUjian.query()
-      .with("jadwalUjian", (builder) => {
-        builder
-          .with("jadwalUjian", (builder) => {
-            builder
-              .with("ujian", (builder) => {
-                builder
-                  .with("mataPelajaran")
-                  .select(
-                    "id",
-                    "nama",
-                    "tipe",
-                    "tingkat",
-                    "dihapus",
-                    "m_mata_pelajaran_id"
-                  );
-              })
-              .select("id", "m_ujian_id", "dihapus", "kkm")
-              .where({ dihapus: 0 });
-          })
-          .where({ dihapus: 0 });
-      })
-      .select(
-        "id",
-        "nilai",
-        "m_user_id",
-        "tk_jadwal_ujian_id",
-        "dihapus",
-        "selesai",
-        "dinilai"
-      )
-      .where({ m_user_id: user_id })
-      .andWhere({ dihapus: 0 })
-      .andWhere({ selesai: 1 })
-      .andWhere({ dinilai: 1 })
+      .where({ dihapus: 0 })
+      .andWhere({ m_rombel_id: rombel_id })
       .fetch();
 
     const materiRombel = await TkMateriRombel.query()
@@ -19370,7 +19336,6 @@ class MainController {
     return response.ok({
       siswa: siswa,
       ta: ta,
-      nilai: nilai,
       sekolah: sekolah,
       materiRombel: materiRombel,
       predikat: predikat,
@@ -19381,7 +19346,7 @@ class MainController {
       totalIzin: totalIzin,
       totalAlpa: totalAlpa,
       tanggalDistinct: tanggalDistinct,
-      ulangan: ulangan,
+      muatan,
       sikapsosial,
       sikapspiritual,
     });
