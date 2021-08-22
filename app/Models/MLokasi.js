@@ -11,6 +11,10 @@ class MLokasi extends Model {
       barang() {
         return this.hasMany("App/Models/MBarang");
       }
+
+      getFoto(foto) {
+        return foto ? foto.split(",") : [];
+      }
 }
 
 module.exports = MLokasi

@@ -3145,7 +3145,7 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    const { jam_mulai, jam_selesai } = request.post();
+    const { jam_mulai, jam_selesai, istirahat } = request.post();
     const rules = {
       jam_mulai: "required",
       jam_selesai: "required",
@@ -3164,6 +3164,7 @@ class MainController {
       .update({
         jam_mulai: jam_mulai,
         jam_selesai: jam_selesai,
+        istirahat: istirahat,
       });
 
     if (!jamMengajar) {
@@ -13671,7 +13672,7 @@ class MainController {
     }
 
     const user = await auth.getUser();
-    const { search, searchall } = request.get();
+    const { search, searchall, page } = request.get();
 
     let proyek;
     let proyekall;
@@ -13679,13 +13680,12 @@ class MainController {
     if (search) {
       // ===== service cari proyek ====
 
-      proyek = await MProyek.query()
+      proyek = MProyek.query()
         .withCount("anggota", (builder) => {
           builder.where({ status: "menerima" });
         })
         .where({ dihapus: 0 })
         .andWhere("nama", "like", `%${search}%`)
-        .paginate();
     } else {
       // ===== service proyek saya ====
 
@@ -13697,33 +13697,25 @@ class MainController {
         .pluck("m_proyek_id");
 
       // ambil data dari proyek yg diterima
-      proyek = await MProyek.query()
+      proyek = MProyek.query()
         .withCount("anggota", (builder) => {
           builder.where({ status: "menerima" });
         })
         .where({ dihapus: 0 })
         .andWhere({ m_sekolah_id: sekolah.id })
         .whereIn("id", terimaProyekIds)
-        .paginate();
     }
-    if (searchall) {
-      // ===== service cari proyek ====
 
-      proyekall = await MProyek.query()
-        .withCount("anggota", (builder) => {
-          builder.where({ status: "menerima" });
-        })
-        .where({ dihapus: 0 })
-        .andWhere("nama", "like", `%${searchall}%`)
-        .paginate();
-    } else {
-      proyekall = await MProyek.query()
-        .withCount("anggota", (builder) => {
-          builder.where({ status: "menerima" });
-        })
-        .where({ dihapus: 0 })
-        .paginate();
+    proyekall = MProyek.query()
+      .withCount("anggota", (builder) => {
+        builder.where({ status: "menerima" });
+      })
+      .where({ dihapus: 0 });
+
+    if (searchall) {
+      proyekall.andWhere("nama", "like", `%${searchall}%`);
     }
+
 
     // ===== service cari partner ====
     const cariPartner = await MAnggotaProyek.query()
@@ -13749,10 +13741,10 @@ class MainController {
       .fetch();
 
     return response.ok({
-      proyek: proyek,
+      proyek: await proyek.paginate(parseInt(page), 18),
       userPartner: userPartner,
-      undangan,
-      proyekall,
+      undangan: undangan,
+      proyekall: await proyekall.paginate(parseInt(page), 18),
     });
   }
 
@@ -22128,16 +22120,25 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const lokasi = await MLokasi.query()
+    let { search, page } = request.get();
+
+    page = page ? parseInt(page) : 1;
+
+    let lokasi;
+
+    lokasi = MLokasi.query()
       .withCount("barang as total", (builder) => {
         builder.where({ dihapus: 0 });
       })
       .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .fetch();
+      .andWhere({ m_sekolah_id: sekolah.id });
+
+    if (search) {
+      lokasi.andWhere("nama", "like", `%${search}%`);
+    }
 
     return response.ok({
-      lokasi: lokasi,
+      lokasi: await lokasi.paginate(page, 25),
     });
   }
 
@@ -22169,23 +22170,35 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const barang = await MBarang.query()
-      .with("lokasi")
-      .where({ dihapus: 0 })
-      .fetch();
+    let { search_lokasi, page_barang, search_barang } = request.get();
 
-    const result = await Promise.all(
-      barang.toJSON().map(async (d) => {
-        const jumlah_barang = await MBarang.query()
-          .where({ nama: d.nama })
-          .count("* as total");
+    page_barang = page_barang ? parseInt(page_barang) : 1;
+
+    let lokasi;
+    let barang;
+
+    lokasi = MLokasi.query()
+      .withCount("barang as total", (builder) => {
+        builder.where({ dihapus: 0 });
       })
-    );
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id });
+
+    if (search_lokasi) {
+      lokasi.andWhere("nama", "like", `%${search_lokasi}%`);
+    }
+
+    barang =  MBarang.query()
+            .with("lokasi")
+            .where({ dihapus: 0 })
+
+    if (search_barang) {
+      barang.andWhere("nama", "like", `%${search_barang}%`);
+    }
 
     return response.ok({
-      barang: barang,
-      // jumlah_barang,
-      result,
+      lokasi: await lokasi.limit(25).fetch(),
+      barang: await barang.paginate(page_barang, 25),
     });
   }
 
@@ -22219,7 +22232,10 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { jenis, nama, no_regis, lebar, panjang } = request.post();
+    let { jenis, nama, no_regis, lebar, panjang, foto } = request.post();
+
+    foto = foto ? foto.toString() : null;
+
     const rules = {
       jenis: "required",
       nama: "required",
@@ -22244,6 +22260,7 @@ class MainController {
       nama,
       no_regis,
       lebar,
+      foto,
       panjang,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
@@ -22265,7 +22282,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { jenis, nama, no_regis, lebar, panjang } = request.post();
+    let { jenis, nama, no_regis, lebar, panjang, foto } = request.post();
     const rules = {
       jenis: "required",
       nama: "required",
@@ -22285,12 +22302,15 @@ class MainController {
       return response.unprocessableEntity(validation.messages());
     }
 
+    foto = foto ? foto.toString() : null;
+
     const lokasi = await MLokasi.query().where({ id: lokasi_id }).update({
       jenis,
       nama,
       no_regis,
       lebar,
       panjang,
+      foto,
     });
 
     if (!lokasi) {
@@ -22354,6 +22374,7 @@ class MainController {
       harga,
       deskripsi,
       status,
+      jumlah,
       kepemilikan,
       m_lokasi_id,
     } = request.post();
@@ -22396,6 +22417,7 @@ class MainController {
       kepemilikan,
       m_lokasi_id,
       dihapus: 0,
+      jumlah,
     });
 
     return response.ok({
@@ -22425,6 +22447,7 @@ class MainController {
       status,
       kepemilikan,
       m_lokasi_id,
+      jumlah,
     } = request.post();
     const rules = {
       kode_barang: "required",
@@ -22464,6 +22487,7 @@ class MainController {
       status,
       kepemilikan,
       m_lokasi_id,
+      jumlah,
     });
 
     if (!barang) {

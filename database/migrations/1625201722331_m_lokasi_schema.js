@@ -12,8 +12,9 @@ class MLokasiSchema extends Schema {
           table.string("jenis");
           table.string("no_regis");
           table.string("nama");
-          table.integer("lebar");
-          table.integer("panjang");
+          table.float("lebar", [11, 1]);
+          table.float("panjang", [11, 1]);
+          table.text('foto')
           table.integer("m_sekolah_id").unsigned().index("m_sekolah_id");
           table
             .foreign("m_sekolah_id")
