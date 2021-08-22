@@ -18512,6 +18512,16 @@ class MainController {
       .andWhere({ m_rombel_id: rombel_id })
       .fetch();
 
+    // const mapelIds = [];
+    // const noLoop = kategoriMapel.toJSON().mapelRapor.filter((d) => {
+    //   if (!mapelIds.includes(d.mataPelajaran.id)) {
+    //     mapelIds.push(d.mataPelajaran.id);
+    //     return true;
+    //   } else {
+    //     return false;
+    //   }
+    // });
+
     return response.ok({
       rombel: rombel,
       kategoriMapel: kategoriMapel,
