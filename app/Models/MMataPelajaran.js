@@ -19,6 +19,14 @@ class MMataPelajaran extends Model {
   nilaiSiswa() {
     return this.hasMany("App/Models/MUjianSiswa", "id", "m_mata_pelajaran_id");
   }
+
+  nilaiIndividu() {
+    return this.belongsTo(
+      "App/Models/MUjianSiswa",
+      "id",
+      "m_mata_pelajaran_id"
+    );
+  }
 }
 
 module.exports = MMataPelajaran;

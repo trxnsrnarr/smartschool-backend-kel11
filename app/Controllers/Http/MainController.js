@@ -13699,7 +13699,7 @@ class MainController {
           builder.where({ status: "menerima" });
         })
         .where({ dihapus: 0 })
-        .andWhere("nama", "like", `%${search}%`)
+        .andWhere("nama", "like", `%${search}%`);
     } else {
       // ===== service proyek saya ====
 
@@ -13717,7 +13717,7 @@ class MainController {
         })
         .where({ dihapus: 0 })
         .andWhere({ m_sekolah_id: sekolah.id })
-        .whereIn("id", terimaProyekIds)
+        .whereIn("id", terimaProyekIds);
     }
 
     proyekall = MProyek.query()
@@ -13729,7 +13729,6 @@ class MainController {
     if (searchall) {
       proyekall.andWhere("nama", "like", `%${searchall}%`);
     }
-
 
     // ===== service cari partner ====
     const cariPartner = await MAnggotaProyek.query()
@@ -15640,8 +15639,15 @@ class MainController {
     const { nilai } = request.post();
 
     const check = await TkRekapNilai.query()
+      .with("rekapRombel", (builder) => {
+        builder.with("rekap");
+      })
       .where({ m_user_id: user_id })
       .andWhere({ m_rekap_rombel_id: rekapnilai_id })
+      .first();
+
+    const materi = await MMateri.query()
+      .where({ id: check.toJSON().rekapRombel.rekap.m_materi_id })
       .first();
 
     let rekap;
@@ -15658,6 +15664,17 @@ class MainController {
       });
     }
 
+    if (check.toJSON().rekapRombel.rekap.teknik == "UTS") {
+      const checkData = await MUjianSiswa.query()
+        .where({ m_user_id: user_Id })
+        .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
+        .first();
+    } else if (check.toJSON().rekapRombel.rekap.teknik == "UAS") {
+      const checkData = await MUjianSiswa.query()
+        .where({ m_user_id: user_Id })
+        .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
+        .first();
+    }
     if (!rekap) {
       return response.ok({
         message: messagePostSuccess,
@@ -19278,7 +19295,7 @@ class MainController {
       .with("mapelRapor", (builder) => {
         builder
           .with("mataPelajaran", (builder) => {
-            builder.with("nilaiSiswa", (builder) => {
+            builder.with("nilaiIndividu", (builder) => {
               builder.where({ m_user_id: user_id });
             });
           })
@@ -22613,9 +22630,7 @@ class MainController {
       lokasi.andWhere("nama", "like", `%${search_lokasi}%`);
     }
 
-    barang =  MBarang.query()
-            .with("lokasi")
-            .where({ dihapus: 0 })
+    barang = MBarang.query().with("lokasi").where({ dihapus: 0 });
 
     if (search_barang) {
       barang.andWhere("nama", "like", `%${search_barang}%`);
