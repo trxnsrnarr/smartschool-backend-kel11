@@ -13685,7 +13685,7 @@ class MainController {
           builder.where({ status: "menerima" });
         })
         .where({ dihapus: 0 })
-        .andWhere("nama", "like", `%${search}%`)
+        .andWhere("nama", "like", `%${search}%`);
     } else {
       // ===== service proyek saya ====
 
@@ -13703,7 +13703,7 @@ class MainController {
         })
         .where({ dihapus: 0 })
         .andWhere({ m_sekolah_id: sekolah.id })
-        .whereIn("id", terimaProyekIds)
+        .whereIn("id", terimaProyekIds);
     }
 
     proyekall = MProyek.query()
@@ -13715,7 +13715,6 @@ class MainController {
     if (searchall) {
       proyekall.andWhere("nama", "like", `%${searchall}%`);
     }
-
 
     // ===== service cari partner ====
     const cariPartner = await MAnggotaProyek.query()
@@ -22170,35 +22169,20 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { search_lokasi, page_barang, search_barang } = request.get();
+    let { page, search } = request.get();
 
-    page_barang = page_barang ? parseInt(page_barang) : 1;
+    page = page ? parseInt(page) : 1;
 
-    let lokasi;
     let barang;
 
-    lokasi = MLokasi.query()
-      .withCount("barang as total", (builder) => {
-        builder.where({ dihapus: 0 });
-      })
-      .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id });
+    barang = MBarang.query().with("lokasi").where({ dihapus: 0 });
 
-    if (search_lokasi) {
-      lokasi.andWhere("nama", "like", `%${search_lokasi}%`);
-    }
-
-    barang =  MBarang.query()
-            .with("lokasi")
-            .where({ dihapus: 0 })
-
-    if (search_barang) {
-      barang.andWhere("nama", "like", `%${search_barang}%`);
+    if (search) {
+      barang.andWhere("nama", "like", `%${search}%`);
     }
 
     return response.ok({
-      lokasi: await lokasi.limit(25).fetch(),
-      barang: await barang.paginate(page_barang, 25),
+      barang: await barang.paginate(page, 25),
     });
   }
 
