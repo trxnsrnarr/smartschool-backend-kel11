@@ -4880,7 +4880,7 @@ class MainController {
       }
     }
 
-    const tingkat = await MPenghargaan.query()
+    const tingkatData = await MPenghargaan.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .fetch();
@@ -4906,7 +4906,7 @@ class MainController {
 
     return response.ok({
       prestasi,
-      tingkat,
+      tingkat: tingkatData,
       user: user,
     });
   }
