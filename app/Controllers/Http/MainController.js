@@ -4820,6 +4820,97 @@ class MainController {
     });
   }
 
+  async getPrestasi1({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let { search, page, tingkat, nama_siswa } = request.get();
+
+    page = page ? parseInt(page) : 1;
+
+    let prestasi;
+
+    if (search) {
+      const userIds = await User.query()
+        .where("nama", "like", `%${search}%`)
+        .andWhere({ dihapus: 0 })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .limit(25)
+        .ids();
+
+      if (tingkat) {
+        prestasi = await MPrestasi.query()
+          .with("user")
+          .with("prestasi")
+          .where({ m_sekolah_id: sekolah.id })
+          .andWhere({ dihapus: 0 })
+          .andWhere({ tingkat })
+          .whereIn("m_user_id", userIds)
+          .paginate(page, 25);
+      } else {
+        prestasi = await MPrestasi.query()
+          .with("user")
+          .with("prestasi")
+          .where({ m_sekolah_id: sekolah.id })
+          .andWhere({ dihapus: 0 })
+          .whereIn("m_user_id", userIds)
+          .paginate(page, 25);
+      }
+    } else {
+      if (tingkat) {
+        prestasi = await MPrestasi.query()
+          .with("user")
+          .with("prestasi")
+          .where({ m_sekolah_id: sekolah.id })
+          .andWhere({ dihapus: 0 })
+          .andWhere({ tingkat })
+          .paginate(page, 25);
+      } else {
+        prestasi = await MPrestasi.query()
+          .with("user")
+          .with("prestasi")
+          .where({ m_sekolah_id: sekolah.id })
+          .andWhere({ dihapus: 0 })
+          .paginate(page, 25);
+      }
+    }
+
+    const tingkat = await MPenghargaan.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    let user;
+
+    if (nama_siswa) {
+      user = await User.query()
+        .select("id", "nama")
+        .where("nama", "like", `%${nama_siswa}%`)
+        .where({ dihapus: 0 })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .limit(25)
+        .fetch();
+    } else {
+      user = await User.query()
+        .select("id", "nama")
+        .where({ dihapus: 0 })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .limit(25)
+        .fetch();
+    }
+
+    return response.ok({
+      prestasi,
+      tingkat,
+      user: user,
+    });
+  }
+
   async postPrestasi({ response, request, auth }) {
     const domain = request.headers().origin;
 
@@ -15663,17 +15754,41 @@ class MainController {
         m_rekap_rombel_id: rekapnilai_id,
       });
     }
+    const checkData = await MUjianSiswa.query()
+      .where({ m_user_id: user_Id })
+      .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
+      .first();
 
     if (check.toJSON().rekapRombel.rekap.teknik == "UTS") {
-      const checkData = await MUjianSiswa.query()
-        .where({ m_user_id: user_Id })
-        .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
-        .first();
+      if (checkData) {
+        await MUjianSiswa.query()
+          .where({ m_user_id: user_id })
+          .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
+          .update({
+            uts_id: rekap.id,
+          });
+      } else {
+        await MUjianSiswa.create({
+          m_user_id: user_id,
+          m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
+          uts_id: rekap.id,
+        });
+      }
     } else if (check.toJSON().rekapRombel.rekap.teknik == "UAS") {
-      const checkData = await MUjianSiswa.query()
-        .where({ m_user_id: user_Id })
-        .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
-        .first();
+      if (checkData) {
+        await MUjianSiswa.query()
+          .where({ m_user_id: user_id })
+          .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
+          .update({
+            uas_id: rekap.id,
+          });
+      } else {
+        await MUjianSiswa.create({
+          m_user_id: user_id,
+          m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
+          uas_id: rekap.id,
+        });
+      }
     }
     if (!rekap) {
       return response.ok({
