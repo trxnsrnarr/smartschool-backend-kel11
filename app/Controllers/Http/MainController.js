@@ -14586,20 +14586,18 @@ class MainController {
     const { delete_anggota } = request.post();
 
     // Cek Role, selain admin tidak boleh delete anggota
-    const isAdmin = await MAnggotaProyekRole.query()
-      .where({ m_anggota_proyek_id: anggota_proyek_id })
-      .andWhere({ role: "Admin" })
-      .fetch();
+    // const isAdmin = await MAnggotaProyekRole.query()
+    //   .where({ m_anggota_proyek_id: anggota_proyek_id })
+    //   .andWhere({ role: "Admin" })
+    //   .fetch();
 
-    if (!isAdmin) {
-      return response.forbidden({ message: messageForbidden });
-    }
+    // if (!isAdmin) {
+    //   return response.forbidden({ message: messageForbidden });
+    // }
 
     const hapusAnggota = await MAnggotaProyek.query()
-      .where({ id: delete_anggota })
-      .update({
-        dihapus: 1,
-      });
+      .where({ id: anggota_proyek_id })
+      .delete();
 
     if (!hapusAnggota) {
       return response.notFound({
