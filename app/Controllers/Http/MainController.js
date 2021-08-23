@@ -22530,7 +22530,7 @@ class MainController {
     let data = [];
 
     colComment.eachCell(async (cell, rowNumber) => {
-      if (rowNumber >= 5) {
+      if (rowNumber > 5) {
         data.push({
           jenis: explanation.getCell("B" + rowNumber).value,
           no_regis: explanation.getCell("C" + rowNumber).value,
@@ -22776,7 +22776,7 @@ class MainController {
     let data = [];
 
     colComment.eachCell(async (cell, rowNumber) => {
-      if (rowNumber >= 5) {
+      if (rowNumber > 5) {
         data.push({
           kode_barang: explanation.getCell("B" + rowNumber).value,
           nama: explanation.getCell("C" + rowNumber).value,
