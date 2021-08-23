@@ -234,7 +234,7 @@ const hour = dateObj.getHours();
 const minute = dateObj.getMinutes();
 const second = dateObj.getSeconds();
 const keluarantanggal = day + "," + month + "," + year;
-const keluarantanggalseconds = `${day},${month},${year} ${hour}-${minute}-${second}`;
+const keluarantanggalseconds = moment().format("YYYY-MM-DD HH:mm:ss");
 class MainController {
   // UTILS
 
