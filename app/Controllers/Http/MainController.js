@@ -235,7 +235,7 @@ const hour = dateObj.getHours();
 const minute = dateObj.getMinutes();
 const second = dateObj.getSeconds();
 const keluarantanggal = day + "," + month + "," + year;
-const keluarantanggalseconds = `${day},${month},${year} ${hour}-${minute}-${second}`;
+const keluarantanggalseconds = moment().format("YYYY-MM-DD HH:mm:ss");
 class MainController {
   // UTILS
 
@@ -14691,20 +14691,18 @@ class MainController {
     const { delete_anggota } = request.post();
 
     // Cek Role, selain admin tidak boleh delete anggota
-    const isAdmin = await MAnggotaProyekRole.query()
-      .where({ m_anggota_proyek_id: anggota_proyek_id })
-      .andWhere({ role: "Admin" })
-      .fetch();
+    // const isAdmin = await MAnggotaProyekRole.query()
+    //   .where({ m_anggota_proyek_id: anggota_proyek_id })
+    //   .andWhere({ role: "Admin" })
+    //   .fetch();
 
-    if (!isAdmin) {
-      return response.forbidden({ message: messageForbidden });
-    }
+    // if (!isAdmin) {
+    //   return response.forbidden({ message: messageForbidden });
+    // }
 
     const hapusAnggota = await MAnggotaProyek.query()
-      .where({ id: delete_anggota })
-      .update({
-        dihapus: 1,
-      });
+      .where({ id: anggota_proyek_id })
+      .delete();
 
     if (!hapusAnggota) {
       return response.notFound({
@@ -22751,33 +22749,20 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { search_lokasi, page_barang, search_barang } = request.get();
+    let { page, search } = request.get();
 
-    page_barang = page_barang ? parseInt(page_barang) : 1;
+    page = page ? parseInt(page) : 1;
 
-    let lokasi;
     let barang;
-
-    lokasi = MLokasi.query()
-      .withCount("barang as total", (builder) => {
-        builder.where({ dihapus: 0 });
-      })
-      .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id });
-
-    if (search_lokasi) {
-      lokasi.andWhere("nama", "like", `%${search_lokasi}%`);
-    }
 
     barang = MBarang.query().with("lokasi").where({ dihapus: 0 });
 
-    if (search_barang) {
-      barang.andWhere("nama", "like", `%${search_barang}%`);
+    if (search) {
+      barang.andWhere("nama", "like", `%${search}%`);
     }
 
     return response.ok({
-      lokasi: await lokasi.limit(25).fetch(),
-      barang: await barang.paginate(page_barang, 25),
+      barang: await barang.paginate(page, 25),
     });
   }
 
@@ -23127,7 +23112,7 @@ class MainController {
     let data = [];
 
     colComment.eachCell(async (cell, rowNumber) => {
-      if (rowNumber >= 5) {
+      if (rowNumber > 5) {
         data.push({
           jenis: explanation.getCell("B" + rowNumber).value,
           no_regis: explanation.getCell("C" + rowNumber).value,
@@ -23144,8 +23129,8 @@ class MainController {
           jenis: d.jenis,
           nama: d.nama,
           no_regis: d.no_regis,
-          lebar: d.lebar,
-          panjang: d.panjang,
+          lebar: parseInt(d.lebar),
+          panjang: parseInt(d.panjang),
           m_sekolah_id: sekolah.id,
           dihapus: 0,
         });
@@ -23373,7 +23358,7 @@ class MainController {
     let data = [];
 
     colComment.eachCell(async (cell, rowNumber) => {
-      if (rowNumber >= 5) {
+      if (rowNumber > 5) {
         data.push({
           kode_barang: explanation.getCell("B" + rowNumber).value,
           nama: explanation.getCell("C" + rowNumber).value,
