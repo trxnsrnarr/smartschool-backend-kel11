@@ -13685,7 +13685,7 @@ class MainController {
           builder.where({ status: "menerima" });
         })
         .where({ dihapus: 0 })
-        .andWhere("nama", "like", `%${search}%`)
+        .andWhere("nama", "like", `%${search}%`);
     } else {
       // ===== service proyek saya ====
 
@@ -13703,7 +13703,7 @@ class MainController {
         })
         .where({ dihapus: 0 })
         .andWhere({ m_sekolah_id: sekolah.id })
-        .whereIn("id", terimaProyekIds)
+        .whereIn("id", terimaProyekIds);
     }
 
     proyekall = MProyek.query()
@@ -13715,7 +13715,6 @@ class MainController {
     if (searchall) {
       proyekall.andWhere("nama", "like", `%${searchall}%`);
     }
-
 
     // ===== service cari partner ====
     const cariPartner = await MAnggotaProyek.query()
@@ -14587,20 +14586,18 @@ class MainController {
     const { delete_anggota } = request.post();
 
     // Cek Role, selain admin tidak boleh delete anggota
-    const isAdmin = await MAnggotaProyekRole.query()
-      .where({ m_anggota_proyek_id: anggota_proyek_id })
-      .andWhere({ role: "Admin" })
-      .fetch();
+    // const isAdmin = await MAnggotaProyekRole.query()
+    //   .where({ m_anggota_proyek_id: anggota_proyek_id })
+    //   .andWhere({ role: "Admin" })
+    //   .fetch();
 
-    if (!isAdmin) {
-      return response.forbidden({ message: messageForbidden });
-    }
+    // if (!isAdmin) {
+    //   return response.forbidden({ message: messageForbidden });
+    // }
 
     const hapusAnggota = await MAnggotaProyek.query()
-      .where({ id: delete_anggota })
-      .update({
-        dihapus: 1,
-      });
+      .where({ id: anggota_proyek_id })
+      .delete();
 
     if (!hapusAnggota) {
       return response.notFound({
@@ -22188,9 +22185,7 @@ class MainController {
       lokasi.andWhere("nama", "like", `%${search_lokasi}%`);
     }
 
-    barang =  MBarang.query()
-            .with("lokasi")
-            .where({ dihapus: 0 })
+    barang = MBarang.query().with("lokasi").where({ dihapus: 0 });
 
     if (search_barang) {
       barang.andWhere("nama", "like", `%${search_barang}%`);
