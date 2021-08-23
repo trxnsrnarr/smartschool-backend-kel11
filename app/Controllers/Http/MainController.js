@@ -22547,8 +22547,8 @@ class MainController {
           jenis: d.jenis,
           nama: d.nama,
           no_regis: d.no_regis,
-          lebar: d.lebar,
-          panjang: d.panjang,
+          lebar: parseInt(d.lebar),
+          panjang: parseInt(d.panjang),
           m_sekolah_id: sekolah.id,
           dihapus: 0,
         });
