@@ -215,6 +215,7 @@ Route.delete("/bab/:bab_id", "MainController.deleteBab");
 
 // prestasi
 Route.get("/prestasi", "MainController.getPrestasi");
+Route.get("/prestasi1", "MainController.getPrestasi1");
 Route.post("/prestasi", "MainController.postPrestasi");
 Route.put("/prestasi/:prestasi_id", "MainController.putPrestasi");
 Route.delete("/prestasi/:prestasi_id", "MainController.deletePrestasi");
@@ -702,7 +703,6 @@ Route.post("/surel-arsip", "MainController.postFolderArsip");
 Route.put("/surel-arsip/:arsip_id", "MainController.putFolderArsip");
 Route.delete("/surel-arsip/:arsip_id", "MainController.deleteFolderArsip");
 Route.get("/surel-arsip/:arsip_id", "MainController.detailArsipSurel");
-
 
 // SARPRAS SERVICE
 // barang Service
