@@ -80,6 +80,7 @@ const TkTimelineKomen = use("App/Models/TkTimelineKomen");
 const TkMateriKesimpulan = use("App/Models/TkMateriKesimpulan");
 const MTimelineKomen = use("App/Models/MTimelineKomen");
 const MPerusahaan = use("App/Models/MPerusahaan");
+const TkPerusahaanSekolah = use("App/Models/TkPerusahaanSekolah");
 const MPekerjaan = use("App/Models/MPekerjaan");
 const MInformasiPekerjaan = use("App/Models/MInformasiPekerjaan");
 const MPekerjaanPengumuman = use("App/Models/MPekerjaanPengumuman");
