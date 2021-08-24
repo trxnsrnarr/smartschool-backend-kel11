@@ -9671,7 +9671,7 @@ class MainController {
       jawaban_menjodohkan,
       jawaban_foto,
     } = request.post();
-    jawaban_esai = htmlEscaper.escape(jawaban_esai);
+    jawaban_esai = jawaban_esai ? htmlEscaper.escape(jawaban_esai) : "";
     jawaban_pg_kompleks = jawaban_pg_kompleks
       ? jawaban_pg_kompleks.toString()
       : null;
