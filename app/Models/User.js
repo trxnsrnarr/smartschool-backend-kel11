@@ -130,6 +130,9 @@ class User extends Model {
   nilaiUjian() {
     return this.belongsTo("App/Models/MUjianSiswa", "id", "m_user_id");
   }
+  nilaiSemuaUjian() {
+    return this.hasMany("App/Models/MUjianSiswa", "id", "m_user_id");
+  }
 }
 
 module.exports = User;
