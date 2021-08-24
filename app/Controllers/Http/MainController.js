@@ -9800,7 +9800,7 @@ class MainController {
       jawaban_menjodohkan,
       jawaban_foto,
     } = request.post();
-    jawaban_esai = htmlEscaper.escape(jawaban_esai)
+    jawaban_esai = htmlEscaper.escape(jawaban_esai);
     jawaban_pg_kompleks = jawaban_pg_kompleks
       ? jawaban_pg_kompleks.toString()
       : null;
@@ -19390,7 +19390,9 @@ class MainController {
 
     const nilaiAkhirKeterampilan = await MUjianSiswa.query()
       .where({ m_user_id: user_id })
-      .andWhere({ m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id })
+      .andWhere({
+        m_mata_pelajaran_id: jadwalMengajarKeterampilan.m_mata_pelajaran_id,
+      })
       .first();
 
     await MUjianSiswa.query().where({ id: nilaiAkhirKeterampilan.id }).update({
