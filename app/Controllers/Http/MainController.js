@@ -6142,7 +6142,7 @@ class MainController {
       await Promise.all(
         timeline.toJSON().map(async (d) => {
           if (d.tipe == "tugas") {
-            if (d.timeline.tugas) {
+            if (d.timeline.tugas && d.timeline.tugas.draft == 0) {
               if (
                 moment(
                   moment(d.timeline.tugas.tanggal_pembagian)
@@ -9800,6 +9800,7 @@ class MainController {
       jawaban_menjodohkan,
       jawaban_foto,
     } = request.post();
+    jawaban_esai = htmlEscaper.escape(jawaban_esai)
     jawaban_pg_kompleks = jawaban_pg_kompleks
       ? jawaban_pg_kompleks.toString()
       : null;
