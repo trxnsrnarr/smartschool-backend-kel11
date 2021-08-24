@@ -2739,8 +2739,8 @@ class MainController {
       .andWhere({ m_mata_pelajaran_id: data.m_mata_pelajaran_id })
       .first();
     const totalMapel = await TkMateriRombel.query()
-      .where({ m_rombel_id: rombel_id })
-      .count();
+      .where({ m_rombel_id: data.m_rombel_id })
+      .count("*");
     if (rombel_id) {
       jadwalMengajar = await MJadwalMengajar.query()
         .with("mataPelajaran")
