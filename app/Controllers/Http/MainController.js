@@ -2738,7 +2738,9 @@ class MainController {
       .where({ dihapus: 0 })
       .andWhere({ m_mata_pelajaran_id: data.m_mata_pelajaran_id })
       .first();
-
+    const totalMapel = await TkMateriRombel.query()
+      .where({ m_rombel_id: rombel_id })
+      .count();
     if (rombel_id) {
       jadwalMengajar = await MJadwalMengajar.query()
         .with("mataPelajaran")
@@ -2772,7 +2774,13 @@ class MainController {
                 })
                 .withCount("nilaiUjian as kkmKeterampilan", (builder) => {
                   builder.where("nilai_keterampilan", "<", `${kkm.kkm2}`);
-                });
+                })
+                .withCount(
+                  "nilaiSemuaUjian as jumlahMapelDikerjakan",
+                  (builder) => {
+                    builder.andWhere({ m_ta_id: ta.id });
+                  }
+                );
             });
           });
         })
@@ -2815,7 +2823,13 @@ class MainController {
                   builder
                     .where("nilai_keterampilan", "<", `${kkm.kkm2}`)
                     .andWhere({ m_ta_id: ta.id });
-                });
+                })
+                .withCount(
+                  "nilaiSemuaUjian as jumlahMapelDikerjakan",
+                  (builder) => {
+                    builder.andWhere({ m_ta_id: ta.id });
+                  }
+                );
             });
           });
         })
@@ -2945,6 +2959,7 @@ class MainController {
       sikapsosial: sikapsosial,
       sikapspiritual: sikapspiritual,
       kkm,
+      totalMapel,
     });
   }
 
