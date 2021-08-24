@@ -6006,7 +6006,7 @@ class MainController {
       await Promise.all(
         timeline.toJSON().map(async (d) => {
           if (d.tipe == "tugas") {
-            if (d.timeline.tugas) {
+            if (d.timeline.tugas && d.timeline.tugas.draft == 0) {
               if (
                 moment(
                   moment(d.timeline.tugas.tanggal_pembagian)
