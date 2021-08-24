@@ -2738,6 +2738,10 @@ class MainController {
       .andWhere({ m_mata_pelajaran_id: data.m_mata_pelajaran_id })
       .first();
 
+    const perusahaan = await TkPerusahaanSekolah.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .fetch();
+
     if (rombel_id) {
       jadwalMengajar = await MJadwalMengajar.query()
         .with("mataPelajaran")
@@ -2944,6 +2948,7 @@ class MainController {
       sikapsosial: sikapsosial,
       sikapspiritual: sikapspiritual,
       kkm,
+      perusahaan,
     });
   }
 
