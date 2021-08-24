@@ -2728,6 +2728,16 @@ class MainController {
     let judulTugas;
     let rekap;
 
+    const data = await MJadwalMengajar.query()
+      .where({ id: jadwal_mengajar_id })
+      .first();
+
+    const kkm = await TkMapelRapor.query()
+      .with("mataPelajaran")
+      .where({ dihapus: 0 })
+      .andWhere({ m_mata_pelajaran_id: data.m_mata_pelajaran_id })
+      .first();
+
     if (rombel_id) {
       jadwalMengajar = await MJadwalMengajar.query()
         .with("mataPelajaran")
@@ -2751,7 +2761,17 @@ class MainController {
                 .with("rekapSikap", (builder) => {
                   builder.where({ dihapus: 0 });
                 })
-                .with("nilaiUjian");
+                .with("nilaiUjian")
+                .withCount("nilaiUjian as kkmPengetahuan", (builder) => {
+                  builder.where(
+                    "nilai",
+                    "<",
+                    `${kkm.toJSON().mataPelajaran.kkm}`
+                  );
+                })
+                .withCount("nilaiUjian as kkmKeterampilan", (builder) => {
+                  builder.where("nilai_keterampilan", "<", `${kkm.kkm2}`);
+                });
             });
           });
         })
@@ -2784,7 +2804,17 @@ class MainController {
                 .with("rekapSikap", (builder) => {
                   builder.where({ dihapus: 0 });
                 })
-                .with("nilaiUjian");
+                .with("nilaiUjian")
+                .withCount("nilaiSemuaUjian as kkmPengetahuan", (builder) => {
+                  builder
+                    .where("nilai", "<", `${kkm.toJSON().mataPelajaran.kkm}`)
+                    .andWhere({ m_ta_id: ta.id });
+                })
+                .withCount("nilaiSemuaUjian as kkmKeterampilan", (builder) => {
+                  builder
+                    .where("nilai_keterampilan", "<", `${kkm.kkm2}`)
+                    .andWhere({ m_ta_id: ta.id });
+                });
             });
           });
         })
@@ -2913,6 +2943,7 @@ class MainController {
       industri: industri,
       sikapsosial: sikapsosial,
       sikapspiritual: sikapspiritual,
+      kkm,
     });
   }
 
@@ -18440,7 +18471,9 @@ class MainController {
       .fetch();
 
     const result = await Promise.all(
-      ta.toJSON().map(async (d, idx) => {
+      ta.toJSON().map(async (d) => {
+        const taa = await Mta.query().where({ id: d.id }).first();
+
         const tanggalDistinct = await Database.raw(
           "SELECT DISTINCT DATE_FORMAT(created_at, '%Y-%m-%d') as tanggalDistinct from m_absen WHERE created_at BETWEEN ? AND  ?",
           [`${d.tanggal_awal}`, `${d.tanggal_akhir}`]
@@ -19176,7 +19209,7 @@ class MainController {
       4;
     // const dataUjian1 =
     //   result1.reduce((a, b) => a.nilai + b, 0) / result1.length;
-    await MUjianSiswa.query().where({ id: nilaiAkhirKeterampilan.id }).update({
+    await MUjianSiswa.query().where({ id: ujian.id }).update({
       nilai: nilaiAkhir,
     });
 
