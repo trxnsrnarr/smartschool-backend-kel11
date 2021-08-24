@@ -2740,7 +2740,7 @@ class MainController {
       .first();
     const totalMapel = await TkMateriRombel.query()
       .where({ m_rombel_id: data.m_rombel_id })
-      .count("*");
+      .count("* as total");
     if (rombel_id) {
       jadwalMengajar = await MJadwalMengajar.query()
         .with("mataPelajaran")
