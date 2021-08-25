@@ -18542,13 +18542,7 @@ class MainController {
           .with("prestasi", (builder) => {
             builder.with("tingkatPrestasi").where({ dihapus: 0 });
           })
-          .with("sikap", (builder) => {
-            builder
-              .with("ditingkatkanSosial")
-              .with("ditunjukkanSosial")
-              .with("ditingkatkanSpiritual")
-              .with("ditunjukkanSpiritual");
-          })
+          .with("sikap")
           .where({ id: user_id })
           .andWhere({ dihapus: 0 })
           .first();
