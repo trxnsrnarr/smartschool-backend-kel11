@@ -15829,9 +15829,10 @@ class MainController {
     let rekap;
 
     if (check) {
-      await TkRekapNilai.query().where({ m_user_id: user_id }).update({
-        nilai,
-      });
+      await TkRekapNilai.query()
+        .andWhere({ m_rekap_rombel_id: rekapnilai_id })
+        .where({ m_user_id: user_id })
+        .update({ nilai });
       rekap = check;
     } else {
       rekap = await TkRekapNilai.create({
