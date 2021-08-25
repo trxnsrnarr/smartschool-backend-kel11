@@ -15811,7 +15811,7 @@ class MainController {
     }
 
     const user = await auth.getUser();
-
+    const ta = await this.getTAAktif(sekolah);
     const { nilai } = request.post();
 
     const check = await TkRekapNilai.query()
@@ -15829,12 +15829,11 @@ class MainController {
     let rekap;
 
     if (check) {
-      rekap = await TkRekapNilai.query()
+      await TkRekapNilai.query()
         .andWhere({ m_rekap_rombel_id: rekapnilai_id })
         .where({ m_user_id: user_id })
-        .update({
-          nilai,
-        });
+        .update({ nilai });
+      rekap = check;
     } else {
       rekap = await TkRekapNilai.create({
         m_user_id: user_id,
@@ -15845,6 +15844,7 @@ class MainController {
     const checkData = await MUjianSiswa.query()
       .where({ m_user_id: user_id })
       .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
+      .andWhere({ m_ta_id: ta.id })
       .first();
 
     if (check.toJSON().rekapRombel.rekap.teknik == "UTS") {
@@ -15860,6 +15860,7 @@ class MainController {
           m_user_id: user_id,
           m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
           uts_id: rekap.id,
+          m_ta_id: ta.id,
         });
       }
     } else if (check.toJSON().rekapRombel.rekap.teknik == "UAS") {
@@ -15875,6 +15876,7 @@ class MainController {
           m_user_id: user_id,
           m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
           uas_id: rekap.id,
+          m_ta_id: ta.id,
         });
       }
     }
@@ -19214,7 +19216,10 @@ class MainController {
     const rekap = await TkRekapNilai.query()
       .with("rekapRombel", (builder) => {
         builder.with("rekap", (builder) => {
-          builder.where({ tipe: "tugas" }).andWhere({ m_ta_id: ta.id });
+          builder
+            .where({ tipe: "tugas" })
+            .andWhere({ m_ta_id: ta.id })
+            .andWhere({ dihapus: 0 });
         });
       })
       .where({ m_user_id: user_id })
@@ -19223,7 +19228,10 @@ class MainController {
     const rekapUjian = await TkRekapNilai.query()
       .with("rekapRombel", (builder) => {
         builder.with("rekap", (builder) => {
-          builder.where({ tipe: "ujian" }).andWhere({ m_ta_id: ta.id });
+          builder
+            .where({ tipe: "ujian" })
+            .andWhere({ m_ta_id: ta.id })
+            .andWhere({ dihapus: 0 });
         });
       })
       .where({ m_user_id: user_id })
@@ -19486,9 +19494,13 @@ class MainController {
       })
       .first();
 
-    await MUjianSiswa.query().where({ id: nilaiAkhirKeterampilan.id }).update({
-      nilai_keterampilan: rataData,
-    });
+    if (nilaiAkhirKeterampilan) {
+      await MUjianSiswa.query()
+        .where({ id: nilaiAkhirKeterampilan.id })
+        .update({
+          nilai_keterampilan: rataData,
+        });
+    }
 
     return response.ok({
       dataKeterampilan,
