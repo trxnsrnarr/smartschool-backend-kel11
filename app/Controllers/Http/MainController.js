@@ -1361,6 +1361,10 @@ class MainController {
         dihapus: 0,
         avatar,
       });
+    } else {
+      const guru = await User.query()
+        .where({ id: check.toJSON().id })
+        .update({ dihapus: 0 });
     }
 
     return response.ok({
