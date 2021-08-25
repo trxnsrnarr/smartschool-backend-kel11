@@ -18534,7 +18534,9 @@ class MainController {
 
         const siswa = await User.query()
           .with("profil")
-          .with("keteranganRapor")
+          .with("keteranganRapor", (builder) => {
+            builder.where({ dihapus: 0 }).andWhere({ m_ta_id: d.id });
+          })
           .with("keteranganPkl")
           .with("raporEkskul", (builder) => {
             builder.with("rombel", (builder) => {
@@ -18563,49 +18565,49 @@ class MainController {
           .andWhere({ m_rombel_id: rombel_id })
           .fetch();
 
-        const ulangan = await TkPesertaUjian.query()
-          .with("jadwalUjian", (builder) => {
-            builder
-              .with("jadwalUjian", (builder) => {
-                builder
-                  .with("ujian", (builder) => {
-                    builder
-                      .with("mataPelajaran")
-                      .select(
-                        "id",
-                        "nama",
-                        "tipe",
-                        "tingkat",
-                        "dihapus",
-                        "m_mata_pelajaran_id"
-                      );
-                  })
-                  .select("id", "m_ujian_id", "dihapus", "kkm")
-                  .where({ dihapus: 0 });
-              })
-              .where({ dihapus: 0 });
-          })
-          .select(
-            "id",
-            "nilai",
-            "m_user_id",
-            "tk_jadwal_ujian_id",
-            "dihapus",
-            "selesai",
-            "dinilai"
-          )
-          .where({ m_user_id: user_id })
-          .andWhere({ dihapus: 0 })
-          .andWhere({ selesai: 1 })
-          .andWhere({ dinilai: 1 })
-          .fetch();
+        // const ulangan = await TkPesertaUjian.query()
+        //   .with("jadwalUjian", (builder) => {
+        //     builder
+        //       .with("jadwalUjian", (builder) => {
+        //         builder
+        //           .with("ujian", (builder) => {
+        //             builder
+        //               .with("mataPelajaran")
+        //               .select(
+        //                 "id",
+        //                 "nama",
+        //                 "tipe",
+        //                 "tingkat",
+        //                 "dihapus",
+        //                 "m_mata_pelajaran_id"
+        //               );
+        //           })
+        //           .select("id", "m_ujian_id", "dihapus", "kkm")
+        //           .where({ dihapus: 0 });
+        //       })
+        //       .where({ dihapus: 0 });
+        //   })
+        //   .select(
+        //     "id",
+        //     "nilai",
+        //     "m_user_id",
+        //     "tk_jadwal_ujian_id",
+        //     "dihapus",
+        //     "selesai",
+        //     "dinilai"
+        //   )
+        //   .where({ m_user_id: user_id })
+        //   .andWhere({ dihapus: 0 })
+        //   .andWhere({ selesai: 1 })
+        //   .andWhere({ dinilai: 1 })
+        //   .fetch();
 
-        const materiRombel = await TkMateriRombel.query()
-          .with("materi", (builder) => {
-            builder.with("mataPelajaran");
-          })
-          .where({ m_rombel_id: rombel_id })
-          .fetch();
+        // const materiRombel = await TkMateriRombel.query()
+        //   .with("materi", (builder) => {
+        //     builder.with("mataPelajaran");
+        //   })
+        //   .where({ m_rombel_id: rombel_id })
+        //   .fetch();
 
         const predikat = await MPredikatNilai.query()
           .where({ m_sekolah_id: sekolah.id })
@@ -18679,7 +18681,7 @@ class MainController {
           siswa: siswa,
           ta: taa,
           sekolah: sekolah,
-          materiRombel: materiRombel,
+          // materiRombel: materiRombel,
           predikat: predikat,
           rombel: rombelData,
           ekskul: ekskul,
@@ -18688,7 +18690,7 @@ class MainController {
           totalIzin: totalIzin,
           totalAlpa: totalAlpa,
           tanggalDistinct: tanggalDistinct,
-          ulangan: ulangan,
+          // ulangan: ulangan,
           muatan,
         };
       })
@@ -19704,7 +19706,7 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
-
+    const ta = await this.getTAAktif(sekolah);
     const user = await auth.getUser();
 
     const { catatan, kelulusan } = request.post();
@@ -19722,6 +19724,7 @@ class MainController {
     const keteranganRapor = await MKeteranganRapor.create({
       catatan,
       kelulusan,
+      m_ta_id: ta.id,
       m_user_id: user_id,
       dihapus: 0,
     });
