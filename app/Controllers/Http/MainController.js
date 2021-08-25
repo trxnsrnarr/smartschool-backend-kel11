@@ -8387,7 +8387,7 @@ class MainController {
           .where({ m_user_id: user.id })
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_dibuka", ">", hari_ini)
-          .orderBy("waktu_dibuka", "asc")
+          .orderBy("waktu_dibuka", "desc")
           .fetch();
       } else if (status == "berlangsung") {
         jadwalUjian = await MJadwalUjian.query()
@@ -8396,7 +8396,7 @@ class MainController {
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_dibuka", "<=", hari_ini)
           .andWhere("waktu_ditutup", ">=", hari_ini)
-          .orderBy("waktu_dibuka", "asc")
+          .orderBy("waktu_dibuka", "desc")
           .fetch();
       } else if (status == "sudah-selesai") {
         jadwalUjian = await MJadwalUjian.query()
@@ -8404,7 +8404,7 @@ class MainController {
           .where({ m_user_id: user.id })
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_ditutup", "<=", hari_ini)
-          .orderBy("waktu_dibuka", "asc")
+          .orderBy("waktu_dibuka", "desc")
           .paginate(page, 10);
       }
 
