@@ -2741,6 +2741,7 @@ class MainController {
     const totalMapel = await TkMateriRombel.query()
       .where({ m_rombel_id: data.m_rombel_id })
       .count("* as total");
+
     if (rombel_id) {
       jadwalMengajar = await MJadwalMengajar.query()
         .with("mataPelajaran")
@@ -18583,9 +18584,28 @@ class MainController {
           .fetch();
 
         const rombel = await MRombel.query()
+          .with("anggotaRombel", (builder) => {
+            builder.where({ dihapus: 0 }).andWhere({ m_user_id: user_id });
+          })
           .with("user")
-          .where({ id: rombel_id })
-          .first();
+          .andWhere({ m_ta_id: d.id })
+          .andWhere({ kelompok: "reguler" })
+          .fetch();
+
+        // return rombel;
+
+        const rombel1 = await Promise.all(
+          rombel.toJSON().map(async (d) => {
+            if (d.anggotaRombel.length == 0) {
+              return;
+            }
+            return d;
+          })
+        );
+
+        const rombelData = rombel1.filter((d) => d != null);
+
+        // return rombelData;
 
         const ekskul = await MRombel.query()
           .with("anggotaRombel", (builder) => {
@@ -18625,24 +18645,29 @@ class MainController {
         const totalAlpa =
           user_id.length -
           (totalHadir[0].total + totalSakit[0].total + totalIzin[0].total);
+
+        return {
+          siswa: siswa,
+          ta: taa,
+          sekolah: sekolah,
+          materiRombel: materiRombel,
+          predikat: predikat,
+          rombel: rombelData,
+          ekskul: ekskul,
+          totalHadir: totalHadir,
+          totalSakit: totalSakit,
+          totalIzin: totalIzin,
+          totalAlpa: totalAlpa,
+          tanggalDistinct: tanggalDistinct,
+          ulangan: ulangan,
+          muatan,
+        };
       })
     );
     return response.ok({
-      siswa: siswa,
-      ta: ta,
-      nilai: nilai,
-      sekolah: sekolah,
-      materiRombel: materiRombel,
-      predikat: predikat,
-      rombel: rombel,
-      ekskul: ekskul,
-      totalHadir: totalHadir,
-      totalSakit: totalSakit,
-      totalIzin: totalIzin,
-      totalAlpa: totalAlpa,
-      tanggalDistinct: tanggalDistinct,
-      ulangan: ulangan,
-      muatan,
+      result,
+      sikapsosial,
+      sikapspiritual,
     });
   }
 
