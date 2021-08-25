@@ -105,6 +105,9 @@ const MPasalPeraturan = use("App/Models/MPasalPeraturan");
 const MBukuTamu = use("App/Models/MBukuTamu");
 const MKategoriMapel = use("App/Models/MKategoriMapel");
 const TkMapelRapor = use("App/Models/TkMapelRapor");
+const MSurat = use("App/Models/MSurat");
+const MDisposisi = use("App/Models/MDisposisi");
+const MPelaporanDisposisi = use("App/Models/MPelaporanDisposisi");
 
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
@@ -2767,6 +2770,7 @@ class MainController {
       .where({ dihapus: 0 })
       .andWhere({ m_mata_pelajaran_id: data.m_mata_pelajaran_id })
       .first();
+
     const totalMapel = await TkMateriRombel.query()
       .where({ m_rombel_id: data.m_rombel_id })
       .count("* as total");
@@ -19274,17 +19278,28 @@ class MainController {
 
     const rataUjian = jumlah / dataUjian.length;
 
-    const nilaiAkhir =
-      (rataUjian +
-        rata +
-        ujian.toJSON().nilaiUAS.nilai +
-        ujian.toJSON().nilaiUTS.nilai) /
-      4;
+    let nilaiAkhir;
+    if (ujian) {
+      nilaiAkhir =
+        (rataUjian +
+          rata +
+          ujian.toJSON().nilaiUAS.nilai +
+          ujian.toJSON().nilaiUTS.nilai) /
+        4;
+      await MUjianSiswa.query().where({ id: ujian.id }).update({
+        nilai: nilaiAkhir,
+      });
+    } else {
+      nilaiAkhir = (rataUjian + rata) / 2;
+      await MUjianSiswa.create({
+        m_ta_id: ta.id,
+        m_user_id: user_id,
+        m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id,
+        nilai: nilaiAkhir,
+      });
+    }
     // const dataUjian1 =
     //   result1.reduce((a, b) => a.nilai + b, 0) / result1.length;
-    await MUjianSiswa.query().where({ id: ujian.id }).update({
-      nilai: nilaiAkhir,
-    });
 
     return response.ok({
       data,
@@ -27524,16 +27539,84 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const bab = await MSurat.query()
-      .withCount("pasal as total", (builder) => {
-        builder.where({ dihapus: 0 });
-      })
-      .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .fetch();
+    const user = await auth.getUser();
+
+    const { tipe, search } = request.get();
+
+    let surat;
+
+    if (search) {
+      // ===== service cari Perusahaan ====
+      if (tipe == "keluar") {
+        surat = await MSurat.query()
+          .where({ dihapus: 0 })
+          .andWhere({ tipe: "keluar" })
+          .andWhere({ m_user_id: user.id })
+          .andWhere("perihal", "like", `%${search}%`)
+          .paginate();
+      } else if (tipe == "masuk") {
+        surat = await MSurat.query()
+          .where({ dihapus: 0 })
+          .andWhere({ tipe: "masuk" })
+          .andWhere({ m_user_id: user.id })
+          .andWhere("perihal", "like", `%${search}%`)
+          .paginate();
+      } else if (tipe == "disposisi") {
+        surat = await MSurat.query()
+          .with("surat", (builder) => {
+            builder
+              .with("userPengirim", (builder) => {
+                builder.select("id", "nama", "email");
+              })
+              .withCount("komen", (builder) => {
+                builder.where({ dihapus: 0 });
+              })
+
+              .where({ dihapus: 0 })
+              .andWhere({ m_user_pengirim_id: user.id })
+              .andWhere("perihal", "like", `%${search}%`);
+          })
+          .where({ dihapus: 0 })
+          .andWhere({ tipe: "draf" })
+          .andWhere({ m_user_id: user.id })
+          .paginate();
+      }
+    } else {
+      // ===== service Perusahaan saya ====
+      if (tipe == "keluar") {
+        surat = await MSurat.query()
+          .where({ dihapus: 0 })
+          .andWhere({ tipe: "keluar" })
+          .andWhere({ m_user_id: user.id })
+          .paginate();
+      } else if (tipe == "masuk") {
+        surat = await MSurat.query()
+          .where({ dihapus: 0 })
+          .andWhere({ tipe: "masuk" })
+          .andWhere({ m_user_id: user.id })
+          .paginate();
+      } else if (tipe == "disposisi") {
+        surat = await MSurat.query()
+          .with("surat", (builder) => {
+            builder
+              .with("userPengirim", (builder) => {
+                builder.select("id", "nama", "email");
+              })
+              .withCount("komen", (builder) => {
+                builder.where({ dihapus: 0 });
+              })
+              .where({ dihapus: 0 })
+              .andWhere({ m_user_tujuan_id: user.id });
+          })
+          .where({ dihapus: 0 })
+          .andWhere({ tipe: "masuk" })
+          .andWhere({ m_user_id: user.id })
+          .paginate();
+      }
+    }
 
     return response.ok({
-      bab,
+      surat,
     });
   }
 
@@ -27558,7 +27641,7 @@ class MainController {
       perihal: "required",
       keamanan: "required",
       isi: "required",
-      file: "required",
+      // file: "required",
     };
     const message = {
       "tipe.required": "Tipe harus diisi",
@@ -27568,7 +27651,7 @@ class MainController {
       "perihal.required": "Perihal harus diisi",
       "keamanan.required": "Tingkat Keamanan harus dipilih",
       "isi.required": "Isi Ringakasan Surat harus diisi",
-      "file.required": "harus diisi",
+      // "file.required": "harus diisi",
     };
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
@@ -27615,7 +27698,7 @@ class MainController {
       perihal: "required",
       keamanan: "required",
       isi: "required",
-      file: "required",
+      // file: "required",
     };
     const message = {
       "tipe.required": "Tipe harus diisi",
@@ -27625,7 +27708,7 @@ class MainController {
       "perihal.required": "Perihal harus diisi",
       "keamanan.required": "Tingkat Keamanan harus dipilih",
       "isi.required": "Isi Ringakasan Surat harus diisi",
-      "file.required": "harus diisi",
+      // "file.required": "harus diisi",
     };
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
