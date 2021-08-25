@@ -19292,17 +19292,25 @@ class MainController {
 
     let nilaiAkhir;
     if (ujian) {
-      nilaiAkhir =
-        (rataUjian +
-          rata +
-          ujian.toJSON().nilaiUAS.nilai +
-          ujian.toJSON().nilaiUTS.nilai) /
-        4;
+      const listNilai = [
+        rataUjian,
+        rata,
+        ujian.toJSON().nilaiUAS ? ujian.toJSON().nilaiUAS?.nilai : null,
+        ujian.toJSON().nilaiUTS ? ujian.toJSON().nilaiUTS?.nilai : null,
+      ];
+      nilaiAkhir = listNilai.filter((nilai) => nilai).length
+        ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) /
+          listNilai.filter((nilai) => nilai).length
+        : 0;
       await MUjianSiswa.query().where({ id: ujian.id }).update({
         nilai: nilaiAkhir,
       });
     } else {
-      nilaiAkhir = (rataUjian + rata) / 2;
+      const listNilai = [rataUjian, rata];
+      nilaiAkhir = listNilai.filter((nilai) => nilai).length
+        ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) /
+          listNilai.filter((nilai) => nilai).length
+        : 0;
       await MUjianSiswa.create({
         m_ta_id: ta.id,
         m_user_id: user_id,
@@ -19351,7 +19359,10 @@ class MainController {
     const rekap = await TkRekapNilai.query()
       .with("rekapRombel", (builder) => {
         builder.with("rekap", (builder) => {
-          builder.where({ tipe: "keterampilan" }).andWhere({ m_ta_id: ta.id });
+          builder
+            .where({ tipe: "keterampilan" })
+            .andWhere({ m_ta_id: ta.id })
+            .andWhere({ dihapus: 0 });
         });
       })
       .where({ m_user_id: user_id })
@@ -19372,15 +19383,18 @@ class MainController {
         jumlah0 += d.nilai;
       });
 
-    const rataData = jumlah0 / dataKeterampilan.length;
+    const rataData = dataKeterampilan.length
+      ? jumlah0 / dataKeterampilan.length
+      : 0;
 
     const rekapPraktik = await TkRekapNilai.query()
       .with("rekapRombel", (builder) => {
-        builder.with("rekap", (builder) => {
+        builder.where({ dihapus: 0 }).with("rekap", (builder) => {
           builder
             .where({ tipe: "keterampilan" })
             .andWhere({ teknik: "praktik" })
-            .andWhere({ m_ta_id: ta.id });
+            .andWhere({ m_ta_id: ta.id })
+            .andWhere({ dihapus: 0 });
         });
       })
       .where({ m_user_id: user_id })
