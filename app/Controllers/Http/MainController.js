@@ -1618,12 +1618,15 @@ class MainController {
         });
       }
     } else if (m_rombel_id) {
-      const rombel = await MAnggotaRombel.create({
-        role: "Anggota",
-        dihapus: 0,
-        m_user_id: check.toJSON().id,
-        m_rombel_id: m_rombel_id,
-      });
+      const rombel = await MAnggotaRombel.query()
+        .where({ m_rombel_id: m_rombel_id })
+        .andWhere({ m_user_id: check.toJSON().id })
+        .update({
+          dihapus: 0,
+        });
+      const siswa = await User.query()
+        .where({ id: check.toJSON().id })
+        .update({ dihapus: 0 });
     }
 
     return response.ok({
@@ -9039,7 +9042,7 @@ class MainController {
       kkm,
       waktu_dibuka,
       waktu_ditutup: moment(waktu_dibuka)
-        .add("minutes", durasi)
+        .add(durasi, "minutes")
         .format("YYYY-MM-DD HH:mm:ss"),
       durasi,
       gmeet,
@@ -9106,7 +9109,7 @@ class MainController {
         kkm,
         waktu_dibuka,
         waktu_ditutup: moment(waktu_dibuka)
-          .add("minutes", durasi)
+          .add(durasi, "minutes")
           .format("YYYY-MM-DD HH:mm:ss"),
         durasi,
         gmeet,
