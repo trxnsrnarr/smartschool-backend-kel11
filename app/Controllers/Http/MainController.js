@@ -1622,12 +1622,27 @@ class MainController {
         });
       }
     } else if (m_rombel_id) {
-      const rombel = await MAnggotaRombel.query()
+      const checkAnggotaRombel = await MAnggotaRombel.query()
         .where({ m_rombel_id: m_rombel_id })
         .andWhere({ m_user_id: check.toJSON().id })
-        .update({
+        .first();
+
+      if (!checkAnggotaRombel) {
+        const rombel = await MAnggotaRombel.create({
+          role: "Anggota",
           dihapus: 0,
+          m_user_id: check.toJSON().id,
+          m_rombel_id: m_rombel_id,
         });
+      } else {
+        const rombel = await MAnggotaRombel.query()
+          .where({ m_rombel_id: m_rombel_id })
+          .andWhere({ m_user_id: check.toJSON().id })
+          .update({
+            dihapus: 0,
+          });
+      }
+
       const siswa = await User.query()
         .where({ id: check.toJSON().id })
         .update({ dihapus: 0 });
