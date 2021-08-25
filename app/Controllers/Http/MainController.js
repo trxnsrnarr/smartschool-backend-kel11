@@ -4157,6 +4157,9 @@ class MainController {
 
           return;
         }
+        await User.query()
+          .where({ id: checkUser.toJSON().id })
+          .update({ dihapus: 0 });
 
         const checkAnggotaRombel = await MAnggotaRombel.query()
           .where({ role: d.role })
@@ -15831,6 +15834,7 @@ class MainController {
         }
 
         if (checkUser) {
+          await User.query().where({ id: checkUser.id }).update({ dihapus: 0 });
           const checkProfil = await MProfilUser.query()
             .select("id")
             .where({ m_user_id: checkUser.id })
