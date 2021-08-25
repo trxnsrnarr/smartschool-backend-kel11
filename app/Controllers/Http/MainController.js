@@ -15836,7 +15836,7 @@ class MainController {
       });
     }
     const checkData = await MUjianSiswa.query()
-      .where({ m_user_id: user_Id })
+      .where({ m_user_id: user_id })
       .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
       .first();
 
@@ -18726,6 +18726,7 @@ class MainController {
       .first();
 
     const rombel = await MRombel.query()
+      .with("jurusan")
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ m_ta_id: ta.id })
       .andWhere({ id: rombel_id })
