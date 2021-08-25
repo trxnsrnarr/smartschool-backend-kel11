@@ -4177,13 +4177,15 @@ class MainController {
           .update({ dihapus: 0 });
 
         const checkAnggotaRombel = await MAnggotaRombel.query()
-          .where({ role: d.role })
-          .andWhere({ dihapus: 0 })
           .andWhere({ m_user_id: checkUser.toJSON().id })
           .andWhere({ m_rombel_id: m_rombel_id })
           .first();
 
         if (checkAnggotaRombel) {
+          await MAnggotaRombel.query()
+            .andWhere({ m_user_id: checkUser.toJSON().id })
+            .andWhere({ m_rombel_id: m_rombel_id })
+            .update({ dihapus: 0, role: d.role });
           return {
             message: `${d.nama} sudah terdaftar`,
             error: true,
