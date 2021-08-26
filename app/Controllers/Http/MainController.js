@@ -108,6 +108,7 @@ const TkMapelRapor = use("App/Models/TkMapelRapor");
 const MSurat = use("App/Models/MSurat");
 const MDisposisi = use("App/Models/MDisposisi");
 const MPelaporanDisposisi = use("App/Models/MPelaporanDisposisi");
+const MTemplateDeskripsi = use("App/Models/MTemplateDeskripsi");
 
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
@@ -14839,6 +14840,8 @@ class MainController {
 
     const user = await auth.getUser();
 
+    const { nav } = request.get();
+
     const pelajaran = await MMateri.query()
       .with("mataPelajaran")
       .where({ id: materi_id })
@@ -14888,6 +14891,106 @@ class MainController {
         return false;
       }
     });
+
+    if (nav == "template-deskripsi") {
+      const checkTemplate = await MTemplateNilai.query()
+        .where({ dihapus: 0 })
+        .andWhere({ m_mata_pelajaran_id: rekap.m_mata_pelajaran_id })
+        .first();
+
+      if (!checkTemplate) {
+        const predikat = await MPredikatNilai.query()
+          .where({ m_sekolah_id: sekolah.id })
+          .andWhere({ dihapus: 0 })
+          .fetch();
+
+        await Promise.all(
+          predikat.map(async (d) => {
+            if (d.predikan == "A") {
+              await MTemplateDeskripsi.create({
+                tipe: "Pengetahuan",
+                m_predikat_nilai: d.id,
+                m_mata_pelajaran_id: rekap.m_mata_pelajaran_id,
+                prolog:
+                  "Peserta didik dinyatakan telah mengetahui, memahami, mengimplementasikan dan menganalisis pengetahuan dengan sangat baik mengenai",
+                epilog: "Perlu ditingkatkan mengenai",
+              });
+              await MTemplateDeskripsi.create({
+                tipe: "Keterampilan",
+                m_predikat_nilai: d.id,
+                m_mata_pelajaran_id: rekap.m_mata_pelajaran_id,
+                prolog:
+                  "Peserta didik dinyatakan telah dapat mengetahui, menerapkan, menganalisis, dan mengeveluasi keterampilan dengan sangat baik mengenai",
+                epilog: "Perlu ditingkatkan mengenai",
+              });
+            } else if (d.predikan == "B") {
+              await MTemplateDeskripsi.create({
+                tipe: "Pengetahuan",
+                m_predikat_nilai: d.id,
+                m_mata_pelajaran_id: rekap.m_mata_pelajaran_id,
+                prolog:
+                  "Peserta didik dinyatakan telah mengetahui, memahami, mengimplementasikan dan menganalisis pengetahuan dengan baik mengenai",
+                epilog: "Perlu ditingkatkan mengenai",
+              });
+              await MTemplateDeskripsi.create({
+                tipe: "Keterampilan",
+                m_predikat_nilai: d.id,
+                m_mata_pelajaran_id: rekap.m_mata_pelajaran_id,
+                prolog:
+                  "Peserta didik dinyatakan telah dapat mengetahui, menerapkan, menganalisis, dan mengeveluasi keterampilan dengan baik mengenai",
+                epilog: "Perlu ditingkatkan mengenai",
+              });
+            } else if (d.predikan == "C") {
+              await MTemplateDeskripsi.create({
+                tipe: "Pengetahuan",
+                m_predikat_nilai: d.id,
+                m_mata_pelajaran_id: rekap.m_mata_pelajaran_id,
+                prolog:
+                  "Peserta didik dinyatakan telah mengetahui, memahami, mengimplementasikan dan menganalisis pengetahuan dengan cukup mengenai",
+                epilog: "Perlu ditingkatkan mengenai",
+              });
+              await MTemplateDeskripsi.create({
+                tipe: "Keterampilan",
+                m_predikat_nilai: d.id,
+                m_mata_pelajaran_id: rekap.m_mata_pelajaran_id,
+                prolog:
+                  "Peserta didik dinyatakan telah dapat mengetahui, menerapkan, menganalisis, dan mengeveluasi keterampilan dengan cukup mengenai",
+                epilog: "Perlu ditingkatkan mengenai",
+              });
+            } else if (d.predikan == "D") {
+              await MTemplateDeskripsi.create({
+                tipe: "Pengetahuan",
+                m_predikat_nilai: d.id,
+                m_mata_pelajaran_id: rekap.m_mata_pelajaran_id,
+                prolog:
+                  "Peserta didik dinyatakan telah mengetahui, memahami, mengimplementasikan dan menganalisis pengetahuan dengan kurang mengenai",
+                epilog: "Perlu ditingkatkan mengenai",
+              });
+              await MTemplateDeskripsi.create({
+                tipe: "Keterampilan",
+                m_predikat_nilai: d.id,
+                m_mata_pelajaran_id: rekap.m_mata_pelajaran_id,
+                prolog:
+                  "Peserta didik dinyatakan telah dapat mengetahui, menerapkan, menganalisis, dan mengeveluasi keterampilan dengan kurang mengenai",
+                epilog: "Perlu ditingkatkan mengenai",
+              });
+            }
+          })
+        );
+
+        await MTemplateDeskripsi.create({
+          tipe: "Sikap",
+          m_mata_pelajaran_id: rekap.m_mata_pelajaran_id,
+          prolog: "Peserta didik dinyatakan telah menunjukkan sikap - sikap",
+          epilog: "Perlu ditingkatkan mengenai",
+        });
+      }
+
+      dataTemplate = await MTemplateDeskripsi.query()
+        .with("predikat")
+        .where({ m_mata_pelajaran_id: rekap.m_mata_pelajaran_id })
+        .fetch();
+    }
 
     return response.ok({
       rekap,
@@ -18497,6 +18600,54 @@ class MainController {
 
     const ta = await this.getTAAktif(sekolah);
 
+    const checkPredikat = await MPredikatNilai.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .first();
+
+    if (!checkPredikat) {
+      await MPredikatNilai.create({
+        predikat: "A",
+        bb_pengetahuan: "86",
+        ba_pengetahuan: "100",
+        bb_keterampilan: "86",
+        ba_keterampilan: "100",
+        sikap: "Sangat Baik",
+        m_sekolah_id: sekolah.id,
+        dihapus: 0,
+      });
+      await MPredikatNilai.create({
+        predikat: "B",
+        bb_pengetahuan: "71",
+        ba_pengetahuan: "85",
+        bb_keterampilan: "71",
+        ba_keterampilan: "85",
+        sikap: "Baik",
+        m_sekolah_id: sekolah.id,
+        dihapus: 0,
+      });
+      await MPredikatNilai.create({
+        predikat: "C",
+        bb_pengetahuan: "56",
+        ba_pengetahuan: "70",
+        bb_keterampilan: "756",
+        ba_keterampilan: "70",
+        sikap: "Cukup",
+        m_sekolah_id: sekolah.id,
+        dihapus: 0,
+      });
+      await MPredikatNilai.create({
+        predikat: "D",
+        bb_pengetahuan: "0",
+        ba_pengetahuan: "55",
+        bb_keterampilan: "0",
+        ba_keterampilan: "55",
+        sikap: "Kurang",
+        m_sekolah_id: sekolah.id,
+        dihapus: 0,
+      });
+    }
+
     const predikat = await MPredikatNilai.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
@@ -18785,7 +18936,9 @@ class MainController {
 
     const materiRombel = await TkMateriRombel.query()
       .with("materi", (builder) => {
-        builder.with("mataPelajaran");
+        builder.with("mataPelajaran", (builder) => {
+          builder.where({ dihapus: 0 });
+        });
       })
       .where({ m_rombel_id: rombel_id })
       .fetch();
