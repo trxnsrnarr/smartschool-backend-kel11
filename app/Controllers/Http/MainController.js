@@ -14933,7 +14933,7 @@ class MainController {
         .fetch();
 
       await Promise.all(
-        predikat.map(async (d) => {
+        predikat.toJSON().map(async (d) => {
           if (d.predikan == "A") {
             await MTemplateDeskripsi.create({
               tipe: "Pengetahuan",
