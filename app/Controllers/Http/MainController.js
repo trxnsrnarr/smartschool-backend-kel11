@@ -13204,9 +13204,9 @@ class MainController {
       .withCount("riwayat as totalJumlah", (builder) => {
         builder.where({ dihapus: 0 });
       })
-      .where({ dihapus: 0 })
-      .andWhere({ m_user_id: user.id })
-      .andWhere({ id: pembayaran_siswa_id })
+      // .where({ dihapus: 0 })
+      // .andWhere({ m_user_id: user.id })
+      .where({ id: pembayaran_siswa_id })
       .first();
 
     const kontak = await MKontak.query()
