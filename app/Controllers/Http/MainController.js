@@ -14921,7 +14921,7 @@ class MainController {
       }
     });
 
-    const checkTemplate = await MTemplateNilai.query()
+    const checkTemplate = await MTemplateDeskripsi.query()
       .where({ dihapus: 0 })
       .andWhere({ m_mata_pelajaran_id: rekap.m_mata_pelajaran_id })
       .first();
@@ -14933,7 +14933,7 @@ class MainController {
         .fetch();
 
       await Promise.all(
-        predikat.map(async (d) => {
+        predikat.toJSON().map(async (d) => {
           if (d.predikan == "A") {
             await MTemplateDeskripsi.create({
               tipe: "Pengetahuan",
