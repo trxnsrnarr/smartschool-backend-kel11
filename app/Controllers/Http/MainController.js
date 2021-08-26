@@ -1361,6 +1361,10 @@ class MainController {
         dihapus: 0,
         avatar,
       });
+    } else {
+      const guru = await User.query()
+        .where({ id: check.toJSON().id })
+        .update({ dihapus: 0 });
     }
 
     return response.ok({
@@ -1618,12 +1622,30 @@ class MainController {
         });
       }
     } else if (m_rombel_id) {
-      const rombel = await MAnggotaRombel.create({
-        role: "Anggota",
-        dihapus: 0,
-        m_user_id: check.toJSON().id,
-        m_rombel_id: m_rombel_id,
-      });
+      const checkAnggotaRombel = await MAnggotaRombel.query()
+        .where({ m_rombel_id: m_rombel_id })
+        .andWhere({ m_user_id: check.toJSON().id })
+        .first();
+
+      if (!checkAnggotaRombel) {
+        const rombel = await MAnggotaRombel.create({
+          role: "Anggota",
+          dihapus: 0,
+          m_user_id: check.toJSON().id,
+          m_rombel_id: m_rombel_id,
+        });
+      } else {
+        const rombel = await MAnggotaRombel.query()
+          .where({ m_rombel_id: m_rombel_id })
+          .andWhere({ m_user_id: check.toJSON().id })
+          .update({
+            dihapus: 0,
+          });
+      }
+
+      const siswa = await User.query()
+        .where({ id: check.toJSON().id })
+        .update({ dihapus: 0 });
     }
 
     return response.ok({
@@ -4150,15 +4172,20 @@ class MainController {
 
           return;
         }
+        await User.query()
+          .where({ id: checkUser.toJSON().id })
+          .update({ dihapus: 0 });
 
         const checkAnggotaRombel = await MAnggotaRombel.query()
-          .where({ role: d.role })
-          .andWhere({ dihapus: 0 })
           .andWhere({ m_user_id: checkUser.toJSON().id })
           .andWhere({ m_rombel_id: m_rombel_id })
           .first();
 
         if (checkAnggotaRombel) {
+          await MAnggotaRombel.query()
+            .andWhere({ m_user_id: checkUser.toJSON().id })
+            .andWhere({ m_rombel_id: m_rombel_id })
+            .update({ dihapus: 0, role: d.role });
           return {
             message: `${d.nama} sudah terdaftar`,
             error: true,
@@ -8360,7 +8387,7 @@ class MainController {
           .where({ m_user_id: user.id })
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_dibuka", ">", hari_ini)
-          .orderBy("waktu_dibuka", "asc")
+          .orderBy("waktu_dibuka", "desc")
           .fetch();
       } else if (status == "berlangsung") {
         jadwalUjian = await MJadwalUjian.query()
@@ -8369,7 +8396,7 @@ class MainController {
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_dibuka", "<=", hari_ini)
           .andWhere("waktu_ditutup", ">=", hari_ini)
-          .orderBy("waktu_dibuka", "asc")
+          .orderBy("waktu_dibuka", "desc")
           .fetch();
       } else if (status == "sudah-selesai") {
         jadwalUjian = await MJadwalUjian.query()
@@ -8377,7 +8404,7 @@ class MainController {
           .where({ m_user_id: user.id })
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_ditutup", "<=", hari_ini)
-          .orderBy("waktu_dibuka", "asc")
+          .orderBy("waktu_dibuka", "desc")
           .paginate(page, 10);
       }
 
@@ -9039,7 +9066,7 @@ class MainController {
       kkm,
       waktu_dibuka,
       waktu_ditutup: moment(waktu_dibuka)
-        .add("minutes", durasi)
+        .add(durasi, "minutes")
         .format("YYYY-MM-DD HH:mm:ss"),
       durasi,
       gmeet,
@@ -9106,7 +9133,7 @@ class MainController {
         kkm,
         waktu_dibuka,
         waktu_ditutup: moment(waktu_dibuka)
-          .add("minutes", durasi)
+          .add(durasi, "minutes")
           .format("YYYY-MM-DD HH:mm:ss"),
         durasi,
         gmeet,
@@ -9671,7 +9698,7 @@ class MainController {
       jawaban_menjodohkan,
       jawaban_foto,
     } = request.post();
-    jawaban_esai = htmlEscaper.escape(jawaban_esai);
+    jawaban_esai = jawaban_esai ? htmlEscaper.escape(jawaban_esai) : "";
     jawaban_pg_kompleks = jawaban_pg_kompleks
       ? jawaban_pg_kompleks.toString()
       : null;
@@ -15667,9 +15694,12 @@ class MainController {
     let rekap;
 
     if (check) {
-      rekap = await TkRekapNilai.query().where({ m_user_id: user_id }).update({
-        nilai,
-      });
+      rekap = await TkRekapNilai.query()
+        .andWhere({ m_rekap_rombel_id: rekapnilai_id })
+        .where({ m_user_id: user_id })
+        .update({
+          nilai,
+        });
     } else {
       rekap = await TkRekapNilai.create({
         m_user_id: user_id,
@@ -15853,6 +15883,7 @@ class MainController {
         }
 
         if (checkUser) {
+          await User.query().where({ id: checkUser.id }).update({ dihapus: 0 });
           const checkProfil = await MProfilUser.query()
             .select("id")
             .where({ m_user_id: checkUser.id })
