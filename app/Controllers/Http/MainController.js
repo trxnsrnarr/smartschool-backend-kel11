@@ -19099,6 +19099,22 @@ class MainController {
 
     const { urutan, nama, kkm2, m_kategori_mapel_id } = request.post();
 
+    if (urutan) {
+      urutan.map((item) => {
+        const kategoriId = item.kategori_id;
+        item.mapel_ids.map(async (mapel, idx) => {
+          await TkMapelRapor.query()
+            .where({ id: mapel })
+            .update({
+              urutan: idx + 1,
+              m_kategori_mapel_id: kategoriId,
+            });
+        });
+      });
+      return response.ok({
+        message: messagePutSuccess,
+      });
+    }
     const mapelRapor = await TkMapelRapor.query()
       .where({ id: mapelRapor_id })
       .update({
