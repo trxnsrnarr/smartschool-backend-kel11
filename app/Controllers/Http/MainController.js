@@ -14922,8 +14922,7 @@ class MainController {
     });
 
     const checkTemplate = await MTemplateDeskripsi.query()
-      .where({ dihapus: 0 })
-      .andWhere({ m_mata_pelajaran_id: rekap.m_mata_pelajaran_id })
+      .where({ m_mata_pelajaran_id: rekap.m_mata_pelajaran_id })
       .first();
 
     if (!checkTemplate) {
@@ -15040,6 +15039,55 @@ class MainController {
       dataTemplateSikap,
       sikapsosial,
       tugas,
+    });
+  }
+
+  async putTemplateDeskripsi({
+    response,
+    request,
+    auth,
+    params: { template_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { prolog, epilog } = request.post();
+
+    const rules = {
+      prolog: "required",
+      epilog: "required",
+    };
+    const message = {
+      "prolog.required": "Prolog harus diisi",
+      "epilog.required": "Epilog harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const template = await MTemplateDeskripsi.query()
+      .where({ id: template_id })
+      .update({
+        prolog,
+        epilog,
+      });
+
+    if (!template) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
     });
   }
 
