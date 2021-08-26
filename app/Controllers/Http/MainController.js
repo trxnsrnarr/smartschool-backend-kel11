@@ -2128,7 +2128,16 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    const { tahun, semester, nama_kepsek, nip_kepsek, aktif } = request.post();
+    const {
+      tahun,
+      semester,
+      nama_kepsek,
+      nip_kepsek,
+      aktif,
+      tanggal_rapor,
+      tanggal_awal,
+      tanggal_akhir,
+    } = request.post();
     const rules = {
       tahun: "required",
       semester: "required",
@@ -2163,6 +2172,9 @@ class MainController {
       nama_kepsek,
       nip_kepsek,
       aktif,
+      tanggal_awal,
+      tanggal_rapor,
+      tanggal_akhir,
       m_sekolah_id: sekolah.id,
       dihapus: 0,
     });
@@ -2420,7 +2432,16 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    const { tahun, semester, nama_kepsek, nip_kepsek, aktif } = request.post();
+    const {
+      tahun,
+      semester,
+      nama_kepsek,
+      nip_kepsek,
+      aktif,
+      tanggal_awal,
+      tanggal_rapor,
+      tanggal_akhir,
+    } = request.post();
     const rules = {
       tahun: "required",
       semester: "required",
@@ -2455,6 +2476,9 @@ class MainController {
       nama_kepsek,
       nip_kepsek,
       aktif,
+      tanggal_awal,
+      tanggal_rapor,
+      tanggal_akhir,
     });
 
     if (!ta) {
@@ -15879,6 +15903,22 @@ class MainController {
           m_ta_id: ta.id,
         });
       }
+    } else if (check.toJSON().rekapRombel.rekap.teknik == "US") {
+      if (checkData) {
+        await MUjianSiswa.query()
+          .where({ m_user_id: user_id })
+          .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
+          .update({
+            us_id: rekap.id,
+          });
+      } else {
+        await MUjianSiswa.create({
+          m_user_id: user_id,
+          m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
+          us_id: rekap.id,
+          m_ta_id: ta.id,
+        });
+      }
     }
     if (!rekap) {
       return response.ok({
@@ -18568,6 +18608,7 @@ class MainController {
                   builder.where({ m_user_id: user_id });
                 });
               })
+              .orderBy("urutan", "asc")
               .where({ dihapus: 0 });
           })
           .where({ dihapus: 0 })
@@ -18782,7 +18823,10 @@ class MainController {
 
     const kategoriMapel = await MKategoriMapel.query()
       .with("mapelRapor", (builder) => {
-        builder.with("mataPelajaran").where({ dihapus: 0 });
+        builder
+          .with("mataPelajaran")
+          .where({ dihapus: 0 })
+          .orderBy("urutan", "asc");
       })
       .where({ dihapus: 0 })
       .andWhere({ m_rombel_id: rombel_id })
@@ -19605,7 +19649,8 @@ class MainController {
               builder.where({ m_user_id: user_id });
             });
           })
-          .where({ dihapus: 0 });
+          .where({ dihapus: 0 })
+          .orderBy("urutan", "asc");
       })
       .where({ dihapus: 0 })
       .andWhere({ m_rombel_id: rombel_id })
