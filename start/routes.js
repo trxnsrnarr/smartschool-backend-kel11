@@ -191,6 +191,10 @@ Route.post(
   "/riwayat-pembayaran-siswa",
   "MainController.postRiwayatPembayaranSiswa"
 );
+Route.put(
+  "/riwayat-pembayaran-siswa/:riwayat_pembayaran_siswa_id",
+  "MainController.putRiwayatPembayaranSiswa"
+);
 
 // pembayaran kategori
 Route.post("/pembayaran-kategori", "MainController.postPembayaranKategori");
@@ -693,7 +697,6 @@ Route.post("/surel-arsip", "MainController.postFolderArsip");
 Route.put("/surel-arsip/:arsip_id", "MainController.putFolderArsip");
 Route.delete("/surel-arsip/:arsip_id", "MainController.deleteFolderArsip");
 Route.get("/surel-arsip/:arsip_id", "MainController.detailArsipSurel");
-
 
 // SARPRAS SERVICE
 // barang Service
