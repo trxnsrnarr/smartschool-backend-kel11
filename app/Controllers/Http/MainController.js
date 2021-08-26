@@ -14921,7 +14921,7 @@ class MainController {
       }
     });
 
-    if (nav == "template-deskripsi") {
+    
       const checkTemplate = await MTemplateNilai.query()
         .where({ dihapus: 0 })
         .andWhere({ m_mata_pelajaran_id: rekap.m_mata_pelajaran_id })
@@ -15015,15 +15015,16 @@ class MainController {
         });
       }
 
-      dataTemplate = await MTemplateDeskripsi.query()
+     const dataTemplate = await MTemplateDeskripsi.query()
         .with("predikat")
         .where({ m_mata_pelajaran_id: rekap.m_mata_pelajaran_id })
         .fetch();
-    }
+    
 
     return response.ok({
       rekap,
       materirombel: rombel,
+      dataTemplate,
       sikapsosial,
       tugas,
     });
