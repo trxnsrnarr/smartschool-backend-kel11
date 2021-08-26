@@ -15822,6 +15822,7 @@ class MainController {
       data.map(async (d) => {
         const checkUser = await User.query()
           .where({ whatsapp: d.whatsapp })
+          .andWhere({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
           .first();
 
