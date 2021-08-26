@@ -192,6 +192,10 @@ Route.post(
   "/riwayat-pembayaran-siswa",
   "MainController.postRiwayatPembayaranSiswa"
 );
+Route.put(
+  "/riwayat-pembayaran-siswa/:riwayat_pembayaran_siswa_id",
+  "MainController.putRiwayatPembayaranSiswa"
+);
 
 // pembayaran kategori
 Route.post("/pembayaran-kategori", "MainController.postPembayaranKategori");

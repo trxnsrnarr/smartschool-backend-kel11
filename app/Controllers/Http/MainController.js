@@ -13393,7 +13393,7 @@ class MainController {
 
     const kontak = await MKontak.query()
       .where({
-        m_sekolah_id: sekolah.id,
+        m_sekolah_id: 13,
       })
       .first();
 
@@ -13412,8 +13412,6 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
-
-    const user = await auth.getUser();
 
     let { bank, norek, nama_pemilik, nominal, bukti, m_pembayaran_siswa_id } =
       request.post();
@@ -13447,6 +13445,37 @@ class MainController {
       m_pembayaran_siswa_id: +m_pembayaran_siswa_id,
       dihapus: 0,
     });
+
+    return response.ok(pembayaran);
+  }
+
+  async putRiwayatPembayaranSiswa({
+    response,
+    request,
+    params: { riwayat_pembayaran_siswa_id },
+    auth,
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    if (user.role != "admin" && user.m_sekolah_id != sekolah.id) {
+      return response.forbidden({ message: messageForbidden });
+    }
+
+    let { dikonfirmasi } = request.post();
+
+    const pembayaran = await MRiwayatPembayaranSiswa.query()
+      .where({ id: riwayat_pembayaran_siswa_id })
+      .update({
+        dikonfirmasi,
+      });
 
     return response.ok(pembayaran);
   }
