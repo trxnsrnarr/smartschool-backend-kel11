@@ -526,6 +526,10 @@ Route.post(
   "MainController.postRekapSikap"
 );
 Route.put("/rekap/:materi_id/:rekap_id", "MainController.putRekap");
+Route.put(
+  "/rekap-template/:template_id",
+  "MainController.putTemplateDeskripsi"
+);
 Route.delete("/rekap/:materi_id/:rekap_id", "MainController.deleteRekap");
 Route.get(
   "/rekap/:materi_id/rombel/:rekapnilai_id",
