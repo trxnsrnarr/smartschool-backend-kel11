@@ -13386,9 +13386,9 @@ class MainController {
       .withCount("riwayat as totalJumlah", (builder) => {
         builder.where({ dihapus: 0 });
       })
-      .where({ dihapus: 0 })
-      .andWhere({ m_user_id: user.id })
-      .andWhere({ id: pembayaran_siswa_id })
+      // .where({ dihapus: 0 })
+      // .andWhere({ m_user_id: user.id })
+      .where({ id: pembayaran_siswa_id })
       .first();
 
     const kontak = await MKontak.query()
@@ -16228,6 +16228,7 @@ class MainController {
       data.map(async (d) => {
         const checkUser = await User.query()
           .where({ whatsapp: d.whatsapp })
+          .andWhere({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
           .first();
 
