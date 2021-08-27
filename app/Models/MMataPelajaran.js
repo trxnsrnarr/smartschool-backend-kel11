@@ -27,6 +27,14 @@ class MMataPelajaran extends Model {
       "m_mata_pelajaran_id"
     );
   }
+
+  templateDeskripsi() {
+    return this.hasMany(
+      "App/Models/MTemplateDeskripsi",
+      "id",
+      "m_mata_pelajaran_id"
+    );
+  }
 }
 
 module.exports = MMataPelajaran;
