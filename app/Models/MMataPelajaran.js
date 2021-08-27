@@ -20,6 +20,10 @@ class MMataPelajaran extends Model {
     return this.hasMany("App/Models/MUjianSiswa", "id", "m_mata_pelajaran_id");
   }
 
+  materi() {
+    return this.belongsTo("App/Models/MMateri", "id", "m_mata_pelajaran_id");
+  }
+
   nilaiIndividu() {
     return this.belongsTo(
       "App/Models/MUjianSiswa",
