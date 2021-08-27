@@ -19818,7 +19818,7 @@ class MainController {
         jumlah1 += d.nilai;
       });
     const data1 = result2.filter((d) => d != null);
-    const proyek = jumlah / data1.length;
+    const proyek = jumlah1 / data1.length;
 
     const rekapPortofolio = await TkRekapNilai.query()
       .with("rekapRombel", (builder) => {
@@ -19846,7 +19846,7 @@ class MainController {
         jumlah2 += d.nilai;
       });
     const data2 = result3.filter((d) => d != null);
-    const portofolio = jumlah / data2.length;
+    const portofolio = jumlah2 / data2.length;
 
     const rekapProduk = await TkRekapNilai.query()
       .with("rekapRombel", (builder) => {
@@ -19874,7 +19874,7 @@ class MainController {
         jumlah3 += d.nilai;
       });
     const data3 = result4.filter((d) => d != null);
-    const produk = jumlah / data3.length;
+    const produk = jumlah3 / data3.length;
 
     const nilaiAkhirKeterampilan = await MUjianSiswa.query()
       .where({ m_user_id: user_id })
