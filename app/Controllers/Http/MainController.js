@@ -18812,23 +18812,6 @@ class MainController {
           .andWhere({ dihapus: 0 })
           .first();
 
-        const muatan = await MKategoriMapel.query()
-          .with("mapelRapor", (builder) => {
-            builder
-              .with("mataPelajaran", (builder) => {
-                builder
-                  .with("nilaiIndividu", (builder) => {
-                    builder.where({ m_user_id: user_id });
-                  })
-                  .with("templateDeskripsi");
-              })
-              .orderBy("urutan", "asc")
-              .where({ dihapus: 0 });
-          })
-          .where({ dihapus: 0 })
-          .andWhere({ m_rombel_id: rombel_id })
-          .fetch();
-
         const nilaiTertinggi = await TkRekapNilai.query()
           .with("rekapRombel", (builder) => {
             builder.with("rekap", (builder) => {
@@ -18917,14 +18900,136 @@ class MainController {
 
         const dataRekapMaxKeterampilan = dataRekapMax1Keterampilan[0];
 
-        // const result = await Promise.all(
-        //   rekapMax.map(async (d) => {
-        //     if (d.rekapRombel.rekap == null) {
-        //       return;
-        //     }
-        //     return d;
-        //   })
-        // );
+        const nilaiTerendah = await TkRekapNilai.query()
+          .with("rekapRombel", (builder) => {
+            builder.with("rekap", (builder) => {
+              builder
+                .where({ tipe: "tugas" })
+                .andWhere({ m_ta_id: d.id })
+                .andWhere({ dihapus: 0 });
+            });
+          })
+          .where({ m_user_id: user_id })
+          .orderBy("id", "asc")
+          .fetch();
+
+        const dataNilaiTerendah = nilaiTerendah
+          .toJSON()
+          .filter((d) => d.rekapRombel.rekap != null);
+
+        const nilaiMin = dataNilaiTerendah[0] ? dataNilaiTerendah[0].nilai : 0;
+
+        const rekapTerendah = await MRekap.query()
+          .with("rekapRombelSendiri", (builder) => {
+            builder
+              .with("rekapNilaiSendiri", (builder) => {
+                builder
+                  .where({ m_user_id: user_id })
+                  .andWhere({ nilai: nilaiMin });
+              })
+              .where({ m_rombel_id: rombel_id });
+          })
+          .where({ m_ta_id: d.id })
+          .andWhere({ dihapus: 0 })
+          .fetch();
+
+        const dataRekapFilter1Terendah = rekapTerendah
+          .toJSON()
+          .filter((d) => d.rekapRombelSendiri != null);
+        const dataRekapMin1 = dataRekapFilter1Terendah.filter(
+          (d) => d.rekapRombelSendiri.rekapNilaiSendiri != null
+        );
+
+        const dataRekapMin = dataRekapMin1[0];
+
+        const nilaiTerendahKeterampilan = await TkRekapNilai.query()
+          .with("rekapRombel", (builder) => {
+            builder.with("rekap", (builder) => {
+              builder
+                .where({ tipe: "keterampulan" })
+                .andWhere({ m_ta_id: d.id })
+                .andWhere({ dihapus: 0 });
+            });
+          })
+          .where({ m_user_id: user_id })
+          .orderBy("id", "asc")
+          .fetch();
+
+        const dataNilaiTerendahKeterampilan = nilaiTerendahKeterampilan
+          .toJSON()
+          .filter((d) => d.rekapRombel.rekap != null);
+
+        const nilaiMinKeterampilan = dataNilaiTerendahKeterampilan[0]
+          ? dataNilaiTerendahKeterampilan[0].nilai
+          : 0;
+
+        const rekapKeterampilanTerendah = await MRekap.query()
+          .with("rekapRombelSendiri", (builder) => {
+            builder
+              .with("rekapNilaiSendiri", (builder) => {
+                builder
+                  .where({ m_user_id: user_id })
+                  .andWhere({ nilai: nilaiMinKeterampilan });
+              })
+              .where({ m_rombel_id: rombel_id });
+          })
+          .where({ m_ta_id: d.id })
+          .andWhere({ dihapus: 0 })
+          .fetch();
+
+        const dataRekapFilter1KeterampilanTerendah = rekapKeterampilanTerendah
+          .toJSON()
+          .filter((d) => d.rekapRombelSendiri != null);
+        const dataRekapMin1Keterampilan =
+          dataRekapFilter1KeterampilanTerendah.filter(
+            (d) => d.rekapRombelSendiri.rekapNilaiSendiri != null
+          );
+
+        const dataRekapMinKeterampilan = dataRekapMin1Keterampilan[0];
+
+        const muatan = await MKategoriMapel.query()
+          .with("mapelRapor", (builder) => {
+            builder
+              .with("mataPelajaran", (builder) => {
+                builder
+                  .with("nilaiIndividu", (builder) => {
+                    builder.where({ m_user_id: user_id });
+                  })
+                  .with("templateDeskripsi")
+                  .with("materi", (builder) => {
+                    builder
+                      .with("rekapMaxPengetahuan", (builder) => {
+                        builder.where({
+                          id: dataRekapMax ? dataRekapMax.id : 0,
+                        });
+                      })
+                      .with("rekapMinPengetahuan", (builder) => {
+                        builder.where({
+                          id: dataRekapMin ? dataRekapMin.id : 0,
+                        });
+                      })
+                      .with("rekapMaxKeterampilan", (builder) => {
+                        builder.where({
+                          id: dataRekapMaxKeterampilan
+                            ? dataRekapMaxKeterampilan.id
+                            : 0,
+                        });
+                      })
+                      .with("rekapMinKeterampilan", (builder) => {
+                        builder.where({
+                          id: dataRekapMinKeterampilan
+                            ? dataRekapMinKeterampilan.id
+                            : 0,
+                        });
+                      });
+                  });
+              })
+              .orderBy("urutan", "asc")
+              .where({ dihapus: 0 });
+          })
+          .where({ dihapus: 0 })
+          .andWhere({ m_rombel_id: rombel_id })
+          .fetch();
 
         // const ulangan = await TkPesertaUjian.query()
         //   .with("jadwalUjian", (builder) => {
@@ -19045,6 +19150,8 @@ class MainController {
           // materiRombel: materiRombel,
           dataRekapMaxKeterampilan,
           dataRekapMax,
+          dataRekapMinKeterampilan,
+          dataRekapMin,
           muatan,
           predikat: predikat,
           rombel: rombelData,
