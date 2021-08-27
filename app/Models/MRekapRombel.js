@@ -9,7 +9,11 @@ class MRekapRombel extends Model {
   }
 
   rekapnilai() {
-    return this.hasMany("App/Models/TkRekapNilai");
+    return this.hasMany("App/Models/TkRekapNilai", "id", "m_rekap_rombel_id");
+  }
+
+  rekapNilaiSendiri() {
+    return this.belongsTo("App/Models/TkRekapNilai", "id", "m_rekap_rombel_id");
   }
 
   tugas() {
