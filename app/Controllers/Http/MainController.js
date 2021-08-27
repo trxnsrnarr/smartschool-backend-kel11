@@ -18900,7 +18900,7 @@ class MainController {
               .with("rekapNilaiSendiri", (builder) => {
                 builder
                   .where({ m_user_id: user_id })
-                  .andWhere({ nilai: nilaiMax });
+                  .andWhere({ nilai: nilaiMaxKeterampilan });
               })
               .where({ m_rombel_id: rombel_id });
           })
