@@ -17,14 +17,18 @@ class MTemplateDeskripsiSchema extends Schema {
         .references("m_mata_pelajaran.id")
         .onDelete("cascade")
         .onUpdate("cascade");
-      table.string("a_prolog");
-      table.string("a_epilog");
-      table.string("b_prolog");
-      table.string("b_epilog");
-      table.string("c_prolog");
-      table.string("c_epilog");
-      table.string("d_prolog");
-      table.string("d_epilog");
+      table
+        .integer("m_predikat_nilai_id")
+        .unsigned()
+        .index("m_predikat_nilai_id");
+      table
+        .foreign("m_predikat_nilai_id")
+        .references("m_predikat_nilai.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
+      table.string("prolog");
+      table.string("epilog");
+      table.boolean("dihapus");
       table.timestamps();
     });
   }
