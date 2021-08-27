@@ -15669,15 +15669,8 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const {
-      di_ss,
-      judul,
-      tanggal,
-      m_tugas_id,
-      m_rombel_id,
-      m_rekap_id,
-      teknik,
-    } = request.post();
+    const { di_ss, judul, tanggal, m_tugas_id, m_rombel_id, m_rekap_id } =
+      request.post();
 
     let rekap;
     let tugasdata;
@@ -15695,29 +15688,6 @@ class MainController {
         judul: tugasdata.toJSON().tugas.judul,
         tanggal,
         m_tugas_id: m_tugas_id,
-        m_rombel_id,
-        m_rekap_id: rekapnilai_id,
-        dihapus: 0,
-      });
-    } else if (teknik) {
-      const rules = {
-        judul: "required",
-        tanggal: "required",
-      };
-      const message = {
-        "tugas.required": "Judul TUgas Harus Diisi",
-        "tanggal.required": "Tanggal Tugas harus diisi",
-      };
-      const validation = await validate(request.all(), rules, message);
-      if (validation.fails()) {
-        return response.unprocessableEntity(validation.messages());
-      }
-      rekap = await MRekapRombel.create({
-        di_ss: 0,
-        judul,
-        tanggal,
-        teknik,
-        m_tugas_id: null,
         m_rombel_id,
         m_rekap_id: rekapnilai_id,
         dihapus: 0,
@@ -15861,7 +15831,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { judul, tanggal, m_tugas_id, teknik } = request.post();
+    const { judul, tanggal, m_tugas_id } = request.post();
 
     let rekap;
     if (m_tugas_id) {
@@ -15897,7 +15867,6 @@ class MainController {
         di_ss: 0,
         judul,
         tanggal,
-        teknik,
         m_tugas_id: null,
         dihapus: 0,
       });
@@ -18847,9 +18816,11 @@ class MainController {
           .with("mapelRapor", (builder) => {
             builder
               .with("mataPelajaran", (builder) => {
-                builder.with("nilaiIndividu", (builder) => {
-                  builder.where({ m_user_id: user_id });
-                });
+                builder
+                  .with("nilaiIndividu", (builder) => {
+                    builder.where({ m_user_id: user_id });
+                  })
+                  .with("templateDeskripsi");
               })
               .orderBy("urutan", "asc")
               .where({ dihapus: 0 });
@@ -18857,6 +18828,103 @@ class MainController {
           .where({ dihapus: 0 })
           .andWhere({ m_rombel_id: rombel_id })
           .fetch();
+
+        const nilaiTertinggi = await TkRekapNilai.query()
+          .with("rekapRombel", (builder) => {
+            builder.with("rekap", (builder) => {
+              builder
+                .where({ tipe: "tugas" })
+                .andWhere({ m_ta_id: d.id })
+                .andWhere({ dihapus: 0 });
+            });
+          })
+          .where({ m_user_id: user_id })
+          .orderBy("id", "desc")
+          .fetch();
+
+        const dataNilaiTertinggi = nilaiTertinggi
+          .toJSON()
+          .filter((d) => d.rekapRombel.rekap != null);
+
+        const nilaiMax = dataNilaiTertinggi[0]
+          ? dataNilaiTertinggi[0].nilai
+          : 0;
+
+        const rekap = await MRekap.query()
+          .with("rekapRombelSendiri", (builder) => {
+            builder
+              .with("rekapNilaiSendiri", (builder) => {
+                builder
+                  .where({ m_user_id: user_id })
+                  .andWhere({ nilai: nilaiMax });
+              })
+              .where({ m_rombel_id: rombel_id });
+          })
+          .where({ m_ta_id: d.id })
+          .andWhere({ dihapus: 0 })
+          .fetch();
+
+        const dataRekapFilter1 = rekap
+          .toJSON()
+          .filter((d) => d.rekapRombelSendiri != null);
+        const dataRekapMax1 = dataRekapFilter1.filter(
+          (d) => d.rekapRombelSendiri.rekapNilaiSendiri != null
+        );
+
+        const dataRekapMax = dataRekapMax1[0];
+
+        const nilaiTertinggiKeterampilan = await TkRekapNilai.query()
+          .with("rekapRombel", (builder) => {
+            builder.with("rekap", (builder) => {
+              builder
+                .where({ tipe: "keterampulan" })
+                .andWhere({ m_ta_id: d.id })
+                .andWhere({ dihapus: 0 });
+            });
+          })
+          .where({ m_user_id: user_id })
+          .orderBy("id", "desc")
+          .fetch();
+
+        const dataNilaiTertinggiKeterampilan = nilaiTertinggiKeterampilan
+          .toJSON()
+          .filter((d) => d.rekapRombel.rekap != null);
+
+        const nilaiMaxKeterampilan = dataNilaiTertinggiKeterampilan[0]
+          ? dataNilaiTertinggiKeterampilan[0].nilai
+          : 0;
+
+        const rekapKeterampilan = await MRekap.query()
+          .with("rekapRombelSendiri", (builder) => {
+            builder
+              .with("rekapNilaiSendiri", (builder) => {
+                builder
+                  .where({ m_user_id: user_id })
+                  .andWhere({ nilai: nilaiMax });
+              })
+              .where({ m_rombel_id: rombel_id });
+          })
+          .where({ m_ta_id: d.id })
+          .andWhere({ dihapus: 0 })
+          .fetch();
+
+        const dataRekapFilter1Keterampilan = rekapKeterampilan
+          .toJSON()
+          .filter((d) => d.rekapRombelSendiri != null);
+        const dataRekapMax1Keterampilan = dataRekapFilter1Keterampilan.filter(
+          (d) => d.rekapRombelSendiri.rekapNilaiSendiri != null
+        );
+
+        const dataRekapMaxKeterampilan = dataRekapMax1Keterampilan[0];
+
+        // const result = await Promise.all(
+        //   rekapMax.map(async (d) => {
+        //     if (d.rekapRombel.rekap == null) {
+        //       return;
+        //     }
+        //     return d;
+        //   })
+        // );
 
         // const ulangan = await TkPesertaUjian.query()
         //   .with("jadwalUjian", (builder) => {
@@ -18975,6 +19043,9 @@ class MainController {
           ta: taa,
           sekolah: sekolah,
           // materiRombel: materiRombel,
+          dataRekapMaxKeterampilan,
+          dataRekapMax,
+          muatan,
           predikat: predikat,
           rombel: rombelData,
           ekskul: ekskul,
@@ -18984,7 +19055,6 @@ class MainController {
           totalAlpa: totalAlpa,
           tanggalDistinct: tanggalDistinct,
           // ulangan: ulangan,
-          muatan,
         };
       })
     );
