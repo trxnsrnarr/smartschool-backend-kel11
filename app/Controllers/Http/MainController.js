@@ -2774,9 +2774,6 @@ class MainController {
       .where({ m_sekolah_id: sekolah.id })
       .fetch();
 
-    const sikapsosial = await MSikapSosial.query().fetch();
-    const sikapspiritual = await MSikapSpiritual.query().fetch();
-
     const { rombel_id, kode_hari } = request.get();
 
     let jadwalMengajar;
@@ -2785,6 +2782,9 @@ class MainController {
     let checkAbsensi = [];
     let judulTugas;
     let rekap;
+
+    const sikapsosial = await MSikapSosial.query().fetch();
+    const sikapspiritual = await MSikapSpiritual.query().fetch();
 
     const data = await MJadwalMengajar.query()
       .where({ id: jadwal_mengajar_id })
@@ -2805,7 +2805,7 @@ class MainController {
         .with("mataPelajaran")
         .with("rombel", (builder) => {
           builder.with("anggotaRombel", (builder) => {
-            builder.where({ dihapus: 0 }).with("user", (builder) => {
+            builder.where({ dihapus: 0 }).with("user", async (builder) => {
               builder
                 .with("keteranganRapor", (builder) => {
                   builder.where({ dihapus: 0 });
@@ -2824,22 +2824,26 @@ class MainController {
                   builder.where({ dihapus: 0 });
                 })
                 .with("nilaiUjian")
-                .withCount("nilaiUjian as kkmPengetahuan", (builder) => {
-                  builder.where(
-                    "nilai",
-                    "<",
-                    `${kkm.toJSON().mataPelajaran.kkm}`
-                  );
-                })
-                .withCount("nilaiUjian as kkmKeterampilan", (builder) => {
-                  builder.where("nilai_keterampilan", "<", `${kkm.kkm2}`);
-                })
                 .withCount(
                   "nilaiSemuaUjian as jumlahMapelDikerjakan",
                   (builder) => {
                     builder.andWhere({ m_ta_id: ta.id });
                   }
                 );
+
+                  if(kkm) {
+                    await jadwalMengajar
+                      .withCount("nilaiUjian as kkmPengetahuan", (builder) => {
+                        builder.where(
+                          "nilai",
+                          "<",
+                          `${kkm.mataPelajaran.kkm}`
+                        );
+                      })
+                      .withCount("nilaiUjian as kkmKeterampilan", (builder) => {
+                        builder.where("nilai_keterampilan", "<", `${kkm.kkm2}`);
+                      })
+                  }
             });
           });
         })
@@ -2852,7 +2856,7 @@ class MainController {
         })
         .with("rombel", (builder) => {
           builder.with("anggotaRombel", (builder) => {
-            builder.where({ dihapus: 0 }).with("user", (builder) => {
+            builder.where({ dihapus: 0 }).with("user", async (builder) => {
               builder
                 .with("keteranganRapor", (builder) => {
                   builder.where({ dihapus: 0 });
@@ -2873,22 +2877,26 @@ class MainController {
                   builder.where({ dihapus: 0 });
                 })
                 .with("nilaiUjian")
-                .withCount("nilaiSemuaUjian as kkmPengetahuan", (builder) => {
-                  builder
-                    .where("nilai", "<", `${kkm.toJSON().mataPelajaran.kkm}`)
-                    .andWhere({ m_ta_id: ta.id });
-                })
-                .withCount("nilaiSemuaUjian as kkmKeterampilan", (builder) => {
-                  builder
-                    .where("nilai_keterampilan", "<", `${kkm.kkm2}`)
-                    .andWhere({ m_ta_id: ta.id });
-                })
                 .withCount(
                   "nilaiSemuaUjian as jumlahMapelDikerjakan",
                   (builder) => {
                     builder.andWhere({ m_ta_id: ta.id });
                   }
                 );
+
+                  if(kkm) {
+                    await jadwalMengajar
+                      .withCount("nilaiSemuaUjian as kkmPengetahuan", (builder) => {
+                        builder
+                          .where("nilai", "<", `${kkm.mataPelajaran.kkm}`)
+                          .andWhere({ m_ta_id: ta.id });
+                      })
+                      .withCount("nilaiSemuaUjian as kkmKeterampilan", (builder) => {
+                        builder
+                          .where("nilai_keterampilan", "<", `${kkm.kkm2}`)
+                          .andWhere({ m_ta_id: ta.id });
+                      })
+                  }
             });
           });
         })
