@@ -2782,23 +2782,11 @@ class MainController {
     let checkAbsensi = [];
     let judulTugas;
     let rekap;
-
-    const sikapsosial = await MSikapSosial.query().fetch();
-    const sikapspiritual = await MSikapSpiritual.query().fetch();
-
-    const data = await MJadwalMengajar.query()
-      .where({ id: jadwal_mengajar_id })
-      .first();
-
-    const kkm = await TkMapelRapor.query()
-      .with("mataPelajaran")
-      .where({ dihapus: 0 })
-      .andWhere({ m_mata_pelajaran_id: data.m_mata_pelajaran_id })
-      .first();
-
-    const totalMapel = await TkMateriRombel.query()
-      .where({ m_rombel_id: data.m_rombel_id })
-      .count("* as total");
+    let data
+    let kkm
+    let totalMapel
+    let sikapsosial
+    let sikapspiritual
 
     if (rombel_id) {
       jadwalMengajar = await MJadwalMengajar.query()
@@ -2830,26 +2818,33 @@ class MainController {
                     builder.andWhere({ m_ta_id: ta.id });
                   }
                 );
-
-                  if(kkm) {
-                    await jadwalMengajar
-                      .withCount("nilaiUjian as kkmPengetahuan", (builder) => {
-                        builder.where(
-                          "nilai",
-                          "<",
-                          `${kkm.mataPelajaran.kkm}`
-                        );
-                      })
-                      .withCount("nilaiUjian as kkmKeterampilan", (builder) => {
-                        builder.where("nilai_keterampilan", "<", `${kkm.kkm2}`);
-                      })
-                  }
             });
           });
         })
         .where({ m_rombel_id: rombel_id })
         .first();
     } else {
+      data = await MJadwalMengajar.query()
+      .where({ id: jadwal_mengajar_id })
+      .first();
+
+      if(data) {
+        kkm = await TkMapelRapor.query()
+          .with("mataPelajaran")
+          .where({ dihapus: 0 })
+          .andWhere({ m_mata_pelajaran_id: data.m_mata_pelajaran_id })
+          .first();
+    
+        totalMapel = await TkMateriRombel.query()
+          .where({ m_rombel_id: data.m_rombel_id })
+          .count("* as total");
+
+      }
+
+
+       sikapsosial = await MSikapSosial.query().fetch();
+     sikapspiritual = await MSikapSpiritual.query().fetch();
+
       jadwalMengajar = await MJadwalMengajar.query()
         .with("mataPelajaran", (builder) => {
           builder.with("user");
