@@ -112,6 +112,10 @@ Route.delete(
   "/rapor-sikap/spiritual/:user_id",
   "MainController.deleteRaporSikapSpiritual"
 );
+Route.get(
+  "/rombel/:rombel_id/nilai/:user_id",
+  "MainController.detailRombelWalas"
+);
 // Route.get("/rombel/rapor/:user_id", "MainController.getRombelRapor");
 // anggota rombel
 Route.post("/anggota-rombel", "MainController.postAnggotaRombel");

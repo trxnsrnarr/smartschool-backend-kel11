@@ -427,7 +427,7 @@ class MainController {
 
     const res = await User.query()
       .select("nama", "whatsapp", "role")
-      .where({ whatsapp })
+      .where({ whatsapp: `${whatsapp}` })
       .andWhere({ m_sekolah_id: sekolah.id })
       .first();
 
@@ -3036,8 +3036,7 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
-    const sikapsosial = await MSikapSosial.query().fetch();
-    const sikapspiritual = await MSikapSpiritual.query().fetch();
+
     const ta = await Mta.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ aktif: 1 })
@@ -3049,25 +3048,10 @@ class MainController {
       [`${ta.tanggal_awal}`, `${ta.tanggal_akhir}`]
     );
 
+    const sikapsosial = await MSikapSosial.query().fetch();
+    const sikapspiritual = await MSikapSpiritual.query().fetch();
+
     const siswa = await User.query()
-      .with("profil")
-      .with("keteranganRapor")
-      .with("keteranganPkl")
-      .with("raporEkskul", (builder) => {
-        builder.with("rombel", (builder) => {
-          builder.select("id", "nama");
-        });
-      })
-      .with("prestasi", (builder) => {
-        builder.with("tingkatPrestasi").where({ dihapus: 0 });
-      })
-      .with("sikap", (builder) => {
-        builder
-          .with("ditingkatkanSosial")
-          .with("ditunjukkanSosial")
-          .with("ditingkatkanSpiritual")
-          .with("ditunjukkanSpiritual");
-      })
       .where({ id: user_id })
       .andWhere({ dihapus: 0 })
       .first();
@@ -3076,9 +3060,13 @@ class MainController {
       .with("mapelRapor", (builder) => {
         builder
           .with("mataPelajaran", (builder) => {
-            builder.with("nilaiIndividu", (builder) => {
-              builder.where({ m_user_id: user_id });
-            });
+            builder
+              .with("nilaiIndividu", (builder) => {
+                builder.where({ m_user_id: user_id });
+              })
+              .with("sikapSiswa", (builder) => {
+                builder.with("predikat").where({ m_user_id: user_id });
+              });
           })
           .where({ dihapus: 0 })
           .orderBy("urutan", "asc");
@@ -3104,36 +3092,6 @@ class MainController {
       .where({ id: rombel_id })
       .first();
 
-    const ekskul = await MRombel.query()
-      .with("anggotaRombel", (builder) => {
-        builder.where({ dihapus: 0 }).andWhere({ m_user_id: user_id });
-      })
-      .where({ kelompok: "ekskul" })
-      .andWhere({ dihapus: 0 })
-      .fetch();
-
-    const totalHadir = await MAbsen.query()
-      .with("user")
-      .whereBetween("created_at", [`${ta.tanggal_awal}`, `${ta.tanggal_akhir}`])
-      .andWhere({ keterangan: "hadir" })
-      .andWhere({ m_user_id: user_id })
-      .count("* as total");
-    const totalSakit = await MAbsen.query()
-      .with("user")
-      .whereBetween("created_at", [`${ta.tanggal_awal}`, `${ta.tanggal_akhir}`])
-      .andWhere({ keterangan: "sakit" })
-      .andWhere({ m_user_id: user_id })
-      .count("* as total");
-    const totalIzin = await MAbsen.query()
-      .with("user")
-      .whereBetween("created_at", [`${ta.tanggal_awal}`, `${ta.tanggal_akhir}`])
-      .andWhere({ keterangan: "izin" })
-      .andWhere({ m_user_id: user_id })
-      .count("* as total");
-    const totalAlpa =
-      user_id.length -
-      (totalHadir[0].total + totalSakit[0].total + totalIzin[0].total);
-
     return response.ok({
       siswa: siswa,
       ta: ta,
@@ -3141,15 +3099,10 @@ class MainController {
       materiRombel: materiRombel,
       predikat: predikat,
       rombel: rombel,
-      ekskul: ekskul,
-      totalHadir: totalHadir,
-      totalSakit: totalSakit,
-      totalIzin: totalIzin,
-      totalAlpa: totalAlpa,
+      sikapsosial: sikapsosial,
+      sikapspiritual: sikapspiritual,
       tanggalDistinct: tanggalDistinct,
       muatan,
-      sikapsosial,
-      sikapspiritual,
     });
   }
 
@@ -15264,6 +15217,7 @@ class MainController {
     const sikap = await MSikapRombel.query()
       .where({ m_user_id: user_id })
       .andWhere({ m_rombel_id: rombel_id })
+      .andWhere({ m_mata_pelajaran_id: mata_pelajaran_id })
       .first();
 
     if (!sikap) {
