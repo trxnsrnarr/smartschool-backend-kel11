@@ -15261,6 +15261,9 @@ class MainController {
           m_mata_pelajaran_id: mata_pelajaran_id,
         });
     }
+    return response.ok({
+      message: messagePutSuccess,
+    });
   }
   async postRaporSikapSosial({ response, request, auth, params: { user_id } }) {
     const domain = request.headers().origin;
