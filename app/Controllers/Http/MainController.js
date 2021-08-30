@@ -18831,7 +18831,7 @@ class MainController {
             });
           })
           .where({ m_user_id: user_id })
-          .orderBy("id", "desc")
+          .orderBy("nilai", "desc")
           .fetch();
 
         const dataNilaiTertinggi = nilaiTertinggi
@@ -18869,13 +18869,13 @@ class MainController {
           .with("rekapRombel", (builder) => {
             builder.with("rekap", (builder) => {
               builder
-                .where({ tipe: "keterampulan" })
+                .where({ tipe: "keterampilan" })
                 .andWhere({ m_ta_id: d.id })
                 .andWhere({ dihapus: 0 });
             });
           })
           .where({ m_user_id: user_id })
-          .orderBy("id", "desc")
+          .orderBy("nilai", "desc")
           .fetch();
 
         const dataNilaiTertinggiKeterampilan = nilaiTertinggiKeterampilan
@@ -18919,7 +18919,7 @@ class MainController {
             });
           })
           .where({ m_user_id: user_id })
-          .orderBy("id", "asc")
+          .orderBy("nilai", "asc")
           .fetch();
 
         const dataNilaiTerendah = nilaiTerendah
@@ -18955,13 +18955,13 @@ class MainController {
           .with("rekapRombel", (builder) => {
             builder.with("rekap", (builder) => {
               builder
-                .where({ tipe: "keterampulan" })
+                .where({ tipe: "keterampilan" })
                 .andWhere({ m_ta_id: d.id })
                 .andWhere({ dihapus: 0 });
             });
           })
           .where({ m_user_id: user_id })
-          .orderBy("id", "asc")
+          .orderBy("nilai", "asc")
           .fetch();
 
         const dataNilaiTerendahKeterampilan = nilaiTerendahKeterampilan
@@ -19002,9 +19002,13 @@ class MainController {
               .with("mataPelajaran", (builder) => {
                 builder
                   .with("nilaiIndividu", (builder) => {
-                    builder.where({ m_user_id: user_id });
+                    builder
+                      .where({ m_user_id: user_id })
+                      .andWhere({ m_ta_id: d.id });
                   })
-                  .with("templateDeskripsi")
+                  .with("templateDeskripsi", (builder) => {
+                    builder.with("predikat");
+                  })
                   .with("materi", (builder) => {
                     builder
                       .with("rekapMaxPengetahuan", (builder) => {
