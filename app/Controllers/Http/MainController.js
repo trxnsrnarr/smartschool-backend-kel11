@@ -2782,11 +2782,11 @@ class MainController {
     let checkAbsensi = [];
     let judulTugas;
     let rekap;
-    let data
-    let kkm
-    let totalMapel
-    let sikapsosial
-    let sikapspiritual
+    let data;
+    let kkm;
+    let totalMapel;
+    let sikapsosial;
+    let sikapspiritual;
 
     if (rombel_id) {
       jadwalMengajar = await MJadwalMengajar.query()
@@ -2825,25 +2825,23 @@ class MainController {
         .first();
     } else {
       data = await MJadwalMengajar.query()
-      .where({ id: jadwal_mengajar_id })
-      .first();
+        .where({ id: jadwal_mengajar_id })
+        .first();
 
-      if(data) {
+      if (data) {
         kkm = await TkMapelRapor.query()
           .with("mataPelajaran")
           .where({ dihapus: 0 })
           .andWhere({ m_mata_pelajaran_id: data.m_mata_pelajaran_id })
           .first();
-    
+
         totalMapel = await TkMateriRombel.query()
           .where({ m_rombel_id: data.m_rombel_id })
           .count("* as total");
-
       }
 
-
-       sikapsosial = await MSikapSosial.query().fetch();
-     sikapspiritual = await MSikapSpiritual.query().fetch();
+      sikapsosial = await MSikapSosial.query().fetch();
+      sikapspiritual = await MSikapSpiritual.query().fetch();
 
       jadwalMengajar = await MJadwalMengajar.query()
         .with("mataPelajaran", (builder) => {
@@ -2879,19 +2877,22 @@ class MainController {
                   }
                 );
 
-                  if(kkm) {
-                    await jadwalMengajar
-                      .withCount("nilaiSemuaUjian as kkmPengetahuan", (builder) => {
-                        builder
-                          .where("nilai", "<", `${kkm.mataPelajaran.kkm}`)
-                          .andWhere({ m_ta_id: ta.id });
-                      })
-                      .withCount("nilaiSemuaUjian as kkmKeterampilan", (builder) => {
-                        builder
-                          .where("nilai_keterampilan", "<", `${kkm.kkm2}`)
-                          .andWhere({ m_ta_id: ta.id });
-                      })
-                  }
+              if (kkm) {
+                await jadwalMengajar
+                  .withCount("nilaiSemuaUjian as kkmPengetahuan", (builder) => {
+                    builder
+                      .where("nilai", "<", `${kkm.mataPelajaran.kkm}`)
+                      .andWhere({ m_ta_id: ta.id });
+                  })
+                  .withCount(
+                    "nilaiSemuaUjian as kkmKeterampilan",
+                    (builder) => {
+                      builder
+                        .where("nilai_keterampilan", "<", `${kkm.kkm2}`)
+                        .andWhere({ m_ta_id: ta.id });
+                    }
+                  );
+              }
             });
           });
         })
@@ -14928,12 +14929,11 @@ class MainController {
       .where({ m_mata_pelajaran_id: rekap.m_mata_pelajaran_id })
       .first();
 
+    const predikat = await MPredikatNilai.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
     if (!checkTemplate) {
-      const predikat = await MPredikatNilai.query()
-        .where({ m_sekolah_id: sekolah.id })
-        .andWhere({ dihapus: 0 })
-        .fetch();
-
       await Promise.all(
         predikat.toJSON().map(async (d) => {
           if (d.predikat == "A") {
@@ -15042,6 +15042,7 @@ class MainController {
       dataTemplateSikap,
       sikapsosial,
       tugas,
+      predikat,
     });
   }
 
@@ -15111,7 +15112,11 @@ class MainController {
 
     // const user = await auth.getUser();
 
-    const { m_sikap_ditunjukkan_id, m_sikap_ditingkatkan_id } = request.post();
+    const {
+      m_sikap_ditunjukkan_id,
+      m_sikap_ditingkatkan_id,
+      m_predikat_nilai_id,
+    } = request.post();
     const rules = {
       m_sikap_ditingkatkan_id: "required",
       m_sikap_ditunjukkan_id: "required",
@@ -15140,6 +15145,7 @@ class MainController {
           ? m_sikap_ditingkatkan_id.toString()
           : null
         : null,
+      m_predikat_nilai_id,
       status: 1,
       dihapus: 0,
     });
@@ -18760,7 +18766,7 @@ class MainController {
       rombel: rombel,
     });
   }
-  async detailBukuIndukSiswa({
+  async({
     response,
     request,
     auth,
