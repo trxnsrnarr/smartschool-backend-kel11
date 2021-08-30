@@ -2782,11 +2782,11 @@ class MainController {
     let checkAbsensi = [];
     let judulTugas;
     let rekap;
-    let data
-    let kkm
-    let totalMapel
-    let sikapsosial
-    let sikapspiritual
+    let data;
+    let kkm;
+    let totalMapel;
+    let sikapsosial;
+    let sikapspiritual;
 
     if (rombel_id) {
       jadwalMengajar = await MJadwalMengajar.query()
@@ -2825,25 +2825,23 @@ class MainController {
         .first();
     } else {
       data = await MJadwalMengajar.query()
-      .where({ id: jadwal_mengajar_id })
-      .first();
+        .where({ id: jadwal_mengajar_id })
+        .first();
 
-      if(data) {
+      if (data) {
         kkm = await TkMapelRapor.query()
           .with("mataPelajaran")
           .where({ dihapus: 0 })
           .andWhere({ m_mata_pelajaran_id: data.m_mata_pelajaran_id })
           .first();
-    
+
         totalMapel = await TkMateriRombel.query()
           .where({ m_rombel_id: data.m_rombel_id })
           .count("* as total");
-
       }
 
-
-       sikapsosial = await MSikapSosial.query().fetch();
-     sikapspiritual = await MSikapSpiritual.query().fetch();
+      sikapsosial = await MSikapSosial.query().fetch();
+      sikapspiritual = await MSikapSpiritual.query().fetch();
 
       jadwalMengajar = await MJadwalMengajar.query()
         .with("mataPelajaran", (builder) => {
@@ -2879,19 +2877,22 @@ class MainController {
                   }
                 );
 
-                  if(kkm) {
-                    await jadwalMengajar
-                      .withCount("nilaiSemuaUjian as kkmPengetahuan", (builder) => {
-                        builder
-                          .where("nilai", "<", `${kkm.mataPelajaran.kkm}`)
-                          .andWhere({ m_ta_id: ta.id });
-                      })
-                      .withCount("nilaiSemuaUjian as kkmKeterampilan", (builder) => {
-                        builder
-                          .where("nilai_keterampilan", "<", `${kkm.kkm2}`)
-                          .andWhere({ m_ta_id: ta.id });
-                      })
-                  }
+              if (kkm) {
+                await jadwalMengajar
+                  .withCount("nilaiSemuaUjian as kkmPengetahuan", (builder) => {
+                    builder
+                      .where("nilai", "<", `${kkm.mataPelajaran.kkm}`)
+                      .andWhere({ m_ta_id: ta.id });
+                  })
+                  .withCount(
+                    "nilaiSemuaUjian as kkmKeterampilan",
+                    (builder) => {
+                      builder
+                        .where("nilai_keterampilan", "<", `${kkm.kkm2}`)
+                        .andWhere({ m_ta_id: ta.id });
+                    }
+                  );
+              }
             });
           });
         })
@@ -18825,7 +18826,7 @@ class MainController {
             });
           })
           .where({ m_user_id: user_id })
-          .orderBy("id", "desc")
+          .orderBy("nilai", "desc")
           .fetch();
 
         const dataNilaiTertinggi = nilaiTertinggi
@@ -18863,13 +18864,13 @@ class MainController {
           .with("rekapRombel", (builder) => {
             builder.with("rekap", (builder) => {
               builder
-                .where({ tipe: "keterampulan" })
+                .where({ tipe: "keterampilan" })
                 .andWhere({ m_ta_id: d.id })
                 .andWhere({ dihapus: 0 });
             });
           })
           .where({ m_user_id: user_id })
-          .orderBy("id", "desc")
+          .orderBy("nilai", "desc")
           .fetch();
 
         const dataNilaiTertinggiKeterampilan = nilaiTertinggiKeterampilan
@@ -18913,7 +18914,7 @@ class MainController {
             });
           })
           .where({ m_user_id: user_id })
-          .orderBy("id", "asc")
+          .orderBy("nilai", "asc")
           .fetch();
 
         const dataNilaiTerendah = nilaiTerendah
@@ -18949,13 +18950,13 @@ class MainController {
           .with("rekapRombel", (builder) => {
             builder.with("rekap", (builder) => {
               builder
-                .where({ tipe: "keterampulan" })
+                .where({ tipe: "keterampilan" })
                 .andWhere({ m_ta_id: d.id })
                 .andWhere({ dihapus: 0 });
             });
           })
           .where({ m_user_id: user_id })
-          .orderBy("id", "asc")
+          .orderBy("nilai", "asc")
           .fetch();
 
         const dataNilaiTerendahKeterampilan = nilaiTerendahKeterampilan
@@ -18996,9 +18997,13 @@ class MainController {
               .with("mataPelajaran", (builder) => {
                 builder
                   .with("nilaiIndividu", (builder) => {
-                    builder.where({ m_user_id: user_id });
+                    builder
+                      .where({ m_user_id: user_id })
+                      .andWhere({ m_ta_id: d.id });
                   })
-                  .with("templateDeskripsi")
+                  .with("templateDeskripsi", (builder) => {
+                    builder.with("predikat");
+                  })
                   .with("materi", (builder) => {
                     builder
                       .with("rekapMaxPengetahuan", (builder) => {
