@@ -18766,7 +18766,7 @@ class MainController {
       rombel: rombel,
     });
   }
-  async({
+  async detailBukuIndukSiswa({
     response,
     request,
     auth,
