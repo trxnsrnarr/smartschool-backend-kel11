@@ -93,7 +93,10 @@ Route.get("/rombel/:jadwal_mengajar_id", "MainController.detailRombel");
 Route.post("/rombel", "MainController.postRombel");
 Route.put("/rombel/:rombel_id", "MainController.putRombel");
 Route.delete("/rombel/:rombel_id", "MainController.deleteRombel");
-Route.post("/rombel/:rombel_id/:user_id", "MainController.postSikapRombel");
+Route.post(
+  "/rombel/:rombel_id/:user_id/:mata_pelajaran_id",
+  "MainController.postSikapRombel"
+);
 Route.post(
   "/rapor-sikap/sosial/:user_id",
   "MainController.postRaporSikapSosial"
@@ -110,6 +113,10 @@ Route.delete(
 Route.delete(
   "/rapor-sikap/spiritual/:user_id",
   "MainController.deleteRaporSikapSpiritual"
+);
+Route.get(
+  "/rombel/:rombel_id/nilai/:user_id",
+  "MainController.detailRombelWalas"
 );
 // Route.get("/rombel/rapor/:user_id", "MainController.getRombelRapor");
 // anggota rombel
