@@ -15009,7 +15009,7 @@ class MainController {
 
     const sikapsosial = await MSikapSosial.query().fetch();
 
-    const tugas = await MTugas.query().where({ m_user_id: user.id }).fetch();
+    // const tugas = await MTugas.query().where({ m_user_id: user.id }).fetch();
 
     const rekap = await MMateri.query()
       .with("jurusan")
@@ -15168,7 +15168,7 @@ class MainController {
       dataTemplateKeterampilan,
       dataTemplateSikap,
       sikapsosial,
-      tugas,
+      // tugas,
       predikat,
     });
   }
@@ -15247,12 +15247,14 @@ class MainController {
     const rules = {
       m_sikap_ditingkatkan_id: "required",
       m_sikap_ditunjukkan_id: "required",
+      m_predikat_nilai_id: "required",
     };
     const message = {
       "m_sikap_ditingkatkan_id.required":
         "Pilih salah satu sikap yang ditingkatkan",
       "m_sikap_ditunjukkan_id.required":
         "Pilih salah satu sikap yang ditunjukkan",
+      "m_predikat_nilai_id.required": "Pilih salah satu predikat",
     };
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
