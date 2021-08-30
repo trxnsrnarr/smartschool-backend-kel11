@@ -111,6 +111,7 @@ Route.delete(
   "/rapor-sikap/spiritual/:user_id",
   "MainController.deleteRaporSikapSpiritual"
 );
+// Route.get("/rombel/rapor/:user_id", "MainController.getRombelRapor");
 // anggota rombel
 Route.post("/anggota-rombel", "MainController.postAnggotaRombel");
 Route.post("/anggota-rombel/import", "MainController.importAnggotaRombel");
@@ -220,6 +221,7 @@ Route.delete("/bab/:bab_id", "MainController.deleteBab");
 
 // prestasi
 Route.get("/prestasi", "MainController.getPrestasi");
+Route.get("/prestasi1", "MainController.getPrestasi1");
 Route.post("/prestasi", "MainController.postPrestasi");
 Route.put("/prestasi/:prestasi_id", "MainController.putPrestasi");
 Route.delete("/prestasi/:prestasi_id", "MainController.deletePrestasi");
@@ -526,6 +528,10 @@ Route.post(
   "MainController.postRekapSikap"
 );
 Route.put("/rekap/:materi_id/:rekap_id", "MainController.putRekap");
+Route.put(
+  "/rekap-template/:template_id",
+  "MainController.putTemplateDeskripsi"
+);
 Route.delete("/rekap/:materi_id/:rekap_id", "MainController.deleteRekap");
 Route.get(
   "/rekap/:materi_id/rombel/:rekapnilai_id",
@@ -588,8 +594,16 @@ Route.delete("/predikat/:predikat_id", "MainController.deletePredikat");
 
 //Rapor Service
 Route.get(
-  "/rombel/:jadwal_mengajar_id/rapor/:user_id",
+  "/rombel/:jadwal_mengajar_id/rapor-nilai/:user_id",
   "MainController.detailRombelRapor"
+);
+Route.get(
+  "/rombel/:jadwal_mengajar_id/rapor-keterampilan/:user_id",
+  "MainController.detailRombelRaporKeterampilan"
+);
+Route.get(
+  "/rapor/:rombel_id/siswa/:user_id",
+  "MainController.detailRaporSiswa"
 );
 
 Route.post(
@@ -863,6 +877,7 @@ Route.get("/dashboard/tugas", "MainController.getDashboardTugas");
 Route.get("/dashboard/absen", "MainController.getDashboardAbsen");
 
 Route.post("/dummyGPDS/GPDS", "MainController.dummyGPDS");
+Route.post("/dummyGPDS/GPDS2", "MainController.dummyGPDS2");
 
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");

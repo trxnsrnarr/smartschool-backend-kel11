@@ -5,17 +5,20 @@ const Schema = use("Schema");
 
 class MTimelineMapelSchema extends Schema {
   up() {
-    this.table("m_timeline", (table) => {
+    this.hasColumn("m_timeline", async (table) => {
       // alter table
-      table
-        .integer("m_mata_pelajaran_id")
-        .unsigned()
-        .index("m_mata_pelajaran_id");
-      table
-        .foreign("m_mata_pelajaran_id")
-        .references("m_mata_pelajaran.id")
-        .onDelete("cascade")
-        .onUpdate("cascade");
+      const exist = await this.hasColumn("m_timeline", "m_mata_pelajaran_id");
+      if (!exist) {
+        table
+          .integer("m_mata_pelajaran_id")
+          .unsigned()
+          .index("m_mata_pelajaran_id");
+        table
+          .foreign("m_mata_pelajaran_id")
+          .references("m_mata_pelajaran.id")
+          .onDelete("cascade")
+          .onUpdate("cascade");
+      }
     });
   }
 
