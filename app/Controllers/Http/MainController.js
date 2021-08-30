@@ -400,11 +400,11 @@ class MainController {
   }
 
   async getMasterSekolah({ response, request }) {
-    const { npsn } = request.get();
+    const { page, search } = request.get();
 
     const res = await Sekolah.query()
-      .where("npsn", "like", `%${npsn}%`)
-      .first();
+      .where("sekolah", "like", `%${search}%`)
+      .paginate(page);
 
     return response.ok(res);
   }
