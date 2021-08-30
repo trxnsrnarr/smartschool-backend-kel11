@@ -427,7 +427,7 @@ class MainController {
 
     const res = await User.query()
       .select("nama", "whatsapp", "role")
-      .where({ whatsapp })
+      .where({ whatsapp: `${whatsapp}` })
       .andWhere({ m_sekolah_id: sekolah.id })
       .first();
 
