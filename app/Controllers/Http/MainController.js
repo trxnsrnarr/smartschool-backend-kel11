@@ -15226,7 +15226,7 @@ class MainController {
     response,
     request,
     auth,
-    params: { user_id },
+    params: { user_id, mata_pelajaran_id },
     params: { rombel_id },
   }) {
     const domain = request.headers().origin;
@@ -15279,12 +15279,31 @@ class MainController {
             : null
           : null,
         m_predikat_nilai_id,
+        m_mata_pelajaran_id: mata_pelajaran_id,
         status: 1,
         dihapus: 0,
       });
       return response.ok({
         message: messagePostSuccess,
       });
+    } else {
+      await MSikapRombel.query()
+        .where({ m_user_id: user_id })
+        .andWhere({ m_rombel_id: rombel_id })
+        .update({
+          m_sikap_ditunjukkan_id: m_sikap_ditunjukkan_id
+            ? m_sikap_ditunjukkan_id.length
+              ? m_sikap_ditunjukkan_id.toString()
+              : null
+            : null,
+          m_sikap_ditingkatkan_id: m_sikap_ditingkatkan_id
+            ? m_sikap_ditingkatkan_id.length
+              ? m_sikap_ditingkatkan_id.toString()
+              : null
+            : null,
+          m_predikat_nilai_id,
+          m_mata_pelajaran_id: mata_pelajaran_id,
+        });
     }
   }
   async postRaporSikapSosial({ response, request, auth, params: { user_id } }) {
