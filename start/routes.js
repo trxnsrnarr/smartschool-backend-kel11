@@ -18,6 +18,8 @@ const { route, RouteGroup } = require("@adonisjs/framework/src/Route/Manager");
 /** @type {typeof import('@adonisjs/framework/src/Route/Manager')} */
 const Route = use("Route");
 
+Route.get("/master/sekolah", "MainController.getMasterSekolah");
+
 // utils
 Route.get("/lokasi-saat-ini", "MainController.getLokasiSaatIni");
 Route.post("/single-upload", "MainController.singleUpload");
