@@ -22814,6 +22814,12 @@ class MainController {
           .andWhere({ tipe: "draf" })
           .andWhere({ m_user_id: user.id })
           .paginate();
+      } else if (tipe == "disposisi") {
+        surel = await MDisposisi.query()
+          .with("surat")
+          .where({ dihapus: 0 })
+          .andWhere({ m_user_id: user.id })
+          .paginate();
       }
     } else {
       // ===== service Perusahaan saya ====
@@ -22866,6 +22872,12 @@ class MainController {
           })
           .where({ dihapus: 0 })
           .andWhere({ tipe: "draf" })
+          .andWhere({ m_user_id: user.id })
+          .paginate();
+      } else if (tipe == "disposisi") {
+        surel = await MDisposisi.query()
+          .with("surat")
+          .where({ dihapus: 0 })
           .andWhere({ m_user_id: user.id })
           .paginate();
       }
@@ -28251,73 +28263,147 @@ class MainController {
 
     let surat;
 
-    if (search) {
-      // ===== service cari Perusahaan ====
-      if (tipe == "keluar") {
-        surat = await MSurat.query()
-          .where({ dihapus: 0 })
-          .andWhere({ tipe: "keluar" })
-          .andWhere({ m_user_id: user.id })
-          .andWhere("perihal", "like", `%${search}%`)
-          .paginate();
-      } else if (tipe == "masuk") {
-        surat = await MSurat.query()
-          .where({ dihapus: 0 })
-          .andWhere({ tipe: "masuk" })
-          .andWhere({ m_user_id: user.id })
-          .andWhere("perihal", "like", `%${search}%`)
-          .paginate();
-      } else if (tipe == "disposisi") {
-        surat = await MSurat.query()
-          .with("surat", (builder) => {
-            builder
-              .with("userPengirim", (builder) => {
-                builder.select("id", "nama", "email");
-              })
-              .withCount("komen", (builder) => {
-                builder.where({ dihapus: 0 });
-              })
+    if (user.role == "admin") {
+      if (search) {
+        // ===== service cari Perusahaan ====
+        if (tipe == "keluar") {
+          surat = await MSurat.query()
+            .where({ dihapus: 0 })
+            .andWhere({ tipe: "keluar" })
+            .andWhere({ m_user_id: user.id })
+            .andWhere("perihal", "like", `%${search}%`)
+            .paginate();
+        } else if (tipe == "masuk") {
+          surat = await MSurat.query()
+            .where({ dihapus: 0 })
+            .andWhere({ tipe: "masuk" })
+            .andWhere({ m_user_id: user.id })
+            .andWhere("perihal", "like", `%${search}%`)
+            .paginate();
+        } else if (tipe == "disposisi") {
+          surat = await MSurat.query()
+            .with("surat", (builder) => {
+              builder
+                .with("userPengirim", (builder) => {
+                  builder.select("id", "nama", "email");
+                })
+                .withCount("komen", (builder) => {
+                  builder.where({ dihapus: 0 });
+                })
 
-              .where({ dihapus: 0 })
-              .andWhere({ m_user_pengirim_id: user.id })
-              .andWhere("perihal", "like", `%${search}%`);
-          })
-          .where({ dihapus: 0 })
-          .andWhere({ tipe: "draf" })
-          .andWhere({ m_user_id: user.id })
-          .paginate();
+                .where({ dihapus: 0 })
+                .andWhere({ m_user_pengirim_id: user.id })
+                .andWhere("perihal", "like", `%${search}%`);
+            })
+            .where({ dihapus: 0 })
+            .andWhere({ tipe: "draf" })
+            .andWhere({ m_user_id: user.id })
+            .paginate();
+        }
+      } else {
+        // ===== service Perusahaan saya ====
+        if (tipe == "keluar") {
+          surat = await MSurat.query()
+            .where({ dihapus: 0 })
+            .andWhere({ tipe: "keluar" })
+            .andWhere({ m_user_id: user.id })
+            .paginate();
+        } else if (tipe == "masuk") {
+          surat = await MSurat.query()
+            .where({ dihapus: 0 })
+            .andWhere({ tipe: "masuk" })
+            .andWhere({ m_user_id: user.id })
+            .paginate();
+        } else if (tipe == "disposisi") {
+          surat = await MSurat.query()
+            .with("surat", (builder) => {
+              builder
+                .with("userPengirim", (builder) => {
+                  builder.select("id", "nama", "email");
+                })
+                .withCount("komen", (builder) => {
+                  builder.where({ dihapus: 0 });
+                })
+                .where({ dihapus: 0 })
+                .andWhere({ m_user_tujuan_id: user.id });
+            })
+            .where({ dihapus: 0 })
+            .andWhere({ tipe: "masuk" })
+            .andWhere({ m_user_id: user.id })
+            .paginate();
+        }
       }
-    } else {
-      // ===== service Perusahaan saya ====
-      if (tipe == "keluar") {
-        surat = await MSurat.query()
-          .where({ dihapus: 0 })
-          .andWhere({ tipe: "keluar" })
-          .andWhere({ m_user_id: user.id })
-          .paginate();
-      } else if (tipe == "masuk") {
-        surat = await MSurat.query()
-          .where({ dihapus: 0 })
-          .andWhere({ tipe: "masuk" })
-          .andWhere({ m_user_id: user.id })
-          .paginate();
-      } else if (tipe == "disposisi") {
-        surat = await MSurat.query()
-          .with("surat", (builder) => {
-            builder
-              .with("userPengirim", (builder) => {
-                builder.select("id", "nama", "email");
-              })
-              .withCount("komen", (builder) => {
-                builder.where({ dihapus: 0 });
-              })
-              .where({ dihapus: 0 })
-              .andWhere({ m_user_tujuan_id: user.id });
-          })
-          .where({ dihapus: 0 })
-          .andWhere({ tipe: "masuk" })
-          .andWhere({ m_user_id: user.id })
-          .paginate();
+    } else if (user.role == "kepsek") {
+      if (search) {
+        // ===== service cari Perusahaan ====
+        if (tipe == "keluar") {
+          surat = await MSurat.query()
+            .where({ dihapus: 0 })
+            .andWhere({ tipe: "keluar" })
+            .andWhere({ m_user_id: user.id })
+            .andWhere("perihal", "like", `%${search}%`)
+            .paginate();
+        } else if (tipe == "masuk") {
+          surat = await MSurat.query()
+            .where({ dihapus: 0 })
+            .andWhere({ tipe: "masuk" })
+            .andWhere({ m_user_id: user.id })
+            .andWhere("perihal", "like", `%${search}%`)
+            .andWhere({ teruskan: 1 })
+            .paginate();
+        } else if (tipe == "disposisi") {
+          surat = await MSurat.query()
+            .with("surat", (builder) => {
+              builder
+                .with("userPengirim", (builder) => {
+                  builder.select("id", "nama", "email");
+                })
+                .withCount("komen", (builder) => {
+                  builder.where({ dihapus: 0 });
+                })
+
+                .where({ dihapus: 0 })
+                .andWhere({ m_user_pengirim_id: user.id })
+                .andWhere("perihal", "like", `%${search}%`);
+            })
+            .where({ dihapus: 0 })
+            .andWhere({ tipe: "draf" })
+            .andWhere({ m_user_id: user.id })
+            .paginate();
+        }
+      } else {
+        // ===== service Perusahaan saya ====
+        if (tipe == "keluar") {
+          surat = await MSurat.query()
+            .where({ dihapus: 0 })
+            .andWhere({ tipe: "keluar" })
+            .andWhere({ m_user_id: user.id })
+            .paginate();
+        } else if (tipe == "masuk") {
+          surat = await MSurat.query()
+            .where({ dihapus: 0 })
+            .andWhere({ tipe: "masuk" })
+            .andWhere({ m_user_id: user.id })
+            .andWhere({ teruskan: 1 })
+            .paginate();
+        } else if (tipe == "disposisi") {
+          surat = await MSurat.query()
+            .with("surat", (builder) => {
+              builder
+                .with("userPengirim", (builder) => {
+                  builder.select("id", "nama", "email");
+                })
+                .withCount("komen", (builder) => {
+                  builder.where({ dihapus: 0 });
+                })
+                .where({ dihapus: 0 })
+                .andWhere({ m_user_tujuan_id: user.id });
+            })
+            .where({ dihapus: 0 })
+            .andWhere({ tipe: "masuk" })
+            .andWhere({ m_user_id: user.id })
+            .paginate();
+        }
       }
     }
 
@@ -28468,7 +28554,8 @@ class MainController {
       message: messageDeleteSuccess,
     });
   }
-  async postDisposisi({ response, request, auth }) {
+
+  async detailDisposisi({ response, request, auth, params: { disposisi_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -28479,42 +28566,56 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const {
-      penanganan,
-      tanggal_pembagian,
-      isi,
-      ttd,
-      m_sikap_spiritual_ditunjukkan_id,
-      m_user_id,
-    } = request.post();
-    const rules = {
-      tipe: "required",
-      penanganan: "required",
-      tanggal_pembagian: "required",
-      isi: "required",
-      ttd: "required",
-    };
-    const message = {
-      "tipe.required": "Tipe harus diisi",
-      "penanganan.required": "harus diisi",
-      "tanggal_pembagian.required": "harus diisi",
-      "isi.required": "harus diisi",
-      "ttd.required": "harus diisi",
-    };
-    const validation = await validate(request.all(), rules, message);
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
+    // const { rombel_id } = request.post();
+    const disposisi = await MDisposisi.query()
+      .with("surat")
+      .with("pelaporanDisposisi")
+      .where({ id: disposisi_id })
+      .first();
+
+    return response.ok({
+      disposisi,
+    });
+  }
+
+  async postPelaporanDisposisi({
+    response,
+    request,
+    auth,
+    params: { disposisi_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const disposisi = await MDisposisi.create({
-      penanganan,
-      tanggal_pembagian,
-      isi,
-      ttd,
-      m_user_id,
-      status: 0,
-      dihapus: 0,
-    });
+    const user = await auth.getUser();
+
+    const { keterangan, lampiran } = request.post();
+
+    const disposisi = await MPelaporanDisposisi.query()
+      .where({ m_disposisi_id: disposisi_id })
+      .first();
+
+    if (disposisi) {
+      await MPelaporanDisposisi.query()
+        .where({ m_disposisi_id: disposisi_id })
+        .update({
+          keterangan,
+          lampiran,
+        });
+    } else {
+      await MPelaporanDisposisi.create({
+        keterangan,
+        lampiran,
+        m_disposisi_id: disposisi_id,
+        status: 1,
+        dihapus: 0,
+      });
+    }
 
     return response.ok({
       message: messagePostSuccess,
@@ -28532,21 +28633,21 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { penanganan, tanggal_pembagian, isi, ttd, m_user_id } =
+    const { penanganan, tanggal_pengembalian, isi, ttd, m_user_id } =
       request.post();
     const rules = {
-      tipe: "required",
       penanganan: "required",
-      tanggal_pembagian: "required",
+      tanggal_pengembalian: "required",
       isi: "required",
       ttd: "required",
+      m_user_id: "required",
     };
     const message = {
-      "tipe.required": "Tipe harus diisi",
-      "penanganan.required": "harus diisi",
-      "tanggal_pembagian.required": "harus diisi",
-      "isi.required": "harus diisi",
-      "ttd.required": "harus diisi",
+      "penanganan.required": "Penanganan harus diisi",
+      "tanggal_pengembalian.required": "Tanggal Pengembalian harus diisi",
+      "isi.required": "Isi harus diisi",
+      "ttd.required": "TTD harus diisi",
+      "m_user_id.required": "Disposisi kepada harus dipilih",
     };
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
@@ -28557,7 +28658,7 @@ class MainController {
       .where({ id: disposisi_id })
       .update({
         penanganan,
-        tanggal_pembagian,
+        tanggal_pengembalian,
         isi,
         ttd,
         m_user_id,
@@ -30735,7 +30836,7 @@ class MainController {
       .fetch();
 
     const userData = await User.query()
-    .with("profil")
+      .with("profil")
       .where({ id: user_id })
       .with("sekolah")
       .first();
@@ -30756,6 +30857,5 @@ class MainController {
       ta,
     });
   }
-  
 }
 module.exports = MainController;
