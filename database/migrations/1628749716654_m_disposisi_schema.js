@@ -8,7 +8,7 @@ class MDisposisiSchema extends Schema {
     this.create("m_disposisi", (table) => {
       table.increments();
       table.string("penanganan");
-      table.date("tanggal_pembagian");
+      table.date("tanggal_pengembalian");
       table.string("isi");
       table.string("ttd");
       table.integer("m_surat_id").unsigned().index("m_surat_id");
