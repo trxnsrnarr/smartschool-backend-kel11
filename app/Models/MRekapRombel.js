@@ -23,6 +23,10 @@ class MRekapRombel extends Model {
   rekap() {
     return this.belongsTo("App/Models/MRekap");
   }
+
+  rombel() {
+    return this.belongsTo("App/Models/MRombel");
+  }
 }
 
 module.exports = MRekapRombel;
