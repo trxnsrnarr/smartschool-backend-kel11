@@ -19974,8 +19974,9 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
     const ta = await this.getTAAktif(sekolah);
-    const mapelKeterampilan = await MMataPelajaran.query()
+    const mapel = await MMataPelajaran.query()
       .with("user")
+      .with("materi")
       .where({ id: mata_pelajaran_id })
       .first();
 
@@ -20135,7 +20136,7 @@ class MainController {
     const nilaiAkhirKeterampilan = await MUjianSiswa.query()
       .where({ m_user_id: user_id })
       .andWhere({
-        m_mata_pelajaran_id: mapelKeterampilan.id,
+        m_mata_pelajaran_id: mapel.id,
       })
       .first();
 
@@ -20155,7 +20156,7 @@ class MainController {
       praktik,
       portofolio,
       produk,
-      mapelKeterampilan,
+      mapel,
       nilaiAkhirKeterampilan,
     });
   }
