@@ -28622,6 +28622,52 @@ class MainController {
     });
   }
 
+  async postDisposisi({ response, request, auth}) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { penanganan, tanggal_pengembalian, isi, ttd, m_user_id } =
+      request.post();
+    const rules = {
+      penanganan: "required",
+      tanggal_pengembalian: "required",
+      isi: "required",
+      ttd: "required",
+      m_user_id: "required",
+    };
+    const message = {
+      "penanganan.required": "Penanganan harus diisi",
+      "tanggal_pengembalian.required": "Tanggal Pengembalian harus diisi",
+      "isi.required": "Isi harus diisi",
+      "ttd.required": "TTD harus diisi",
+      "m_user_id.required": "Disposisi kepada harus dipilih",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const disposisi = await MDisposisi.create({
+        penanganan,
+        tanggal_pengembalian,
+        isi,
+        ttd,
+        m_user_id,
+      });
+
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
   async putDisposisi({ response, request, auth, params: { disposisi_id } }) {
     const domain = request.headers().origin;
 
