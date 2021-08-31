@@ -22724,7 +22724,7 @@ class MainController {
       });
     }
 
-    const { tipe, search } = request.get();
+    const { tipe, search,nav } = request.get();
 
     let surel;
 
@@ -22815,11 +22815,30 @@ class MainController {
           .andWhere({ m_user_id: user.id })
           .paginate();
       } else if (tipe == "disposisi") {
-        surel = await MDisposisi.query()
+        if(nav=="semua"){
+          surel = await MDisposisi.query()
           .with("surat")
+          .with("pelaporanDisposisi")
           .where({ dihapus: 0 })
           .andWhere({ m_user_id: user.id })
           .paginate();
+        }else if(nav=="belum selesai"){
+          surel = await MDisposisi.query()
+          .with("surat")
+          .with("pelaporanDisposisi")
+          .where({ dihapus: 0 })
+          .andWhere({ m_user_id: user.id })
+          .andWhere({status:0})
+          .paginate();
+        }else if(nav=="selesai"){
+          surel = await MDisposisi.query()
+          .with("surat")
+          .with("pelaporanDisposisi")
+          .where({ dihapus: 0 })
+          .andWhere({ m_user_id: user.id })
+          .andWhere({status:1})
+          .paginate();
+        }
       }
     } else {
       // ===== service Perusahaan saya ====
@@ -22875,11 +22894,30 @@ class MainController {
           .andWhere({ m_user_id: user.id })
           .paginate();
       } else if (tipe == "disposisi") {
-        surel = await MDisposisi.query()
+         if(nav=="semua"){
+          surel = await MDisposisi.query()
           .with("surat")
+          .with("pelaporanDisposisi")
           .where({ dihapus: 0 })
           .andWhere({ m_user_id: user.id })
           .paginate();
+        }else if(nav=="belum selesai"){
+          surel = await MDisposisi.query()
+          .with("surat")
+          .with("pelaporanDisposisi")
+          .where({ dihapus: 0 })
+          .andWhere({ m_user_id: user.id })
+          .andWhere({status:0})
+          .paginate();
+        }else if(nav=="selesai"){
+          surel = await MDisposisi.query()
+          .with("surat")
+          .with("pelaporanDisposisi")
+          .where({ dihapus: 0 })
+          .andWhere({ m_user_id: user.id })
+          .andWhere({status:1})
+          .paginate();
+        }
       }
     }
 
@@ -28281,24 +28319,30 @@ class MainController {
             .andWhere("perihal", "like", `%${search}%`)
             .paginate();
         } else if (tipe == "disposisi") {
-          surat = await MSurat.query()
-            .with("surat", (builder) => {
-              builder
-                .with("userPengirim", (builder) => {
-                  builder.select("id", "nama", "email");
-                })
-                .withCount("komen", (builder) => {
-                  builder.where({ dihapus: 0 });
-                })
-
-                .where({ dihapus: 0 })
-                .andWhere({ m_user_pengirim_id: user.id })
-                .andWhere("perihal", "like", `%${search}%`);
-            })
-            .where({ dihapus: 0 })
-            .andWhere({ tipe: "draf" })
-            .andWhere({ m_user_id: user.id })
-            .paginate();
+          if(nav=="semua"){
+          surel = await MDisposisi.query()
+          .with("surat")
+          .with("pelaporanDisposisi")
+          .where({ dihapus: 0 })
+          .andWhere({ m_user_id: user.id })
+          .paginate();
+        }else if(nav=="belum selesai"){
+          surel = await MDisposisi.query()
+          .with("surat")
+          .with("pelaporanDisposisi")
+          .where({ dihapus: 0 })
+          .andWhere({ m_user_id: user.id })
+          .andWhere({status:0})
+          .paginate();
+        }else if(nav=="selesai"){
+          surel = await MDisposisi.query()
+          .with("surat")
+          .with("pelaporanDisposisi")
+          .where({ dihapus: 0 })
+          .andWhere({ m_user_id: user.id })
+          .andWhere({status:1})
+          .paginate();
+        }
         }
       } else {
         // ===== service Perusahaan saya ====
@@ -28315,22 +28359,30 @@ class MainController {
             .andWhere({ m_user_id: user.id })
             .paginate();
         } else if (tipe == "disposisi") {
-          surat = await MSurat.query()
-            .with("surat", (builder) => {
-              builder
-                .with("userPengirim", (builder) => {
-                  builder.select("id", "nama", "email");
-                })
-                .withCount("komen", (builder) => {
-                  builder.where({ dihapus: 0 });
-                })
-                .where({ dihapus: 0 })
-                .andWhere({ m_user_tujuan_id: user.id });
-            })
-            .where({ dihapus: 0 })
-            .andWhere({ tipe: "masuk" })
-            .andWhere({ m_user_id: user.id })
-            .paginate();
+          if(nav=="semua"){
+          surel = await MDisposisi.query()
+          .with("surat")
+          .with("pelaporanDisposisi")
+          .where({ dihapus: 0 })
+          .andWhere({ m_user_id: user.id })
+          .paginate();
+        }else if(nav=="belum selesai"){
+          surel = await MDisposisi.query()
+          .with("surat")
+          .with("pelaporanDisposisi")
+          .where({ dihapus: 0 })
+          .andWhere({ m_user_id: user.id })
+          .andWhere({status:0})
+          .paginate();
+        }else if(nav=="selesai"){
+          surel = await MDisposisi.query()
+          .with("surat")
+          .with("pelaporanDisposisi")
+          .where({ dihapus: 0 })
+          .andWhere({ m_user_id: user.id })
+          .andWhere({status:1})
+          .paginate();
+        }
         }
       }
     } else if (user.role == "kepsek") {
@@ -28352,24 +28404,30 @@ class MainController {
             .andWhere({ teruskan: 1 })
             .paginate();
         } else if (tipe == "disposisi") {
-          surat = await MSurat.query()
-            .with("surat", (builder) => {
-              builder
-                .with("userPengirim", (builder) => {
-                  builder.select("id", "nama", "email");
-                })
-                .withCount("komen", (builder) => {
-                  builder.where({ dihapus: 0 });
-                })
-
-                .where({ dihapus: 0 })
-                .andWhere({ m_user_pengirim_id: user.id })
-                .andWhere("perihal", "like", `%${search}%`);
-            })
-            .where({ dihapus: 0 })
-            .andWhere({ tipe: "draf" })
-            .andWhere({ m_user_id: user.id })
-            .paginate();
+           if(nav=="semua"){
+          surel = await MDisposisi.query()
+          .with("surat")
+          .with("pelaporanDisposisi")
+          .where({ dihapus: 0 })
+          .andWhere({ m_user_id: user.id })
+          .paginate();
+        }else if(nav=="belum selesai"){
+          surel = await MDisposisi.query()
+          .with("surat")
+          .with("pelaporanDisposisi")
+          .where({ dihapus: 0 })
+          .andWhere({ m_user_id: user.id })
+          .andWhere({status:0})
+          .paginate();
+        }else if(nav=="selesai"){
+          surel = await MDisposisi.query()
+          .with("surat")
+          .with("pelaporanDisposisi")
+          .where({ dihapus: 0 })
+          .andWhere({ m_user_id: user.id })
+          .andWhere({status:1})
+          .paginate();
+        }
         }
       } else {
         // ===== service Perusahaan saya ====
@@ -28387,22 +28445,30 @@ class MainController {
             .andWhere({ teruskan: 1 })
             .paginate();
         } else if (tipe == "disposisi") {
-          surat = await MSurat.query()
-            .with("surat", (builder) => {
-              builder
-                .with("userPengirim", (builder) => {
-                  builder.select("id", "nama", "email");
-                })
-                .withCount("komen", (builder) => {
-                  builder.where({ dihapus: 0 });
-                })
-                .where({ dihapus: 0 })
-                .andWhere({ m_user_tujuan_id: user.id });
-            })
-            .where({ dihapus: 0 })
-            .andWhere({ tipe: "masuk" })
-            .andWhere({ m_user_id: user.id })
-            .paginate();
+          if(nav=="semua"){
+          surel = await MDisposisi.query()
+          .with("surat")
+          .with("pelaporanDisposisi")
+          .where({ dihapus: 0 })
+          .andWhere({ m_user_id: user.id })
+          .paginate();
+        }else if(nav=="belum selesai"){
+          surel = await MDisposisi.query()
+          .with("surat")
+          .with("pelaporanDisposisi")
+          .where({ dihapus: 0 })
+          .andWhere({ m_user_id: user.id })
+          .andWhere({status:0})
+          .paginate();
+        }else if(nav=="selesai"){
+          surel = await MDisposisi.query()
+          .with("surat")
+          .with("pelaporanDisposisi")
+          .where({ dihapus: 0 })
+          .andWhere({ m_user_id: user.id })
+          .andWhere({status:1})
+          .paginate();
+        }
         }
       }
     }
@@ -28607,6 +28673,10 @@ class MainController {
           keterangan,
           lampiran,
         });
+
+      await MDisposisi.query().where({ id: disposisi_id }).update({
+        status: 1,
+      });
     } else {
       await MPelaporanDisposisi.create({
         keterangan,
@@ -28615,6 +28685,9 @@ class MainController {
         status: 1,
         dihapus: 0,
       });
+      await MDisposisi.query().where({ id: disposisi_id }).update({
+        status: 1,
+      });
     }
 
     return response.ok({
@@ -28622,7 +28695,7 @@ class MainController {
     });
   }
 
-  async postDisposisi({ response, request, auth}) {
+  async postDisposisi({ response, request, auth }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -28655,13 +28728,12 @@ class MainController {
     }
 
     const disposisi = await MDisposisi.create({
-        penanganan,
-        tanggal_pengembalian,
-        isi,
-        ttd,
-        m_user_id,
-      });
-
+      penanganan,
+      tanggal_pengembalian,
+      isi,
+      ttd,
+      m_user_id,
+    });
 
     return response.ok({
       message: messagePostSuccess,
