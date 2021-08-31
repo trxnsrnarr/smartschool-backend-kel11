@@ -408,20 +408,20 @@ class MainController {
   async getMasterSekolah({ response, request }) {
     let { page, search, bentuk } = request.get();
 
-    page = page ? page : 1
+    page = page ? page : 1;
 
-    const res = Sekolah.query()
+    const res = Sekolah.query();
 
-    if(search) {
-      res.where("sekolah", "like", `%${search}%`)
+    if (search) {
+      res.where("sekolah", "like", `%${search}%`);
     }
-      
-    if(bentuk) {
-      res.where("bentuk", bentuk)
+
+    if (bentuk) {
+      res.where("bentuk", bentuk);
     }
 
     return response.ok({
-      sekolah: await res.paginate(page)
+      sekolah: await res.paginate(page),
     });
   }
 
@@ -3076,7 +3076,8 @@ class MainController {
               })
               .with("sikapSiswa", (builder) => {
                 builder.with("predikat").where({ m_user_id: user_id });
-              });
+              })
+              .with("templateDeskripsi");
           })
           .where({ dihapus: 0 })
           .orderBy("urutan", "asc");
