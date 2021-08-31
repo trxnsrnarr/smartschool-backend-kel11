@@ -30887,14 +30887,6 @@ class MainController {
     worksheet.getColumn("B").width = 20;
     worksheet.getColumn("C").width = 23;
     worksheet.getColumn("D").width = 6;
-    worksheet.getColumn("A").outlineLevel = 0;
-    worksheet.getColumn("B").outlineLevel = 1;
-    worksheet.getColumn("C").outlineLevel = 1;
-
-    // columns support a readonly field to indicate the collapsed state based on outlineLevel
-    expect(worksheet.getColumn("A").collapsed).to.equal(false);
-    expect(worksheet.getColumn("B").collapsed).to.equal(true);
-    expect(worksheet.getColumn("C").collapsed).to.equal(true);
 
     let namaFile = `/uploads/rekapan-nilai-${
       rekapan.toJSON().rekap.tipe
