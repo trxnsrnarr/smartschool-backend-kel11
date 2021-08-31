@@ -30682,5 +30682,80 @@ class MainController {
 
     return namaFile;
   }
+
+  async detailRPPGuru({ response, request, auth, params: { user_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const user = await User.query()
+      .where({ dihapus: 0 })
+      .andWhere({ id: user_id })
+      .first();
+
+    const rpp = await MRpp.query()
+      .with("mataPelajaran")
+      .where({ m_user_id: user.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    return response.ok({
+      user,
+      rpp,
+      sekolah,
+    });
+  }
+
+  async getProfilGuru({ auth, response, request, params: { user_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    const mataPelajaran = await MMataPelajaran.query()
+      .where({ m_user_id: user_id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    const userData = await User.query()
+    .with("profil")
+      .where({ id: user_id })
+      .with("sekolah")
+      .first();
+
+    let rombel;
+
+    if (ta != "404") {
+      rombel = await MRombel.query()
+        .where({ m_ta_id: ta.id })
+        .andWhere({ m_user_id: user_id })
+        .first();
+    }
+
+    return response.ok({
+      user: userData,
+      mataPelajaran: mataPelajaran,
+      rombel,
+      ta,
+    });
+  }
+  
 }
 module.exports = MainController;

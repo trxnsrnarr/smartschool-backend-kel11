@@ -43,6 +43,7 @@ Route.put("/profil", "MainController.putProfil");
 Route.put("/ubah-password", "MainController.putUbahPassword");
 Route.post("/profil-user", "MainController.postProfilUser");
 Route.get("/profil-user", "MainController.getProfilUser");
+Route.get("/profil/guru/:user_id", "MainController.getProfilGuru");
 
 // user
 Route.get("/user", "MainController.getUser");
@@ -434,6 +435,7 @@ Route.get("/rpp/:rpp_id", "MainController.detailRpp");
 Route.post("/rpp", "MainController.postRpp");
 Route.put("/rpp/:rpp_id", "MainController.putRpp");
 Route.delete("/rpp/:rpp_id", "MainController.deleteRpp");
+Route.get("/rpp/guru/:user_id", "MainController.detailRPPGuru");
 
 // perpus aktivitas
 Route.post("/perpus-aktivitas", "MainController.postPerpusAktivitas");
