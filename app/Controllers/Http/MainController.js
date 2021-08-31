@@ -2819,7 +2819,7 @@ class MainController {
                   builder.where({ dihapus: 0 });
                 })
                 .with("rekapSikap", (builder) => {
-                  builder.where({ dihapus: 0 });
+                  builder.with("predikat").where({ dihapus: 0 });
                 })
                 .with("nilaiUjian")
                 .withCount(
@@ -2878,7 +2878,7 @@ class MainController {
                     builder.where({ dihapus: 0 });
                   })
                   .with("rekapSikap", (builder) => {
-                    builder.where({ dihapus: 0 });
+                    builder.with("predikat").where({ dihapus: 0 });
                   })
                   .with("nilaiUjian")
                   .withCount(
