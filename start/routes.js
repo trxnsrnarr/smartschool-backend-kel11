@@ -603,11 +603,11 @@ Route.delete("/predikat/:predikat_id", "MainController.deletePredikat");
 
 //Rapor Service
 Route.get(
-  "/rombel/:jadwal_mengajar_id/rapor-nilai/:user_id",
+  "/rombel/:mata_pelajaran_id/rapor-nilai/:user_id",
   "MainController.detailRombelRapor"
 );
 Route.get(
-  "/rombel/:jadwal_mengajar_id/rapor-keterampilan/:user_id",
+  "/rombel/:mata_pelajaran_id/rapor-keterampilan/:user_id",
   "MainController.detailRombelRaporKeterampilan"
 );
 Route.get(

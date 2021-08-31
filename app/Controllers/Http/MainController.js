@@ -19818,7 +19818,7 @@ class MainController {
     response,
     request,
     auth,
-    params: { user_id, jadwal_mengajar_id },
+    params: { user_id, mata_pelajaran_id },
   }) {
     const domain = request.headers().origin;
 
@@ -19830,11 +19830,9 @@ class MainController {
     const ta = await this.getTAAktif(sekolah);
     const siswa = await User.query().where({ id: user_id }).first();
 
-    const jadwalMengajar = await MJadwalMengajar.query()
-      .with("mataPelajaran", (builder) => {
-        builder.with("user");
-      })
-      .where({ id: jadwal_mengajar_id })
+    const mapel = await MMataPelajaran.query()
+      .with("user")
+      .where({ id: mata_pelajaran_id })
       .first();
 
     const rekap = await TkRekapNilai.query()
@@ -19869,7 +19867,7 @@ class MainController {
         builder.select("id", "nilai");
       })
       .where({ m_user_id: user_id })
-      .andWhere({ m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id })
+      .andWhere({ m_mata_pelajaran_id: mapel.id })
       .first();
 
     const result = await Promise.all(
@@ -19938,7 +19936,7 @@ class MainController {
       await MUjianSiswa.create({
         m_ta_id: ta.id,
         m_user_id: user_id,
-        m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id,
+        m_mata_pelajaran_id: mapel.id,
         nilai: nilaiAkhir,
       });
     }
@@ -19953,7 +19951,7 @@ class MainController {
       nilaiAkhir,
       ujian,
       siswa,
-      jadwalMengajar,
+      mapel,
     });
   }
 
@@ -19961,7 +19959,7 @@ class MainController {
     response,
     request,
     auth,
-    params: { user_id, jadwal_mengajar_id },
+    params: { user_id, mata_pelajaran_id },
   }) {
     const siswaKeterampilan = await User.query().where({ id: user_id }).first();
 
@@ -19973,11 +19971,9 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
     const ta = await this.getTAAktif(sekolah);
-    const jadwalMengajarKeterampilan = await MJadwalMengajar.query()
-      .with("mataPelajaran", (builder) => {
-        builder.with("user");
-      })
-      .where({ id: jadwal_mengajar_id })
+    const mapelKeterampilan = await MMataPelajaran.query()
+      .with("user")
+      .where({ id: mata_pelajaran_id })
       .first();
 
     const rekap = await TkRekapNilai.query()
@@ -20128,7 +20124,7 @@ class MainController {
     const nilaiAkhirKeterampilan = await MUjianSiswa.query()
       .where({ m_user_id: user_id })
       .andWhere({
-        m_mata_pelajaran_id: jadwalMengajarKeterampilan.m_mata_pelajaran_id,
+        m_mata_pelajaran_id: mapelKeterampilan.id,
       })
       .first();
 
@@ -20148,7 +20144,7 @@ class MainController {
       praktik,
       portofolio,
       produk,
-      jadwalMengajarKeterampilan,
+      mapelKeterampilan,
       nilaiAkhirKeterampilan,
     });
   }
@@ -22724,7 +22720,7 @@ class MainController {
       });
     }
 
-    const { tipe, search,nav } = request.get();
+    const { tipe, search, nav } = request.get();
 
     let surel;
 
@@ -22815,29 +22811,29 @@ class MainController {
           .andWhere({ m_user_id: user.id })
           .paginate();
       } else if (tipe == "disposisi") {
-        if(nav=="semua"){
+        if (nav == "semua") {
           surel = await MDisposisi.query()
-          .with("surat")
-          .with("pelaporanDisposisi")
-          .where({ dihapus: 0 })
-          .andWhere({ m_user_id: user.id })
-          .paginate();
-        }else if(nav=="belum selesai"){
+            .with("surat")
+            .with("pelaporanDisposisi")
+            .where({ dihapus: 0 })
+            .andWhere({ m_user_id: user.id })
+            .paginate();
+        } else if (nav == "belum selesai") {
           surel = await MDisposisi.query()
-          .with("surat")
-          .with("pelaporanDisposisi")
-          .where({ dihapus: 0 })
-          .andWhere({ m_user_id: user.id })
-          .andWhere({status:0})
-          .paginate();
-        }else if(nav=="selesai"){
+            .with("surat")
+            .with("pelaporanDisposisi")
+            .where({ dihapus: 0 })
+            .andWhere({ m_user_id: user.id })
+            .andWhere({ status: 0 })
+            .paginate();
+        } else if (nav == "selesai") {
           surel = await MDisposisi.query()
-          .with("surat")
-          .with("pelaporanDisposisi")
-          .where({ dihapus: 0 })
-          .andWhere({ m_user_id: user.id })
-          .andWhere({status:1})
-          .paginate();
+            .with("surat")
+            .with("pelaporanDisposisi")
+            .where({ dihapus: 0 })
+            .andWhere({ m_user_id: user.id })
+            .andWhere({ status: 1 })
+            .paginate();
         }
       }
     } else {
@@ -22894,29 +22890,29 @@ class MainController {
           .andWhere({ m_user_id: user.id })
           .paginate();
       } else if (tipe == "disposisi") {
-         if(nav=="semua"){
+        if (nav == "semua") {
           surel = await MDisposisi.query()
-          .with("surat")
-          .with("pelaporanDisposisi")
-          .where({ dihapus: 0 })
-          .andWhere({ m_user_id: user.id })
-          .paginate();
-        }else if(nav=="belum selesai"){
+            .with("surat")
+            .with("pelaporanDisposisi")
+            .where({ dihapus: 0 })
+            .andWhere({ m_user_id: user.id })
+            .paginate();
+        } else if (nav == "belum selesai") {
           surel = await MDisposisi.query()
-          .with("surat")
-          .with("pelaporanDisposisi")
-          .where({ dihapus: 0 })
-          .andWhere({ m_user_id: user.id })
-          .andWhere({status:0})
-          .paginate();
-        }else if(nav=="selesai"){
+            .with("surat")
+            .with("pelaporanDisposisi")
+            .where({ dihapus: 0 })
+            .andWhere({ m_user_id: user.id })
+            .andWhere({ status: 0 })
+            .paginate();
+        } else if (nav == "selesai") {
           surel = await MDisposisi.query()
-          .with("surat")
-          .with("pelaporanDisposisi")
-          .where({ dihapus: 0 })
-          .andWhere({ m_user_id: user.id })
-          .andWhere({status:1})
-          .paginate();
+            .with("surat")
+            .with("pelaporanDisposisi")
+            .where({ dihapus: 0 })
+            .andWhere({ m_user_id: user.id })
+            .andWhere({ status: 1 })
+            .paginate();
         }
       }
     }
@@ -28319,30 +28315,30 @@ class MainController {
             .andWhere("perihal", "like", `%${search}%`)
             .paginate();
         } else if (tipe == "disposisi") {
-          if(nav=="semua"){
-          surel = await MDisposisi.query()
-          .with("surat")
-          .with("pelaporanDisposisi")
-          .where({ dihapus: 0 })
-          .andWhere({ m_user_id: user.id })
-          .paginate();
-        }else if(nav=="belum selesai"){
-          surel = await MDisposisi.query()
-          .with("surat")
-          .with("pelaporanDisposisi")
-          .where({ dihapus: 0 })
-          .andWhere({ m_user_id: user.id })
-          .andWhere({status:0})
-          .paginate();
-        }else if(nav=="selesai"){
-          surel = await MDisposisi.query()
-          .with("surat")
-          .with("pelaporanDisposisi")
-          .where({ dihapus: 0 })
-          .andWhere({ m_user_id: user.id })
-          .andWhere({status:1})
-          .paginate();
-        }
+          if (nav == "semua") {
+            surel = await MDisposisi.query()
+              .with("surat")
+              .with("pelaporanDisposisi")
+              .where({ dihapus: 0 })
+              .andWhere({ m_user_id: user.id })
+              .paginate();
+          } else if (nav == "belum selesai") {
+            surel = await MDisposisi.query()
+              .with("surat")
+              .with("pelaporanDisposisi")
+              .where({ dihapus: 0 })
+              .andWhere({ m_user_id: user.id })
+              .andWhere({ status: 0 })
+              .paginate();
+          } else if (nav == "selesai") {
+            surel = await MDisposisi.query()
+              .with("surat")
+              .with("pelaporanDisposisi")
+              .where({ dihapus: 0 })
+              .andWhere({ m_user_id: user.id })
+              .andWhere({ status: 1 })
+              .paginate();
+          }
         }
       } else {
         // ===== service Perusahaan saya ====
@@ -28359,30 +28355,30 @@ class MainController {
             .andWhere({ m_user_id: user.id })
             .paginate();
         } else if (tipe == "disposisi") {
-          if(nav=="semua"){
-          surel = await MDisposisi.query()
-          .with("surat")
-          .with("pelaporanDisposisi")
-          .where({ dihapus: 0 })
-          .andWhere({ m_user_id: user.id })
-          .paginate();
-        }else if(nav=="belum selesai"){
-          surel = await MDisposisi.query()
-          .with("surat")
-          .with("pelaporanDisposisi")
-          .where({ dihapus: 0 })
-          .andWhere({ m_user_id: user.id })
-          .andWhere({status:0})
-          .paginate();
-        }else if(nav=="selesai"){
-          surel = await MDisposisi.query()
-          .with("surat")
-          .with("pelaporanDisposisi")
-          .where({ dihapus: 0 })
-          .andWhere({ m_user_id: user.id })
-          .andWhere({status:1})
-          .paginate();
-        }
+          if (nav == "semua") {
+            surel = await MDisposisi.query()
+              .with("surat")
+              .with("pelaporanDisposisi")
+              .where({ dihapus: 0 })
+              .andWhere({ m_user_id: user.id })
+              .paginate();
+          } else if (nav == "belum selesai") {
+            surel = await MDisposisi.query()
+              .with("surat")
+              .with("pelaporanDisposisi")
+              .where({ dihapus: 0 })
+              .andWhere({ m_user_id: user.id })
+              .andWhere({ status: 0 })
+              .paginate();
+          } else if (nav == "selesai") {
+            surel = await MDisposisi.query()
+              .with("surat")
+              .with("pelaporanDisposisi")
+              .where({ dihapus: 0 })
+              .andWhere({ m_user_id: user.id })
+              .andWhere({ status: 1 })
+              .paginate();
+          }
         }
       }
     } else if (user.role == "kepsek") {
@@ -28404,30 +28400,30 @@ class MainController {
             .andWhere({ teruskan: 1 })
             .paginate();
         } else if (tipe == "disposisi") {
-           if(nav=="semua"){
-          surel = await MDisposisi.query()
-          .with("surat")
-          .with("pelaporanDisposisi")
-          .where({ dihapus: 0 })
-          .andWhere({ m_user_id: user.id })
-          .paginate();
-        }else if(nav=="belum selesai"){
-          surel = await MDisposisi.query()
-          .with("surat")
-          .with("pelaporanDisposisi")
-          .where({ dihapus: 0 })
-          .andWhere({ m_user_id: user.id })
-          .andWhere({status:0})
-          .paginate();
-        }else if(nav=="selesai"){
-          surel = await MDisposisi.query()
-          .with("surat")
-          .with("pelaporanDisposisi")
-          .where({ dihapus: 0 })
-          .andWhere({ m_user_id: user.id })
-          .andWhere({status:1})
-          .paginate();
-        }
+          if (nav == "semua") {
+            surel = await MDisposisi.query()
+              .with("surat")
+              .with("pelaporanDisposisi")
+              .where({ dihapus: 0 })
+              .andWhere({ m_user_id: user.id })
+              .paginate();
+          } else if (nav == "belum selesai") {
+            surel = await MDisposisi.query()
+              .with("surat")
+              .with("pelaporanDisposisi")
+              .where({ dihapus: 0 })
+              .andWhere({ m_user_id: user.id })
+              .andWhere({ status: 0 })
+              .paginate();
+          } else if (nav == "selesai") {
+            surel = await MDisposisi.query()
+              .with("surat")
+              .with("pelaporanDisposisi")
+              .where({ dihapus: 0 })
+              .andWhere({ m_user_id: user.id })
+              .andWhere({ status: 1 })
+              .paginate();
+          }
         }
       } else {
         // ===== service Perusahaan saya ====
@@ -28445,30 +28441,30 @@ class MainController {
             .andWhere({ teruskan: 1 })
             .paginate();
         } else if (tipe == "disposisi") {
-          if(nav=="semua"){
-          surel = await MDisposisi.query()
-          .with("surat")
-          .with("pelaporanDisposisi")
-          .where({ dihapus: 0 })
-          .andWhere({ m_user_id: user.id })
-          .paginate();
-        }else if(nav=="belum selesai"){
-          surel = await MDisposisi.query()
-          .with("surat")
-          .with("pelaporanDisposisi")
-          .where({ dihapus: 0 })
-          .andWhere({ m_user_id: user.id })
-          .andWhere({status:0})
-          .paginate();
-        }else if(nav=="selesai"){
-          surel = await MDisposisi.query()
-          .with("surat")
-          .with("pelaporanDisposisi")
-          .where({ dihapus: 0 })
-          .andWhere({ m_user_id: user.id })
-          .andWhere({status:1})
-          .paginate();
-        }
+          if (nav == "semua") {
+            surel = await MDisposisi.query()
+              .with("surat")
+              .with("pelaporanDisposisi")
+              .where({ dihapus: 0 })
+              .andWhere({ m_user_id: user.id })
+              .paginate();
+          } else if (nav == "belum selesai") {
+            surel = await MDisposisi.query()
+              .with("surat")
+              .with("pelaporanDisposisi")
+              .where({ dihapus: 0 })
+              .andWhere({ m_user_id: user.id })
+              .andWhere({ status: 0 })
+              .paginate();
+          } else if (nav == "selesai") {
+            surel = await MDisposisi.query()
+              .with("surat")
+              .with("pelaporanDisposisi")
+              .where({ dihapus: 0 })
+              .andWhere({ m_user_id: user.id })
+              .andWhere({ status: 1 })
+              .paginate();
+          }
         }
       }
     }
@@ -30891,6 +30887,14 @@ class MainController {
     worksheet.getColumn("B").width = 20;
     worksheet.getColumn("C").width = 23;
     worksheet.getColumn("D").width = 6;
+    worksheet.getColumn("A").outlineLevel = 0;
+    worksheet.getColumn("B").outlineLevel = 1;
+    worksheet.getColumn("C").outlineLevel = 1;
+
+    // columns support a readonly field to indicate the collapsed state based on outlineLevel
+    expect(worksheet.getColumn("A").collapsed).to.equal(false);
+    expect(worksheet.getColumn("B").collapsed).to.equal(true);
+    expect(worksheet.getColumn("C").collapsed).to.equal(true);
 
     let namaFile = `/uploads/rekapan-nilai-${
       rekapan.toJSON().rekap.tipe
