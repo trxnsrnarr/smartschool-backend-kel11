@@ -19836,6 +19836,7 @@ class MainController {
       .where({ id: mata_pelajaran_id })
       .first();
 
+    return mapel.toJSON().materi;
     const rekap = await TkRekapNilai.query()
       .with("rekapRombel", (builder) => {
         builder.with("rekap", (builder) => {
@@ -19843,7 +19844,7 @@ class MainController {
             .where({ tipe: "tugas" })
             .andWhere({ m_ta_id: ta.id })
             .andWhere({ dihapus: 0 })
-            .andWhere({ m_materi_id: mapel.materi.id });
+            .andWhere({ m_materi_id: mapel.toJSON().materi.id });
         });
       })
       .where({ m_user_id: user_id })
