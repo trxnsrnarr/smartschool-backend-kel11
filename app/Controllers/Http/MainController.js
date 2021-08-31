@@ -406,13 +406,23 @@ class MainController {
   }
 
   async getMasterSekolah({ response, request }) {
-    const { page, search } = request.get();
+    let { page, search, bentuk } = request.get();
 
-    const res = await Sekolah.query()
-      .where("sekolah", "like", `%${search}%`)
-      .paginate(page);
+    page = page ? page : 1
 
-    return response.ok(res);
+    const res = Sekolah.query()
+
+    if(search) {
+      res.where("sekolah", "like", `%${search}%`)
+    }
+      
+    if(bentuk) {
+      res.where("bentuk", bentuk)
+    }
+
+    return response.ok({
+      sekolah: await res.paginate(page)
+    });
   }
 
   async loginWhatsapp({ response, request }) {
