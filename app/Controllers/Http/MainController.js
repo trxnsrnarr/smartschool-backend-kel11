@@ -19985,7 +19985,8 @@ class MainController {
           builder
             .where({ tipe: "keterampilan" })
             .andWhere({ m_ta_id: ta.id })
-            .andWhere({ dihapus: 0 });
+            .andWhere({ dihapus: 0 })
+            .andWhere({ m_materi_id: mapel.materi.id });
         });
       })
       .where({ m_user_id: user_id })
@@ -20017,7 +20018,8 @@ class MainController {
             .where({ tipe: "keterampilan" })
             .andWhere({ teknik: "praktik" })
             .andWhere({ m_ta_id: ta.id })
-            .andWhere({ dihapus: 0 });
+            .andWhere({ dihapus: 0 })
+            .andWhere({ m_materi_id: mapel.materi.id });
         });
       })
       .where({ m_user_id: user_id })
@@ -20046,7 +20048,9 @@ class MainController {
           builder
             .where({ tipe: "keterampilan" })
             .andWhere({ teknik: "proyek" })
-            .andWhere({ m_ta_id: ta.id });
+            .andWhere({ m_ta_id: ta.id })
+            .andWhere({ dihapus: 0 })
+            .andWhere({ m_materi_id: mapel.materi.id });
         });
       })
       .where({ m_user_id: user_id })
@@ -20074,7 +20078,9 @@ class MainController {
           builder
             .where({ tipe: "keterampilan" })
             .andWhere({ teknik: "portofolio" })
-            .andWhere({ m_ta_id: ta.id });
+            .andWhere({ m_ta_id: ta.id })
+            .andWhere({ dihapus: 0 })
+            .andWhere({ m_materi_id: mapel.materi.id });
         });
       })
       .where({ m_user_id: user_id })
@@ -20102,7 +20108,9 @@ class MainController {
           builder
             .where({ tipe: "keterampilan" })
             .andWhere({ teknik: "produk" })
-            .andWhere({ m_ta_id: ta.id });
+            .andWhere({ m_ta_id: ta.id })
+            .andWhere({ dihapus: 0 })
+            .andWhere({ m_materi_id: mapel.materi.id });
         });
       })
       .where({ m_user_id: user_id })
