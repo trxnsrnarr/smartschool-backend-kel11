@@ -406,13 +406,23 @@ class MainController {
   }
 
   async getMasterSekolah({ response, request }) {
-    const { npsn } = request.get();
+    let { page, search, bentuk } = request.get();
 
-    const res = await Sekolah.query()
-      .where("npsn", "like", `%${npsn}%`)
-      .first();
+    page = page ? page : 1;
 
-    return response.ok(res);
+    const res = Sekolah.query();
+
+    if (search) {
+      res.where("sekolah", "like", `%${search}%`);
+    }
+
+    if (bentuk) {
+      res.where("bentuk", bentuk);
+    }
+
+    return response.ok({
+      sekolah: await res.paginate(page),
+    });
   }
 
   async loginWhatsapp({ response, request }) {
@@ -2809,7 +2819,7 @@ class MainController {
                   builder.where({ dihapus: 0 });
                 })
                 .with("rekapSikap", (builder) => {
-                  builder.where({ dihapus: 0 });
+                  builder.with("predikat").where({ dihapus: 0 });
                 })
                 .with("nilaiUjian")
                 .withCount(
@@ -2868,7 +2878,7 @@ class MainController {
                     builder.where({ dihapus: 0 });
                   })
                   .with("rekapSikap", (builder) => {
-                    builder.where({ dihapus: 0 });
+                    builder.with("predikat").where({ dihapus: 0 });
                   })
                   .with("nilaiUjian")
                   .withCount(
@@ -3066,7 +3076,8 @@ class MainController {
               })
               .with("sikapSiswa", (builder) => {
                 builder.with("predikat").where({ m_user_id: user_id });
-              });
+              })
+              .with("templateDeskripsi");
           })
           .where({ dihapus: 0 })
           .orderBy("urutan", "asc");
@@ -14962,7 +14973,7 @@ class MainController {
 
     const sikapsosial = await MSikapSosial.query().fetch();
 
-    const tugas = await MTugas.query().where({ m_user_id: user.id }).fetch();
+    // const tugas = await MTugas.query().where({ m_user_id: user.id }).fetch();
 
     const rekap = await MMateri.query()
       .with("jurusan")
@@ -15121,7 +15132,7 @@ class MainController {
       dataTemplateKeterampilan,
       dataTemplateSikap,
       sikapsosial,
-      tugas,
+      // tugas,
       predikat,
     });
   }
@@ -15200,12 +15211,14 @@ class MainController {
     const rules = {
       m_sikap_ditingkatkan_id: "required",
       m_sikap_ditunjukkan_id: "required",
+      m_predikat_nilai_id: "required",
     };
     const message = {
       "m_sikap_ditingkatkan_id.required":
         "Pilih salah satu sikap yang ditingkatkan",
       "m_sikap_ditunjukkan_id.required":
         "Pilih salah satu sikap yang ditunjukkan",
+      "m_predikat_nilai_id.required": "Pilih salah satu predikat",
     };
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
@@ -15259,6 +15272,9 @@ class MainController {
           m_mata_pelajaran_id: mata_pelajaran_id,
         });
     }
+    return response.ok({
+      message: messagePutSuccess,
+    });
   }
   async postRaporSikapSosial({ response, request, auth, params: { user_id } }) {
     const domain = request.headers().origin;
