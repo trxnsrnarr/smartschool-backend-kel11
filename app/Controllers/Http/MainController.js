@@ -28043,9 +28043,9 @@ class MainController {
           `${today.getFullYear()}-${
             today.getMonth() + 1
           }-${today.getDate()} 00:00:00`,
-          `${today.getFullYear()}-${today.getMonth() + 1}-${
-            today.getDate() + 1
-          } 00:00:00`,
+          `${today.getFullYear()}-${
+            today.getMonth() + 1
+          }-${today.getDate()} 23:59:59`,
         ])
         .andWhere({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
