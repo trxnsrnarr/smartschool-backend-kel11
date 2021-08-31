@@ -19832,6 +19832,7 @@ class MainController {
 
     const mapel = await MMataPelajaran.query()
       .with("user")
+      .with("materi")
       .where({ id: mata_pelajaran_id })
       .first();
 
@@ -19841,7 +19842,8 @@ class MainController {
           builder
             .where({ tipe: "tugas" })
             .andWhere({ m_ta_id: ta.id })
-            .andWhere({ dihapus: 0 });
+            .andWhere({ dihapus: 0 })
+            .andWhere({ m_materi_id: mapel.materi.id });
         });
       })
       .where({ m_user_id: user_id })
@@ -19853,7 +19855,8 @@ class MainController {
           builder
             .where({ tipe: "ujian" })
             .andWhere({ m_ta_id: ta.id })
-            .andWhere({ dihapus: 0 });
+            .andWhere({ dihapus: 0 })
+            .andWhere({ m_materi_id: mapel.materi.id });
         });
       })
       .where({ m_user_id: user_id })
@@ -30623,7 +30626,7 @@ class MainController {
           .where({ m_rekap_rombel_id: rekapRombel_id })
           .andWhere({ m_user_id: userSiswa.id })
           .update({
-            nilai: d.nilai > 100 ? 100 : d.nilai ,
+            nilai: d.nilai > 100 ? 100 : d.nilai,
           });
         return;
       })
