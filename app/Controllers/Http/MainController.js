@@ -14999,7 +14999,13 @@ class MainController {
       .with("rombel", (builder) => {
         builder.with("anggotaRombel", (builder) => {
           builder.where({ dihapus: 0 }).with("user", (builder) => {
-            builder.with("rekapSikap").select("id", "nama");
+            builder
+              .with("rekapSikap", (builder) => {
+                builder.where({
+                  m_mata_pelajaran_id: pelajaran.toJSON().mataPelajaran.id,
+                });
+              })
+              .select("id", "nama");
           });
         });
       })
@@ -15255,8 +15261,7 @@ class MainController {
       });
     } else {
       await MSikapRombel.query()
-        .where({ m_user_id: user_id })
-        .andWhere({ m_rombel_id: rombel_id })
+        .where({ id: sikap.id })
         .update({
           m_sikap_ditunjukkan_id: m_sikap_ditunjukkan_id
             ? m_sikap_ditunjukkan_id.length
