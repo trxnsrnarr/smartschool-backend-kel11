@@ -877,6 +877,16 @@ Route.post("/download/monev", "MainController.downloadMonev1");
 Route.post("/import/GPDS", "MainController.importGPDS");
 Route.post("/gpds-username", "MainController.gpdsUsername");
 
+Route.post(
+  "/download/rekap-rombel/:rekapRombel_id",
+  "MainController.downloadRekapRombel"
+);
+Route.post(
+  "/import/rekap-rombel/:rekapRombel_id",
+  "MainController.importNilaiRekapRombel"
+);
+Route.post("/import/GPDS", "MainController.importGPDS");
+
 //dashboard
 Route.get("/dashboard/tugas", "MainController.getDashboardTugas");
 Route.get("/dashboard/absen", "MainController.getDashboardAbsen");
