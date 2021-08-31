@@ -30623,7 +30623,7 @@ class MainController {
           .where({ m_rekap_rombel_id: rekapRombel_id })
           .andWhere({ m_user_id: userSiswa.id })
           .update({
-            nilai: d.nilai,
+            nilai: d.nilai > 100 ? 100 : d.nilai ,
           });
         return;
       })
