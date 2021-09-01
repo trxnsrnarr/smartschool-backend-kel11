@@ -3833,6 +3833,10 @@ class MainController {
           m_rombel_id,
         });
       } else {
+        const checkTk = await TkMateriRombel.query()
+          .where({ m_materi_id: check.id })
+          .andWhere({ m_rombel_id })
+          .first();
         await TkMateriRombel.create({
           m_materi_id: check.id,
           m_rombel_id,
@@ -3855,10 +3859,16 @@ class MainController {
           m_rombel_id,
         });
       } else {
-        await TkMateriRombel.create({
-          m_materi_id: check.id,
-          m_rombel_id,
-        });
+        const checkTk = await TkMateriRombel.query()
+          .where({ m_materi_id: check.id })
+          .andWhere({ m_rombel_id })
+          .first();
+        if (!checkTk) {
+          await TkMateriRombel.create({
+            m_materi_id: check.id,
+            m_rombel_id,
+          });
+        }
       }
     }
 
@@ -18859,9 +18869,25 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .fetch();
 
+    const rombelIds = await MRombel.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .pluck("id");
+
+    const countMapel = await Promise.all(
+      rombelIds.map(async (item) => {
+        const count = await TkMateriRombel.query()
+          .where("m_rombel_id", item)
+          .countDistinct("m_materi_id");
+        return { rombel_id: item, count };
+      })
+    );
+
     return response.ok({
       predikat: predikat,
       rombel: rombel,
+      countMapel,
     });
   }
 
