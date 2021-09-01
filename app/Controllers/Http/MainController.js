@@ -2883,7 +2883,11 @@ class MainController {
                   .with("rekapSikap", (builder) => {
                     builder.with("predikat").where({ dihapus: 0 });
                   })
-                  .with("nilaiUjian")
+                  .with("nilaiUjian", (builder) => {
+                    builder.where({
+                      m_mata_pelajaran_id: data.m_mata_pelajaran_id,
+                    });
+                  })
                   .withCount(
                     "nilaiSemuaUjian as jumlahMapelDikerjakan",
                     (builder) => {
