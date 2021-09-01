@@ -6166,21 +6166,21 @@ class MainController {
                 dihapus: 0,
                 dikumpulkan: 0,
               });
-              if (d.user.email != null) {
-                const gmail = await Mail.send(`emails.tugas`, d, (message) => {
-                  message
-                    .to(`${d.user.email}`)
-                    .from("no-reply@smarteschool.id")
-                    .subject("Pembayaran SPP");
-                });
+              // if (d.user.email != null) {
+              //   const gmail = await Mail.send(`emails.tugas`, d, (message) => {
+              //     message
+              //       .to(`${d.user.email}`)
+              //       .from("no-reply@smarteschool.id")
+              //       .subject("Pembayaran SPP");
+              //   });
 
-                if (gmail) {
-                  return response.ok({
-                    message: messageEmailSuccess,
-                  });
-                }
-                // return d.user.nama;
-              }
+              //   if (gmail) {
+              //     return response.ok({
+              //       message: messageEmailSuccess,
+              //     });
+              //   }
+              //   // return d.user.nama;
+              // }
             } else if (
               dihapus.includes(d.m_user_id) &&
               list_anggota.length > 0
