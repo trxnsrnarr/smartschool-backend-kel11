@@ -2839,11 +2839,13 @@ class MainController {
         .first();
 
       if (data) {
-        kkm = await TkMapelRapor.query()
-          .with("mataPelajaran")
+        kkm = await MKategoriMapel.query()
+          .with("mapelRapor", (builder) => {
+            builder.with("mataPelajaran");
+          })
           .where({ dihapus: 0 })
-          .andWhere({ m_mata_pelajaran_id: data.m_mata_pelajaran_id })
-          .first();
+          .andWhere({ m_rombel_id: data.m_rombel_id })
+          .fetch();
 
         totalMapel = await TkMateriRombel.query()
           .where({ m_rombel_id: data.m_rombel_id })
@@ -2862,6 +2864,7 @@ class MainController {
             builder
               .with("user", async (builder) => {
                 builder
+                  .select("id", "nama", "whatsapp", "email", "avatar", "gender")
                   .with("keteranganRapor", (builder) => {
                     builder.where({ dihapus: 0 });
                   })
@@ -2886,27 +2889,23 @@ class MainController {
                     (builder) => {
                       builder.andWhere({ m_ta_id: ta.id });
                     }
-                  );
-
-                if (kkm) {
-                  await jadwalMengajar
-                    .withCount(
-                      "nilaiSemuaUjian as kkmPengetahuan",
-                      (builder) => {
-                        builder
-                          .where("nilai", "<", `${kkm.mataPelajaran.kkm}`)
-                          .andWhere({ m_ta_id: ta.id });
-                      }
-                    )
-                    .withCount(
-                      "nilaiSemuaUjian as kkmKeterampilan",
-                      (builder) => {
-                        builder
-                          .where("nilai_keterampilan", "<", `${kkm.kkm2}`)
-                          .andWhere({ m_ta_id: ta.id });
-                      }
-                    );
-                }
+                  )
+                  .with("nilaiSemuaUjian", (builder) => {
+                    builder
+                      .select(
+                        // "m_ta_id",
+                        "m_user_id",
+                        "m_mata_pelajaran_id",
+                        "nilai",
+                        "nilai_keterampilan"
+                      )
+                      // .where(
+                      //   "nilai",
+                      //   "<",
+                      //   `${kkm.toJSON().mataPelajaran.kkm}`
+                      // )
+                      .where({ m_ta_id: ta.id });
+                  });
               })
               .where({ dihapus: 0 });
           });
@@ -19376,6 +19375,13 @@ class MainController {
         });
       })
       .where({ m_rombel_id: rombel_id })
+      .pluck("m_materi_id");
+
+    const count = await MMateri.query()
+      .select("id", "m_mata_pelajaran_id")
+      .with("mataPelajaran")
+      .distinct("id")
+      .whereIn("id", materiRombel)
       .fetch();
 
     const predikat = await MPredikatNilai.query()
@@ -19402,11 +19408,11 @@ class MainController {
       });
 
       const result = await Promise.all(
-        materiRombel.toJSON().map(async (d, idx) => {
+        count.toJSON().map(async (d, idx) => {
           await TkMapelRapor.create({
-            nama: d.materi.mataPelajaran ? d.materi.mataPelajaran.nama : "-",
-            kkm2: d.materi.mataPelajaran ? d.materi.mataPelajaran.kkm : "0",
-            m_mata_pelajaran_id: d.materi ? d.materi.m_mata_pelajaran_id : null,
+            nama: d.mataPelajaran ? d.mataPelajaran.nama : "-",
+            kkm2: d.mataPelajaran ? d.mataPelajaran.kkm : "0",
+            m_mata_pelajaran_id: d ? d.m_mata_pelajaran_id : null,
             m_kategori_mapel_id: kategori.id,
             m_predikat_nilai_id: predikat ? predikat.id : "0",
             dihapus: 0,
