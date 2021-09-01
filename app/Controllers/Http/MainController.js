@@ -18993,6 +18993,9 @@ class MainController {
                       .where({ m_user_id: user_id })
                       .andWhere({ m_ta_id: d.id });
                   })
+                  .with("sikapSiswa", (builder) => {
+                    builder.with("predikat").where({ m_user_id: user_id });
+                  })
                   .with("templateDeskripsi", (builder) => {
                     builder.with("predikat");
                   })
