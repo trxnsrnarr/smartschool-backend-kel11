@@ -5139,6 +5139,12 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
     const { nama, tingkat, peringkat, tempat, tahun, m_user_id } =
       request.post();
     const rules = {
@@ -5169,6 +5175,7 @@ class MainController {
       dihapus: 0,
       m_user_id: m_user_id,
       m_sekolah_id: sekolah.id,
+      m_ta_id: ta.id,
     });
 
     return response.ok({
@@ -18998,14 +19005,19 @@ class MainController {
           .with("keteranganRapor", (builder) => {
             builder.where({ dihapus: 0 }).andWhere({ m_ta_id: d.id });
           })
-          .with("keteranganPkl")
+          .with("keteranganPkl", (builder) => {
+            builder.where({ dihapus: 0 }).andWhere({ m_ta_id: d.id });
+          })
           .with("raporEkskul", (builder) => {
             builder.with("rombel", (builder) => {
               builder.select("id", "nama");
             });
           })
           .with("prestasi", (builder) => {
-            builder.with("tingkatPrestasi").where({ dihapus: 0 });
+            builder
+              .with("tingkatPrestasi")
+              .where({ dihapus: 0 })
+              .andWhere({ m_ta_id: d.id });
           })
           .with("sikap", (builder) => {
             builder.where({ dihapus: 0 }).andWhere({ m_ta_id: d.id });
@@ -20639,6 +20651,11 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
 
     const user = await auth.getUser();
 
@@ -20675,6 +20692,7 @@ class MainController {
       keterangan,
       lamanya: lama,
       m_user_id: user_id,
+      m_ta_id: ta.id,
       dihapus: 0,
     });
 
@@ -25885,6 +25903,11 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
 
     const user = await auth.getUser();
 
@@ -25929,6 +25952,7 @@ class MainController {
             lampiran,
             m_sekolah_id: sekolah.id,
             m_user_id: d,
+            m_ta_id: ta.id,
             dihapus: 0,
           });
         })
