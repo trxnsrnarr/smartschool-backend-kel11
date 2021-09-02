@@ -2886,7 +2886,7 @@ class MainController {
 
         totalMapel = await TkMateriRombel.query()
           .where({ m_rombel_id: data.m_rombel_id })
-          .count("* as total");
+          .countDistinct("m_materi_id");
       }
 
       sikapsosial = await MSikapSosial.query().fetch();
@@ -4564,9 +4564,6 @@ class MainController {
         })
         .withCount("bab", (builder) => {
           builder.where({ dihapus: 0 });
-        })
-        .withCount("rekap as total", (builder) => {
-          builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id });
         })
         .whereIn("id", materiIds)
         .fetch();
@@ -15090,6 +15087,54 @@ class MainController {
         return false;
       }
     });
+
+    const checkPredikat = await MPredikatNilai.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .first();
+
+    if (!checkPredikat) {
+      await MPredikatNilai.create({
+        predikat: "A",
+        bb_pengetahuan: "86",
+        ba_pengetahuan: "100",
+        bb_keterampilan: "86",
+        ba_keterampilan: "100",
+        sikap: "Sangat Baik",
+        m_sekolah_id: sekolah.id,
+        dihapus: 0,
+      });
+      await MPredikatNilai.create({
+        predikat: "B",
+        bb_pengetahuan: "71",
+        ba_pengetahuan: "85",
+        bb_keterampilan: "71",
+        ba_keterampilan: "85",
+        sikap: "Baik",
+        m_sekolah_id: sekolah.id,
+        dihapus: 0,
+      });
+      await MPredikatNilai.create({
+        predikat: "C",
+        bb_pengetahuan: "56",
+        ba_pengetahuan: "70",
+        bb_keterampilan: "756",
+        ba_keterampilan: "70",
+        sikap: "Cukup",
+        m_sekolah_id: sekolah.id,
+        dihapus: 0,
+      });
+      await MPredikatNilai.create({
+        predikat: "D",
+        bb_pengetahuan: "0",
+        ba_pengetahuan: "55",
+        bb_keterampilan: "0",
+        ba_keterampilan: "55",
+        sikap: "Kurang",
+        m_sekolah_id: sekolah.id,
+        dihapus: 0,
+      });
+    }
 
     const checkTemplate = await MTemplateDeskripsi.query()
       .where({ m_mata_pelajaran_id: rekap.m_mata_pelajaran_id })
