@@ -4529,7 +4529,7 @@ class MainController {
           builder.where({ dihapus: 0 });
         })
         .withCount("rekap as total", (builder) => {
-          builder.where({ dihapus: 0 });
+          builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id });
         })
         .whereIn("id", materiIds)
         .fetch();
@@ -4561,6 +4561,9 @@ class MainController {
       .with("mataPelajaran")
       .withCount("bab", (builder) => {
         builder.where({ dihapus: 0 });
+      })
+      .withCount("rekap as total", (builder) => {
+        builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id });
       })
       .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
       .fetch();
