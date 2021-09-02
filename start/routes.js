@@ -69,6 +69,7 @@ Route.delete("/guru/:guru_id", "MainController.deleteGuru");
 Route.get("/siswa", "MainController.getSiswa");
 Route.post("/siswa", "MainController.postSiswa");
 Route.put("/siswa/:siswa_id", "MainController.putSiswa");
+Route.put("/avatar-siswa/:user_id", "MainController.putFotoSiswa");
 Route.delete("/siswa/:siswa_id", "MainController.deleteSiswa");
 
 // ppdb

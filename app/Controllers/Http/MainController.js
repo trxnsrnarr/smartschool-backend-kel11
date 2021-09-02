@@ -1738,6 +1738,43 @@ class MainController {
     });
   }
 
+  async putFotoSiswa({ response, request, auth, params: { user_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { avatar } = request.post();
+    const rules = {
+      avatar: "required",
+    };
+    const message = {
+      "avatar.required": "Avatar harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const DUser = await User.query().where({ id: user_id }).update({
+      avatar,
+      dihapus: 0,
+    });
+
+    if (!DUser) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
   async deleteSiswa({ response, request, auth, params: { siswa_id } }) {
     const domain = request.headers().origin;
 
