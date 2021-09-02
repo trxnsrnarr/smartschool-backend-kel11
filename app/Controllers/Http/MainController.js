@@ -20444,7 +20444,7 @@ class MainController {
       sekolah: sekolah,
       materiRombel: materiRombel,
       predikat: predikat,
-      rombel: rombel,
+      // rombel: rombel,
       ekskul: ekskul,
       totalHadir: totalHadir,
       totalSakit: totalSakit,
