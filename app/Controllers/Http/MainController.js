@@ -20356,57 +20356,58 @@ class MainController {
     //   .where({ id: jadwal_mengajar_id })
     //   .first();
 
-    // let kkm;
-    // let totalMapel;
-    // if (data) {
-    //   kkm = await TkMapelRapor.query()
-    //     .with("mataPelajaran")
-    //     .where({ dihapus: 0 })
-    //     .andWhere({ m_mata_pelajaran_id: data.m_mata_pelajaran_id })
-    //     .first();
+    let kkm;
+    let totalMapel;
+    if (data) {
+      kkm = await MKategoriMapel.query()
+        .with("mapelRapor", (builder) => {
+          builder.with("mataPelajaran");
+        })
+        .where({ dihapus: 0 })
+        .andWhere({ m_rombel_id: rombel_id })
+        .fetch();
 
-    //   totalMapel = await TkMateriRombel.query()
-    //     .where({ m_rombel_id: data.m_rombel_id })
-    //     .count("* as total");
-    // }
+      totalMapel = await TkMateriRombel.query()
+        .where({ m_rombel_id: rombel_id })
+        .count("* as total");
+    }
 
-    // const rombel = await MRombel.query()
-    //   .with("user")
-    //   .with("anggotaRombel", (builder) => {
-    //     builder.with("anggotaRombel", (builder) => {
-    //       builder
-    //         .with("user", async (builder) => {
-    //           builder
-    //             .with("nilaiUjian")
-    //             .withCount(
-    //               "nilaiSemuaUjian as jumlahMapelDikerjakan",
-    //               (builder) => {
-    //                 builder.andWhere({ m_ta_id: ta.id });
-    //               }
-    //             );
-
-    //           if (kkm) {
-    //             await jadwalMengajar
-    //               .withCount("nilaiSemuaUjian as kkmPengetahuan", (builder) => {
-    //                 builder
-    //                   .where("nilai", "<", `${kkm.mataPelajaran.kkm}`)
-    //                   .andWhere({ m_ta_id: ta.id });
-    //               })
-    //               .withCount(
-    //                 "nilaiSemuaUjian as kkmKeterampilan",
-    //                 (builder) => {
-    //                   builder
-    //                     .where("nilai_keterampilan", "<", `${kkm.kkm2}`)
-    //                     .andWhere({ m_ta_id: ta.id });
-    //                 }
-    //               );
-    //           }
-    //         })
-    //         .where({ dihapus: 0 });
-    //     });
-    //   })
-    //   .where({ id: rombel_id })
-    //   .first();
+    const rombel = await MRombel.query()
+      .with("user")
+      .with("anggotaRombel", (builder) => {
+        builder.with("anggotaRombel", (builder) => {
+          builder
+            .with("user", async (builder) => {
+              builder
+                .with("nilaiUjian")
+                .withCount(
+                  "nilaiSemuaUjian as jumlahMapelDikerjakan",
+                  (builder) => {
+                    builder.andWhere({ m_ta_id: ta.id });
+                  }
+                )
+                .with("nilaiSemuaUjian", (builder) => {
+                  builder
+                    .select(
+                      // "m_ta_id",
+                      "m_user_id",
+                      "m_mata_pelajaran_id",
+                      "nilai",
+                      "nilai_keterampilan"
+                    )
+                    // .where(
+                    //   "nilai",
+                    //   "<",
+                    //   `${kkm.toJSON().mataPelajaran.kkm}`
+                    // )
+                    .where({ m_ta_id: ta.id });
+                });
+            })
+            .where({ dihapus: 0 });
+        });
+      })
+      .where({ id: rombel_id })
+      .first();
 
     const ekskul = await MRombel.query()
       .with("anggotaRombel", (builder) => {
@@ -20444,7 +20445,7 @@ class MainController {
       sekolah: sekolah,
       materiRombel: materiRombel,
       predikat: predikat,
-      // rombel: rombel,
+      rombel: rombel,
       ekskul: ekskul,
       totalHadir: totalHadir,
       totalSakit: totalSakit,
@@ -20452,6 +20453,8 @@ class MainController {
       totalAlpa: totalAlpa,
       tanggalDistinct: tanggalDistinct,
       muatan,
+      totalMapel,
+      kkm,
       sikapsosial,
       sikapspiritual,
     });
