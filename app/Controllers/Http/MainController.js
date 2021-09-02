@@ -20302,10 +20302,10 @@ class MainController {
     const siswa = await User.query()
       .with("profil")
       .with("keteranganRapor", (builder) => {
-        builder.with("tingkatPrestasi").where({ dihapus: 0 }).andWhere({m_ta_id:ta.id});
+        builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id });
       })
       .with("keteranganPkl", (builder) => {
-        builder.with("tingkatPrestasi").where({ dihapus: 0 }).andWhere({m_ta_id:ta.id});
+        builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id });
       })
       .with("raporEkskul", (builder) => {
         builder.with("rombel", (builder) => {
@@ -20313,10 +20313,13 @@ class MainController {
         });
       })
       .with("prestasi", (builder) => {
-        builder.with("tingkatPrestasi").where({ dihapus: 0 }).andWhere({m_ta_id:ta.id});
+        builder
+          .with("tingkatPrestasi")
+          .where({ dihapus: 0 })
+          .andWhere({ m_ta_id: ta.id });
       })
       .with("sikap", (builder) => {
-        builder.with("tingkatPrestasi").where({ dihapus: 0 }).andWhere({m_ta_id:ta.id});
+        builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id });
       })
       .where({ id: user_id })
       .andWhere({ dihapus: 0 })
