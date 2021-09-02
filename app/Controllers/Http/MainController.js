@@ -15114,6 +15114,23 @@ class MainController {
                 "Peserta didik dinyatakan telah dapat mengetahui, menerapkan, menganalisis, dan mengeveluasi keterampilan dengan kurang mengenai",
               epilog: "Perlu ditingkatkan mengenai",
             });
+          } else {
+            await MTemplateDeskripsi.create({
+              tipe: "Pengetahuan",
+              m_predikat_nilai_id: d.id,
+              m_mata_pelajaran_id: rekap.m_mata_pelajaran_id,
+              prolog:
+                "Peserta didik dinyatakan telah mengetahui, memahami, mengimplementasikan dan menganalisis pengetahuan dengan kurang mengenai",
+              epilog: "Perlu ditingkatkan mengenai",
+            });
+            await MTemplateDeskripsi.create({
+              tipe: "Keterampilan",
+              m_predikat_nilai_id: d.id,
+              m_mata_pelajaran_id: rekap.m_mata_pelajaran_id,
+              prolog:
+                "Peserta didik dinyatakan telah dapat mengetahui, menerapkan, menganalisis, dan mengeveluasi keterampilan dengan kurang mengenai",
+              epilog: "Perlu ditingkatkan mengenai",
+            });
           }
         })
       );
