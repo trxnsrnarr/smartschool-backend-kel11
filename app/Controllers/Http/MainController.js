@@ -4528,6 +4528,9 @@ class MainController {
         .withCount("bab", (builder) => {
           builder.where({ dihapus: 0 });
         })
+        .withCount("rekap as total", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
         .whereIn("id", materiIds)
         .fetch();
 
