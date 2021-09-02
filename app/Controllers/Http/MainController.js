@@ -2849,7 +2849,7 @@ class MainController {
 
         totalMapel = await TkMateriRombel.query()
           .where({ m_rombel_id: data.m_rombel_id })
-          .count("* as total");
+          .countDistinct("m_materi_id");
       }
 
       sikapsosial = await MSikapSosial.query().fetch();
@@ -4527,9 +4527,6 @@ class MainController {
         })
         .withCount("bab", (builder) => {
           builder.where({ dihapus: 0 });
-        })
-        .withCount("rekap as total", (builder) => {
-          builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id });
         })
         .whereIn("id", materiIds)
         .fetch();
