@@ -15325,10 +15325,15 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
+    const ta = await this.getTAAktif(sekolah);
 
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
     const checkSikap = await MSikapSiswa.query()
       .where({ m_user_id: user_id })
       .andWhere({ dihapus: 0 })
+      .andWhere({ m_ta_id: ta.id })
       .first();
 
     const {
@@ -15382,6 +15387,7 @@ class MainController {
             ? m_sikap_sosial_ditingkatkan_id.toString()
             : null
           : null,
+        m_ta_id: ta.id,
         status: 1,
         dihapus: 0,
       });
@@ -15410,10 +15416,15 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
+    const ta = await this.getTAAktif(sekolah);
 
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
     const checkSikap = await MSikapSiswa.query()
       .where({ m_user_id: user_id })
       .andWhere({ dihapus: 0 })
+      .andWhere({ m_ta_id: ta.id })
       .first();
 
     const {
@@ -15469,6 +15480,7 @@ class MainController {
             : null
           : null,
         status: 1,
+        m_ta_id: ta.id,
         dihapus: 0,
       });
     }
@@ -18995,7 +19007,9 @@ class MainController {
           .with("prestasi", (builder) => {
             builder.with("tingkatPrestasi").where({ dihapus: 0 });
           })
-          .with("sikap")
+          .with("sikap", (builder) => {
+            builder.where({ dihapus: 0 }).andWhere({ m_ta_id: d.id });
+          })
           .where({ id: user_id })
           .andWhere({ dihapus: 0 })
           .first();
