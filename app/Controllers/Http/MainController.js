@@ -19000,6 +19000,28 @@ class MainController {
           .andWhere({ dihapus: 0 })
           .first();
 
+          const rombel = await MRombel.query()
+          .with("anggotaRombel", (builder) => {
+            builder.where({ dihapus: 0 }).andWhere({ m_user_id: user_id });
+          })
+          .with("user")
+          .andWhere({ m_ta_id: d.id })
+          .andWhere({ kelompok: "reguler" })
+          .fetch();
+
+        // return rombel;
+
+        const rombel1 = await Promise.all(
+          rombel.toJSON().map(async (d) => {
+            if (d.anggotaRombel.length == 0) {
+              return;
+            }
+            return d;
+          })
+        );
+
+        const rombelData = rombel1.filter((d) => d != null);
+
         const muatan = await MKategoriMapel.query()
           .with("mapelRapor", (builder) => {
             builder
@@ -19022,7 +19044,7 @@ class MainController {
               .where({ dihapus: 0 });
           })
           .where({ dihapus: 0 })
-          .andWhere({ m_rombel_id: rombel_id })
+          .andWhere({ m_rombel_id: rombelData.id })
           .fetch();
 
         const dataNilaiMentah = await TkRekapNilai.query()
@@ -19291,27 +19313,7 @@ class MainController {
           .andWhere({ dihapus: 0 })
           .fetch();
 
-        const rombel = await MRombel.query()
-          .with("anggotaRombel", (builder) => {
-            builder.where({ dihapus: 0 }).andWhere({ m_user_id: user_id });
-          })
-          .with("user")
-          .andWhere({ m_ta_id: d.id })
-          .andWhere({ kelompok: "reguler" })
-          .fetch();
-
-        // return rombel;
-
-        const rombel1 = await Promise.all(
-          rombel.toJSON().map(async (d) => {
-            if (d.anggotaRombel.length == 0) {
-              return;
-            }
-            return d;
-          })
-        );
-
-        const rombelData = rombel1.filter((d) => d != null);
+       
 
         // return rombelData;
 
