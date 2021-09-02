@@ -19000,7 +19000,7 @@ class MainController {
           .andWhere({ dihapus: 0 })
           .first();
 
-          const rombel = await MRombel.query()
+        const rombel = await MRombel.query()
           .with("anggotaRombel", (builder) => {
             builder.where({ dihapus: 0 }).andWhere({ m_user_id: user_id });
           })
@@ -19021,6 +19021,8 @@ class MainController {
         );
 
         const rombelData = rombel1.filter((d) => d != null);
+
+        const rombelData1 = rombelData[0];
 
         const muatan = await MKategoriMapel.query()
           .with("mapelRapor", (builder) => {
@@ -19044,7 +19046,7 @@ class MainController {
               .where({ dihapus: 0 });
           })
           .where({ dihapus: 0 })
-          .andWhere({ m_rombel_id: rombelData.id })
+          .andWhere({ m_rombel_id: rombelData1 ? rombelData1.id : 0 })
           .fetch();
 
         const dataNilaiMentah = await TkRekapNilai.query()
@@ -19312,8 +19314,6 @@ class MainController {
           .where({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
           .fetch();
-
-       
 
         // return rombelData;
 
