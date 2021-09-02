@@ -6823,16 +6823,18 @@ class MainController {
             lampiran: lampiran.toString(),
             absen: absen,
             keterangan: keterangan,
-            waktu_absen: waktu_absen,
+            waktu_absen: moment().utc(7).format("YYYY-MM-DD HH:mm:ss"),
           });
         return;
       } else if (user.role == "siswa") {
-        timeline = await TkTimeline.query().where({ id: timeline_id }).update({
-          lampiran: lampiran.toString(),
-          absen: absen,
-          keterangan: keterangan,
-          waktu_absen: waktu_absen,
-        });
+        timeline = await TkTimeline.query()
+          .where({ id: timeline_id })
+          .update({
+            lampiran: lampiran.toString(),
+            absen: absen,
+            keterangan: keterangan,
+            waktu_absen: moment().utc(7).format("YYYY-MM-DD HH:mm:ss"),
+          });
       } else {
         // if (!m_mata_pelajaran_id) {
         //   jadwalMengajar = await MJadwalMengajar.query()
@@ -14143,23 +14145,27 @@ class MainController {
   }
 
   async getUser({ response, request, auth }) {
-    const { page, name } = request.get();
+    const { page, name, user_id } = request.get();
 
-    let user;
+    let user = User.query()
+      .with("sekolah")
+      .with("profil")
+      .with("anggotaRombel", (builder) => {
+        builder.with("rombel", (builder) => {
+          builder.with("jurusan");
+        });
+      })
+      .where({ dihapus: 0 })
+      .andWhereNot({ role: "admin" });
+
     if (name) {
-      user = await User.query()
-        .with("sekolah")
-        .where({ dihapus: 0 })
-        .where("nama", "like", `%${name}%`)
-        .andWhereNot({ role: "admin" })
-        .paginate(page);
-    } else {
-      user = await User.query()
-        .with("sekolah")
-        .where({ dihapus: 0 })
-        .andWhereNot({ role: "admin" })
-        .paginate(page);
+      user.where("nama", "like", `%${name}%`);
     }
+    if (user_id) {
+      user.where({ id: user_id });
+    }
+
+    user = user_id ? await user.first() : await user.paginate(page, 18);
 
     return response.ok({
       user: user,
@@ -19003,6 +19009,9 @@ class MainController {
                     builder
                       .where({ m_user_id: user_id })
                       .andWhere({ m_ta_id: d.id });
+                  })
+                  .with("sikapSiswa", (builder) => {
+                    builder.with("predikat").where({ m_user_id: user_id });
                   })
                   .with("templateDeskripsi", (builder) => {
                     builder.with("predikat");
