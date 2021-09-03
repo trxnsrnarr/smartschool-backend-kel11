@@ -20455,7 +20455,7 @@ class MainController {
 
     const totalMapel = await TkMateriRombel.query()
       .where({ m_rombel_id: rombel_id })
-      .count("* as total");
+      .countDistinct("m_materi_id as total");
     // }
 
     const rombel = await MRombel.query()
