@@ -19145,6 +19145,7 @@ class MainController {
                 builder
                   .with("nilaiIndividu", (builder) => {
                     builder
+                      .with("nilaiUS")
                       .where({ m_user_id: user_id })
                       .andWhere({ m_ta_id: d.id });
                   })
