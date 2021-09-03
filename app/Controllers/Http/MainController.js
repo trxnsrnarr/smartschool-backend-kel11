@@ -19012,7 +19012,7 @@ class MainController {
       rombelIds.map(async (item) => {
         const count = await TkMateriRombel.query()
           .where("m_rombel_id", item)
-          .countDistinct("m_materi_id");
+          .countDistinct("m_materi_id as total");
         return { rombel_id: item, count };
       })
     );
