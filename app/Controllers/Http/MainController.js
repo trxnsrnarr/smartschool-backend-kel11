@@ -19164,6 +19164,12 @@ class MainController {
           .andWhere({ m_rombel_id: rombelData1 ? rombelData1.id : 0 })
           .fetch();
 
+        const isUS = muatan
+          .toJSON()
+          .some(
+            (item) => !item.mapelRapor?.mataPelajaran?.nilaiIndividu?.nilaiUS
+          );
+
         const dataNilaiMentah = await TkRekapNilai.query()
           .with("rekapRombel", (builder) => {
             builder.with("rekap", (builder) => {
@@ -19476,6 +19482,7 @@ class MainController {
           ta: taa,
           sekolah: sekolah,
           // materiRombel: materiRombel,
+          isUS,
           muatan,
           nilaiTinggiRendah,
           predikat: predikat,
