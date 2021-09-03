@@ -2886,7 +2886,7 @@ class MainController {
 
         totalMapel = await TkMateriRombel.query()
           .where({ m_rombel_id: data.m_rombel_id })
-          .countDistinct("m_materi_id");
+          .countDistinct("m_materi_id as totalMapel");
       }
 
       sikapsosial = await MSikapSosial.query().fetch();
