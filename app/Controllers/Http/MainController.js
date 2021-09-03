@@ -31136,7 +31136,7 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    const user = await User.query()
+    const userAuthor = await User.query()
       .where({ dihapus: 0 })
       .andWhere({ id: user_id })
       .first();
@@ -31150,7 +31150,7 @@ class MainController {
       .fetch();
 
     return response.ok({
-      user,
+      userAuthor,
       rpp,
       sekolah,
     });
