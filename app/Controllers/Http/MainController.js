@@ -31143,7 +31143,7 @@ class MainController {
 
     const rpp = await MRpp.query()
       .with("mataPelajaran")
-      .where({ m_user_id: user.id })
+      .where({ m_user_id: userAuthor.id })
       .andWhere({ m_ta_id: ta.id })
       .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
