@@ -28825,8 +28825,33 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { tipe, asal, nomor, tanggal, perihal, keamanan, isi, file } =
-      request.post();
+    const {
+      tipe,
+      asal,
+      nomor,
+      tanggal,
+      perihal,
+      keamanan,
+      isi,
+      teruskan = 0,
+      file,
+    } = request.post();
+
+    if (teruskan) {
+      const surat = await MSurat.query().where({ id: surat_id }).update({
+        teruskan,
+      });
+      if (!surat) {
+        return response.notFound({
+          message: messageNotFound,
+        });
+      }
+
+      return response.ok({
+        message: messagePutSuccess,
+      });
+    }
+
     const rules = {
       tipe: "required",
       asal: "required",
