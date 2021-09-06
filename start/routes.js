@@ -870,7 +870,7 @@ Route.post("/surat", "MainController.postSurat");
 Route.put("/surat/:surat_id", "MainController.putSurat");
 Route.delete("/surat/:surat_id", "MainController.deleteSurat");
 // Disposisi
-Route.get("/diposisi/:disposisi_id", "MainController.detailDisposisi");
+Route.get("/disposisi/:disposisi_id", "MainController.detailDisposisi");
 Route.post("/disposisi", "MainController.postDisposisi");
 Route.post(
   "/pelaporan-disposisi/:disposisi_id",
