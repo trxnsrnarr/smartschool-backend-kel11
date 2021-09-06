@@ -8,6 +8,7 @@ class MSuratSchema extends Schema {
     this.create("m_surat", (table) => {
       table.increments();
       table.string("tipe");
+      table.string("kode");
       table.string("asal");
       table.string("nomor");
       table.date("tanggal");
