@@ -109,6 +109,8 @@ const MSurat = use("App/Models/MSurat");
 const MDisposisi = use("App/Models/MDisposisi");
 const MPelaporanDisposisi = use("App/Models/MPelaporanDisposisi");
 const MTemplateDeskripsi = use("App/Models/MTemplateDeskripsi");
+const MPertemuanBk = use("App/Models/MPertemuanBk");
+const MJadwalKonsultasi = use("App/Models/MJadwalKonsultasi");
 
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
@@ -28736,19 +28738,38 @@ class MainController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const surat = await MSurat.create({
-      tipe,
-      asal,
-      nomor,
-      tanggal,
-      perihal,
-      keamanan,
-      isi,
-      file,
-      m_user_id: user.id,
-      m_sekolah_id: sekolah.id,
-      dihapus: 0,
-    });
+    let surat;
+    if (tipe == "masuk") {
+      surat = await MSurat.create({
+        tipe,
+        asal,
+        nomor,
+        tanggal,
+        perihal,
+        keamanan,
+        isi,
+        file,
+        kode: `SM.${month}.${year}`,
+        m_user_id: user.id,
+        m_sekolah_id: sekolah.id,
+        dihapus: 0,
+      });
+    } else if (tipe == "keluar") {
+      surat = await MSurat.create({
+        tipe,
+        asal,
+        nomor,
+        tanggal,
+        perihal,
+        keamanan,
+        isi,
+        file,
+        kode: `SK.${month}.${year}`,
+        m_user_id: user.id,
+        m_sekolah_id: sekolah.id,
+        dihapus: 0,
+      });
+    }
 
     return response.ok({
       message: messagePostSuccess,
@@ -31196,7 +31217,7 @@ class MainController {
     });
   }
 
-  async getKonsultasi({ auth, response, request, params: { user_id } }) {
+  async getKonsultasi({ auth, response, request }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -31206,32 +31227,280 @@ class MainController {
     }
 
     const ta = await this.getTAAktif(sekolah);
+    const user = await auth.getUser();
+    const { tipe, search, nav } = request.get();
 
-    const mataPelajaran = await MMataPelajaran.query()
-      .where({ m_user_id: user_id })
-      .andWhere({ dihapus: 0 })
-      .fetch();
+    let mataPelajaran;
+    let bukuKunjungan;
+    let totalPengunjung;
+    let totalPengunjungSelesai;
+    let totalPengunjungProses;
+    let totalPengunjungTolak;
 
-    const userData = await User.query()
-      .with("profil")
-      .where({ id: user_id })
-      .with("sekolah")
-      .first();
+    if (user.role == "guru" || user.m_sekolah_id != sekolah.id) {
+      if (tipe == buku) {
+        if (nav == "pengajuan") {
+          bukuKunjungan = await MPertemuanBk.query()
+            .with("user", (builder) => {
+              builder.select("id", "nama");
+            })
+            .where({ m_user_guru_id: user.id })
+            .andWhere({ status: null })
+            .paginate();
+        } else if (nav == "diterima") {
+          bukuKunjungan = await MPertemuanBk.query()
+            .with("user", (builder) => {
+              builder.select("id", "nama");
+            })
+            .where({ m_user_guru_id: user.id })
+            .andWhere({ status: 1 })
+            .paginate();
+        } else if (nav == "ditolak") {
+          bukuKunjungan = await MPertemuanBk.query()
+            .with("user", (builder) => {
+              builder.select("id", "nama");
+            })
+            .where({ m_user_guru_id: user.id })
+            .andWhere({ status: 0 })
+            .paginate();
+        } else if (nav == "selesai") {
+          bukuKunjungan = await MPertemuanBk.query()
+            .with("user", (builder) => {
+              builder.select("id", "nama");
+            })
+            .where({ m_user_guru_id: user.id })
+            .andWhere({ status: 1 })
+            .andWhere({ status_selesai: 1 })
+            .paginate();
+        }
 
-    let rombel;
+        totalPengunjung = await MPertemuanBk.query()
+          .with("user")
+          .where({ m_user_guru_id: user.id })
+          .count("* as totalPengunjung");
 
-    if (ta != "404") {
-      rombel = await MRombel.query()
-        .where({ m_ta_id: ta.id })
-        .andWhere({ m_user_id: user_id })
+        totalPengunjungProses = await MPertemuanBk.query()
+          .with("user")
+          .where({ m_user_guru_id: user.id })
+          .andWhere({ status: 1 })
+          .count("* as totalDiproses");
+
+        totalPengunjungTolak = await MPertemuanBk.query()
+          .with("user")
+          .where({ m_user_guru_id: user.id })
+          .andWhere({ status: 0 })
+          .count("* as totalDitolak");
+
+        totalPengunjungSelesai = await MPertemuanBk.query()
+          .with("user")
+          .where({ m_user_guru_id: user.id })
+          .andWhere({ status: 1 })
+          .andWhere({ status_selesai: 1 })
+          .count("* as totalSelesai");
+      }
+    } else if (user.role == "siswa" || user.m_sekolah_id != sekolah.id) {
+      if (tipe == "cari") {
+        mataPelajaran = await MMataPelajaran.query()
+          .with("user", (builder) => {
+            builder.select("id", "nama");
+          })
+          .where({ m_sekolah_id: sekolah.id })
+          .andWhere({ dihapus: 0 })
+          .andWhere({ kode: "BK" })
+          .andWhere({ m_ta_id: ta.id })
+          .fetch();
+      } else if (tipe == "konsultasi") {
+        if (nav == "pengajuan") {
+          bukuKunjungan = await MPertemuanBk.query()
+            .with("userGuru", (builder) => {
+              builder.select("id", "nama");
+            })
+            .where({ m_user_id: user.id })
+            .andWhere({ status: null })
+            .paginate();
+        } else if (nav == "diterima") {
+          bukuKunjungan = await MPertemuanBk.query()
+            .with("userGuru", (builder) => {
+              builder.select("id", "nama");
+            })
+            .where({ m_user_id: user.id })
+            .andWhere({ status: 1 })
+            .paginate();
+        } else if (nav == "ditolak") {
+          bukuKunjungan = await MPertemuanBk.query()
+            .with("userGuru", (builder) => {
+              builder.select("id", "nama");
+            })
+            .where({ m_user_id: user.id })
+            .andWhere({ status: 0 })
+            .paginate();
+        } else if (nav == "selesai") {
+          bukuKunjungan = await MPertemuanBk.query()
+            .with("userGuru", (builder) => {
+              builder.select("id", "nama");
+            })
+            .where({ m_user_id: user.id })
+            .andWhere({ status: 1 })
+            .andWhere({ status_selesai: 1 })
+            .paginate();
+        }
+      }
+    }
+
+    return response.ok({
+      mataPelajaran: mataPelajaran,
+      bukuKunjungan,
+      totalPengunjung,
+      totalPengunjungSelesai,
+      totalPengunjungProses,
+      totalPengunjungTolak,
+    });
+  }
+  async detailKonsultasi({
+    auth,
+    response,
+    request,
+    params: { konsultasi_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+    const user = await auth.getUser();
+
+    let konsultasi;
+    if (user.role == "guru" || user.m_sekolah_id != sekolah.id) {
+      konsultasi = await MPertemuanBk.query()
+        .with("user", (builder) => {
+          builder
+            .select("id", "nama", "whatsapp", "alamat")
+            .with("anggotaRombel", (builder) => {
+              builder.with("rombel");
+            });
+        })
+        .with("userGuru", (builder) => {
+          builder.select("id", "nama");
+        })
+        .with("jadwal")
+        .where({ id: konsultasi_id })
+        .first();
+    } else if (user.role == "siswa" || user.m_sekolah_id != sekolah.id) {
+      konsultasi = await MPertemuanBk.query()
+        .with("user", (builder) => {
+          builder.select("id", "nama");
+        })
+        .with("userGuru", (builder) => {
+          builder.select("id", "nama");
+        })
+        .with("jadwal")
+        .where({ id: konsultasi_id })
         .first();
     }
 
     return response.ok({
-      user: userData,
-      mataPelajaran: mataPelajaran,
-      rombel,
-      ta,
+      konsultasi,
+    });
+  }
+
+  async postKonsultasi({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      keperluan,
+      tanggal_konsultasi,
+      media_konsultasi,
+      keterangan,
+      m_user_guru_id,
+    } = request.post();
+    const rules = {
+      keperluan: "required",
+      tanggal_konsultasi: "required",
+      media_konsultasi: "required",
+      keterangan: "required",
+      m_user_guru_id: "required",
+    };
+    const message = {
+      "keperluan.required": "Keperluan harus diisi",
+      "tanggal_konsultasi.required": "Tanggal Konsultasi harus diisi",
+      "media_konsultasi.required": "Media Konsultasi harus diisi",
+      "keterangan.required": "Keterangan harus diisi",
+      "m_user_guru_id.required": "Nama Guru BK harus dipilih",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const Konsultasi = await MPertemuanBk.create({
+      keperluan,
+      tanggal_konsultasi,
+      media_konsultasi,
+      keterangan,
+      m_user_guru_id,
+      m_user_id: user.id,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async postJadwalKonsultasi({
+    response,
+    request,
+    auth,
+    params: { konsultasi_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { waktu_mulai, waktu_berakhir, media, keterangan, status } =
+      request.post();
+    const rules = {
+      keterangan: "required",
+    };
+    const message = {
+      "keterangan.required": "Keterangan harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const Konsultasi = await MJadwalKonsultasi.create({
+      waktu_mulai,
+      waktu_berakhir,
+      media,
+      keterangan,
+      m_pertemuan_bk_id: konsultasi_id,
+    });
+
+    await MPertemuanBk.query().where({ id: konsultasi_id }).update({
+      status,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
     });
   }
 }
