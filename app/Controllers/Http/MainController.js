@@ -19041,7 +19041,38 @@ class MainController {
 
     const rombel = await MRombel.query()
       .with("anggotaRombel", (builder) => {
-        builder.where({ dihapus: 0 }).with("user");
+        builder.where({ dihapus: 0 }).with("user", (builder) => {
+          builder
+            .select("id", "nama", "avatar", "whatsapp")
+            .with("profil", (builder) => {
+              builder.select(
+                "id",
+                "nisn",
+                "tempat_lahir",
+                "tanggal_lahir",
+                "gender",
+                "agama",
+                "status_keluarga",
+                "anak_ke",
+                "alamat",
+                "telp_rumah",
+                "asal_sekolah",
+                "kelas_diterima",
+                "tanggal_masuk",
+                "nama_ayah",
+                "nama_ibu",
+                "alamat_ayah",
+                "alamat_ibu",
+                "pekerjaan_ayah",
+                "pekerjaan_ibu",
+                "nama_wali",
+                "alamat_wali",
+                "telp_wali",
+                "pekerjaan_wali",
+                "m_user_id"
+              );
+            });
+        });
       })
       .with("jurusan")
       .where({ m_sekolah_id: sekolah.id })
@@ -19165,6 +19196,12 @@ class MainController {
           .where({ dihapus: 0 })
           .andWhere({ m_rombel_id: rombelData1 ? rombelData1.id : 0 })
           .fetch();
+
+        const isUS = muatan
+          .toJSON()
+          .some(
+            (item) => !item.mapelRapor?.mataPelajaran?.nilaiIndividu?.nilaiUS
+          );
 
         const dataNilaiMentah = await TkRekapNilai.query()
           .with("rekapRombel", (builder) => {
@@ -19478,6 +19515,7 @@ class MainController {
           ta: taa,
           sekolah: sekolah,
           // materiRombel: materiRombel,
+          isUS,
           muatan,
           nilaiTinggiRendah,
           predikat: predikat,
