@@ -13,8 +13,8 @@ class MJadwalKonsultasiSchema extends Schema {
         .references("m_pertemuan_bk.id")
         .onDelete("cascade")
         .onUpdate("cascade");
-      table.string("waktu_mulai");
-      table.string("waktu_berakhir");
+      table.time("waktu_mulai");
+      table.time("waktu_berakhir");
       table.string("media");
       table.string("keterangan");
       table.timestamps();
