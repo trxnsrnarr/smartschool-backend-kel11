@@ -8,10 +8,14 @@ class MPertemuanBk extends Model {
     return "m_pertemuan_bk";
   }
   jadwal() {
-    return this.belongsTo("App/Models/MJadwalPertemuan");
+    return this.belongsTo(
+      "App/Models/MJadwalKonsultasi",
+      "id",
+      "m_pertemuan_bk_id"
+    );
   }
   user() {
-    return this.belongsTo("App/Models/User");
+    return this.belongsTo("App/Models/User", "m_user_id");
   }
   userGuru() {
     return this.belongsTo("App/Models/User", "m_user_guru_id");
