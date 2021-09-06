@@ -5,7 +5,7 @@ const Model = use("Model");
 
 class MPertemuanBk extends Model {
   static get table() {
-    return "m_perusahaan";
+    return "m_pertemuan_bk";
   }
   jadwal() {
     return this.belongsTo("App/Models/MJadwalPertemuan");
