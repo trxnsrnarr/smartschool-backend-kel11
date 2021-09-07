@@ -28716,12 +28716,11 @@ class MainController {
       if (tipe != "disposisi") {
         surat = MSurat.query()
           .where({ dihapus: 0 })
-          .andWhere({ m_sekolah_id: sekolah.id })
-          .andWhere({ teruskan: 1 });
+          .andWhere({ m_sekolah_id: sekolah.id });
         if (tipe == "keluar") {
           surat.andWhere({ tipe: "keluar" });
         } else if (tipe == "masuk") {
-          surat.andWhere({ tipe: "masuk" });
+          surat.andWhere({ tipe: "masuk" }).andWhere({ teruskan: 1 });
         }
       } else if (tipe == "disposisi") {
         surat = MDisposisi.query()
