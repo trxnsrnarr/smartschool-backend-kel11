@@ -28565,83 +28565,73 @@ class MainController {
       if (search) {
         // ===== service cari Perusahaan ====
         if (tipe == "keluar") {
-          surat = await MSurat.query()
+          surat = MSurat.query()
             .where({ dihapus: 0 })
             .andWhere({ tipe: "keluar" })
             .andWhere({ m_user_id: user.id })
-            .andWhere("perihal", "like", `%${search}%`)
-            .paginate();
+            .andWhere("perihal", "like", `%${search}%`);
         } else if (tipe == "masuk") {
-          surat = await MSurat.query()
+          surat = MSurat.query()
             .where({ dihapus: 0 })
             .andWhere({ tipe: "masuk" })
             .andWhere({ m_user_id: user.id })
-            .andWhere("perihal", "like", `%${search}%`)
-            .paginate();
+            .andWhere("perihal", "like", `%${search}%`);
         } else if (tipe == "disposisi") {
           if (nav == "semua") {
-            surat = await MDisposisi.query()
+            surat = MDisposisi.query()
               .with("surat")
               .with("pelaporanDisposisi")
               .where({ dihapus: 0 })
-              .andWhere({ m_user_id: user.id })
-              .paginate();
+              .andWhere({ m_user_id: user.id });
           } else if (nav == "belum selesai") {
-            surat = await MDisposisi.query()
+            surat = MDisposisi.query()
               .with("surat")
               .with("pelaporanDisposisi")
               .where({ dihapus: 0 })
               .andWhere({ m_user_id: user.id })
-              .andWhere({ status: 0 })
-              .paginate();
+              .andWhere({ status: 0 });
           } else if (nav == "selesai") {
-            surat = await MDisposisi.query()
+            surat = MDisposisi.query()
               .with("surat")
               .with("pelaporanDisposisi")
               .where({ dihapus: 0 })
               .andWhere({ m_user_id: user.id })
-              .andWhere({ status: 1 })
-              .paginate();
+              .andWhere({ status: 1 });
           }
         }
       } else {
         // ===== service Perusahaan saya ====
         if (tipe == "keluar") {
-          surat = await MSurat.query()
+          surat = MSurat.query()
             .where({ dihapus: 0 })
             .andWhere({ tipe: "keluar" })
-            .andWhere({ m_user_id: user.id })
-            .paginate();
+            .andWhere({ m_user_id: user.id });
         } else if (tipe == "masuk") {
-          surat = await MSurat.query()
+          surat = MSurat.query()
             .where({ dihapus: 0 })
             .andWhere({ tipe: "masuk" })
-            .andWhere({ m_user_id: user.id })
-            .paginate();
+            .andWhere({ m_user_id: user.id });
         } else if (tipe == "disposisi") {
           if (nav == "semua") {
-            surat = await MDisposisi.query()
+            surat = MDisposisi.query()
               .with("surat")
               .with("pelaporanDisposisi")
               .where({ dihapus: 0 })
-              .andWhere({ m_user_id: user.id })
-              .paginate();
+              .andWhere({ m_user_id: user.id });
           } else if (nav == "belum selesai") {
-            surat = await MDisposisi.query()
+            surat = MDisposisi.query()
               .with("surat")
               .with("pelaporanDisposisi")
               .where({ dihapus: 0 })
               .andWhere({ m_user_id: user.id })
-              .andWhere({ status: 0 })
-              .paginate();
+              .andWhere({ status: 0 });
           } else if (nav == "selesai") {
-            surat = await MDisposisi.query()
+            surat = MDisposisi.query()
               .with("surat")
               .with("pelaporanDisposisi")
               .where({ dihapus: 0 })
               .andWhere({ m_user_id: user.id })
-              .andWhere({ status: 1 })
-              .paginate();
+              .andWhere({ status: 1 });
           }
         }
       }
@@ -28649,89 +28639,76 @@ class MainController {
       if (search) {
         // ===== service cari Perusahaan ====
         if (tipe == "keluar") {
-          surat = await MSurat.query()
+          surat = MSurat.query()
             .where({ dihapus: 0 })
             .andWhere({ tipe: "keluar" })
-            .andWhere({ m_user_id: user.id })
-            .andWhere("perihal", "like", `%${search}%`)
-            .paginate();
+            .andWhere("perihal", "like", `%${search}%`);
         } else if (tipe == "masuk") {
-          surat = await MSurat.query()
+          surat = MSurat.query()
             .where({ dihapus: 0 })
             .andWhere({ tipe: "masuk" })
-            .andWhere({ m_user_id: user.id })
             .andWhere("perihal", "like", `%${search}%`)
-            .andWhere({ teruskan: 1 })
-            .paginate();
+            .andWhere({ teruskan: 1 });
         } else if (tipe == "disposisi") {
           if (nav == "semua") {
-            surel = await MDisposisi.query()
+            surat = MDisposisi.query()
               .with("surat")
               .with("pelaporanDisposisi")
               .where({ dihapus: 0 })
-              .andWhere({ m_user_id: user.id })
-              .paginate();
+              .andWhere({ m_user_id: user.id });
           } else if (nav == "belum selesai") {
-            surel = await MDisposisi.query()
+            surat = MDisposisi.query()
               .with("surat")
               .with("pelaporanDisposisi")
               .where({ dihapus: 0 })
               .andWhere({ m_user_id: user.id })
-              .andWhere({ status: 0 })
-              .paginate();
+              .andWhere({ status: 0 });
           } else if (nav == "selesai") {
-            surel = await MDisposisi.query()
+            surat = MDisposisi.query()
               .with("surat")
               .with("pelaporanDisposisi")
               .where({ dihapus: 0 })
               .andWhere({ m_user_id: user.id })
-              .andWhere({ status: 1 })
-              .paginate();
+              .andWhere({ status: 1 });
           }
         }
       } else {
         // ===== service Perusahaan saya ====
         if (tipe == "keluar") {
-          surat = await MSurat.query()
+          surat = MSurat.query()
             .where({ dihapus: 0 })
-            .andWhere({ tipe: "keluar" })
-            .andWhere({ m_user_id: user.id })
-            .paginate();
+            .andWhere({ tipe: "keluar" });
         } else if (tipe == "masuk") {
-          surat = await MSurat.query()
+          surat = MSurat.query()
             .where({ dihapus: 0 })
             .andWhere({ tipe: "masuk" })
-            .andWhere({ m_user_id: user.id })
-            .andWhere({ teruskan: 1 })
-            .paginate();
+            .andWhere({ teruskan: 1 });
         } else if (tipe == "disposisi") {
           if (nav == "semua") {
-            surel = await MDisposisi.query()
+            surat = MDisposisi.query()
               .with("surat")
               .with("pelaporanDisposisi")
               .where({ dihapus: 0 })
-              .andWhere({ m_user_id: user.id })
-              .paginate();
+              .andWhere({ m_user_id: user.id });
           } else if (nav == "belum selesai") {
-            surel = await MDisposisi.query()
+            surat = MDisposisi.query()
               .with("surat")
               .with("pelaporanDisposisi")
               .where({ dihapus: 0 })
               .andWhere({ m_user_id: user.id })
-              .andWhere({ status: 0 })
-              .paginate();
+              .andWhere({ status: 0 });
           } else if (nav == "selesai") {
-            surel = await MDisposisi.query()
+            surat = MDisposisi.query()
               .with("surat")
               .with("pelaporanDisposisi")
               .where({ dihapus: 0 })
               .andWhere({ m_user_id: user.id })
-              .andWhere({ status: 1 })
-              .paginate();
+              .andWhere({ status: 1 });
           }
         }
       }
     }
+    surat = await surat.paginate();
 
     return response.ok({
       surat,
