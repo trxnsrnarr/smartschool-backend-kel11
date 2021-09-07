@@ -28632,15 +28632,16 @@ class MainController {
     }
     surat = await surat.paginate();
 
-    surat.data = await Promise.all(
-      surat.toJSON().data.filter(async (d) => {
-        if (d.surat == null) {
-          return false;
-        }
-        return true;
-      })
-    );
-
+    if (tipe == "disposisi") {
+      surat.data = await Promise.all(
+        surat.toJSON().data.filter(async (d) => {
+          if (d.surat == null) {
+            return false;
+          }
+          return true;
+        })
+      );
+    }
 
     return response.ok({
       surat,
