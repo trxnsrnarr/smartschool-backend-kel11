@@ -28642,12 +28642,14 @@ class MainController {
           surat = MSurat.query()
             .where({ dihapus: 0 })
             .andWhere({ tipe: "keluar" })
-            .andWhere("perihal", "like", `%${search}%`);
+            .andWhere("perihal", "like", `%${search}%`)
+            .andWhere({ m_sekolah_id: sekolah.id });
         } else if (tipe == "masuk") {
           surat = MSurat.query()
             .where({ dihapus: 0 })
             .andWhere({ tipe: "masuk" })
             .andWhere("perihal", "like", `%${search}%`)
+            .andWhere({ m_sekolah_id: sekolah.id })
             .andWhere({ teruskan: 1 });
         } else if (tipe == "disposisi") {
           if (nav == "semua") {
@@ -28677,16 +28679,20 @@ class MainController {
         if (tipe == "keluar") {
           surat = MSurat.query()
             .where({ dihapus: 0 })
-            .andWhere({ tipe: "keluar" });
+            .andWhere({ tipe: "keluar" })
+            .andWhere({ m_sekolah_id: sekolah.id });
         } else if (tipe == "masuk") {
           surat = MSurat.query()
             .where({ dihapus: 0 })
             .andWhere({ tipe: "masuk" })
+            .andWhere({ m_sekolah_id: sekolah.id })
             .andWhere({ teruskan: 1 });
         } else if (tipe == "disposisi") {
           if (nav == "semua") {
             surat = MDisposisi.query()
-              .with("surat")
+              .with("surat", (builder) => {
+                builder.where({ m_sekolah_id: sekolah.id });
+              })
               .with("pelaporanDisposisi")
               .where({ dihapus: 0 })
               .andWhere({ m_user_id: user.id });
@@ -31608,42 +31614,39 @@ class MainController {
 
     const user = await auth.getUser();
 
-    
-      const bukuKunjunganPengajuan = await MPertemuanBk.query()
-        .with("user", (builder) => {
-          builder.select("id", "nama");
-        })
-        .where({ m_user_guru_id: user.id })
-        .andWhere({ status: null })
-        .paginate();
-    
-        
-      const bukuKunjunganDiterima = await MPertemuanBk.query()
-        .with("user", (builder) => {
-          builder.select("id", "nama");
-        })
-        .where({ m_user_guru_id: user.id })
-        .andWhere({ status: 1 })
-        .andWhere({ status_selesai: 0 })
-        .paginate();
-    
-      const bukuKunjunganDitolak = await MPertemuanBk.query()
-        .with("user", (builder) => {
-          builder.select("id", "nama");
-        })
-        .where({ m_user_guru_id: user.id })
-        .andWhere({ status: 0 })
-        .paginate();
-    
-      const bukuKunjunganSelesai = await MPertemuanBk.query()
-        .with("user", (builder) => {
-          builder.select("id", "nama");
-        })
-        .where({ m_user_guru_id: user.id })
-        .andWhere({ status: 1 })
-        .andWhere({ status_selesai: 1 })
-        .paginate();
-    
+    const bukuKunjunganPengajuan = await MPertemuanBk.query()
+      .with("user", (builder) => {
+        builder.select("id", "nama");
+      })
+      .where({ m_user_guru_id: user.id })
+      .andWhere({ status: null })
+      .paginate();
+
+    const bukuKunjunganDiterima = await MPertemuanBk.query()
+      .with("user", (builder) => {
+        builder.select("id", "nama");
+      })
+      .where({ m_user_guru_id: user.id })
+      .andWhere({ status: 1 })
+      .andWhere({ status_selesai: 0 })
+      .paginate();
+
+    const bukuKunjunganDitolak = await MPertemuanBk.query()
+      .with("user", (builder) => {
+        builder.select("id", "nama");
+      })
+      .where({ m_user_guru_id: user.id })
+      .andWhere({ status: 0 })
+      .paginate();
+
+    const bukuKunjunganSelesai = await MPertemuanBk.query()
+      .with("user", (builder) => {
+        builder.select("id", "nama");
+      })
+      .where({ m_user_guru_id: user.id })
+      .andWhere({ status: 1 })
+      .andWhere({ status_selesai: 1 })
+      .paginate();
 
     let workbook = new Excel.Workbook();
     let worksheet = workbook.addWorksheet(`Daftar Rekap Nilai Siswa`);
