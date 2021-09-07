@@ -16372,8 +16372,8 @@ class MainController {
       .first();
 
     if (
-      rekapNilai.rekapRombel.rekap.tipe == "tugas" ||
-      rekapNilai.rekapRombel.rekap.tipe == "keterampilan"
+      rekapNilai.toJSON().rekapRombel.rekap.tipe == "tugas" ||
+      rekapNilai.toJSON().rekapRombel.rekap.tipe == "ujian"
     ) {
       const rekap = await TkRekapNilai.query()
         .with("rekapRombel", (builder) => {
@@ -16482,7 +16482,7 @@ class MainController {
           nilai: nilaiAkhir,
         });
       }
-    } else if (rekapNilai.rekapRombel.rekap.tipe == "keterampilan") {
+    } else if (rekapNilai.toJSON().rekapRombel.rekap.tipe == "keterampilan") {
       const rekap = await TkRekapNilai.query()
         .with("rekapRombel", (builder) => {
           builder.with("rekap", (builder) => {
