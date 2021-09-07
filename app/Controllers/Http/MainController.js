@@ -16649,6 +16649,13 @@ class MainController {
           .update({
             nilai_keterampilan: rataData,
           });
+      } else {
+        await MUjianSiswa.create({
+          m_ta_id: ta.id,
+          m_user_id: user_id,
+          m_mata_pelajaran_id: mapel.id,
+          nilai_keterampilan: rataData,
+        });
       }
     }
 
@@ -20672,6 +20679,13 @@ class MainController {
         .update({
           nilai_keterampilan: rataData,
         });
+    } else {
+      await MUjianSiswa.create({
+        m_ta_id: ta.id,
+        m_user_id: user_id,
+        m_mata_pelajaran_id: mapel.id,
+        nilai_keterampilan: rataData,
+      });
     }
 
     return response.ok({
