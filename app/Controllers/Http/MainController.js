@@ -28557,7 +28557,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { tipe, search, nav } = request.get();
+    const { tipe, search, nav = "semua" } = request.get();
 
     let surat;
 
@@ -28580,14 +28580,14 @@ class MainController {
             .paginate();
         } else if (tipe == "disposisi") {
           if (nav == "semua") {
-            surel = await MDisposisi.query()
+            surat = await MDisposisi.query()
               .with("surat")
               .with("pelaporanDisposisi")
               .where({ dihapus: 0 })
               .andWhere({ m_user_id: user.id })
               .paginate();
           } else if (nav == "belum selesai") {
-            surel = await MDisposisi.query()
+            surat = await MDisposisi.query()
               .with("surat")
               .with("pelaporanDisposisi")
               .where({ dihapus: 0 })
@@ -28595,7 +28595,7 @@ class MainController {
               .andWhere({ status: 0 })
               .paginate();
           } else if (nav == "selesai") {
-            surel = await MDisposisi.query()
+            surat = await MDisposisi.query()
               .with("surat")
               .with("pelaporanDisposisi")
               .where({ dihapus: 0 })
@@ -28620,14 +28620,14 @@ class MainController {
             .paginate();
         } else if (tipe == "disposisi") {
           if (nav == "semua") {
-            surel = await MDisposisi.query()
+            surat = await MDisposisi.query()
               .with("surat")
               .with("pelaporanDisposisi")
               .where({ dihapus: 0 })
               .andWhere({ m_user_id: user.id })
               .paginate();
           } else if (nav == "belum selesai") {
-            surel = await MDisposisi.query()
+            surat = await MDisposisi.query()
               .with("surat")
               .with("pelaporanDisposisi")
               .where({ dihapus: 0 })
@@ -28635,7 +28635,7 @@ class MainController {
               .andWhere({ status: 0 })
               .paginate();
           } else if (nav == "selesai") {
-            surel = await MDisposisi.query()
+            surat = await MDisposisi.query()
               .with("surat")
               .with("pelaporanDisposisi")
               .where({ dihapus: 0 })
