@@ -14194,27 +14194,43 @@ class MainController {
   }
 
   async getUser({ response, request, auth }) {
-    const { page, name, user_id } = request.get();
+    const { page, name, user_id, role, notRole, sekolah_id } = request.get();
 
     let user = User.query()
       .with("sekolah")
       .with("profil")
-      .with("anggotaRombel", (builder) => {
-        builder.with("rombel", (builder) => {
-          builder.with("jurusan");
-        });
-      })
       .where({ dihapus: 0 })
       .andWhereNot({ role: "admin" });
 
+    if (!role && !notRole) {
+      user.with("anggotaRombel", (builder) => {
+        builder.with("rombel", (builder) => {
+          builder.with("jurusan");
+        });
+      });
+    } else {
+      if (role) {
+        user.whereIn("role", role);
+      }
+      if (notRole) {
+        user.whereNotIn("role", notRole);
+      }
+    }
     if (name) {
       user.where("nama", "like", `%${name}%`);
     }
     if (user_id) {
       user.where({ id: user_id });
     }
+    if (sekolah_id) {
+      user.where({ m_sekolah_id: sekolah_id });
+    }
 
-    user = user_id ? await user.first() : await user.paginate(page, 18);
+    if (user_id) {
+      user = user_id ? await user.first() : await user.paginate(page, 18);
+    } else if (sekolah_id) {
+      user = await user.limit(50).fetch();
+    }
 
     return response.ok({
       user: user,
