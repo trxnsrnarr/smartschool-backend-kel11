@@ -28558,6 +28558,7 @@ class MainController {
     const user = await auth.getUser();
 
     const {
+      page,
       tipe,
       search,
       nav = "semua",
