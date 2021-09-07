@@ -31217,7 +31217,7 @@ class MainController {
 
     const ta = await this.getTAAktif(sekolah);
     const user = await auth.getUser();
-    const { tipe, search, nav } = request.get();
+    const { tipe, search, nav, tanggal } = request.get();
 
     let mataPelajaran;
     let bukuKunjungan;
@@ -31227,43 +31227,27 @@ class MainController {
     let totalPengunjungTolak;
 
     if (user.role == "guru" || user.m_sekolah_id != sekolah.id) {
+      bukuKunjungan = MPertemuanBk.query()
+        .with("user", (builder) => {
+          builder.select("id", "nama");
+          if (search) {
+            bukuKunjungan.where("nama", "like", `%${search}%`);
+          }
+        })
+        .where({ m_user_guru_id: user.id });
       if (tipe == "buku") {
         if (nav == "pengajuan") {
-          bukuKunjungan = await MPertemuanBk.query()
-            .with("user", (builder) => {
-              builder.select("id", "nama");
-            })
-            .where({ m_user_guru_id: user.id })
-            .andWhere({ status: null })
-            .paginate();
+          bukuKunjungan.andWhere({ status: null });
         } else if (nav == "diterima") {
-          bukuKunjungan = await MPertemuanBk.query()
-            .with("user", (builder) => {
-              builder.select("id", "nama");
-            })
-            .where({ m_user_guru_id: user.id })
-            .andWhere({ status: 1 })
-            .andWhere({ status_selesai: 0 })
-            .paginate();
+          bukuKunjungan.andWhere({ status: 1 }).andWhere({ status_selesai: 0 });
         } else if (nav == "ditolak") {
-          bukuKunjungan = await MPertemuanBk.query()
-            .with("user", (builder) => {
-              builder.select("id", "nama");
-            })
-            .where({ m_user_guru_id: user.id })
-            .andWhere({ status: 0 })
-            .paginate();
+          bukuKunjungan.andWhere({ status: 0 });
         } else if (nav == "selesai") {
-          bukuKunjungan = await MPertemuanBk.query()
-            .with("user", (builder) => {
-              builder.select("id", "nama");
-            })
-            .where({ m_user_guru_id: user.id })
-            .andWhere({ status: 1 })
-            .andWhere({ status_selesai: 1 })
-            .paginate();
+          bukuKunjungan.andWhere({ status: 1 }).andWhere({ status_selesai: 1 });
         }
-
+        if (tanggal) {
+          bukuKunjungan.andWhere({ status: tanggal });
+        }
         totalPengunjung = await MPertemuanBk.query()
           .with("user")
           .where({ m_user_guru_id: user.id })
@@ -31289,11 +31273,7 @@ class MainController {
           .count("* as totalSelesai");
       } else if (tipe == "konsultasi") {
         if (nav == "hari_ini") {
-          bukuKunjungan = await MPertemuanBk.query()
-            .with("userGuru", (builder) => {
-              builder.select("id", "nama");
-            })
-            .where({ m_user_id: user.id })
+          bukuKunjungan
             .andWhere({ status: null })
             .whereBetween("tanggal_konsultasi", [
               `${today.getFullYear()}-${
@@ -31302,14 +31282,9 @@ class MainController {
               `${today.getFullYear()}-${today.getMonth() + 1}-${
                 today.getDate() + 1
               } 00:00:00`,
-            ])
-            .paginate();
+            ]);
         } else if (nav == "akan_datang") {
-          bukuKunjungan = await MPertemuanBk.query()
-            .with("userGuru", (builder) => {
-              builder.select("id", "nama");
-            })
-            .where({ m_user_id: user.id })
+          bukuKunjungan
             .andWhere({ status: 1 })
             .andWhere({ status_selesai: 0 })
             .andWhere(
@@ -31318,17 +31293,9 @@ class MainController {
               `${today.getFullYear()}-${
                 today.getMonth() + 1
               }-${today.getDate()} 00:00:00`
-            )
-            .paginate();
+            );
         } else if (nav == "selesai") {
-          bukuKunjungan = await MPertemuanBk.query()
-            .with("userGuru", (builder) => {
-              builder.select("id", "nama");
-            })
-            .where({ m_user_id: user.id })
-            .andWhere({ status: 1 })
-            .andWhere({ status_selesai: 1 })
-            .paginate();
+          bukuKunjungan.andWhere({ status: 1 }).andWhere({ status_selesai: 1 });
         }
       }
     } else if (user.role == "siswa" || user.m_sekolah_id != sekolah.id) {
@@ -31343,43 +31310,27 @@ class MainController {
           .andWhere({ m_ta_id: ta.id })
           .fetch();
       } else if (tipe == "konsultasi") {
+        bukuKunjungan = await MPertemuanBk.query()
+          .with("userGuru", (builder) => {
+            builder.select("id", "nama");
+            if (search) {
+              bukuKunjungan.where("nama", "like", `%${search}%`);
+            }
+          })
+          .where({ m_user_id: user.id });
         if (nav == "pengajuan") {
-          bukuKunjungan = await MPertemuanBk.query()
-            .with("userGuru", (builder) => {
-              builder.select("id", "nama");
-            })
-            .where({ m_user_id: user.id })
-            .andWhere({ status: null })
-            .paginate();
+          bukuKunjungan.andWhere({ status: null });
         } else if (nav == "diterima") {
-          bukuKunjungan = await MPertemuanBk.query()
-            .with("userGuru", (builder) => {
-              builder.select("id", "nama");
-            })
-            .where({ m_user_id: user.id })
-            .andWhere({ status: 1 })
-            .andWhere({ status_selesai: 0 })
-            .paginate();
+          bukuKunjungan.andWhere({ status: 1 }).andWhere({ status_selesai: 0 });
         } else if (nav == "ditolak") {
-          bukuKunjungan = await MPertemuanBk.query()
-            .with("userGuru", (builder) => {
-              builder.select("id", "nama");
-            })
-            .where({ m_user_id: user.id })
-            .andWhere({ status: 0 })
-            .paginate();
+          bukuKunjungan.andWhere({ status: 0 });
         } else if (nav == "selesai") {
-          bukuKunjungan = await MPertemuanBk.query()
-            .with("userGuru", (builder) => {
-              builder.select("id", "nama");
-            })
-            .where({ m_user_id: user.id })
-            .andWhere({ status: 1 })
-            .andWhere({ status_selesai: 1 })
-            .paginate();
+          bukuKunjungan.andWhere({ status: 1 }).andWhere({ status_selesai: 1 });
         }
       }
     }
+
+    bukuKunjungan = bukuKunjungan.paginate();
 
     return response.ok({
       mataPelajaran: mataPelajaran,
