@@ -28557,7 +28557,13 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { tipe, search, nav = "semua" } = request.get();
+    const {
+      tipe,
+      search,
+      nav = "semua",
+      tanggal_awal,
+      tanggal_akhir,
+    } = request.get();
 
     let surat;
 
@@ -28590,11 +28596,6 @@ class MainController {
           surat.andWhere({ status: 1 });
         }
       }
-      if (search) {
-        if (tipe != "disposisi") {
-          surat.andWhere("perihal", "like", `%${search}%`);
-        }
-      }
     } else if (user.role == "kepsek") {
       if (tipe != "disposisi") {
         surat = MSurat.query()
@@ -28624,13 +28625,19 @@ class MainController {
           surat.andWhere({ status: 1 });
         }
       }
+    }
+    if (tipe != "disposisi") {
       if (search) {
-        if (tipe != "disposisi") {
-          surat.andWhere("perihal", "like", `%${search}%`);
-        }
+        surat.andWhere("perihal", "like", `%${search}%`);
+      }
+      if ((tanggal_awal, tanggal_akhir)) {
+        surat.whereBetween("created_at", [
+          `${tanggal_awal} 00:00:00`,
+          `${tanggal_akhir} 23:59:59`,
+        ]);
       }
     }
-    surat = await surat.paginate();
+    surat = await surat.paginate(page, 10);
 
     if (tipe == "disposisi") {
       surat.data = await Promise.all(
