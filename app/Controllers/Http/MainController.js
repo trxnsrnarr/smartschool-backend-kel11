@@ -31606,18 +31606,42 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const rekapan = await MRekapRombel.query()
-      .with("rekap")
-      .with("rombel")
-      .where({ id: rekapRombel_id })
-      .first();
-
-    const rekapData = await TkRekapNilai.query()
-      .with("user", (builder) => {
-        builder.select("id", "nama", "whatsapp");
-      })
-      .where({ m_rekap_rombel_id: rekapRombel_id })
-      .fetch();
+    
+      const bukuKunjunganPengajuan = await MPertemuanBk.query()
+        .with("user", (builder) => {
+          builder.select("id", "nama");
+        })
+        .where({ m_user_guru_id: user.id })
+        .andWhere({ status: null })
+        .paginate();
+    
+        
+      const bukuKunjunganDiterima = await MPertemuanBk.query()
+        .with("user", (builder) => {
+          builder.select("id", "nama");
+        })
+        .where({ m_user_guru_id: user.id })
+        .andWhere({ status: 1 })
+        .andWhere({ status_selesai: 0 })
+        .paginate();
+    
+      const bukuKunjunganDitolak = await MPertemuanBk.query()
+        .with("user", (builder) => {
+          builder.select("id", "nama");
+        })
+        .where({ m_user_guru_id: user.id })
+        .andWhere({ status: 0 })
+        .paginate();
+    
+      const bukuKunjunganSelesai = await MPertemuanBk.query()
+        .with("user", (builder) => {
+          builder.select("id", "nama");
+        })
+        .where({ m_user_guru_id: user.id })
+        .andWhere({ status: 1 })
+        .andWhere({ status_selesai: 1 })
+        .paginate();
+    
 
     let workbook = new Excel.Workbook();
     let worksheet = workbook.addWorksheet(`Daftar Rekap Nilai Siswa`);
