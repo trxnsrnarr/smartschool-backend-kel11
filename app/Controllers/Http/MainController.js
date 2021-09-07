@@ -28577,27 +28577,15 @@ class MainController {
           .with("pelaporanDisposisi")
           .where({ dihapus: 0 })
           .andWhere({ m_user_id: user.id });
+        if (nav == "belum selesai") {
+          surat.andWhere({ status: 0 });
+        } else if (nav == "selesai") {
+          surat.andWhere({ status: 1 });
+        }
       }
       if (search) {
         // ===== service cari Perusahaan ====
-        if (tipe != "disposisi") {
-          surat.andWhere("perihal", "like", `%${search}%`);
-        } else if (tipe == "disposisi") {
-          if (nav == "belum selesai") {
-            surat.andWhere({ status: 0 });
-          } else if (nav == "selesai") {
-            surat.andWhere({ status: 1 });
-          }
-        }
-      } else {
-        // ===== service Perusahaan saya ====
-        if (tipe == "disposisi") {
-          if (nav == "belum selesai") {
-            surat.andWhere({ status: 0 });
-          } else if (nav == "selesai") {
-            surat.andWhere({ status: 1 });
-          }
-        }
+        surat.andWhere("perihal", "like", `%${search}%`);
       }
     } else if (user.role == "kepsek") {
       if (search) {
