@@ -897,6 +897,15 @@ Route.post(
 );
 Route.post("/import/GPDS", "MainController.importGPDS");
 
+//Konsultasi BK services
+Route.get("/konsultasi", "MainController.getKonsultasi");
+Route.get("/konsultasi/:konsultasi_id", "MainController.detailKonsultasi");
+Route.post("/konsultasi", "MainController.postKonsultasi");
+Route.post(
+  "/konsultasi/:konsultasi_id/jadwal",
+  "MainController.postJadwalKonsultasi"
+);
+
 //dashboard
 Route.get("/dashboard/tugas", "MainController.getDashboardTugas");
 Route.get("/dashboard/absen", "MainController.getDashboardAbsen");
