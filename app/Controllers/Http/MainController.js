@@ -28688,6 +28688,15 @@ class MainController {
 
     let surat;
     if (tipe == "masuk") {
+      const total = MSurat.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ tipe: "masuk" })
+        .whereBetween("created_at", [
+          `${dateObj.getFullYear()}-${dateObj.getMonth() + 1}-1`,
+          `${dateObj.getFullYear()}-${dateObj.getMonth() + 2}-1 `,
+        ])
+        .getCount();
+
       surat = await MSurat.create({
         tipe,
         asal,
@@ -28697,7 +28706,7 @@ class MainController {
         keamanan,
         isi,
         file,
-        kode: `SM.${month}.${year}`,
+        kode: `SM.${total}.${dateObj.getMonth() + 1}.${year}`,
         m_user_id: user.id,
         m_sekolah_id: sekolah.id,
         dihapus: 0,
