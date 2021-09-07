@@ -28557,7 +28557,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { tipe, search } = request.get();
+    const { tipe, search, nav } = request.get();
 
     let surat;
 
