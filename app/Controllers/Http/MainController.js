@@ -14194,7 +14194,14 @@ class MainController {
   }
 
   async getUser({ response, request, auth }) {
-    const { page, name, user_id, role, notRole, sekolah_id } = request.get();
+    const {
+      page,
+      name,
+      user_id,
+      role = [],
+      notRole = [],
+      sekolah_id,
+    } = request.get();
 
     let user = User.query()
       .with("sekolah")
@@ -14202,7 +14209,7 @@ class MainController {
       .where({ dihapus: 0 })
       .andWhereNot({ role: "admin" });
 
-    if (!role && !notRole) {
+    if (!notRole.includes("siswa") && role.includes("siswa")) {
       user.with("anggotaRombel", (builder) => {
         builder.with("rombel", (builder) => {
           builder.with("jurusan");
