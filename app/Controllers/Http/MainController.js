@@ -3826,8 +3826,10 @@ class MainController {
 
     let jadwalMengajar;
 
-    const checkKategoriMapel = await MKategoriMapel.query().where({m_rombel_id}).first()
-    if(!checkKategoriMapel){
+    const checkKategoriMapel = await MKategoriMapel.query()
+      .where({ m_rombel_id })
+      .first();
+    if (!checkKategoriMapel) {
       kategori = await MKategoriMapel.create({
         nama: "Muatan Nasional",
         dihapus: 0,
@@ -3844,7 +3846,7 @@ class MainController {
         m_rombel_id: rombel_id,
       });
     }
-    
+
     if (kosongkan) {
       jadwalMengajar = await MJadwalMengajar.query()
         .where({ id: jadwal_mengajar_id })
@@ -3879,8 +3881,6 @@ class MainController {
       const jadwalAwal = await MJadwalMengajar.query()
         .where({ id: jadwal_mengajar_id })
         .first();
-
-       
 
       const kategoriMapel = await MKategoriMapel.query()
         .where({ m_rombel_id })
@@ -14169,6 +14169,17 @@ class MainController {
         .withCount("anggota", (builder) => {
           builder.where({ status: "menerima" });
         })
+        .with("anggota", (builder) => {
+          builder
+            .with("user", (builder) => {
+              builder
+                .select("id", "m_sekolah_id")
+                .with("sekolah", (builder) => {
+                  builder.select("id", "nama", "logo_ss");
+                });
+            })
+            .where({ status: "menerima" });
+        })
         .where({ dihapus: 0 })
         .andWhere("nama", "like", `%${search}%`);
     } else {
@@ -14186,6 +14197,17 @@ class MainController {
         .withCount("anggota", (builder) => {
           builder.where({ status: "menerima" });
         })
+        .with("anggota", (builder) => {
+          builder
+            .with("user", (builder) => {
+              builder
+                .select("id", "m_sekolah_id")
+                .with("sekolah", (builder) => {
+                  builder.select("id", "nama", "logo_ss");
+                });
+            })
+            .where({ status: "menerima" });
+        })
         .where({ dihapus: 0 })
         .andWhere({ m_sekolah_id: sekolah.id })
         .whereIn("id", terimaProyekIds);
@@ -14194,6 +14216,15 @@ class MainController {
     proyekall = MProyek.query()
       .withCount("anggota", (builder) => {
         builder.where({ status: "menerima" });
+      })
+      .with("anggota", (builder) => {
+        builder
+          .with("user", (builder) => {
+            builder.select("id", "m_sekolah_id").with("sekolah", (builder) => {
+              builder.select("id", "nama", "logo_ss");
+            });
+          })
+          .where({ status: "menerima" });
       })
       .where({ dihapus: 0 });
 
