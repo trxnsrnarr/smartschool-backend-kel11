@@ -3826,6 +3826,25 @@ class MainController {
 
     let jadwalMengajar;
 
+    const checkKategoriMapel = await MKategoriMapel.query().where({m_rombel_id}).first()
+    if(!checkKategoriMapel){
+      kategori = await MKategoriMapel.create({
+        nama: "Muatan Nasional",
+        dihapus: 0,
+        m_rombel_id: rombel_id,
+      });
+      kategori1 = await MKategoriMapel.create({
+        nama: "Muatan Kewilayahan",
+        dihapus: 0,
+        m_rombel_id: rombel_id,
+      });
+      kategori2 = await MKategoriMapel.create({
+        nama: "Muatan Peminatan Kejurusan",
+        dihapus: 0,
+        m_rombel_id: rombel_id,
+      });
+    }
+    
     if (kosongkan) {
       jadwalMengajar = await MJadwalMengajar.query()
         .where({ id: jadwal_mengajar_id })
@@ -3860,6 +3879,8 @@ class MainController {
       const jadwalAwal = await MJadwalMengajar.query()
         .where({ id: jadwal_mengajar_id })
         .first();
+
+       
 
       const kategoriMapel = await MKategoriMapel.query()
         .where({ m_rombel_id })
