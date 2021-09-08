@@ -3834,10 +3834,69 @@ class MainController {
           diubah: 1,
         });
 
+      const kategoriMapel = await MKategoriMapel.query()
+        .where({ m_rombel_id })
+        .fetch();
+
+      const checkTkMapel = await TkMapelRapor.query()
+        .where({ m_mata_pelajaran_id: m_mata_pelajaran_id })
+        .whereIn(
+          "m_kategori_mapel_id",
+          kategoriMapel.toJSON().map((item) => item.id)
+        )
+        .first();
+
+      if (checkTkMapel) {
+        await TkMapelRapor.query()
+          .where({ m_kategori_mapel_id: checkTkMapel.id })
+          .andWhere({ m_mata_pelajaran_id: m_mata_pelajaran_id })
+          .update({ dihapus: 1 });
+      }
+
       return response.ok({
         message: messagePutSuccess,
       });
     } else {
+      const jadwalAwal = await MJadwalMengajar.query()
+        .where({ id: jadwal_mengajar_id })
+        .first();
+
+      const kategoriMapel = await MKategoriMapel.query()
+        .where({ m_rombel_id })
+        .fetch();
+
+      const checkTkMapel = await TkMapelRapor.query()
+        .where({ m_mata_pelajaran_id: jadwalAwal.m_mata_pelajaran_id })
+        .whereIn(
+          "m_kategori_mapel_id",
+          kategoriMapel.toJSON().map((item) => item.id)
+        )
+        .first();
+
+      const mapel = await MMataPelajaran.query()
+        .where({ id: m_mata_pelajaran_id })
+        .first();
+
+      if (!checkTkMapel) {
+        await TkMapelRapor.create({
+          m_mata_pelajaran_id: m_mata_pelajaran_id,
+          nama: mapel.nama,
+          kkm2: mapel.kkm,
+          m_kategori_mapel_id: kategoriMapel.toJSON()[0].id,
+          dihapus: 0,
+          urutan: 1,
+        });
+      } else {
+        await TkMapelRapor.query()
+          .where({ m_kategori_mapel_id: checkTkMapel.m_kategori_mapel_id })
+          .andWhere({ m_mata_pelajaran_id: jadwalAwal.m_mata_pelajaran_id })
+          .update({
+            m_mata_pelajaran_id: m_mata_pelajaran_id,
+            m_kategori_mapel_id: checkTkMapel.m_kategori_mapel_id,
+            nama: mapel.nama,
+            kkm2: mapel.kkm,
+          });
+      }
       jadwalMengajar = await MJadwalMengajar.query()
         .where({ id: jadwal_mengajar_id })
         .update({
@@ -19902,36 +19961,25 @@ class MainController {
       .andWhere({ predikat: "B" })
       .first();
 
+    let kategori;
+    let kategori1;
+    let kategori2;
     if (!check) {
-      const kategori = await MKategoriMapel.create({
+      kategori = await MKategoriMapel.create({
         nama: "Muatan Nasional",
         dihapus: 0,
         m_rombel_id: rombel_id,
       });
-      await MKategoriMapel.create({
+      kategori1 = await MKategoriMapel.create({
         nama: "Muatan Kewilayahan",
         dihapus: 0,
         m_rombel_id: rombel_id,
       });
-      await MKategoriMapel.create({
+      kategori2 = await MKategoriMapel.create({
         nama: "Muatan Peminatan Kejurusan",
         dihapus: 0,
         m_rombel_id: rombel_id,
       });
-
-      const result = await Promise.all(
-        count.toJSON().map(async (d, idx) => {
-          await TkMapelRapor.create({
-            nama: d.mataPelajaran ? d.mataPelajaran.nama : "-",
-            kkm2: d.mataPelajaran ? d.mataPelajaran.kkm : "0",
-            m_mata_pelajaran_id: d ? d.m_mata_pelajaran_id : null,
-            m_kategori_mapel_id: kategori.id,
-            m_predikat_nilai_id: predikat ? predikat.id : "0",
-            dihapus: 0,
-            urutan: idx + 1,
-          });
-        })
-      );
     }
 
     const kategoriMapel = await MKategoriMapel.query()
@@ -19945,6 +19993,29 @@ class MainController {
       .andWhere({ m_rombel_id: rombel_id })
       .fetch();
 
+    const result = await Promise.all(
+      count.toJSON().map(async (d, idx) => {
+        const checkTkMapel = await TkMapelRapor.query()
+          .where({ m_mata_pelajaran_id: d ? d.m_mata_pelajaran_id : null })
+          .whereIn(
+            "m_kategori_mapel_id",
+            kategoriMapel.toJSON().map((item) => item.id)
+          )
+          .first();
+
+        if (!checkTkMapel) {
+          await TkMapelRapor.create({
+            nama: d.mataPelajaran ? d.mataPelajaran.nama : "-",
+            kkm2: d.mataPelajaran ? d.mataPelajaran.kkm : "0",
+            m_mata_pelajaran_id: d ? d.m_mata_pelajaran_id : null,
+            m_kategori_mapel_id: kategoriMapel.toJSON()[0].id,
+            m_predikat_nilai_id: predikat ? predikat.id : "0",
+            dihapus: 0,
+            urutan: idx + 1,
+          });
+        }
+      })
+    );
     // const mapelIds = [];
     // const noLoop = kategoriMapel.toJSON().mapelRapor.filter((d) => {
     //   if (!mapelIds.includes(d.mataPelajaran.id)) {
