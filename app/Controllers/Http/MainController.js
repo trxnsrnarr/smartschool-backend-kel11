@@ -14234,9 +14234,11 @@ class MainController {
     }
 
     if (user_id) {
-      user = user_id ? await user.first() : await user.paginate(page, 18);
+      user = await user.first();
     } else if (sekolah_id) {
       user = await user.limit(50).fetch();
+    } else {
+      user = await user.paginate(page, 18);
     }
 
     return response.ok({
