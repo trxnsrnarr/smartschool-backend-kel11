@@ -14246,9 +14246,21 @@ class MainController {
     // ===== List Undangan =====
     const undangan = await MAnggotaProyek.query()
       .with("proyek", (builder) => {
-        builder.withCount("anggota", (builder) => {
-          builder.where({ status: "menerima" });
-        });
+        builder
+          .withCount("anggota", (builder) => {
+            builder.where({ status: "menerima" });
+          })
+          .with("anggota", (builder) => {
+            builder
+              .with("user", (builder) => {
+                builder
+                  .select("id", "m_sekolah_id")
+                  .with("sekolah", (builder) => {
+                    builder.select("id", "nama", "logo_ss");
+                  });
+              })
+              .where({ status: "menerima" });
+          });
       })
       .where({ dihapus: 0 })
       .andWhere({ m_user_id: user.id })
