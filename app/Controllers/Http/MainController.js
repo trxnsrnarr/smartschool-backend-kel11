@@ -14209,7 +14209,10 @@ class MainController {
       .where({ dihapus: 0 })
       .andWhereNot({ role: "admin" });
 
-    if (!notRole.includes("siswa") && role.includes("siswa")) {
+    if (
+      (!notRole.includes("siswa") && role.includes("siswa")) ||
+      (role.length == 0 && notRole.length == 0)
+    ) {
       user.with("anggotaRombel", (builder) => {
         builder.with("rombel", (builder) => {
           builder.with("jurusan");
