@@ -905,7 +905,7 @@ Route.post(
   "/konsultasi/:konsultasi_id/jadwal",
   "MainController.postJadwalKonsultasi"
 );
-
+Route.post("/konsultasi/download", "MainController.downloadKonsultasi");
 //dashboard
 Route.get("/dashboard/tugas", "MainController.getDashboardTugas");
 Route.get("/dashboard/absen", "MainController.getDashboardAbsen");
