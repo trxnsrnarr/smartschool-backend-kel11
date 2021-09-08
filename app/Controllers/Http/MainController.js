@@ -14274,7 +14274,14 @@ class MainController {
   }
 
   async getUser({ response, request, auth }) {
-    const { page, name, user_id, role, notRole, sekolah_id } = request.get();
+    const {
+      page,
+      name,
+      user_id,
+      role = [],
+      notRole = [],
+      sekolah_id,
+    } = request.get();
 
     let user = User.query()
       .with("sekolah")
@@ -14282,7 +14289,10 @@ class MainController {
       .where({ dihapus: 0 })
       .andWhereNot({ role: "admin" });
 
-    if (!role && !notRole) {
+    if (
+      (!notRole.includes("siswa") && role.includes("siswa")) ||
+      (role.length == 0 && notRole.length == 0)
+    ) {
       user.with("anggotaRombel", (builder) => {
         builder.with("rombel", (builder) => {
           builder.with("jurusan");
@@ -14307,9 +14317,11 @@ class MainController {
     }
 
     if (user_id) {
-      user = user_id ? await user.first() : await user.paginate(page, 18);
+      user = await user.first();
     } else if (sekolah_id) {
       user = await user.limit(50).fetch();
+    } else {
+      user = await user.paginate(page, 18);
     }
 
     return response.ok({
