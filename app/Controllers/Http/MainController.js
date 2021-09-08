@@ -408,20 +408,22 @@ class MainController {
   async getMasterSekolah({ response, request }) {
     let { page, search, bentuk } = request.get();
 
-    page = page ? page : 1
+    page = page ? page : 1;
 
-    const res = Sekolah.query()
+    const res = Sekolah.query();
 
-    if(search) {
-      res.where("sekolah", "like", `%${search}%`)
+    if (search) {
+      res
+        .where("sekolah", "like", `%${search}%`)
+        .orWhere("npsn", "like", `${search}`);
     }
-      
-    if(bentuk) {
-      res.where("bentuk", bentuk)
+
+    if (bentuk) {
+      res.where("bentuk", bentuk);
     }
 
     return response.ok({
-      sekolah: await res.paginate(page)
+      sekolah: await res.paginate(page),
     });
   }
 
@@ -2792,11 +2794,11 @@ class MainController {
     let checkAbsensi = [];
     let judulTugas;
     let rekap;
-    let data
-    let kkm
-    let totalMapel
-    let sikapsosial
-    let sikapspiritual
+    let data;
+    let kkm;
+    let totalMapel;
+    let sikapsosial;
+    let sikapspiritual;
 
     if (rombel_id) {
       jadwalMengajar = await MJadwalMengajar.query()
@@ -2835,25 +2837,23 @@ class MainController {
         .first();
     } else {
       data = await MJadwalMengajar.query()
-      .where({ id: jadwal_mengajar_id })
-      .first();
+        .where({ id: jadwal_mengajar_id })
+        .first();
 
-      if(data) {
+      if (data) {
         kkm = await TkMapelRapor.query()
           .with("mataPelajaran")
           .where({ dihapus: 0 })
           .andWhere({ m_mata_pelajaran_id: data.m_mata_pelajaran_id })
           .first();
-    
+
         totalMapel = await TkMateriRombel.query()
           .where({ m_rombel_id: data.m_rombel_id })
           .count("* as total");
-
       }
 
-
-       sikapsosial = await MSikapSosial.query().fetch();
-     sikapspiritual = await MSikapSpiritual.query().fetch();
+      sikapsosial = await MSikapSosial.query().fetch();
+      sikapspiritual = await MSikapSpiritual.query().fetch();
 
       jadwalMengajar = await MJadwalMengajar.query()
         .with("mataPelajaran", (builder) => {
@@ -2889,19 +2889,22 @@ class MainController {
                   }
                 );
 
-                  if(kkm) {
-                    await jadwalMengajar
-                      .withCount("nilaiSemuaUjian as kkmPengetahuan", (builder) => {
-                        builder
-                          .where("nilai", "<", `${kkm.mataPelajaran.kkm}`)
-                          .andWhere({ m_ta_id: ta.id });
-                      })
-                      .withCount("nilaiSemuaUjian as kkmKeterampilan", (builder) => {
-                        builder
-                          .where("nilai_keterampilan", "<", `${kkm.kkm2}`)
-                          .andWhere({ m_ta_id: ta.id });
-                      })
-                  }
+              if (kkm) {
+                await jadwalMengajar
+                  .withCount("nilaiSemuaUjian as kkmPengetahuan", (builder) => {
+                    builder
+                      .where("nilai", "<", `${kkm.mataPelajaran.kkm}`)
+                      .andWhere({ m_ta_id: ta.id });
+                  })
+                  .withCount(
+                    "nilaiSemuaUjian as kkmKeterampilan",
+                    (builder) => {
+                      builder
+                        .where("nilai_keterampilan", "<", `${kkm.kkm2}`)
+                        .andWhere({ m_ta_id: ta.id });
+                    }
+                  );
+              }
             });
           });
         })
@@ -27587,7 +27590,7 @@ class MainController {
       return "Format File Tidak Sesuai";
     }
 
-    let explanation = workbook.getWorksheet("Form Responses 1");
+    let explanation = workbook.getWorksheet("Sheet1");
 
     if (!explanation) {
       return "Format File Tidak Sesuai";
@@ -27600,79 +27603,45 @@ class MainController {
     let data = [];
 
     colComment.eachCell(async (cell, rowNumber) => {
-      if (rowNumber >= 2) {
-        data.push({
-          sekolah: explanation.getCell("B" + rowNumber).value,
-          npsn: explanation.getCell("C" + rowNumber).value,
-          nama1: explanation.getCell("D" + rowNumber).value,
-          no1: explanation.getCell("E" + rowNumber).value,
-          tgl1: explanation.getCell("F" + rowNumber).value,
-          nama2: explanation.getCell("G" + rowNumber).value,
-          no2: explanation.getCell("H" + rowNumber).value,
-          tgl2: explanation.getCell("I" + rowNumber).value,
-          nama3: explanation.getCell("J" + rowNumber).value,
-          no3: explanation.getCell("K" + rowNumber).value,
-          tgl3: explanation.getCell("L" + rowNumber).value,
-          nama4: explanation.getCell("M" + rowNumber).value,
-          no4: explanation.getCell("N" + rowNumber).value,
-          tgl4: explanation.getCell("O" + rowNumber).value,
-        });
+      if (rowNumber >= 3) {
+        const npsn = explanation.getCell("C" + rowNumber).value
+          ? explanation.getCell("C" + rowNumber).value
+          : "-";
+        const nama1 = explanation.getCell("F" + rowNumber).value
+          ? explanation.getCell("F" + rowNumber).value
+          : "-";
+        const no1 = explanation.getCell("G" + rowNumber).value
+          ? explanation.getCell("G" + rowNumber).value
+          : "-";
+
+        data.push({ npsn, nama1, no1 });
       }
     });
-    const result = await Promise.all(
-      data.map(async (d) => {
-        const checkSekolah = await MSekolah.query()
-          .where({ npsn: d.sekolah })
-          .first();
 
-        if (!checkSekolah) {
-          // const tingkat = `${d.sekolah.split(" ")[0]}`;
-          // const tingkat = `${d.sekolah.indexOf("SD")}`;
-          let tingkatSekolah;
-          // if (
-          //   tingkat == "%SD%" ||
-          //   tingkat == "SDS" ||
-          //   tingkat == "SDN" ||
-          //   tingkat == "SDK"
-          // ) {
-          //   tingkatSekolah = "SD";
-          // } else if (
-          //   tingkat == "SMP" ||
-          //   tingkat == "SMPS" ||
-          //   tingkat == "SMPN" ||
-          //   tingkat == "SMPK"
-          // ) {
-          //   tingkatSekolah = "SMP";
-          // }
-          if (
-            d.sekolah.indexOf("SD") == 0 ||
-            d.sekolah.indexOf("Sd") == 0 ||
-            d.sekolah.indexOf("sd") == 0
-          ) {
-            tingkatSekolah = "SD";
-          } else if (
-            d.sekolah.indexOf("SMP") == 0 ||
-            d.sekolah.indexOf("Smp") == 0 ||
-            d.sekolah.indexOf("SMp") == 0 ||
-            d.sekolah.indexOf("smp") == 0
-          ) {
-            tingkatSekolah = "SMP";
-          }
-          const sekolahCreate = await MSekolah.create({
-            npsn: d.npsn,
-            nama: d.sekolah,
-            domain: `https://${slugify(d.sekolah, {
-              replacement: "", // replace spaces with replacement character, defaults to `-`
-              remove: /[*+~.()'"!:@]/g,
-              lower: true, // convert to lower case, defaults to `false`
-            })}.smarteschool.id`,
-            status: "S",
-            tingkat: tingkatSekolah,
-            integrasi: "whatsapp",
-            diintegrasi: 1,
-            trial: 1,
-          });
+    const result = await Promise.all(
+      data.map(async (d, idx) => {
+        const check = await Sekolah.query().where("npsn", d.npsn).first();
+
+        if (!check) {
+          return d;
+        } else {
+          return check;
         }
+
+        // const sekolahCreate = await MSekolah.create({
+        //   npsn: d.npsn,
+        //   nama: d.sekolah,
+        //   domain: `https://${slugify(d.sekolah, {
+        //     replacement: "", // replace spaces with replacement character, defaults to `-`
+        //     remove: /[*+~.()'"!:@]/g,
+        //     lower: true, // convert to lower case, defaults to `false`
+        //   })}.smarteschool.id`,
+        //   status: "S",
+        //   tingkat: tingkatSekolah,
+        //   integrasi: "whatsapp",
+        //   diintegrasi: 1,
+        //   trial: 1,
+        // });
       })
     );
 
