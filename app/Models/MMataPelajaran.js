@@ -32,6 +32,14 @@ class MMataPelajaran extends Model {
     );
   }
 
+  sikapSiswa() {
+    return this.belongsTo(
+      "App/Models/MSikapRombel",
+      "id",
+      "m_mata_pelajaran_id"
+    );
+  }
+
   templateDeskripsi() {
     return this.hasMany(
       "App/Models/MTemplateDeskripsi",

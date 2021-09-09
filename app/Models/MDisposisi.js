@@ -7,6 +7,12 @@ class MDisposisi extends Model {
   static get table() {
     return "m_disposisi";
   }
+  surat() {
+    return this.belongsTo("App/Models/MSurat");
+  }
+  pelaporanDisposisi() {
+    return this.belongsTo("App/Models/MPelaporanDisposisi");
+  }
 }
 
 module.exports = MDisposisi;

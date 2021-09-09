@@ -13,6 +13,10 @@ class MUjianSiswa extends Model {
   nilaiUTS() {
     return this.belongsTo("App/Models/TkRekapNilai", "uts_id", "id");
   }
+
+  nilaiUS() {
+    return this.belongsTo("App/Models/TkRekapNilai", "us_id", "id");
+  }
 }
 
 module.exports = MUjianSiswa;

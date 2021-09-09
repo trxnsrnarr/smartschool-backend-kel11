@@ -43,6 +43,7 @@ Route.put("/profil", "MainController.putProfil");
 Route.put("/ubah-password", "MainController.putUbahPassword");
 Route.post("/profil-user", "MainController.postProfilUser");
 Route.get("/profil-user", "MainController.getProfilUser");
+Route.get("/profil/guru/:user_id", "MainController.getProfilGuru");
 
 // user
 Route.get("/user", "MainController.getUser");
@@ -68,6 +69,7 @@ Route.delete("/guru/:guru_id", "MainController.deleteGuru");
 Route.get("/siswa", "MainController.getSiswa");
 Route.post("/siswa", "MainController.postSiswa");
 Route.put("/siswa/:siswa_id", "MainController.putSiswa");
+Route.put("/avatar-siswa/:user_id", "MainController.putFotoSiswa");
 Route.delete("/siswa/:siswa_id", "MainController.deleteSiswa");
 
 // ppdb
@@ -93,7 +95,10 @@ Route.get("/rombel/:jadwal_mengajar_id", "MainController.detailRombel");
 Route.post("/rombel", "MainController.postRombel");
 Route.put("/rombel/:rombel_id", "MainController.putRombel");
 Route.delete("/rombel/:rombel_id", "MainController.deleteRombel");
-Route.post("/rombel/:rombel_id/:user_id", "MainController.postSikapRombel");
+Route.post(
+  "/rombel/:rombel_id/:user_id/:mata_pelajaran_id",
+  "MainController.postSikapRombel"
+);
 Route.post(
   "/rapor-sikap/sosial/:user_id",
   "MainController.postRaporSikapSosial"
@@ -110,6 +115,10 @@ Route.delete(
 Route.delete(
   "/rapor-sikap/spiritual/:user_id",
   "MainController.deleteRaporSikapSpiritual"
+);
+Route.get(
+  "/rombel/:rombel_id/nilai/:user_id",
+  "MainController.detailRombelWalas"
 );
 // Route.get("/rombel/rapor/:user_id", "MainController.getRombelRapor");
 // anggota rombel
@@ -427,6 +436,7 @@ Route.get("/rpp/:rpp_id", "MainController.detailRpp");
 Route.post("/rpp", "MainController.postRpp");
 Route.put("/rpp/:rpp_id", "MainController.putRpp");
 Route.delete("/rpp/:rpp_id", "MainController.deleteRpp");
+Route.get("/rpp/guru/:user_id", "MainController.detailRPPGuru");
 
 // perpus aktivitas
 Route.post("/perpus-aktivitas", "MainController.postPerpusAktivitas");
@@ -594,11 +604,11 @@ Route.delete("/predikat/:predikat_id", "MainController.deletePredikat");
 
 //Rapor Service
 Route.get(
-  "/rombel/:jadwal_mengajar_id/rapor-nilai/:user_id",
+  "/rombel/:mata_pelajaran_id/rapor-nilai/:user_id",
   "MainController.detailRombelRapor"
 );
 Route.get(
-  "/rombel/:jadwal_mengajar_id/rapor-keterampilan/:user_id",
+  "/rombel/:mata_pelajaran_id/rapor-keterampilan/:user_id",
   "MainController.detailRombelRaporKeterampilan"
 );
 Route.get(
@@ -860,7 +870,12 @@ Route.post("/surat", "MainController.postSurat");
 Route.put("/surat/:surat_id", "MainController.putSurat");
 Route.delete("/surat/:surat_id", "MainController.deleteSurat");
 // Disposisi
+Route.get("/disposisi/:disposisi_id", "MainController.detailDisposisi");
 Route.post("/disposisi", "MainController.postDisposisi");
+Route.post(
+  "/pelaporan-disposisi/:disposisi_id",
+  "MainController.postPelaporanDisposisi"
+);
 Route.put("/disposisi/:disposisi_id", "MainController.putDisposisi");
 Route.delete("/disposisi/:disposisi_id", "MainController.deleteDisposisi");
 
@@ -872,6 +887,25 @@ Route.post("/download/monev", "MainController.downloadMonev1");
 Route.post("/import/GPDS", "MainController.importGPDS");
 Route.post("/gpds-username", "MainController.gpdsUsername");
 
+Route.post(
+  "/download/rekap-rombel/:rekapRombel_id",
+  "MainController.downloadRekapRombel"
+);
+Route.post(
+  "/import/rekap-rombel/:rekapRombel_id",
+  "MainController.importNilaiRekapRombel"
+);
+Route.post("/import/GPDS", "MainController.importGPDS");
+
+//Konsultasi BK services
+Route.get("/konsultasi", "MainController.getKonsultasi");
+Route.get("/konsultasi/:konsultasi_id", "MainController.detailKonsultasi");
+Route.post("/konsultasi", "MainController.postKonsultasi");
+Route.post(
+  "/konsultasi/:konsultasi_id/jadwal",
+  "MainController.postJadwalKonsultasi"
+);
+Route.post("/konsultasi/download", "MainController.downloadKonsultasi");
 //dashboard
 Route.get("/dashboard/tugas", "MainController.getDashboardTugas");
 Route.get("/dashboard/absen", "MainController.getDashboardAbsen");
