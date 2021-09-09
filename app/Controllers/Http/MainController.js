@@ -8847,7 +8847,10 @@ class MainController {
         .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
         .pluck("m_rombel_id");
 
-      const rombel = await MRombel.query().whereIn("id", rombelIds).fetch();
+      const rombel = await MRombel.query()
+        .whereIn("id", rombelIds)
+        .andWhere({ dihapus: 0 })
+        .fetch();
 
       let jadwalUjian;
 
@@ -18305,12 +18308,13 @@ class MainController {
 
     let colComment = explanation.getColumn("A");
 
-    // let dataRombel = [];
+    let dataRombel = [];
 
     colComment.eachCell(async (cell, rowNumber) => {
       if (rowNumber >= 7) {
         let rombelall = explanation.getCell("B" + rowNumber).value;
-        let tingkat = `${rombelall.split(" ")[0]}`;
+        let tingkat = `${romawi[rombelall.split(" ")[0] - 1]}`;
+        let jurusanNama = `${rombelall.split(" ")[1]}`;
 
         // dataRombel.push({
         //   rombelall: explanation.getCell("B" + rowNumber).value,
@@ -18327,18 +18331,69 @@ class MainController {
           .first();
 
         if (!rombelCheck) {
-          await MRombel.create({
+          const checkJurusan = await MJurusan.query()
+            .where({ sekolah: sekolah.id })
+            .andWhere({ kode: jurusanNama })
+            .andWhere({ dihapus: 0 })
+            .first();
+
+          if (!checkJurusan) {
+            await MJurusan.create({
+              nama: jurusanNama,
+              kode: jurusanNama,
+              spp: 0,
+              sumbangan_sarana_pendidikan: 0,
+              kegiatan_osis: 0,
+              mpls_jas_almamater: 0,
+              seragam_sekolah: 0,
+              toolkit_praktek: 0,
+              m_sekolah_id: sekolah.id,
+              dihapus: 0,
+            });
+          }
+          const jurusan = await MJurusan.query()
+            .select("id", "kode", "m_sekolah_id", "dihapus")
+            .where({ kode: jurusanNama })
+            .andWhere({ dihapus: 0 })
+            .andWhere({ m_sekolah_id: sekolah.id })
+            .first();
+
+          const rombel = await MRombel.create({
             tingkat: tingkat,
             nama: rombelData,
-            kelompok: "reguler",
+            m_jurusan_id: jurusan.id,
             m_sekolah_id: sekolah.id,
             m_ta_id: ta.id,
+            kelompok: "reguler",
             dihapus: 0,
           });
+
+          const jamMengajar = await MJamMengajar.query()
+            .select("id")
+            .where({ m_sekolah_id: sekolah.id })
+            .andWhere({ m_ta_id: ta.id })
+            .fetch();
+
+          const jadwalMengajarData = await Promise.all(
+            jamMengajar.toJSON().map(async (data) => {
+              data.m_mata_pelajaran_id = null;
+              data.m_rombel_id = rombel.id;
+              data.m_jam_mengajar_id = data.id;
+              data.m_sekolah_id = sekolah.id;
+              data.m_ta_id = ta.id;
+              delete data.id;
+              delete data.jamFormat;
+
+              return data;
+            })
+          );
+
+          await MJadwalMengajar.createMany(jadwalMengajarData);
           return rombelCheck;
         }
       }
     });
+    return;
 
     // const rombelResult = await Promise.all(
     //   dataRombel.map(async (d) => {
