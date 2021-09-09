@@ -463,7 +463,9 @@ class MainController {
     const res = Sekolah.query();
 
     if (search) {
-      res.where("sekolah", "like", `%${search}%`);
+      res
+        .where("sekolah", "like", `%${search}%`)
+        .orWhere("npsn", "like", `${search}`);
     }
 
     if (bentuk) {
@@ -28644,7 +28646,7 @@ class MainController {
       return "Format File Tidak Sesuai";
     }
 
-    let explanation = workbook.getWorksheet("Form Responses 1");
+    let explanation = workbook.getWorksheet("Sheet1");
 
     if (!explanation) {
       return "Format File Tidak Sesuai";
@@ -28657,78 +28659,154 @@ class MainController {
     let data = [];
 
     colComment.eachCell(async (cell, rowNumber) => {
-      if (rowNumber >= 2) {
-        data.push({
-          sekolah: explanation.getCell("B" + rowNumber).value,
-          npsn: explanation.getCell("C" + rowNumber).value,
-          nama1: explanation.getCell("D" + rowNumber).value,
-          no1: explanation.getCell("E" + rowNumber).value,
-          tgl1: explanation.getCell("F" + rowNumber).value,
-          nama2: explanation.getCell("G" + rowNumber).value,
-          no2: explanation.getCell("H" + rowNumber).value,
-          tgl2: explanation.getCell("I" + rowNumber).value,
-          nama3: explanation.getCell("J" + rowNumber).value,
-          no3: explanation.getCell("K" + rowNumber).value,
-          tgl3: explanation.getCell("L" + rowNumber).value,
-          nama4: explanation.getCell("M" + rowNumber).value,
-          no4: explanation.getCell("N" + rowNumber).value,
-          tgl4: explanation.getCell("O" + rowNumber).value,
-        });
+      if (rowNumber >= 3) {
+        const sekolah = explanation.getCell("B" + rowNumber).value
+          ? explanation.getCell("B" + rowNumber).value
+          : "-";
+        const npsn = explanation.getCell("C" + rowNumber).value
+          ? explanation.getCell("C" + rowNumber).value
+          : "-";
+        const bentuk = explanation.getCell("E" + rowNumber).value
+          ? explanation.getCell("E" + rowNumber).value
+          : "-";
+        const nama1 = explanation.getCell("F" + rowNumber).value
+          ? explanation.getCell("F" + rowNumber).value
+          : "-";
+        const no1 = explanation.getCell("G" + rowNumber).value
+          ? explanation.getCell("G" + rowNumber).value
+          : "-";
+
+        data.push({ npsn, nama1, no1, sekolah, bentuk });
       }
     });
-    const result = await Promise.all(
-      data.map(async (d) => {
-        const checkSekolah = await MSekolah.query()
-          .where({ npsn: d.sekolah })
-          .first();
 
-        if (!checkSekolah) {
-          // const tingkat = `${d.sekolah.split(" ")[0]}`;
-          // const tingkat = `${d.sekolah.indexOf("SD")}`;
-          let tingkatSekolah;
-          // if (
-          //   tingkat == "%SD%" ||
-          //   tingkat == "SDS" ||
-          //   tingkat == "SDN" ||
-          //   tingkat == "SDK"
-          // ) {
-          //   tingkatSekolah = "SD";
-          // } else if (
-          //   tingkat == "SMP" ||
-          //   tingkat == "SMPS" ||
-          //   tingkat == "SMPN" ||
-          //   tingkat == "SMPK"
-          // ) {
-          //   tingkatSekolah = "SMP";
-          // }
-          if (
-            d.sekolah.indexOf("SD") == 0 ||
-            d.sekolah.indexOf("Sd") == 0 ||
-            d.sekolah.indexOf("sd") == 0
-          ) {
-            tingkatSekolah = "SD";
-          } else if (
-            d.sekolah.indexOf("SMP") == 0 ||
-            d.sekolah.indexOf("Smp") == 0 ||
-            d.sekolah.indexOf("SMp") == 0 ||
-            d.sekolah.indexOf("smp") == 0
-          ) {
-            tingkatSekolah = "SMP";
+    const result = await Promise.all(
+      data.map(async (d, idx) => {
+        const check = await Sekolah.query().where("npsn", d.npsn).first();
+
+        if (!check) {
+          let sekolahCreate;
+
+          sekolahCreate = await MSekolah.query()
+            .where({
+              npsn: d.npsn,
+            })
+            .andWhere({
+              nama: d.sekolah,
+            })
+            .first();
+
+          if (!sekolahCreate) {
+            sekolahCreate = await MSekolah.create({
+              npsn: d.npsn,
+              nama: d.sekolah,
+              domain: `https://${slugify(d.sekolah, {
+                replacement: "", // replace spaces with replacement character, defaults to `-`
+                remove: /[*+~.()'"!:@]/g,
+                lower: true, // convert to lower case, defaults to `false`
+              })}.smarteschool.id`,
+              status: "N",
+              tingkat: d.bentuk,
+              integrasi: "whatsapp",
+              diintegrasi: 1,
+              trial: 1,
+            });
           }
-          const sekolahCreate = await MSekolah.create({
-            npsn: d.npsn,
-            nama: d.sekolah,
-            domain: `https://${slugify(d.sekolah, {
-              replacement: "", // replace spaces with replacement character, defaults to `-`
-              remove: /[*+~.()'"!:@]/g,
-              lower: true, // convert to lower case, defaults to `false`
-            })}.smarteschool.id`,
-            status: "S",
-            tingkat: tingkatSekolah,
-            integrasi: "whatsapp",
-            diintegrasi: 1,
-            trial: 1,
-          });
+
+          if (
+            !(await User.query()
+              .where({ whatsapp: `${d.no1}?admin` })
+              .andWhere({ m_sekolah_id: sekolahCreate.id })
+              .first())
+          ) {
+            const admin = await User.create({
+              nama: d.nama1,
+              whatsapp: `${d.no1}?admin`,
+              gender: "L",
+              password: "gpdsnasional",
+              role: "admin",
+              m_sekolah_id: sekolahCreate.id,
+              dihapus: 0,
+            });
+          }
+          if (
+            !(await User.query()
+              .where({ whatsapp: d.no1 })
+              .andWhere({ m_sekolah_id: sekolahCreate.id })
+              .first())
+          ) {
+            const guru = await User.create({
+              nama: d.nama1,
+              whatsapp: d.no1,
+              gender: "L",
+              password: "gpdsnasional",
+              role: "guru",
+              m_sekolah_id: sekolahCreate.id,
+              dihapus: 0,
+            });
+          }
+        } else {
+          let sekolahCreate;
+
+          sekolahCreate = await MSekolah.query()
+            .where({
+              npsn: check.npsn,
+            })
+            .andWhere({
+              nama: check.sekolah,
+            })
+            .first();
+
+          if (!sekolahCreate) {
+            sekolahCreate = await MSekolah.create({
+              npsn: check.npsn,
+              nama: check.sekolah,
+              domain: `https://${slugify(check.sekolah, {
+                replacement: "", // replace spaces with replacement character, defaults to `-`
+                remove: /[*+~.()'"!:@]/g,
+                lower: true, // convert to lower case, defaults to `false`
+              })}.smarteschool.id`,
+              status: "N",
+              tingkat: check.bentuk,
+              integrasi: "whatsapp",
+              diintegrasi: 1,
+              trial: 1,
+              sekolah_id: check.id,
+            });
+          }
+
+          if (
+            !(await User.query()
+              .where({ whatsapp: `${d.no1}?admin` })
+              .andWhere({ m_sekolah_id: sekolahCreate.id })
+              .first())
+          ) {
+            const admin = await User.create({
+              nama: d.nama1,
+              whatsapp: `${d.no1}?admin`,
+              gender: "L",
+              password: "gpdsnasional",
+              role: "admin",
+              m_sekolah_id: sekolahCreate.id,
+              dihapus: 0,
+            });
+          }
+          if (
+            !(await User.query()
+              .where({ whatsapp: d.no1 })
+              .andWhere({ m_sekolah_id: sekolahCreate.id })
+              .first())
+          ) {
+            const guru = await User.create({
+              nama: d.nama1,
+              whatsapp: d.no1,
+              gender: "L",
+              password: "gpdsnasional",
+              role: "guru",
+              m_sekolah_id: sekolahCreate.id,
+              dihapus: 0,
+            });
+          }
         }
       })
     );
