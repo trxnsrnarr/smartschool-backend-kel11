@@ -333,8 +333,8 @@ class MainController {
         m_sekolah_id: sekolah.id,
       })
       .first();
-      
-      const checkPredikat = await MPredikatNilai.query()
+
+    const checkPredikat = await MPredikatNilai.query()
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .first();
@@ -381,7 +381,6 @@ class MainController {
         dihapus: 0,
       });
     }
-
 
     return response.ok({
       sekolah: sekolah,
@@ -3921,7 +3920,7 @@ class MainController {
         await TkMapelRapor.query()
           .where({ m_kategori_mapel_id: checkTkMapel.id })
           .andWhere({ m_mata_pelajaran_id: m_mata_pelajaran_id })
-          .update({ dihapus: 1 });
+          .delete();
       }
 
       return response.ok({
