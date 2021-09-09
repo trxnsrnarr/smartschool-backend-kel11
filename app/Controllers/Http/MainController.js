@@ -18332,7 +18332,7 @@ class MainController {
 
         if (!rombelCheck) {
           const checkJurusan = await MJurusan.query()
-            .where({ sekolah: sekolah.id })
+            .where({ m_sekolah_id: sekolah.id })
             .andWhere({ kode: jurusanNama })
             .andWhere({ dihapus: 0 })
             .first();
@@ -18389,11 +18389,9 @@ class MainController {
           );
 
           await MJadwalMengajar.createMany(jadwalMengajarData);
-          return rombelCheck;
         }
       }
     });
-    return;
 
     // const rombelResult = await Promise.all(
     //   dataRombel.map(async (d) => {
