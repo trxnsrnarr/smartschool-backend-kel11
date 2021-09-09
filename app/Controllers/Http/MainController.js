@@ -18520,6 +18520,10 @@ class MainController {
           .andWhere({ m_sekolah_id: sekolah.id })
           .first();
 
+        if (checkRombel == null) {
+          return;
+        }
+
         const tgllahir = moment(d.tanggallahir).format(`YYYY-MM-DD`);
         // return d.rombel;
 
