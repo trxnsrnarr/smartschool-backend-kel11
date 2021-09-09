@@ -29250,7 +29250,10 @@ class MainController {
         if (tipe == "keluar") {
           surat.andWhere({ tipe: "keluar" });
         } else if (tipe == "masuk") {
-          surat.andWhere({ tipe: "masuk" }).andWhere({ teruskan: 1 });
+          surat
+            .with("disposisi")
+            .andWhere({ tipe: "masuk" })
+            .andWhere({ teruskan: 1 });
         }
       } else if (tipe == "disposisi") {
         surat = MDisposisi.query()
