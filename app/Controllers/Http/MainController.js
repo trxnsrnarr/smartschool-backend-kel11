@@ -18309,15 +18309,71 @@ class MainController {
     let explanation = workbook.getWorksheet("Daftar Peserta Didik");
 
     let colComment = explanation.getColumn("A");
+    let colCommentRombel = explanation.getColumn("E");
 
     let dataRombel = [];
 
     colComment.eachCell(async (cell, rowNumber) => {
-      if (rowNumber >= 7) {
-        let rombelall = explanation.getCell("B" + rowNumber).value;
-        let tingkat = `${romawi[rombelall.split(" ")[0] - 1]}`;
-        let jurusanNama = `${rombelall.split(" ")[1]}`;
+      if (rowNumber >= 9) {
+        let kode = explanation.getCell("B" + rowNumber).value;
+        let nama = explanation.getCell("C" + rowNumber).value;
 
+        if (kode == null || nama == null) {
+          return;
+        }
+        const checkJurusan = await MJurusan.query()
+          .where({ m_sekolah_id: sekolah.id })
+          .andWhere({ kode: kode })
+          .andWhere({ dihapus: 0 })
+          .first();
+
+        if (!checkJurusan) {
+          await MJurusan.create({
+            nama: nama,
+            kode: kode,
+            spp: 0,
+            sumbangan_sarana_pendidikan: 0,
+            kegiatan_osis: 0,
+            mpls_jas_almamater: 0,
+            seragam_sekolah: 0,
+            toolkit_praktek: 0,
+            m_sekolah_id: sekolah.id,
+            dihapus: 0,
+          });
+        }
+      }
+    });
+
+    colCommentRombel.eachCell(async (cell, rowNumber) => {
+      if (rowNumber >= 9) {
+        let rombelall = explanation.getCell("F" + rowNumber).value;
+        let tingkat = `${romawi[rombelall.split(" ")[0] - 1]}`;
+        let jurusanKode = `${rombelall.split(" ")[1]}`;
+        let nama = explanation.getCell("G" + rowNumber).value;
+        let walas = explanation.getCell("H" + rowNumber).value;
+        let gender = explanation.getCell("I" + rowNumber).value;
+
+        const checkUser = await User.query()
+          .where({ whatsapp: walas })
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .first();
+
+        if (!checkUser) {
+          const createUser = await User.create({
+            nama: nama,
+            whatsapp: walas,
+            gender: gender,
+            // email: d.email ? d.email : "",
+            password: "smartschool",
+            role: "guru",
+            m_sekolah_id: sekolah.id,
+            dihapus: 0,
+          });
+        }
+        const userWalas = await User.query()
+          .where({ whatsapp: walas })
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .first();
         // dataRombel.push({
         //   rombelall: explanation.getCell("B" + rowNumber).value,
         //   tingkat: `${rombelall.split(" ")[0]}`,
@@ -18330,32 +18386,13 @@ class MainController {
           .where({ nama: rombelData })
           .andWhere({ m_ta_id: ta.id })
           .andWhere({ m_sekolah_id: sekolah.id })
+          .andWhere({ m_user_id: userWalas.id })
           .first();
 
         if (!rombelCheck) {
-          const checkJurusan = await MJurusan.query()
-            .where({ m_sekolah_id: sekolah.id })
-            .andWhere({ kode: jurusanNama })
-            .andWhere({ dihapus: 0 })
-            .first();
-
-          if (!checkJurusan) {
-            await MJurusan.create({
-              nama: jurusanNama,
-              kode: jurusanNama,
-              spp: 0,
-              sumbangan_sarana_pendidikan: 0,
-              kegiatan_osis: 0,
-              mpls_jas_almamater: 0,
-              seragam_sekolah: 0,
-              toolkit_praktek: 0,
-              m_sekolah_id: sekolah.id,
-              dihapus: 0,
-            });
-          }
           const jurusan = await MJurusan.query()
             .select("id", "kode", "m_sekolah_id", "dihapus")
-            .where({ kode: jurusanNama })
+            .where({ kode: jurusanKode })
             .andWhere({ dihapus: 0 })
             .andWhere({ m_sekolah_id: sekolah.id })
             .first();
@@ -18367,6 +18404,7 @@ class MainController {
             m_sekolah_id: sekolah.id,
             m_ta_id: ta.id,
             kelompok: "reguler",
+            m_user_id: userWalas.id,
             dihapus: 0,
           });
 
@@ -18395,65 +18433,65 @@ class MainController {
       }
     });
 
-    // const rombelResult = await Promise.all(
-    //   dataRombel.map(async (d) => {
-    //     const rombelCheck = await MRombel.query()
-    //       .where({ nama: d.rombel })
-    //       .andWhere({ m_ta_id: ta.id })
-    //       .andWhere({ m_sekolah_id: sekolah.id })
-    //       .first();
+    const rombelResult = await Promise.all(
+      dataRombel.map(async (d) => {
+        const rombelCheck = await MRombel.query()
+          .where({ nama: d.rombel })
+          .andWhere({ m_ta_id: ta.id })
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .first();
 
-    //     if (!rombelCheck) {
-    //       const createRombel = await MRombel.create({
-    //         tingkat: d.tingkat,
-    //         nama: d.rombelall,
-    //         kelompok: "reguler",
-    //         m_sekolah_id: sekolah.id,
-    //         m_ta_id: ta.id,
-    //         dihapus: 0,
-    //       });
-    //       return;
-    //     }
-    //   })
-    // );
+        if (!rombelCheck) {
+          const createRombel = await MRombel.create({
+            tingkat: d.tingkat,
+            nama: d.rombelall,
+            kelompok: "reguler",
+            m_sekolah_id: sekolah.id,
+            m_ta_id: ta.id,
+            dihapus: 0,
+          });
+          return;
+        }
+      })
+    );
 
     let data = [];
 
     colComment.eachCell(async (cell, rowNumber) => {
-      if (rowNumber >= 7) {
-        const rombelsiswa = explanation.getCell("X" + rowNumber).value;
+      if (rowNumber >= 9) {
+        const rombelsiswa = explanation.getCell("AE" + rowNumber).value;
         data.push({
-          nama: explanation.getCell("E" + rowNumber).value,
-          nipd: explanation.getCell("F" + rowNumber).value,
-          jk: explanation.getCell("G" + rowNumber).value,
-          nisn: explanation.getCell("H" + rowNumber).value,
-          tempatlahir: explanation.getCell("I" + rowNumber).value,
-          tanggallahir: explanation.getCell("J" + rowNumber).value,
-          agama: explanation.getCell("K" + rowNumber).value,
-          alamat: explanation.getCell("L" + rowNumber).value,
-          kelurahan: explanation.getCell("M" + rowNumber).value,
-          kecamatan: explanation.getCell("N" + rowNumber).value,
-          kodepos: explanation.getCell("O" + rowNumber).value,
-          whatsapp: explanation.getCell("P" + rowNumber).value,
+          nama: explanation.getCell("L" + rowNumber).value,
+          nipd: explanation.getCell("M" + rowNumber).value,
+          jk: explanation.getCell("N" + rowNumber).value,
+          nisn: explanation.getCell("O" + rowNumber).value,
+          tempatlahir: explanation.getCell("P" + rowNumber).value,
+          tanggallahir: explanation.getCell("Q" + rowNumber).value,
+          agama: explanation.getCell("R" + rowNumber).value,
+          alamat: explanation.getCell("S" + rowNumber).value,
+          kelurahan: explanation.getCell("T" + rowNumber).value,
+          kecamatan: explanation.getCell("U" + rowNumber).value,
+          kodepos: explanation.getCell("V" + rowNumber).value,
+          whatsapp: explanation.getCell("W" + rowNumber).value,
           email:
-            explanation.getCell("Q" + rowNumber).value == null
+            explanation.getCell("X" + rowNumber).value == null
               ? ""
-              : typeof explanation.getCell("Q" + rowNumber).value == "object"
-              ? JSON.parse(explanation.getCell("Q" + rowNumber).value).text
-              : explanation.getCell("Q" + rowNumber).value,
-          namaayah: explanation.getCell("R" + rowNumber).value,
-          pekerjaanayah: explanation.getCell("S" + rowNumber).value,
-          namaibu: explanation.getCell("T" + rowNumber).value,
-          pekerjaanibu: explanation.getCell("U" + rowNumber).value,
-          namawali: explanation.getCell("V" + rowNumber).value,
-          pekerjaanwali: explanation.getCell("W" + rowNumber).value,
+              : typeof explanation.getCell("X" + rowNumber).value == "object"
+              ? JSON.parse(explanation.getCell("X" + rowNumber).value).text
+              : explanation.getCell("X" + rowNumber).value,
+          namaayah: explanation.getCell("Y" + rowNumber).value,
+          pekerjaanayah: explanation.getCell("Z" + rowNumber).value,
+          namaibu: explanation.getCell("AA" + rowNumber).value,
+          pekerjaanibu: explanation.getCell("AB" + rowNumber).value,
+          namawali: explanation.getCell("AC" + rowNumber).value,
+          pekerjaanwali: explanation.getCell("AD" + rowNumber).value,
           rombel: `${romawi[rombelsiswa.split(" ")[0] - 1]} ${
             rombelsiswa.split(" ")[1]
           } ${rombelsiswa.split(" ")[2]}`,
-          kebutuhan: explanation.getCell("Y" + rowNumber).value,
-          asalsekolah: explanation.getCell("Z" + rowNumber).value,
-          bb: explanation.getCell("AA" + rowNumber).value,
-          tb: explanation.getCell("AB" + rowNumber).value,
+          kebutuhan: explanation.getCell("AF" + rowNumber).value,
+          asalsekolah: explanation.getCell("AG" + rowNumber).value,
+          bb: explanation.getCell("AH" + rowNumber).value,
+          tb: explanation.getCell("AI" + rowNumber).value,
         });
       }
     });
