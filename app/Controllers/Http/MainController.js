@@ -29584,14 +29584,21 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { penanganan, tanggal_pengembalian, isi, ttd, m_user_id } =
-      request.post();
+    const {
+      penanganan,
+      tanggal_pengembalian,
+      isi,
+      ttd,
+      m_user_id,
+      m_surat_id,
+    } = request.post();
     const rules = {
       penanganan: "required",
       tanggal_pengembalian: "required",
       isi: "required",
       ttd: "required",
       m_user_id: "required",
+      m_surat_id: "required",
     };
     const message = {
       "penanganan.required": "Penanganan harus diisi",
@@ -29599,6 +29606,7 @@ class MainController {
       "isi.required": "Isi harus diisi",
       "ttd.required": "TTD harus diisi",
       "m_user_id.required": "Disposisi kepada harus dipilih",
+      "m_surat_id.required": "Disposisi kepada harus dipilih",
     };
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
@@ -29611,6 +29619,7 @@ class MainController {
       isi,
       ttd,
       m_user_id,
+      m_surat_id,
     });
 
     return response.ok({
