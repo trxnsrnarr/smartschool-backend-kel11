@@ -4509,6 +4509,7 @@ class MainController {
           //     : explanation.getCell("D" + rowNumber).value,
           gender: explanation.getCell("E" + rowNumber).value,
           role: explanation.getCell("F" + rowNumber).value,
+          password: explanation.getCell("G" + rowNumber).value,
         });
       }
     });
@@ -4526,7 +4527,7 @@ class MainController {
             whatsapp: d.whatsapp,
             gender: d.gender,
             // email: d.email ? d.email : "",
-            password: "smartschool",
+            password: d ? d.password : "smarteschool",
             role: "siswa",
             m_sekolah_id: sekolah.id,
             dihapus: 0,
@@ -4654,7 +4655,7 @@ class MainController {
           //     : explanation.getCell("D" + rowNumber).value,
           gender: explanation.getCell("D" + rowNumber).value,
           role: explanation.getCell("E" + rowNumber).value,
-          password: explanation.getCell("F" + rowNumber).value,
+          password: explanation.getCell("F " + rowNumber).value,
         });
       }
     });
@@ -18957,6 +18958,7 @@ class MainController {
               "No",
               "Nama",
               "Whatsapp",
+              "Email",
               "Gender",
               "Jabatan",
             ];
@@ -18965,6 +18967,7 @@ class MainController {
               { key: "no" },
               { key: "user" },
               { key: "whatsapp" },
+              { key: "email" },
               { key: "gender" },
               { key: "jabatan" },
             ];
@@ -18974,6 +18977,7 @@ class MainController {
               no: `${idx + 1}`,
               user: anggota.user ? anggota.user.nama : "-",
               whatsapp: anggota.user ? anggota.user.whatsapp : "-",
+              email: anggota.user ? anggota.user.email : "-",
               gender: anggota.user ? anggota.user.gender : "-",
               jabatan: anggota ? anggota.role : "-",
             });
