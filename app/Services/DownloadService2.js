@@ -917,7 +917,7 @@ class DownloadService {
         // Add row using key mapping to columns
         worksheet4.addRow({
           No: `${idx + 1}`,
-          INDIKATOR_SOAL: d ? d.akm_konten_materi : "-",
+          INDIKATOR_SOAL: d ? d.kd_konten_materi : "-",
           RUMUSAN_BUTIR_SOAL: d
             ? d.pertanyaan.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
             : "-",
