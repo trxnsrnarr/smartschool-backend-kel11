@@ -18840,7 +18840,7 @@ class MainController {
           "A6"
         ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
         worksheet.addConditionalFormatting({
-          ref: `A1:E4`,
+          ref: `A1:F4`,
           rules: [
             {
               type: "expression",
@@ -18860,12 +18860,12 @@ class MainController {
             },
           ],
         });
-        worksheet.mergeCells(`A1:E1`);
-        worksheet.mergeCells(`A2:E2`);
-        worksheet.mergeCells(`A3:E3`);
-        worksheet.mergeCells(`A4:E4`);
+        worksheet.mergeCells(`A1:F1`);
+        worksheet.mergeCells(`A2:F2`);
+        worksheet.mergeCells(`A3:F3`);
+        worksheet.mergeCells(`A4:F4`);
         worksheet.addConditionalFormatting({
-          ref: `A7:E7`,
+          ref: `A7:F7`,
           rules: [
             {
               type: "expression",
@@ -18900,7 +18900,7 @@ class MainController {
         await Promise.all(
           d.anggotaRombel.map(async (anggota, idx) => {
             worksheet.addConditionalFormatting({
-              ref: `B${(idx + 1) * 1 + 7}:E${(idx + 1) * 1 + 7}`,
+              ref: `B${(idx + 1) * 1 + 7}:F${(idx + 1) * 1 + 7}`,
               rules: [
                 {
                   type: "expression",
