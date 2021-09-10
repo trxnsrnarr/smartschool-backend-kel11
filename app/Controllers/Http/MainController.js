@@ -4544,7 +4544,7 @@ class MainController {
         }
         await User.query()
           .where({ id: checkUser.toJSON().id })
-          .update({ dihapus: 0 });
+          .update({ dihapus: 0, password: await Hash.make(d.password || "smarteschool") });
 
         const checkAnggotaRombel = await MAnggotaRombel.query()
           .andWhere({ m_user_id: checkUser.toJSON().id })
