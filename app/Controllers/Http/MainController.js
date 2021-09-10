@@ -4615,6 +4615,152 @@ class MainController {
     });
   }
 
+  async importAnggotaRombelPasswordServices(
+    filelocation,
+    sekolah,
+    m_rombel_id
+  ) {
+    var workbook = new Excel.Workbook();
+
+    try {
+      workbook = await workbook.xlsx.readFile(filelocation);
+    } catch (err) {
+      return "Format File Tidak Sesuai";
+    }
+
+    let explanation = workbook.getWorksheet("Sheet1");
+
+    if (!explanation) {
+      return "Format File Tidak Sesuai";
+    }
+
+    let colComment = explanation.getColumn("A");
+    if (!colComment) {
+      return "Format File Tidak Sesuai";
+    }
+
+    let data = [];
+
+    colComment.eachCell(async (cell, rowNumber) => {
+      if (rowNumber >= 8) {
+        data.push({
+          nama: explanation.getCell("B" + rowNumber).value,
+          whatsapp: explanation.getCell("C" + rowNumber).value,
+          // email:
+          //   explanation.getCell("D" + rowNumber).value == null
+          //     ? ""
+          //     : typeof explanation.getCell("D" + rowNumber).value == "object"
+          //     ? JSON.parse(explanation.getCell("D" + rowNumber).value).text
+          //     : explanation.getCell("D" + rowNumber).value,
+          gender: explanation.getCell("D" + rowNumber).value,
+          role: explanation.getCell("E" + rowNumber).value,
+          password: explanation.getCell("F" + rowNumber).value,
+        });
+      }
+    });
+
+    const result = await Promise.all(
+      data.map(async (d) => {
+        const checkUser = await User.query()
+          .where({ whatsapp: d.whatsapp })
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .first();
+
+        if (!checkUser) {
+          const createUser = await User.create({
+            nama: d.nama,
+            whatsapp: d.whatsapp,
+            gender: d.gender,
+            // email: d.email ? d.email : "",
+            password: d.password,
+            role: "siswa",
+            m_sekolah_id: sekolah.id,
+            dihapus: 0,
+          });
+
+          await MAnggotaRombel.create({
+            role: d.role,
+            dihapus: 0,
+            m_user_id: createUser.toJSON().id,
+            m_rombel_id: m_rombel_id,
+          });
+
+          return;
+        }
+        await User.query()
+          .where({ id: checkUser.toJSON().id })
+          .update({ dihapus: 0, password: d.password });
+
+        const checkAnggotaRombel = await MAnggotaRombel.query()
+          .andWhere({ m_user_id: checkUser.toJSON().id })
+          .andWhere({ m_rombel_id: m_rombel_id })
+          .first();
+
+        if (checkAnggotaRombel) {
+          await MAnggotaRombel.query()
+            .andWhere({ m_user_id: checkUser.toJSON().id })
+            .andWhere({ m_rombel_id: m_rombel_id })
+            .update({ dihapus: 0, role: d.role });
+          return {
+            message: `${d.nama} sudah terdaftar`,
+            error: true,
+          };
+        }
+
+        await MAnggotaRombel.create({
+          role: d.role,
+          dihapus: 0,
+          m_user_id: checkUser.toJSON().id,
+          m_rombel_id: m_rombel_id,
+        });
+
+        return;
+      })
+    );
+
+    return "import Siswa Berhasil";
+  }
+
+  async importAnggotaRombelPassword({ request, response }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let file = request.file("file");
+    let fname = `import-excel.${file.extname}`;
+
+    const { m_rombel_id } = request.post();
+
+    //move uploaded file into custom folder
+    await file.move(Helpers.tmpPath("/uploads"), {
+      name: fname,
+      overwrite: true,
+    });
+
+    if (!file.moved()) {
+      return fileUpload.error();
+    }
+
+    const message = await this.importAnggotaRombelPasswordServices(
+      `tmp/uploads/${fname}`,
+      sekolah,
+      m_rombel_id
+    );
+
+    if (message == "Format File Tidak Sesuai") {
+      return response.notFound({
+        message,
+      });
+    }
+    return response.ok({
+      message,
+    });
+  }
+
   async deleteAnggotaRombel({
     response,
     request,
