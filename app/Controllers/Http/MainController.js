@@ -4527,7 +4527,7 @@ class MainController {
             whatsapp: d.whatsapp,
             gender: d.gender,
             // email: d.email ? d.email : "",
-            password: d ? d.password : "smarteschool",
+            password: d.password || "smarteschool",
             role: "siswa",
             m_sekolah_id: sekolah.id,
             dihapus: 0,
@@ -4544,7 +4544,7 @@ class MainController {
         }
         await User.query()
           .where({ id: checkUser.toJSON().id })
-          .update({ dihapus: 0, password: await Hash.make(d.password || "smarteschool") });
+          .update({ dihapus: 0, password: d.password || "smarteschool" });
 
         const checkAnggotaRombel = await MAnggotaRombel.query()
           .andWhere({ m_user_id: checkUser.toJSON().id })
