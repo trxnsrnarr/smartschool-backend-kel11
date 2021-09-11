@@ -3910,7 +3910,7 @@ class MainController {
           diubah: 1,
         });
 
-      if (jadwal.m_rombel_id && jadwal.m_mata_pelajaran_id) {
+      if (jadwal.toJSON().m_rombel_id && jadwal.toJSON().m_mata_pelajaran_id) {
         const kategoriMapel = await MKategoriMapel.query()
           .where({ m_rombel_id: jadwal.m_rombel_id })
           .fetch();
