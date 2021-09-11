@@ -124,6 +124,10 @@ Route.get(
 // anggota rombel
 Route.post("/anggota-rombel", "MainController.postAnggotaRombel");
 Route.post("/anggota-rombel/import", "MainController.importAnggotaRombel");
+Route.post(
+  "/anggota-rombel/import-password",
+  "MainController.importAnggotaRombelPassword"
+);
 
 // MATA PELAJARAN SERVICE - START
 Route.get("/mata-pelajaran", "MainController.getMataPelajaran");
