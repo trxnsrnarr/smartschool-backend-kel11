@@ -3899,6 +3899,10 @@ class MainController {
     }
 
     if (kosongkan) {
+      const jadwal = await MJadwalMengajar.query()
+        .where({ id: jadwal_mengajar_id })
+        .first();
+
       jadwalMengajar = await MJadwalMengajar.query()
         .where({ id: jadwal_mengajar_id })
         .update({
@@ -3906,23 +3910,25 @@ class MainController {
           diubah: 1,
         });
 
-      const kategoriMapel = await MKategoriMapel.query()
-        .where({ m_rombel_id })
-        .fetch();
+      if (jadwal.m_rombel_id && jadwal.m_mata_pelajaran_id) {
+        const kategoriMapel = await MKategoriMapel.query()
+          .where({ m_rombel_id: jadwal.m_rombel_id })
+          .fetch();
 
-      const checkTkMapel = await TkMapelRapor.query()
-        .where({ m_mata_pelajaran_id: m_mata_pelajaran_id })
-        .whereIn(
-          "m_kategori_mapel_id",
-          kategoriMapel.toJSON().map((item) => item.id)
-        )
-        .first();
+        const checkTkMapel = await TkMapelRapor.query()
+          .where({ m_mata_pelajaran_id: jadwal.m_mata_pelajaran_id })
+          .whereIn(
+            "m_kategori_mapel_id",
+            kategoriMapel.toJSON().map((item) => item.id)
+          )
+          .first();
 
-      if (checkTkMapel) {
-        await TkMapelRapor.query()
-          .where({ m_kategori_mapel_id: checkTkMapel.id })
-          .andWhere({ m_mata_pelajaran_id: m_mata_pelajaran_id })
-          .delete();
+        if (checkTkMapel) {
+          await TkMapelRapor.query()
+            .where({ m_kategori_mapel_id: checkTkMapel.id })
+            .andWhere({ m_mata_pelajaran_id: jadwal.m_mata_pelajaran_id })
+            .delete();
+        }
       }
 
       return response.ok({
