@@ -3876,26 +3876,28 @@ class MainController {
 
     let jadwalMengajar;
 
-    const checkKategoriMapel = await MKategoriMapel.query()
-      .where({ m_rombel_id })
-      .first();
+    if (!kosongkan) {
+      const checkKategoriMapel = await MKategoriMapel.query()
+        .where({ m_rombel_id })
+        .first();
 
-    if (!checkKategoriMapel) {
-      await MKategoriMapel.create({
-        nama: "Muatan Nasional",
-        dihapus: 0,
-        m_rombel_id: m_rombel_id,
-      });
-      await MKategoriMapel.create({
-        nama: "Muatan Kewilayahan",
-        dihapus: 0,
-        m_rombel_id: m_rombel_id,
-      });
-      await MKategoriMapel.create({
-        nama: "Muatan Peminatan Kejurusan",
-        dihapus: 0,
-        m_rombel_id: m_rombel_id,
-      });
+      if (!checkKategoriMapel) {
+        await MKategoriMapel.create({
+          nama: "Muatan Nasional",
+          dihapus: 0,
+          m_rombel_id: m_rombel_id,
+        });
+        await MKategoriMapel.create({
+          nama: "Muatan Kewilayahan",
+          dihapus: 0,
+          m_rombel_id: m_rombel_id,
+        });
+        await MKategoriMapel.create({
+          nama: "Muatan Peminatan Kejurusan",
+          dihapus: 0,
+          m_rombel_id: m_rombel_id,
+        });
+      }
     }
 
     if (kosongkan) {
@@ -3910,7 +3912,7 @@ class MainController {
           diubah: 1,
         });
 
-      if (jadwal.toJSON().m_rombel_id && jadwal.toJSON().m_mata_pelajaran_id) {
+      if (jadwal.m_rombel_id && jadwal.m_mata_pelajaran_id) {
         const kategoriMapel = await MKategoriMapel.query()
           .where({ m_rombel_id: jadwal.m_rombel_id })
           .fetch();
