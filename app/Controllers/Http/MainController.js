@@ -28521,6 +28521,9 @@ class MainController {
         const npsn = explanation.getCell("C" + rowNumber).value
           ? explanation.getCell("C" + rowNumber).value
           : "-";
+        const provinsi = explanation.getCell("D" + rowNumber).value
+          ? explanation.getCell("D" + rowNumber).value
+          : "-";
         const bentuk = explanation.getCell("E" + rowNumber).value
           ? explanation.getCell("E" + rowNumber).value
           : "-";
@@ -28531,7 +28534,7 @@ class MainController {
           ? explanation.getCell("G" + rowNumber).value
           : "-";
 
-        data.push({ npsn, nama1, no1, sekolah, bentuk });
+        data.push({ npsn, nama1, no1, sekolah, bentuk, provinsi });
       }
     });
 
@@ -28555,6 +28558,7 @@ class MainController {
             sekolahCreate = await MSekolah.create({
               npsn: d.npsn,
               nama: d.sekolah,
+              provinsi: d.provinsi,
               domain: `https://${slugify(d.sekolah, {
                 replacement: "", // replace spaces with replacement character, defaults to `-`
                 remove: /[*+~.()'"!:@]/g,
@@ -28616,6 +28620,7 @@ class MainController {
             sekolahCreate = await MSekolah.create({
               npsn: check.npsn,
               nama: check.sekolah,
+              provinsi: check.provinsi,
               domain: `https://${slugify(check.sekolah, {
                 replacement: "", // replace spaces with replacement character, defaults to `-`
                 remove: /[*+~.()'"!:@]/g,
