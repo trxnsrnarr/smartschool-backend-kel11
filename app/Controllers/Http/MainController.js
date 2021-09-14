@@ -17297,6 +17297,100 @@ class MainController {
     return await this.importGTKServices(`tmp/uploads/${fname}`, sekolah);
   }
 
+  //import GTK SINGKAT
+
+  async importGTK2Services(filelocation, sekolah) {
+    var workbook = new Excel.Workbook();
+
+    workbook = await workbook.xlsx.readFile(filelocation);
+
+    let explanation = workbook.getWorksheet("Daftar guru");
+
+    let colComment = explanation.getColumn("A");
+
+    let data = [];
+
+    colComment.eachCell(async (cell, rowNumber) => {
+      if (rowNumber >= 6) {
+        data.push({
+          nama: explanation.getCell("B" + rowNumber).value,
+          gender: explanation.getCell("C" + rowNumber).value,
+          whatsapp: explanation.getCell("D" + rowNumber).value,
+          email:
+            explanation.getCell("E" + rowNumber).value == null
+              ? ""
+              : typeof explanation.getCell("E" + rowNumber).value == "object"
+              ? JSON.parse(explanation.getCell("E" + rowNumber).value).text
+              : explanation.getCell("E" + rowNumber).value,
+          password: explanation.getCell("F" + rowNumber).value,
+        });
+      }
+    });
+
+    let dataUpdated;
+    let dataCreated;
+
+    const result = await Promise.all(
+      data.map(async (d) => {
+        const checkUser = await User.query()
+          .where({ whatsapp: d.whatsapp })
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .andWhere({ dihapus: 0 })
+          .first();
+
+        if (checkUser) {
+          await User.query()
+            .where({ id: checkUser.id })
+            .update({
+              dihapus: 0,
+              password: await Hash.make(d.password || "smarteschool"),
+            });
+
+          return dataUpdated++;
+        }
+
+        await User.create({
+          nama: d.nama,
+          whatsapp: d.whatsapp,
+          gender: d.gender,
+          password: d.password || "smarteschool",
+          role: "guru",
+          m_sekolah_id: sekolah.id,
+          dihapus: 0,
+        });
+
+        return dataCreated++;
+      })
+    );
+
+    return { dataCreated, dataUpdated };
+  }
+
+  async importGTK2({ request, response }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let file = request.file("file");
+    let fname = `import-excel.${file.extname}`;
+
+    //move uploaded file into custom folder
+    await file.move(Helpers.tmpPath("/uploads"), {
+      name: fname,
+      overwrite: true,
+    });
+
+    if (!file.moved()) {
+      return fileUpload.error();
+    }
+
+    return await this.importGTK2Services(`tmp/uploads/${fname}`, sekolah);
+  }
+
   async downloadRekapAbsen({ response, request, auth }) {
     const domain = request.headers().origin;
 
@@ -18833,6 +18927,293 @@ class MainController {
     }
 
     return await this.importRombelServices2(
+      `tmp/uploads/${fname}`,
+      sekolah,
+      ta
+    );
+  }
+
+  async importRombel2Services(filelocation, sekolah, ta) {
+    var workbook = new Excel.Workbook();
+
+    workbook = await workbook.xlsx.readFile(filelocation);
+
+    let explanation = workbook.getWorksheet("Daftar Peserta Didik");
+
+    let colComment = explanation.getColumn("A");
+    let colCommentRombel = explanation.getColumn("E");
+
+    let dataRombel = [];
+
+    colComment.eachCell(async (cell, rowNumber) => {
+      if (rowNumber >= 9) {
+        let kode = explanation.getCell("B" + rowNumber).value;
+        let nama = explanation.getCell("C" + rowNumber).value;
+
+        if (kode == null || nama == null) {
+          return;
+        }
+        const checkJurusan = await MJurusan.query()
+          .where({ m_sekolah_id: sekolah.id })
+          .andWhere({ kode: kode })
+          .andWhere({ dihapus: 0 })
+          .first();
+
+        if (!checkJurusan) {
+          await MJurusan.create({
+            nama: nama,
+            kode: kode,
+            spp: 0,
+            sumbangan_sarana_pendidikan: 0,
+            kegiatan_osis: 0,
+            mpls_jas_almamater: 0,
+            seragam_sekolah: 0,
+            toolkit_praktek: 0,
+            m_sekolah_id: sekolah.id,
+            dihapus: 0,
+          });
+        }
+      }
+    });
+
+    colCommentRombel.eachCell(async (cell, rowNumber) => {
+      if (rowNumber >= 9) {
+        let rombelall = explanation.getCell("F" + rowNumber).value;
+        let tingkat = `${romawi[rombelall.split(" ")[0] - 1]}`;
+        let jurusanKode = `${rombelall.split(" ")[1]}`;
+        let nama = explanation.getCell("G" + rowNumber).value;
+        let walas = explanation.getCell("H" + rowNumber).value;
+        let gender = explanation.getCell("I" + rowNumber).value;
+
+        const checkUser = await User.query()
+          .where({ whatsapp: walas })
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .first();
+
+        if (!checkUser) {
+          const createUser = await User.create({
+            nama: nama,
+            whatsapp: walas,
+            gender: gender,
+            // email: d.email ? d.email : "",
+            password: "smartschool",
+            role: "guru",
+            m_sekolah_id: sekolah.id,
+            dihapus: 0,
+          });
+        }
+        const userWalas = await User.query()
+          .where({ whatsapp: walas })
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .first();
+        // dataRombel.push({
+        //   rombelall: explanation.getCell("B" + rowNumber).value,
+        //   tingkat: `${rombelall.split(" ")[0]}`,
+        // });
+        let rombelData = `${romawi[rombelall.split(" ")[0] - 1]} ${
+          rombelall.split(" ")[1]
+        } ${rombelall.split(" ")[2]}`;
+
+        const rombelCheck = await MRombel.query()
+          .where({ nama: rombelData })
+          .andWhere({ m_ta_id: ta.id })
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .andWhere({ m_user_id: userWalas.id })
+          .first();
+
+        if (!rombelCheck) {
+          const jurusan = await MJurusan.query()
+            .select("id", "kode", "m_sekolah_id", "dihapus")
+            .where({ kode: jurusanKode })
+            .andWhere({ dihapus: 0 })
+            .andWhere({ m_sekolah_id: sekolah.id })
+            .first();
+
+          const rombel = await MRombel.create({
+            tingkat: tingkat,
+            nama: rombelData,
+            m_jurusan_id: jurusan.id,
+            m_sekolah_id: sekolah.id,
+            m_ta_id: ta.id,
+            kelompok: "reguler",
+            m_user_id: userWalas.id,
+            dihapus: 0,
+          });
+
+          const jamMengajar = await MJamMengajar.query()
+            .select("id")
+            .where({ m_sekolah_id: sekolah.id })
+            .andWhere({ m_ta_id: ta.id })
+            .fetch();
+
+          const jadwalMengajarData = await Promise.all(
+            jamMengajar.toJSON().map(async (data) => {
+              data.m_mata_pelajaran_id = null;
+              data.m_rombel_id = rombel.id;
+              data.m_jam_mengajar_id = data.id;
+              data.m_sekolah_id = sekolah.id;
+              data.m_ta_id = ta.id;
+              delete data.id;
+              delete data.jamFormat;
+
+              return data;
+            })
+          );
+
+          await MJadwalMengajar.createMany(jadwalMengajarData);
+        }
+      }
+    });
+
+    const rombelResult = await Promise.all(
+      dataRombel.map(async (d) => {
+        const rombelCheck = await MRombel.query()
+          .where({ nama: d.rombel })
+          .andWhere({ m_ta_id: ta.id })
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .first();
+
+        if (!rombelCheck) {
+          const createRombel = await MRombel.create({
+            tingkat: d.tingkat,
+            nama: d.rombelall,
+            kelompok: "reguler",
+            m_sekolah_id: sekolah.id,
+            m_ta_id: ta.id,
+            dihapus: 0,
+          });
+          return;
+        }
+      })
+    );
+
+    let data = [];
+
+    colComment.eachCell(async (cell, rowNumber) => {
+      if (rowNumber >= 9) {
+        const rombelsiswa = explanation.getCell("P" + rowNumber).value;
+        data.push({
+          nama: explanation.getCell("L" + rowNumber).value,
+          jk: explanation.getCell("M" + rowNumber).value,
+          whatsapp: explanation.getCell("N" + rowNumber).value,
+          email:
+            explanation.getCell("O" + rowNumber).value == null
+              ? ""
+              : typeof explanation.getCell("O" + rowNumber).value == "object"
+              ? JSON.parse(explanation.getCell("O" + rowNumber).value).text
+              : explanation.getCell("O" + rowNumber).value,
+          rombel: `${romawi[rombelsiswa.split(" ")[0] - 1]} ${
+            rombelsiswa.split(" ")[1]
+          } ${rombelsiswa.split(" ")[2]}`,
+          password: explanation.getCell("Q" + rowNumber).value,
+        });
+      }
+    });
+
+    const result = await Promise.all(
+      data.map(async (d) => {
+        const checkUser = await User.query()
+          .where({ whatsapp: d.whatsapp })
+          .first();
+
+        const checkRombel = await MRombel.query()
+          .where({ nama: d.rombel })
+          .andWhere({ m_ta_id: ta.id })
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .first();
+
+        if (checkRombel == null) {
+          return;
+        }
+
+        const tgllahir = moment(d.tanggallahir).format(`YYYY-MM-DD`);
+        // return d.rombel;
+
+        if (!checkUser) {
+          const createUser = await User.create({
+            nama: d.nama,
+            whatsapp: d.whatsapp,
+            // email: d.email ? d.email : "",
+            gender: d.jk,
+            password: d.password || "smarteschool",
+            role: "siswa",
+            m_sekolah_id: sekolah.id,
+            dihapus: 0,
+          });
+
+          if (checkUser) {
+            await User.query()
+              .where({ id: checkUser.id })
+              .update({
+                dihapus: 0,
+                password: await Hash.make(d.password || "smarteschool"),
+              });
+          }
+
+          await MAnggotaRombel.create({
+            role: "anggota",
+            dihapus: 0,
+            m_user_id: createUser.toJSON().id,
+            m_rombel_id: checkRombel.id,
+          });
+          return;
+        }
+
+        const checkAnggotaRombel = await MAnggotaRombel.query()
+          .where({ dihapus: 0 })
+          .andWhere({ m_user_id: checkUser.toJSON().id })
+          .andWhere({ m_rombel_id: checkRombel.id })
+          .first();
+
+        if (checkAnggotaRombel) {
+          return {
+            message: `${d.nama} sudah terdaftar`,
+            error: true,
+          };
+        }
+
+        await MAnggotaRombel.create({
+          role: "anggota",
+          dihapus: 0,
+          m_user_id: checkUser.id,
+          m_rombel_id: checkRombel.id,
+        });
+        return;
+      })
+    );
+
+    return result;
+  }
+
+  async importRombel2({ request, response, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    let file = request.file("file");
+    let fname = `import-excel.${file.extname}`;
+
+    //move uploaded file into custom folder
+    await file.move(Helpers.tmpPath("/uploads"), {
+      name: fname,
+      overwrite: true,
+    });
+
+    if (!file.moved()) {
+      return fileUpload.error();
+    }
+
+    return await this.importRombel2Services(
       `tmp/uploads/${fname}`,
       sekolah,
       ta
@@ -31742,7 +32123,7 @@ class MainController {
           .select("id", "whatsapp", "dihapus")
           .where({ whatsapp: d.whatsapp })
           .andWhere({ dihapus: 0 })
-          .andWhere({m_sekolah_id : sekolah.id})
+          .andWhere({ m_sekolah_id: sekolah.id })
           .first();
         const nilaiSiswa = await TkRekapNilai.query()
           .where({ m_rekap_rombel_id: rekapRombel_id })

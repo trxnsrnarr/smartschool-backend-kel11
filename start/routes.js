@@ -576,6 +576,7 @@ Route.put(
 // GTK
 
 Route.post("/gtk/import", "MainController.importGTK");
+Route.post("/gtk/import-singkat", "MainController.importGTK2");
 
 Route.post("/absen/rekapdownload", "MainController.downloadRekapAbsen");
 
@@ -585,6 +586,7 @@ Route.post("/mutasi/download-mutasi", "MainController.downloadMutasi");
 
 // Rombel Service
 Route.post("/rombel/import-rombel", "MainController.importRombel");
+Route.post("/rombel/import-rombel-singkat", "MainController.importRombel2");
 Route.post("/rombel/download-rombel", "MainController.downloadRombel");
 
 // Alumni Service
