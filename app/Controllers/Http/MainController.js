@@ -31742,6 +31742,7 @@ class MainController {
           .select("id", "whatsapp", "dihapus")
           .where({ whatsapp: d.whatsapp })
           .andWhere({ dihapus: 0 })
+          .andWhere({m_sekolah_id : sekolah.id})
           .first();
         const nilaiSiswa = await TkRekapNilai.query()
           .where({ m_rekap_rombel_id: rekapRombel_id })
