@@ -242,7 +242,8 @@ const hour = dateObj.getHours();
 const minute = dateObj.getMinutes();
 const second = dateObj.getSeconds();
 const keluarantanggal = day + "," + month + "," + year;
-const keluarantanggalseconds = moment().format("YYYY-MM-DD HH-mm-ss");
+const keluarantanggalseconds1 = moment().format("YYYY-MM-DD HH-mm-ss");
+const keluarantanggalseconds = keluarantanggalseconds1 + dateObj.getTime();
 class MainController {
   // UTILS
 
@@ -8130,10 +8131,6 @@ class MainController {
 
   async getTest({ response, request, auth }) {}
 
-  async notFoundPage({ response, request, auth }) {
-    return `<p>Data tidak ditemukan, silahkan kembali ke <a href="http://getsmartschool.id">Smart School</a></p>`;
-  }
-
   async getUjian({ response, request, auth }) {
     const domain = request.headers().origin;
 
@@ -13291,9 +13288,9 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    let { jenis, search } = request.get();
+    let { tipe, search } = request.get();
 
-    jenis = jenis ? jenis : "spp";
+    tipe = tipe ? tipe : "spp";
 
     let pembayaran;
 
@@ -13304,7 +13301,7 @@ class MainController {
         })
         .where({ dihapus: 0 })
         .andWhere({ m_sekolah_id: sekolah.id })
-        .andWhere({ jenis: jenis })
+        .andWhere({ jenis: tipe })
         .andWhere("nama", "like", `%${search}%`)
         .fetch();
     } else {
@@ -13314,7 +13311,7 @@ class MainController {
         })
         .where({ dihapus: 0 })
         .andWhere({ m_sekolah_id: sekolah.id })
-        .andWhere({ jenis: jenis })
+        .andWhere({ jenis: tipe })
         .fetch();
     }
 
@@ -33370,6 +33367,9 @@ class MainController {
     return response.ok({
       message: messagePutSuccess,
     });
+  }
+  async notFoundPage({ response, request, auth }) {
+    return `<p>Data tidak ditemukan, silahkan kembali ke <a href="http://getsmartschool.id">Smart School</a></p>`;
   }
 }
 module.exports = MainController;
