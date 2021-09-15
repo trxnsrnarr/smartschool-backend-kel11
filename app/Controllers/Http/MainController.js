@@ -13645,13 +13645,14 @@ class MainController {
 
     const pembayaran = await MPembayaran.query()
       .where({ id: pembayaran_id })
-      .update({
-        nama,
-        jenis,
-        bulan,
-        tipe_ujian,
-        nominal,
-      });
+      .first();
+    await MPembayaran.query().where({ id: pembayaran_id }).update({
+      nama,
+      jenis,
+      bulan,
+      tipe_ujian,
+      nominal,
+    });
 
     if (!pembayaran) {
       return response.notFound({
@@ -13659,6 +13660,22 @@ class MainController {
       });
     }
 
+    const rombelIds = await TkPembayaranRombel.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_pembayaran_id: pembayaran.id })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .pluck("m_rombel_id");
+
+    rombelIds
+      .filter((item) => !rombel_id.includes(item))
+      .map(async (item) => {
+        await TkPembayaranRombel.query()
+          .where({ m_rombel_id: item })
+          .where({ dihapus: 0 })
+          .andWhere({ m_pembayaran_id: pembayaran.id })
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .delete();
+      });
     if (rombel_id.length) {
       await Promise.all(
         rombel_id.map(async (d) => {
