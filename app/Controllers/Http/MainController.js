@@ -13547,7 +13547,7 @@ class MainController {
               .with("user", (builder) => {
                 builder.select("id", "email").where({ dihapus: 0 });
               })
-              .whereIn("m_rombel_id", rombel_id)
+              .whereIn({ m_rombel_id: d })
               .andWhere({ dihapus: 0 })
               .fetch();
 
