@@ -18234,7 +18234,10 @@ class MainController {
     const { tanggal_awal, tanggal_akhir } = request.post();
 
     const mutasi = await MMutasi.query()
-      .whereBetween("waktu_dibuat", [`${tanggal_awal}`, `${tanggal_akhir}`])
+      .whereBetween("waktu_dibuat", [
+        `${tanggal_awal} 00:00:00`,
+        `${tanggal_akhir} 23:59:59`,
+      ])
       .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .fetch();
@@ -19464,14 +19467,14 @@ class MainController {
             worksheet.getCell(
               "A8"
             ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
-            worksheet.mergeCells(`A1:F1`);
-            worksheet.mergeCells(`A2:F2`);
-            worksheet.mergeCells(`A3:F3`);
-            worksheet.mergeCells(`A5:F5`);
-            worksheet.mergeCells(`A6:F6`);
-            worksheet.mergeCells(`A7:F7`);
+            worksheet.mergeCells(`A1:I1`);
+            worksheet.mergeCells(`A2:I2`);
+            worksheet.mergeCells(`A3:I3`);
+            worksheet.mergeCells(`A5:I5`);
+            worksheet.mergeCells(`A6:I6`);
+            worksheet.mergeCells(`A7:I7`);
             worksheet.addConditionalFormatting({
-              ref: "A1:F3",
+              ref: "A1:I3",
               rules: [
                 {
                   type: "expression",
@@ -19492,7 +19495,7 @@ class MainController {
               ],
             });
             worksheet.addConditionalFormatting({
-              ref: "A5:F7",
+              ref: "A5:I7",
               rules: [
                 {
                   type: "expression",
@@ -19512,11 +19515,9 @@ class MainController {
                 },
               ],
             });
-            worksheet.getColumn("A").width = 5;
-            worksheet.getColumn("B").width = 28;
-            worksheet.getColumn("C").width = 10;
+
             worksheet.addConditionalFormatting({
-              ref: "A9:C9",
+              ref: "A9:I9",
               rules: [
                 {
                   type: "expression",
@@ -19565,7 +19566,17 @@ class MainController {
             await Promise.all(
               e.siswa.map(async (anggota, nox) => {
                 // add column headers
-                worksheet.getRow(9).values = ["No", "Nama", "Status"];
+                worksheet.getRow(9).values = [
+                  "No",
+                  "Nama",
+                  "Status",
+                  "No Pembayaran",
+                  "Bank",
+                  "Norek",
+                  "Nama Pemilik",
+                  "Nominal",
+                  "Bukti",
+                ];
                 worksheet.columns = [
                   { key: "no" },
                   { key: "nama" },
@@ -19575,12 +19586,7 @@ class MainController {
                 // Add row using key mapping to columns
                 let row = worksheet.addRow({
                   no: `${nox + 1}`,
-                  id: `${nox + 1}`,
                   nama: anggota.user ? anggota.user.nama : "-",
-                  status: anggota ? anggota.status : "-",
-                  status: anggota ? anggota.status : "-",
-                  status: anggota ? anggota.status : "-",
-                  status: anggota ? anggota.status : "-",
                   status: anggota ? anggota.status : "-",
                 });
 
@@ -19588,8 +19594,9 @@ class MainController {
                   anggota.riwayat.map(async (r, no) => {
                     worksheet.getRow(9).values = [
                       "",
-                      "No",
-                      "Nama",
+                      "",
+                      "",
+                      "",
                       "Bank",
                       "Norek",
                       "NamaPemilik",
@@ -19598,6 +19605,8 @@ class MainController {
                     ];
 
                     worksheet.columns = [
+                      { key: "" },
+                      { key: "" },
                       { key: "" },
                       { key: "no" },
                       { key: "bank" },
@@ -19619,10 +19628,14 @@ class MainController {
                 );
               })
             );
+            worksheet.getColumn("A").width = 5;
+            worksheet.getColumn("B").width = 28;
+            worksheet.getColumn("C").width = 10;
           })
         );
       })
     );
+
     let namaFile = `/uploads/rekap-SPP-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
@@ -25071,14 +25084,24 @@ class MainController {
 
     let barang;
 
-    barang = MBarang.query().with("lokasi").where({ dihapus: 0 });
+    barang = MBarang.query()
+      .with("lokasi")
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id });
 
     if (search) {
       barang.andWhere("nama", "like", `%${search}%`);
     }
 
+    const lokasi = MLokasi.query()
+      .select("id", "nama")
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
     return response.ok({
       barang: await barang.paginate(page, 25),
+      lokasi,
     });
   }
 
@@ -25163,6 +25186,9 @@ class MainController {
     const user = await auth.getUser();
 
     let { jenis, nama, no_regis, lebar, panjang, foto } = request.post();
+
+    foto = foto ? foto.toString() : null;
+
     const rules = {
       jenis: "required",
       nama: "required",
@@ -25246,39 +25272,49 @@ class MainController {
     const user = await auth.getUser();
 
     const {
-      kode_barang,
+      foto,
       nama,
       merk,
+      kode_barang,
       tahun_beli,
       asal,
-      harga,
       deskripsi,
-      status,
       jumlah,
+      harga,
       kepemilikan,
+      nama_pemilik,
       m_lokasi_id,
     } = request.post();
+
+    foto = foto ? foto.toString() : null;
+
     const rules = {
       kode_barang: "required",
       nama: "required",
+      foto: "required",
       merk: "required",
       tahun_beli: "required",
       asal: "required",
       harga: "required",
       deskripsi: "required",
-      status: "required",
+      jumlah: "required",
       kepemilikan: "required",
+      nama_pemilik: "required",
+      m_lokasi_id: "required",
     };
     const message = {
       "kode_barang.required": "Jenis harus diisi",
       "nama.required": "Nama harus diisi",
+      "foto.required": "Foto harus diisi",
       "merk.required": "Nomor Registrasi harus diisi",
       "tahun_beli.required": "Lebar harus diisi",
       "asal.required": "Panjang harus diisi",
-      harga: "Harga harus diisi",
-      deskripsi: "Deskripsi harus diisi",
-      status: "Status harus diisi",
-      kepemilikan: "Kepemilikan harus diisi",
+      "harga.required": "Harga harus diisi",
+      "deskripsi.required": "Spesifikasi harus diisi",
+      "jumlah.required": "Jumlah harus diisi",
+      "kepemilikan.required": "Kepemilikan harus diisi",
+      "nama_pemilik.required": "Nama Pemilik harus diisi",
+      "m_lokasi_id.required": "Lokasi harus diisi",
     };
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
@@ -25292,12 +25328,15 @@ class MainController {
       tahun_beli,
       asal,
       harga,
+      jumlah,
       deskripsi,
-      status,
+      foto,
       kepemilikan,
+      nama_pemilik,
       m_lokasi_id,
       dihapus: 0,
-      jumlah,
+      baik: jumlah,
+      m_sekolah_id: sekolah.id,
     });
 
     return response.ok({
@@ -25317,39 +25356,49 @@ class MainController {
     const user = await auth.getUser();
 
     const {
-      kode_barang,
+      foto,
       nama,
       merk,
+      kode_barang,
       tahun_beli,
       asal,
-      harga,
       deskripsi,
-      status,
-      kepemilikan,
-      m_lokasi_id,
       jumlah,
+      harga,
+      kepemilikan,
+      nama_pemilik,
+      m_lokasi_id,
     } = request.post();
+
+    foto = foto ? foto.toString() : null;
+
     const rules = {
       kode_barang: "required",
       nama: "required",
+      foto: "required",
       merk: "required",
       tahun_beli: "required",
       asal: "required",
       harga: "required",
       deskripsi: "required",
-      status: "required",
+      jumlah: "required",
       kepemilikan: "required",
+      nama_pemilik: "required",
+      m_lokasi_id: "required",
     };
     const message = {
       "kode_barang.required": "Jenis harus diisi",
       "nama.required": "Nama harus diisi",
+      "foto.required": "Foto harus diisi",
       "merk.required": "Nomor Registrasi harus diisi",
       "tahun_beli.required": "Lebar harus diisi",
       "asal.required": "Panjang harus diisi",
-      harga: "Harga harus diisi",
-      deskripsi: "Deskripsi harus diisi",
-      status: "Status harus diisi",
-      kepemilikan: "Kepemilikan harus diisi",
+      "harga.required": "Harga harus diisi",
+      "deskripsi.required": "Spesifikasi harus diisi",
+      "jumlah.required": "Jumlah harus diisi",
+      "kepemilikan.required": "Kepemilikan harus diisi",
+      "nama_pemilik.required": "Nama Pemilik harus diisi",
+      "m_lokasi_id.required": "Lokasi harus diisi",
     };
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
@@ -25363,11 +25412,12 @@ class MainController {
       tahun_beli,
       asal,
       harga,
-      deskripsi,
-      status,
-      kepemilikan,
-      m_lokasi_id,
       jumlah,
+      deskripsi,
+      foto,
+      kepemilikan,
+      nama_pemilik,
+      m_lokasi_id,
     });
 
     if (!barang) {
@@ -33578,7 +33628,8 @@ class MainController {
       waktu_awal,
       waktu_akhir,
       media,
-      aktif,
+      tempat,
+      link,
       deskripsi,
       buku_tamu,
     } = request.post();
@@ -33616,7 +33667,8 @@ class MainController {
       waktu_awal,
       waktu_akhir,
       media,
-      aktif,
+      tempat,
+      link,
       deskripsi,
       buku_tamu,
       dihapus: 0,
@@ -33651,7 +33703,8 @@ class MainController {
       waktu_awal,
       waktu_akhir,
       media,
-      aktif,
+      tempat,
+      link,
       deskripsi,
       buku_tamu,
     } = request.post();
@@ -33692,7 +33745,8 @@ class MainController {
         waktu_akhir,
         media,
         deskripsi,
-        aktif,
+        tempat,
+        link,
         buku_tamu,
       });
 
