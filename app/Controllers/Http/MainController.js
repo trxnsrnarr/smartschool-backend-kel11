@@ -111,6 +111,9 @@ const MPelaporanDisposisi = use("App/Models/MPelaporanDisposisi");
 const MTemplateDeskripsi = use("App/Models/MTemplateDeskripsi");
 const MPertemuanBk = use("App/Models/MPertemuanBk");
 const MJadwalKonsultasi = use("App/Models/MJadwalKonsultasi");
+const MLabelKalender = use("App/Models/MLabelKalender");
+const MKegiatanKalender = use("App/Models/MKegiatanKalender");
+const MKalenderPendidikan = use("App/Models/MKalenderPendidikan");
 
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
@@ -33200,7 +33203,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { page, search } = request.get();
+    let { search } = request.get();
 
     const checkLabel = await MLabelKalender.query()
       .where({ dihapus: 0 })
