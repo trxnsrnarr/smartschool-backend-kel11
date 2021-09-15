@@ -13224,21 +13224,6 @@ class MainController {
 
     const { bank, norek, nama, saldo } = request.post();
 
-    const rules = {
-      bank: "required",
-      bulan: "required",
-      nominal: "required",
-    };
-    const message = {
-      "bank.required": "Bank harus dipilih",
-      "bulan.required": "Bulan harus dipilih",
-      "nominal.required": "Nominal harus diisi",
-    };
-    const validation = await validate(request.all(), rules, message);
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
-    }
-
     const check = await MRekSekolah.query()
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
