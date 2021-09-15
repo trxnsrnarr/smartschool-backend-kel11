@@ -1,7 +1,7 @@
 const Excel = require("exceljs");
 const nodeHtmlToImage = require("node-html-to-image");
 const sizeOf = require("image-size");
-const htmlEscaper = require("html-escaper");
+const htmlEscaper = require("html-sloppy-escaper");
 require("events").EventEmitter.defaultMaxListeners = 50;
 
 class DownloadService {
