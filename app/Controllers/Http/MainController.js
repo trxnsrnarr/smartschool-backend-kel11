@@ -19548,12 +19548,11 @@ class MainController {
                 },
               ],
             });
- const dataFilter = await Promise.all(
-          e.siswa.filter((siswa) => siswa != null)
-        );
+            const dataFilter = await Promise.all(
+              e.siswa.filter((siswa) => siswa != null)
+            );
             await Promise.all(
               dataFilter.map(async (anggota, idxx) => {
-
                 worksheet.getRow(9).values = [
                   "No",
                   "Nama",
@@ -19581,49 +19580,50 @@ class MainController {
                 if (anggota.riwayat.length == 0) {
                   let row = worksheet.addRow({
                     no: `${idxx + 1}`,
-                    nama: anggota.user ? anggota.user.nama  : "-",
+                    nama: anggota.user ? anggota.user.nama : "-",
                     status: "Belum ada Pembayaran",
                   });
                 } else {
-                await Promise.all(
-                  anggota.riwayat.map(async (r, no) => {
-                    worksheet.getRow(9).values = [
-                      "No",
-                      "Nama",
-                      "Status",
-                      "No Pembayaran",
-                      "Bank",
-                      "Norek",
-                      "Nama Pemilik",
-                      "Nominal",
-                      "Bukti",
-                    ];
-                    worksheet.columns = [
-                      { key: "no" },
-                      { key: "nama" },
-                      { key: "status" },
-                      { key: "noPembayaran" },
-                      { key: "bank" },
-                      { key: "norek" },
-                      { key: "nama_pemilik" },
-                      { key: "nominal" },
-                      { key: "bukti" },
-                    ];
+                  await Promise.all(
+                    anggota.riwayat.map(async (r, no) => {
+                      worksheet.getRow(9).values = [
+                        "No",
+                        "Nama",
+                        "Status",
+                        "No Pembayaran",
+                        "Bank",
+                        "Norek",
+                        "Nama Pemilik",
+                        "Nominal",
+                        "Bukti",
+                      ];
+                      worksheet.columns = [
+                        { key: "no" },
+                        { key: "nama" },
+                        { key: "status" },
+                        { key: "noPembayaran" },
+                        { key: "bank" },
+                        { key: "norek" },
+                        { key: "nama_pemilik" },
+                        { key: "nominal" },
+                        { key: "bukti" },
+                      ];
 
-                    // Add row using key mapping to columns
-                    let row = worksheet.addRow({
-                      no: `${idxx + 1}`,
-                      nama: anggota.user ? anggota.user.nama : "-",
-                      status: anggota ? anggota.status : "-",
-                      noPembayaran: `Pembayaran #${no + 1}`,
-                      bank: r ? r.bank : "-",
-                      norek: r ? r.norek : "-",
-                      nama_pemilik: r ? r.nama_pemilik : "-",
-                      nominal: r ? r.nominal : "-",
-                      bukti: r ? r.bukti : "-",
-                    });
-                  })
-                );}
+                      // Add row using key mapping to columns
+                      let row = worksheet.addRow({
+                        no: `${idxx + 1}`,
+                        nama: anggota.user ? anggota.user.nama : "-",
+                        status: anggota ? anggota.status : "-",
+                        noPembayaran: `Pembayaran #${no + 1}`,
+                        bank: r ? r.bank : "-",
+                        norek: r ? r.norek : "-",
+                        nama_pemilik: r ? r.nama_pemilik : "-",
+                        nominal: r ? r.nominal : "-",
+                        bukti: r ? r.bukti : "-",
+                      });
+                    })
+                  );
+                }
               })
             );
             worksheet.getColumn("A").width = 5;
@@ -33265,7 +33265,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { search } = request.get();
+    let { search, tanggal } = request.get();
 
     const checkLabel = await MLabelKalender.query()
       .where({ dihapus: 0 })
@@ -33309,14 +33309,16 @@ class MainController {
 
     kegiatan = MKegiatanKalender.query()
       .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id });
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .whereBetween("tanggal_mulai", [`${tanggal + -1}`, `${tanggal + -31}`]);
     if (search) {
       kegiatan.andWhere("nama", "like", `%${search}%`);
     }
 
     pendidikan = MKalenderPendidikan.query()
       .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id });
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .whereBetween("tanggal_mulai", [`${tanggal + -1}`, `${tanggal + -31}`]);
 
     if (search) {
       kegiatan.andWhere("nama", "like", `%${search}%`);
