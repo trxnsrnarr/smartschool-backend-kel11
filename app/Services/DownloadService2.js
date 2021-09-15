@@ -1,8 +1,8 @@
 const Excel = require("exceljs");
 const nodeHtmlToImage = require("node-html-to-image");
 const sizeOf = require("image-size");
-const htmlEscaper = require("html-escaper");
 require("events").EventEmitter.defaultMaxListeners = 100;
+const htmlEscaper = require("html-sloppy-escaper");
 
 class DownloadService {
   static async kartuUjian(
