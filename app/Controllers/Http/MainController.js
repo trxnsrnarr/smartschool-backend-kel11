@@ -13225,21 +13225,6 @@ class MainController {
 
     const { bank, norek, nama, saldo } = request.post();
 
-    const rules = {
-      bank: "required",
-      bulan: "required",
-      nominal: "required",
-    };
-    const message = {
-      "bank.required": "Bank harus dipilih",
-      "bulan.required": "Bulan harus dipilih",
-      "nominal.required": "Nominal harus diisi",
-    };
-    const validation = await validate(request.all(), rules, message);
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
-    }
-
     const check = await MRekSekolah.query()
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
@@ -28896,6 +28881,9 @@ class MainController {
         const npsn = explanation.getCell("C" + rowNumber).value
           ? explanation.getCell("C" + rowNumber).value
           : "-";
+        const provinsi = explanation.getCell("D" + rowNumber).value
+          ? explanation.getCell("D" + rowNumber).value
+          : "-";
         const bentuk = explanation.getCell("E" + rowNumber).value
           ? explanation.getCell("E" + rowNumber).value
           : "-";
@@ -28906,7 +28894,7 @@ class MainController {
           ? explanation.getCell("G" + rowNumber).value
           : "-";
 
-        data.push({ npsn, nama1, no1, sekolah, bentuk });
+        data.push({ npsn, nama1, no1, sekolah, bentuk, provinsi });
       }
     });
 
@@ -28930,6 +28918,7 @@ class MainController {
             sekolahCreate = await MSekolah.create({
               npsn: d.npsn,
               nama: d.sekolah,
+              provinsi: d.provinsi,
               domain: `https://${slugify(d.sekolah, {
                 replacement: "", // replace spaces with replacement character, defaults to `-`
                 remove: /[*+~.()'"!:@]/g,
@@ -28991,6 +28980,7 @@ class MainController {
             sekolahCreate = await MSekolah.create({
               npsn: check.npsn,
               nama: check.sekolah,
+              provinsi: check.provinsi,
               domain: `https://${slugify(check.sekolah, {
                 replacement: "", // replace spaces with replacement character, defaults to `-`
                 remove: /[*+~.()'"!:@]/g,
