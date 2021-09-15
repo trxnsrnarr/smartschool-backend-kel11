@@ -2895,6 +2895,7 @@ class MainController {
           builder.with("anggotaRombel", (builder) => {
             builder.where({ dihapus: 0 }).with("user", async (builder) => {
               builder
+                .where({ dihapus: 0 })
                 .with("keteranganRapor", (builder) => {
                   builder.where({ dihapus: 0 });
                 })
