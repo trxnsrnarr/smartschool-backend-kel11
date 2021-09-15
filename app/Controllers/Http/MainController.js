@@ -19548,9 +19548,12 @@ class MainController {
                 },
               ],
             });
+ const dataFilter = await Promise.all(
+          e.siswa.filter((siswa) => siswa != null)
+        );
             await Promise.all(
-              e.siswa.map(async (anggota, nox) => {
-                // add column headers
+              dataFilter.map(async (anggota, idxx) => {
+
                 worksheet.getRow(9).values = [
                   "No",
                   "Nama",
@@ -19566,34 +19569,40 @@ class MainController {
                   { key: "no" },
                   { key: "nama" },
                   { key: "status" },
+                  { key: "noPembayaran" },
+                  { key: "bank" },
+                  { key: "norek" },
+                  { key: "nama_pemilik" },
+                  { key: "nominal" },
+                  { key: "bukti" },
                 ];
 
-                // Add row using key mapping to columns
-                let row = worksheet.addRow({
-                  no: `${nox + 1}`,
-                  nama: anggota.user ? anggota.user.nama : "-",
-                  status: anggota ? anggota.status : "-",
-                });
-
+                // add column headers
+                if (anggota.riwayat.length == 0) {
+                  let row = worksheet.addRow({
+                    no: `${idxx + 1}`,
+                    nama: anggota.user ? anggota.user.nama  : "-",
+                    status: "Belum ada Pembayaran",
+                  });
+                } else {
                 await Promise.all(
                   anggota.riwayat.map(async (r, no) => {
                     worksheet.getRow(9).values = [
-                      "",
-                      "",
-                      "",
-                      "",
+                      "No",
+                      "Nama",
+                      "Status",
+                      "No Pembayaran",
                       "Bank",
                       "Norek",
-                      "NamaPemilik",
+                      "Nama Pemilik",
                       "Nominal",
                       "Bukti",
                     ];
-
                     worksheet.columns = [
-                      { key: "" },
-                      { key: "" },
-                      { key: "" },
                       { key: "no" },
+                      { key: "nama" },
+                      { key: "status" },
+                      { key: "noPembayaran" },
                       { key: "bank" },
                       { key: "norek" },
                       { key: "nama_pemilik" },
@@ -19601,8 +19610,12 @@ class MainController {
                       { key: "bukti" },
                     ];
 
+                    // Add row using key mapping to columns
                     let row = worksheet.addRow({
-                      no: `Pembayaran #${no + 1}`,
+                      no: `${idxx + 1}`,
+                      nama: anggota.user ? anggota.user.nama : "-",
+                      status: anggota ? anggota.status : "-",
+                      noPembayaran: `Pembayaran #${no + 1}`,
                       bank: r ? r.bank : "-",
                       norek: r ? r.norek : "-",
                       nama_pemilik: r ? r.nama_pemilik : "-",
@@ -19610,12 +19623,17 @@ class MainController {
                       bukti: r ? r.bukti : "-",
                     });
                   })
-                );
+                );}
               })
             );
             worksheet.getColumn("A").width = 5;
             worksheet.getColumn("B").width = 28;
-            worksheet.getColumn("C").width = 10;
+            worksheet.getColumn("C").width = 24;
+            worksheet.getColumn("D").width = 23;
+            worksheet.getColumn("E").width = 9;
+            worksheet.getColumn("F").width = 9;
+            worksheet.getColumn("G").width = 19;
+            worksheet.getColumn("F").width = 12;
           })
         );
       })
@@ -25718,8 +25736,9 @@ class MainController {
           asal: explanation.getCell("F" + rowNumber).value,
           harga: explanation.getCell("G" + rowNumber).value,
           deskripsi: explanation.getCell("H" + rowNumber).value,
-          status: explanation.getCell("I" + rowNumber).value,
+          jumlah: explanation.getCell("I" + rowNumber).value,
           kepemilikan: explanation.getCell("J" + rowNumber).value,
+          nama_pemilik: explanation.getCell("K" + rowNumber).value,
         });
       }
     });
@@ -25734,9 +25753,12 @@ class MainController {
           asal: d.asal,
           harga: d.harga,
           deskripsi: d.deskripsi,
-          status: d.status,
+          jumlah: d.jumlah,
           kepemilikan: d.kepemilikan,
+          nama_pemilik: d.nama_pemilik,
           dihapus: 0,
+          m_sekolah_id: sekolah.id,
+          baik: d.jumlah,
         });
 
         return;
