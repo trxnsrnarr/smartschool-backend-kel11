@@ -33239,7 +33239,7 @@ class MainController {
     });
   }
 
-  async postLokasi({ response, request, auth }) {
+  async postLokasi222({ response, request, auth }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -33289,7 +33289,7 @@ class MainController {
     });
   }
 
-  async putLokasi({ response, request, auth, params: { lokasi_id } }) {
+  async putLokasi222({ response, request, auth, params: { lokasi_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -33342,7 +33342,7 @@ class MainController {
     });
   }
 
-  async deleteLokasi({ response, request, auth, params: { lokasi_id } }) {
+  async deleteLokasi222({ response, request, auth, params: { lokasi_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
