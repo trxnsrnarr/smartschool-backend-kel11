@@ -242,7 +242,8 @@ const hour = dateObj.getHours();
 const minute = dateObj.getMinutes();
 const second = dateObj.getSeconds();
 const keluarantanggal = day + "," + month + "," + year;
-const keluarantanggalseconds = moment().format("YYYY-MM-DD HH-mm-ss");
+const keluarantanggalseconds1 = moment().format("YYYY-MM-DD HH-mm-ss");
+const keluarantanggalseconds = keluarantanggalseconds1 + dateObj.getTime();
 class MainController {
   // UTILS
 
@@ -31742,7 +31743,7 @@ class MainController {
           .select("id", "whatsapp", "dihapus")
           .where({ whatsapp: d.whatsapp })
           .andWhere({ dihapus: 0 })
-          .andWhere({m_sekolah_id : sekolah.id})
+          .andWhere({ m_sekolah_id: sekolah.id })
           .first();
         const nilaiSiswa = await TkRekapNilai.query()
           .where({ m_rekap_rombel_id: rekapRombel_id })
