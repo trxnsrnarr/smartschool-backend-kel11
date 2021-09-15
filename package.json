@@ -41,6 +41,7 @@
     "mysql": "^2.18.1",
     "node-cron": "^3.0.0",
     "node-fetch": "^2.6.1",
+    "node-html-to-image": "^3.2.0",
     "nodejs-file-downloader": "^4.6.0",
     "pdf-image": "^2.0.0",
     "pdf-parse": "^1.1.1",
