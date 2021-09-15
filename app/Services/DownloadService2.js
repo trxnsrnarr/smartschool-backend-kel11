@@ -1,4 +1,8 @@
 const Excel = require("exceljs");
+const nodeHtmlToImage = require("node-html-to-image");
+const sizeOf = require("image-size");
+const htmlEscaper = require("html-escaper");
+require("events").EventEmitter.defaultMaxListeners = 50;
 
 class DownloadService {
   static async kartuUjian(
@@ -91,6 +95,81 @@ class DownloadService {
     //loop PG
     await Promise.all(
       pgFilter.map(async (d, idx) => {
+        // image
+        const image = await nodeHtmlToImage({
+          html: d ? `<div>${htmlEscaper.unescape(d.pertanyaan)}</div>` : "-",
+          type: "jpeg",
+          quality: 25,
+          encoding: "base64",
+          selector: "div",
+        });
+        const dimensions = sizeOf(Buffer.from(image, "base64"));
+        const imagea = await nodeHtmlToImage({
+          html: d ? `<div>${htmlEscaper.unescape(d.jawaban_a)}</div>` : "-",
+          type: "jpeg",
+          quality: 25,
+          encoding: "base64",
+          selector: "div",
+        });
+        const dimensionsa = sizeOf(Buffer.from(imagea, "base64"));
+        const imageb = await nodeHtmlToImage({
+          html: d ? `<div>${htmlEscaper.unescape(d.jawaban_b)}</div>` : "-",
+          type: "jpeg",
+          quality: 25,
+          encoding: "base64",
+          selector: "div",
+        });
+        const dimensionsb = sizeOf(Buffer.from(imageb, "base64"));
+        const imagec = await nodeHtmlToImage({
+          html: d ? `<div>${htmlEscaper.unescape(d.jawaban_c)}</div>` : "-",
+          type: "jpeg",
+          quality: 25,
+          encoding: "base64",
+          selector: "div",
+        });
+        const dimensionsc = sizeOf(Buffer.from(imagec, "base64"));
+        const imaged = await nodeHtmlToImage({
+          html: d ? `<div>${htmlEscaper.unescape(d.jawaban_d)}</div>` : "-",
+          type: "jpeg",
+          quality: 25,
+          encoding: "base64",
+          selector: "div",
+        });
+        const dimensionsd = sizeOf(Buffer.from(imaged, "base64"));
+        const imagee = await nodeHtmlToImage({
+          html: d ? `<div>${htmlEscaper.unescape(d.jawaban_e)}</div>` : "-",
+          type: "jpeg",
+          quality: 25,
+          encoding: "base64",
+          selector: "div",
+        });
+        const dimensionse = sizeOf(Buffer.from(imagee, "base64"));
+
+        const imageId = workbook.addImage({
+          base64: image,
+          extension: "jpeg",
+        });
+        const imageIda = workbook.addImage({
+          base64: imagea,
+          extension: "jpeg",
+        });
+        const imageIdb = workbook.addImage({
+          base64: imageb,
+          extension: "jpeg",
+        });
+        const imageIdc = workbook.addImage({
+          base64: imagec,
+          extension: "jpeg",
+        });
+        const imageIdd = workbook.addImage({
+          base64: imaged,
+          extension: "jpeg",
+        });
+        const imageIde = workbook.addImage({
+          base64: imagee,
+          extension: "jpeg",
+        });
+
         // worksheet 2
 
         worksheet2.mergeCells(
@@ -404,11 +483,20 @@ class DownloadService {
         worksheet2.getCell(
           `E${(idx + 1) * 32 - 19}`
         ).value = `Rumusan Butir Soal`;
-        worksheet2.getCell(`E${(idx + 1) * 32 - 17}`).value = `${
-          d
-            ? d.pertanyaan.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
-            : "-"
-        }`;
+        worksheet2.getRow((idx + 1) * 32 - 17).height =
+          (dimensions.height * 3) / 4 + 4;
+        worksheet2.addImage(imageId, {
+          tl: { col: 4.1, row: (idx + 1) * 32 - 18.9 },
+          ext: {
+            width: `${dimensions.width}`,
+            height: `${dimensions.height}`,
+          },
+        });
+        // worksheet2.getCell(`E${(idx + 1) * 32 - 17}`).value = `${
+        //   d
+        //     ? d.pertanyaan.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
+        //     : "-"
+        // }`;
         worksheet2.getCell(`H${(idx + 1) * 32 - 19}`).value = `BUKU`;
         worksheet2.getCell(`H${(idx + 1) * 32 - 17}`).value = ``;
         worksheet2.addConditionalFormatting({
@@ -644,31 +732,77 @@ class DownloadService {
             },
           ],
         });
-        worksheet2.getCell(`F${(idx + 1) * 32 - 15}`).value = `${
-          d
-            ? d.jawaban_a.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
-            : "-"
-        }`;
-        worksheet2.getCell(`F${(idx + 1) * 32 - 14}`).value = `${
-          d
-            ? d.jawaban_b.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
-            : "-"
-        }`;
-        worksheet2.getCell(`F${(idx + 1) * 32 - 13}`).value = `${
-          d
-            ? d.jawaban_c.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
-            : "-"
-        }`;
-        worksheet2.getCell(`F${(idx + 1) * 32 - 12}`).value = `${
-          d
-            ? d.jawaban_d.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
-            : "-"
-        }`;
-        worksheet2.getCell(`F${(idx + 1) * 32 - 11}`).value = `${
-          d
-            ? d.jawaban_e.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
-            : "-"
-        }`;
+        // worksheet2.getCell(`F${(idx + 1) * 32 - 15}`).value = `${
+        //   d
+        //     ? d.jawaban_a.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
+        //     : "-"
+        // }`;
+        // worksheet2.getCell(`F${(idx + 1) * 32 - 14}`).value = `${
+        //   d
+        //     ? d.jawaban_b.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
+        //     : "-"
+        // }`;
+        // worksheet2.getCell(`F${(idx + 1) * 32 - 13}`).value = `${
+        //   d
+        //     ? d.jawaban_c.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
+        //     : "-"
+        // }`;
+        // worksheet2.getCell(`F${(idx + 1) * 32 - 12}`).value = `${
+        //   d
+        //     ? d.jawaban_d.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
+        //     : "-"
+        // }`;
+        // worksheet2.getCell(`F${(idx + 1) * 32 - 11}`).value = `${
+        //   d
+        //     ? d.jawaban_e.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
+        //     : "-"
+        // }`;
+
+        worksheet2.getRow((idx + 1) * 32 - 15).height =
+          (dimensionsa.height * 3) / 4 + 4;
+        worksheet2.addImage(imageIda, {
+          tl: { col: 5.1, row: (idx + 1) * 32 - 15.9 },
+          ext: {
+            width: `${dimensionsa.width}`,
+            height: `${dimensionsa.height}`,
+          },
+        });
+        worksheet2.getRow((idx + 1) * 32 - 14).height =
+          (dimensionsb.height * 3) / 4 + 4;
+        worksheet2.addImage(imageIdb, {
+          tl: { col: 5.1, row: (idx + 1) * 32 - 14.9 },
+          ext: {
+            width: `${dimensionsb.width}`,
+            height: `${dimensionsb.height}`,
+          },
+        });
+        worksheet2.getRow((idx + 1) * 32 - 13).height =
+          (dimensionsc.height * 3) / 4 + 4;
+        worksheet2.addImage(imageIdc, {
+          tl: { col: 5.1, row: (idx + 1) * 32 - 13.9 },
+          ext: {
+            width: `${dimensionsc.width}`,
+            height: `${dimensionsc.height}`,
+          },
+        });
+        worksheet2.getRow((idx + 1) * 32 - 12).height =
+          (dimensionsd.height * 3) / 4 + 4;
+        worksheet2.addImage(imageIdd, {
+          tl: { col: 5.1, row: (idx + 1) * 32 - 12.9 },
+          ext: {
+            width: `${dimensionsd.width}`,
+            height: `${dimensionsd.height}`,
+          },
+        });
+        worksheet2.getRow((idx + 1) * 32 - 11).height =
+          (dimensionse.height * 3) / 4 + 4;
+        worksheet2.addImage(imageIde, {
+          tl: { col: 5.1, row: (idx + 1) * 32 - 11.9 },
+          ext: {
+            width: `${dimensionse.width}`,
+            height: `${dimensionse.height}`,
+          },
+        });
 
         worksheet2.addConditionalFormatting({
           ref: `C${(idx + 1) * 32 - 15}`,
@@ -905,37 +1039,81 @@ class DownloadService {
         worksheet4.columns = [
           { key: "No" },
           { key: "INDIKATOR_SOAL" },
-          { key: "RUMUSAN_BUTIR_SOAL" },
-          { key: "A" },
-          { key: "B" },
-          { key: "C" },
-          { key: "D" },
-          { key: "E" },
+          // { key: "RUMUSAN_BUTIR_SOAL" },
+          // { key: "A" },
+          // { key: "B" },
+          // { key: "C" },
+          // { key: "D" },
+          // { key: "E" },
           { key: "KUNCI_JAWABAN" },
         ];
 
         // Add row using key mapping to columns
+        worksheet4.getRow(idx + 9).height = (dimensions.height * 3) / 4 + 4;
+        worksheet4.addImage(imageId, {
+          tl: { col: 2.1, row: idx + 8.1 },
+          ext: {
+            width: `${dimensions.width}`,
+            height: `${dimensions.height}`,
+          },
+        });
+        worksheet4.addImage(imageIda, {
+          tl: { col: 3.1, row: idx + 8.1 },
+          ext: {
+            width: `${dimensionsa.width}`,
+            height: `${dimensionsa.height}`,
+          },
+        });
+        worksheet4.addImage(imageIdb, {
+          tl: { col: 4.1, row: idx + 8.1 },
+          ext: {
+            width: `${dimensionsb.width}`,
+            height: `${dimensionsb.height}`,
+          },
+        });
+        worksheet4.addImage(imageIdc, {
+          tl: { col: 5.1, row: idx + 8.1 },
+          ext: {
+            width: `${dimensionsc.width}`,
+            height: `${dimensionsc.height}`,
+          },
+        });
+        worksheet4.addImage(imageIdd, {
+          tl: { col: 6.1, row: idx + 8.1 },
+          ext: {
+            width: `${dimensionsd.width}`,
+            height: `${dimensionsd.height}`,
+          },
+        });
+        worksheet4.addImage(imageIde, {
+          tl: { col: 7.1, row: idx + 8.1 },
+          ext: {
+            width: `${dimensionse.width}`,
+            height: `${dimensionse.height}`,
+          },
+        });
+
         worksheet4.addRow({
           No: `${idx + 1}`,
           INDIKATOR_SOAL: d ? d.kd_konten_materi : "-",
-          RUMUSAN_BUTIR_SOAL: d
-            ? d.pertanyaan.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
-            : "-",
-          A: d
-            ? d.jawaban_a.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
-            : "-",
-          B: d
-            ? d.jawaban_b.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
-            : "-",
-          C: d
-            ? d.jawaban_c.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
-            : "-",
-          D: d
-            ? d.jawaban_d.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
-            : "-",
-          E: d
-            ? d.jawaban_e.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
-            : "-",
+          // RUMUSAN_BUTIR_SOAL: d
+          //   ? d.pertanyaan.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
+          //   : "-",
+          // A: d
+          //   ? d.jawaban_a.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
+          //   : "-",
+          // B: d
+          //   ? d.jawaban_b.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
+          //   : "-",
+          // C: d
+          //   ? d.jawaban_c.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
+          //   : "-",
+          // D: d
+          //   ? d.jawaban_d.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
+          //   : "-",
+          // E: d
+          //   ? d.jawaban_e.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
+          //   : "-",
           KUNCI_JAWABAN: d ? d.kj_pg : "-",
         });
 
@@ -1082,72 +1260,67 @@ class DownloadService {
           ],
         });
 
-        worksheet5.getRow(`${(idx + 1) * 7 + 15}`).values = [
-          `${idx + 1}`,
-          `${
-            d
-              ? d.pertanyaan
-                  .replace(/(<([^>]+)>)/gi, "")
-                  .replace(/\&nbsp;/gi, "")
-              : "-"
-          }`,
-        ];
+        worksheet5.getRow(`${(idx + 1) * 7 + 15}`).values = [`${idx + 1}`];
+        worksheet5.getRow(`${(idx + 1) * 7 + 15}`).height =
+          (dimensions.height * 3) / 4 + 4;
+        worksheet5.addImage(imageId, {
+          tl: { col: 1.1, row: (idx + 1) * 7 + 14.1 },
+          ext: {
+            width: `${dimensions.width}`,
+            height: `${dimensions.height}`,
+          },
+        });
 
-        worksheet5.getRow(`${(idx + 1) * 7 + 16}`).values = [
-          "",
-          "A",
-          `${
-            d
-              ? d.jawaban_a
-                  .replace(/(<([^>]+)>)/gi, "")
-                  .replace(/\&nbsp;/gi, "")
-              : "-"
-          }`,
-        ];
-        worksheet5.getRow(`${(idx + 1) * 7 + 17}`).values = [
-          "",
-          "B",
-          `${
-            d
-              ? d.jawaban_b
-                  .replace(/(<([^>]+)>)/gi, "")
-                  .replace(/\&nbsp;/gi, "")
-              : "-"
-          }`,
-        ];
-        worksheet5.getRow(`${(idx + 1) * 7 + 18}`).values = [
-          "",
-          "C",
-          `${
-            d
-              ? d.jawaban_c
-                  .replace(/(<([^>]+)>)/gi, "")
-                  .replace(/\&nbsp;/gi, "")
-              : "-"
-          }`,
-        ];
-        worksheet5.getRow(`${(idx + 1) * 7 + 19}`).values = [
-          "",
-          "D",
-          `${
-            d
-              ? d.jawaban_d
-                  .replace(/(<([^>]+)>)/gi, "")
-                  .replace(/\&nbsp;/gi, "")
-              : "-"
-          }`,
-        ];
-        worksheet5.getRow(`${(idx + 1) * 7 + 20}`).values = [
-          "",
-          "E",
-          `${
-            d
-              ? d.jawaban_e
-                  .replace(/(<([^>]+)>)/gi, "")
-                  .replace(/\&nbsp;/gi, "")
-              : "-"
-          }`,
-        ];
+        worksheet5.getRow(`${(idx + 1) * 7 + 16}`).values = ["", "A"];
+        worksheet5.getRow(`${(idx + 1) * 7 + 16}`).height =
+          (dimensionsa.height * 3) / 4 + 4;
+        worksheet5.addImage(imageIda, {
+          tl: { col: 2.1, row: (idx + 1) * 7 + 15.1 },
+          ext: {
+            width: `${dimensionsa.width}`,
+            height: `${dimensionsa.height}`,
+          },
+        });
+        worksheet5.getRow(`${(idx + 1) * 7 + 17}`).values = ["", "B"];
+        worksheet5.getRow(`${(idx + 1) * 7 + 17}`).height =
+          (dimensionsb.height * 3) / 4 + 4;
+        worksheet5.addImage(imageIdb, {
+          tl: { col: 2.1, row: (idx + 1) * 7 + 16.1 },
+          ext: {
+            width: `${dimensionsb.width}`,
+            height: `${dimensionsb.height}`,
+          },
+        });
+        worksheet5.getRow(`${(idx + 1) * 7 + 18}`).values = ["", "C"];
+        worksheet5.getRow(`${(idx + 1) * 7 + 18}`).height =
+          (dimensionsc.height * 3) / 4 + 4;
+        worksheet5.addImage(imageIdc, {
+          tl: { col: 2.1, row: (idx + 1) * 7 + 17.1 },
+          ext: {
+            width: `${dimensionsc.width}`,
+            height: `${dimensionsc.height}`,
+          },
+        });
+        worksheet5.getRow(`${(idx + 1) * 7 + 19}`).values = ["", "D"];
+        worksheet5.getRow(`${(idx + 1) * 7 + 19}`).height =
+          (dimensionsd.height * 3) / 4 + 4;
+        worksheet5.addImage(imageIdd, {
+          tl: { col: 2.1, row: (idx + 1) * 7 + 18.1 },
+          ext: {
+            width: `${dimensionsd.width}`,
+            height: `${dimensionsd.height}`,
+          },
+        });
+        worksheet5.getRow(`${(idx + 1) * 7 + 20}`).values = ["", "E"];
+        worksheet5.getRow(`${(idx + 1) * 7 + 20}`).height =
+          (dimensionse.height * 3) / 4 + 4;
+        worksheet5.addImage(imageIde, {
+          tl: { col: 2.1, row: (idx + 1) * 7 + 19.1 },
+          ext: {
+            width: `${dimensionse.width}`,
+            height: `${dimensionse.height}`,
+          },
+        });
 
         worksheet5.mergeCells(`B${(idx + 1) * 7 + 15}:L${(idx + 1) * 7 + 15}`);
         worksheet5.mergeCells(`C${(idx + 1) * 7 + 16}:L${(idx + 1) * 7 + 16}`);
@@ -2502,7 +2675,7 @@ class DownloadService {
     worksheet2.getColumn("D").width = 7;
     worksheet2.getColumn("E").width = 5.5;
     worksheet2.getColumn("F").width = 33;
-    worksheet2.getColumn("G").width = 42;
+    worksheet2.getColumn("G").width = 85;
     worksheet2.getColumn("H").width = 31;
 
     //desain worksheet3
@@ -2517,12 +2690,12 @@ class DownloadService {
 
     worksheet4.getColumn("A").width = 4;
     worksheet4.getColumn("B").width = 32;
-    worksheet4.getColumn("C").width = 84;
-    worksheet4.getColumn("D").width = 11;
-    worksheet4.getColumn("E").width = 11;
-    worksheet4.getColumn("F").width = 11;
-    worksheet4.getColumn("G").width = 11;
-    worksheet4.getColumn("H").width = 11;
+    worksheet4.getColumn("C").width = 115;
+    worksheet4.getColumn("D").width = 115;
+    worksheet4.getColumn("E").width = 115;
+    worksheet4.getColumn("F").width = 115;
+    worksheet4.getColumn("G").width = 115;
+    worksheet4.getColumn("H").width = 115;
     worksheet4.getColumn("I").width = 11;
 
     // worksheet4.addImage(logoImage, {
