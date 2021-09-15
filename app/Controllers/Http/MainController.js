@@ -13547,7 +13547,7 @@ class MainController {
               .with("user", (builder) => {
                 builder.select("id", "email").where({ dihapus: 0 });
               })
-              .where({ m_rombel_id: rombel_id })
+              .whereIn("m_rombel_id", rombel_id)
               .andWhere({ dihapus: 0 })
               .fetch();
 
@@ -13599,7 +13599,8 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { nama, jenis, bulan, tipe_ujian, nominal, rombel_id } = request.post();
+    let { nama, jenis, bulan, tipe_ujian, nominal, rombel_id, tanggal_dibuat } =
+      request.post();
 
     if (bulan) {
       const rules = {
@@ -13651,6 +13652,7 @@ class MainController {
       jenis,
       bulan,
       tipe_ujian,
+      tanggal_dibuat,
       nominal,
     });
 
