@@ -102,6 +102,7 @@ class DownloadService {
           quality: 25,
           encoding: "base64",
           selector: "div",
+          puppeteerArgs: { ignoreDefaultArgs: ["--no-sandbox"] },
         });
         const dimensions = sizeOf(Buffer.from(image, "base64"));
         const imagea = await nodeHtmlToImage({
@@ -110,6 +111,7 @@ class DownloadService {
           quality: 25,
           encoding: "base64",
           selector: "div",
+          puppeteerArgs: { ignoreDefaultArgs: ["--no-sandbox"] },
         });
         const dimensionsa = sizeOf(Buffer.from(imagea, "base64"));
         const imageb = await nodeHtmlToImage({
@@ -118,6 +120,7 @@ class DownloadService {
           quality: 25,
           encoding: "base64",
           selector: "div",
+          puppeteerArgs: { ignoreDefaultArgs: ["--no-sandbox"] },
         });
         const dimensionsb = sizeOf(Buffer.from(imageb, "base64"));
         const imagec = await nodeHtmlToImage({
@@ -126,6 +129,7 @@ class DownloadService {
           quality: 25,
           encoding: "base64",
           selector: "div",
+          puppeteerArgs: { ignoreDefaultArgs: ["--no-sandbox"] },
         });
         const dimensionsc = sizeOf(Buffer.from(imagec, "base64"));
         const imaged = await nodeHtmlToImage({
@@ -134,6 +138,7 @@ class DownloadService {
           quality: 25,
           encoding: "base64",
           selector: "div",
+          puppeteerArgs: { ignoreDefaultArgs: ["--no-sandbox"] },
         });
         const dimensionsd = sizeOf(Buffer.from(imaged, "base64"));
         const imagee = await nodeHtmlToImage({
@@ -142,6 +147,7 @@ class DownloadService {
           quality: 25,
           encoding: "base64",
           selector: "div",
+          puppeteerArgs: { ignoreDefaultArgs: ["--no-sandbox"] },
         });
         const dimensionse = sizeOf(Buffer.from(imagee, "base64"));
 
