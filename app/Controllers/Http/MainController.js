@@ -33202,22 +33202,76 @@ class MainController {
 
     let { page, search } = request.get();
 
-    page = page ? parseInt(page) : 1;
+    const checkLabel = await MLabelKalender.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .first();
 
-    let kalender;
+    if (!checkLabel) {
+      await MLabelKalender.create({
+        nama: "Kegiatan",
+        warna: "#2680EB",
+        m_sekolah_id: sekolah.id,
+        dihapus: 0,
+      });
 
-    kalender = Mkalender.query().with("lokasi").where({ dihapus: 0 });
+      await MLabelKalender.create({
+        nama: "Libur Nasional",
+        warna: "#7986CB",
+        m_sekolah_id: sekolah.id,
+        dihapus: 0,
+      });
+      await MLabelKalender.create({
+        nama: "Ujian",
+        warna: "#FC544B",
+        m_sekolah_id: sekolah.id,
+        dihapus: 0,
+      });
+      await MLabelKalender.create({
+        nama: "Libur Semester",
+        warna: "#FFC107",
+        m_sekolah_id: sekolah.id,
+        dihapus: 0,
+      });
+    }
+    let kegiatan;
+    let pendidikan;
 
+    const label = await MLabelKalender.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
+    kegiatan = MKegiatanKalender.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id });
     if (search) {
-      kalender.andWhere("nama", "like", `%${search}%`);
+      kegiatan.andWhere("nama", "like", `%${search}%`);
     }
 
+    pendidikan = MKalenderPendidikan.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id });
+
+    if (search) {
+      kegiatan.andWhere("nama", "like", `%${search}%`);
+    }
+
+    kegiatan = kegiatan.fetch();
+    pendidikan = pendidikan.fetch();
+
     return response.ok({
-      kalender: await kalender.paginate(page, 25),
+      label,
+      kegiatan,
+      pendidikan,
     });
   }
 
-  async detailKalender({ response, request, params: { kalender_id } }) {
+  async detailKalenderPendidikan({
+    response,
+    request,
+    params: { kalender_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -33226,8 +33280,8 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const kalender = await Mkalender.query()
-      .with("lokasi")
+    const kalender = await MKalenderPendidikan.query()
+      .with("label")
       .where({ id: kalender_id })
       .first();
 
@@ -33236,7 +33290,26 @@ class MainController {
     });
   }
 
-  async postLokasi222({ response, request, auth }) {
+  async detailKalenderKegiatan({ response, request, params: { kegiatan_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const kalender = await MKegiatanKalender.query()
+      .with("label")
+      .where({ id: kalender_id })
+      .first();
+
+    return response.ok({
+      kalender: kalender,
+    });
+  }
+
+  async postLabelKalender({ response, request, auth }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -33247,36 +33320,24 @@ class MainController {
 
     const user = await auth.getUser();
 
-    let { jenis, nama, no_regis, lebar, panjang, foto } = request.post();
-
-    foto = foto ? foto.toString() : null;
+    let { nama, warna } = request.post();
 
     const rules = {
-      jenis: "required",
       nama: "required",
-      no_regis: "required",
-      lebar: "required",
-      panjang: "required",
+      warna: "required",
     };
     const message = {
-      "jenis.required": "Jenis harus diisi",
       "nama.required": "Nama harus diisi",
-      "no_regis.required": "Nomor Registrasi harus diisi",
-      "lebar.required": "Lebar harus diisi",
-      "panjang.required": "Panjang harus diisi",
+      "warna.required": "Warna harus dipilih",
     };
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const lokasi = await MLokasi.create({
-      jenis,
+    const kalender = await MKalenderPendidikan.create({
       nama,
-      no_regis,
-      lebar,
-      foto,
-      panjang,
+      warna,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
     });
@@ -33286,7 +33347,7 @@ class MainController {
     });
   }
 
-  async putLokasi222({ response, request, auth, params: { lokasi_id } }) {
+  async putLabelKalender({ response, request, auth, params: { label_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -33297,38 +33358,27 @@ class MainController {
 
     const user = await auth.getUser();
 
-    let { jenis, nama, no_regis, lebar, panjang, foto } = request.post();
+    let { nama, warna } = request.post();
+
     const rules = {
-      jenis: "required",
       nama: "required",
-      no_regis: "required",
-      lebar: "required",
-      panjang: "required",
+      warna: "required",
     };
     const message = {
-      "jenis.required": "Jenis harus diisi",
       "nama.required": "Nama harus diisi",
-      "no_regis.required": "Nomor Registrasi harus diisi",
-      "lebar.required": "Lebar harus diisi",
-      "panjang.required": "Panjang harus diisi",
+      "warna.required": "Warna harus dipilih",
     };
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
       return response.unprocessableEntity(validation.messages());
     }
 
-    foto = foto ? foto.toString() : null;
-
-    const lokasi = await MLokasi.query().where({ id: lokasi_id }).update({
-      jenis,
+    const label = await MLabelKalender.query().where({ id: label_id }).update({
       nama,
-      no_regis,
-      lebar,
-      panjang,
-      foto,
+      warna,
     });
 
-    if (!lokasi) {
+    if (!label) {
       return response.notFound({
         message: messageNotFound,
       });
@@ -33339,7 +33389,7 @@ class MainController {
     });
   }
 
-  async deleteLokasi222({ response, request, auth, params: { lokasi_id } }) {
+  async deleteLabelKalender({ response, request, auth, params: { label_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -33354,11 +33404,11 @@ class MainController {
     //   return response.forbidden({ message: messageForbidden });
     // }
 
-    const lokasi = await MLokasi.query().where({ id: lokasi_id }).update({
+    const label = await MLabelKalender.query().where({ id: label_id }).update({
       dihapus: 1,
     });
 
-    if (!lokasi) {
+    if (!label) {
       return response.notFound({
         message: messageNotFound,
       });
@@ -33368,6 +33418,329 @@ class MainController {
       message: messagePutSuccess,
     });
   }
+
+  async postKalenderPendidikan({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { nama, m_label_kalender_id, tanggal_awal, tanggal_akhir } =
+      request.post();
+
+    const rules = {
+      nama: "required",
+      m_label_kalender_id: "required",
+      tanggal_awal: "required",
+      tanggal_akhir: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+      "m_label_kalender_id.required": "Label harus dipilih",
+      "tanggal_awal.required": "Tanggal Awal harus diisi",
+      "tanggal_akhir.required": "Tanggal Akhir harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const kalender = await MKalenderPendidikan.create({
+      nama,
+      m_label_kalender_id,
+      tanggal_awal,
+      tanggal_akhir,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putKalenderPendidikan({
+    response,
+    request,
+    auth,
+    params: { kalender_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { nama, m_label_kalender_id, tanggal_awal, tanggal_akhir } =
+      request.post();
+
+    const rules = {
+      nama: "required",
+      m_label_kalender_id: "required",
+      tanggal_awal: "required",
+      tanggal_akhir: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+      "m_label_kalender_id.required": "Label harus dipilih",
+      "tanggal_awal.required": "Tanggal Awal harus diisi",
+      "tanggal_akhir.required": "Tanggal Akhir harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const kalender = await MKalenderPendidikan.query()
+      .where({ id: kalender_id })
+      .update({
+        nama,
+        m_label_kalender_id,
+        tanggal_awal,
+        tanggal_akhir,
+      });
+
+    if (!kalender) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteKalenderPendidikan({
+    response,
+    request,
+    auth,
+    params: { kalender_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    // if ((user.role != "admin" || user.role  == 'kurikulum') || user.m_sekolah_id != sekolah.id) {
+    //   return response.forbidden({ message: messageForbidden });
+    // }
+
+    const kalender = await MKalenderPendidikan.query()
+      .where({ id: kalender_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!kalender) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async postKegiatanKalender({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let {
+      nama,
+      tanggal_awal,
+      tanggal_akhir,
+      waktu_awal,
+      waktu_akhir,
+      media,
+      aktif,
+      deskripsi,
+      buku_tamu,
+    } = request.post();
+
+    const rules = {
+      nama: "required",
+      tanggal_awal: "required",
+      tanggal_akhir: "required",
+      buku_tamu: "required",
+      waktu_awal: "required",
+      waktu_akhir: "required",
+      media: "required",
+      deskripsi: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+      "label.required": "Label harus dipilih",
+      "deskripsi.required": "Deskripsi harus dipilih",
+      "tanggal_awal.required": "Tanggal Awal harus diisi",
+      "tanggal_akhir.required": "Tanggal Akhir harus diisi",
+      "waktu_awal.required": "Waktu Awal harus diisi",
+      "waktu_akhir.required": "Waktu Akhir harus diisi",
+      "media.required": "Media Kegiatan harus dipilih",
+      "buku_tamu.required": "Buku Tamu harus dipilih",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const kalender = await MKegiatanKalender.create({
+      nama,
+      tanggal_awal,
+      tanggal_akhir,
+      waktu_awal,
+      waktu_akhir,
+      media,
+      aktif,
+      deskripsi,
+      buku_tamu,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putKegiatanKalender({
+    response,
+    request,
+    auth,
+    params: { kalender_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let {
+      nama,
+      tanggal_awal,
+      tanggal_akhir,
+      waktu_awal,
+      waktu_akhir,
+      media,
+      aktif,
+      deskripsi,
+      buku_tamu,
+    } = request.post();
+
+    const rules = {
+      nama: "required",
+      tanggal_awal: "required",
+      tanggal_akhir: "required",
+      buku_tamu: "required",
+      waktu_awal: "required",
+      waktu_akhir: "required",
+      media: "required",
+      deskripsi: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+      "label.required": "Label harus dipilih",
+      "deskripsi.required": "Deskripsi harus dipilih",
+      "tanggal_awal.required": "Tanggal Awal harus diisi",
+      "tanggal_akhir.required": "Tanggal Akhir harus diisi",
+      "waktu_awal.required": "Waktu Awal harus diisi",
+      "waktu_akhir.required": "Waktu Akhir harus diisi",
+      "media.required": "Media Kegiatan harus dipilih",
+      "buku_tamu.required": "Buku Tamu harus dipilih",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const kalender = await MKegiatanKalender.query()
+      .where({ id: kalender_id })
+      .update({
+        nama,
+        tanggal_awal,
+        tanggal_akhir,
+        waktu_awal,
+        waktu_akhir,
+        media,
+        deskripsi,
+        aktif,
+        buku_tamu,
+      });
+
+    if (!kalender) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteKegiatanKalender({
+    response,
+    request,
+    auth,
+    params: { kalender_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    // if ((user.role != "admin" || user.role  == 'kurikulum') || user.m_sekolah_id != sekolah.id) {
+    //   return response.forbidden({ message: messageForbidden });
+    // }
+
+    const kalender = await MKegiatanKalender.query()
+      .where({ id: kalender_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!kalender) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
   async notFoundPage({ response, request, auth }) {
     return `<p>Data tidak ditemukan, silahkan kembali ke <a href="http://getsmartschool.id">Smart School</a></p>`;
   }
