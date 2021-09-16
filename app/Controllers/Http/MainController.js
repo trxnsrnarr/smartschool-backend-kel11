@@ -25580,12 +25580,12 @@ class MainController {
       m_lokasi_id,
     } = request.post();
 
-    foto = foto ? foto.toString() : null;
+    const foto1 = foto ? foto.toString() : null;
 
     const rules = {
       kode_barang: "required",
       nama: "required",
-      foto: "required",
+      // foto: "required",
       merk: "required",
       tahun_beli: "required",
       asal: "required",
@@ -25599,7 +25599,7 @@ class MainController {
     const message = {
       "kode_barang.required": "Jenis harus diisi",
       "nama.required": "Nama harus diisi",
-      "foto.required": "Foto harus diisi",
+      // "foto.required": "Foto harus diisi",
       "merk.required": "Nomor Registrasi harus diisi",
       "tahun_beli.required": "Lebar harus diisi",
       "asal.required": "Panjang harus diisi",
@@ -25624,7 +25624,7 @@ class MainController {
       harga,
       jumlah,
       deskripsi,
-      foto,
+      foto:foto1,
       kepemilikan,
       nama_pemilik,
       m_lokasi_id,
