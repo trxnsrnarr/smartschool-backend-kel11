@@ -23481,8 +23481,16 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { judul, foto, lokasi, deskripsi, waktu_awal, waktu_akhir } =
-      request.post();
+    const {
+      judul,
+      foto,
+      lokasi,
+      deskripsi,
+      waktu_awal,
+      waktu_akhir,
+      link,
+      peserta,
+    } = request.post();
 
     const acara = await MAcaraPerusahaan.create({
       judul,
@@ -23491,6 +23499,8 @@ class MainController {
       deskripsi,
       waktu_awal,
       waktu_akhir,
+      link,
+      peserta,
       m_perusahaan_id: perusahaan_id,
       dihapus: 0,
     });
@@ -23511,8 +23521,16 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { judul, foto, lokasi, deskripsi, waktu_awal, waktu_akhir } =
-      request.post();
+    const {
+      judul,
+      foto,
+      lokasi,
+      deskripsi,
+      waktu_awal,
+      waktu_akhir,
+      link,
+      peserta,
+    } = request.post();
 
     const acara = await MAcaraPerusahaaan.query()
       .where({ id: acara_id })
@@ -23523,6 +23541,8 @@ class MainController {
         deskripsi,
         waktu_awal,
         waktu_akhir,
+        link,
+        peserta,
         dihapus: 0,
       });
 
@@ -25509,7 +25529,7 @@ class MainController {
       deskripsi: "required",
       jumlah: "required",
       kepemilikan: "required",
-      nama_pemilik: "required",
+      // nama_pemilik: "required",
       m_lokasi_id: "required",
     };
     const message = {
@@ -25523,7 +25543,7 @@ class MainController {
       "deskripsi.required": "Spesifikasi harus diisi",
       "jumlah.required": "Jumlah harus diisi",
       "kepemilikan.required": "Kepemilikan harus diisi",
-      "nama_pemilik.required": "Nama Pemilik harus diisi",
+      // "nama_pemilik.required": "Nama Pemilik harus diisi",
       "m_lokasi_id.required": "Lokasi harus diisi",
     };
     const validation = await validate(request.all(), rules, message);
@@ -25593,7 +25613,7 @@ class MainController {
       deskripsi: "required",
       jumlah: "required",
       kepemilikan: "required",
-      nama_pemilik: "required",
+      // nama_pemilik: "required",
       m_lokasi_id: "required",
     };
     const message = {
@@ -25607,7 +25627,7 @@ class MainController {
       "deskripsi.required": "Spesifikasi harus diisi",
       "jumlah.required": "Jumlah harus diisi",
       "kepemilikan.required": "Kepemilikan harus diisi",
-      "nama_pemilik.required": "Nama Pemilik harus diisi",
+      // "nama_pemilik.required": "Nama Pemilik harus diisi",
       "m_lokasi_id.required": "Lokasi harus diisi",
     };
     const validation = await validate(request.all(), rules, message);
@@ -25624,7 +25644,7 @@ class MainController {
       harga,
       jumlah,
       deskripsi,
-      foto:foto1,
+      foto: foto1,
       kepemilikan,
       nama_pemilik,
       m_lokasi_id,
