@@ -2898,6 +2898,7 @@ class MainController {
           builder.with("anggotaRombel", (builder) => {
             builder.where({ dihapus: 0 }).with("user", async (builder) => {
               builder
+                .where({ dihapus: 0 })
                 .with("keteranganRapor", (builder) => {
                   builder.where({ dihapus: 0 });
                 })
@@ -13373,53 +13374,29 @@ class MainController {
         .ids();
     }
 
+    siswa = MPembayaranSiswa.query()
+      .with("user")
+      .with("riwayat", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .with("rombelPembayaran", (builder) => {
+        builder.with("pembayaran");
+      })
+      .where({ dihapus: 0 });
     if (rombel_id) {
+      siswa.andWhere({ tk_pembayaran_rombel_id: rombel_id });
       if (search) {
-        siswa = await MPembayaranSiswa.query()
-          .with("user")
-          .with("riwayat", (builder) => {
-            builder.where({ dihapus: 0 });
-          })
-          .where({ dihapus: 0 })
-          .andWhere({ tk_pembayaran_rombel_id: rombel_id })
-          .whereIn("m_user_id", userIds)
-          .fetch();
-      } else {
-        siswa = await MPembayaranSiswa.query()
-          .with("user")
-          .with("riwayat", (builder) => {
-            builder.where({ dihapus: 0 });
-          })
-          .where({ dihapus: 0 })
-          .andWhere({ tk_pembayaran_rombel_id: rombel_id })
-          .fetch();
+        siswa.whereIn("m_user_id", userIds);
       }
     } else {
+      siswa.andWhere({
+        tk_pembayaran_rombel_id: pembayaran.toJSON().rombel[0].id,
+      });
       if (search) {
-        siswa = await MPembayaranSiswa.query()
-          .with("user")
-          .with("riwayat", (builder) => {
-            builder.where({ dihapus: 0 });
-          })
-          .where({ dihapus: 0 })
-          .andWhere({
-            tk_pembayaran_rombel_id: pembayaran.toJSON().rombel[0].id,
-          })
-          .whereIn("m_user_id", userIds)
-          .fetch();
-      } else {
-        siswa = await MPembayaranSiswa.query()
-          .with("user")
-          .with("riwayat", (builder) => {
-            builder.where({ dihapus: 0 });
-          })
-          .where({ dihapus: 0 })
-          .andWhere({
-            tk_pembayaran_rombel_id: pembayaran.toJSON().rombel[0].id,
-          })
-          .fetch();
+        siswa.whereIn("m_user_id", userIds);
       }
     }
+    siswa = await siswa.fetch();
 
     return response.ok({
       pembayaran,
@@ -13550,36 +13527,39 @@ class MainController {
               .with("user", (builder) => {
                 builder.select("id", "email").where({ dihapus: 0 });
               })
-              .where({ m_rombel_id: rombel_id })
+              .where({ m_rombel_id: d })
               .andWhere({ dihapus: 0 })
               .fetch();
 
             await Promise.all(
-              userIds.toJSON().map(async (e) => {
-                await MPembayaranSiswa.create({
-                  status: "belum lunas",
-                  dihapus: 0,
-                  m_user_id: e.m_user_id,
-                  tk_pembayaran_rombel_id: tkPembayaran.id,
-                  m_sekolah_id: sekolah.id,
-                });
-                if (e.user.email != null) {
-                  try {
-                    const gmail = await Mail.send(
-                      `emails.spp`,
-                      pembayaran.toJSON(),
-                      (message) => {
-                        message
-                          .to(`${e.user.email}`)
-                          .from("no-reply@smarteschool.id")
-                          .subject("Pembayaran SPP");
-                      }
-                    );
-                  } catch (error) {
-                    // console.log(error);
+              userIds
+                .toJSON()
+                .filter((e) => e.user)
+                .map(async (e) => {
+                  await MPembayaranSiswa.create({
+                    status: "belum lunas",
+                    dihapus: 0,
+                    m_user_id: e.m_user_id,
+                    tk_pembayaran_rombel_id: tkPembayaran.id,
+                    m_sekolah_id: sekolah.id,
+                  });
+                  if (e.user.email != null) {
+                    try {
+                      const gmail = await Mail.send(
+                        `emails.spp`,
+                        pembayaran.toJSON(),
+                        (message) => {
+                          message
+                            .to(`${e.user.email}`)
+                            .from("no-reply@smarteschool.id")
+                            .subject("Pembayaran SPP");
+                        }
+                      );
+                    } catch (error) {
+                      // console.log(error);
+                    }
                   }
-                }
-              })
+                })
             );
           }
         })
@@ -13602,7 +13582,8 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { nama, jenis, bulan, tipe_ujian, nominal, rombel_id } = request.post();
+    let { nama, jenis, bulan, tipe_ujian, nominal, rombel_id, tanggal_dibuat } =
+      request.post();
 
     if (bulan) {
       const rules = {
@@ -13648,13 +13629,15 @@ class MainController {
 
     const pembayaran = await MPembayaran.query()
       .where({ id: pembayaran_id })
-      .update({
-        nama,
-        jenis,
-        bulan,
-        tipe_ujian,
-        nominal,
-      });
+      .first();
+    await MPembayaran.query().where({ id: pembayaran_id }).update({
+      nama,
+      jenis,
+      bulan,
+      tipe_ujian,
+      tanggal_dibuat,
+      nominal,
+    });
 
     if (!pembayaran) {
       return response.notFound({
@@ -13662,6 +13645,22 @@ class MainController {
       });
     }
 
+    const rombelIds = await TkPembayaranRombel.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_pembayaran_id: pembayaran.id })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .pluck("m_rombel_id");
+
+    rombelIds
+      .filter((item) => !rombel_id.includes(item))
+      .map(async (item) => {
+        await TkPembayaranRombel.query()
+          .where({ m_rombel_id: item })
+          .where({ dihapus: 0 })
+          .andWhere({ m_pembayaran_id: pembayaran.id })
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .delete();
+      });
     if (rombel_id.length) {
       await Promise.all(
         rombel_id.map(async (d) => {
@@ -13673,12 +13672,51 @@ class MainController {
             .first();
 
           if (!check) {
-            await TkPembayaranRombel.create({
+            const tkPembayaran = await TkPembayaranRombel.create({
               dihapus: 0,
               m_pembayaran_id: pembayaran.id,
               m_rombel_id: d,
               m_sekolah_id: sekolah.id,
             });
+
+            const userIds = await MAnggotaRombel.query()
+              .with("user", (builder) => {
+                builder.select("id", "email").where({ dihapus: 0 });
+              })
+              .where({ m_rombel_id: d })
+              .andWhere({ dihapus: 0 })
+              .fetch();
+
+            await Promise.all(
+              userIds
+                .toJSON()
+                .filter((e) => e.user)
+                .map(async (e) => {
+                  await MPembayaranSiswa.create({
+                    status: "belum lunas",
+                    dihapus: 0,
+                    m_user_id: e.m_user_id,
+                    tk_pembayaran_rombel_id: tkPembayaran.id,
+                    m_sekolah_id: sekolah.id,
+                  });
+                  if (e.user.email != null) {
+                    try {
+                      const gmail = await Mail.send(
+                        `emails.spp`,
+                        pembayaran.toJSON(),
+                        (message) => {
+                          message
+                            .to(`${e.user.email}`)
+                            .from("no-reply@smarteschool.id")
+                            .subject("Pembayaran SPP");
+                        }
+                      );
+                    } catch (error) {
+                      // console.log(error);
+                    }
+                  }
+                })
+            );
           }
         })
       );
@@ -13807,6 +13845,12 @@ class MainController {
     const pembayaran = await MPembayaranSiswa.query()
       .with("rombelPembayaran", (builder) => {
         builder.with("pembayaran");
+      })
+      .with("riwayat", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .withCount("riwayat as totalJumlah", (builder) => {
+        builder.where({ dihapus: 0 });
       })
       .where({ dihapus: 0 })
       .andWhere({ m_user_id: user.id })
@@ -13940,6 +13984,38 @@ class MainController {
       .update({
         dikonfirmasi,
       });
+
+    const pembayaranSiswa = await MRiwayatPembayaranSiswa.query()
+      .where({ id: riwayat_pembayaran_siswa_id })
+      .first();
+
+    const riwayat = await MPembayaranSiswa.query()
+      .where({ id: pembayaranSiswa.m_pembayaran_siswa_id })
+      .with("riwayat")
+      .with("rombelPembayaran", (builder) => {
+        builder.with("pembayaran");
+      })
+      .first();
+
+    const totalDibayar = riwayat
+      .toJSON()
+      .riwayat.reduce((a, b) => a + b.nominal, 0);
+    const totalTagihan = riwayat.toJSON().rombelPembayaran?.pembayaran?.nominal;
+    if (totalDibayar < totalTagihan) {
+      await MPembayaranSiswa.query()
+        .where({ id: pembayaranSiswa.m_pembayaran_siswa_id })
+        .update({
+          status: "belum lunas",
+        });
+    } else {
+      if (!riwayat.toJSON().riwayat.some((item) => !item.dikonfirmasi)) {
+        await MPembayaranSiswa.query()
+          .where({ id: pembayaranSiswa.m_pembayaran_siswa_id })
+          .update({
+            status: "lunas",
+          });
+      }
+    }
 
     return response.ok(pembayaran);
   }
