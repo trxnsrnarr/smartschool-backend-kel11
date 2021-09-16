@@ -13396,6 +13396,10 @@ class MainController {
         siswa.whereIn("m_user_id", userIds);
       }
     }
+    if (nav == "belum-lunas") {
+      siswa.where({ status: "belum lunas" });
+    }
+
     siswa = await siswa.fetch();
 
     return response.ok({
