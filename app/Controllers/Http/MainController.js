@@ -14105,73 +14105,56 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { search, dari_tanggal, sampai_tanggal, tipe, offset } = request.get();
+    let { search, dari_tanggal, sampai_tanggal, tipe, offset, filter_grafik } = request.get();
     offset = offset ? parseInt(offset) : 0;
+
+    let grafikData = MMutasi.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+    
+    if(!filter_grafik || filter_grafik == "bulan"){
+      grafikData.whereBetween("created_at", [
+        moment().startOf("month").format("YYYY-MM-DD 00:00:00"),
+        moment().endOf("month").format("YYYY-MM-DD 23:59:59"),
+      ])
+    }
+    if(filter_grafik == "minggu"){
+      grafikData.whereBetween("created_at", [
+        moment().startOf("week").format("YYYY-MM-DD 00:00:00"),
+        moment().endOf("week").format("YYYY-MM-DD 23:59:59"),
+      ])
+    }
+    if(filter_grafik == "tahun"){
+      grafikData.whereBetween("created_at", [
+        moment().startOf("year").format("YYYY-MM-DD 00:00:00"),
+        moment().endOf("year").format("YYYY-MM-DD 23:59:59"),
+      ])
+    }
+    grafikData = await grafikData.fetch()
 
     let sarpras;
 
-    if (search) {
-      if (dari_tanggal || sampai_tanggal || tipe) {
-        if (tipe) {
-          sarpras = await MMutasi.query()
-            .where({ dihapus: 0 })
-            .andWhere({ m_sekolah_id: sekolah.id })
-            .andWhere({ tipe: tipe })
-            .andWhere("nama", "like", `%${search}%`)
-            .whereBetween("waktu_dibuat", [dari_tanggal, sampai_tanggal])
-            .offset(offset)
-            .limit(25)
-            .fetch();
-        } else {
-          sarpras = await MMutasi.query()
-            .where({ dihapus: 0 })
-            .andWhere({ m_sekolah_id: sekolah.id })
-            .andWhere("nama", "like", `%${search}%`)
-            .whereBetween("waktu_dibuat", [dari_tanggal, sampai_tanggal])
-            .offset(offset)
-            .limit(25)
-            .fetch();
-        }
-      } else {
-        sarpras = await MMutasi.query()
-          .where({ dihapus: 0 })
-          .andWhere({ m_sekolah_id: sekolah.id })
-          .andWhere("nama", "like", `%${search}%`)
-          .offset(offset)
-          .limit(25)
-          .fetch();
-      }
-    } else {
-      if (dari_tanggal || sampai_tanggal || tipe) {
-        if (tipe) {
-          sarpras = await MMutasi.query()
-            .where({ dihapus: 0 })
-            .andWhere({ m_sekolah_id: sekolah.id })
-            .andWhere({ tipe: tipe })
-            .offset(offset)
-            .limit(25)
-            .fetch();
-        } else {
-          sarpras = await MMutasi.query()
-            .where({ dihapus: 0 })
-            .andWhere({ m_sekolah_id: sekolah.id })
-            .whereBetween("waktu_dibuat", [dari_tanggal, sampai_tanggal])
-            .offset(offset)
-            .limit(25)
-            .fetch();
-        }
-      } else {
-        sarpras = await MMutasi.query()
-          .where({ dihapus: 0 })
-          .andWhere({ m_sekolah_id: sekolah.id })
-          .offset(offset)
-          .limit(25)
-          .fetch();
-      }
+    sarpras = MMutasi.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .offset(offset)
+      .limit(25);
+
+    if (tipe) {
+      sarpras.andWhere({ tipe: tipe });
     }
+    if (dari_tanggal && sampai_tanggal) {
+      sarpras.whereBetween("created_at", [dari_tanggal, sampai_tanggal]);
+    }
+    if (search) {
+      sarpras.andWhere("nama", "like", `%${search}%`);
+    }
+
+    sarpras = await sarpras.fetch();
 
     return response.ok({
       sarpras: sarpras,
+      grafik: grafikData
     });
   }
 
