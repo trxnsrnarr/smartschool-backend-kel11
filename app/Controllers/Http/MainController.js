@@ -25566,6 +25566,7 @@ class MainController {
       m_lokasi_id,
       dihapus: 0,
       baik: jumlah,
+      rusak: 0,
       m_sekolah_id: sekolah.id,
     });
 
