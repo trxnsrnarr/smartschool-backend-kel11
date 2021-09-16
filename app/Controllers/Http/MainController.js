@@ -24039,17 +24039,17 @@ class MainController {
     const user = await auth.getUser();
 
     const {
-      judul,
       m_perusahaan_id,
+      judul,
       jenis,
+      province_id,
+      regency_id,
+      // district_id,
+      // village_id,
+      jumlah_lowongan,
       bidang,
       mulai_kerja,
       akhir_kerja,
-      jumlah_lowongan,
-      province_id,
-      regency_id,
-      district_id,
-      village_id,
       pengalaman,
       batas_pengiriman,
       pendidikan,
