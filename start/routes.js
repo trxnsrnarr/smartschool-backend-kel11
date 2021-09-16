@@ -912,6 +912,41 @@ Route.post(
   "MainController.postJadwalKonsultasi"
 );
 Route.post("/konsultasi/download", "MainController.downloadKonsultasi");
+
+//kalender
+Route.get("/kalender", "MainController.getKalender");
+Route.post("/kalender/label", "MainController.postLabelKalender");
+Route.put("/kalender/label/:label_id", "MainController.putLabelKalender");
+Route.delete("/kalender/label/:label_id", "MainController.deleteLabelKalender");
+
+Route.get(
+  "/kalender/kegiatan/:kegiatan_id",
+  "MainController.detailKalenderKegiatan"
+);
+Route.post("/kalender/kegiatan", "MainController.postKegiatanKalender");
+Route.put(
+  "/kalender/kegiatan/:kegiatan_id",
+  "MainController.putKegiatanKalender"
+);
+Route.delete(
+  "/kalender/kegiatan/:kegiatan_id",
+  "MainController.deleteKegiatanKalender"
+);
+
+Route.get(
+  "/kalender/pendidikan/:pendidikan_id",
+  "MainController.detailKalenderPendidikan"
+);
+Route.post("/kalender/pendidikan", "MainController.postKalenderPendidikan");
+Route.put(
+  "/kalender/pendidikan/:kalender_id",
+  "MainController.putKalenderPendidikan"
+);
+Route.delete(
+  "/kalender/pendidikan/:kalender_id",
+  "MainController.deleteKalenderPendidikan"
+);
+
 //dashboard
 Route.get("/dashboard/tugas", "MainController.getDashboardTugas");
 Route.get("/dashboard/absen", "MainController.getDashboardAbsen");

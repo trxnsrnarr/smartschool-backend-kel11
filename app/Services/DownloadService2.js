@@ -1340,6 +1340,19 @@ class DownloadService {
     //loop Esai
     await Promise.all(
       esaiFilter.map(async (d, idx) => {
+        const imageEsai = await nodeHtmlToImage({
+          html: d ? `<div>${htmlEscaper.unescape(d.pertanyaan)}</div>` : "-",
+          type: "jpeg",
+          quality: 25,
+          encoding: "base64",
+          selector: "div",
+          puppeteerArgs: { args: ["--no-sandbox", "--disable-setuid-sandbox"] },
+        });
+        const dimensions = sizeOf(Buffer.from(imageEsai, "base64"));
+        const imageEsay = workbook.addImage({
+          base64: imageEsai,
+          extension: "jpeg",
+        });
         worksheet3.mergeCells(
           `B${(idx + 1) * 32 - 30}:H${(idx + 1) * 32 - 30}`
         );
@@ -1652,11 +1665,21 @@ class DownloadService {
         worksheet3.getCell(
           `E${(idx + 1) * 32 - 19}`
         ).value = `Rumusan Butir Soal`;
-        worksheet3.getCell(`E${(idx + 1) * 32 - 17}`).value = `${
-          d
-            ? d.pertanyaan.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
-            : "-"
-        }`;
+        worksheet3.getRow(`${(idx + 1) * 32 + 17}`).height =
+          (dimensions.height * 3) / 4 + 4;
+        worksheet3.addImage(imageEsay, {
+          tl: { col: 4.1, row: (idx + 1) * 32 - 18.9 },
+          ext: {
+            width: `${dimensions.width}`,
+            height: `${dimensions.height}`,
+          },
+        });
+
+        // worksheet3.getCell(`E${(idx + 1) * 32 - 17}`).value = `${
+        //   d
+        //     ? d.pertanyaan.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
+        //     : "-"
+        // }`;
         worksheet3.getCell(`H${(idx + 1) * 32 - 19}`).value = `BUKU`;
         worksheet3.getCell(`H${(idx + 1) * 32 - 17}`).value = ``;
         worksheet3.addConditionalFormatting({
