@@ -23593,6 +23593,10 @@ class MainController {
       didirikan,
       alamat,
       telepon,
+      motto,
+      visi,
+      misi,
+      email,
       situs,
       jumlah_pekerja,
       tentang,
@@ -23631,9 +23635,14 @@ class MainController {
 
     const informasi = await MInformasiPerusahaan.create({
       m_perusahaan_id: perusahaan.id,
+      sampul,
+      email,
       didirikan,
       alamat,
       telepon,
+      motto,
+      visi,
+      misi,
       situs,
       jumlah_pekerja,
       tentang,
@@ -23656,7 +23665,6 @@ class MainController {
       behace,
       dribble,
       kodepos,
-      sampul,
     });
 
     return response.ok({
@@ -23756,6 +23764,205 @@ class MainController {
       });
 
     if (!perusahaan) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async putProfilPerusahaan({
+    response,
+    request,
+    auth,
+    params: { perusahaan_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { motto, visi, misi, tentang } = request.post();
+
+    const informasi = await MInformasiPerusahaaan.query()
+      .where({ m_perusahaan_id: perusahaan_id })
+      .update({
+        tentang,
+        visi,
+        misi,
+        motto,
+      });
+
+    if (!informasi) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async putBudayaPerusahaan({
+    response,
+    request,
+    auth,
+    params: { perusahaan_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      lingkungan_kerja,
+      busana,
+      budaya,
+      budaya_kerja,
+      jam_kerja,
+      benefit_karyawan,
+    } = request.post();
+
+    const informasi = await MInformasiPerusahaaan.query()
+      .where({ m_perusahaan_id: perusahaan_id })
+      .update({
+        lingkungan_kerja,
+        busana,
+        budaya,
+        budaya_kerja,
+        jam_kerja,
+        benefit_karyawan,
+      });
+
+    if (!informasi) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async putInformasiPerusahaan({
+    response,
+    request,
+    auth,
+    params: { perusahaan_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      nama,
+      bidang,
+      email,
+      jumlah_karyawan,
+      province_id,
+      regency_id,
+      kode_pos,
+      alamat,
+      didirikan,
+      situs,
+      telepon,
+    } = request.post();
+
+    const perusahaan = await MPerusahaaan.query()
+      .where({ id: perusahaan_id })
+      .update({
+        nama,
+        bidang,
+        province_id,
+        regency_id,
+        dihapus: 0,
+      });
+
+    const informasi = await MInformasiPerusahaaan.query()
+      .where({ m_perusahaan_id: perusahaan_id })
+      .update({
+        email,
+        jumlah_karyawan,
+        kode_pos,
+        alamat,
+        didirikan,
+        situs,
+        telepon,
+      });
+
+    if (!informasi) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async putTautanPerusahaan({
+    response,
+    request,
+    auth,
+    params: { perusahaan_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      youtube,
+      twitter,
+      instagram,
+      facebook,
+      github,
+      linkedin,
+      behace,
+      dribble,
+    } = request.post();
+
+    const informasi = await MInformasiPerusahaaan.query()
+      .where({ m_perusahaan_id: perusahaan_id })
+      .update({
+        youtube,
+        twitter,
+        instagram,
+        facebook,
+        github,
+        linkedin,
+        behace,
+        dribble,
+      });
+
+    if (!informasi) {
       return response.notFound({
         message: messageNotFound,
       });
@@ -25289,12 +25496,12 @@ class MainController {
       m_lokasi_id,
     } = request.post();
 
-    foto = foto ? foto.toString() : null;
+    let foto1 = foto ? foto.toString() : null;
 
     const rules = {
       kode_barang: "required",
       nama: "required",
-      foto: "required",
+      // foto1: "required",
       merk: "required",
       tahun_beli: "required",
       asal: "required",
@@ -25308,7 +25515,7 @@ class MainController {
     const message = {
       "kode_barang.required": "Jenis harus diisi",
       "nama.required": "Nama harus diisi",
-      "foto.required": "Foto harus diisi",
+      // "foto1.required": "Foto harus diisi",
       "merk.required": "Nomor Registrasi harus diisi",
       "tahun_beli.required": "Lebar harus diisi",
       "asal.required": "Panjang harus diisi",
@@ -25333,7 +25540,7 @@ class MainController {
       harga,
       jumlah,
       deskripsi,
-      foto,
+      foto: foto1,
       kepemilikan,
       nama_pemilik,
       m_lokasi_id,
