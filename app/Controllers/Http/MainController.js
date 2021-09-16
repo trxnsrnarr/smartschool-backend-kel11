@@ -13371,53 +13371,29 @@ class MainController {
         .ids();
     }
 
+    siswa = MPembayaranSiswa.query()
+      .with("user")
+      .with("riwayat", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .with("rombelPembayaran", (builder) => {
+        builder.with("pembayaran");
+      })
+      .where({ dihapus: 0 });
     if (rombel_id) {
+      siswa.andWhere({ tk_pembayaran_rombel_id: rombel_id });
       if (search) {
-        siswa = await MPembayaranSiswa.query()
-          .with("user")
-          .with("riwayat", (builder) => {
-            builder.where({ dihapus: 0 });
-          })
-          .where({ dihapus: 0 })
-          .andWhere({ tk_pembayaran_rombel_id: rombel_id })
-          .whereIn("m_user_id", userIds)
-          .fetch();
-      } else {
-        siswa = await MPembayaranSiswa.query()
-          .with("user")
-          .with("riwayat", (builder) => {
-            builder.where({ dihapus: 0 });
-          })
-          .where({ dihapus: 0 })
-          .andWhere({ tk_pembayaran_rombel_id: rombel_id })
-          .fetch();
+        siswa.whereIn("m_user_id", userIds);
       }
     } else {
+      siswa.andWhere({
+        tk_pembayaran_rombel_id: pembayaran.toJSON().rombel[0].id,
+      });
       if (search) {
-        siswa = await MPembayaranSiswa.query()
-          .with("user")
-          .with("riwayat", (builder) => {
-            builder.where({ dihapus: 0 });
-          })
-          .where({ dihapus: 0 })
-          .andWhere({
-            tk_pembayaran_rombel_id: pembayaran.toJSON().rombel[0].id,
-          })
-          .whereIn("m_user_id", userIds)
-          .fetch();
-      } else {
-        siswa = await MPembayaranSiswa.query()
-          .with("user")
-          .with("riwayat", (builder) => {
-            builder.where({ dihapus: 0 });
-          })
-          .where({ dihapus: 0 })
-          .andWhere({
-            tk_pembayaran_rombel_id: pembayaran.toJSON().rombel[0].id,
-          })
-          .fetch();
+        siswa.whereIn("m_user_id", userIds);
       }
     }
+    siswa = await siswa.fetch();
 
     return response.ok({
       pembayaran,
