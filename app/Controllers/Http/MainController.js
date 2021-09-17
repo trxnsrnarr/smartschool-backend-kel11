@@ -10185,9 +10185,7 @@ class MainController {
         .ids();
 
       const soalPG = await TkSoalUjian.query()
-        .with("soal", (builder) => {
-          builder.where({ dihapus: 0 });
-        })
+        .where({ m_ujian_id: ujian_id })
         .whereIn("m_soal_ujian_id", soalMasterPGIds)
         .orderByRaw(`${diacak}`)
         .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_pg)
@@ -10209,6 +10207,7 @@ class MainController {
         .with("soal", (builder) => {
           builder.where({ dihapus: 0 });
         })
+        .where({ m_ujian_id: ujian_id })
         .whereIn("m_soal_ujian_id", soalMasterEsaiIds)
         .orderByRaw(`${diacak}`)
         .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_esai)
@@ -10243,7 +10242,7 @@ class MainController {
             ragu: 0,
             dijawab: 0,
             dinilai: 1,
-            m_soal_ujian_id: d.soal.id,
+            m_soal_ujian_id: d.m_soal_ujian_id,
             tk_peserta_ujian_id: pesertaUjian.id,
           });
         })
@@ -32800,8 +32799,6 @@ class MainController {
 
     return namaFile;
   }
-
-
 
   async notFoundPage({ response, request, auth }) {
     return `<p>Data tidak ditemukan, silahkan kembali ke <a href="http://getsmartschool.id">Smart School</a></p>`;
