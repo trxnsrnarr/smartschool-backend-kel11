@@ -34149,30 +34149,126 @@ class MainController {
             })
             .where({ dihapus: 0 });
         })
-        .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
+        .select("nama", "id", "whatsapp", "avatar", "gender", "role")
         .where({ m_sekolah_id: sekolah.id })
+        .whereIn("role", ["guru", "siswa"])
         .andWhere({ dihapus: 0 })
         .andWhere("nama", "like", `%${search}%`)
-        .paginate(page, 25);
+        .paginate(page, 10);
     } else {
-      user = await User.query()
-        .with("anggotaRombel", (builder) => {
-          builder
-            .select("m_user_id", "m_rombel_id", "dihapus")
-            .with("rombel", (builder) => {
-              builder.select("id", "nama").where({ dihapus: 0 });
-            })
-            .where({ dihapus: 0 });
-        })
-        .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
-        .where({ m_sekolah_id: sekolah.id })
-        .andWhere({ dihapus: 0 })
-        .paginate(page, 25);
+      user;
     }
 
     return response.ok({
       user: user,
     });
+  }
+
+  async detailCekNomorWhatsapp({
+    response,
+    request,
+    auth,
+    params: { user_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await User.query()
+      .select("id", "nama", "whatsapp", "email")
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ id: user_id })
+      .first();
+
+    let email1;
+    let email;
+    let emailTutup;
+    let belakangEmail;
+
+    if (user.email != null) {
+      email1 = user.email.split("@", 1)[0];
+      email = email1.slice(-2);
+      emailTutup = email1.length - 2;
+      belakangEmail = user.email.split("@")[1];
+    }
+    const nomor = user.whatsapp.slice(-4);
+    const nomorTutup = user.whatsapp.length - 4;
+    const nama = user.nama;
+
+    return response.ok({
+      nomor,
+      nomorTutup,
+      nama,
+      email,
+      emailTutup,
+      belakangEmail,
+    });
+  }
+
+  async postEmailCekNomorWhatsapp({
+    response,
+    request,
+    auth,
+    params: { user_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let { email } = request.post();
+
+    const rules = {
+      email: "required",
+    };
+    const message = {
+      "email.required": "Email harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const user = await User.query()
+      .select("id", "nama", "whatsapp", "email")
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ id: user_id })
+      .first();
+
+    if (user.email == email) {
+      try {
+        const gmail = await Mail.send(
+          `emails.lupapw`,
+          user.toJSON(),
+          (message) => {
+            message
+              .to(`${email}`)
+              .from("raihanvans@gmail.com")
+              .subject("Lupa Password");
+          }
+        );
+        if (gmail) {
+          return response.ok({
+            message: messageEmailSuccess,
+          });
+        }
+      } catch (error) {
+        // console.log(error);
+      }
+    } else {
+      return "Email tidak sesuai";
+    }
+
+    // return response.ok({
+    //   message: messagePostSuccess,
+    // });
   }
 
   async notFoundPage({ response, request, auth }) {
