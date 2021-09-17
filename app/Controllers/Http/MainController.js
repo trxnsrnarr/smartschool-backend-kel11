@@ -4586,6 +4586,7 @@ class MainController {
         await User.query()
           .where({ id: checkUser.toJSON().id })
           .update({
+            nama: d.nama,
             dihapus: 0,
             password: await Hash.make(d.password || "smarteschool"),
           });
@@ -24120,8 +24121,10 @@ class MainController {
       jenis,
       province_id,
       regency_id,
-      // district_id,
-      // village_id,
+      district_id,
+      village_id,
+      alamat_penempatan,
+      kodepos,
       jumlah_lowongan,
       bidang,
       mulai_kerja,
@@ -24133,20 +24136,22 @@ class MainController {
       keahlian,
       deskripsi,
       persyaratan_khusus,
-      range_gaji,
+      gaji_minimal,
+      gaji_maksimal,
       status_jurusan,
       jurusan,
       gender,
       tb,
       usia_minimal,
       usia_maksimal,
-      alamat,
-      kodepos,
       khusus_alumni,
       khusus_difabel,
       buta_warna,
       kacamata,
-      tes,
+      tes_psikotes,
+      tes_masuk,
+      tes_wawancara,
+      tes_kesehatan,
       lokasi_tes,
       kelengkapan_data,
       data_nilai,
@@ -24182,20 +24187,24 @@ class MainController {
       keahlian,
       deskripsi,
       persyaratan_khusus,
-      range_gaji,
+      gaji_minimal,
+      gaji_maksimal,
       status_jurusan,
       jurusan,
       gender,
       tb,
       usia_minimal,
       usia_maksimal,
-      alamat,
+      alamat_penempatan,
       kodepos,
       khusus_alumni,
       khusus_difabel,
       buta_warna,
       kacamata,
-      tes,
+      tes_psikotes,
+      tes_masuk,
+      tes_wawancara,
+      tes_kesehatan,
       lokasi_tes,
       kelengkapan_data,
       data_nilai,
@@ -34113,6 +34122,56 @@ class MainController {
 
     return response.ok({
       message: messagePutSuccess,
+    });
+  }
+
+  async getCekNomorWhatsapp({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let { search, page } = request.get();
+
+    page = page ? parseInt(page) : 1;
+    let user;
+
+    if (search) {
+      user = await User.query()
+        .with("anggotaRombel", (builder) => {
+          builder
+            .select("m_user_id", "m_rombel_id", "dihapus")
+            .with("rombel", (builder) => {
+              builder.select("id", "nama").where({ dihapus: 0 });
+            })
+            .where({ dihapus: 0 });
+        })
+        .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ dihapus: 0 })
+        .andWhere("nama", "like", `%${search}%`)
+        .paginate(page, 25);
+    } else {
+      user = await User.query()
+        .with("anggotaRombel", (builder) => {
+          builder
+            .select("m_user_id", "m_rombel_id", "dihapus")
+            .with("rombel", (builder) => {
+              builder.select("id", "nama").where({ dihapus: 0 });
+            })
+            .where({ dihapus: 0 });
+        })
+        .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ dihapus: 0 })
+        .paginate(page, 25);
+    }
+
+    return response.ok({
+      user: user,
     });
   }
 
