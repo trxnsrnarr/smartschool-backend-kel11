@@ -14113,19 +14113,19 @@ class MainController {
       .andWhere({ m_sekolah_id: sekolah.id })
     
     if(!filter_grafik || filter_grafik == "bulan"){
-      grafikData.whereBetween("created_at", [
+      grafikData.whereBetween("waktu_dibuat", [
         moment().startOf("month").format("YYYY-MM-DD 00:00:00"),
         moment().endOf("month").format("YYYY-MM-DD 23:59:59"),
       ])
     }
     if(filter_grafik == "minggu"){
-      grafikData.whereBetween("created_at", [
+      grafikData.whereBetween("waktu_dibuat", [
         moment().startOf("week").format("YYYY-MM-DD 00:00:00"),
         moment().endOf("week").format("YYYY-MM-DD 23:59:59"),
       ])
     }
     if(filter_grafik == "tahun"){
-      grafikData.whereBetween("created_at", [
+      grafikData.whereBetween("waktu_dibuat", [
         moment().startOf("year").format("YYYY-MM-DD 00:00:00"),
         moment().endOf("year").format("YYYY-MM-DD 23:59:59"),
       ])
@@ -14144,7 +14144,7 @@ class MainController {
       sarpras.andWhere({ tipe: tipe });
     }
     if (dari_tanggal && sampai_tanggal) {
-      sarpras.whereBetween("created_at", [dari_tanggal, sampai_tanggal]);
+      sarpras.whereBetween("waktu_dibuat", [dari_tanggal, sampai_tanggal]);
     }
     if (search) {
       sarpras.andWhere("nama", "like", `%${search}%`);
