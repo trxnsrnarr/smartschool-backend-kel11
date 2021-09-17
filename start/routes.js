@@ -576,6 +576,7 @@ Route.put(
 // GTK
 
 Route.post("/gtk/import", "MainController.importGTK");
+Route.post("/gtk/import-singkat", "MainController.importGTK2");
 
 Route.post("/absen/rekapdownload", "MainController.downloadRekapAbsen");
 
@@ -585,6 +586,7 @@ Route.post("/mutasi/download-mutasi", "MainController.downloadMutasi");
 
 // Rombel Service
 Route.post("/rombel/import-rombel", "MainController.importRombel");
+Route.post("/rombel/import-rombel-singkat", "MainController.importRombel2");
 Route.post("/rombel/download-rombel", "MainController.downloadRombel");
 
 // Alumni Service
@@ -910,6 +912,41 @@ Route.post(
   "MainController.postJadwalKonsultasi"
 );
 Route.post("/konsultasi/download", "MainController.downloadKonsultasi");
+
+//kalender
+Route.get("/kalender", "MainController.getKalender");
+Route.post("/kalender/label", "MainController.postLabelKalender");
+Route.put("/kalender/label/:label_id", "MainController.putLabelKalender");
+Route.delete("/kalender/label/:label_id", "MainController.deleteLabelKalender");
+
+Route.get(
+  "/kalender/kegiatan/:kegiatan_id",
+  "MainController.detailKalenderKegiatan"
+);
+Route.post("/kalender/kegiatan", "MainController.postKegiatanKalender");
+Route.put(
+  "/kalender/kegiatan/:kegiatan_id",
+  "MainController.putKegiatanKalender"
+);
+Route.delete(
+  "/kalender/kegiatan/:kegiatan_id",
+  "MainController.deleteKegiatanKalender"
+);
+
+Route.get(
+  "/kalender/pendidikan/:pendidikan_id",
+  "MainController.detailKalenderPendidikan"
+);
+Route.post("/kalender/pendidikan", "MainController.postKalenderPendidikan");
+Route.put(
+  "/kalender/pendidikan/:kalender_id",
+  "MainController.putKalenderPendidikan"
+);
+Route.delete(
+  "/kalender/pendidikan/:kalender_id",
+  "MainController.deleteKalenderPendidikan"
+);
+
 //dashboard
 Route.get("/dashboard/tugas", "MainController.getDashboardTugas");
 Route.get("/dashboard/absen", "MainController.getDashboardAbsen");
