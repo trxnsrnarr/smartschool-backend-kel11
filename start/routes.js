@@ -708,6 +708,23 @@ Route.delete("/cdc/acara/:acara_id", "MainControler.deleteAcaraPerusahaan");
 
 Route.post("/cdc/perusahaan", "MainControler.postPerusahaan");
 Route.put("/cdc/perusahaan/:perusahaan_id", "MainControler.putPerusahaan");
+Route.put(
+  "/cdc/profil-perusahaan/:perusahaan_id",
+  "MainControler.putProfilPerusahaan"
+);
+Route.put(
+  "/cdc/budaya-perusahaan/:perusahaan_id",
+  "MainControler.putBudayaPerusahaan"
+);
+Route.put(
+  "/cdc/informasi-perusahaan/:perusahaan_id",
+  "MainControler.putInformasiPerusahaan"
+);
+Route.put(
+  "/cdc/tautan-perusahaan/:perusahaan_id",
+  "MainControler.putTautanPerusahaan"
+);
+
 Route.delete(
   "/cdc/perusahaan/:perusahaan_id",
   "MainControler.deletePerusahaan"
@@ -945,6 +962,16 @@ Route.put(
 Route.delete(
   "/kalender/pendidikan/:kalender_id",
   "MainController.deleteKalenderPendidikan"
+);
+
+Route.get("/cek-nomor-whatsapp", "MainController.getCekNomorWhatsapp");
+Route.get(
+  "/cek-nomor-whatsapp/:user_id",
+  "MainController.detailCekNomorWhatsapp"
+);
+Route.post(
+  "/cek-nomor-whatsapp/:user_id",
+  "MainController.postEmailCekNomorWhatsapp"
 );
 
 //dashboard
