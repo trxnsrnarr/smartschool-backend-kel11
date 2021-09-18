@@ -8429,7 +8429,8 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { nama, tipe, tingkat, m_mata_pelajaran_id } = request.post();
+    const { nama, tipe, tingkat, m_mata_pelajaran_id, ujian_id } =
+      request.post();
 
     const rules = {
       nama: "required",
@@ -8455,6 +8456,20 @@ class MainController {
       m_user_id: user.id,
       dihapus: 0,
     });
+
+    if (ujian_id) {
+      const soalIds = await TkSoalUjian.query()
+        .where({ m_ujian_id: ujian_id })
+        .andWhere({ dihapus: 0 })
+        .pluck("m_soal_ujian_id");
+      soalIds.map((item) => {
+        await TkSoalUjian.create({
+          m_ujian_id: ujian.id,
+          m_soal_ujian_id: item,
+          dihapus: 0,
+        });
+      });
+    }
 
     return response.ok({
       message: messagePostSuccess,
@@ -14104,32 +14119,33 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { search, dari_tanggal, sampai_tanggal, tipe, offset, filter_grafik } = request.get();
+    let { search, dari_tanggal, sampai_tanggal, tipe, offset, filter_grafik } =
+      request.get();
     offset = offset ? parseInt(offset) : 0;
 
     let grafikData = MMutasi.query()
       .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-    
-    if(!filter_grafik || filter_grafik == "bulan"){
+      .andWhere({ m_sekolah_id: sekolah.id });
+
+    if (!filter_grafik || filter_grafik == "bulan") {
       grafikData.whereBetween("waktu_dibuat", [
         moment().startOf("month").format("YYYY-MM-DD 00:00:00"),
         moment().endOf("month").format("YYYY-MM-DD 23:59:59"),
-      ])
+      ]);
     }
-    if(filter_grafik == "minggu"){
+    if (filter_grafik == "minggu") {
       grafikData.whereBetween("waktu_dibuat", [
         moment().startOf("week").format("YYYY-MM-DD 00:00:00"),
         moment().endOf("week").format("YYYY-MM-DD 23:59:59"),
-      ])
+      ]);
     }
-    if(filter_grafik == "tahun"){
+    if (filter_grafik == "tahun") {
       grafikData.whereBetween("waktu_dibuat", [
         moment().startOf("year").format("YYYY-MM-DD 00:00:00"),
         moment().endOf("year").format("YYYY-MM-DD 23:59:59"),
-      ])
+      ]);
     }
-    grafikData = await grafikData.fetch()
+    grafikData = await grafikData.fetch();
 
     let sarpras;
 
@@ -14153,7 +14169,7 @@ class MainController {
 
     return response.ok({
       sarpras: sarpras,
-      grafik: grafikData
+      grafik: grafikData,
     });
   }
 
