@@ -8462,7 +8462,7 @@ class MainController {
         .where({ m_ujian_id: ujian_id })
         .andWhere({ dihapus: 0 })
         .pluck("m_soal_ujian_id");
-      soalIds.map((item) => {
+      soalIds.map(async (item) => {
         await TkSoalUjian.create({
           m_ujian_id: ujian.id,
           m_soal_ujian_id: item,
