@@ -9400,7 +9400,9 @@ class MainController {
               .where("waktu_dibuka", "<=", hari_ini)
               .andWhere("waktu_ditutup", ">", hari_ini);
           })
-          .with("peserta")
+          .with("peserta", (builder) => {
+            builder.where({ m_user_id: user.id });
+          })
           .where({ dihapus: 0 })
           .whereIn("m_rombel_id", anggotaRombel)
           .fetch();
