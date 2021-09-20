@@ -29895,11 +29895,11 @@ class MainController {
 
       timeline = [
         ...timeline2.toJSON().filter((item) => {
-          if (item.m_tugas_id) {
-            return item.tugas ? true : false;
+          if (item.m_tugas_id && !item.tugas) {
+            return false;
           }
-          if (item.m_mata_pelajaran_id) {
-            return item.mataPelajaran ? true : false;
+          if (item.m_mata_pelajaran_id && !item.mataPelajaran) {
+            return false;
           } else {
             return true;
           }
