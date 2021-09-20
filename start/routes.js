@@ -700,6 +700,7 @@ Route.get(
   "/cdc/cari-perusahaan/:perusahaan_id",
   "MainController.detailPerusahaan"
 );
+Route.get("/cdc/sekolah/:sekolah_id", "MainController.detailSekolah");
 Route.get("/cdc/acara", "MainController.getAcaraPerusahaan");
 Route.get("/cdc/acara/:acara_id", "MainController.detailAcaraPerusahaan");
 Route.post("/cdc/acara", "MainControler.postAcaraPerusahaan");
