@@ -24210,6 +24210,9 @@ class MainController {
       data_nilai,
     });
 
+    if (tes_psikotes == 1) {
+    }
+
     return response.ok({
       message: messagePostSuccess,
     });
@@ -26857,7 +26860,10 @@ class MainController {
     const ta = await this.getTAAktif(sekolah);
 
     const rombel = await MRombel.query()
-      .select("id", "nama")
+      .with("jurusan", (builder) => {
+        builder.select("id", "nama");
+      })
+      .select("id", "nama", "m_jurusan_id")
       .with("anggotaRombel", (builder) => {
         builder
           .where({ dihapus: 0 })
@@ -34244,16 +34250,12 @@ class MainController {
 
     if (user.email == email) {
       try {
-        const gmail = await Mail.send(
-          `emails.lupapw`,
-          user.toJSON(),
-          (message) => {
-            message
-              .to(`${email}`)
-              .from("raihanvans@gmail.com")
-              .subject("Lupa Password");
-          }
-        );
+        const gmail = Mail.send(`emails.lupapw`, user.toJSON(), (message) => {
+          message
+            .to(`${email}`)
+            .from("raihanvans@gmail.com")
+            .subject("Lupa Password");
+        });
         if (gmail) {
           return response.ok({
             message: messageEmailSuccess,
@@ -34269,6 +34271,202 @@ class MainController {
     // return response.ok({
     //   message: messagePostSuccess,
     // });
+  }
+
+  async postUserBaru({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      gender,
+      nama,
+      whatsapp,
+      email,
+      rombel_id,
+      mapel_id,
+      password,
+      avatar,
+      role,
+    } = request.post();
+
+    let validation = await validate(
+      request.post(),
+      rulesUserPost,
+      messagesUser
+    );
+
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const check = await User.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ whatsapp: whatsapp })
+      .first();
+    if (!check) {
+      const user = await User.create({
+        nama,
+        whatsapp,
+        gender,
+        password: password,
+        role,
+        m_sekolah_id: sekolah.id,
+        dihapus: 0,
+        avatar,
+      });
+
+      if (role == "siswa") {
+        await MAnggotaRombel.create({
+          role: "anggota",
+          dihapus: 0,
+          m_user_id: user.id,
+          m_rombel_id: rombel_id,
+        });
+      }
+    } else {
+      const guru = await User.query()
+        .where({ id: check.toJSON().id })
+        .update({ dihapus: 0 });
+    }
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async postUserCDC({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      nama,
+      whatsapp,
+      password,
+      jurusan,
+      tahun_lulus,
+      nama_perusahaan,
+      posisi,
+      tanggal_mulai,
+      alamar,
+      province_id,
+      regency_id,
+      kode_pos,
+      nama_perguruan_tinggi,
+      program_pendidikan,
+      fakultas,
+      prodi,
+      gender,
+      email,
+      rombel_id,
+      mapel_id,
+      avatar,
+      role,
+    } = request.post();
+
+    let validation = await validate(
+      request.post(),
+      rulesUserPost,
+      messagesUser
+    );
+
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const check = await User.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ whatsapp: whatsapp })
+      .first();
+    if (!check) {
+      const user = await User.create({
+        nama,
+        whatsapp,
+        gender,
+        password: password,
+        role,
+        m_sekolah_id: sekolah.id,
+        dihapus: 0,
+        avatar,
+      });
+
+      if (role == "siswa") {
+        await MAnggotaRombel.create({
+          role: "anggota",
+          dihapus: 0,
+          m_user_id: user.id,
+          m_rombel_id: rombel_id,
+        });
+      }
+    } else {
+      const guru = await User.query()
+        .where({ id: check.toJSON().id })
+        .update({ dihapus: 0 });
+    }
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async detailSekolah({ response, request, auth, params: { sekolah_id } }) {
+    const domain = request.headers().origin;
+
+    const ta = await Mta.query()
+      .where({ m_sekolah_id: sekolah_id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ aktif: 1 })
+      .first();
+
+    const user = await auth.getUser();
+    // const { rombel_id } = request.post();
+    const sekolah = await MSekolah.query()
+      .with("informasi")
+      .with("jurusan", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .with("rombel", (builder) => {
+        builder
+          .where({ dihapus: 0 })
+          .andWhere({ kelompok: "ekskul" })
+          .andWhere({ m_ta_id: ta.id });
+      })
+      .where({ id: sekolah_id })
+      .first();
+
+    const prestasi = await MPrestasi.query()
+      .with("tingkatPrestasi", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .where({ m_sekolah_id: sekolah_id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    const tingkat = await MPenghargaan.query()
+      .withCount("prestasi as tingkatnya", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .where({ m_sekolah_id: sekolah_id })
+      .fetch();
+
+    return response.ok({
+      sekolah,
+      prestasi,
+      tingkat,
+    });
   }
 
   async notFoundPage({ response, request, auth }) {
