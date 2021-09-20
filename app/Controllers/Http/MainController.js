@@ -13864,7 +13864,9 @@ class MainController {
 
     const pembayaran = await MPembayaranSiswa.query()
       .with("rombelPembayaran", (builder) => {
-        builder.with("pembayaran");
+        builder.with("pembayaran", (builder) => {
+          builder.where({dihapus: 0})
+        });
       })
       .with("riwayat", (builder) => {
         builder.where({ dihapus: 0 });
@@ -13878,7 +13880,7 @@ class MainController {
       .fetch();
 
     return response.ok({
-      pembayaran: pembayaran,
+      pembayaran: pembayaran.toJSON().filter(item => item.rombelPembayaran.pembayaran),
       rek_sekolah: rekSekolah,
     });
   }
