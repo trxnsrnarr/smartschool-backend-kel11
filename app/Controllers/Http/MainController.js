@@ -29867,7 +29867,9 @@ class MainController {
         })
         .with("user")
         .with("rombel")
-        .with("mataPelajaran")
+        .with("mataPelajaran", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
         .with("komen", (builder) => {
           builder.with("user").where({ dihapus: 0 });
         })
@@ -29895,6 +29897,9 @@ class MainController {
         ...timeline2.toJSON().filter((item) => {
           if (item.m_tugas_id) {
             return item.tugas ? true : false;
+          }
+          if (item.m_mata_pelajaran_id) {
+            return item.mataPelajaran ? true : false;
           } else {
             return true;
           }
