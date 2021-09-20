@@ -8430,7 +8430,8 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { nama, tipe, tingkat, m_mata_pelajaran_id } = request.post();
+    const { nama, tipe, tingkat, m_mata_pelajaran_id, ujian_id } =
+      request.post();
 
     const rules = {
       nama: "required",
@@ -8456,6 +8457,20 @@ class MainController {
       m_user_id: user.id,
       dihapus: 0,
     });
+
+    if (ujian_id) {
+      const soalIds = await TkSoalUjian.query()
+        .where({ m_ujian_id: ujian_id })
+        .andWhere({ dihapus: 0 })
+        .pluck("m_soal_ujian_id");
+      soalIds.map(async (item) => {
+        await TkSoalUjian.create({
+          m_ujian_id: ujian.id,
+          m_soal_ujian_id: item,
+          dihapus: 0,
+        });
+      });
+    }
 
     return response.ok({
       message: messagePostSuccess,
@@ -9386,7 +9401,9 @@ class MainController {
               .where("waktu_dibuka", "<=", hari_ini)
               .andWhere("waktu_ditutup", ">", hari_ini);
           })
-          .with("peserta")
+          .with("peserta", (builder) => {
+            builder.where({ m_user_id: user.id });
+          })
           .where({ dihapus: 0 })
           .whereIn("m_rombel_id", anggotaRombel)
           .fetch();
@@ -10190,9 +10207,7 @@ class MainController {
         .ids();
 
       const soalPG = await TkSoalUjian.query()
-        .with("soal", (builder) => {
-          builder.where({ dihapus: 0 });
-        })
+        .where({ m_ujian_id: ujian_id })
         .whereIn("m_soal_ujian_id", soalMasterPGIds)
         .orderByRaw(`${diacak}`)
         .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_pg)
@@ -10214,6 +10229,7 @@ class MainController {
         .with("soal", (builder) => {
           builder.where({ dihapus: 0 });
         })
+        .where({ m_ujian_id: ujian_id })
         .whereIn("m_soal_ujian_id", soalMasterEsaiIds)
         .orderByRaw(`${diacak}`)
         .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_esai)
@@ -10248,7 +10264,7 @@ class MainController {
             ragu: 0,
             dijawab: 0,
             dinilai: 1,
-            m_soal_ujian_id: d.soal.id,
+            m_soal_ujian_id: d.m_soal_ujian_id,
             tk_peserta_ujian_id: pesertaUjian.id,
           });
         })
@@ -13397,6 +13413,10 @@ class MainController {
         siswa.whereIn("m_user_id", userIds);
       }
     }
+    if (nav == "belum-lunas") {
+      siswa.where({ status: "belum lunas" });
+    }
+
     siswa = await siswa.fetch();
 
     return response.ok({
@@ -13546,7 +13566,7 @@ class MainController {
                   });
                   if (e.user.email != null) {
                     try {
-                      const gmail = await Mail.send(
+                      const gmail = Mail.send(
                         `emails.spp`,
                         pembayaran.toJSON(),
                         (message) => {
@@ -13702,7 +13722,7 @@ class MainController {
                   });
                   if (e.user.email != null) {
                     try {
-                      const gmail = await Mail.send(
+                      const gmail = Mail.send(
                         `emails.spp`,
                         pembayaran.toJSON(),
                         (message) => {
@@ -13845,7 +13865,9 @@ class MainController {
 
     const pembayaran = await MPembayaranSiswa.query()
       .with("rombelPembayaran", (builder) => {
-        builder.with("pembayaran");
+        builder.with("pembayaran", (builder) => {
+          builder.where({ dihapus: 0 });
+        });
       })
       .with("riwayat", (builder) => {
         builder.where({ dihapus: 0 });
@@ -13859,7 +13881,9 @@ class MainController {
       .fetch();
 
     return response.ok({
-      pembayaran: pembayaran,
+      pembayaran: pembayaran
+        .toJSON()
+        .filter((item) => item.rombelPembayaran.pembayaran),
       rek_sekolah: rekSekolah,
     });
   }
@@ -14102,73 +14126,57 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { search, dari_tanggal, sampai_tanggal, tipe, offset } = request.get();
+    let { search, dari_tanggal, sampai_tanggal, tipe, offset, filter_grafik } =
+      request.get();
     offset = offset ? parseInt(offset) : 0;
+
+    let grafikData = MMutasi.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id });
+
+    if (!filter_grafik || filter_grafik == "bulan") {
+      grafikData.whereBetween("waktu_dibuat", [
+        moment().startOf("month").format("YYYY-MM-DD 00:00:00"),
+        moment().endOf("month").format("YYYY-MM-DD 23:59:59"),
+      ]);
+    }
+    if (filter_grafik == "minggu") {
+      grafikData.whereBetween("waktu_dibuat", [
+        moment().startOf("week").format("YYYY-MM-DD 00:00:00"),
+        moment().endOf("week").format("YYYY-MM-DD 23:59:59"),
+      ]);
+    }
+    if (filter_grafik == "tahun") {
+      grafikData.whereBetween("waktu_dibuat", [
+        moment().startOf("year").format("YYYY-MM-DD 00:00:00"),
+        moment().endOf("year").format("YYYY-MM-DD 23:59:59"),
+      ]);
+    }
+    grafikData = await grafikData.fetch();
 
     let sarpras;
 
-    if (search) {
-      if (dari_tanggal || sampai_tanggal || tipe) {
-        if (tipe) {
-          sarpras = await MMutasi.query()
-            .where({ dihapus: 0 })
-            .andWhere({ m_sekolah_id: sekolah.id })
-            .andWhere({ tipe: tipe })
-            .andWhere("nama", "like", `%${search}%`)
-            .whereBetween("waktu_dibuat", [dari_tanggal, sampai_tanggal])
-            .offset(offset)
-            .limit(25)
-            .fetch();
-        } else {
-          sarpras = await MMutasi.query()
-            .where({ dihapus: 0 })
-            .andWhere({ m_sekolah_id: sekolah.id })
-            .andWhere("nama", "like", `%${search}%`)
-            .whereBetween("waktu_dibuat", [dari_tanggal, sampai_tanggal])
-            .offset(offset)
-            .limit(25)
-            .fetch();
-        }
-      } else {
-        sarpras = await MMutasi.query()
-          .where({ dihapus: 0 })
-          .andWhere({ m_sekolah_id: sekolah.id })
-          .andWhere("nama", "like", `%${search}%`)
-          .offset(offset)
-          .limit(25)
-          .fetch();
-      }
-    } else {
-      if (dari_tanggal || sampai_tanggal || tipe) {
-        if (tipe) {
-          sarpras = await MMutasi.query()
-            .where({ dihapus: 0 })
-            .andWhere({ m_sekolah_id: sekolah.id })
-            .andWhere({ tipe: tipe })
-            .offset(offset)
-            .limit(25)
-            .fetch();
-        } else {
-          sarpras = await MMutasi.query()
-            .where({ dihapus: 0 })
-            .andWhere({ m_sekolah_id: sekolah.id })
-            .whereBetween("waktu_dibuat", [dari_tanggal, sampai_tanggal])
-            .offset(offset)
-            .limit(25)
-            .fetch();
-        }
-      } else {
-        sarpras = await MMutasi.query()
-          .where({ dihapus: 0 })
-          .andWhere({ m_sekolah_id: sekolah.id })
-          .offset(offset)
-          .limit(25)
-          .fetch();
-      }
+    sarpras = MMutasi.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .offset(offset)
+      .limit(25);
+
+    if (tipe) {
+      sarpras.andWhere({ tipe: tipe });
     }
+    if (dari_tanggal && sampai_tanggal) {
+      sarpras.whereBetween("waktu_dibuat", [dari_tanggal, sampai_tanggal]);
+    }
+    if (search) {
+      sarpras.andWhere("nama", "like", `%${search}%`);
+    }
+
+    sarpras = await sarpras.fetch();
 
     return response.ok({
       sarpras: sarpras,
+      grafik: grafikData,
     });
   }
 
@@ -29840,7 +29848,9 @@ class MainController {
     let timeline;
     if (user.role == "guru") {
       const timeline1 = await MTimeline.query()
-        .with("tugas")
+        .with("tugas", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
         .with("user")
         .with("rombel")
         .with("komen", (builder) => {
@@ -29867,10 +29877,14 @@ class MainController {
         .fetch();
 
       const timeline2 = await MTimeline.query()
-        .with("tugas")
+        .with("tugas", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
         .with("user")
         .with("rombel")
-        .with("mataPelajaran")
+        .with("mataPelajaran", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
         .with("komen", (builder) => {
           builder.with("user").where({ dihapus: 0 });
         })
@@ -29894,7 +29908,25 @@ class MainController {
         .offset(0)
         .fetch();
 
-      timeline = [...timeline2.toJSON(), ...timeline1.toJSON()];
+      timeline = [
+        ...timeline2.toJSON().filter((item) => {
+          if (item.m_tugas_id && !item.tugas) {
+            return false;
+          }
+          if (item.m_mata_pelajaran_id && !item.mataPelajaran) {
+            return false;
+          } else {
+            return true;
+          }
+        }),
+        ...timeline1.toJSON().filter((item) => {
+          if (item.m_tugas_id) {
+            return item.tugas ? true : false;
+          } else {
+            return true;
+          }
+        }),
+      ];
 
       const timelineData = timeline.filter((d) => {
         if (d.tipe == "absen") {
