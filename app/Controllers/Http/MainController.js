@@ -13565,7 +13565,7 @@ class MainController {
                   });
                   if (e.user.email != null) {
                     try {
-                      const gmail = await Mail.send(
+                      const gmail = Mail.send(
                         `emails.spp`,
                         pembayaran.toJSON(),
                         (message) => {
@@ -13721,7 +13721,7 @@ class MainController {
                   });
                   if (e.user.email != null) {
                     try {
-                      const gmail = await Mail.send(
+                      const gmail = Mail.send(
                         `emails.spp`,
                         pembayaran.toJSON(),
                         (message) => {
