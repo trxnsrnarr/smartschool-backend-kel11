@@ -13865,7 +13865,7 @@ class MainController {
     const pembayaran = await MPembayaranSiswa.query()
       .with("rombelPembayaran", (builder) => {
         builder.with("pembayaran", (builder) => {
-          builder.where({dihapus: 0})
+          builder.where({ dihapus: 0 });
         });
       })
       .with("riwayat", (builder) => {
@@ -13880,7 +13880,9 @@ class MainController {
       .fetch();
 
     return response.ok({
-      pembayaran: pembayaran.toJSON().filter(item => item.rombelPembayaran.pembayaran),
+      pembayaran: pembayaran
+        .toJSON()
+        .filter((item) => item.rombelPembayaran.pembayaran),
       rek_sekolah: rekSekolah,
     });
   }
@@ -29831,7 +29833,9 @@ class MainController {
     let timeline;
     if (user.role == "guru") {
       const timeline1 = await MTimeline.query()
-        .with("tugas")
+        .with("tugas", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
         .with("user")
         .with("rombel")
         .with("komen", (builder) => {
@@ -29858,7 +29862,9 @@ class MainController {
         .fetch();
 
       const timeline2 = await MTimeline.query()
-        .with("tugas")
+        .with("tugas", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
         .with("user")
         .with("rombel")
         .with("mataPelajaran")
@@ -29885,7 +29891,22 @@ class MainController {
         .offset(0)
         .fetch();
 
-      timeline = [...timeline2.toJSON(), ...timeline1.toJSON()];
+      timeline = [
+        ...timeline2.toJSON().filter((item) => {
+          if (item.m_tugas_id) {
+            return item.tugas ? true : false;
+          } else {
+            return true;
+          }
+        }),
+        ...timeline1.toJSON().filter((item) => {
+          if (item.m_tugas_id) {
+            return item.tugas ? true : false;
+          } else {
+            return true;
+          }
+        }),
+      ];
 
       const timelineData = timeline.filter((d) => {
         if (d.tipe == "absen") {
