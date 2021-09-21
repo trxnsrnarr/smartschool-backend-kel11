@@ -26839,10 +26839,16 @@ class MainController {
           .select("id", "m_rombel_id", "m_user_id")
           .with("rombel", (builder) => {
             builder
-              .select("id", "nama")
+              .select("id", "nama","m_ta_id","m_sekolah_id","m_jurusan_id")
+              .with("jurusan",(builder)=>{
+                builder.select("id","nama")
+              })
               .where({ m_ta_id: ta.id })
               .andWhere({ m_sekolah_id: sekolah.id });
           });
+      })
+      .with("profil",(builder)=>{
+        builder.select("m_user_id","nisn")
       })
       .select("id", "nama", "whatsapp")
       .where({ m_sekolah_id: sekolah.id })
