@@ -6296,36 +6296,36 @@ class MainController {
                 dikumpulkan: 0,
               });
 
-              try {
-                if (d.user.email != null) {
-                  const task = cron.schedule(
-                    `${menit} ${jam} ${tanggal} ${bulan} *`,
-                    () => {
-                      Mail.send(
-                        `emails.tugas`,
-                        {
-                          ...sekolah.toJSON(),
-                          timelineid: timeline.id,
-                          namaguru: user.nama,
-                          mataPelajaran: mapel.nama,
-                          judulTugas: judul,
-                        },
-                        (message) => {
-                          message
-                            .to(`${d.user.email}`)
-                            .from("no-reply@smarteschool.id")
-                            .subject("Ada Tugas Baru");
-                        }
-                      );
-                    },
-                    {
-                      scheduled: true,
-                      timezone: "Asia/Jakarta",
-                    }
-                  );
-                  return task;
-                }
-              } catch (error) {}
+              // try {
+              //   if (d.user.email != null) {
+              //     const task = cron.schedule(
+              //       `${menit} ${jam} ${tanggal} ${bulan} *`,
+              //       () => {
+              //         Mail.send(
+              //           `emails.tugas`,
+              //           {
+              //             ...sekolah.toJSON(),
+              //             timelineid: timeline.id,
+              //             namaguru: user.nama,
+              //             mataPelajaran: mapel.nama,
+              //             judulTugas: judul,
+              //           },
+              //           (message) => {
+              //             message
+              //               .to(`${d.user.email}`)
+              //               .from("no-reply@smarteschool.id")
+              //               .subject("Ada Tugas Baru");
+              //           }
+              //         );
+              //       },
+              //       {
+              //         scheduled: true,
+              //         timezone: "Asia/Jakarta",
+              //       }
+              //     );
+              //     return task;
+              //   }
+              // } catch (error) {}
             })
           );
         } else {
@@ -6342,36 +6342,36 @@ class MainController {
                       dikumpulkan: 0,
                     });
                   }
-                  try {
-                    if (d.user.email != null) {
-                      const task = cron.schedule(
-                        `${menit} ${jam} ${tanggal} ${bulan} *`,
-                        () => {
-                          Mail.send(
-                            `emails.tugas`,
-                            {
-                              ...sekolah.toJSON(),
-                              timelineid: timeline.id,
-                              namaguru: user.nama,
-                              mataPelajaran: mapel.nama,
-                              judulTugas: judul,
-                            },
-                            (message) => {
-                              message
-                                .to(`${d.user.email}`)
-                                .from("no-reply@smarteschool.id")
-                                .subject("Ada Tugas Baru");
-                            }
-                          );
-                        },
-                        {
-                          scheduled: true,
-                          timezone: "Asia/Jakarta",
-                        }
-                      );
-                      return task;
-                    }
-                  } catch (error) {}
+                  // try {
+                  //   if (d.user.email != null) {
+                  //     const task = cron.schedule(
+                  //       `${menit} ${jam} ${tanggal} ${bulan} *`,
+                  //       () => {
+                  //         Mail.send(
+                  //           `emails.tugas`,
+                  //           {
+                  //             ...sekolah.toJSON(),
+                  //             timelineid: timeline.id,
+                  //             namaguru: user.nama,
+                  //             mataPelajaran: mapel.nama,
+                  //             judulTugas: judul,
+                  //           },
+                  //           (message) => {
+                  //             message
+                  //               .to(`${d.user.email}`)
+                  //               .from("no-reply@smarteschool.id")
+                  //               .subject("Ada Tugas Baru");
+                  //           }
+                  //         );
+                  //       },
+                  //       {
+                  //         scheduled: true,
+                  //         timezone: "Asia/Jakarta",
+                  //       }
+                  //     );
+                  //     return task;
+                  //   }
+                  // } catch (error) {}
                 })
               );
             })
@@ -13563,22 +13563,22 @@ class MainController {
                     tk_pembayaran_rombel_id: tkPembayaran.id,
                     m_sekolah_id: sekolah.id,
                   });
-                  if (e.user.email != null) {
-                    try {
-                      const gmail = Mail.send(
-                        `emails.spp`,
-                        pembayaran.toJSON(),
-                        (message) => {
-                          message
-                            .to(`${e.user.email}`)
-                            .from("no-reply@smarteschool.id")
-                            .subject("Pembayaran SPP");
-                        }
-                      );
-                    } catch (error) {
-                      // console.log(error);
-                    }
-                  }
+                  // if (e.user.email != null) {
+                    // try {
+                    //   const gmail = Mail.send(
+                    //     `emails.spp`,
+                    //     pembayaran.toJSON(),
+                    //     (message) => {
+                    //       message
+                    //         .to(`${e.user.email}`)
+                    //         .from("no-reply@smarteschool.id")
+                    //         .subject("Pembayaran SPP");
+                    //     }
+                    //   );
+                    // } catch (error) {
+                    //   // console.log(error);
+                    // }
+                  // }
                 })
             );
           }
@@ -13719,22 +13719,22 @@ class MainController {
                     tk_pembayaran_rombel_id: tkPembayaran.id,
                     m_sekolah_id: sekolah.id,
                   });
-                  if (e.user.email != null) {
-                    try {
-                      const gmail = Mail.send(
-                        `emails.spp`,
-                        pembayaran.toJSON(),
-                        (message) => {
-                          message
-                            .to(`${e.user.email}`)
-                            .from("no-reply@smarteschool.id")
-                            .subject("Pembayaran SPP");
-                        }
-                      );
-                    } catch (error) {
-                      // console.log(error);
-                    }
-                  }
+                  // if (e.user.email != null) {
+                  //   try {
+                  //     const gmail = Mail.send(
+                  //       `emails.spp`,
+                  //       pembayaran.toJSON(),
+                  //       (message) => {
+                  //         message
+                  //           .to(`${e.user.email}`)
+                  //           .from("no-reply@smarteschool.id")
+                  //           .subject("Pembayaran SPP");
+                  //       }
+                  //     );
+                  //   } catch (error) {
+                  //     // console.log(error);
+                  //   }
+                  // }
                 })
             );
           }
@@ -28142,21 +28142,21 @@ class MainController {
     // });
     // const data = [jadwalMengajar, user];
 
-    const task = cron.schedule(
-      `${menit} ${jam} ${tanggal} ${bulan} *`,
-      () => {
-        Mail.send(`emails.sppbayar`, user.toJSON(), (message) => {
-          message
-            .to(`raihanvans@gmail.com`)
-            .from("no-reply@smarteschool.id")
-            .subject("SPP terkonfirmasi");
-        });
-      },
-      {
-        scheduled: true,
-        timezone: "Asia/Jakarta",
-      }
-    );
+    // const task = cron.schedule(
+    //   `${menit} ${jam} ${tanggal} ${bulan} *`,
+    //   () => {
+    //     Mail.send(`emails.sppbayar`, user.toJSON(), (message) => {
+    //       message
+    //         .to(`raihanvans@gmail.com`)
+    //         .from("no-reply@smarteschool.id")
+    //         .subject("SPP terkonfirmasi");
+    //     });
+    //   },
+    //   {
+    //     scheduled: true,
+    //     timezone: "Asia/Jakarta",
+    //   }
+    // );
 
     // const gmail = await Mail.send(
     //   `emails.sppbayar`,
