@@ -20184,7 +20184,7 @@ class MainController {
 
   async daftarsekolah({ response, request }) {
     const sekolah = await MSekolah.query()
-      .select("id", "nama", "page", "logo")
+      .select("id", "nama", "logo")
       .fetch();
 
     return sekolah;
