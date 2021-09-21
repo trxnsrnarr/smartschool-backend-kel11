@@ -7,6 +7,9 @@ class MPenghargaan extends Model {
   static get table() {
     return "m_penghargaan";
   }
+  prestasi() {
+    return this.hasMany("App/Models/MPrestasi", "id", "tingkat");
+  }
 }
 
 module.exports = MPenghargaan;
