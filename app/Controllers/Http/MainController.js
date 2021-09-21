@@ -26940,7 +26940,9 @@ class MainController {
         builder.where({ dihapus: 0 });
       })
       .with("pelanggaranSiswa", (builder) => {
-        builder.where({ dihapus: 0 });
+        builder.with("pelanggaran").with("userPelapor",(builder)=>{
+          builder.select("id","nama")
+        }).where({ dihapus: 0 });
       })
       .with("sanksiSiswa", (builder) => {
         builder.where({ dihapus: 0 });
