@@ -10247,6 +10247,7 @@ class MainController {
         });
       }
 
+      const trx = await Database.beginTransaction()
       const pesertaUjian = await TkPesertaUjian.create({
         waktu_mulai,
         dinilai: 0,
@@ -10254,7 +10255,7 @@ class MainController {
         dihapus: 0,
         m_user_id: user.id,
         tk_jadwal_ujian_id: tk_jadwal_ujian_id,
-      });
+      }, trx);
 
       await Promise.all(
         soalPG.toJSON().map(async (d) => {
@@ -10282,7 +10283,8 @@ class MainController {
         })
       );
 
-      await TkJawabanUjianSiswa.createMany(soalData);
+      await TkJawabanUjianSiswa.createMany(soalData, trx);
+      await trx.commit()
 
       const res = await jadwalUjianReference.add({
         tk_jadwal_ujian_id: tk_jadwal_ujian_id,
