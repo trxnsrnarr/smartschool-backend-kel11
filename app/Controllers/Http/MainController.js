@@ -14080,7 +14080,12 @@ class MainController {
   async putLunasPembayaranSiswa({
     response,
     request,
-    params: { riwayat_pembayaran_siswa_id,user_id,m_pembayaran_siswa_id ,m_pembayaran_id},
+    params: {
+      riwayat_pembayaran_siswa_id,
+      user_id,
+      m_pembayaran_siswa_id,
+      m_pembayaran_id,
+    },
     auth,
   }) {
     const domain = request.headers().origin;
@@ -14097,11 +14102,11 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    const pembayaranUtama = await MPembayaran.query().where({id:m_pembayaran_id}).first()
+    const pembayaranUtama = await MPembayaran.query()
+      .where({ id: m_pembayaran_id })
+      .first();
 
-    await MPembayaranSiswa.query()
-    .where({ id: m_pembayaran_siswa_id })
-    .update({
+    await MPembayaranSiswa.query().where({ id: m_pembayaran_siswa_id }).update({
       status: "lunas",
     });
 
@@ -14115,6 +14120,26 @@ class MainController {
       m_pembayaran_siswa_id: +m_pembayaran_siswa_id,
       dihapus: 0,
     });
+
+    const mutasi = await MMutasi.create({
+      tipe: "kredit",
+      nama: `Pembayaran ${pembayaranUtama.nama} ${
+        pembayaranUtama.jenis == "spp" ? pembayaranUtama.bulan : ""
+      }-${riwayat.toJSON().user.nama}`,
+      kategori: `pembayaran ${pembayaranUtama.jenis}`,
+      nominal: pembayaranUtama.nominal,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+      waktu_dibuat: pembayaran.created_at,
+    });
+
+    const rekSekolah = await MRekSekolah.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .first();
+
+    await MRekSekolah.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .update({ pemasukan: rekSekolah.pemasukan + pembayaranSiswa.nominal });
 
     return response.ok(pembayaran);
   }
@@ -19657,204 +19682,202 @@ class MainController {
 
     let workbook = new Excel.Workbook();
 
+    await Promise.all(
+      pembayaran.toJSON().rombel.map(async (e, idx) => {
+        let worksheet = workbook.addWorksheet(`${idx + 1}.${e.rombel.nama}`);
+        worksheet.getCell("A1").value = `Rekap Pembayaran ${pembayaran.jenis}`;
+        worksheet.getCell("A2").value = sekolah.nama;
+        worksheet.getCell("A3").value = ta.tahun;
+        worksheet.getCell("A5").value = pembayaran.nama;
+        worksheet.getCell("A6").value = e.rombel.nama;
+        worksheet.getCell("A7").value = pembayaran.bulan;
+        worksheet.getCell(
+          "A8"
+        ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+        worksheet.mergeCells(`A1:I1`);
+        worksheet.mergeCells(`A2:I2`);
+        worksheet.mergeCells(`A3:I3`);
+        worksheet.mergeCells(`A5:I5`);
+        worksheet.mergeCells(`A6:I6`);
+        worksheet.mergeCells(`A7:I7`);
+        worksheet.addConditionalFormatting({
+          ref: "A1:I3",
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 16,
+                  bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+              },
+            },
+          ],
+        });
+        worksheet.addConditionalFormatting({
+          ref: "A5:I7",
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 14,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+              },
+            },
+          ],
+        });
+
+        worksheet.addConditionalFormatting({
+          ref: "A9:I9",
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 14,
+                  bold: true,
+                },
+                fill: {
+                  type: "pattern",
+                  pattern: "solid",
+                  bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet.addConditionalFormatting({
+          ref: "A10:A109",
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+              },
+            },
+          ],
+        });
+        const dataFilter = await Promise.all(
+          e.siswa.filter((siswa) => siswa != null)
+        );
         await Promise.all(
-          pembayaran.toJSON().rombel.map(async (e, idx) => {
-            let worksheet = workbook.addWorksheet(
-              `${idx + 1}.${e.rombel.nama}`
-            );
-            worksheet.getCell("A1").value = `Rekap Pembayaran ${pembayaran.jenis}`;
-            worksheet.getCell("A2").value = sekolah.nama;
-            worksheet.getCell("A3").value = ta.tahun;
-            worksheet.getCell("A5").value = pembayaran.nama;
-            worksheet.getCell("A6").value = e.rombel.nama;
-            worksheet.getCell("A7").value = pembayaran.bulan;
-            worksheet.getCell(
-              "A8"
-            ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
-            worksheet.mergeCells(`A1:I1`);
-            worksheet.mergeCells(`A2:I2`);
-            worksheet.mergeCells(`A3:I3`);
-            worksheet.mergeCells(`A5:I5`);
-            worksheet.mergeCells(`A6:I6`);
-            worksheet.mergeCells(`A7:I7`);
-            worksheet.addConditionalFormatting({
-              ref: "A1:I3",
-              rules: [
-                {
-                  type: "expression",
-                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-                  style: {
-                    font: {
-                      name: "Times New Roman",
-                      family: 4,
-                      size: 16,
-                      bold: true,
-                    },
-                    alignment: {
-                      vertical: "middle",
-                      horizontal: "center",
-                    },
-                  },
-                },
-              ],
-            });
-            worksheet.addConditionalFormatting({
-              ref: "A5:I7",
-              rules: [
-                {
-                  type: "expression",
-                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-                  style: {
-                    font: {
-                      name: "Times New Roman",
-                      family: 4,
-                      size: 14,
-                      // bold: true,
-                    },
-                    alignment: {
-                      vertical: "middle",
-                      horizontal: "center",
-                    },
-                  },
-                },
-              ],
-            });
+          dataFilter.map(async (anggota, idxx) => {
+            worksheet.getRow(9).values = [
+              "No",
+              "Nama",
+              "Status",
+              "No Pembayaran",
+              "Bank",
+              "Norek",
+              "Nama Pemilik",
+              "Nominal",
+              "Bukti",
+            ];
+            worksheet.columns = [
+              { key: "no" },
+              { key: "nama" },
+              { key: "status" },
+              { key: "noPembayaran" },
+              { key: "bank" },
+              { key: "norek" },
+              { key: "nama_pemilik" },
+              { key: "nominal" },
+              { key: "bukti" },
+            ];
 
-            worksheet.addConditionalFormatting({
-              ref: "A9:I9",
-              rules: [
-                {
-                  type: "expression",
-                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-                  style: {
-                    font: {
-                      name: "Times New Roman",
-                      family: 4,
-                      size: 14,
-                      bold: true,
-                    },
-                    fill: {
-                      type: "pattern",
-                      pattern: "solid",
-                      bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
-                    },
-                    alignment: {
-                      vertical: "middle",
-                      horizontal: "center",
-                    },
-                    border: {
-                      top: { style: "thin" },
-                      left: { style: "thin" },
-                      bottom: { style: "thin" },
-                      right: { style: "thin" },
-                    },
-                  },
-                },
-              ],
-            });
-            worksheet.addConditionalFormatting({
-              ref: "A10:A109",
-              rules: [
-                {
-                  type: "expression",
-                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-                  style: {
-                    alignment: {
-                      vertical: "middle",
-                      horizontal: "center",
-                    },
-                  },
-                },
-              ],
-            });
-            const dataFilter = await Promise.all(
-              e.siswa.filter((siswa) => siswa != null)
-            );
-            await Promise.all(
-              dataFilter.map(async (anggota, idxx) => {
-                worksheet.getRow(9).values = [
-                  "No",
-                  "Nama",
-                  "Status",
-                  "No Pembayaran",
-                  "Bank",
-                  "Norek",
-                  "Nama Pemilik",
-                  "Nominal",
-                  "Bukti",
-                ];
-                worksheet.columns = [
-                  { key: "no" },
-                  { key: "nama" },
-                  { key: "status" },
-                  { key: "noPembayaran" },
-                  { key: "bank" },
-                  { key: "norek" },
-                  { key: "nama_pemilik" },
-                  { key: "nominal" },
-                  { key: "bukti" },
-                ];
+            // add column headers
+            if (anggota.riwayat.length == 0) {
+              let row = worksheet.addRow({
+                no: `${idxx + 1}`,
+                nama: anggota.user ? anggota.user.nama : "-",
+                status: "Belum ada Pembayaran",
+              });
+            } else {
+              await Promise.all(
+                anggota.riwayat.map(async (r, no) => {
+                  worksheet.getRow(9).values = [
+                    "No",
+                    "Nama",
+                    "Status",
+                    "No Pembayaran",
+                    "Bank",
+                    "Norek",
+                    "Nama Pemilik",
+                    "Nominal",
+                    "Bukti",
+                  ];
+                  worksheet.columns = [
+                    { key: "no" },
+                    { key: "nama" },
+                    { key: "status" },
+                    { key: "noPembayaran" },
+                    { key: "bank" },
+                    { key: "norek" },
+                    { key: "nama_pemilik" },
+                    { key: "nominal" },
+                    { key: "bukti" },
+                  ];
 
-                // add column headers
-                if (anggota.riwayat.length == 0) {
+                  // Add row using key mapping to columns
                   let row = worksheet.addRow({
                     no: `${idxx + 1}`,
                     nama: anggota.user ? anggota.user.nama : "-",
-                    status: "Belum ada Pembayaran",
+                    status: anggota ? anggota.status : "-",
+                    noPembayaran: `Pembayaran #${no + 1}`,
+                    bank: r ? r.bank : "-",
+                    norek: r ? r.norek : "-",
+                    nama_pemilik: r ? r.nama_pemilik : "-",
+                    nominal: r ? r.nominal : "-",
+                    bukti: r ? r.bukti : "-",
                   });
-                } else {
-                  await Promise.all(
-                    anggota.riwayat.map(async (r, no) => {
-                      worksheet.getRow(9).values = [
-                        "No",
-                        "Nama",
-                        "Status",
-                        "No Pembayaran",
-                        "Bank",
-                        "Norek",
-                        "Nama Pemilik",
-                        "Nominal",
-                        "Bukti",
-                      ];
-                      worksheet.columns = [
-                        { key: "no" },
-                        { key: "nama" },
-                        { key: "status" },
-                        { key: "noPembayaran" },
-                        { key: "bank" },
-                        { key: "norek" },
-                        { key: "nama_pemilik" },
-                        { key: "nominal" },
-                        { key: "bukti" },
-                      ];
-
-                      // Add row using key mapping to columns
-                      let row = worksheet.addRow({
-                        no: `${idxx + 1}`,
-                        nama: anggota.user ? anggota.user.nama : "-",
-                        status: anggota ? anggota.status : "-",
-                        noPembayaran: `Pembayaran #${no + 1}`,
-                        bank: r ? r.bank : "-",
-                        norek: r ? r.norek : "-",
-                        nama_pemilik: r ? r.nama_pemilik : "-",
-                        nominal: r ? r.nominal : "-",
-                        bukti: r ? r.bukti : "-",
-                      });
-                    })
-                  );
-                }
-              })
-            );
-            worksheet.getColumn("A").width = 5;
-            worksheet.getColumn("B").width = 28;
-            worksheet.getColumn("C").width = 24;
-            worksheet.getColumn("D").width = 23;
-            worksheet.getColumn("E").width = 9;
-            worksheet.getColumn("F").width = 9;
-            worksheet.getColumn("G").width = 19;
-            worksheet.getColumn("F").width = 12;
+                })
+              );
+            }
           })
         );
+        worksheet.getColumn("A").width = 5;
+        worksheet.getColumn("B").width = 28;
+        worksheet.getColumn("C").width = 24;
+        worksheet.getColumn("D").width = 23;
+        worksheet.getColumn("E").width = 9;
+        worksheet.getColumn("F").width = 9;
+        worksheet.getColumn("G").width = 19;
+        worksheet.getColumn("F").width = 12;
+      })
+    );
 
     let namaFile = `/uploads/Rekap-Pembayaran-${pembayaran.jenis}-${keluarantanggalseconds}.xlsx`;
 
@@ -26951,6 +26974,10 @@ class MainController {
     }
     const ta = await this.getTAAktif(sekolah);
 
+    const {
+      search,page
+    } = request.get();
+
     const rombel = await MRombel.query()
       .select("id", "nama", "tingkat")
       .withCount("anggotaRombel as total", (builder) => {
@@ -26961,7 +26988,9 @@ class MainController {
       .andWhere({ m_ta_id: ta.id })
       .fetch();
 
-    const siswa = await User.query()
+      let siswa;
+
+    siswa = User.query()
       .with("pelanggaranSiswa")
       .with("anggotaRombel", (builder) => {
         builder
@@ -26969,26 +26998,28 @@ class MainController {
           .select("id", "m_rombel_id", "m_user_id")
           .with("rombel", (builder) => {
             builder
-              .select("id", "nama","m_ta_id","m_sekolah_id","m_jurusan_id")
-              .with("jurusan",(builder)=>{
-                builder.select("id","nama")
+              .select("id", "nama", "m_ta_id", "m_sekolah_id", "m_jurusan_id")
+              .with("jurusan", (builder) => {
+                builder.select("id", "nama");
               })
               .where({ m_ta_id: ta.id })
               .andWhere({ m_sekolah_id: sekolah.id });
           });
       })
-      .with("profil",(builder)=>{
-        builder.select("m_user_id","nisn")
+      .with("profil", (builder) => {
+        builder.select("m_user_id", "nisn");
       })
       .select("id", "nama", "whatsapp")
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .andWhere({ role: "siswa" })
-      .fetch();
+      if (search) {
+       siswa.andWhere("nama", "like", `%${search}%`);
+      }
 
     return response.ok({
       rombel,
-      siswa,
+      siswa: await siswa.paginate(page, 15),
     });
   }
 
@@ -27076,9 +27107,12 @@ class MainController {
         builder.where({ dihapus: 0 });
       })
       .with("pelanggaranSiswa", (builder) => {
-        builder.with("pelanggaran").with("userPelapor",(builder)=>{
-          builder.select("id","nama")
-        }).where({ dihapus: 0 });
+        builder
+          .with("pelanggaran")
+          .with("userPelapor", (builder) => {
+            builder.select("id", "nama");
+          })
+          .where({ dihapus: 0 });
       })
       .with("sanksiSiswa", (builder) => {
         builder.where({ dihapus: 0 });
@@ -34637,6 +34671,139 @@ class MainController {
       prestasi,
       tingkat,
     });
+  }
+
+  async importLunasPembayaranServices(filelocation, sekolah, pembayaran) {
+    var workbook = new Excel.Workbook();
+
+    workbook = await workbook.xlsx.readFile(filelocation);
+
+    let explanation = workbook.getWorksheet("sheet1");
+
+    let colComment = explanation.getColumn("A");
+
+    let data = [];
+
+    colComment.eachCell(async (cell, rowNumber) => {
+      if (rowNumber > 9) {
+        data.push({
+          nama: explanation.getCell("B" + rowNumber).value,
+          whatsapp: explanation.getCell("C" + rowNumber).value,
+          status: explanation.getCell("D" + rowNumber).value,
+        });
+      }
+    });
+
+    const result = await Promise.all(
+      data.map(async (d) => {
+        if (d.status == "lunas") {
+          const user = await User.query()
+            .select("id", "nama", "whatsapp")
+            .with("anggotaRombel", (builder) => {
+              builder.where({ dihapus: 0 });
+            })
+            .where({ whatsapp: d.whatsapp })
+            .andWhere({ m_sekolah_id: sekolah.id })
+            .andWhere({ dihapus: 0 })
+            .first();
+
+          const pembayaranRombel = await TkPembayaranRombel.query()
+            .where({ m_pembayaran_id: pembayaran.id })
+            .andWhere({ dihapus: 0 })
+            .andWhere({ m_sekolah_id: sekolah.id })
+            .andWhere({ m_rombel_id: user.toJSON().anggotaRombel.m_rombel_id })
+            .first();
+
+          await MPembayaranSiswa.query()
+            .where({ m_user_id: user.id })
+            .andWhere({ m_sekolah_id: sekolah.id })
+            .andWhere({ tk_pembayaran_rombel_id: pembayaranRombel.id })
+            .update({
+              status: d.status,
+            });
+
+            const pembayaranSiswa = await MPembayaranSiswa.query()
+            .where({ m_user_id: user.id })
+            .andWhere({ m_sekolah_id: sekolah.id })
+            .andWhere({ tk_pembayaran_rombel_id: pembayaranRombel.id }).first()
+
+            const rekSekolah = await MRekSekolah.query()
+              .where({ m_sekolah_id: sekolah.id })
+              .first();
+
+          const riwayat = await MRiwayatPembayaranSiswa.create({
+            bank: rekSekolah.bank,
+            norek: rekSekolah.norek,
+            nama_pemilik: rekSekolah.nama,
+            nominal: pembayaran.nominal,
+            dikonfirmasi: 1,
+            dihapus: 0,
+            m_pembayaran_siswa_id: pembayaranSiswa.id,
+          });
+
+          const mutasi = await MMutasi.create({
+            tipe: "kredit",
+            nama: `Pembayaran ${pembayaran.nama} ${
+              pembayaran.jenis == "spp" ? pembayaran.bulan : ""
+            }-${user.nama}`,
+            kategori: `pembayaran ${pembayaran.jenis}`,
+            nominal: pembayaran.nominal,
+            dihapus: 0,
+            m_sekolah_id: sekolah.id,
+            waktu_dibuat: pembayaranSiswa.updated_at,
+          });
+
+
+          await MRekSekolah.query()
+            .where({ m_sekolah_id: sekolah.id })
+            .update({
+              pemasukan: rekSekolah.pemasukan + pembayaran.nominal,
+            });
+
+          return;
+        }
+      })
+    );
+
+    return result;
+  }
+
+  async importLunasPembayaran({
+    request,
+    response,
+    auth,
+    params: { pembayaran_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let file = request.file("file");
+    let fname = `import-excel.${file.extname}`;
+
+    //move uploaded file into custom folder
+    await file.move(Helpers.tmpPath("/uploads"), {
+      name: fname,
+      overwrite: true,
+    });
+
+    if (!file.moved()) {
+      return fileUpload.error();
+    }
+
+    const pembayaran = await MPembayaran.query()
+      .where({ id: pembayaran_id })
+      .first();
+
+    return await this.importLunasPembayaranServices(
+      `tmp/uploads/${fname}`,
+      sekolah,
+      pembayaran
+    );
   }
 
   async notFoundPage({ response, request, auth }) {
