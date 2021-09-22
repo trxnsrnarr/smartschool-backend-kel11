@@ -14080,7 +14080,7 @@ class MainController {
   async putLunasPembayaranSiswa({
     response,
     request,
-    params: { riwayat_pembayaran_siswa_id },
+    params: { riwayat_pembayaran_siswa_id,user_id,m_pembayaran_siswa_id ,m_pembayaran_id},
     auth,
   }) {
     const domain = request.headers().origin;
@@ -14097,45 +14097,24 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    let { dikonfirmasi } = request.post();
+    const pembayaranUtama = await MPembayaran.query().where({id:m_pembayaran_id}).first()
 
-    const pembayaran = await MRiwayatPembayaranSiswa.query()
-      .where({ id: riwayat_pembayaran_siswa_id })
-      .update({
-        dikonfirmasi,
-      });
+    await MPembayaranSiswa.query()
+    .where({ id: m_pembayaran_siswa_id })
+    .update({
+      status: "lunas",
+    });
 
-    const pembayaranSiswa = await MRiwayatPembayaranSiswa.query()
-      .where({ id: riwayat_pembayaran_siswa_id })
-      .first();
-
-    const riwayat = await MPembayaranSiswa.query()
-      .where({ id: pembayaranSiswa.m_pembayaran_siswa_id })
-      .with("riwayat")
-      .with("rombelPembayaran", (builder) => {
-        builder.with("pembayaran");
-      })
-      .first();
-
-    const totalDibayar = riwayat
-      .toJSON()
-      .riwayat.reduce((a, b) => a + b.nominal, 0);
-    const totalTagihan = riwayat.toJSON().rombelPembayaran?.pembayaran?.nominal;
-    if (totalDibayar < totalTagihan) {
-      await MPembayaranSiswa.query()
-        .where({ id: pembayaranSiswa.m_pembayaran_siswa_id })
-        .update({
-          status: "belum lunas",
-        });
-    } else {
-      if (!riwayat.toJSON().riwayat.some((item) => !item.dikonfirmasi)) {
-        await MPembayaranSiswa.query()
-          .where({ id: pembayaranSiswa.m_pembayaran_siswa_id })
-          .update({
-            status: "lunas",
-          });
-      }
-    }
+    const pembayaran = await MRiwayatPembayaranSiswa.create({
+      bank,
+      norek,
+      nama_pemilik,
+      nominal: pembayaranUtama.nominal,
+      bukti,
+      dikonfirmasi: 1,
+      m_pembayaran_siswa_id: +m_pembayaran_siswa_id,
+      dihapus: 0,
+    });
 
     return response.ok(pembayaran);
   }
