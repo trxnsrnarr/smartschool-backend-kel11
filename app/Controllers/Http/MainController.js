@@ -10247,15 +10247,18 @@ class MainController {
         });
       }
 
-      const trx = await Database.beginTransaction()
-      const pesertaUjian = await TkPesertaUjian.create({
-        waktu_mulai,
-        dinilai: 0,
-        selesai: 0,
-        dihapus: 0,
-        m_user_id: user.id,
-        tk_jadwal_ujian_id: tk_jadwal_ujian_id,
-      }, trx);
+      const trx = await Database.beginTransaction();
+      const pesertaUjian = await TkPesertaUjian.create(
+        {
+          waktu_mulai,
+          dinilai: 0,
+          selesai: 0,
+          dihapus: 0,
+          m_user_id: user.id,
+          tk_jadwal_ujian_id: tk_jadwal_ujian_id,
+        },
+        trx
+      );
 
       await Promise.all(
         soalPG.toJSON().map(async (d) => {
@@ -10284,7 +10287,7 @@ class MainController {
       );
 
       await TkJawabanUjianSiswa.createMany(soalData, trx);
-      await trx.commit()
+      await trx.commit();
 
       const res = await jadwalUjianReference.add({
         tk_jadwal_ujian_id: tk_jadwal_ujian_id,
@@ -13566,20 +13569,20 @@ class MainController {
                     m_sekolah_id: sekolah.id,
                   });
                   // if (e.user.email != null) {
-                    // try {
-                    //   const gmail = Mail.send(
-                    //     `emails.spp`,
-                    //     pembayaran.toJSON(),
-                    //     (message) => {
-                    //       message
-                    //         .to(`${e.user.email}`)
-                    //         .from("no-reply@smarteschool.id")
-                    //         .subject("Pembayaran SPP");
-                    //     }
-                    //   );
-                    // } catch (error) {
-                    //   // console.log(error);
-                    // }
+                  // try {
+                  //   const gmail = Mail.send(
+                  //     `emails.spp`,
+                  //     pembayaran.toJSON(),
+                  //     (message) => {
+                  //       message
+                  //         .to(`${e.user.email}`)
+                  //         .from("no-reply@smarteschool.id")
+                  //         .subject("Pembayaran SPP");
+                  //     }
+                  //   );
+                  // } catch (error) {
+                  //   // console.log(error);
+                  // }
                   // }
                 })
             );
@@ -14018,6 +14021,9 @@ class MainController {
     const riwayat = await MPembayaranSiswa.query()
       .where({ id: pembayaranSiswa.m_pembayaran_siswa_id })
       .with("riwayat")
+      .with("user", (x) => {
+        x.select("id", "nama");
+      })
       .with("rombelPembayaran", (builder) => {
         builder.with("pembayaran");
       })
@@ -14042,6 +14048,30 @@ class MainController {
           });
       }
     }
+
+    const mutasi = await MMutasi.create({
+      tipe: "kredit",
+      nama: `Pembayaran ${riwayat.toJSON().rombelPembayaran.pembayaran.nama} ${
+        riwayat.toJSON().rombelPembayaran.pembayaran.jenis == "spp"
+          ? riwayat.toJSON().rombelPembayaran.pembayaran.bulan
+          : ""
+      }-${riwayat.toJSON().user.nama}`,
+      kategori: `pembayaran ${
+        riwayat.toJSON().rombelPembayaran.pembayaran.jenis
+      }`,
+      nominal: pembayaranSiswa.nominal,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+      waktu_dibuat: pembayaranSiswa.updated_at,
+    });
+
+    const rekSekolah = await MRekSekolah.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .first();
+
+    await MRekSekolah.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .update({ pemasukan: rekSekolah.pemasukan + pembayaranSiswa.nominal });
 
     return response.ok(pembayaran);
   }
@@ -14219,6 +14249,17 @@ class MainController {
       waktu_dibuat,
     });
 
+    const rekSekolah = await MRekSekolah.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .first();
+
+    await MRekSekolah.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .update({
+        pemasukan: rekSekolah.pemasukan + tipe == "debit" ? nominal : 0,
+        pengeluaran: rekSekolah.pengeluaran + tipe == "debit" ? 0 : nominal,
+      });
+
     return response.ok({
       message: messagePostSuccess,
     });
@@ -14232,6 +14273,8 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
+
+    const beforeUpdate = await MMutasi.query().where({ id: mutasi_id }).first();
 
     const { tipe, nama, kategori, nominal, waktu_dibuat } = request.post();
     const rules = {
@@ -14259,6 +14302,34 @@ class MainController {
       waktu_dibuat,
     });
 
+    const rekSekolah = await MRekSekolah.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .first();
+
+    let pemasukan, pengeluaran;
+    if (tipe != beforeUpdate.tipe) {
+      if (tipe == "kredit") {
+        pemasukan = rekSekolah.pemasukan + nominal;
+        pengeluaran = rekSekolah.pengeluaran - beforeUpdate.nominal;
+      } else {
+        pengeluaran = rekSekolah.pengeluaran + nominal;
+        pemasukan = rekSekolah.pemasukan - beforeUpdate.nominal;
+      }
+    } else {
+      if (tipe == "kredit") {
+        pemasukan = rekSekolah.pemasukan - beforeUpdate.nominal + nominal;
+        pengeluaran = rekSekolah.pengeluaran;
+      } else {
+        pengeluaran = rekSekolah.pengeluaran - beforeUpdate.nominal + nominal;
+        pemasukan = rekSekolah.pemasukan;
+      }
+    }
+
+    await MRekSekolah.query().where({ m_sekolah_id: sekolah.id }).update({
+      pemasukan,
+      pengeluaran,
+    });
+
     if (!mutasi) {
       return response.notFound({
         message: messageNotFound,
@@ -14278,6 +14349,27 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
+
+    const beforeUpdate = await MMutasi.query().where({ id: mutasi_id }).first();
+    const rekSekolah = await MRekSekolah.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .first();
+
+    let pemasukan, pengeluaran;
+    if (beforeUpdate.tipe == "kredit") {
+      // Kredit == pemasukan
+      pemasukan = rekSekolah.pemasukan - beforeUpdate.nominal;
+      pengeluaran = rekSekolah.pengeluaran;
+    } else {
+      // debit == pengeluaran
+      pemasukan = rekSekolah.pemasukan;
+      pengeluaran = rekSekolah.pengeluaran - beforeUpdate.nominal;
+    }
+
+    await MRekSekolah.query().where({ m_sekolah_id: sekolah.id }).update({
+      pemasukan,
+      pengeluaran,
+    });
 
     const mutasi = await MMutasi.query().where({ id: mutasi_id }).update({
       dihapus: 1,
@@ -20185,9 +20277,7 @@ class MainController {
   }
 
   async daftarsekolah({ response, request }) {
-    const sekolah = await MSekolah.query()
-      .select("id", "nama", "logo")
-      .fetch();
+    const sekolah = await MSekolah.query().select("id", "nama", "logo").fetch();
 
     return sekolah;
   }
