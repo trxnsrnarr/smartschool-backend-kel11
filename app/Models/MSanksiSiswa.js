@@ -14,6 +14,10 @@ class MSanksiSiswa extends Model {
   getLampiran(lampiran) {
     return lampiran ? lampiran.split(",") : [];
   }
+  getLink(link) {
+    return link ? link.split(",") : [];
+  }
+
 
   user() {
     return this.belongsTo("App/Models/User", "m_user_id");

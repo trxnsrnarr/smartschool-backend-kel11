@@ -27277,7 +27277,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { m_sanksi_pelanggaran_id, keterangan, lampiran } = request.post();
+    const { m_sanksi_pelanggaran_id, keterangan, lampiran ,link} = request.post();
     const rules = {
       m_sanksi_pelanggaran_id: "required",
       keterangan: "required",
@@ -27295,6 +27295,7 @@ class MainController {
       m_sanksi_pelanggaran_id,
       keterangan,
       lampiran:lampiran.toString(),
+      link:link.toString(),
       m_user_id: user_id,
       dihapus: 0,
     });
