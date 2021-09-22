@@ -11,6 +11,10 @@ class TkSiswaPelanggaran extends Model {
   pelanggaran() {
     return this.belongsTo("App/Models/MPelanggaran");
   }
+
+  userPelapor(){
+    return this.belongsTo("App/Models/User","m_user_pelapor_id");
+  }
 }
 
 module.exports = TkSiswaPelanggaran;

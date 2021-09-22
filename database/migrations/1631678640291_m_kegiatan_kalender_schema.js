@@ -22,10 +22,9 @@ class MKegiatanKalenderSchema extends Schema {
       table.time("waktu_mulai");
       table.time("waktu_akhir");
       table.string("media");
-      table.text("tempat");
-      table.string("deskripsi");
       table.string("tempat");
-      table.string("link");
+      table.string("deskripsi");
+      table.text("link");
       table.integer("m_sekolah_id").unsigned().index("m_sekolah_id");
       table
         .foreign("m_sekolah_id")
