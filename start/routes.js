@@ -207,6 +207,14 @@ Route.post(
   "/riwayat-pembayaran-siswa",
   "MainController.postRiwayatPembayaranSiswa"
 );
+Route.post(
+  "/import/pembayaran-siswa/:pembayaran_id",
+  "MainController.importLunasPembayaran"
+);
+Route.post(
+  "/download/pembayaran-siswa/:tk_pembayaran_rombel_id",
+  "MainController.downloadLunasPembayaran"
+);
 Route.put(
   "/riwayat-pembayaran-siswa/:riwayat_pembayaran_siswa_id",
   "MainController.putRiwayatPembayaranSiswa"
