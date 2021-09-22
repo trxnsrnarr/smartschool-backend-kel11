@@ -34683,7 +34683,7 @@ class MainController {
     let data = [];
 
     colComment.eachCell(async (cell, rowNumber) => {
-      if (rowNumber > 9) {
+      if (rowNumber > 7) {
         data.push({
           nama: explanation.getCell("B" + rowNumber).value,
           whatsapp: explanation.getCell("C" + rowNumber).value,
@@ -34813,6 +34813,202 @@ class MainController {
       sekolah,
       pembayaran
     );
+  }
+
+  async downloadLunasPembayaran({ response, request, auth,params:{tk_pembayaran_rombel_id} }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const pembayaran = await TkPembayaranRombel.query()
+      // .with("rombel",(builder)=>{
+      //   builder.with("anggotaRombel",(builder)=>{
+      //     builder.with("user",(builder)=>{
+      //       builder.select("id","whatsapp","nama")
+      //     })
+      //   })
+      // })
+      .with("siswa",(builder)=>{
+        builder.with("user",(builder)=>{
+        builder.select("id","whatsapp","nama")
+      })})
+      .where({ dihapus: 0 })
+      .andWhere({id:tk_pembayaran_rombel_id})
+      .first();
+
+    let workbook = new Excel.Workbook();
+    let worksheet = workbook.addWorksheet(`sheet1`);
+    worksheet.mergeCells("A1:D1");
+    worksheet.mergeCells("A2:D2");
+    worksheet.getCell(
+      "A4"
+    ).value = `note : Status diisi dengan lunas / belum lunas`;
+    worksheet.getCell(
+      "A6"
+    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    worksheet.addConditionalFormatting({
+      ref: "A1:K2",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 16,
+              bold: true,
+            },
+            // fill: {
+            //   type: "pattern",
+            //   pattern: "solid",
+            //   bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            // },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            // border: {
+            //   top: { style: "thin" },
+            //   left: { style: "thin" },
+            //   bottom: { style: "thin" },
+            //   right: { style: "thin" },
+            // },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: "A7:D7",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet.getCell("A1").value = "Import Pembayaran";
+    worksheet.getCell("A2").value = sekolah.nama;
+    await Promise.all(
+      pembayaran.toJSON().siswa.map(async (d, idx) => {
+        worksheet.addConditionalFormatting({
+          ref: `B${(idx + 1) * 1 + 7}:D${(idx + 1) * 1 + 7}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet.addConditionalFormatting({
+          ref: `A${(idx + 1) * 1 + 7}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        // add column headers
+        worksheet.getRow(7).values = [
+          "No",
+          "Nama",
+          "Whatsapp",
+          "Status",
+        ];
+        worksheet.columns = [
+          { key: "no" },
+          { key: "nama" },
+          { key: "whatsapp" },
+          { key: "status" },
+        ];
+
+        // Add row using key mapping to columns
+        let row = worksheet.addRow({
+          no: `${idx + 1}`,
+          nama: d.user ? d.user.nama : "-",
+          whatsapp: d.user ? d.user.whatsapp : "-",
+          status: d ? d.status: "-",
+        });
+      })
+    );
+
+    worksheet.getColumn("A").width = 6;
+    worksheet.getColumn("B").width = 30;
+    worksheet.getColumn("C").width = 20;
+    worksheet.getColumn("D").width = 13;
+
+    let namaFile = `/uploads/import-Pembayaran-${keluarantanggalseconds}.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
   }
 
   async notFoundPage({ response, request, auth }) {
