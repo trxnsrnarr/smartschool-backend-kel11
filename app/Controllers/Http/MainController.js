@@ -26974,9 +26974,7 @@ class MainController {
     }
     const ta = await this.getTAAktif(sekolah);
 
-    const {
-      search,page
-    } = request.get();
+    const { search, page } = request.get();
 
     const rombel = await MRombel.query()
       .select("id", "nama", "tingkat")
@@ -26988,7 +26986,7 @@ class MainController {
       .andWhere({ m_ta_id: ta.id })
       .fetch();
 
-      let siswa;
+    let siswa;
 
     siswa = User.query()
       .with("pelanggaranSiswa")
@@ -27012,10 +27010,10 @@ class MainController {
       .select("id", "nama", "whatsapp")
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
-      .andWhere({ role: "siswa" })
-      if (search) {
-       siswa.andWhere("nama", "like", `%${search}%`);
-      }
+      .andWhere({ role: "siswa" });
+    if (search) {
+      siswa.andWhere("nama", "like", `%${search}%`);
+    }
 
     return response.ok({
       rombel,
@@ -34722,43 +34720,54 @@ class MainController {
               status: d.status,
             });
 
-            const pembayaranSiswa = await MPembayaranSiswa.query()
+          const pembayaranSiswa = await MPembayaranSiswa.query()
             .where({ m_user_id: user.id })
             .andWhere({ m_sekolah_id: sekolah.id })
-            .andWhere({ tk_pembayaran_rombel_id: pembayaranRombel.id }).first()
+            .andWhere({ tk_pembayaran_rombel_id: pembayaranRombel.id })
+            .first();
 
-            const rekSekolah = await MRekSekolah.query()
-              .where({ m_sekolah_id: sekolah.id })
-              .first();
-
-          const riwayat = await MRiwayatPembayaranSiswa.create({
-            bank: rekSekolah.bank,
-            norek: rekSekolah.norek,
-            nama_pemilik: rekSekolah.nama,
-            nominal: pembayaran.nominal,
-            dikonfirmasi: 1,
-            dihapus: 0,
-            m_pembayaran_siswa_id: pembayaranSiswa.id,
-          });
-
-          const mutasi = await MMutasi.create({
-            tipe: "kredit",
-            nama: `Pembayaran ${pembayaran.nama} ${
-              pembayaran.jenis == "spp" ? pembayaran.bulan : ""
-            }-${user.nama}`,
-            kategori: `pembayaran ${pembayaran.jenis}`,
-            nominal: pembayaran.nominal,
-            dihapus: 0,
-            m_sekolah_id: sekolah.id,
-            waktu_dibuat: pembayaranSiswa.updated_at,
-          });
-
-
-          await MRekSekolah.query()
+          const rekSekolah = await MRekSekolah.query()
             .where({ m_sekolah_id: sekolah.id })
-            .update({
-              pemasukan: rekSekolah.pemasukan + pembayaran.nominal,
+            .first();
+
+          const checkRiwayat = await MRiwayatPembayaranSiswa.query()
+            .where({ bank: rekSekolah.bank })
+            .andWhere({ norek: rekSekolah.norek })
+            .andWhere({ nama_pemilik: rekSekolah.nama })
+            .andWhere({ nominal: pembayaran.nominal })
+            .andWhere({ dikonfirmasi: 1 })
+            .andWhere({ dihapus: 0 })
+            .andWhere({ m_pembayaran_siswa_id: pembayaranSiswa.id })
+            .first();
+
+          if (!checkRiwayat) {
+            const riwayat = await MRiwayatPembayaranSiswa.create({
+              bank: rekSekolah.bank,
+              norek: rekSekolah.norek,
+              nama_pemilik: rekSekolah.nama,
+              nominal: pembayaran.nominal,
+              dikonfirmasi: 1,
+              dihapus: 0,
+              m_pembayaran_siswa_id: pembayaranSiswa.id,
             });
+            const mutasi = await MMutasi.create({
+              tipe: "kredit",
+              nama: `Pembayaran ${pembayaran.nama} ${
+                pembayaran.jenis == "spp" ? pembayaran.bulan : ""
+              }-${user.nama}`,
+              kategori: `pembayaran ${pembayaran.jenis}`,
+              nominal: pembayaran.nominal,
+              dihapus: 0,
+              m_sekolah_id: sekolah.id,
+              waktu_dibuat: pembayaranSiswa.updated_at,
+            });
+
+            await MRekSekolah.query()
+              .where({ m_sekolah_id: sekolah.id })
+              .update({
+                pemasukan: rekSekolah.pemasukan + pembayaran.nominal,
+              });
+          }
 
           return;
         }
