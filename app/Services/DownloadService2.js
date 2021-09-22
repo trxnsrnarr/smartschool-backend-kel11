@@ -1042,86 +1042,90 @@ class DownloadService {
 
         worksheet4.getRow(7).values = ["", "", "", "A", "B", "C", "D", "E", ""];
 
-        worksheet4.columns = [
-          { key: "No" },
-          { key: "INDIKATOR_SOAL" },
-          // { key: "RUMUSAN_BUTIR_SOAL" },
-          // { key: "A" },
-          // { key: "B" },
-          // { key: "C" },
-          // { key: "D" },
-          // { key: "E" },
-          { key: "KUNCI_JAWABAN" },
-        ];
+        worksheet4.getCell(`A${idx + 8}`).value = idx + 1;
+        worksheet4.getCell(`B${idx + 8}`).value = d ? d.kd_konten_materi : "-";
+        worksheet4.getCell(`I${idx + 8}`).value = d ? d.kj_pg : "-";
+
+        // worksheet4.columns = [
+        //   { key: "No" },
+        //   { key: "INDIKATOR_SOAL" },
+        //   // { key: "RUMUSAN_BUTIR_SOAL" },
+        //   // { key: "A" },
+        //   // { key: "B" },
+        //   // { key: "C" },
+        //   // { key: "D" },
+        //   // { key: "E" },
+        //   { key: "KUNCI_JAWABAN" },
+        // ];
 
         // Add row using key mapping to columns
-        worksheet4.getRow(idx + 9).height = (dimensions.height * 3) / 4 + 4;
+        worksheet4.getRow(idx + 8).height = (dimensions.height * 3) / 4 + 4;
         worksheet4.addImage(imageId, {
-          tl: { col: 2.1, row: idx + 8.1 },
+          tl: { col: 2.1, row: idx + 7.1 },
           ext: {
             width: `${dimensions.width}`,
             height: `${dimensions.height}`,
           },
         });
         worksheet4.addImage(imageIda, {
-          tl: { col: 3.1, row: idx + 8.1 },
+          tl: { col: 3.1, row: idx + 7.1 },
           ext: {
             width: `${dimensionsa.width}`,
             height: `${dimensionsa.height}`,
           },
         });
         worksheet4.addImage(imageIdb, {
-          tl: { col: 4.1, row: idx + 8.1 },
+          tl: { col: 4.1, row: idx + 7.1 },
           ext: {
             width: `${dimensionsb.width}`,
             height: `${dimensionsb.height}`,
           },
         });
         worksheet4.addImage(imageIdc, {
-          tl: { col: 5.1, row: idx + 8.1 },
+          tl: { col: 5.1, row: idx + 7.1 },
           ext: {
             width: `${dimensionsc.width}`,
             height: `${dimensionsc.height}`,
           },
         });
         worksheet4.addImage(imageIdd, {
-          tl: { col: 6.1, row: idx + 8.1 },
+          tl: { col: 6.1, row: idx + 7.1 },
           ext: {
             width: `${dimensionsd.width}`,
             height: `${dimensionsd.height}`,
           },
         });
         worksheet4.addImage(imageIde, {
-          tl: { col: 7.1, row: idx + 8.1 },
+          tl: { col: 7.1, row: idx + 7.1 },
           ext: {
             width: `${dimensionse.width}`,
             height: `${dimensionse.height}`,
           },
         });
 
-        worksheet4.addRow({
-          No: `${idx + 1}`,
-          INDIKATOR_SOAL: d ? d.kd_konten_materi : "-",
-          // RUMUSAN_BUTIR_SOAL: d
-          //   ? d.pertanyaan.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
-          //   : "-",
-          // A: d
-          //   ? d.jawaban_a.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
-          //   : "-",
-          // B: d
-          //   ? d.jawaban_b.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
-          //   : "-",
-          // C: d
-          //   ? d.jawaban_c.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
-          //   : "-",
-          // D: d
-          //   ? d.jawaban_d.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
-          //   : "-",
-          // E: d
-          //   ? d.jawaban_e.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
-          //   : "-",
-          KUNCI_JAWABAN: d ? d.kj_pg : "-",
-        });
+        // worksheet4.addRow({
+        //   No: `${idx + 1}`,
+        //   INDIKATOR_SOAL: d ? d.kd_konten_materi : "-",
+        //   // RUMUSAN_BUTIR_SOAL: d
+        //   //   ? d.pertanyaan.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
+        //   //   : "-",
+        //   // A: d
+        //   //   ? d.jawaban_a.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
+        //   //   : "-",
+        //   // B: d
+        //   //   ? d.jawaban_b.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
+        //   //   : "-",
+        //   // C: d
+        //   //   ? d.jawaban_c.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
+        //   //   : "-",
+        //   // D: d
+        //   //   ? d.jawaban_d.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
+        //   //   : "-",
+        //   // E: d
+        //   //   ? d.jawaban_e.replace(/(<([^>]+)>)/gi, "").replace(/\&nbsp;/gi, "")
+        //   //   : "-",
+        //   KUNCI_JAWABAN: d ? d.kj_pg : "-",
+        // });
 
         // worksheet 5
 
