@@ -14045,6 +14045,69 @@ class MainController {
     return response.ok(pembayaran);
   }
 
+  async putLunasPembayaranSiswa({
+    response,
+    request,
+    params: { riwayat_pembayaran_siswa_id },
+    auth,
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    if (user.role != "admin" && user.m_sekolah_id != sekolah.id) {
+      return response.forbidden({ message: messageForbidden });
+    }
+
+    let { dikonfirmasi } = request.post();
+
+    const pembayaran = await MRiwayatPembayaranSiswa.query()
+      .where({ id: riwayat_pembayaran_siswa_id })
+      .update({
+        dikonfirmasi,
+      });
+
+    const pembayaranSiswa = await MRiwayatPembayaranSiswa.query()
+      .where({ id: riwayat_pembayaran_siswa_id })
+      .first();
+
+    const riwayat = await MPembayaranSiswa.query()
+      .where({ id: pembayaranSiswa.m_pembayaran_siswa_id })
+      .with("riwayat")
+      .with("rombelPembayaran", (builder) => {
+        builder.with("pembayaran");
+      })
+      .first();
+
+    const totalDibayar = riwayat
+      .toJSON()
+      .riwayat.reduce((a, b) => a + b.nominal, 0);
+    const totalTagihan = riwayat.toJSON().rombelPembayaran?.pembayaran?.nominal;
+    if (totalDibayar < totalTagihan) {
+      await MPembayaranSiswa.query()
+        .where({ id: pembayaranSiswa.m_pembayaran_siswa_id })
+        .update({
+          status: "belum lunas",
+        });
+    } else {
+      if (!riwayat.toJSON().riwayat.some((item) => !item.dikonfirmasi)) {
+        await MPembayaranSiswa.query()
+          .where({ id: pembayaranSiswa.m_pembayaran_siswa_id })
+          .update({
+            status: "lunas",
+          });
+      }
+    }
+
+    return response.ok(pembayaran);
+  }
+
   async getKontak({ response, request, auth }) {
     const domain = request.headers().origin;
 
@@ -19517,23 +19580,21 @@ class MainController {
       .where({ id: pembayaran_id })
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
-      .fetch();
+      .first();
 
     let workbook = new Excel.Workbook();
 
-    await Promise.all(
-      pembayaran.toJSON().map(async (d) => {
         await Promise.all(
-          d.rombel.map(async (e, idx) => {
+          pembayaran.toJSON().rombel.map(async (e, idx) => {
             let worksheet = workbook.addWorksheet(
               `${idx + 1}.${e.rombel.nama}`
             );
-            worksheet.getCell("A1").value = "Rekap SPP";
+            worksheet.getCell("A1").value = `Rekap Pembayaran ${pembayaran.jenis}`;
             worksheet.getCell("A2").value = sekolah.nama;
             worksheet.getCell("A3").value = ta.tahun;
-            worksheet.getCell("A5").value = d.nama;
+            worksheet.getCell("A5").value = pembayaran.nama;
             worksheet.getCell("A6").value = e.rombel.nama;
-            worksheet.getCell("A7").value = d.bulan;
+            worksheet.getCell("A7").value = pembayaran.bulan;
             worksheet.getCell(
               "A8"
             ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
@@ -19721,10 +19782,8 @@ class MainController {
             worksheet.getColumn("F").width = 12;
           })
         );
-      })
-    );
 
-    let namaFile = `/uploads/rekap-SPP-${keluarantanggalseconds}.xlsx`;
+    let namaFile = `/uploads/Rekap-Pembayaran-${pembayaran.jenis}-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
