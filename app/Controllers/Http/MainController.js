@@ -14124,6 +14124,26 @@ class MainController {
       dihapus: 0,
     });
 
+    const mutasi = await MMutasi.create({
+      tipe: "kredit",
+      nama: `Pembayaran ${pembayaranUtama.nama} ${
+        pembayaranUtama.jenis == "spp" ? pembayaranUtama.bulan : ""
+      }-${riwayat.toJSON().user.nama}`,
+      kategori: `pembayaran ${pembayaranUtama.jenis}`,
+      nominal: pembayaranUtama.nominal,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+      waktu_dibuat: pembayaran.created_at,
+    });
+
+    const rekSekolah = await MRekSekolah.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .first();
+
+    await MRekSekolah.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .update({ pemasukan: rekSekolah.pemasukan + pembayaranSiswa.nominal });
+
     return response.ok(pembayaran);
   }
 
@@ -26970,6 +26990,10 @@ class MainController {
     }
     const ta = await this.getTAAktif(sekolah);
 
+    const {
+      search,page
+    } = request.get();
+
     const rombel = await MRombel.query()
       .select("id", "nama", "tingkat")
       .withCount("anggotaRombel as total", (builder) => {
@@ -26980,7 +27004,9 @@ class MainController {
       .andWhere({ m_ta_id: ta.id })
       .fetch();
 
-    const siswa = await User.query()
+      let siswa;
+
+    siswa = User.query()
       .with("pelanggaranSiswa")
       .with("anggotaRombel", (builder) => {
         builder
@@ -27003,11 +27029,13 @@ class MainController {
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .andWhere({ role: "siswa" })
-      .fetch();
+      if (search) {
+       siswa.andWhere("nama", "like", `%${search}%`);
+      }
 
     return response.ok({
       rombel,
-      siswa,
+      siswa: await siswa.paginate(page, 15),
     });
   }
 
@@ -34659,6 +34687,139 @@ class MainController {
       prestasi,
       tingkat,
     });
+  }
+
+  async importLunasPembayaranServices(filelocation, sekolah, pembayaran) {
+    var workbook = new Excel.Workbook();
+
+    workbook = await workbook.xlsx.readFile(filelocation);
+
+    let explanation = workbook.getWorksheet("sheet1");
+
+    let colComment = explanation.getColumn("A");
+
+    let data = [];
+
+    colComment.eachCell(async (cell, rowNumber) => {
+      if (rowNumber > 9) {
+        data.push({
+          nama: explanation.getCell("B" + rowNumber).value,
+          whatsapp: explanation.getCell("C" + rowNumber).value,
+          status: explanation.getCell("D" + rowNumber).value,
+        });
+      }
+    });
+
+    const result = await Promise.all(
+      data.map(async (d) => {
+        if (d.status == "lunas") {
+          const user = await User.query()
+            .select("id", "nama", "whatsapp")
+            .with("anggotaRombel", (builder) => {
+              builder.where({ dihapus: 0 });
+            })
+            .where({ whatsapp: d.whatsapp })
+            .andWhere({ m_sekolah_id: sekolah.id })
+            .andWhere({ dihapus: 0 })
+            .first();
+
+          const pembayaranRombel = await TkPembayaranRombel.query()
+            .where({ m_pembayaran_id: pembayaran.id })
+            .andWhere({ dihapus: 0 })
+            .andWhere({ m_sekolah_id: sekolah.id })
+            .andWhere({ m_rombel_id: user.toJSON().anggotaRombel.m_rombel_id })
+            .first();
+
+          await MPembayaranSiswa.query()
+            .where({ m_user_id: user.id })
+            .andWhere({ m_sekolah_id: sekolah.id })
+            .andWhere({ tk_pembayaran_rombel_id: pembayaranRombel.id })
+            .update({
+              status: d.status,
+            });
+
+            const pembayaranSiswa = await MPembayaranSiswa.query()
+            .where({ m_user_id: user.id })
+            .andWhere({ m_sekolah_id: sekolah.id })
+            .andWhere({ tk_pembayaran_rombel_id: pembayaranRombel.id }).first()
+
+            const rekSekolah = await MRekSekolah.query()
+              .where({ m_sekolah_id: sekolah.id })
+              .first();
+
+          const riwayat = await MRiwayatPembayaranSiswa.create({
+            bank: rekSekolah.bank,
+            norek: rekSekolah.norek,
+            nama_pemilik: rekSekolah.nama,
+            nominal: pembayaran.nominal,
+            dikonfirmasi: 1,
+            dihapus: 0,
+            m_pembayaran_siswa_id: pembayaranSiswa.id,
+          });
+
+          const mutasi = await MMutasi.create({
+            tipe: "kredit",
+            nama: `Pembayaran ${pembayaran.nama} ${
+              pembayaran.jenis == "spp" ? pembayaran.bulan : ""
+            }-${user.nama}`,
+            kategori: `pembayaran ${pembayaran.jenis}`,
+            nominal: pembayaran.nominal,
+            dihapus: 0,
+            m_sekolah_id: sekolah.id,
+            waktu_dibuat: pembayaranSiswa.updated_at,
+          });
+
+
+          await MRekSekolah.query()
+            .where({ m_sekolah_id: sekolah.id })
+            .update({
+              pemasukan: rekSekolah.pemasukan + pembayaran.nominal,
+            });
+
+          return;
+        }
+      })
+    );
+
+    return result;
+  }
+
+  async importLunasPembayaran({
+    request,
+    response,
+    auth,
+    params: { pembayaran_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let file = request.file("file");
+    let fname = `import-excel.${file.extname}`;
+
+    //move uploaded file into custom folder
+    await file.move(Helpers.tmpPath("/uploads"), {
+      name: fname,
+      overwrite: true,
+    });
+
+    if (!file.moved()) {
+      return fileUpload.error();
+    }
+
+    const pembayaran = await MPembayaran.query()
+      .where({ id: pembayaran_id })
+      .first();
+
+    return await this.importLunasPembayaranServices(
+      `tmp/uploads/${fname}`,
+      sekolah,
+      pembayaran
+    );
   }
 
   async notFoundPage({ response, request, auth }) {
