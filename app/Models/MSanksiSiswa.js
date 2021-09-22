@@ -11,6 +11,9 @@ class MSanksiSiswa extends Model {
   sanksi() {
     return this.belongsTo("App/Models/MSanksiPelanggaran");
   }
+  getLampiran(lampiran) {
+    return lampiran ? lampiran.split(",") : [];
+  }
 
   user() {
     return this.belongsTo("App/Models/User", "m_user_id");
