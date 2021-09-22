@@ -27294,7 +27294,7 @@ class MainController {
     const siswa = await MSanksiSiswa.create({
       m_sanksi_pelanggaran_id,
       keterangan,
-      lampiran,
+      lampiran:lampiran.toString(),
       m_user_id: user_id,
       dihapus: 0,
     });
