@@ -34952,7 +34952,7 @@ class MainController {
     worksheet.mergeCells("A2:D2");
     worksheet.getCell(
       "A4"
-    ).value = `note : Status diisi dengan lunas / belum lunas`;
+    ).value = `note : Isi nominal dengan angka`;
     worksheet.getCell(
       "A6"
     ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
