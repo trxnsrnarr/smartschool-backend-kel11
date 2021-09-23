@@ -9384,26 +9384,30 @@ class MainController {
         );
       }
 
+      const userIds = await User.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .whereIn("role", ["admin", "guru"])
+        .ids();
+
       const ujian = await MUjian.query()
-        .where({ m_user_id: user.id })
+        .whereIn("m_user_id", userIds)
         .andWhere({ dihapus: 0 })
         .fetch();
-        if (status == "sudah-selesai") {
-          return response.ok({
-            rombel,
-            jadwalUjian: jadwalUjianDataFormat,
-            ujian,
-            total: jadwalUjian.toJSON().total,
-            lastPage: jadwalUjian.toJSON().lastPage,
-          });
-        }else{
-          return response.ok({
-            rombel,
-            jadwalUjian: jadwalUjianDataFormat,
-            ujian,
-          });
-
-        }
+      if (status == "sudah-selesai") {
+        return response.ok({
+          rombel,
+          jadwalUjian: jadwalUjianDataFormat,
+          ujian,
+          total: jadwalUjian.toJSON().total,
+          lastPage: jadwalUjian.toJSON().lastPage,
+        });
+      } else {
+        return response.ok({
+          rombel,
+          jadwalUjian: jadwalUjianDataFormat,
+          ujian,
+        });
+      }
     } else if (user.role == "siswa") {
       const rombelIds = await MRombel.query()
         .where({ m_ta_id: ta.id })
