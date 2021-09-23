@@ -9449,6 +9449,7 @@ class MainController {
           })
           .where({ dihapus: 0 })
           .whereIn("m_rombel_id", anggotaRombel)
+          .orderBy("created_at", "desc")
           .paginate(page, 10);
       }
 
