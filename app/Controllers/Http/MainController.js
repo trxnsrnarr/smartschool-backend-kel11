@@ -34758,7 +34758,7 @@ class MainController {
         data.push({
           nama: explanation.getCell("B" + rowNumber).value,
           whatsapp: explanation.getCell("C" + rowNumber).value,
-          status: explanation.getCell("D" + rowNumber).value,
+          nominal: explanation.getCell("D" + rowNumber).value,
         });
       }
     });
@@ -34771,7 +34771,7 @@ class MainController {
 
     const result = await Promise.all(
       data.map(async (d) => {
-        if (d.status == "lunas") {
+        if (d.nominal > 0) {
           const user = await User.query()
             .select("id", "nama", "whatsapp")
             .with("anggotaRombel", (builder) => {
@@ -34796,55 +34796,62 @@ class MainController {
             .andWhere({ tk_pembayaran_rombel_id: pembayaranRombel.id })
             .first();
 
-          if (checkPembayaranSiswa.status != "lunas") {
-            await MPembayaranSiswa.query()
-              .where({ m_user_id: user.id })
-              .andWhere({ m_sekolah_id: sekolah.id })
-              .andWhere({ tk_pembayaran_rombel_id: pembayaranRombel.id })
-              .update({
-                status: d.status,
-              });
-
+          if (checkPembayaranSiswa.status == "belum lunas") {
             const pembayaranSiswa = await MPembayaranSiswa.query()
               .where({ m_user_id: user.id })
               .andWhere({ m_sekolah_id: sekolah.id })
               .andWhere({ tk_pembayaran_rombel_id: pembayaranRombel.id })
+              .with("riwayat")
+              .with("user", (x) => {
+                x.select("id", "nama");
+              })
+              .with("rombelPembayaran", (builder) => {
+                builder.with("pembayaran");
+              })
               .first();
 
-            const checkRiwayat = await MRiwayatPembayaranSiswa.query()
-              .where({ bank: rekSekolah.bank })
-              .andWhere({ norek: rekSekolah.norek })
-              .andWhere({ nama_pemilik: rekSekolah.nama })
-              .andWhere({ nominal: pembayaran.nominal })
-              .andWhere({ dikonfirmasi: 1 })
-              .andWhere({ dihapus: 0 })
-              .andWhere({ m_pembayaran_siswa_id: pembayaranSiswa.id })
-              .first();
+            const riwayat = await MRiwayatPembayaranSiswa.create({
+              bank: rekSekolah.bank,
+              norek: rekSekolah.norek,
+              nama_pemilik: rekSekolah.nama,
+              nominal: d.nominal,
+              dikonfirmasi: 1,
+              dihapus: 0,
+              m_pembayaran_siswa_id: pembayaranSiswa.id,
+            });
 
-            if (!checkRiwayat) {
-              const riwayat = await MRiwayatPembayaranSiswa.create({
-                bank: rekSekolah.bank,
-                norek: rekSekolah.norek,
-                nama_pemilik: rekSekolah.nama,
-                nominal: pembayaran.nominal,
-                dikonfirmasi: 1,
-                dihapus: 0,
-                m_pembayaran_siswa_id: pembayaranSiswa.id,
-              });
-              const mutasi = await MMutasi.create({
-                tipe: "kredit",
-                nama: `Pembayaran ${pembayaran.nama} ${
-                  pembayaran.jenis == "spp" ? pembayaran.bulan : ""
-                }-${user.nama}`,
-                kategori: `pembayaran ${pembayaran.jenis}`,
-                nominal: pembayaran.nominal,
-                dihapus: 0,
-                m_sekolah_id: sekolah.id,
-                waktu_dibuat: pembayaranSiswa.updated_at,
-              });
+            const mutasi = await MMutasi.create({
+              tipe: "kredit",
+              nama: `Pembayaran ${pembayaran.nama} ${
+                pembayaran.jenis == "spp" ? pembayaran.bulan : ""
+              }-${user.nama}`,
+              kategori: `pembayaran ${pembayaran.jenis}`,
+              nominal: d.nominal,
+              dihapus: 0,
+              m_sekolah_id: sekolah.id,
+              waktu_dibuat: pembayaranSiswa.updated_at,
+            });
 
-              return pembayaran.nominal;
+            const totalDibayar = pembayaranSiswa
+              .toJSON()
+              .riwayat.reduce((a, b) => a + b.nominal, 0) + d.nominal;
+            const totalTagihan = pembayaranSiswa.toJSON().rombelPembayaran?.pembayaran?.nominal;
+            if (totalDibayar < totalTagihan) {
+              await MPembayaranSiswa.query()
+                .where({ id: pembayaranSiswa.id })
+                .update({
+                  status: "belum lunas",
+                });
+            } else {
+              if (!riwayat.toJSON().riwayat.some((item) => !item.dikonfirmasi)) {
+                await MPembayaranSiswa.query()
+                  .where({ id: pembayaranSiswa.id })
+                  .update({
+                    status: "lunas",
+                  });
+              }
             }
+            return d.nominal;
           }
           return;
         }
@@ -35066,12 +35073,12 @@ class MainController {
           ],
         });
         // add column headers
-        worksheet.getRow(7).values = ["No", "Nama", "Whatsapp", "Status"];
+        worksheet.getRow(7).values = ["No", "Nama", "Whatsapp", "Nominal"];
         worksheet.columns = [
           { key: "no" },
           { key: "nama" },
           { key: "whatsapp" },
-          { key: "status" },
+          { key: "nominal" },
         ];
 
         // Add row using key mapping to columns
@@ -35079,7 +35086,7 @@ class MainController {
           no: `${idx + 1}`,
           nama: d.user ? d.user.nama : "-",
           whatsapp: d.user ? d.user.whatsapp : "-",
-          status: d ? d.status : "-",
+          nominal: 0,
         });
       })
     );
