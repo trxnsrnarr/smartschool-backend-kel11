@@ -9471,10 +9471,10 @@ class MainController {
       if (status == "sudah-selesai") {
         return response.ok({
           jadwalUjian: ujian,
-          total: jadwalUjian.toJSON().total,
+          total: ujian.length,
           perPage: jadwalUjian.toJSON().perPage,
           page: jadwalUjian.toJSON().page,
-          lastPage: jadwalUjian.toJSON().lastPage,
+          lastPage: Math.ceil(ujian.length / jadwalUjian.toJSON().perPage),
         });
       } else {
         return response.ok({
