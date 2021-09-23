@@ -34772,6 +34772,7 @@ class MainController {
 
     const result = await Promise.all(
       data.map(async (d) => {
+        // return d.nominal;
         if (d.nominal > 0) {
           const user = await User.query()
             .select("id", "nama", "whatsapp")
@@ -34797,21 +34798,23 @@ class MainController {
             .andWhere({ tk_pembayaran_rombel_id: pembayaranRombel.id })
             .first();
 
+            // return checkPembayaranSiswa;
+
           if (checkPembayaranSiswa.status == "belum lunas") {
             const pembayaranSiswa = await MPembayaranSiswa.query()
               .where({ m_user_id: user.id })
               .andWhere({ m_sekolah_id: sekolah.id })
               .andWhere({ tk_pembayaran_rombel_id: pembayaranRombel.id })
               .with("riwayat")
-              .with("user", (x) => {
-                x.select("id", "nama");
+              .with("user", (builder) => {
+                builder.select("id", "nama");
               })
               .with("rombelPembayaran", (builder) => {
                 builder.with("pembayaran");
               })
               .first();
 
-            const riwayat = await MRiwayatPembayaranSiswa.create({
+            await MRiwayatPembayaranSiswa.create({
               bank: rekSekolah.bank,
               norek: rekSekolah.norek,
               nama_pemilik: rekSekolah.nama,
@@ -34820,6 +34823,8 @@ class MainController {
               dihapus: 0,
               m_pembayaran_siswa_id: pembayaranSiswa.id,
             });
+
+           
 
             const mutasi = await MMutasi.create({
               tipe: "kredit",
@@ -34844,7 +34849,7 @@ class MainController {
                   status: "belum lunas",
                 });
             } else {
-              if (!riwayat.toJSON().riwayat.some((item) => !item.dikonfirmasi)) {
+              if (!pembayaranSiswa.toJSON().riwayat.some((item) => !item.dikonfirmasi)) {
                 await MPembayaranSiswa.query()
                   .where({ id: pembayaranSiswa.id })
                   .update({
@@ -34854,7 +34859,7 @@ class MainController {
             }
             return d.nominal;
           }
-          return;
+          return ;
         }
       })
     );
