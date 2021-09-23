@@ -20409,7 +20409,7 @@ class MainController {
   }
 
   async daftarsekolah({ response, request }) {
-    const sekolah = await MSekolah.query().select("id", "nama", "logo").fetch();
+    const sekolah = await MSekolah.query().select("id", "nama", "favicon", "domain").fetch();
 
     return sekolah;
   }
