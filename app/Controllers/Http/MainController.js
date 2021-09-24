@@ -27525,24 +27525,12 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { m_sanksi_siswa_id, konfirmasi, lampiran, link } = request.post();
-    const rules = {
-      m_sanksi_siswa_id: "required",
-      keterangan: "required",
-    };
-    const message = {
-      "m_sanksi_siswa_id.required": "Sanksi harus diisi",
-      "keterangan.required": "Keterangan harus diisi",
-    };
-    const validation = await validate(request.all(), rules, message);
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
-    }
+    const {  konfirmasi, lampiran, link } = request.post();
+    
 
     const sanksi = await MBuktiPelaksanaanSanksi.query()
       .where({ id: sanksi_id })
       .update({
-        m_sanksi_siswa_id,
         lampiran: lampiran.toString(),
         link: link.toString(),
         konfirmasi,
