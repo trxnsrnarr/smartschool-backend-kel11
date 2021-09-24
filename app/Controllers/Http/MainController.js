@@ -20409,10 +20409,15 @@ class MainController {
   }
 
   async daftarsekolah({ response, request }) {
-    const sekolah = await MSekolah.query()
-      .select("id", "nama", "favicon", "domain")
-      .limit(50)
-      .fetch();
+    const { search } = request.get();
+
+    let sekolah = MSekolah.query().select("id", "nama", "favicon", "domain");
+
+    if (search) {
+      sekolah.where("nama", "like", `%${search}%`);
+    }
+
+    sekolah = await sekolah.limit(50).fetch();
 
     return sekolah;
   }
