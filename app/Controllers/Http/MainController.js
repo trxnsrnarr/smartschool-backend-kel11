@@ -13987,7 +13987,7 @@ class MainController {
 
     const kontak = await MKontak.query()
       .where({
-        m_sekolah_id: 13,
+        m_sekolah_id: sekolah.id,
       })
       .first();
 
