@@ -9234,12 +9234,17 @@ class MainController {
         .andWhere({ m_sekolah_id: sekolah.id })
         .fetch();
 
+      const userIds = await User.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .whereIn("role", ["admin", "guru"])
+        .ids();
+
       let jadwalUjian;
 
       if (status == "akan-datang") {
         jadwalUjian = await MJadwalUjian.query()
           .with("ujian")
-          .where({ m_user_id: user.id })
+          .whereIn("m_user_id", userIds)
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_dibuka", ">", hari_ini)
           .orderBy("id", "desc")
@@ -9247,7 +9252,7 @@ class MainController {
       } else if (status == "berlangsung") {
         jadwalUjian = await MJadwalUjian.query()
           .with("ujian")
-          .where({ m_user_id: user.id })
+          .whereIn("m_user_id", userIds)
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_dibuka", "<=", hari_ini)
           .andWhere("waktu_ditutup", ">=", hari_ini)
@@ -9256,7 +9261,7 @@ class MainController {
       } else if (status == "sudah-selesai") {
         jadwalUjian = await MJadwalUjian.query()
           .with("ujian")
-          .where({ m_user_id: user.id })
+          .whereIn("m_user_id", userIds)
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_ditutup", "<=", hari_ini)
           .orderBy("id", "desc")
@@ -9383,11 +9388,6 @@ class MainController {
           })
         );
       }
-
-      const userIds = await User.query()
-        .where({ m_sekolah_id: sekolah.id })
-        .whereIn("role", ["admin", "guru"])
-        .ids();
 
       const ujian = await MUjian.query()
         .whereIn("m_user_id", userIds)
@@ -20409,7 +20409,10 @@ class MainController {
   }
 
   async daftarsekolah({ response, request }) {
-    const sekolah = await MSekolah.query().select("id", "nama", "favicon", "domain").fetch();
+    const sekolah = await MSekolah.query()
+      .select("id", "nama", "favicon", "domain")
+      .limit(50)
+      .fetch();
 
     return sekolah;
   }
@@ -27348,7 +27351,8 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { m_sanksi_pelanggaran_id, keterangan, lampiran ,link} = request.post();
+    const { m_sanksi_pelanggaran_id, keterangan, lampiran, link } =
+      request.post();
     const rules = {
       m_sanksi_pelanggaran_id: "required",
       keterangan: "required",
@@ -27365,8 +27369,8 @@ class MainController {
     const siswa = await MSanksiSiswa.create({
       m_sanksi_pelanggaran_id,
       keterangan,
-      lampiran:lampiran.toString(),
-      link:link.toString(),
+      lampiran: lampiran.toString(),
+      link: link.toString(),
       m_user_id: user_id,
       dihapus: 0,
     });
@@ -34798,7 +34802,7 @@ class MainController {
             .andWhere({ tk_pembayaran_rombel_id: pembayaranRombel.id })
             .first();
 
-            // return checkPembayaranSiswa;
+          // return checkPembayaranSiswa;
 
           if (checkPembayaranSiswa.status == "belum lunas") {
             const pembayaranSiswa = await MPembayaranSiswa.query()
@@ -34824,8 +34828,6 @@ class MainController {
               m_pembayaran_siswa_id: pembayaranSiswa.id,
             });
 
-           
-
             const mutasi = await MMutasi.create({
               tipe: "kredit",
               nama: `Pembayaran ${pembayaran.nama} ${
@@ -34838,10 +34840,12 @@ class MainController {
               waktu_dibuat: pembayaranSiswa.updated_at,
             });
 
-            const totalDibayar = pembayaranSiswa
-              .toJSON()
-              .riwayat.reduce((a, b) => a + b.nominal, 0) + d.nominal;
-            const totalTagihan = pembayaranSiswa.toJSON().rombelPembayaran?.pembayaran?.nominal;
+            const totalDibayar =
+              pembayaranSiswa
+                .toJSON()
+                .riwayat.reduce((a, b) => a + b.nominal, 0) + d.nominal;
+            const totalTagihan =
+              pembayaranSiswa.toJSON().rombelPembayaran?.pembayaran?.nominal;
             if (totalDibayar < totalTagihan) {
               await MPembayaranSiswa.query()
                 .where({ id: pembayaranSiswa.id })
@@ -34849,7 +34853,11 @@ class MainController {
                   status: "belum lunas",
                 });
             } else {
-              if (!pembayaranSiswa.toJSON().riwayat.some((item) => !item.dikonfirmasi)) {
+              if (
+                !pembayaranSiswa
+                  .toJSON()
+                  .riwayat.some((item) => !item.dikonfirmasi)
+              ) {
                 await MPembayaranSiswa.query()
                   .where({ id: pembayaranSiswa.id })
                   .update({
@@ -34859,7 +34867,7 @@ class MainController {
             }
             return d.nominal;
           }
-          return ;
+          return;
         }
       })
     );
@@ -34950,9 +34958,7 @@ class MainController {
     let worksheet = workbook.addWorksheet(`sheet1`);
     worksheet.mergeCells("A1:D1");
     worksheet.mergeCells("A2:D2");
-    worksheet.getCell(
-      "A4"
-    ).value = `note : Isi nominal dengan angka`;
+    worksheet.getCell("A4").value = `note : Isi nominal dengan angka`;
     worksheet.getCell(
       "A6"
     ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
