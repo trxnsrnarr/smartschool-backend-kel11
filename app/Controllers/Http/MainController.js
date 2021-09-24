@@ -33087,6 +33087,7 @@ class MainController {
     const userAuthor = await User.query()
       .where({ dihapus: 0 })
       .andWhere({ id: user_id })
+      .with("profil")
       .first();
 
     const rpp = await MRpp.query()
