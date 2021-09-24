@@ -2838,6 +2838,8 @@ class MainController {
       tingkat = ["VII", "VIII", "IX"];
     } else if (sekolah.tingkat == "SD") {
       tingkat = ["I", "II", "III", "IV", "V", "VI"];
+    } else if (sekolah.tingkat == "SLB") {
+      tingkat = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
     }
 
     return response.ok({
