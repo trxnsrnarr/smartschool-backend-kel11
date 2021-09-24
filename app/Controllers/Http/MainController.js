@@ -114,6 +114,7 @@ const MJadwalKonsultasi = use("App/Models/MJadwalKonsultasi");
 const MLabelKalender = use("App/Models/MLabelKalender");
 const MKegiatanKalender = use("App/Models/MKegiatanKalender");
 const MKalenderPendidikan = use("App/Models/MKalenderPendidikan");
+const MBuktiPelaksanaanSanksi = use("App/Models/MBuktiPelaksanaanSanksi");
 
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
@@ -13364,7 +13365,10 @@ class MainController {
     if (search) {
       pembayaran = await MPembayaran.query()
         .with("rombel", (builder) => {
-          builder.with("rombel");
+          builder.with("rombel")
+          .withCount("siswa as total",(builder)=>{
+            builder.where({status:"lunas"})
+          });
         })
         .where({ dihapus: 0 })
         .andWhere({ m_sekolah_id: sekolah.id })
@@ -13374,7 +13378,9 @@ class MainController {
     } else {
       pembayaran = await MPembayaran.query()
         .with("rombel", (builder) => {
-          builder.with("rombel");
+          builder.with("rombel").withCount("siswa as total",(builder)=>{
+            builder.where({status:"lunas"})
+          });
         })
         .where({ dihapus: 0 })
         .andWhere({ m_sekolah_id: sekolah.id })
@@ -26877,23 +26883,38 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
+    const { search, page } = request.get();
+
     const sanksi = await MSanksiPelanggaran.query()
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .fetch();
 
-    const siswa = await Promise.all(
-      sanksi.toJSON().map(async (d) => {
-        const siswa = await MSanksiSiswa.query()
-          .with("user", (builder) => {
-            builder.select("id", "nama").where({ dihapus: 0 });
-          })
+    const data = await MSanksiSiswa.query()
+      .with("sanksi")
+      .with("bukti")
+      .with("user", (builder) => {
+        builder
+          .select("id", "nama")
           .where({ dihapus: 0 })
-          .andWhere({ m_sanksi_pelanggaran_id: d.id })
-          .fetch();
-        return siswa;
+          .andWhere({ m_sekolah_id: sekolah.id });
+        if (search) {
+          builder.andWhere("nama", "like", `%${search}%`);
+        }
       })
+      .where({ dihapus: 0 })
+      .orderBy("created_at", "desc")
+      .paginate(page, 10);
+
+    const siswa = await Promise.all(
+      data.toJSON().filter((d) => d.user != null)
     );
+    // .andWhere({ m_sanksi_pelanggaran_id: d.id })
+    // const siswa = await Promise.all(
+    //   sanksi.toJSON().map(async (d) => {
+    //     return siswa;
+    //   })
+    // );
 
     return response.ok({
       sanksi,
@@ -27184,7 +27205,7 @@ class MainController {
           .where({ dihapus: 0 });
       })
       .with("sanksiSiswa", (builder) => {
-        builder.where({ dihapus: 0 });
+        builder.with("bukti").where({ dihapus: 0 });
       })
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
@@ -27348,7 +27369,8 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { m_sanksi_pelanggaran_id, keterangan, lampiran ,link} = request.post();
+    const { m_sanksi_pelanggaran_id, keterangan, lampiran, link } =
+      request.post();
     const rules = {
       m_sanksi_pelanggaran_id: "required",
       keterangan: "required",
@@ -27365,8 +27387,8 @@ class MainController {
     const siswa = await MSanksiSiswa.create({
       m_sanksi_pelanggaran_id,
       keterangan,
-      lampiran:lampiran.toString(),
-      link:link.toString(),
+      lampiran: lampiran.toString(),
+      link: link.toString(),
       m_user_id: user_id,
       dihapus: 0,
     });
@@ -27387,7 +27409,8 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { m_sanksi_pelanggaran_id, keterangan, lampiran } = request.post();
+    const { m_sanksi_pelanggaran_id, keterangan, lampiran, link } =
+      request.post();
     const rules = {
       m_sanksi_pelanggaran_id: "required",
       keterangan: "required",
@@ -27404,7 +27427,8 @@ class MainController {
     const sanksi = await MSanksiSiswa.query().where({ id: sanksi_id }).update({
       m_sanksi_pelanggaran_id,
       keterangan,
-      lampiran,
+      lampiran: lampiran.toString(),
+      link: link.toString(),
       dihapus: 0,
     });
 
@@ -27437,6 +27461,130 @@ class MainController {
     const sanksi = await MSanksiSiswa.query().where({ id: sanksi_id }).update({
       dihapus: 1,
     });
+
+    if (!sanksi) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async postBuktiSanksiSiswa({ response, request, auth, params: { user_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { m_sanksi_siswa_id, lampiran, link } = request.post();
+    const rules = {
+      m_sanksi_siswa_id: "required",
+    };
+    const message = {
+      "m_sanksi_siswa_id.required": "Sanksi harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const siswa = await MBuktiPelaksanaanSanksi.create({
+      m_sanksi_siswa_id,
+      lampiran: lampiran.toString(),
+      link: link.toString(),
+      m_user_id: user_id,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putBuktiSanksiSiswa({
+    response,
+    request,
+    auth,
+    params: { sanksi_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { m_sanksi_siswa_id, konfirmasi, lampiran, link } = request.post();
+    const rules = {
+      m_sanksi_siswa_id: "required",
+      keterangan: "required",
+    };
+    const message = {
+      "m_sanksi_siswa_id.required": "Sanksi harus diisi",
+      "keterangan.required": "Keterangan harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const sanksi = await MBuktiPelaksanaanSanksi.query()
+      .where({ id: sanksi_id })
+      .update({
+        m_sanksi_siswa_id,
+        lampiran: lampiran.toString(),
+        link: link.toString(),
+        konfirmasi,
+        dihapus: 0,
+      });
+
+    if (!sanksi) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteBuktiSanksiSiswa({
+    response,
+    request,
+    auth,
+    params: { sanksi_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    // if ((user.role != "admin" || user.role  == 'kurikulum') || user.m_sekolah_id != sekolah.id) {
+    //   return response.forbidden({ message: messageForbidden });
+    // }
+
+    const sanksi = await MBuktiPelaksanaanSanksi.query()
+      .where({ id: sanksi_id })
+      .update({
+        dihapus: 1,
+      });
 
     if (!sanksi) {
       return response.notFound({
@@ -34798,7 +34946,7 @@ class MainController {
             .andWhere({ tk_pembayaran_rombel_id: pembayaranRombel.id })
             .first();
 
-            // return checkPembayaranSiswa;
+          // return checkPembayaranSiswa;
 
           if (checkPembayaranSiswa.status == "belum lunas") {
             const pembayaranSiswa = await MPembayaranSiswa.query()
@@ -34824,8 +34972,6 @@ class MainController {
               m_pembayaran_siswa_id: pembayaranSiswa.id,
             });
 
-           
-
             const mutasi = await MMutasi.create({
               tipe: "kredit",
               nama: `Pembayaran ${pembayaran.nama} ${
@@ -34838,10 +34984,12 @@ class MainController {
               waktu_dibuat: pembayaranSiswa.updated_at,
             });
 
-            const totalDibayar = pembayaranSiswa
-              .toJSON()
-              .riwayat.reduce((a, b) => a + b.nominal, 0) + d.nominal;
-            const totalTagihan = pembayaranSiswa.toJSON().rombelPembayaran?.pembayaran?.nominal;
+            const totalDibayar =
+              pembayaranSiswa
+                .toJSON()
+                .riwayat.reduce((a, b) => a + b.nominal, 0) + d.nominal;
+            const totalTagihan =
+              pembayaranSiswa.toJSON().rombelPembayaran?.pembayaran?.nominal;
             if (totalDibayar < totalTagihan) {
               await MPembayaranSiswa.query()
                 .where({ id: pembayaranSiswa.id })
@@ -34849,7 +34997,11 @@ class MainController {
                   status: "belum lunas",
                 });
             } else {
-              if (!pembayaranSiswa.toJSON().riwayat.some((item) => !item.dikonfirmasi)) {
+              if (
+                !pembayaranSiswa
+                  .toJSON()
+                  .riwayat.some((item) => !item.dikonfirmasi)
+              ) {
                 await MPembayaranSiswa.query()
                   .where({ id: pembayaranSiswa.id })
                   .update({
@@ -34859,7 +35011,7 @@ class MainController {
             }
             return d.nominal;
           }
-          return ;
+          return;
         }
       })
     );
