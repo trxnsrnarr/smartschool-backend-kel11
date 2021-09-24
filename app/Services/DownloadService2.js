@@ -1,8 +1,8 @@
 const Excel = require("exceljs");
 const nodeHtmlToImage = require("node-html-to-image");
 const sizeOf = require("image-size");
-require("events").EventEmitter.defaultMaxListeners = 100;
 const htmlEscaper = require("html-sloppy-escaper");
+require("events").EventEmitter.defaultMaxListeners = 100;
 
 class DownloadService {
   static async kartuUjian(
@@ -97,7 +97,7 @@ class DownloadService {
       pgFilter.map(async (d, idx) => {
         // image
         const image = await nodeHtmlToImage({
-          html: d ? `<div>${htmlEscaper.unescape(d.pertanyaan)}</div>` : "-",
+          html: d ? `<div>${htmlEscaper.unescape(d.pertanyaan)}</div>` : "<div>-</div>",
           type: "jpeg",
           quality: 25,
           encoding: "base64",
@@ -106,7 +106,7 @@ class DownloadService {
         });
         const dimensions = sizeOf(Buffer.from(image, "base64"));
         const imagea = await nodeHtmlToImage({
-          html: d ? `<div>${htmlEscaper.unescape(d.jawaban_a)}</div>` : "-",
+          html: d ? `<div>${htmlEscaper.unescape(d.jawaban_a)}</div>` : "<div>-</div>",
           type: "jpeg",
           quality: 25,
           encoding: "base64",
@@ -115,7 +115,7 @@ class DownloadService {
         });
         const dimensionsa = sizeOf(Buffer.from(imagea, "base64"));
         const imageb = await nodeHtmlToImage({
-          html: d ? `<div>${htmlEscaper.unescape(d.jawaban_b)}</div>` : "-",
+          html: d ? `<div>${htmlEscaper.unescape(d.jawaban_b)}</div>` : "<div>-</div>",
           type: "jpeg",
           quality: 25,
           encoding: "base64",
@@ -124,7 +124,7 @@ class DownloadService {
         });
         const dimensionsb = sizeOf(Buffer.from(imageb, "base64"));
         const imagec = await nodeHtmlToImage({
-          html: d ? `<div>${htmlEscaper.unescape(d.jawaban_c)}</div>` : "-",
+          html: d ? `<div>${htmlEscaper.unescape(d.jawaban_c)}</div>` : "<div>-</div>",
           type: "jpeg",
           quality: 25,
           encoding: "base64",
@@ -133,7 +133,7 @@ class DownloadService {
         });
         const dimensionsc = sizeOf(Buffer.from(imagec, "base64"));
         const imaged = await nodeHtmlToImage({
-          html: d ? `<div>${htmlEscaper.unescape(d.jawaban_d)}</div>` : "-",
+          html: d ? `<div>${htmlEscaper.unescape(d.jawaban_d)}</div>` : "<div>-</div>",
           type: "jpeg",
           quality: 25,
           encoding: "base64",
@@ -142,7 +142,7 @@ class DownloadService {
         });
         const dimensionsd = sizeOf(Buffer.from(imaged, "base64"));
         const imagee = await nodeHtmlToImage({
-          html: d ? `<div>${htmlEscaper.unescape(d.jawaban_e)}</div>` : "-",
+          html: d ? `<div>${htmlEscaper.unescape(d.jawaban_e)}</div>` : "<div>-</div>",
           type: "jpeg",
           quality: 25,
           encoding: "base64",
