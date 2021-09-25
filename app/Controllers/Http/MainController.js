@@ -8800,8 +8800,6 @@ class MainController {
 
     let explanation = workbook.getWorksheet("Sheet1");
 
-    return explanation;
-
     let colComment = explanation.getColumn("A");
 
     let data = [];
@@ -8875,7 +8873,7 @@ class MainController {
 
     let file = request.file("file");
 
-    let fname = `import-excel-soal.${file.extname}`;
+    let fname = `import-excel-soal-${new Date().getTime()}.${file.extname}`;
 
     const user = await auth.getUser();
 
