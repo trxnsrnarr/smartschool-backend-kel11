@@ -4633,7 +4633,7 @@ class MainController {
     }
 
     let file = request.file("file");
-    let fname = `import-excel.${file.extname}`;
+    let fname = `import-excel.xlsx`;
 
     const { m_rombel_id } = request.post();
 
@@ -4779,7 +4779,7 @@ class MainController {
     }
 
     let file = request.file("file");
-    let fname = `import-excel.${file.extname}`;
+    let fname = `import-excel.xlsx`;
 
     const { m_rombel_id } = request.post();
 
@@ -8873,7 +8873,7 @@ class MainController {
 
     let file = request.file("file");
 
-    let fname = `import-excel-soal-${new Date().getTime()}.${file.extname}`;
+    let fname = `import-excel-soal-${new Date().getTime()}.xlsx`;
 
     const user = await auth.getUser();
 
@@ -17585,7 +17585,7 @@ class MainController {
     }
 
     let file = request.file("file");
-    let fname = `import-excel.${file.extname}`;
+    let fname = `import-excel.xlsx`;
 
     //move uploaded file into custom folder
     await file.move(Helpers.tmpPath("/uploads"), {
@@ -17679,7 +17679,7 @@ class MainController {
     }
 
     let file = request.file("file");
-    let fname = `import-excel.${file.extname}`;
+    let fname = `import-excel.xlsx`;
 
     //move uploaded file into custom folder
     await file.move(Helpers.tmpPath("/uploads"), {
@@ -18238,7 +18238,7 @@ class MainController {
     }
 
     let file = request.file("file");
-    let fname = `import-excel.${file.extname}`;
+    let fname = `import-excel.xlsx`;
 
     //move uploaded file into custom folder
     await file.move(Helpers.tmpPath("/uploads"), {
@@ -18510,7 +18510,7 @@ class MainController {
     }
 
     let file = request.file("file");
-    let fname = `import-excel.${file.extname}`;
+    let fname = `import-excel.xlsx`;
 
     //move uploaded file into custom folder
     await file.move(Helpers.tmpPath("/uploads"), {
@@ -19220,7 +19220,7 @@ class MainController {
     }
 
     let file = request.file("file");
-    let fname = `import-excel.${file.extname}`;
+    let fname = `import-excel.xlsx`;
 
     //move uploaded file into custom folder
     await file.move(Helpers.tmpPath("/uploads"), {
@@ -19507,7 +19507,7 @@ class MainController {
     }
 
     let file = request.file("file");
-    let fname = `import-excel.${file.extname}`;
+    let fname = `import-excel.xlsx`;
 
     //move uploaded file into custom folder
     await file.move(Helpers.tmpPath("/uploads"), {
@@ -20077,7 +20077,7 @@ class MainController {
     }
 
     let file = request.file("file");
-    let fname = `import-excel.${file.extname}`;
+    let fname = `import-excel.xlsx`;
 
     //move uploaded file into custom folder
     await file.move(Helpers.tmpPath("/uploads"), {
@@ -26079,7 +26079,7 @@ class MainController {
     }
 
     let file = request.file("file");
-    let fname = `import-excel.${file.extname}`;
+    let fname = `import-excel.xlsx`;
 
     //move uploaded file into custom folder
     await file.move(Helpers.tmpPath("/uploads"), {
@@ -26336,7 +26336,7 @@ class MainController {
     }
 
     let file = request.file("file");
-    let fname = `import-excel.${file.extname}`;
+    let fname = `import-excel.xlsx`;
 
     //move uploaded file into custom folder
     await file.move(Helpers.tmpPath("/uploads"), {
@@ -30071,7 +30071,7 @@ class MainController {
 
   async importGPDS({ request, response, auth }) {
     let file = request.file("file");
-    let fname = `import-excel.${file.extname}`;
+    let fname = `import-excel.xlsx`;
 
     //move uploaded file into custom folder
     await file.move(Helpers.tmpPath("/uploads"), {
@@ -32818,7 +32818,7 @@ class MainController {
     }
 
     let file = request.file("file");
-    let fname = `import-excel.${file.extname}`;
+    let fname = `import-excel.xlsx`;
 
     //move uploaded file into custom folder
     await file.move(Helpers.tmpPath("/uploads"), {
@@ -34906,7 +34906,7 @@ class MainController {
     }
 
     let file = request.file("file");
-    let fname = `import-excel.${file.extname}`;
+    let fname = `import-excel.xlsx`;
 
     //move uploaded file into custom folder
     await file.move(Helpers.tmpPath("/uploads"), {
