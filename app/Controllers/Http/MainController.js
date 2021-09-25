@@ -2840,7 +2840,20 @@ class MainController {
     } else if (sekolah.tingkat == "SD") {
       tingkat = ["I", "II", "III", "IV", "V", "VI"];
     } else if (sekolah.tingkat == "SLB") {
-      tingkat = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
+      tingkat = [
+        "I",
+        "II",
+        "III",
+        "IV",
+        "V",
+        "VI",
+        "VII",
+        "VIII",
+        "IX",
+        "X",
+        "XI",
+        "XII",
+      ];
     }
 
     return response.ok({
@@ -9470,6 +9483,24 @@ class MainController {
         });
       }
     } else if (user.role == "siswa") {
+      // get tagihan
+      const pembayaran = await MPembayaranSiswa.query()
+        .with("rombelPembayaran", (builder) => {
+          builder.with("pembayaran", (builder) => {
+            builder.where({ dihapus: 0 }).andWhere({jenis: "ujian"});
+          });
+        })
+        .with("riwayat", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .withCount("riwayat as totalJumlah", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .where({ dihapus: 0 })
+        .andWhere({ m_user_id: user.id })
+        .andWhere({ status: "belum lunas" })
+        .fetch();
+
       const rombelIds = await MRombel.query()
         .where({ m_ta_id: ta.id })
         .andWhere({ dihapus: 0 })
@@ -9541,10 +9572,12 @@ class MainController {
           perPage: jadwalUjian.toJSON().perPage,
           page: jadwalUjian.toJSON().page,
           lastPage: Math.ceil(ujian.length / jadwalUjian.toJSON().perPage),
+          pembayaran: pembayaran.toJSON().filter(item => item.rombelPembayaran.pembayaran)
         });
       } else {
         return response.ok({
           jadwalUjian: ujian,
+          pembayaran: pembayaran.toJSON().filter(item => item.rombelPembayaran.pembayaran)
         });
       }
     }
@@ -13425,9 +13458,8 @@ class MainController {
     if (search) {
       pembayaran = await MPembayaran.query()
         .with("rombel", (builder) => {
-          builder.with("rombel")
-          .withCount("siswa as total",(builder)=>{
-            builder.where({status:"lunas"})
+          builder.with("rombel").withCount("siswa as total", (builder) => {
+            builder.where({ status: "lunas" });
           });
         })
         .where({ dihapus: 0 })
@@ -13438,8 +13470,8 @@ class MainController {
     } else {
       pembayaran = await MPembayaran.query()
         .with("rombel", (builder) => {
-          builder.with("rombel").withCount("siswa as total",(builder)=>{
-            builder.where({status:"lunas"})
+          builder.with("rombel").withCount("siswa as total", (builder) => {
+            builder.where({ status: "lunas" });
           });
         })
         .where({ dihapus: 0 })
@@ -27593,8 +27625,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const {  konfirmasi, lampiran, link } = request.post();
-    
+    const { konfirmasi, lampiran, link } = request.post();
 
     const sanksi = await MBuktiPelaksanaanSanksi.query()
       .where({ id: sanksi_id })
