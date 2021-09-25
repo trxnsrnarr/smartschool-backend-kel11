@@ -22,6 +22,10 @@ class MSanksiSiswa extends Model {
   user() {
     return this.belongsTo("App/Models/User", "m_user_id");
   }
+
+  bukti() {
+    return this.belongsTo("App/Models/MBuktiPelaksanaanSanksi");
+  }
 }
 
 module.exports = MSanksiSiswa;

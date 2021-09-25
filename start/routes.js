@@ -871,6 +871,19 @@ Route.delete(
   "MainController.deleteSanksiSiswa"
 );
 
+Route.post(
+  "/tatatertib/siswa/bukti-sanksi/:user_id",
+  "MainController.postBuktiSanksiSiswa"
+);
+Route.put(
+  "/tatatertib/siswa/bukti-sanksi/:sanksi_id",
+  "MainController.putBuktiSanksiSiswa"
+);
+Route.delete(
+  "/tatatertib/siswa/bukti-sanksi/:sanksi_id",
+  "MainController.deleteBuktiSanksiSiswa"
+);
+
 //Peraturan Service
 Route.get("/tatatertib/peraturan", "MainController.getBabPeraturan");
 Route.post("/tatatertib/peraturan", "MainController.postBabPeraturan");
