@@ -161,6 +161,7 @@ Route.put(
 
 // post
 Route.get("/blog", "MainController.getBlog");
+Route.get("/blog/:post_id", "MainController.detailBlog");
 Route.get("/post", "MainController.getPost");
 Route.get("/post/:post_id", "MainController.detailPost");
 Route.post("/post", "MainController.postPost");

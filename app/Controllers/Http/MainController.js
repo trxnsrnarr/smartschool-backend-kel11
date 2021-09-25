@@ -4160,6 +4160,33 @@ class MainController {
     });
   }
 
+  async detailBlog({ response, request, params: { post_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const post = await MPost.query()
+      .with("tkPost")
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ id: post_id })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    const kategori = await MKategori.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    return response.ok({
+      post: post,
+      kategori: kategori,
+    });
+  }
+
   async detailPost({ response, request, auth, params: { post_id } }) {
     const user = await auth.getUser();
 
