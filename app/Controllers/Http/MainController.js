@@ -26975,7 +26975,7 @@ class MainController {
       .paginate(page, 10);
 
     const siswa = await Promise.all(
-      data.toJSON().filter((d) => d.user != null)
+      data.toJSON().data.filter((d) => d.user != null)
     );
     // .andWhere({ m_sanksi_pelanggaran_id: d.id })
     // const siswa = await Promise.all(
