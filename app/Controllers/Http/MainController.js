@@ -8800,6 +8800,8 @@ class MainController {
 
     let explanation = workbook.getWorksheet("Sheet1");
 
+    return explanation;
+
     let colComment = explanation.getColumn("A");
 
     let data = [];
