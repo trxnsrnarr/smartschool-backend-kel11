@@ -4093,6 +4093,37 @@ class MainController {
     });
   }
 
+  async getBlog({ response, request }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { limit } = request.get();
+
+    let post;
+
+    if (limit) {
+      post = await MPost.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ dihapus: 0 })
+        .limit(limit)
+        .fetch();
+    } else {
+      post = await MPost.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ dihapus: 0 })
+        .fetch();
+    }
+
+    return response.ok({
+      post: post,
+    });
+  }
+
   async getPost({ response, request, auth }) {
     const user = await auth.getUser();
 
