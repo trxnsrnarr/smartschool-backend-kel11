@@ -9487,7 +9487,7 @@ class MainController {
       const pembayaran = await MPembayaranSiswa.query()
         .with("rombelPembayaran", (builder) => {
           builder.with("pembayaran", (builder) => {
-            builder.where({ dihapus: 0 }).andWhere({jenis: "ujian"});
+            builder.where({ dihapus: 0 }).andWhere({ jenis: "ujian" });
           });
         })
         .with("riwayat", (builder) => {
@@ -9572,12 +9572,16 @@ class MainController {
           perPage: jadwalUjian.toJSON().perPage,
           page: jadwalUjian.toJSON().page,
           lastPage: Math.ceil(ujian.length / jadwalUjian.toJSON().perPage),
-          pembayaran: pembayaran.toJSON().filter(item => item.rombelPembayaran.pembayaran)
+          pembayaran: pembayaran
+            .toJSON()
+            .filter((item) => item.rombelPembayaran.pembayaran),
         });
       } else {
         return response.ok({
           jadwalUjian: ujian,
-          pembayaran: pembayaran.toJSON().filter(item => item.rombelPembayaran.pembayaran)
+          pembayaran: pembayaran
+            .toJSON()
+            .filter((item) => item.rombelPembayaran.pembayaran),
         });
       }
     }
@@ -9722,11 +9726,12 @@ class MainController {
                           ? analisisTotal[d.soal.kd] + 1
                           : 1;
                       } else if (d.soal.bentuk == "esai") {
-                        if(JSON.parse(d.jawaban_rubrik_esai)) {
-                          if(JSON.parse(d.jawaban_rubrik_esai).length) {
+                        if (JSON.parse(d.jawaban_rubrik_esai)) {
+                          if (JSON.parse(d.jawaban_rubrik_esai).length) {
                             JSON.parse(d.jawaban_rubrik_esai).map((e) => {
                               if (e.benar) {
-                                metaHasil.nilaiEsai = metaHasil.nilaiEsai + e.poin;
+                                metaHasil.nilaiEsai =
+                                  metaHasil.nilaiEsai + e.poin;
                               }
                             });
 
@@ -9734,9 +9739,7 @@ class MainController {
                               metaHasil.benar = metaHasil.benar + 1;
                             }
                           }
-                          
                         }
-                        
                       }
                     })
                   );
@@ -10100,8 +10103,8 @@ class MainController {
               ? analisisTotal[d.soal.kd] + 1
               : 1;
           } else if (d.soal.bentuk == "esai") {
-            if(JSON.parse(d.jawaban_rubrik_esai)) {
-              if(JSON.parse(d.jawaban_rubrik_esai).length) {
+            if (JSON.parse(d.jawaban_rubrik_esai)) {
+              if (JSON.parse(d.jawaban_rubrik_esai).length) {
                 JSON.parse(d.jawaban_rubrik_esai).map((e) => {
                   if (e.benar) {
                     metaHasil.nilaiEsai = metaHasil.nilaiEsai + e.poin;
@@ -10113,7 +10116,6 @@ class MainController {
                 }
               }
             }
-            
           }
         })
       );
@@ -13471,9 +13473,12 @@ class MainController {
     if (search) {
       pembayaran = await MPembayaran.query()
         .with("rombel", (builder) => {
-          builder.with("rombel").withCount("siswa as total", (builder) => {
-            builder.where({ status: "lunas" });
-          });
+          builder
+            .with("rombel")
+            .withCount("siswa as totalLunas", (builder) => {
+              builder.where({ status: "lunas" });
+            })
+            .withCount("siswa as total");
         })
         .where({ dihapus: 0 })
         .andWhere({ m_sekolah_id: sekolah.id })
@@ -13483,15 +13488,26 @@ class MainController {
     } else {
       pembayaran = await MPembayaran.query()
         .with("rombel", (builder) => {
-          builder.with("rombel").withCount("siswa as total", (builder) => {
-            builder.where({ status: "lunas" });
-          });
+          builder
+            .with("rombel")
+            .withCount("siswa as totalLunas", (builder) => {
+              builder.where({ status: "lunas" });
+            })
+            .withCount("siswa as total");
         })
         .where({ dihapus: 0 })
         .andWhere({ m_sekolah_id: sekolah.id })
         .andWhere({ jenis: tipe })
         .fetch();
     }
+
+    const totalPelunasan = pembayaran.toJSON().map((item) => {
+      return {
+        id: item.id,
+        total: item.rombel.reduce((a, b) => a + b.__meta__.total, 0),
+        totalLunas: item.rombel.reduce((a, b) => a + b.__meta__.totalLunas, 0),
+      };
+    });
 
     const rombel = await MRombel.query()
       .where({ dihapus: 0 })
@@ -13524,6 +13540,7 @@ class MainController {
       rombel: rombel,
       tipeUjian: tipeUjian,
       pembayaran_kategori: pembayaranKategori,
+      totalPelunasan,
     });
   }
 
@@ -14489,19 +14506,21 @@ class MainController {
       .where({ m_sekolah_id: sekolah.id })
       .first();
 
-    let pemasukan, pengeluaran;
-    if (tipe == "debit") {
-      pemasukan = rekSekolah.pemasukan;
-      pengeluaran = rekSekolah.pengeluaran + nominal;
-    } else {
-      pemasukan = rekSekolah.pemasukan + nominal;
-      pengeluaran = rekSekolah.pengeluaran;
+    if(rekSekolah){
+      let pemasukan, pengeluaran;
+      if (tipe == "debit") {
+        pemasukan = rekSekolah.pemasukan;
+        pengeluaran = rekSekolah.pengeluaran + nominal;
+      } else {
+        pemasukan = rekSekolah.pemasukan + nominal;
+        pengeluaran = rekSekolah.pengeluaran;
+      }
+  
+      await MRekSekolah.query().where({ m_sekolah_id: sekolah.id }).update({
+        pemasukan,
+        pengeluaran,
+      });
     }
-
-    await MRekSekolah.query().where({ m_sekolah_id: sekolah.id }).update({
-      pemasukan,
-      pengeluaran,
-    });
 
     return response.ok({
       message: messagePostSuccess,
@@ -14549,29 +14568,31 @@ class MainController {
       .where({ m_sekolah_id: sekolah.id })
       .first();
 
-    let pemasukan, pengeluaran;
-    if (tipe != beforeUpdate.tipe) {
-      if (tipe == "kredit") {
-        pemasukan = rekSekolah.pemasukan + nominal;
-        pengeluaran = rekSekolah.pengeluaran - beforeUpdate.nominal;
+    if (rekSekolah) {
+      let pemasukan, pengeluaran;
+      if (tipe != beforeUpdate.tipe) {
+        if (tipe == "kredit") {
+          pemasukan = rekSekolah.pemasukan + nominal;
+          pengeluaran = rekSekolah.pengeluaran - beforeUpdate.nominal;
+        } else {
+          pengeluaran = rekSekolah.pengeluaran + nominal;
+          pemasukan = rekSekolah.pemasukan - beforeUpdate.nominal;
+        }
       } else {
-        pengeluaran = rekSekolah.pengeluaran + nominal;
-        pemasukan = rekSekolah.pemasukan - beforeUpdate.nominal;
+        if (tipe == "kredit") {
+          pemasukan = rekSekolah.pemasukan - beforeUpdate.nominal + nominal;
+          pengeluaran = rekSekolah.pengeluaran;
+        } else {
+          pengeluaran = rekSekolah.pengeluaran - beforeUpdate.nominal + nominal;
+          pemasukan = rekSekolah.pemasukan;
+        }
       }
-    } else {
-      if (tipe == "kredit") {
-        pemasukan = rekSekolah.pemasukan - beforeUpdate.nominal + nominal;
-        pengeluaran = rekSekolah.pengeluaran;
-      } else {
-        pengeluaran = rekSekolah.pengeluaran - beforeUpdate.nominal + nominal;
-        pemasukan = rekSekolah.pemasukan;
-      }
-    }
 
-    await MRekSekolah.query().where({ m_sekolah_id: sekolah.id }).update({
-      pemasukan,
-      pengeluaran,
-    });
+      await MRekSekolah.query().where({ m_sekolah_id: sekolah.id }).update({
+        pemasukan,
+        pengeluaran,
+      });
+    }
 
     if (!mutasi) {
       return response.notFound({
@@ -14598,27 +14619,29 @@ class MainController {
       .where({ m_sekolah_id: sekolah.id })
       .first();
 
-    let pemasukan, pengeluaran;
-    if (beforeUpdate.tipe == "kredit") {
-      // Kredit == pemasukan
-      pemasukan = rekSekolah.pemasukan - beforeUpdate.nominal;
-      if (pemasukan < 0) {
-        pemasukan = 0;
+    if (rekSekolah) {
+      let pemasukan, pengeluaran;
+      if (beforeUpdate.tipe == "kredit") {
+        // Kredit == pemasukan
+        pemasukan = rekSekolah.pemasukan - beforeUpdate.nominal;
+        if (pemasukan < 0) {
+          pemasukan = 0;
+        }
+        pengeluaran = rekSekolah.pengeluaran;
+      } else {
+        // debit == pengeluaran
+        pengeluaran = rekSekolah.pengeluaran - beforeUpdate.nominal;
+        if (pengeluaran < 0) {
+          pengeluaran = 0;
+        }
+        pemasukan = rekSekolah.pemasukan;
       }
-      pengeluaran = rekSekolah.pengeluaran;
-    } else {
-      // debit == pengeluaran
-      pengeluaran = rekSekolah.pengeluaran - beforeUpdate.nominal;
-      if (pengeluaran < 0) {
-        pengeluaran = 0;
-      }
-      pemasukan = rekSekolah.pemasukan;
-    }
 
-    await MRekSekolah.query().where({ m_sekolah_id: sekolah.id }).update({
-      pemasukan,
-      pengeluaran,
-    });
+      await MRekSekolah.query().where({ m_sekolah_id: sekolah.id }).update({
+        pemasukan,
+        pengeluaran,
+      });
+    }
 
     const mutasi = await MMutasi.query().where({ id: mutasi_id }).update({
       dihapus: 1,
