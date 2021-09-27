@@ -9729,12 +9729,14 @@ class MainController {
                                 metaHasil.nilaiEsai = metaHasil.nilaiEsai + e.poin;
                               }
                             });
+
+                            if (d.jawaban_rubrik_esai.indexOf("true") != -1) {
+                              metaHasil.benar = metaHasil.benar + 1;
+                            }
                           }
                           
                         }
-                        if (d.jawaban_rubrik_esai.indexOf("true") != -1) {
-                          metaHasil.benar = metaHasil.benar + 1;
-                        }
+                        
                       }
                     })
                   );
@@ -10105,11 +10107,13 @@ class MainController {
                     metaHasil.nilaiEsai = metaHasil.nilaiEsai + e.poin;
                   }
                 });
+
+                if (d.jawaban_rubrik_esai.indexOf("true") != -1) {
+                  metaHasil.benar = metaHasil.benar + 1;
+                }
               }
             }
-            if (d.jawaban_rubrik_esai.indexOf("true") != -1) {
-              metaHasil.benar = metaHasil.benar + 1;
-            }
+            
           }
         })
       );
