@@ -3768,6 +3768,21 @@ class MainController {
       tingkatRombel = ["VII", "VIII", "IX"];
     } else if (sekolah.tingkat == "SD") {
       tingkatRombel = ["I", "II", "III", "IV", "V", "VI"];
+    } else if (sekolah.tingkat == "SLB") {
+      tingkatRombel = [
+        "I",
+        "II",
+        "III",
+        "IV",
+        "V",
+        "VI",
+        "VII",
+        "VIII",
+        "IX",
+        "X",
+        "XI",
+        "XII",
+      ];
     }
 
     const { tingkat, hari } = request.get();
@@ -8324,6 +8339,21 @@ class MainController {
       tingkatData = ["VII", "VIII", "IX"];
     } else if (sekolah.tingkat == "SD") {
       tingkatData = ["I", "II", "III", "IV", "V", "VI"];
+    } else if (sekolah.tingkat == "SLB") {
+      tingkatData = [
+        "I",
+        "II",
+        "III",
+        "IV",
+        "V",
+        "VI",
+        "VII",
+        "VIII",
+        "IX",
+        "X",
+        "XI",
+        "XII",
+      ];
     }
 
     let tipeUjian = [
@@ -8471,6 +8501,21 @@ class MainController {
       tingkatData = ["VII", "VIII", "IX"];
     } else if (sekolah.tingkat == "SD") {
       tingkatData = ["I", "II", "III", "IV", "V", "VI"];
+    } else if (sekolah.tingkat == "SLB") {
+      tingkatData = [
+        "I",
+        "II",
+        "III",
+        "IV",
+        "V",
+        "VI",
+        "VII",
+        "VIII",
+        "IX",
+        "X",
+        "XI",
+        "XII",
+      ];
     }
 
     return response.ok({
@@ -8660,6 +8705,21 @@ class MainController {
       tingkat = ["VII", "VIII", "IX"];
     } else if (sekolah.tingkat == "SD") {
       tingkat = ["I", "II", "III", "IV", "V", "VI"];
+    } else if (sekolah.tingkat == "SLB") {
+      tingkat = [
+        "I",
+        "II",
+        "III",
+        "IV",
+        "V",
+        "VI",
+        "VII",
+        "VIII",
+        "IX",
+        "X",
+        "XI",
+        "XII",
+      ];
     }
 
     let tipeUjian = [
@@ -10228,7 +10288,7 @@ class MainController {
     const user = await auth.getUser();
 
     const { tk_jadwal_ujian_id, ujian_id } = request.post();
-    const waktu_mulai = moment().utcOffset(7).format("YYYY-MM-DD HH:mm:ss")
+    const waktu_mulai = moment().utcOffset(7).format("YYYY-MM-DD HH:mm:ss");
 
     const ujian = await MUjian.query().where({ id: ujian_id }).first();
 
@@ -10489,7 +10549,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const waktu_selesai = moment().utcOffset(7).format("YYYY-MM-DD HH:mm:ss")
+    const waktu_selesai = moment().utcOffset(7).format("YYYY-MM-DD HH:mm:ss");
 
     const pesertaUjian = await TkPesertaUjian.query()
       .where({ id: peserta_ujian_id })
@@ -13104,6 +13164,21 @@ class MainController {
       tingkatData = ["VII", "VIII", "IX"];
     } else if (sekolah.tingkat == "SD") {
       tingkatData = ["I", "II", "III", "IV", "V", "VI"];
+    } else if (sekolah.tingkat == "SLB") {
+      tingkatData = [
+        "I",
+        "II",
+        "III",
+        "IV",
+        "V",
+        "VI",
+        "VII",
+        "VIII",
+        "IX",
+        "X",
+        "XI",
+        "XII",
+      ];
     }
 
     return response.ok({
@@ -14507,7 +14582,7 @@ class MainController {
       .where({ m_sekolah_id: sekolah.id })
       .first();
 
-    if(rekSekolah){
+    if (rekSekolah) {
       let pemasukan, pengeluaran;
       if (tipe == "debit") {
         pemasukan = rekSekolah.pemasukan;
@@ -14516,7 +14591,7 @@ class MainController {
         pemasukan = rekSekolah.pemasukan + nominal;
         pengeluaran = rekSekolah.pengeluaran;
       }
-  
+
       await MRekSekolah.query().where({ m_sekolah_id: sekolah.id }).update({
         pemasukan,
         pengeluaran,
