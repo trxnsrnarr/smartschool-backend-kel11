@@ -10093,7 +10093,7 @@ class MainController {
               ? analisisTotal[d.soal.kd] + 1
               : 1;
           } else if (d.soal.bentuk == "esai") {
-            JSON.parse(d.jawaban_rubrik_esai).map((e) => {
+            JSON.parse(d.jawaban_rubrik_esai)?.map((e) => {
               if (e.benar) {
                 metaHasil.nilaiEsai = metaHasil.nilaiEsai + e.poin;
               }
