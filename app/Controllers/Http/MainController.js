@@ -35560,15 +35560,6 @@ class MainController {
   }
 
   async postSekolah({ response, request, auth }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
 
     const { nama, domain, server } = request.post();
 
@@ -35599,9 +35590,6 @@ class MainController {
   }
 
   async putSekolah({ response, request, auth, params: { sekolah_id } }) {
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
 
     const { nama, domain, server } = request.post();
 
