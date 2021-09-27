@@ -2840,7 +2840,20 @@ class MainController {
     } else if (sekolah.tingkat == "SD") {
       tingkat = ["I", "II", "III", "IV", "V", "VI"];
     } else if (sekolah.tingkat == "SLB") {
-      tingkat = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
+      tingkat = [
+        "I",
+        "II",
+        "III",
+        "IV",
+        "V",
+        "VI",
+        "VII",
+        "VIII",
+        "IX",
+        "X",
+        "XI",
+        "XII",
+      ];
     }
 
     return response.ok({
@@ -4094,6 +4107,37 @@ class MainController {
     });
   }
 
+  async getBlog({ response, request }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { limit } = request.get();
+
+    let post;
+
+    if (limit) {
+      post = await MPost.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ dihapus: 0 })
+        .limit(limit)
+        .fetch();
+    } else {
+      post = await MPost.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ dihapus: 0 })
+        .fetch();
+    }
+
+    return response.ok({
+      post: post,
+    });
+  }
+
   async getPost({ response, request, auth }) {
     const user = await auth.getUser();
 
@@ -4126,6 +4170,33 @@ class MainController {
 
     return response.ok({
       post: post,
+    });
+  }
+
+  async detailBlog({ response, request, params: { post_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const post = await MPost.query()
+      .with("tkPost")
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ id: post_id })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    const kategori = await MKategori.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    return response.ok({
+      post: post,
+      kategori: kategori,
     });
   }
 
@@ -9412,6 +9483,24 @@ class MainController {
         });
       }
     } else if (user.role == "siswa") {
+      // get tagihan
+      const pembayaran = await MPembayaranSiswa.query()
+        .with("rombelPembayaran", (builder) => {
+          builder.with("pembayaran", (builder) => {
+            builder.where({ dihapus: 0 }).andWhere({jenis: "ujian"});
+          });
+        })
+        .with("riwayat", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .withCount("riwayat as totalJumlah", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .where({ dihapus: 0 })
+        .andWhere({ m_user_id: user.id })
+        .andWhere({ status: "belum lunas" })
+        .fetch();
+
       const rombelIds = await MRombel.query()
         .where({ m_ta_id: ta.id })
         .andWhere({ dihapus: 0 })
@@ -9483,10 +9572,12 @@ class MainController {
           perPage: jadwalUjian.toJSON().perPage,
           page: jadwalUjian.toJSON().page,
           lastPage: Math.ceil(ujian.length / jadwalUjian.toJSON().perPage),
+          pembayaran: pembayaran.toJSON().filter(item => item.rombelPembayaran.pembayaran)
         });
       } else {
         return response.ok({
           jadwalUjian: ujian,
+          pembayaran: pembayaran.toJSON().filter(item => item.rombelPembayaran.pembayaran)
         });
       }
     }
@@ -9631,14 +9722,21 @@ class MainController {
                           ? analisisTotal[d.soal.kd] + 1
                           : 1;
                       } else if (d.soal.bentuk == "esai") {
-                        JSON.parse(d.jawaban_rubrik_esai).map((e) => {
-                          if (e.benar) {
-                            metaHasil.nilaiEsai = metaHasil.nilaiEsai + e.poin;
+                        if(JSON.parse(d.jawaban_rubrik_esai)) {
+                          if(JSON.parse(d.jawaban_rubrik_esai).length) {
+                            JSON.parse(d.jawaban_rubrik_esai).map((e) => {
+                              if (e.benar) {
+                                metaHasil.nilaiEsai = metaHasil.nilaiEsai + e.poin;
+                              }
+                            });
+
+                            if (d.jawaban_rubrik_esai.indexOf("true") != -1) {
+                              metaHasil.benar = metaHasil.benar + 1;
+                            }
                           }
-                        });
-                        if (d.jawaban_rubrik_esai.indexOf("true") != -1) {
-                          metaHasil.benar = metaHasil.benar + 1;
+                          
                         }
+                        
                       }
                     })
                   );
@@ -10002,14 +10100,20 @@ class MainController {
               ? analisisTotal[d.soal.kd] + 1
               : 1;
           } else if (d.soal.bentuk == "esai") {
-            JSON.parse(d.jawaban_rubrik_esai).map((e) => {
-              if (e.benar) {
-                metaHasil.nilaiEsai = metaHasil.nilaiEsai + e.poin;
+            if(JSON.parse(d.jawaban_rubrik_esai)) {
+              if(JSON.parse(d.jawaban_rubrik_esai).length) {
+                JSON.parse(d.jawaban_rubrik_esai).map((e) => {
+                  if (e.benar) {
+                    metaHasil.nilaiEsai = metaHasil.nilaiEsai + e.poin;
+                  }
+                });
+
+                if (d.jawaban_rubrik_esai.indexOf("true") != -1) {
+                  metaHasil.benar = metaHasil.benar + 1;
+                }
               }
-            });
-            if (d.jawaban_rubrik_esai.indexOf("true") != -1) {
-              metaHasil.benar = metaHasil.benar + 1;
             }
+            
           }
         })
       );
@@ -26991,7 +27095,7 @@ class MainController {
       .paginate(page, 10);
 
     const siswa = await Promise.all(
-      data.toJSON().filter((d) => d.user != null)
+      data.toJSON().data.filter((d) => d.user != null)
     );
     // .andWhere({ m_sanksi_pelanggaran_id: d.id })
     // const siswa = await Promise.all(
