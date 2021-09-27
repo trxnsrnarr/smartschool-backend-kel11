@@ -19,6 +19,10 @@ class MSekolah extends Model {
   rombel() {
     return this.hasMany("App/Models/MRombel", "m_sekolah_id");
   }
+  siswa() {
+    return this.hasMany("App/Models/User", "m_sekolah_id");
+  }
+
 
   static get computed() {
     return ["tingkat_format"];
