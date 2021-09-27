@@ -9487,7 +9487,7 @@ class MainController {
       const pembayaran = await MPembayaranSiswa.query()
         .with("rombelPembayaran", (builder) => {
           builder.with("pembayaran", (builder) => {
-            builder.where({ dihapus: 0 }).andWhere({jenis: "ujian"});
+            builder.where({ dihapus: 0 }).andWhere({ jenis: "ujian" });
           });
         })
         .with("riwayat", (builder) => {
@@ -9572,12 +9572,16 @@ class MainController {
           perPage: jadwalUjian.toJSON().perPage,
           page: jadwalUjian.toJSON().page,
           lastPage: Math.ceil(ujian.length / jadwalUjian.toJSON().perPage),
-          pembayaran: pembayaran.toJSON().filter(item => item.rombelPembayaran.pembayaran)
+          pembayaran: pembayaran
+            .toJSON()
+            .filter((item) => item.rombelPembayaran.pembayaran),
         });
       } else {
         return response.ok({
           jadwalUjian: ujian,
-          pembayaran: pembayaran.toJSON().filter(item => item.rombelPembayaran.pembayaran)
+          pembayaran: pembayaran
+            .toJSON()
+            .filter((item) => item.rombelPembayaran.pembayaran),
         });
       }
     }
@@ -9722,11 +9726,12 @@ class MainController {
                           ? analisisTotal[d.soal.kd] + 1
                           : 1;
                       } else if (d.soal.bentuk == "esai") {
-                        if(JSON.parse(d.jawaban_rubrik_esai)) {
-                          if(JSON.parse(d.jawaban_rubrik_esai).length) {
+                        if (JSON.parse(d.jawaban_rubrik_esai)) {
+                          if (JSON.parse(d.jawaban_rubrik_esai).length) {
                             JSON.parse(d.jawaban_rubrik_esai).map((e) => {
                               if (e.benar) {
-                                metaHasil.nilaiEsai = metaHasil.nilaiEsai + e.poin;
+                                metaHasil.nilaiEsai =
+                                  metaHasil.nilaiEsai + e.poin;
                               }
                             });
 
@@ -9734,9 +9739,7 @@ class MainController {
                               metaHasil.benar = metaHasil.benar + 1;
                             }
                           }
-                          
                         }
-                        
                       }
                     })
                   );
@@ -10100,8 +10103,8 @@ class MainController {
               ? analisisTotal[d.soal.kd] + 1
               : 1;
           } else if (d.soal.bentuk == "esai") {
-            if(JSON.parse(d.jawaban_rubrik_esai)) {
-              if(JSON.parse(d.jawaban_rubrik_esai).length) {
+            if (JSON.parse(d.jawaban_rubrik_esai)) {
+              if (JSON.parse(d.jawaban_rubrik_esai).length) {
                 JSON.parse(d.jawaban_rubrik_esai).map((e) => {
                   if (e.benar) {
                     metaHasil.nilaiEsai = metaHasil.nilaiEsai + e.poin;
@@ -10113,7 +10116,6 @@ class MainController {
                 }
               }
             }
-            
           }
         })
       );
@@ -24512,7 +24514,7 @@ class MainController {
       keterangan_psikotes,
       lokasi_psikotes,
       link_psikotes,
-      
+
       waktu_mulai_masuk,
       waktu_akhir_masuk,
       media_tes_masuk,
@@ -24520,7 +24522,6 @@ class MainController {
       lokasi_masuk,
       link_masuk,
 
-      
       waktu_mulai_wawancara,
       waktu_akhir_wawancara,
       media_tes_wawancara,
@@ -24528,7 +24529,6 @@ class MainController {
       lokasi_wawancara,
       link_wawancara,
 
-      
       waktu_mulai_kesehatan,
       waktu_akhir_kesehatan,
       media_tes_kesehatan,
@@ -24592,49 +24592,49 @@ class MainController {
 
     if (tes_psikotes == 1) {
       await MTesPekerjaan.create({
-        tipe:"psikotes",
-        waktu_mulai:waktu_mulai_psikotes,
-        waktu_akhir:waktu_akhir_psikotes,
-        m_pekerjaan_id:pekerjaan.id,
-        lokasi:lokasi_psikotes,
-        link:link_psikotes,
-        keterangan:keterangan_psikotes,
+        tipe: "psikotes",
+        waktu_mulai: waktu_mulai_psikotes,
+        waktu_akhir: waktu_akhir_psikotes,
+        m_pekerjaan_id: pekerjaan.id,
+        lokasi: lokasi_psikotes,
+        link: link_psikotes,
+        keterangan: keterangan_psikotes,
         dihapus: 0,
       });
     }
     if (tes_masuk == 1) {
       await MTesPekerjaan.create({
-        tipe:"masuk",
-        waktu_mulai:waktu_mulai_masuk,
-        waktu_akhir:waktu_akhir_masuk,
-        m_pekerjaan_id:pekerjaan.id,
-        lokasi:lokasi_masuk,
-        link:link_masuk,
-        keterangan:keterangan_masuk,
+        tipe: "masuk",
+        waktu_mulai: waktu_mulai_masuk,
+        waktu_akhir: waktu_akhir_masuk,
+        m_pekerjaan_id: pekerjaan.id,
+        lokasi: lokasi_masuk,
+        link: link_masuk,
+        keterangan: keterangan_masuk,
         dihapus: 0,
       });
     }
     if (tes_wawancara == 1) {
       await MTesPekerjaan.create({
-        tipe:"wawancara",
-        waktu_mulai:waktu_mulai_wawancara,
-        waktu_akhir:waktu_akhir_wawancara,
-        m_pekerjaan_id:pekerjaan.id,
-        lokasi:lokasi_wawancara,
-        link:link_wawancara,
-        keterangan:keterangan_wawancara,
+        tipe: "wawancara",
+        waktu_mulai: waktu_mulai_wawancara,
+        waktu_akhir: waktu_akhir_wawancara,
+        m_pekerjaan_id: pekerjaan.id,
+        lokasi: lokasi_wawancara,
+        link: link_wawancara,
+        keterangan: keterangan_wawancara,
         dihapus: 0,
       });
     }
     if (tes_kesehatan == 1) {
       await MTesPekerjaan.create({
-        tipe:"kesetes_kesehatan",
-        waktu_mulai:waktu_mulai_kesehatan,
-        waktu_akhir:waktu_akhir_kesehatan,
-        m_pekerjaan_id:pekerjaan.id,
-        lokasi:lokasi_kesehatan,
-        link:link_kesehatan,
-        keterangan:keterangan_kesehatan,
+        tipe: "kesetes_kesehatan",
+        waktu_mulai: waktu_mulai_kesehatan,
+        waktu_akhir: waktu_akhir_kesehatan,
+        m_pekerjaan_id: pekerjaan.id,
+        lokasi: lokasi_kesehatan,
+        link: link_kesehatan,
+        keterangan: keterangan_kesehatan,
         dihapus: 0,
       });
     }
@@ -27395,6 +27395,9 @@ class MainController {
       .with("sanksiSiswa", (builder) => {
         builder.with("bukti").where({ dihapus: 0 });
       })
+      .with("prestasi",(builder)=>{
+        builder.with("tingkatPrestasi").where({dihapus:0})
+      })
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ id: user_id })
@@ -27688,7 +27691,6 @@ class MainController {
       m_sanksi_siswa_id,
       lampiran: lampiran.toString(),
       link: link.toString(),
-      m_user_id: user_id,
       dihapus: 0,
     });
 
@@ -35436,50 +35438,269 @@ class MainController {
     return namaFile;
   }
 
-  async getSuperAdmin({ response, request, auth, params: { sekolah_id } }) {
-    const domain = request.headers().origin;
-
-    const ta = await Mta.query()
-      .where({ m_sekolah_id: sekolah_id })
-      .andWhere({ dihapus: 0 })
-      .andWhere({ aktif: 1 })
-      .first();
-
-    const user = await auth.getUser();
+  async getSuperAdmin({ response, request, auth }) {
+    const user = await User.query().count("* as total");
     // const { rombel_id } = request.post();
-    const sekolah = await MSekolah.query()
-      .with("informasi")
-      .with("jurusan", (builder) => {
-        builder.where({ dihapus: 0 });
-      })
-      .with("rombel", (builder) => {
-        builder
-          .where({ dihapus: 0 })
-          .andWhere({ kelompok: "ekskul" })
-          .andWhere({ m_ta_id: ta.id });
-      })
-      .where({ id: sekolah_id })
-      .first();
-
-    const prestasi = await MPrestasi.query()
-      .with("tingkatPrestasi", (builder) => {
-        builder.where({ dihapus: 0 });
-      })
-      .where({ m_sekolah_id: sekolah_id })
-      .andWhere({ dihapus: 0 })
-      .fetch();
-
-    const tingkat = await MPenghargaan.query()
-      .withCount("prestasi as tingkatnya", (builder) => {
-        builder.where({ dihapus: 0 });
-      })
-      .where({ m_sekolah_id: sekolah_id })
-      .fetch();
+    const sekolah = await MSekolah.query().count("* as total");
 
     return response.ok({
       sekolah,
       prestasi,
       tingkat,
+    });
+  }
+
+  async getSuperAdminSekolah({ response, request, auth }) {
+    const user = await User.query().count("* as total");
+    // const { rombel_id } = request.post();
+    const sekolah = await MSekolah.query().withCount("siswa as total").fetch();
+
+    return response.ok({
+      sekolah,
+      prestasi,
+      tingkat,
+    });
+  }
+
+  async postSekolah({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { nama, domain, server } = request.post();
+
+    let validation = await validate(
+      request.post(),
+      rulesUserPost,
+      messagesUser
+    );
+
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const sekolah = await MSekolah.create({
+      nama,
+      domain,
+      gender,
+      password: password,
+      role,
+      m_sekolah_id: sekolah.id,
+      dihapus: 0,
+      avatar,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putSekolah({ response, request, auth, params: { sekolah_id } }) {
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { nama, domain, server } = request.post();
+
+    let validation = await validate(
+      request.post(),
+      rulesUserPost,
+      messagesUser
+    );
+
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const sekolah = await MSekolah.query().where({ id: sekolah_id }).update({
+      nama,
+      domain,
+      server,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async postPembayaranSekolah({
+    response,
+    request,
+    auth,
+    params: { sekolah_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { nama, tanggal, jumlah, mulai_kontrak, akhir_kontrak } =
+      request.post();
+
+    let validation = await validate(
+      request.post(),
+      rulesUserPost,
+      messagesUser
+    );
+
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const sekolah = await MPembayaranSekolah.create({
+      nama,
+      tanggal,
+      jumlah,
+      mulai_kontrak,
+      akhir_kontrak,
+      m_sekolah_id: sekolah_id,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putPembayaranSekolah({
+    response,
+    request,
+    auth,
+    params: { pembayaranSekolah_id },
+  }) {
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { nama, tanggal, jumlah, mulai_kontrak, akhir_kontrak } =
+      request.post();
+
+    let validation = await validate(
+      request.post(),
+      rulesUserPost,
+      messagesUser
+    );
+
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const sekolah = await MPembayaranSekolah.query()
+      .where({ id: pembayaranSekolah_id })
+      .update({
+        nama,
+        tanggal,
+        jumlah,
+        mulai_kontrak,
+        akhir_kontrak,
+      });
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async postDokumenPembayaranSekolah({
+    response,
+    request,
+    auth,
+    params: { pembayaranSekolah_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { nama, jenis, lampiran } = request.post();
+
+    let validation = await validate(
+      request.post(),
+      rulesUserPost,
+      messagesUser
+    );
+
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const sekolah = await MDokumenPembayaranSekolah.create({
+      nama,
+      jenis,
+      lampiran,
+      m_pembayaran_sekolah_id: pembayaranSekolah_id,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putDokumenPembayaranSekolah({
+    response,
+    request,
+    auth,
+    params: { dokumenPembayaranSekolah_id },
+  }) {
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { nama, jenis, lampiran } = request.post();
+
+    let validation = await validate(
+      request.post(),
+      rulesUserPost,
+      messagesUser
+    );
+
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const sekolah = await MDokumenPembayaranSekolah.query()
+      .where({ id: dokumenPembayaranSekolah_id })
+      .update({
+        nama,
+        jenis,
+        lampiran,
+      });
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteDokumenPembayaranSekolah({
+    response,
+    request,
+    auth,
+    params: { dokumenPembayaranSekolah_id },
+  }) {
+    const sekolah = await MDokumenPembayaranSekolah.query()
+      .where({ id: dokumenPembayaranSekolah_id })
+      .update({
+        dihapu: 1,
+      });
+
+    return response.ok({
+      message: messageDeleteSuccess,
     });
   }
 
