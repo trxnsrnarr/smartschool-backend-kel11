@@ -2839,6 +2839,8 @@ class MainController {
       tingkat = ["VII", "VIII", "IX"];
     } else if (sekolah.tingkat == "SD") {
       tingkat = ["I", "II", "III", "IV", "V", "VI"];
+    } else if (sekolah.tingkat == "SLB") {
+      tingkat = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
     }
 
     return response.ok({
@@ -4632,7 +4634,7 @@ class MainController {
     }
 
     let file = request.file("file");
-    let fname = `import-excel.${file.extname}`;
+    let fname = `import-excel.xlsx`;
 
     const { m_rombel_id } = request.post();
 
@@ -4778,7 +4780,7 @@ class MainController {
     }
 
     let file = request.file("file");
-    let fname = `import-excel.${file.extname}`;
+    let fname = `import-excel.xlsx`;
 
     const { m_rombel_id } = request.post();
 
@@ -8872,7 +8874,7 @@ class MainController {
 
     let file = request.file("file");
 
-    let fname = `import-excel-soal.${file.extname}`;
+    let fname = `import-excel-soal-${new Date().getTime()}.xlsx`;
 
     const user = await auth.getUser();
 
@@ -9235,12 +9237,17 @@ class MainController {
         .andWhere({ m_sekolah_id: sekolah.id })
         .fetch();
 
+      const userIds = await User.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .whereIn("role", ["admin", "guru"])
+        .ids();
+
       let jadwalUjian;
 
       if (status == "akan-datang") {
         jadwalUjian = await MJadwalUjian.query()
           .with("ujian")
-          .where({ m_user_id: user.id })
+          .whereIn("m_user_id", userIds)
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_dibuka", ">", hari_ini)
           .orderBy("id", "desc")
@@ -9248,7 +9255,7 @@ class MainController {
       } else if (status == "berlangsung") {
         jadwalUjian = await MJadwalUjian.query()
           .with("ujian")
-          .where({ m_user_id: user.id })
+          .whereIn("m_user_id", userIds)
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_dibuka", "<=", hari_ini)
           .andWhere("waktu_ditutup", ">=", hari_ini)
@@ -9257,7 +9264,7 @@ class MainController {
       } else if (status == "sudah-selesai") {
         jadwalUjian = await MJadwalUjian.query()
           .with("ujian")
-          .where({ m_user_id: user.id })
+          .whereIn("m_user_id", userIds)
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_ditutup", "<=", hari_ini)
           .orderBy("id", "desc")
@@ -9384,11 +9391,6 @@ class MainController {
           })
         );
       }
-
-      const userIds = await User.query()
-        .where({ m_sekolah_id: sekolah.id })
-        .whereIn("role", ["admin", "guru"])
-        .ids();
 
       const ujian = await MUjian.query()
         .whereIn("m_user_id", userIds)
@@ -13992,7 +13994,7 @@ class MainController {
 
     const kontak = await MKontak.query()
       .where({
-        m_sekolah_id: 13,
+        m_sekolah_id: sekolah.id,
       })
       .first();
 
@@ -17588,7 +17590,7 @@ class MainController {
     }
 
     let file = request.file("file");
-    let fname = `import-excel.${file.extname}`;
+    let fname = `import-excel.xlsx`;
 
     //move uploaded file into custom folder
     await file.move(Helpers.tmpPath("/uploads"), {
@@ -17682,7 +17684,7 @@ class MainController {
     }
 
     let file = request.file("file");
-    let fname = `import-excel.${file.extname}`;
+    let fname = `import-excel.xlsx`;
 
     //move uploaded file into custom folder
     await file.move(Helpers.tmpPath("/uploads"), {
@@ -18241,7 +18243,7 @@ class MainController {
     }
 
     let file = request.file("file");
-    let fname = `import-excel.${file.extname}`;
+    let fname = `import-excel.xlsx`;
 
     //move uploaded file into custom folder
     await file.move(Helpers.tmpPath("/uploads"), {
@@ -18513,7 +18515,7 @@ class MainController {
     }
 
     let file = request.file("file");
-    let fname = `import-excel.${file.extname}`;
+    let fname = `import-excel.xlsx`;
 
     //move uploaded file into custom folder
     await file.move(Helpers.tmpPath("/uploads"), {
@@ -19223,7 +19225,7 @@ class MainController {
     }
 
     let file = request.file("file");
-    let fname = `import-excel.${file.extname}`;
+    let fname = `import-excel.xlsx`;
 
     //move uploaded file into custom folder
     await file.move(Helpers.tmpPath("/uploads"), {
@@ -19510,7 +19512,7 @@ class MainController {
     }
 
     let file = request.file("file");
-    let fname = `import-excel.${file.extname}`;
+    let fname = `import-excel.xlsx`;
 
     //move uploaded file into custom folder
     await file.move(Helpers.tmpPath("/uploads"), {
@@ -20080,7 +20082,7 @@ class MainController {
     }
 
     let file = request.file("file");
-    let fname = `import-excel.${file.extname}`;
+    let fname = `import-excel.xlsx`;
 
     //move uploaded file into custom folder
     await file.move(Helpers.tmpPath("/uploads"), {
@@ -20414,7 +20416,15 @@ class MainController {
   }
 
   async daftarsekolah({ response, request }) {
-    const sekolah = await MSekolah.query().select("id", "nama", "logo").fetch();
+    const { search } = request.get();
+
+    let sekolah = MSekolah.query().select("id", "nama", "favicon", "domain");
+
+    if (search) {
+      sekolah.where("nama", "like", `%${search}%`);
+    }
+
+    sekolah = await sekolah.limit(50).fetch();
 
     return sekolah;
   }
@@ -26149,7 +26159,7 @@ class MainController {
     }
 
     let file = request.file("file");
-    let fname = `import-excel.${file.extname}`;
+    let fname = `import-excel.xlsx`;
 
     //move uploaded file into custom folder
     await file.move(Helpers.tmpPath("/uploads"), {
@@ -26406,7 +26416,7 @@ class MainController {
     }
 
     let file = request.file("file");
-    let fname = `import-excel.${file.extname}`;
+    let fname = `import-excel.xlsx`;
 
     //move uploaded file into custom folder
     await file.move(Helpers.tmpPath("/uploads"), {
@@ -30269,7 +30279,7 @@ class MainController {
 
   async importGPDS({ request, response, auth }) {
     let file = request.file("file");
-    let fname = `import-excel.${file.extname}`;
+    let fname = `import-excel.xlsx`;
 
     //move uploaded file into custom folder
     await file.move(Helpers.tmpPath("/uploads"), {
@@ -33016,7 +33026,7 @@ class MainController {
     }
 
     let file = request.file("file");
-    let fname = `import-excel.${file.extname}`;
+    let fname = `import-excel.xlsx`;
 
     //move uploaded file into custom folder
     await file.move(Helpers.tmpPath("/uploads"), {
@@ -33285,6 +33295,7 @@ class MainController {
     const userAuthor = await User.query()
       .where({ dihapus: 0 })
       .andWhere({ id: user_id })
+      .with("profil")
       .first();
 
     const rpp = await MRpp.query()
@@ -35103,7 +35114,7 @@ class MainController {
     }
 
     let file = request.file("file");
-    let fname = `import-excel.${file.extname}`;
+    let fname = `import-excel.xlsx`;
 
     //move uploaded file into custom folder
     await file.move(Helpers.tmpPath("/uploads"), {
@@ -35163,9 +35174,7 @@ class MainController {
     let worksheet = workbook.addWorksheet(`sheet1`);
     worksheet.mergeCells("A1:D1");
     worksheet.mergeCells("A2:D2");
-    worksheet.getCell(
-      "A4"
-    ).value = `note : Status diisi dengan lunas / belum lunas`;
+    worksheet.getCell("A4").value = `note : Isi nominal dengan angka`;
     worksheet.getCell(
       "A6"
     ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
