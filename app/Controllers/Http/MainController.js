@@ -27492,8 +27492,8 @@ class MainController {
       .with("sanksiSiswa", (builder) => {
         builder.with("bukti").where({ dihapus: 0 });
       })
-      .with("prestasi",(builder)=>{
-        builder.with("tingkatPrestasi").where({dihapus:0})
+      .with("prestasi", (builder) => {
+        builder.with("tingkatPrestasi").where({ dihapus: 0 });
       })
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
@@ -35560,7 +35560,6 @@ class MainController {
   }
 
   async postSekolah({ response, request, auth }) {
-
     const { nama, domain, server } = request.post();
 
     let validation = await validate(
@@ -35590,7 +35589,6 @@ class MainController {
   }
 
   async putSekolah({ response, request, auth, params: { sekolah_id } }) {
-
     const { nama, domain, server } = request.post();
 
     let validation = await validate(
@@ -35620,16 +35618,6 @@ class MainController {
     auth,
     params: { sekolah_id },
   }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-
     const { nama, tanggal, jumlah, mulai_kontrak, akhir_kontrak } =
       request.post();
 
@@ -35664,10 +35652,6 @@ class MainController {
     auth,
     params: { pembayaranSekolah_id },
   }) {
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
     const { nama, tanggal, jumlah, mulai_kontrak, akhir_kontrak } =
       request.post();
 
@@ -35702,15 +35686,7 @@ class MainController {
     auth,
     params: { pembayaranSekolah_id },
   }) {
-    const domain = request.headers().origin;
 
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
 
     const { nama, jenis, lampiran } = request.post();
 
@@ -35743,9 +35719,6 @@ class MainController {
     auth,
     params: { dokumenPembayaranSekolah_id },
   }) {
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
 
     const { nama, jenis, lampiran } = request.post();
 
