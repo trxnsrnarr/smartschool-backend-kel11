@@ -10227,7 +10227,8 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { waktu_mulai, tk_jadwal_ujian_id, ujian_id } = request.post();
+    const { tk_jadwal_ujian_id, ujian_id } = request.post();
+    const waktu_mulai = moment().utcOffset(7).format("YYYY-MM-DD HH:mm:ss")
 
     const ujian = await MUjian.query().where({ id: ujian_id }).first();
 
@@ -10488,7 +10489,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { waktu_selesai } = request.post();
+    const waktu_selesai = moment().utcOffset(7).format("YYYY-MM-DD HH:mm:ss")
 
     const pesertaUjian = await TkPesertaUjian.query()
       .where({ id: peserta_ujian_id })
