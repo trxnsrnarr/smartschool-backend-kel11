@@ -13365,9 +13365,8 @@ class MainController {
     if (search) {
       pembayaran = await MPembayaran.query()
         .with("rombel", (builder) => {
-          builder.with("rombel")
-          .withCount("siswa as total",(builder)=>{
-            builder.where({status:"lunas"})
+          builder.with("rombel").withCount("siswa as total", (builder) => {
+            builder.where({ status: "lunas" });
           });
         })
         .where({ dihapus: 0 })
@@ -13378,8 +13377,8 @@ class MainController {
     } else {
       pembayaran = await MPembayaran.query()
         .with("rombel", (builder) => {
-          builder.with("rombel").withCount("siswa as total",(builder)=>{
-            builder.where({status:"lunas"})
+          builder.with("rombel").withCount("siswa as total", (builder) => {
+            builder.where({ status: "lunas" });
           });
         })
         .where({ dihapus: 0 })
@@ -24393,6 +24392,35 @@ class MainController {
       lokasi_tes,
       kelengkapan_data,
       data_nilai,
+      waktu_mulai_psikotes,
+      waktu_akhir_psikotes,
+      media_tes_psikotes,
+      keterangan_psikotes,
+      lokasi_psikotes,
+      link_psikotes,
+      
+      waktu_mulai_masuk,
+      waktu_akhir_masuk,
+      media_tes_masuk,
+      keterangan_masuk,
+      lokasi_masuk,
+      link_masuk,
+
+      
+      waktu_mulai_wawancara,
+      waktu_akhir_wawancara,
+      media_tes_wawancara,
+      keterangan_wawancara,
+      lokasi_wawancara,
+      link_wawancara,
+
+      
+      waktu_mulai_kesehatan,
+      waktu_akhir_kesehatan,
+      media_tes_kesehatan,
+      keterangan_kesehatan,
+      lokasi_kesehatan,
+      link_kesehatan,
     } = request.post();
     const date1 = moment(`${mulai_kerja}`);
     const date2 = moment(`${akhir_kerja}`);
@@ -24449,6 +24477,52 @@ class MainController {
     });
 
     if (tes_psikotes == 1) {
+      await MTesPekerjaan.create({
+        tipe:"psikotes",
+        waktu_mulai:waktu_mulai_psikotes,
+        waktu_akhir:waktu_akhir_psikotes,
+        m_pekerjaan_id:pekerjaan.id,
+        lokasi:lokasi_psikotes,
+        link:link_psikotes,
+        keterangan:keterangan_psikotes,
+        dihapus: 0,
+      });
+    }
+    if (tes_masuk == 1) {
+      await MTesPekerjaan.create({
+        tipe:"masuk",
+        waktu_mulai:waktu_mulai_masuk,
+        waktu_akhir:waktu_akhir_masuk,
+        m_pekerjaan_id:pekerjaan.id,
+        lokasi:lokasi_masuk,
+        link:link_masuk,
+        keterangan:keterangan_masuk,
+        dihapus: 0,
+      });
+    }
+    if (tes_wawancara == 1) {
+      await MTesPekerjaan.create({
+        tipe:"wawancara",
+        waktu_mulai:waktu_mulai_wawancara,
+        waktu_akhir:waktu_akhir_wawancara,
+        m_pekerjaan_id:pekerjaan.id,
+        lokasi:lokasi_wawancara,
+        link:link_wawancara,
+        keterangan:keterangan_wawancara,
+        dihapus: 0,
+      });
+    }
+    if (tes_kesehatan == 1) {
+      await MTesPekerjaan.create({
+        tipe:"kesetes_kesehatan",
+        waktu_mulai:waktu_mulai_kesehatan,
+        waktu_akhir:waktu_akhir_kesehatan,
+        m_pekerjaan_id:pekerjaan.id,
+        lokasi:lokasi_kesehatan,
+        link:link_kesehatan,
+        keterangan:keterangan_kesehatan,
+        dihapus: 0,
+      });
     }
 
     return response.ok({
@@ -27525,8 +27599,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const {  konfirmasi, lampiran, link } = request.post();
-    
+    const { konfirmasi, lampiran, link } = request.post();
 
     const sanksi = await MBuktiPelaksanaanSanksi.query()
       .where({ id: sanksi_id })
@@ -35248,6 +35321,53 @@ class MainController {
     await workbook.xlsx.writeFile(`public${namaFile}`);
 
     return namaFile;
+  }
+
+  async getSuperAdmin({ response, request, auth, params: { sekolah_id } }) {
+    const domain = request.headers().origin;
+
+    const ta = await Mta.query()
+      .where({ m_sekolah_id: sekolah_id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ aktif: 1 })
+      .first();
+
+    const user = await auth.getUser();
+    // const { rombel_id } = request.post();
+    const sekolah = await MSekolah.query()
+      .with("informasi")
+      .with("jurusan", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .with("rombel", (builder) => {
+        builder
+          .where({ dihapus: 0 })
+          .andWhere({ kelompok: "ekskul" })
+          .andWhere({ m_ta_id: ta.id });
+      })
+      .where({ id: sekolah_id })
+      .first();
+
+    const prestasi = await MPrestasi.query()
+      .with("tingkatPrestasi", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .where({ m_sekolah_id: sekolah_id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    const tingkat = await MPenghargaan.query()
+      .withCount("prestasi as tingkatnya", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .where({ m_sekolah_id: sekolah_id })
+      .fetch();
+
+    return response.ok({
+      sekolah,
+      prestasi,
+      tingkat,
+    });
   }
 
   async notFoundPage({ response, request, auth }) {
