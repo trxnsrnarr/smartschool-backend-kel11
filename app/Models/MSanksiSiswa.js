@@ -24,7 +24,7 @@ class MSanksiSiswa extends Model {
   }
 
   bukti() {
-    return this.belongsTo("App/Models/MBuktiPelaksanaanSanksi");
+    return this.belongsTo("App/Models/MBuktiPelaksanaanSanksi","id","m_sanksi_siswa_id");
   }
 }
 
