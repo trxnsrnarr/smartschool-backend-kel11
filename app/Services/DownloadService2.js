@@ -2756,15 +2756,6 @@ class DownloadService {
     // });
 
     // desain Worksheet 4
-    // worksheet4.getColumn("A").width = 4;
-    // worksheet4.getColumn("B").width = 32;
-    // worksheet4.getColumn("C").width = 84;
-    // worksheet4.getColumn("D").width = 11;
-    // worksheet4.getColumn("E").width = 11;
-    // worksheet4.getColumn("F").width = 11;
-    // worksheet4.getColumn("G").width = 11;
-    // worksheet4.getColumn("H").width = 11;
-    // worksheet4.getColumn("I").width = 11;
     worksheet4.mergeCells("A1:I1");
     worksheet4.mergeCells("A2:I2");
     worksheet4.mergeCells("A3:I3");
@@ -2776,7 +2767,7 @@ class DownloadService {
     worksheet4.mergeCells("D6:H6");
     worksheet4.mergeCells("I6:I7");
     worksheet4.addConditionalFormatting({
-      ref: "C8:I57",
+      ref: `C8:I${(ujian.toJSON().__meta__.TotalUjian + 1) * 1 + 6}`,
       rules: [
         {
           type: "expression",
@@ -2875,7 +2866,7 @@ class DownloadService {
     });
 
     worksheet4.addConditionalFormatting({
-      ref: "A8:I57",
+      ref: `A8:I${(ujian.toJSON().__meta__.TotalUjian + 1) * 1 + 6}`,
       rules: [
         {
           type: "expression",
@@ -2895,65 +2886,58 @@ class DownloadService {
         },
       ],
     });
-    worksheet4.getCell("B60").value = {
-      richText: [
-        {
-          font: { name: "Calibri" },
-          text: "MENGETAHUI",
-        },
-      ],
-    };
-    worksheet4.getCell("B61").value = {
-      richText: [
-        {
-          font: { name: "Calibri" },
-          text: "KEPALA SEKOLAH",
-        },
-      ],
-    };
-    worksheet4.getCell("B66").value = {
-      richText: [
-        {
-          font: { name: "Calibri" },
-          text: `${kepsek}`,
-        },
-      ],
-    };
 
-    worksheet4.getCell("G60").value = {
-      richText: [
-        {
-          font: { name: "Calibri" },
-          text: `${sekolah.kabupaten},`,
-        },
-      ],
-    };
-    worksheet4.getCell("G61").value = {
-      richText: [
-        {
-          font: { name: "Calibri" },
-          text: "GURU MATA PELAJARAN",
-        },
-      ],
-    };
-    worksheet4.getCell("G66").value = {
-      richText: [
-        {
-          font: { name: "Calibri" },
-          text: `${ujian.toJSON().mataPelajaran.user.nama}`,
-        },
-      ],
-    };
+    
+      worksheet4.getCell(`B${(ujian.toJSON().__meta__.TotalUjian + 1) * 1 + 8}`).value = {
+        richText: [
+          {
+            font: { name: "Calibri" },
+            text: "MENGETAHUI",
+          },
+        ],
+      };
+      worksheet4.getCell(`B${(ujian.toJSON().__meta__.TotalUjian + 1) * 1 + 9}`).value = {
+        richText: [
+          {
+            font: { name: "Calibri" },
+            text: "KEPALA SEKOLAH",
+          },
+        ],
+      };
+      worksheet4.getCell(`B${(ujian.toJSON().__meta__.TotalUjian + 1) * 1 + 14}`).value = {
+        richText: [
+          {
+            font: { name: "Calibri" },
+            text: `${kepsek}`,
+          },
+        ],
+      };
 
-    // worksheet4.getColumn("A").width = 4;
-    // worksheet4.getColumn("B").width = 32;
-    // worksheet4.getColumn("C").width = 84;
-    // worksheet4.getColumn("D").width = 11;
-    // worksheet4.getColumn("E").width = 11;
-    // worksheet4.getColumn("F").width = 11;
-    // worksheet4.getColumn("G").width = 11;
-    // worksheet4.getColumn("H").width = 11;
-    // worksheet4.getColumn("I").width = 11;
+      worksheet4.getCell(`G${(ujian.toJSON().__meta__.TotalUjian + 1) * 1 + 8}`).value = {
+        richText: [
+          {
+            font: { name: "Calibri" },
+            text: `${sekolah.kabupaten},`,
+          },
+        ],
+      };
+      worksheet4.getCell(`G${(ujian.toJSON().__meta__.TotalUjian + 1) * 1 + 9}`).value = {
+        richText: [
+          {
+            font: { name: "Calibri" },
+            text: "GURU MATA PELAJARAN",
+          },
+        ],
+      };
+      worksheet4.getCell(`G${(ujian.toJSON().__meta__.TotalUjian + 1) * 1 + 14}`).value = {
+        richText: [
+          {
+            font: { name: "Calibri" },
+            text: `${ujian.toJSON().mataPelajaran.user.nama}`,
+          },
+        ],
+      };
+    
 
     worksheet5.mergeCells("A1:L1");
     worksheet5.mergeCells("A2:L2");
@@ -3408,33 +3392,33 @@ class DownloadService {
           bentuk: d.soal ? d.soal.bentuk : "-",
           pertanyaan: d.soal
             ? d.soal.pertanyaan
-                .replace(/(<([^>]+)>)/ig, "")
-                .replace(/\&nbsp;/ig, "")
+                .replace(/(<([^>]+)>)/gi, "")
+                .replace(/\&nbsp;/gi, "")
             : "-",
           a: d.soal
             ? d.soal.jawaban_a
-                .replace(/(<([^>]+)>)/ig, "")
-                .replace(/\&nbsp;/ig, "")
+                .replace(/(<([^>]+)>)/gi, "")
+                .replace(/\&nbsp;/gi, "")
             : "-",
           b: d.soal
             ? d.soal.jawaban_b
-                .replace(/(<([^>]+)>)/ig, "")
-                .replace(/\&nbsp;/ig, "")
+                .replace(/(<([^>]+)>)/gi, "")
+                .replace(/\&nbsp;/gi, "")
             : "-",
           c: d.soal
             ? d.soal.jawaban_c
-                .replace(/(<([^>]+)>)/ig, "")
-                .replace(/\&nbsp;/ig, "")
+                .replace(/(<([^>]+)>)/gi, "")
+                .replace(/\&nbsp;/gi, "")
             : "-",
           d: d.soal
             ? d.soal.jawaban_d
-                .replace(/(<([^>]+)>)/ig, "")
-                .replace(/\&nbsp;/ig, "")
+                .replace(/(<([^>]+)>)/gi, "")
+                .replace(/\&nbsp;/gi, "")
             : "-",
           e: d.soal
             ? d.soal.jawaban_e
-                .replace(/(<([^>]+)>)/ig, "")
-                .replace(/\&nbsp;/ig, "")
+                .replace(/(<([^>]+)>)/gi, "")
+                .replace(/\&nbsp;/gi, "")
             : "-",
           jawaban: d.soal ? d.soal.kj_pg : "-",
           pembahasan: d.soal ? d.soal.pembahasan : "-",
