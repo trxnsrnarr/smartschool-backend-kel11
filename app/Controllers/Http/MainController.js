@@ -28301,7 +28301,7 @@ class MainController {
       sertifikat_kadaluarsa,
       tanggal_kadaluarsa,
       id_sertifikat,
-      lampiran,
+      lampiran,link,
       user_id,
     } = request.post();
     // const rules = {
@@ -28330,7 +28330,7 @@ class MainController {
             sertifikat_kadaluarsa,
             tanggal_kadaluarsa,
             id_sertifikat,
-            lampiran,
+            lampiran:lampiran.toString(),link:link.toString(),
             m_sekolah_id: sekolah.id,
             m_user_id: d,
             m_ta_id: ta.id,
@@ -28370,7 +28370,7 @@ class MainController {
       sertifikat_kadaluarsa,
       tanggal_kadaluarsa,
       id_sertifikat,
-      lampiran,
+      lampiran,link,
       user_id,
     } = request.post();
     // const rules = {
@@ -28397,7 +28397,8 @@ class MainController {
         sertifikat_kadaluarsa,
         tanggal_kadaluarsa,
         id_sertifikat,
-        lampiran,
+        lampiran:lampiran.toString(),
+        link:link.toString()
       });
 
     if (!penghargaan) {
