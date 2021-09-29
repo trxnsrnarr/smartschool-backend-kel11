@@ -35548,16 +35548,46 @@ class MainController {
   }
 
   async getSuperAdminSekolah({ response, request, auth }) {
+    let { search, page } = request.get();
     const user = await User.query().count("* as total");
     // const { rombel_id } = request.post();
-    const sekolah = await MSekolah.query().withCount("siswa as total").fetch();
+    let sekolah;
+
+    sekolah =  MSekolah.query().withCount("siswa as total",(builder)=>{
+      builder.where({dihapus:0})
+    })
+
+    if(search){
+      sekolah.where("nama","like",`%${search}%`)
+    }
+
+    sekolah = await sekolah.paginate(page,10)
 
     return response.ok({
       sekolah,
-      prestasi,
-      tingkat,
     });
   }
+
+  async detailSuperAdminSekolah({ response, request, auth,params:{sekolah_id} }) {
+
+    let sekolah = await MSekolah.query().withCount("siswa as total",(builder)=>{
+      builder.where({dihapus:0})}).where({id:sekolah_id}).first()
+
+      let { search, page } = request.get();
+
+    let pembayaran = MPembayaranSekolah.query().where({m_sekolah_id:sekolah_id}).andWhere({dihapus:0})
+
+    if (search){
+      pembayaran.andWhere("nama","like",`%${search}%`)
+    }
+
+    pembayaran = await pembayaran.fetch()
+
+    return response.ok({
+      sekolah,pembayaran
+    });
+  }
+
 
   async postSekolah({ response, request, auth }) {
     const { nama, domain, server } = request.post();
@@ -35609,6 +35639,18 @@ class MainController {
 
     return response.ok({
       message: messagePostSuccess,
+    });
+  }
+
+  async detailPembayaranSekolah({ response, request, auth,params:{pembayaran_id} }) {
+    const user = await User.query().count("* as total");
+    // const { rombel_id } = request.post();
+    let pembayaran = MPembayaranSekolah.query().with("sekolah").with("dokumen",(builder)=>{
+      builder.where({dihapus:0})
+    }).where({id:pembayaran_id}).first()
+
+    return response.ok({
+      pembayaran,
     });
   }
 
@@ -35761,6 +35803,84 @@ class MainController {
       message: messageDeleteSuccess,
     });
   }
+
+  async postServer({
+    response,
+    request,
+    auth,
+  }) {
+
+
+    const { nama, ip,tagihan } = request.post();
+
+    let validation = await validate(
+      request.post(),
+      rulesUserPost,
+      messagesUser
+    );
+
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const server = await MServer.create({
+      nama,
+      ip,tagihan,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putServer({
+    response,
+    request,
+    auth,
+    params: { server_id },
+  }) {
+
+    const { nama, ip,tagihan} = request.post();
+
+    let validation = await validate(
+      request.post(),
+      rulesUserPost,
+      messagesUser
+    );
+
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const server = await MServer.query()
+      .where({ id: server_id })
+      .update({
+        nama,ip,tagihan,
+      });
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteServer({
+    response,
+    request,
+    auth,
+    params: { server_id },
+  }) {
+    const server = await MServer.query()
+      .where({ id: server_id })
+      .update({
+        dihapu: 1,
+      });
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
 
   async notFoundPage({ response, request, auth }) {
     return `<p>Data tidak ditemukan, silahkan kembali ke <a href="http://getsmartschool.id">Smart School</a></p>`;
