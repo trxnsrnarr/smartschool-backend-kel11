@@ -5429,7 +5429,10 @@ class MainController {
 
       if (tingkat) {
         prestasi = await MPrestasi.query()
-          .with("user")
+          .with("user",(builder)=>{
+            builder.select("id","nama")
+          })
+          .with("tingkatPrestasi")
           .where({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
           .andWhere({ tingkat })
@@ -5437,7 +5440,10 @@ class MainController {
           .paginate(page, 25);
       } else {
         prestasi = await MPrestasi.query()
-          .with("user")
+          .with("user",(builder)=>{
+            builder.select("id","nama")
+          })
+          .with("tingkatPrestasi")
           .where({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
           .whereIn("m_user_id", userIds)
@@ -5446,14 +5452,20 @@ class MainController {
     } else {
       if (tingkat) {
         prestasi = await MPrestasi.query()
-          .with("user")
+          .with("user",(builder)=>{
+            builder.select("id","nama")
+          })
+          .with("tingkatPrestasi")
           .where({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
           .andWhere({ tingkat })
           .paginate(page, 25);
       } else {
         prestasi = await MPrestasi.query()
-          .with("user")
+          .with("user",(builder)=>{
+            builder.select("id","nama")
+          })
+          .with("tingkatPrestasi")
           .where({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
           .paginate(page, 25);
@@ -5518,8 +5530,10 @@ class MainController {
 
       if (tingkat) {
         prestasi = await MPrestasi.query()
-          .with("user")
-          .with("prestasi")
+          .with("user",(builder)=>{
+            builder.select("id","nama")
+          })
+          .with("tingkatPrestasi")
           .where({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
           .andWhere({ tingkat })
@@ -5527,8 +5541,10 @@ class MainController {
           .paginate(page, 25);
       } else {
         prestasi = await MPrestasi.query()
-          .with("user")
-          .with("prestasi")
+          .with("user",(builder)=>{
+            builder.select("id","nama")
+          })
+          .with("tingkatPrestasi")
           .where({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
           .whereIn("m_user_id", userIds)
@@ -5537,16 +5553,20 @@ class MainController {
     } else {
       if (tingkat) {
         prestasi = await MPrestasi.query()
-          .with("user")
-          .with("prestasi")
+          .with("user",(builder)=>{
+            builder.select("id","nama")
+          })
+          .with("tingkatPrestasi")
           .where({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
           .andWhere({ tingkat })
           .paginate(page, 25);
       } else {
         prestasi = await MPrestasi.query()
-          .with("user")
-          .with("prestasi")
+          .with("user",(builder)=>{
+            builder.select("id","nama")
+          })
+          .with("tingkatPrestasi")
           .where({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
           .paginate(page, 25);
