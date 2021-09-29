@@ -14,6 +14,12 @@ class MPrestasi extends Model {
   tingkatPrestasi() {
     return this.belongsTo("App/Models/MPenghargaan", "tingkat", "id");
   }
+  getLampiran(lampiran) {
+    return lampiran ? lampiran.split(",") : [];
+  }
+  getLink(link) {
+    return link ? link.split(",") : [];
+  }
 }
 
 module.exports = MPrestasi;
