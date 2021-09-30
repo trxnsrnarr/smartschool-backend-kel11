@@ -20801,7 +20801,7 @@ class MainController {
   }
 
   async daftarsekolah({ response, request }) {
-    const { search } = request.get();
+    const { search, page, limit } = request.get();
 
     let sekolah = MSekolah.query().select("id", "nama", "favicon", "domain");
 
@@ -20809,7 +20809,11 @@ class MainController {
       sekolah.where("nama", "like", `%${search}%`);
     }
 
-    sekolah = await sekolah.limit(50).fetch();
+    if(page && limit ){
+      sekolah = await sekolah.paginate(page, limit)
+    } else{
+      sekolah = await sekolah.limit(50).fetch();
+    }
 
     return sekolah;
   }
