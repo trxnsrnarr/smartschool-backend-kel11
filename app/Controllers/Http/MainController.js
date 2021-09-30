@@ -10325,8 +10325,6 @@ class MainController {
             pesertaUjian.toJSON().jadwalUjian.m_jadwal_ujian_id,
         })
         .fetch();
-        
-      return semuaPeserta;
 
       let metaHasil = { nilaiPg: 0, nilaiEsai: 0, nilaiTotal: 0, benar: 0 };
       let analisisBenar = {};
