@@ -17,6 +17,8 @@ const MSikapRombel = use("App/Models/MSikapRombel");
 const MRekap = use("App/Models/MRekap");
 const MPredikatNilai = use("App/Models/MPredikatNilai");
 const MKeteranganRapor = use("App/Models/MKeteranganRapor");
+const MCamera = use("App/Models/MCamera");
+const MAbsenBelumTerdaftar = use("App/Models/MAbsenBelumTerdaftar");
 const MKeteranganPkl = use("App/Models/MKeteranganPkl");
 const MRaporEkskul = use("App/Models/MRaporEkskul");
 const MRekapRombel = use("App/Models/MRekapRombel");
@@ -1310,6 +1312,145 @@ class MainController {
         message: messageNotFound,
       });
     }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async getCamera({ auth, response, request }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const camera = await MCamera.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    return response.ok({
+      camera,
+    });
+  }
+
+  async postCamera({ auth, response, request }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { nama, address, m_sekolah_id } = request.post();
+
+    const rules = {
+      nama: "required",
+      address: "required",
+    };
+    const message = {
+      "nama.required": "Nama kamera harus diisi",
+      "address.required": "address kamera harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const check = await MCamera.query()
+      .where({ address: address })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    if (check) {
+      return response.unprocessableEntity([
+        { message: `Kamera Dengan alamat ${address} sudah Terdaftar` },
+      ]);
+    }
+
+    const newCam = await MCamera.create({
+      nama,
+      address,
+      m_sekolah_id: sekolah.id,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putCamera({ auth, response, request, params: { camera_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { nama, address, sinkron } = request.post();
+
+    if (sinkron) {
+      const waktu_sinkron = moment().utcOffset(7).format("YYYY-MM-DD HH:mm:ss");
+
+      await MCamera.query().where({ id: camera_id }).update({
+        waktu_sinkron,
+      });
+    }
+
+    if (nama || address) {
+      const rules = {
+        nama: "required",
+        address: "required",
+      };
+      const message = {
+        "nama.required": "Nama kamera harus diisi",
+        "address.required": "address kamera harus diisi",
+      };
+      const validation = await validate(request.all(), rules, message);
+      if (validation.fails()) {
+        return response.unprocessableEntity(validation.messages());
+      }
+
+      const check = await MCamera.query()
+        .where({ address: address })
+        .andWhere({ dihapus: 0 })
+        .first();
+
+      if (check && check.id != camera_id) {
+        return response.unprocessableEntity([
+          { message: `Kamera Dengan alamat ${address} sudah Terdaftar` },
+        ]);
+      }
+
+      await MCamera.query().where({ id: camera_id }).update({
+        nama,
+        address,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteCamera({ auth, response, request, params: { camera_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    await MCamera.query().where({ id: camera_id }).update({
+      dihapus: 1,
+    });
 
     return response.ok({
       message: messageDeleteSuccess,
@@ -9958,6 +10099,8 @@ class MainController {
       m_ujian_id,
     } = request.post();
 
+    const pembuatUjian = await MUjian.query().where({id: m_ujian_id}).first()
+
     const jadwalUjian = await MJadwalUjian.create({
       jumlah_pg,
       jumlah_esai,
@@ -9971,7 +10114,7 @@ class MainController {
       durasi,
       gmeet,
       diacak,
-      m_user_id: user.id,
+      m_user_id: pembuatUjian.m_user_id,
       dihapus: 0,
     });
 
@@ -35686,8 +35829,6 @@ class MainController {
     auth,
     params: { pembayaranSekolah_id },
   }) {
-
-
     const { nama, jenis, lampiran } = request.post();
 
     let validation = await validate(
@@ -35719,7 +35860,6 @@ class MainController {
     auth,
     params: { dokumenPembayaranSekolah_id },
   }) {
-
     const { nama, jenis, lampiran } = request.post();
 
     let validation = await validate(
