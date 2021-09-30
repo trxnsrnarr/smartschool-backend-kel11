@@ -20810,7 +20810,7 @@ class MainController {
     }
 
     if( page, limit ){
-      sekolah = await sekolah.paginate(page, limit)
+      sekolah = await sekolah.forPage(page, limit)
     } else{
       sekolah = await sekolah.limit(50).fetch();
     }
