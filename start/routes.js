@@ -1011,5 +1011,8 @@ Route.post("/camera", "MainController.postCamera")
 Route.put("/camera/:camera_id", "MainController.putCamera")
 Route.delete("/camera/:camera_id", "MainController.deleteCamera")
 
+// Log Camera
+Route.post("/log-camera", "MainController.postLogCamera")
+
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");

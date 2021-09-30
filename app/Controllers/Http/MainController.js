@@ -1,5 +1,6 @@
 "use strict";
 
+const Drive = use("Drive");
 const Province = use("App/Models/Province");
 const Regency = use("App/Models/Regency");
 const District = use("App/Models/District");
@@ -1454,6 +1455,111 @@ class MainController {
 
     return response.ok({
       message: messageDeleteSuccess,
+    });
+  }
+
+  async postLogCamera({ auth, response, request }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { nama, waktu, masker, suhu, foto } = request.post();
+
+    const rules = {
+      foto: "required",
+      waktu: "required",
+    };
+    const message = {
+      "foto.required": "foto Muka Harus ada",
+      "waktu.required": "Waktu Muka ditangkap harus ada",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const fileName = new Date().getTime();
+    await Drive.put(`camera/${fileName}.jpeg`, Buffer.from(foto, "base64"));
+
+    if (nama) {
+      const user = await User.query()
+        .where({ whatsapp: nama.split("-")[0] })
+        .andWhere({ dihapus: 0 })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .first();
+      if (user) {
+        const absen = await MAbsen.query()
+          .where("created_at", "like", `%${tanggal}%`)
+          .andWhere({ m_user_id: user.id })
+          .first();
+        if (hour < 9) {
+          if (!absen) {
+            await MAbsen.create({
+              role: user.role,
+              absen: "hadir",
+              foto_masuk_local: `tmp/camera/${fileName}.jpeg`,
+              waktu_masuk: waktu,
+              suhu: suhu,
+              masker: masker,
+              m_user_id: user.id,
+              m_sekolah_id: sekolah.id,
+            });
+          } else {
+            await MAbsen.query()
+              .where({ id: absen.id })
+              .update({
+                foto_masuk_local: `tmp/camera/${fileName}.jpeg`,
+                suhu: suhu,
+                masker: masker,
+              });
+          }
+        } else {
+          if (!absen) {
+            await MAbsen.create({
+              role: user.role,
+              absen: "telat",
+              foto_pulang_local: `tmp/camera/${fileName}.jpeg`,
+              waktu_pulang: waktu,
+              suhu: suhu,
+              masker: masker,
+              m_user_id: user.id,
+              m_sekolah_id: sekolah.id,
+            });
+          } else {
+            await MAbsen.query()
+              .where({ id: absen.id })
+              .update({
+                foto_masuk_local: `tmp/camera/${fileName}.jpeg`,
+                suhu: suhu,
+                masker: masker,
+              });
+          }
+        }
+      } else {
+        await MAbsenBelumTerdaftar.create({
+          foto: `tmp/camera/${fileName}.jpeg`,
+          suhu: suhu,
+          masker: masker,
+          waktu_masuk: waktu,
+          m_sekolah_id: sekolah.id,
+        });
+      }
+    } else {
+      await MAbsenBelumTerdaftar.create({
+        foto: `tmp/camera/${fileName}.jpeg`,
+        suhu: suhu,
+        masker: masker,
+        waktu_masuk: waktu,
+        m_sekolah_id: sekolah.id,
+      });
+    }
+
+    return response.ok({
+      message: messagePostSuccess,
     });
   }
 
@@ -10119,7 +10225,7 @@ class MainController {
       m_ujian_id,
     } = request.post();
 
-    const pembuatUjian = await MUjian.query().where({id: m_ujian_id}).first()
+    const pembuatUjian = await MUjian.query().where({ id: m_ujian_id }).first();
 
     const jadwalUjian = await MJadwalUjian.create({
       jumlah_pg,
@@ -20809,9 +20915,9 @@ class MainController {
       sekolah.where("nama", "like", `%${search}%`);
     }
 
-    if( page, limit ){
-      sekolah = await sekolah.forPage(page, limit).fetch()
-    } else{
+    if ((page, limit)) {
+      sekolah = await sekolah.forPage(page, limit).fetch();
+    } else {
       sekolah = await sekolah.limit(50).fetch();
     }
 
