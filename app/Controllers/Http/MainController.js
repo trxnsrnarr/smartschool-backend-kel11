@@ -5570,7 +5570,10 @@ class MainController {
 
       if (tingkat) {
         prestasi = await MPrestasi.query()
-          .with("user")
+          .with("user", (builder) => {
+            builder.select("id", "nama");
+          })
+          .with("tingkatPrestasi")
           .where({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
           .andWhere({ tingkat })
@@ -5578,7 +5581,10 @@ class MainController {
           .paginate(page, 25);
       } else {
         prestasi = await MPrestasi.query()
-          .with("user")
+          .with("user", (builder) => {
+            builder.select("id", "nama");
+          })
+          .with("tingkatPrestasi")
           .where({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
           .whereIn("m_user_id", userIds)
@@ -5587,14 +5593,20 @@ class MainController {
     } else {
       if (tingkat) {
         prestasi = await MPrestasi.query()
-          .with("user")
+          .with("user", (builder) => {
+            builder.select("id", "nama");
+          })
+          .with("tingkatPrestasi")
           .where({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
           .andWhere({ tingkat })
           .paginate(page, 25);
       } else {
         prestasi = await MPrestasi.query()
-          .with("user")
+          .with("user", (builder) => {
+            builder.select("id", "nama");
+          })
+          .with("tingkatPrestasi")
           .where({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
           .paginate(page, 25);
@@ -5659,8 +5671,10 @@ class MainController {
 
       if (tingkat) {
         prestasi = await MPrestasi.query()
-          .with("user")
-          .with("prestasi")
+          .with("user", (builder) => {
+            builder.select("id", "nama");
+          })
+          .with("tingkatPrestasi")
           .where({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
           .andWhere({ tingkat })
@@ -5668,8 +5682,10 @@ class MainController {
           .paginate(page, 25);
       } else {
         prestasi = await MPrestasi.query()
-          .with("user")
-          .with("prestasi")
+          .with("user", (builder) => {
+            builder.select("id", "nama");
+          })
+          .with("tingkatPrestasi")
           .where({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
           .whereIn("m_user_id", userIds)
@@ -5678,16 +5694,20 @@ class MainController {
     } else {
       if (tingkat) {
         prestasi = await MPrestasi.query()
-          .with("user")
-          .with("prestasi")
+          .with("user", (builder) => {
+            builder.select("id", "nama");
+          })
+          .with("tingkatPrestasi")
           .where({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
           .andWhere({ tingkat })
           .paginate(page, 25);
       } else {
         prestasi = await MPrestasi.query()
-          .with("user")
-          .with("prestasi")
+          .with("user", (builder) => {
+            builder.select("id", "nama");
+          })
+          .with("tingkatPrestasi")
           .where({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
           .paginate(page, 25);
@@ -10288,6 +10308,24 @@ class MainController {
         .where({ id: peserta_ujian_id })
         .first();
 
+      let semuaPeserta = await TkJadwalUjian.query()
+        .with("rombel", (builder) => {
+          builder.select("id", "nama");
+        })
+        .with("peserta", (builder) => {
+          builder
+            .with("user", (builder) => {
+              builder.select("id", "nama");
+            })
+            .select("id", "m_user_id", "tk_jadwal_ujian_id")
+            .whereNotNull("waktu_selesai");
+        })
+        .where({
+          m_jadwal_ujian_id:
+            pesertaUjian.toJSON().jadwalUjian.m_jadwal_ujian_id,
+        })
+        .fetch();
+
       let metaHasil = { nilaiPg: 0, nilaiEsai: 0, nilaiTotal: 0, benar: 0 };
       let analisisBenar = {};
       let analisisTotal = {};
@@ -10356,6 +10394,7 @@ class MainController {
         peserta_ujian: pesertaUjian,
         metaHasil,
         analisisData: analisisData,
+        semuaPeserta: semuaPeserta,
       });
     } else {
       pesertaUjian = await TkPesertaUjian.query()
@@ -27957,14 +27996,22 @@ class MainController {
 
     const { konfirmasi, lampiran, link } = request.post();
 
-    const sanksi = await MBuktiPelaksanaanSanksi.query()
-      .where({ id: sanksi_id })
-      .update({
-        lampiran: lampiran.toString(),
-        link: link.toString(),
-        konfirmasi,
-        dihapus: 0,
-      });
+    let sanksi;
+    if (konfirmasi) {
+      sanksi = await MBuktiPelaksanaanSanksi.query()
+        .where({ id: sanksi_id })
+        .update({
+          konfirmasi,
+        });
+    } else {
+      sanksi = await MBuktiPelaksanaanSanksi.query()
+        .where({ id: sanksi_id })
+        .update({
+          lampiran: lampiran.toString(),
+          link: link.toString(),
+          dihapus: 0,
+        });
+    }
 
     if (!sanksi) {
       return response.notFound({
@@ -28425,6 +28472,7 @@ class MainController {
       tanggal_kadaluarsa,
       id_sertifikat,
       lampiran,
+      link,
       user_id,
     } = request.post();
     // const rules = {
@@ -28453,7 +28501,8 @@ class MainController {
             sertifikat_kadaluarsa,
             tanggal_kadaluarsa,
             id_sertifikat,
-            lampiran,
+            lampiran: lampiran.toString(),
+            link: link.toString(),
             m_sekolah_id: sekolah.id,
             m_user_id: d,
             m_ta_id: ta.id,
@@ -28494,6 +28543,7 @@ class MainController {
       tanggal_kadaluarsa,
       id_sertifikat,
       lampiran,
+      link,
       user_id,
     } = request.post();
     // const rules = {
@@ -28520,7 +28570,8 @@ class MainController {
         sertifikat_kadaluarsa,
         tanggal_kadaluarsa,
         id_sertifikat,
-        lampiran,
+        lampiran: lampiran.toString(),
+        link: link.toString(),
       });
 
     if (!penghargaan) {
@@ -35691,14 +35742,54 @@ class MainController {
   }
 
   async getSuperAdminSekolah({ response, request, auth }) {
+    let { search, page } = request.get();
     const user = await User.query().count("* as total");
     // const { rombel_id } = request.post();
-    const sekolah = await MSekolah.query().withCount("siswa as total").fetch();
+    let sekolah;
+
+    sekolah = MSekolah.query().withCount("siswa as total", (builder) => {
+      builder.where({ dihapus: 0 });
+    });
+
+    if (search) {
+      sekolah.where("nama", "like", `%${search}%`);
+    }
+
+    sekolah = await sekolah.paginate(page, 10);
 
     return response.ok({
       sekolah,
-      prestasi,
-      tingkat,
+    });
+  }
+
+  async detailSuperAdminSekolah({
+    response,
+    request,
+    auth,
+    params: { sekolah_id },
+  }) {
+    let sekolah = await MSekolah.query()
+      .withCount("siswa as total", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .where({ id: sekolah_id })
+      .first();
+
+    let { search, page } = request.get();
+
+    let pembayaran = MPembayaranSekolah.query()
+      .where({ m_sekolah_id: sekolah_id })
+      .andWhere({ dihapus: 0 });
+
+    if (search) {
+      pembayaran.andWhere("nama", "like", `%${search}%`);
+    }
+
+    pembayaran = await pembayaran.fetch();
+
+    return response.ok({
+      sekolah,
+      pembayaran,
     });
   }
 
@@ -35752,6 +35843,27 @@ class MainController {
 
     return response.ok({
       message: messagePostSuccess,
+    });
+  }
+
+  async detailPembayaranSekolah({
+    response,
+    request,
+    auth,
+    params: { pembayaran_id },
+  }) {
+    const user = await User.query().count("* as total");
+    // const { rombel_id } = request.post();
+    let pembayaran = MPembayaranSekolah.query()
+      .with("sekolah")
+      .with("dokumen", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .where({ id: pembayaran_id })
+      .first();
+
+    return response.ok({
+      pembayaran,
     });
   }
 
@@ -35896,6 +36008,65 @@ class MainController {
       .update({
         dihapu: 1,
       });
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async postServer({ response, request, auth }) {
+    const { nama, ip, tagihan } = request.post();
+
+    let validation = await validate(
+      request.post(),
+      rulesUserPost,
+      messagesUser
+    );
+
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const server = await MServer.create({
+      nama,
+      ip,
+      tagihan,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putServer({ response, request, auth, params: { server_id } }) {
+    const { nama, ip, tagihan } = request.post();
+
+    let validation = await validate(
+      request.post(),
+      rulesUserPost,
+      messagesUser
+    );
+
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const server = await MServer.query().where({ id: server_id }).update({
+      nama,
+      ip,
+      tagihan,
+    });
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteServer({ response, request, auth, params: { server_id } }) {
+    const server = await MServer.query().where({ id: server_id }).update({
+      dihapu: 1,
+    });
 
     return response.ok({
       message: messageDeleteSuccess,
