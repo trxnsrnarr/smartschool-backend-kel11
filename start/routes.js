@@ -1005,5 +1005,11 @@ Route.get("/dashboard/absen", "MainController.getDashboardAbsen");
 Route.post("/dummyGPDS/GPDS", "MainController.dummyGPDS");
 Route.post("/dummyGPDS/GPDS2", "MainController.dummyGPDS2");
 
+// Camera
+Route.get("/camera", "MainController.getCamera")
+Route.post("/camera", "MainController.postCamera")
+Route.put("/camera/:camera_id", "MainController.putCamera")
+Route.delete("/camera/:camera_id", "MainController.deleteCamera")
+
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
