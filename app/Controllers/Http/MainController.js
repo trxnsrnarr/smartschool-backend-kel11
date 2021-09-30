@@ -10318,13 +10318,15 @@ class MainController {
               builder.select("id", "nama");
             })
             .select("id", "m_user_id", "tk_jadwal_ujian_id")
-            .whereNotNull("waktu_selesai");
+            .whereNotNull("waktu_selesai") .orderBy('m_user_id', 'asc');
         })
         .where({
           m_jadwal_ujian_id:
             pesertaUjian.toJSON().jadwalUjian.m_jadwal_ujian_id,
         })
         .fetch();
+        
+      return semuaPeserta;
 
       let metaHasil = { nilaiPg: 0, nilaiEsai: 0, nilaiTotal: 0, benar: 0 };
       let analisisBenar = {};
