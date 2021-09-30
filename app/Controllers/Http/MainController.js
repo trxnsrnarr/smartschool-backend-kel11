@@ -27834,14 +27834,22 @@ class MainController {
 
     const { konfirmasi, lampiran, link } = request.post();
 
-    const sanksi = await MBuktiPelaksanaanSanksi.query()
+    let sanksi;
+    if (konfirmasi){
+       sanksi = await MBuktiPelaksanaanSanksi.query()
+      .where({ id: sanksi_id })
+      .update({
+        konfirmasi,
+      });
+    }else{
+      sanksi = await MBuktiPelaksanaanSanksi.query()
       .where({ id: sanksi_id })
       .update({
         lampiran: lampiran.toString(),
         link: link.toString(),
-        konfirmasi,
         dihapus: 0,
       });
+    }
 
     if (!sanksi) {
       return response.notFound({
