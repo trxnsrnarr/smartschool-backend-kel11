@@ -20809,7 +20809,7 @@ class MainController {
       sekolah.where("nama", "like", `%${search}%`);
     }
 
-    if(page && limit ){
+    if( page, limit ){
       sekolah = await sekolah.paginate(page, limit)
     } else{
       sekolah = await sekolah.limit(50).fetch();
