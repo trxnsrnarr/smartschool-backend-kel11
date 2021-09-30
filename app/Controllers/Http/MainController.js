@@ -10424,7 +10424,7 @@ class MainController {
               builder.select("id", "nama");
             })
             .select("id", "m_user_id", "tk_jadwal_ujian_id")
-            .whereNotNull("waktu_selesai");
+            .whereNotNull("waktu_selesai") .orderBy('m_user_id', 'asc');
         })
         .where({
           m_jadwal_ujian_id:
