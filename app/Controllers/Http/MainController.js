@@ -1493,7 +1493,7 @@ class MainController {
         .first();
       if (user) {
         const absen = await MAbsen.query()
-          .where("created_at", "like", `%${tanggal}%`)
+          .where("created_at", "like", `%${moment().utcOffset(7).format("YYYY-MM-DD")}%`)
           .andWhere({ m_user_id: user.id })
           .first();
         if (hour < 9) {
