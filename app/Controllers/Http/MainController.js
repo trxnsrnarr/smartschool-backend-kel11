@@ -1319,6 +1319,34 @@ class MainController {
     });
   }
 
+  async getTamu({ auth, response, request }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { page = 1, limit = 20, date } = request.get();
+
+    let absen = MAbsenBelumTerdaftar.query().where({
+      m_sekolah_id: sekolah.id,
+    });
+
+    if (date) {
+      absen.whereBetween("waktu_masuk", [
+        `${date} 00:00:00`,
+        `${date} 23:59:59`,
+      ]);
+    }
+    absen = await absen.paginate(page, limit);
+
+    return response.ok({
+      absen,
+    });
+  }
+
   async getCamera({ auth, response, request }) {
     const domain = request.headers().origin;
 
@@ -1493,7 +1521,11 @@ class MainController {
         .first();
       if (user) {
         const absen = await MAbsen.query()
-          .where("created_at", "like", `%${moment().utcOffset(7).format("YYYY-MM-DD")}%`)
+          .where(
+            "created_at",
+            "like",
+            `%${moment().utcOffset(7).format("YYYY-MM-DD")}%`
+          )
           .andWhere({ m_user_id: user.id })
           .first();
         if (hour < 9) {
@@ -10424,7 +10456,8 @@ class MainController {
               builder.select("id", "nama");
             })
             .select("id", "m_user_id", "tk_jadwal_ujian_id")
-            .whereNotNull("waktu_selesai") .orderBy('m_user_id', 'asc');
+            .whereNotNull("waktu_selesai")
+            .orderBy("m_user_id", "asc");
         })
         .where({
           m_jadwal_ujian_id:
