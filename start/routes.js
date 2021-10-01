@@ -1014,5 +1014,8 @@ Route.delete("/camera/:camera_id", "MainController.deleteCamera")
 // Log Camera
 Route.post("/log-camera", "MainController.postLogCamera")
 
+// Tamu tertangkap kamera
+Route.get("/tamu", "MainController.getTamu")
+
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
