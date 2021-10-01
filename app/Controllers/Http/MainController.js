@@ -1402,7 +1402,6 @@ class MainController {
       ]);
     }
 
-
     const waktu_sinkron = moment().utcOffset(7).format("YYYY-MM-DD HH:mm:ss");
 
     const newCam = await MCamera.create({
@@ -1410,7 +1409,7 @@ class MainController {
       address,
       m_sekolah_id: sekolah.id,
       dihapus: 0,
-      waktu_sinkron
+      waktu_sinkron,
     });
 
     return response.ok({
@@ -1500,8 +1499,6 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-
-
     const { nama, waktu, masker, suhu, foto } = request.post();
 
     const fileName = new Date().getTime();
@@ -1575,8 +1572,14 @@ class MainController {
           m_sekolah_id: sekolah.id,
         });
 
-        await WhatsAppService.sendMessage(6281316119411, `Wajah tidak dikenal dengan suhu tubuh ${Math.abs(suhu)}℃ dan dalam keadaan ${masker ? 'menggunakan masker' : 'tidak menggunakan masker'} pada ${moment(waktu).format('DD MMM YYYY HH:mm:ss')}`)
-
+        await WhatsAppService.sendMessage(
+          6281316119411,
+          `Wajah tidak dikenal dengan suhu tubuh ${Math.abs(
+            suhu
+          )}℃ dan dalam keadaan ${
+            masker ? "menggunakan masker" : "tidak menggunakan masker"
+          } pada ${moment(waktu).format("DD MMM YYYY HH:mm:ss")}`
+        );
       }
     } else {
       // unregistered
@@ -1588,7 +1591,14 @@ class MainController {
         m_sekolah_id: sekolah.id,
       });
 
-      await WhatsAppService.sendMessage(6281316119411, `Wajah tidak dikenal dengan suhu tubuh ${Math.abs(suhu)}℃ dan dalam keadaan ${masker ? 'menggunakan masker' : 'tidak menggunakan masker'} pada ${moment(waktu).format('DD MMM YYYY HH:mm:ss')}`)
+      await WhatsAppService.sendMessage(
+        6281316119411,
+        `Wajah tidak dikenal dengan suhu tubuh ${Math.abs(
+          suhu
+        )}℃ dan dalam keadaan ${
+          masker ? "menggunakan masker" : "tidak menggunakan masker"
+        } pada ${moment(waktu).format("DD MMM YYYY HH:mm:ss")}`
+      );
     }
 
     return response.ok({
@@ -6571,7 +6581,7 @@ class MainController {
       list_anggota,
       list_rombel,
     } = request.post();
-    
+
     const tanggal = moment(tanggal_pembagian).format(`DD`);
     const bulan = moment(tanggal_pembagian).format(`M`);
     const waktu = `${tanggal_pembagian} ${waktu_pembagian}`;
@@ -6726,24 +6736,24 @@ class MainController {
                   //   console.log(err)
                   // }
 
-                    // try {
-                    //     const task = cron.schedule(
-                    //       `${menit} ${jam} ${tanggal} ${bulan} *`,
-                    //       async () => {
-                    //         await axios.post(`http://localhost:8000/send-message`, {
-                    //           number: `6285648627895@c.us`,
-                    //           message: `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}`
-                    //         })
-                    //       },
-                    //       {
-                    //         scheduled: true,
-                    //         timezone: "Asia/Jakarta",
-                    //       }
-                    //     );
-                    //     return task;
-                    //   } catch (error) {
-                    //     console.log(error)
-                    //   }
+                  // try {
+                  //     const task = cron.schedule(
+                  //       `${menit} ${jam} ${tanggal} ${bulan} *`,
+                  //       async () => {
+                  //         await axios.post(`http://localhost:8000/send-message`, {
+                  //           number: `6285648627895@c.us`,
+                  //           message: `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}`
+                  //         })
+                  //       },
+                  //       {
+                  //         scheduled: true,
+                  //         timezone: "Asia/Jakarta",
+                  //       }
+                  //     );
+                  //     return task;
+                  //   } catch (error) {
+                  //     console.log(error)
+                  //   }
                 })
               );
             })
