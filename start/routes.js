@@ -1006,10 +1006,10 @@ Route.post("/dummyGPDS/GPDS", "MainController.dummyGPDS");
 Route.post("/dummyGPDS/GPDS2", "MainController.dummyGPDS2");
 
 // Camera
-Route.get("/camera", "MainController.getCamera")
-Route.post("/camera", "MainController.postCamera")
-Route.put("/camera/:camera_id", "MainController.putCamera")
-Route.delete("/camera/:camera_id", "MainController.deleteCamera")
+Route.get("/cameras", "MainController.getCamera")
+Route.post("/cameras", "MainController.postCamera")
+Route.put("/cameras/:camera_id", "MainController.putCamera")
+Route.delete("/cameras/:camera_id", "MainController.deleteCamera")
 
 // Log Camera
 Route.post("/log-camera", "MainController.postLogCamera")

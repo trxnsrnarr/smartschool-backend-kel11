@@ -129,6 +129,7 @@ const TkJawabanUjianSiswa = use("App/Models/TkJawabanUjianSiswa");
 const User = use("App/Models/User");
 const DownloadService = use("App/Services/DownloadService");
 const DownloadService2 = use("App/Services/DownloadService2");
+const WhatsAppService = use("App/Services/WhatsAppService");
 
 const moment = require("moment");
 require("moment/locale/id");
@@ -1373,11 +1374,15 @@ class MainController {
       ]);
     }
 
+
+    const waktu_sinkron = moment().utcOffset(7).format("YYYY-MM-DD HH:mm:ss");
+
     const newCam = await MCamera.create({
       nama,
       address,
       m_sekolah_id: sekolah.id,
       dihapus: 0,
+      waktu_sinkron
     });
 
     return response.ok({
@@ -1467,24 +1472,14 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { nama, waktu, masker, suhu, foto } = request.post();
 
-    const rules = {
-      foto: "required",
-      waktu: "required",
-    };
-    const message = {
-      "foto.required": "foto Muka Harus ada",
-      "waktu.required": "Waktu Muka ditangkap harus ada",
-    };
-    const validation = await validate(request.all(), rules, message);
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
-    }
+
+    const { nama, waktu, masker, suhu, foto } = request.post();
 
     const fileName = new Date().getTime();
     await Drive.put(`camera/${fileName}.jpeg`, Buffer.from(foto, "base64"));
 
+    // check registered
     if (nama) {
       const user = await User.query()
         .where({ whatsapp: nama.split("-")[0] })
@@ -1501,7 +1496,7 @@ class MainController {
             await MAbsen.create({
               role: user.role,
               absen: "hadir",
-              foto_masuk_local: `tmp/camera/${fileName}.jpeg`,
+              foto_masuk_local: `${fileName}.jpeg`,
               waktu_masuk: waktu,
               suhu: suhu,
               masker: masker,
@@ -1512,7 +1507,7 @@ class MainController {
             await MAbsen.query()
               .where({ id: absen.id })
               .update({
-                foto_masuk_local: `tmp/camera/${fileName}.jpeg`,
+                foto_masuk_local: `${fileName}.jpeg`,
                 suhu: suhu,
                 masker: masker,
               });
@@ -1522,7 +1517,7 @@ class MainController {
             await MAbsen.create({
               role: user.role,
               absen: "telat",
-              foto_pulang_local: `tmp/camera/${fileName}.jpeg`,
+              foto_pulang_local: `${fileName}.jpeg`,
               waktu_pulang: waktu,
               suhu: suhu,
               masker: masker,
@@ -1533,7 +1528,7 @@ class MainController {
             await MAbsen.query()
               .where({ id: absen.id })
               .update({
-                foto_masuk_local: `tmp/camera/${fileName}.jpeg`,
+                foto_masuk_local: `${fileName}.jpeg`,
                 suhu: suhu,
                 masker: masker,
               });
@@ -1541,21 +1536,27 @@ class MainController {
         }
       } else {
         await MAbsenBelumTerdaftar.create({
-          foto: `tmp/camera/${fileName}.jpeg`,
+          foto: `${fileName}.jpeg`,
           suhu: suhu,
           masker: masker,
           waktu_masuk: waktu,
           m_sekolah_id: sekolah.id,
         });
+
+        await WhatsAppService.sendMessage(6281316119411, `Wajah tidak dikenal dengan suhu tubuh ${Math.abs(suhu)}℃ dan dalam keadaan ${masker ? 'menggunakan masker' : 'tidak menggunakan masker'} pada ${moment(waktu).format('DD MMM YYYY HH:mm:ss')}`)
+
       }
     } else {
+      // unregistered
       await MAbsenBelumTerdaftar.create({
-        foto: `tmp/camera/${fileName}.jpeg`,
+        foto: `${fileName}.jpeg`,
         suhu: suhu,
         masker: masker,
         waktu_masuk: waktu,
         m_sekolah_id: sekolah.id,
       });
+
+      await WhatsAppService.sendMessage(6281316119411, `Wajah tidak dikenal dengan suhu tubuh ${Math.abs(suhu)}℃ dan dalam keadaan ${masker ? 'menggunakan masker' : 'tidak menggunakan masker'} pada ${moment(waktu).format('DD MMM YYYY HH:mm:ss')}`)
     }
 
     return response.ok({
@@ -5024,16 +5025,16 @@ class MainController {
     let data = [];
 
     colComment.eachCell(async (cell, rowNumber) => {
-      if (rowNumber >= 8) {
+      if (rowNumber >= 6) {
         data.push({
           nama: explanation.getCell("B" + rowNumber).value,
           whatsapp: explanation.getCell("C" + rowNumber).value,
-          // email:
-          //   explanation.getCell("D" + rowNumber).value == null
-          //     ? ""
-          //     : typeof explanation.getCell("D" + rowNumber).value == "object"
-          //     ? JSON.parse(explanation.getCell("D" + rowNumber).value).text
-          //     : explanation.getCell("D" + rowNumber).value,
+          email:
+            explanation.getCell("D" + rowNumber).value == null
+              ? ""
+              : typeof explanation.getCell("D" + rowNumber).value == "object"
+              ? JSON.parse(explanation.getCell("D" + rowNumber).value).text
+              : explanation.getCell("D" + rowNumber).value,
           gender: explanation.getCell("D" + rowNumber).value,
           role: explanation.getCell("E" + rowNumber).value,
           password: explanation.getCell("F " + rowNumber).value,
@@ -5053,7 +5054,7 @@ class MainController {
             nama: d.nama,
             whatsapp: d.whatsapp,
             gender: d.gender,
-            // email: d.email ? d.email : "",
+            email: d.email ? d.email : "",
             password: d.password,
             role: "siswa",
             m_sekolah_id: sekolah.id,
