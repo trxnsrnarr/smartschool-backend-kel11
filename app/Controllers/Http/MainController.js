@@ -6271,22 +6271,7 @@ class MainController {
       list_anggota,
       list_rombel,
     } = request.post();
-    // const rules = {
-    //   judul:"required",
-    //   instruksi:"required",
-    //   tingkat:"required",
-    //   m_mata_pelajaran_id:"required",
-    // }
-    // const message={
-    //   "judul.required":"Judul harus diisi",
-    //   "instruksi.required":"Instruksi harus dipilih",
-    //   "tingkat.required":"Tingkat harus dipilih",
-    //   "m_mata_pelajaran_id.required":"Mata Pelajaran harus dipilih",
-    // }
-    // const validation = await validate(request.all(),rules,message);
-    // if(validation.fails()){
-    //   return response.unprocessableEntity(validation.messages());
-    // }
+    
     const tanggal = moment(tanggal_pembagian).format(`DD`);
     const bulan = moment(tanggal_pembagian).format(`M`);
     const waktu = `${tanggal_pembagian} ${waktu_pembagian}`;
@@ -6357,7 +6342,7 @@ class MainController {
         if (list_anggota.length) {
           anggotaRombel = await MAnggotaRombel.query()
             .with("user", (builder) => {
-              builder.select("id", "email").where({ dihapus: 0 });
+              builder.select("id", "whatsapp", "nama").where({ dihapus: 0 });
             })
             .where({ m_rombel_id: list_rombel[0] })
             .whereIn("m_user_id", list_anggota)
@@ -6366,7 +6351,7 @@ class MainController {
         } else {
           anggotaRombel = await MAnggotaRombel.query()
             .with("user", (builder) => {
-              builder.select("id", "email").where({ dihapus: 0 });
+              builder.select("id", "whatsapp", "nama").where({ dihapus: 0 });
             })
             .whereIn("m_rombel_id", list_rombel)
             .andWhere({ dihapus: 0 })
@@ -6386,27 +6371,24 @@ class MainController {
                 dikumpulkan: 0,
               });
 
+              // NOTIFIKASI WHATSAPP
+              // try{
+              //   await axios.post(`http://localhost:8000/send-message`, {
+              //   number: `6285648627895@c.us`,
+              //   message: `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}`
+              // })
+              // } catch(err) {
+              //   console.log(err)
+              // }
+
               // try {
-              //   if (d.user.email != null) {
               //     const task = cron.schedule(
               //       `${menit} ${jam} ${tanggal} ${bulan} *`,
-              //       () => {
-              //         Mail.send(
-              //           `emails.tugas`,
-              //           {
-              //             ...sekolah.toJSON(),
-              //             timelineid: timeline.id,
-              //             namaguru: user.nama,
-              //             mataPelajaran: mapel.nama,
-              //             judulTugas: judul,
-              //           },
-              //           (message) => {
-              //             message
-              //               .to(`${d.user.email}`)
-              //               .from("no-reply@smarteschool.id")
-              //               .subject("Ada Tugas Baru");
-              //           }
-              //         );
+              //       async () => {
+              //         await axios.post(`http://localhost:8000/send-message`, {
+              //           number: `6285648627895@c.us`,
+              //           message: `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}`
+              //         })
               //       },
               //       {
               //         scheduled: true,
@@ -6414,8 +6396,9 @@ class MainController {
               //       }
               //     );
               //     return task;
+              //   } catch (error) {
+              //     console.log(error)
               //   }
-              // } catch (error) {}
             })
           );
         } else {
@@ -6432,36 +6415,35 @@ class MainController {
                       dikumpulkan: 0,
                     });
                   }
-                  // try {
-                  //   if (d.user.email != null) {
-                  //     const task = cron.schedule(
-                  //       `${menit} ${jam} ${tanggal} ${bulan} *`,
-                  //       () => {
-                  //         Mail.send(
-                  //           `emails.tugas`,
-                  //           {
-                  //             ...sekolah.toJSON(),
-                  //             timelineid: timeline.id,
-                  //             namaguru: user.nama,
-                  //             mataPelajaran: mapel.nama,
-                  //             judulTugas: judul,
-                  //           },
-                  //           (message) => {
-                  //             message
-                  //               .to(`${d.user.email}`)
-                  //               .from("no-reply@smarteschool.id")
-                  //               .subject("Ada Tugas Baru");
-                  //           }
-                  //         );
-                  //       },
-                  //       {
-                  //         scheduled: true,
-                  //         timezone: "Asia/Jakarta",
-                  //       }
-                  //     );
-                  //     return task;
-                  //   }
-                  // } catch (error) {}
+
+                  // NOTIFIKASI WHATSAPP
+                  // try{
+                  //   await axios.post(`http://localhost:8000/send-message`, {
+                  //   number: `6285648627895@c.us`,
+                  //   message: `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}`
+                  // })
+                  // } catch(err) {
+                  //   console.log(err)
+                  // }
+
+                    // try {
+                    //     const task = cron.schedule(
+                    //       `${menit} ${jam} ${tanggal} ${bulan} *`,
+                    //       async () => {
+                    //         await axios.post(`http://localhost:8000/send-message`, {
+                    //           number: `6285648627895@c.us`,
+                    //           message: `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}`
+                    //         })
+                    //       },
+                    //       {
+                    //         scheduled: true,
+                    //         timezone: "Asia/Jakarta",
+                    //       }
+                    //     );
+                    //     return task;
+                    //   } catch (error) {
+                    //     console.log(error)
+                    //   }
                 })
               );
             })
