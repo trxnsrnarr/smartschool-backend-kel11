@@ -129,6 +129,7 @@ const TkJawabanUjianSiswa = use("App/Models/TkJawabanUjianSiswa");
 const User = use("App/Models/User");
 const DownloadService = use("App/Services/DownloadService");
 const DownloadService2 = use("App/Services/DownloadService2");
+const WhatsAppService = use("App/Services/WhatsAppService");
 
 const moment = require("moment");
 require("moment/locale/id");
@@ -1401,11 +1402,15 @@ class MainController {
       ]);
     }
 
+
+    const waktu_sinkron = moment().utcOffset(7).format("YYYY-MM-DD HH:mm:ss");
+
     const newCam = await MCamera.create({
       nama,
       address,
       m_sekolah_id: sekolah.id,
       dihapus: 0,
+      waktu_sinkron
     });
 
     return response.ok({
@@ -1495,24 +1500,14 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { nama, waktu, masker, suhu, foto } = request.post();
 
-    const rules = {
-      foto: "required",
-      waktu: "required",
-    };
-    const message = {
-      "foto.required": "foto Muka Harus ada",
-      "waktu.required": "Waktu Muka ditangkap harus ada",
-    };
-    const validation = await validate(request.all(), rules, message);
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
-    }
+
+    const { nama, waktu, masker, suhu, foto } = request.post();
 
     const fileName = new Date().getTime();
     await Drive.put(`camera/${fileName}.jpeg`, Buffer.from(foto, "base64"));
 
+    // check registered
     if (nama) {
       const user = await User.query()
         .where({ whatsapp: nama.split("-")[0] })
@@ -1533,7 +1528,7 @@ class MainController {
             await MAbsen.create({
               role: user.role,
               absen: "hadir",
-              foto_masuk_local: `tmp/camera/${fileName}.jpeg`,
+              foto_masuk_local: `${fileName}.jpeg`,
               waktu_masuk: waktu,
               suhu: suhu,
               masker: masker,
@@ -1544,7 +1539,7 @@ class MainController {
             await MAbsen.query()
               .where({ id: absen.id })
               .update({
-                foto_masuk_local: `tmp/camera/${fileName}.jpeg`,
+                foto_masuk_local: `${fileName}.jpeg`,
                 suhu: suhu,
                 masker: masker,
               });
@@ -1554,7 +1549,7 @@ class MainController {
             await MAbsen.create({
               role: user.role,
               absen: "telat",
-              foto_pulang_local: `tmp/camera/${fileName}.jpeg`,
+              foto_pulang_local: `${fileName}.jpeg`,
               waktu_pulang: waktu,
               suhu: suhu,
               masker: masker,
@@ -1565,7 +1560,7 @@ class MainController {
             await MAbsen.query()
               .where({ id: absen.id })
               .update({
-                foto_masuk_local: `tmp/camera/${fileName}.jpeg`,
+                foto_masuk_local: `${fileName}.jpeg`,
                 suhu: suhu,
                 masker: masker,
               });
@@ -1573,21 +1568,27 @@ class MainController {
         }
       } else {
         await MAbsenBelumTerdaftar.create({
-          foto: `tmp/camera/${fileName}.jpeg`,
+          foto: `${fileName}.jpeg`,
           suhu: suhu,
           masker: masker,
           waktu_masuk: waktu,
           m_sekolah_id: sekolah.id,
         });
+
+        await WhatsAppService.sendMessage(6281316119411, `Wajah tidak dikenal dengan suhu tubuh ${Math.abs(suhu)}℃ dan dalam keadaan ${masker ? 'menggunakan masker' : 'tidak menggunakan masker'} pada ${moment(waktu).format('DD MMM YYYY HH:mm:ss')}`)
+
       }
     } else {
+      // unregistered
       await MAbsenBelumTerdaftar.create({
-        foto: `tmp/camera/${fileName}.jpeg`,
+        foto: `${fileName}.jpeg`,
         suhu: suhu,
         masker: masker,
         waktu_masuk: waktu,
         m_sekolah_id: sekolah.id,
       });
+
+      await WhatsAppService.sendMessage(6281316119411, `Wajah tidak dikenal dengan suhu tubuh ${Math.abs(suhu)}℃ dan dalam keadaan ${masker ? 'menggunakan masker' : 'tidak menggunakan masker'} pada ${moment(waktu).format('DD MMM YYYY HH:mm:ss')}`)
     }
 
     return response.ok({
@@ -5056,16 +5057,16 @@ class MainController {
     let data = [];
 
     colComment.eachCell(async (cell, rowNumber) => {
-      if (rowNumber >= 8) {
+      if (rowNumber >= 6) {
         data.push({
           nama: explanation.getCell("B" + rowNumber).value,
           whatsapp: explanation.getCell("C" + rowNumber).value,
-          // email:
-          //   explanation.getCell("D" + rowNumber).value == null
-          //     ? ""
-          //     : typeof explanation.getCell("D" + rowNumber).value == "object"
-          //     ? JSON.parse(explanation.getCell("D" + rowNumber).value).text
-          //     : explanation.getCell("D" + rowNumber).value,
+          email:
+            explanation.getCell("D" + rowNumber).value == null
+              ? ""
+              : typeof explanation.getCell("D" + rowNumber).value == "object"
+              ? JSON.parse(explanation.getCell("D" + rowNumber).value).text
+              : explanation.getCell("D" + rowNumber).value,
           gender: explanation.getCell("D" + rowNumber).value,
           role: explanation.getCell("E" + rowNumber).value,
           password: explanation.getCell("F " + rowNumber).value,
@@ -5085,7 +5086,7 @@ class MainController {
             nama: d.nama,
             whatsapp: d.whatsapp,
             gender: d.gender,
-            // email: d.email ? d.email : "",
+            email: d.email ? d.email : "",
             password: d.password,
             role: "siswa",
             m_sekolah_id: sekolah.id,
@@ -6570,22 +6571,7 @@ class MainController {
       list_anggota,
       list_rombel,
     } = request.post();
-    // const rules = {
-    //   judul:"required",
-    //   instruksi:"required",
-    //   tingkat:"required",
-    //   m_mata_pelajaran_id:"required",
-    // }
-    // const message={
-    //   "judul.required":"Judul harus diisi",
-    //   "instruksi.required":"Instruksi harus dipilih",
-    //   "tingkat.required":"Tingkat harus dipilih",
-    //   "m_mata_pelajaran_id.required":"Mata Pelajaran harus dipilih",
-    // }
-    // const validation = await validate(request.all(),rules,message);
-    // if(validation.fails()){
-    //   return response.unprocessableEntity(validation.messages());
-    // }
+    
     const tanggal = moment(tanggal_pembagian).format(`DD`);
     const bulan = moment(tanggal_pembagian).format(`M`);
     const waktu = `${tanggal_pembagian} ${waktu_pembagian}`;
@@ -6656,7 +6642,7 @@ class MainController {
         if (list_anggota.length) {
           anggotaRombel = await MAnggotaRombel.query()
             .with("user", (builder) => {
-              builder.select("id", "email").where({ dihapus: 0 });
+              builder.select("id", "whatsapp", "nama").where({ dihapus: 0 });
             })
             .where({ m_rombel_id: list_rombel[0] })
             .whereIn("m_user_id", list_anggota)
@@ -6665,7 +6651,7 @@ class MainController {
         } else {
           anggotaRombel = await MAnggotaRombel.query()
             .with("user", (builder) => {
-              builder.select("id", "email").where({ dihapus: 0 });
+              builder.select("id", "whatsapp", "nama").where({ dihapus: 0 });
             })
             .whereIn("m_rombel_id", list_rombel)
             .andWhere({ dihapus: 0 })
@@ -6685,27 +6671,24 @@ class MainController {
                 dikumpulkan: 0,
               });
 
+              // NOTIFIKASI WHATSAPP
+              // try{
+              //   await axios.post(`http://localhost:8000/send-message`, {
+              //   number: `6285648627895@c.us`,
+              //   message: `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}`
+              // })
+              // } catch(err) {
+              //   console.log(err)
+              // }
+
               // try {
-              //   if (d.user.email != null) {
               //     const task = cron.schedule(
               //       `${menit} ${jam} ${tanggal} ${bulan} *`,
-              //       () => {
-              //         Mail.send(
-              //           `emails.tugas`,
-              //           {
-              //             ...sekolah.toJSON(),
-              //             timelineid: timeline.id,
-              //             namaguru: user.nama,
-              //             mataPelajaran: mapel.nama,
-              //             judulTugas: judul,
-              //           },
-              //           (message) => {
-              //             message
-              //               .to(`${d.user.email}`)
-              //               .from("no-reply@smarteschool.id")
-              //               .subject("Ada Tugas Baru");
-              //           }
-              //         );
+              //       async () => {
+              //         await axios.post(`http://localhost:8000/send-message`, {
+              //           number: `6285648627895@c.us`,
+              //           message: `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}`
+              //         })
               //       },
               //       {
               //         scheduled: true,
@@ -6713,8 +6696,9 @@ class MainController {
               //       }
               //     );
               //     return task;
+              //   } catch (error) {
+              //     console.log(error)
               //   }
-              // } catch (error) {}
             })
           );
         } else {
@@ -6731,36 +6715,35 @@ class MainController {
                       dikumpulkan: 0,
                     });
                   }
-                  // try {
-                  //   if (d.user.email != null) {
-                  //     const task = cron.schedule(
-                  //       `${menit} ${jam} ${tanggal} ${bulan} *`,
-                  //       () => {
-                  //         Mail.send(
-                  //           `emails.tugas`,
-                  //           {
-                  //             ...sekolah.toJSON(),
-                  //             timelineid: timeline.id,
-                  //             namaguru: user.nama,
-                  //             mataPelajaran: mapel.nama,
-                  //             judulTugas: judul,
-                  //           },
-                  //           (message) => {
-                  //             message
-                  //               .to(`${d.user.email}`)
-                  //               .from("no-reply@smarteschool.id")
-                  //               .subject("Ada Tugas Baru");
-                  //           }
-                  //         );
-                  //       },
-                  //       {
-                  //         scheduled: true,
-                  //         timezone: "Asia/Jakarta",
-                  //       }
-                  //     );
-                  //     return task;
-                  //   }
-                  // } catch (error) {}
+
+                  // NOTIFIKASI WHATSAPP
+                  // try{
+                  //   await axios.post(`http://localhost:8000/send-message`, {
+                  //   number: `6285648627895@c.us`,
+                  //   message: `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}`
+                  // })
+                  // } catch(err) {
+                  //   console.log(err)
+                  // }
+
+                    // try {
+                    //     const task = cron.schedule(
+                    //       `${menit} ${jam} ${tanggal} ${bulan} *`,
+                    //       async () => {
+                    //         await axios.post(`http://localhost:8000/send-message`, {
+                    //           number: `6285648627895@c.us`,
+                    //           message: `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}`
+                    //         })
+                    //       },
+                    //       {
+                    //         scheduled: true,
+                    //         timezone: "Asia/Jakarta",
+                    //       }
+                    //     );
+                    //     return task;
+                    //   } catch (error) {
+                    //     console.log(error)
+                    //   }
                 })
               );
             })
