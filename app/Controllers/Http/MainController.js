@@ -18714,11 +18714,11 @@ class MainController {
             dihapus: 0,
           });
           await MMataPelajaran.create({
-            nama: newUser.nama,
-            kode: newUser.kode,
-            kelompok: newUser.kelompok,
-            kkm: newUser.kkm,
-            m_user_id: user.id,
+            nama: d.nama,
+            kode: d.kode,
+            kelompok: d.kelompok,
+            kkm: d.kkm,
+            m_user_id: newUser.id,
             m_sekolah_id: sekolah.id,
             m_ta_id: ta.id,
             dihapus: 0,
