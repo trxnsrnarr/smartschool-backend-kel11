@@ -18705,7 +18705,7 @@ class MainController {
           .first();
         if (!user) {
           const newUser = await User.create({
-            nama: d.nama,
+            nama: d.namaGuru,
             whatsapp: d.whatsapp,
             // email: d.email ? d.email : "",
             m_sekolah_id: sekolah.id,
