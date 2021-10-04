@@ -35807,7 +35807,7 @@ class MainController {
     worksheet.getCell("A1").value = "Import Pembayaran";
     worksheet.getCell("A2").value = sekolah.nama;
     await Promise.all(
-      pembayaran.toJSON().siswa.map(async (d, idx) => {
+      pembayaran.toJSON().siswa.sort((a, b) => ("" + a.user.nama).localeCompare(b.user.nama)).map(async (d, idx) => {
         worksheet.addConditionalFormatting({
           ref: `B${(idx + 1) * 1 + 7}:D${(idx + 1) * 1 + 7}`,
           rules: [
