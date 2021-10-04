@@ -9536,13 +9536,17 @@ class MainController {
           .orderBy("waktu_dibuka", "desc")
           .fetch();
       } else if (status == "sudah-selesai") {
+        const ujianIds = await MUjian.query()
+          .where("nama", "like", `%${search}%`)
+          .andWhere({m_user_id: user.id})
+          .andWhere({ dihapus: 0 })
+          // .andWhere({ m_sekolah_id: sekolah.id })
+          .ids();
+
         jadwalUjian = await MJadwalUjian.query()
-          .with("ujian", (builder) => {
-            if (search) {
-              builder.where("nama", "like", `%${search}%`);
-            }
-          })
-          .where({ m_user_id: user.id })
+          .with("ujian")
+          .whereIn("m_ujian_id", ujianIds)
+          // .where({ m_user_id: user.id })
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_ditutup", "<=", hari_ini)
           .orderBy("waktu_dibuka", "desc")
@@ -9660,13 +9664,16 @@ class MainController {
           .orderBy("id", "desc")
           .fetch();
       } else if (status == "sudah-selesai") {
-        jadwalUjian = await MJadwalUjian.query()
-          .with("ujian", (builder) => {
-            if (search) {
-              builder.where("nama", "like", `%${search}%`);
-            }
-          })
+        const ujianIds = await MUjian.query()
+          .where("nama", "like", `%${search}%`)
+          .andWhere({ dihapus: 0 })
           .whereIn("m_user_id", userIds)
+          // .andWhere({ m_sekolah_id: sekolah.id })
+          .ids();
+
+        jadwalUjian = await MJadwalUjian.query()
+          .with("ujian")
+          .whereIn("m_ujian_id", ujianIds)
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_ditutup", "<=", hari_ini)
           .orderBy("id", "desc")
@@ -14618,8 +14625,8 @@ class MainController {
 
     if (pembayaranSiswa.dikonfirmasi) {
       const totalDibayar =
-        riwayat.toJSON().riwayat
-          .reduce((a, b) => a + b.nominal, 0) - pembayaranSiswa.nominal;
+        riwayat.toJSON().riwayat.reduce((a, b) => a + b.nominal, 0) -
+        pembayaranSiswa.nominal;
       const totalTagihan =
         riwayat.toJSON().rombelPembayaran?.pembayaran?.nominal;
       if (totalDibayar < totalTagihan) {
@@ -35648,7 +35655,7 @@ class MainController {
       })
     );
 
-    if(rekSekolah){
+    if (rekSekolah) {
       await MRekSekolah.query()
         .where({ m_sekolah_id: sekolah.id })
         .update({
@@ -35807,78 +35814,81 @@ class MainController {
     worksheet.getCell("A1").value = "Import Pembayaran";
     worksheet.getCell("A2").value = sekolah.nama;
     await Promise.all(
-      pembayaran.toJSON().siswa.sort((a, b) => ("" + a.user.nama).localeCompare(b.user.nama)).map(async (d, idx) => {
-        worksheet.addConditionalFormatting({
-          ref: `B${(idx + 1) * 1 + 7}:D${(idx + 1) * 1 + 7}`,
-          rules: [
-            {
-              type: "expression",
-              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-              style: {
-                font: {
-                  name: "Times New Roman",
-                  family: 4,
-                  size: 11,
-                  // bold: true,
-                },
-                alignment: {
-                  vertical: "middle",
-                  horizontal: "left",
-                },
-                border: {
-                  top: { style: "thin" },
-                  left: { style: "thin" },
-                  bottom: { style: "thin" },
-                  right: { style: "thin" },
-                },
-              },
-            },
-          ],
-        });
-        worksheet.addConditionalFormatting({
-          ref: `A${(idx + 1) * 1 + 7}`,
-          rules: [
-            {
-              type: "expression",
-              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-              style: {
-                font: {
-                  name: "Times New Roman",
-                  family: 4,
-                  size: 11,
-                  // bold: true,
-                },
-                alignment: {
-                  vertical: "middle",
-                  horizontal: "center",
-                },
-                border: {
-                  top: { style: "thin" },
-                  left: { style: "thin" },
-                  bottom: { style: "thin" },
-                  right: { style: "thin" },
+      pembayaran
+        .toJSON()
+        .siswa.sort((a, b) => ("" + a.user.nama).localeCompare(b.user.nama))
+        .map(async (d, idx) => {
+          worksheet.addConditionalFormatting({
+            ref: `B${(idx + 1) * 1 + 7}:D${(idx + 1) * 1 + 7}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 11,
+                    // bold: true,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "left",
+                  },
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
                 },
               },
-            },
-          ],
-        });
-        // add column headers
-        worksheet.getRow(7).values = ["No", "Nama", "Whatsapp", "Nominal"];
-        worksheet.columns = [
-          { key: "no" },
-          { key: "nama" },
-          { key: "whatsapp" },
-          { key: "nominal" },
-        ];
+            ],
+          });
+          worksheet.addConditionalFormatting({
+            ref: `A${(idx + 1) * 1 + 7}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 11,
+                    // bold: true,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
+                },
+              },
+            ],
+          });
+          // add column headers
+          worksheet.getRow(7).values = ["No", "Nama", "Whatsapp", "Nominal"];
+          worksheet.columns = [
+            { key: "no" },
+            { key: "nama" },
+            { key: "whatsapp" },
+            { key: "nominal" },
+          ];
 
-        // Add row using key mapping to columns
-        let row = worksheet.addRow({
-          no: `${idx + 1}`,
-          nama: d.user ? d.user.nama : "-",
-          whatsapp: d.user ? d.user.whatsapp : "-",
-          nominal: 0,
-        });
-      })
+          // Add row using key mapping to columns
+          let row = worksheet.addRow({
+            no: `${idx + 1}`,
+            nama: d.user ? d.user.nama : "-",
+            whatsapp: d.user ? d.user.whatsapp : "-",
+            nominal: 0,
+          });
+        })
     );
 
     worksheet.getColumn("A").width = 6;
