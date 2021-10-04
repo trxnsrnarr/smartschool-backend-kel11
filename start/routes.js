@@ -221,6 +221,10 @@ Route.put(
   "/riwayat-pembayaran-siswa/:riwayat_pembayaran_siswa_id",
   "MainController.putRiwayatPembayaranSiswa"
 );
+Route.delete(
+  "/riwayat-pembayaran-siswa/:riwayat_pembayaran_siswa_id",
+  "MainController.deleteRiwayatPembayaranSiswa"
+);
 
 // pembayaran kategori
 Route.post("/pembayaran-kategori", "MainController.postPembayaranKategori");
