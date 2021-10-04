@@ -9610,8 +9610,8 @@ class MainController {
           rombel,
           jadwalUjian: jadwalUjianDataFormat,
           ujian,
-          total: jadwalUjianDataFormat.length,
-          lastPage: Math.ceil(jadwalUjianDataFormat.length / 10),
+          total: jadwalUjian.toJSON().total,
+          lastPage: jadwalUjian.toJSON().lastPage,
         });
       } else {
         return response.ok({
@@ -9733,8 +9733,8 @@ class MainController {
           rombel,
           jadwalUjian: jadwalUjianDataFormat,
           ujian,
-          total: jadwalUjianDataFormat.length,
-          lastPage: Math.ceil(jadwalUjianDataFormat.length / 10),
+          total: jadwalUjian.toJSON().total,
+          lastPage: jadwalUjian.toJSON().lastPage,
         });
       } else {
         return response.ok({
@@ -9848,7 +9848,7 @@ class MainController {
           total: ujian.length,
           perPage: jadwalUjian.toJSON().perPage,
           page: jadwalUjian.toJSON().page,
-          lastPage: Math.ceil(ujian.length / jadwalUjian.toJSON().perPage),
+          lastPage: jadwalUjian.toJSON().lastPage,
           pembayaran: pembayaran
             .toJSON()
             .filter((item) => item.rombelPembayaran.pembayaran),
