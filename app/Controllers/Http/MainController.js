@@ -8595,7 +8595,7 @@ class MainController {
       });
     }
 
-    let mataPelajaran;
+    let mataPelajaran, ujian;
 
     if (user.role == "guru") {
       mataPelajaran = await MMataPelajaran.query()
@@ -8613,15 +8613,32 @@ class MainController {
         .fetch();
     }
 
-    const ujian = await MUjian.query()
-      .with("mataPelajaran")
-      .withCount("soalUjian as jumlahSoal", (builder) => {
-        builder.where({ dihapus: 0 });
-      })
-      .where({ dihapus: 0 })
-      .andWhere({ m_user_id: user.id })
-      .orderBy("id", "desc")
-      .fetch();
+    if (user.role == "admin") {
+      const userIds = await User.query()
+        .where({ dihapus: 0 })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .whereIn("role", ["guru", "admin"])
+        .ids();
+      ujian = await MUjian.query()
+        .with("mataPelajaran")
+        .withCount("soalUjian as jumlahSoal", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .where({ dihapus: 0 })
+        .whereIn("m_user_id", userIds)
+        .orderBy("id", "desc")
+        .fetch();
+    } else {
+      ujian = await MUjian.query()
+        .with("mataPelajaran")
+        .withCount("soalUjian as jumlahSoal", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .where({ dihapus: 0 })
+        .andWhere({ m_user_id: user.id })
+        .orderBy("id", "desc")
+        .fetch();
+    }
 
     let tingkatData = [];
 
@@ -9427,13 +9444,21 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const soalUjian = await MSoalUjian.query()
-      .where({ id: soal_ujian_id })
-      .delete();
+    const { m_ujian_id } = request.post();
 
-    const tkSoalUjian = await TkSoalUjian.query()
-      .where({ m_soal_ujian_id: soal_ujian_id })
-      .delete();
+    let soalUjian, tkSoalUjian;
+    if (!m_ujian_id) {
+      soalUjian = await MSoalUjian.query()
+        .where({ id: soal_ujian_id })
+        .delete();
+    } else {
+      tkSoalUjian = await TkSoalUjian.query()
+        .where({ m_soal_ujian_id: soal_ujian_id })
+        .andWhere({ m_ujian_id: m_ujian_id })
+        .update({
+          dihapus: 1,
+        });
+    }
 
     if (soalUjian > 0 || tkSoalUjian > 0) {
       return response.ok({
