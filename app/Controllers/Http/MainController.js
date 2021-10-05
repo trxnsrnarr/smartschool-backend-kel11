@@ -36077,6 +36077,30 @@ class MainController {
     });
   }
 
+  async postSekolahServer({ response, request, auth,params:{server_id} }) {
+    const { sekolah_id } = request.post();
+
+    let validation = await validate(
+      request.post(),
+      rulesUserPost,
+      messagesUser
+    );
+
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const server = await TkServerSekolah.create({
+      m_server_id:server_id,
+      m_sekolah_id:sekolah_id,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
   async notFoundPage({ response, request, auth }) {
     return `<p>Data tidak ditemukan, silahkan kembali ke <a href="http://getsmartschool.id">Smart School</a></p>`;
   }
