@@ -8534,7 +8534,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { tingkat, daftar_ujian_id } = request.get();
+    const { tingkat, daftar_ujian_id, page = 1, search } = request.get();
 
     if (tingkat) {
       let ujianTingkat;
@@ -8619,26 +8619,29 @@ class MainController {
         .andWhere({ m_sekolah_id: sekolah.id })
         .whereIn("role", ["guru", "admin"])
         .ids();
-      ujian = await MUjian.query()
+      ujian = MUjian.query()
         .with("mataPelajaran")
         .withCount("soalUjian as jumlahSoal", (builder) => {
           builder.where({ dihapus: 0 });
         })
         .where({ dihapus: 0 })
         .whereIn("m_user_id", userIds)
-        .orderBy("id", "desc")
-        .fetch();
+        .orderBy("id", "desc");
     } else {
-      ujian = await MUjian.query()
+      ujian = MUjian.query()
         .with("mataPelajaran")
         .withCount("soalUjian as jumlahSoal", (builder) => {
           builder.where({ dihapus: 0 });
         })
         .where({ dihapus: 0 })
         .andWhere({ m_user_id: user.id })
-        .orderBy("id", "desc")
-        .fetch();
+        .orderBy("id", "desc");
     }
+
+    if (search) {
+      ujian = ujian.where("nama", "like", `%${search}%`);
+    }
+    ujian = await ujian.paginate(page, 20);
 
     let tingkatData = [];
 
@@ -8678,7 +8681,9 @@ class MainController {
     ];
 
     return response.ok({
-      ujian: ujian,
+      ujian: ujian.toJSON().data,
+      total: ujian.toJSON().total,
+      lastPage: ujian.toJSON().lastPage,
       mataPelajaran: mataPelajaran,
       tingkat: tingkatData,
       tipeUjian: tipeUjian,
