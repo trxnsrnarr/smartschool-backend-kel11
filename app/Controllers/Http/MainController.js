@@ -33956,7 +33956,7 @@ class MainController {
 
     const ta = await this.getTAAktif(sekolah);
     const user = await auth.getUser();
-    const { tipe, search, nav, tanggal } = request.get();
+    const { tipe, search, nav, tanggal, page } = request.get();
 
     let mataPelajaran;
     let bukuKunjungan;
@@ -34041,7 +34041,16 @@ class MainController {
       if (tipe == "cari") {
         mataPelajaran = await MMataPelajaran.query()
           .with("user", (builder) => {
-            builder.select("id", "nama");
+            builder
+              .with("pertemuanBk", (builder) => {
+                builder
+                  .where({ m_user_id: user.id })
+                  .andWhere({ status_selesai: 0 });
+              })
+              .withCount("pertemuanBk as total", (builder) => {
+                builder.where({ status_selesai: 1 }).andWhere({ status: 0 });
+              })
+              .select("id", "nama");
           })
           .where({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
@@ -34068,8 +34077,9 @@ class MainController {
         }
       }
     }
-
-    bukuKunjungan = bukuKunjungan.paginate();
+    if (tipe != "cari") {
+      bukuKunjungan = bukuKunjungan.paginate(page, 10);
+    }
 
     return response.ok({
       mataPelajaran: mataPelajaran,
