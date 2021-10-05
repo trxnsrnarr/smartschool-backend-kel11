@@ -9943,7 +9943,11 @@ class MainController {
     const { tk_jadwal_ujian_id, m_jadwal_ujian_id } = request.post();
 
     const jadwalUjian = await TkJadwalUjian.query()
-      .with("peserta")
+      .with("peserta",(builder)=>{
+        builder.with("user"),(builder)=>{
+          builder.select("id","nama")
+        }
+      })
       .with("rombel")
       .with("jadwalUjian", (builder) => {
         builder.with("ujian");
@@ -9974,9 +9978,9 @@ class MainController {
         );
 
         await Promise.all(
-          pesertaUjianData.toJSON().map(async (d) => {
+          pesertaUjianData.toJSON().sort((a, b) => ("" + a.nama).localeCompare(b.nama)).map(async (d) => {
             await Promise.all(
-              jadwalUjian.toJSON().peserta.map(async (e) => {
+              jadwalUjian.toJSON().peserta.sort((a, b) => ("" + a.user.nama).localeCompare(b.user.nama)).map(async (e) => {
                 if (d.id == e.m_user_id) {
                   const pesertaUjian = await TkPesertaUjian.query()
                     .with("jawabanSiswa", (builder) => {
@@ -10147,8 +10151,13 @@ class MainController {
 
         //   column.width = maxLength < 15 ? 15 : maxLength > 30 ? 30 : 15;
         // });
+        // worksheet.autoFilter = {
+        //   from: 'A11',
+        //   to: 'D99',
+        // }
       })
     );
+
 
     let namaFile = `/uploads/rekap-nilai-${new Date().getTime()}.xlsx`;
 
