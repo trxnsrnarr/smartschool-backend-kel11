@@ -9538,7 +9538,7 @@ class MainController {
       } else if (status == "sudah-selesai") {
         const ujianIds = await MUjian.query()
           .where("nama", "like", `%${search}%`)
-          .andWhere({m_user_id: user.id})
+          .andWhere({ m_user_id: user.id })
           .andWhere({ dihapus: 0 })
           // .andWhere({ m_sekolah_id: sekolah.id })
           .ids();
@@ -9943,10 +9943,11 @@ class MainController {
     const { tk_jadwal_ujian_id, m_jadwal_ujian_id } = request.post();
 
     const jadwalUjian = await TkJadwalUjian.query()
-      .with("peserta",(builder)=>{
-        builder.with("user"),(builder)=>{
-          builder.select("id","nama")
-        }
+      .with("peserta", (builder) => {
+        builder.with("user"),
+          (builder) => {
+            builder.select("id", "nama");
+          };
       })
       .with("rombel")
       .with("jadwalUjian", (builder) => {
@@ -9978,89 +9979,101 @@ class MainController {
         );
 
         await Promise.all(
-          pesertaUjianData.toJSON().sort((a, b) => ("" + a.nama).localeCompare(b.nama)).map(async (d) => {
-            await Promise.all(
-              jadwalUjian.toJSON().peserta.sort((a, b) => ("" + a.user.nama).localeCompare(b.user.nama)).map(async (e) => {
-                if (d.id == e.m_user_id) {
-                  const pesertaUjian = await TkPesertaUjian.query()
-                    .with("jawabanSiswa", (builder) => {
-                      builder.with("soal");
-                    })
-                    .with("user")
-                    .where({ id: e.id })
-                    .first();
+          pesertaUjianData
+            .toJSON()
+            .sort((a, b) => ("" + a.nama).localeCompare(b.nama))
+            .map(async (d) => {
+              await Promise.all(
+                jadwalUjian
+                  .toJSON()
+                  .peserta.sort((a, b) =>
+                    ("" + a.user.nama).localeCompare(b.user.nama)
+                  )
+                  .map(async (e) => {
+                    if (d.id == e.m_user_id) {
+                      const pesertaUjian = await TkPesertaUjian.query()
+                        .with("jawabanSiswa", (builder) => {
+                          builder.with("soal");
+                        })
+                        .with("user")
+                        .where({ id: e.id })
+                        .first();
 
-                  let metaHasil = {
-                    nilaiPg: 0,
-                    nilaiEsai: 0,
-                    nilaiTotal: 0,
-                    benar: 0,
-                  };
-                  let analisisBenar = {};
-                  let analisisTotal = {};
+                      let metaHasil = {
+                        nilaiPg: 0,
+                        nilaiEsai: 0,
+                        nilaiTotal: 0,
+                        benar: 0,
+                      };
+                      let analisisBenar = {};
+                      let analisisTotal = {};
 
-                  await Promise.all(
-                    pesertaUjian.toJSON().jawabanSiswa.map(async (d) => {
-                      if (d.soal.bentuk == "pg") {
-                        if (d.jawaban_pg == d.soal.kj_pg) {
-                          metaHasil.nilaiPg =
-                            metaHasil.nilaiPg + d.soal.nilai_soal;
-                          metaHasil.benar = metaHasil.benar + 1;
-                          analisisBenar[d.soal.kd] = analisisBenar[d.soal.kd]
-                            ? analisisBenar[d.soal.kd] + 1
-                            : 1;
-                        }
-                        analisisTotal[d.soal.kd] = analisisTotal[d.soal.kd]
-                          ? analisisTotal[d.soal.kd] + 1
-                          : 1;
-                      } else if (d.soal.bentuk == "esai") {
-                        if (JSON.parse(d.jawaban_rubrik_esai)) {
-                          if (JSON.parse(d.jawaban_rubrik_esai).length) {
-                            JSON.parse(d.jawaban_rubrik_esai).map((e) => {
-                              if (e.benar) {
-                                metaHasil.nilaiEsai =
-                                  metaHasil.nilaiEsai + e.poin;
-                              }
-                            });
-
-                            if (d.jawaban_rubrik_esai.indexOf("true") != -1) {
+                      await Promise.all(
+                        pesertaUjian.toJSON().jawabanSiswa.map(async (d) => {
+                          if (d.soal.bentuk == "pg") {
+                            if (d.jawaban_pg == d.soal.kj_pg) {
+                              metaHasil.nilaiPg =
+                                metaHasil.nilaiPg + d.soal.nilai_soal;
                               metaHasil.benar = metaHasil.benar + 1;
+                              analisisBenar[d.soal.kd] = analisisBenar[
+                                d.soal.kd
+                              ]
+                                ? analisisBenar[d.soal.kd] + 1
+                                : 1;
+                            }
+                            analisisTotal[d.soal.kd] = analisisTotal[d.soal.kd]
+                              ? analisisTotal[d.soal.kd] + 1
+                              : 1;
+                          } else if (d.soal.bentuk == "esai") {
+                            if (JSON.parse(d.jawaban_rubrik_esai)) {
+                              if (JSON.parse(d.jawaban_rubrik_esai).length) {
+                                JSON.parse(d.jawaban_rubrik_esai).map((e) => {
+                                  if (e.benar) {
+                                    metaHasil.nilaiEsai =
+                                      metaHasil.nilaiEsai + e.poin;
+                                  }
+                                });
+
+                                if (
+                                  d.jawaban_rubrik_esai.indexOf("true") != -1
+                                ) {
+                                  metaHasil.benar = metaHasil.benar + 1;
+                                }
+                              }
                             }
                           }
-                        }
-                      }
-                    })
-                  );
+                        })
+                      );
 
-                  metaHasil.nilaiTotal =
-                    metaHasil.nilaiPg + metaHasil.nilaiEsai;
+                      metaHasil.nilaiTotal =
+                        metaHasil.nilaiPg + metaHasil.nilaiEsai;
 
-                  // add column headers
-                  worksheet.getRow(10).values = [
-                    "Nama",
-                    "Nilai PG",
-                    "Nilai Esai",
-                    "Nilai Total",
-                  ];
+                      // add column headers
+                      worksheet.getRow(10).values = [
+                        "Nama",
+                        "Nilai PG",
+                        "Nilai Esai",
+                        "Nilai Total",
+                      ];
 
-                  worksheet.columns = [
-                    { key: "user" },
-                    { key: "nilai_pg" },
-                    { key: "nilai_esai" },
-                    { key: "nilai_total" },
-                  ];
+                      worksheet.columns = [
+                        { key: "user" },
+                        { key: "nilai_pg" },
+                        { key: "nilai_esai" },
+                        { key: "nilai_total" },
+                      ];
 
-                  // Add row using key mapping to columns
-                  const row = worksheet.addRow({
-                    user: d.nama,
-                    nilai_pg: metaHasil.nilaiPg,
-                    nilai_esai: metaHasil.nilaiEsai,
-                    nilai_total: metaHasil.nilaiTotal,
-                  });
-                }
-              })
-            );
-          })
+                      // Add row using key mapping to columns
+                      const row = worksheet.addRow({
+                        user: d.nama,
+                        nilai_pg: metaHasil.nilaiPg,
+                        nilai_esai: metaHasil.nilaiEsai,
+                        nilai_total: metaHasil.nilaiTotal,
+                      });
+                    }
+                  })
+              );
+            })
         );
 
         worksheet.getCell("A1").value = "Ujian";
@@ -10157,7 +10170,6 @@ class MainController {
         // }
       })
     );
-
 
     let namaFile = `/uploads/rekap-nilai-${new Date().getTime()}.xlsx`;
 
@@ -33939,7 +33951,7 @@ class MainController {
 
     const ta = await this.getTAAktif(sekolah);
     const user = await auth.getUser();
-    const { tipe, search, nav, tanggal } = request.get();
+    const { tipe, search, nav, tanggal, page } = request.get();
 
     let mataPelajaran;
     let bukuKunjungan;
@@ -34024,7 +34036,13 @@ class MainController {
       if (tipe == "cari") {
         mataPelajaran = await MMataPelajaran.query()
           .with("user", (builder) => {
-            builder.select("id", "nama");
+            builder
+              .with("pertemuanBk", (builder) => {
+                builder
+                  .where({ m_user_id: user.id })
+                  .andWhere({ status_selesai: 1 });
+              })
+              .select("id", "nama");
           })
           .where({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
@@ -34051,8 +34069,9 @@ class MainController {
         }
       }
     }
-
-    bukuKunjungan = bukuKunjungan.paginate();
+    if (tipe != "cari") {
+      bukuKunjungan = bukuKunjungan.paginate(page, 10);
+    }
 
     return response.ok({
       mataPelajaran: mataPelajaran,
@@ -36257,7 +36276,7 @@ class MainController {
     });
   }
 
-  async postSekolahServer({ response, request, auth,params:{server_id} }) {
+  async postSekolahServer({ response, request, auth, params: { server_id } }) {
     const { sekolah_id } = request.post();
 
     let validation = await validate(
@@ -36271,8 +36290,8 @@ class MainController {
     }
 
     const server = await TkServerSekolah.create({
-      m_server_id:server_id,
-      m_sekolah_id:sekolah_id,
+      m_server_id: server_id,
+      m_sekolah_id: sekolah_id,
       dihapus: 0,
     });
 
