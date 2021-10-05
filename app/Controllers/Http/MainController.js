@@ -34048,7 +34048,7 @@ class MainController {
                   .andWhere({ status_selesai: 0 });
               })
               .withCount("pertemuanBk as total", (builder) => {
-                builder.where({ status_selesai: 1 }).andWhere({ status: 0 });
+                builder.where({ status_selesai: 0 }).andWhere({ status: 0 });
               })
               .select("id", "nama");
           })
