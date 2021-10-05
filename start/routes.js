@@ -221,6 +221,10 @@ Route.put(
   "/riwayat-pembayaran-siswa/:riwayat_pembayaran_siswa_id",
   "MainController.putRiwayatPembayaranSiswa"
 );
+Route.delete(
+  "/riwayat-pembayaran-siswa/:riwayat_pembayaran_siswa_id",
+  "MainController.deleteRiwayatPembayaranSiswa"
+);
 
 // pembayaran kategori
 Route.post("/pembayaran-kategori", "MainController.postPembayaranKategori");
@@ -1006,10 +1010,16 @@ Route.post("/dummyGPDS/GPDS", "MainController.dummyGPDS");
 Route.post("/dummyGPDS/GPDS2", "MainController.dummyGPDS2");
 
 // Camera
-Route.get("/camera", "MainController.getCamera")
-Route.post("/camera", "MainController.postCamera")
-Route.put("/camera/:camera_id", "MainController.putCamera")
-Route.delete("/camera/:camera_id", "MainController.deleteCamera")
+Route.get("/cameras", "MainController.getCamera")
+Route.post("/cameras", "MainController.postCamera")
+Route.put("/cameras/:camera_id", "MainController.putCamera")
+Route.delete("/cameras/:camera_id", "MainController.deleteCamera")
+
+// Log Camera
+Route.post("/log-camera", "MainController.postLogCamera")
+
+// Tamu tertangkap kamera
+Route.get("/tamu", "MainController.getTamu")
 
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
