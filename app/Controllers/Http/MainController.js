@@ -34040,7 +34040,10 @@ class MainController {
               .with("pertemuanBk", (builder) => {
                 builder
                   .where({ m_user_id: user.id })
-                  .andWhere({ status_selesai: 1 });
+                  .andWhere({ status_selesai: 0 });
+              })
+              .withCount("pertemuanBk as total", (builder) => {
+                builder.where({ status_selesai: 1 }).andWhere({ status: 0 });
               })
               .select("id", "nama");
           })
