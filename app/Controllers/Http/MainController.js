@@ -8534,7 +8534,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { tingkat, daftar_ujian_id } = request.get();
+    const { tingkat, daftar_ujian_id, page = 1, search } = request.get();
 
     if (tingkat) {
       let ujianTingkat;
@@ -8619,26 +8619,29 @@ class MainController {
         .andWhere({ m_sekolah_id: sekolah.id })
         .whereIn("role", ["guru", "admin"])
         .ids();
-      ujian = await MUjian.query()
+      ujian = MUjian.query()
         .with("mataPelajaran")
         .withCount("soalUjian as jumlahSoal", (builder) => {
           builder.where({ dihapus: 0 });
         })
         .where({ dihapus: 0 })
         .whereIn("m_user_id", userIds)
-        .orderBy("id", "desc")
-        .fetch();
+        .orderBy("id", "desc");
     } else {
-      ujian = await MUjian.query()
+      ujian = MUjian.query()
         .with("mataPelajaran")
         .withCount("soalUjian as jumlahSoal", (builder) => {
           builder.where({ dihapus: 0 });
         })
         .where({ dihapus: 0 })
         .andWhere({ m_user_id: user.id })
-        .orderBy("id", "desc")
-        .fetch();
+        .orderBy("id", "desc");
     }
+
+    if (search) {
+      ujian = ujian.where("nama", "like", `%${search}%`);
+    }
+    ujian = await ujian.paginate(page, 20);
 
     let tingkatData = [];
 
@@ -8678,7 +8681,9 @@ class MainController {
     ];
 
     return response.ok({
-      ujian: ujian,
+      ujian: ujian.toJSON().data,
+      total: ujian.toJSON().total,
+      lastPage: ujian.toJSON().lastPage,
       mataPelajaran: mataPelajaran,
       tingkat: tingkatData,
       tipeUjian: tipeUjian,
@@ -9538,7 +9543,7 @@ class MainController {
       } else if (status == "sudah-selesai") {
         const ujianIds = await MUjian.query()
           .where("nama", "like", `%${search}%`)
-          .andWhere({m_user_id: user.id})
+          .andWhere({ m_user_id: user.id })
           .andWhere({ dihapus: 0 })
           // .andWhere({ m_sekolah_id: sekolah.id })
           .ids();
@@ -9943,10 +9948,11 @@ class MainController {
     const { tk_jadwal_ujian_id, m_jadwal_ujian_id } = request.post();
 
     const jadwalUjian = await TkJadwalUjian.query()
-      .with("peserta",(builder)=>{
-        builder.with("user"),(builder)=>{
-          builder.select("id","nama")
-        }
+      .with("peserta", (builder) => {
+        builder.with("user"),
+          (builder) => {
+            builder.select("id", "nama");
+          };
       })
       .with("rombel")
       .with("jadwalUjian", (builder) => {
@@ -9978,89 +9984,101 @@ class MainController {
         );
 
         await Promise.all(
-          pesertaUjianData.toJSON().sort((a, b) => ("" + a.nama).localeCompare(b.nama)).map(async (d) => {
-            await Promise.all(
-              jadwalUjian.toJSON().peserta.sort((a, b) => ("" + a.user.nama).localeCompare(b.user.nama)).map(async (e) => {
-                if (d.id == e.m_user_id) {
-                  const pesertaUjian = await TkPesertaUjian.query()
-                    .with("jawabanSiswa", (builder) => {
-                      builder.with("soal");
-                    })
-                    .with("user")
-                    .where({ id: e.id })
-                    .first();
+          pesertaUjianData
+            .toJSON()
+            .sort((a, b) => ("" + a.nama).localeCompare(b.nama))
+            .map(async (d) => {
+              await Promise.all(
+                jadwalUjian
+                  .toJSON()
+                  .peserta.sort((a, b) =>
+                    ("" + a.user.nama).localeCompare(b.user.nama)
+                  )
+                  .map(async (e) => {
+                    if (d.id == e.m_user_id) {
+                      const pesertaUjian = await TkPesertaUjian.query()
+                        .with("jawabanSiswa", (builder) => {
+                          builder.with("soal");
+                        })
+                        .with("user")
+                        .where({ id: e.id })
+                        .first();
 
-                  let metaHasil = {
-                    nilaiPg: 0,
-                    nilaiEsai: 0,
-                    nilaiTotal: 0,
-                    benar: 0,
-                  };
-                  let analisisBenar = {};
-                  let analisisTotal = {};
+                      let metaHasil = {
+                        nilaiPg: 0,
+                        nilaiEsai: 0,
+                        nilaiTotal: 0,
+                        benar: 0,
+                      };
+                      let analisisBenar = {};
+                      let analisisTotal = {};
 
-                  await Promise.all(
-                    pesertaUjian.toJSON().jawabanSiswa.map(async (d) => {
-                      if (d.soal.bentuk == "pg") {
-                        if (d.jawaban_pg == d.soal.kj_pg) {
-                          metaHasil.nilaiPg =
-                            metaHasil.nilaiPg + d.soal.nilai_soal;
-                          metaHasil.benar = metaHasil.benar + 1;
-                          analisisBenar[d.soal.kd] = analisisBenar[d.soal.kd]
-                            ? analisisBenar[d.soal.kd] + 1
-                            : 1;
-                        }
-                        analisisTotal[d.soal.kd] = analisisTotal[d.soal.kd]
-                          ? analisisTotal[d.soal.kd] + 1
-                          : 1;
-                      } else if (d.soal.bentuk == "esai") {
-                        if (JSON.parse(d.jawaban_rubrik_esai)) {
-                          if (JSON.parse(d.jawaban_rubrik_esai).length) {
-                            JSON.parse(d.jawaban_rubrik_esai).map((e) => {
-                              if (e.benar) {
-                                metaHasil.nilaiEsai =
-                                  metaHasil.nilaiEsai + e.poin;
-                              }
-                            });
-
-                            if (d.jawaban_rubrik_esai.indexOf("true") != -1) {
+                      await Promise.all(
+                        pesertaUjian.toJSON().jawabanSiswa.map(async (d) => {
+                          if (d.soal.bentuk == "pg") {
+                            if (d.jawaban_pg == d.soal.kj_pg) {
+                              metaHasil.nilaiPg =
+                                metaHasil.nilaiPg + d.soal.nilai_soal;
                               metaHasil.benar = metaHasil.benar + 1;
+                              analisisBenar[d.soal.kd] = analisisBenar[
+                                d.soal.kd
+                              ]
+                                ? analisisBenar[d.soal.kd] + 1
+                                : 1;
+                            }
+                            analisisTotal[d.soal.kd] = analisisTotal[d.soal.kd]
+                              ? analisisTotal[d.soal.kd] + 1
+                              : 1;
+                          } else if (d.soal.bentuk == "esai") {
+                            if (JSON.parse(d.jawaban_rubrik_esai)) {
+                              if (JSON.parse(d.jawaban_rubrik_esai).length) {
+                                JSON.parse(d.jawaban_rubrik_esai).map((e) => {
+                                  if (e.benar) {
+                                    metaHasil.nilaiEsai =
+                                      metaHasil.nilaiEsai + e.poin;
+                                  }
+                                });
+
+                                if (
+                                  d.jawaban_rubrik_esai.indexOf("true") != -1
+                                ) {
+                                  metaHasil.benar = metaHasil.benar + 1;
+                                }
+                              }
                             }
                           }
-                        }
-                      }
-                    })
-                  );
+                        })
+                      );
 
-                  metaHasil.nilaiTotal =
-                    metaHasil.nilaiPg + metaHasil.nilaiEsai;
+                      metaHasil.nilaiTotal =
+                        metaHasil.nilaiPg + metaHasil.nilaiEsai;
 
-                  // add column headers
-                  worksheet.getRow(10).values = [
-                    "Nama",
-                    "Nilai PG",
-                    "Nilai Esai",
-                    "Nilai Total",
-                  ];
+                      // add column headers
+                      worksheet.getRow(10).values = [
+                        "Nama",
+                        "Nilai PG",
+                        "Nilai Esai",
+                        "Nilai Total",
+                      ];
 
-                  worksheet.columns = [
-                    { key: "user" },
-                    { key: "nilai_pg" },
-                    { key: "nilai_esai" },
-                    { key: "nilai_total" },
-                  ];
+                      worksheet.columns = [
+                        { key: "user" },
+                        { key: "nilai_pg" },
+                        { key: "nilai_esai" },
+                        { key: "nilai_total" },
+                      ];
 
-                  // Add row using key mapping to columns
-                  const row = worksheet.addRow({
-                    user: d.nama,
-                    nilai_pg: metaHasil.nilaiPg,
-                    nilai_esai: metaHasil.nilaiEsai,
-                    nilai_total: metaHasil.nilaiTotal,
-                  });
-                }
-              })
-            );
-          })
+                      // Add row using key mapping to columns
+                      const row = worksheet.addRow({
+                        user: d.nama,
+                        nilai_pg: metaHasil.nilaiPg,
+                        nilai_esai: metaHasil.nilaiEsai,
+                        nilai_total: metaHasil.nilaiTotal,
+                      });
+                    }
+                  })
+              );
+            })
         );
 
         worksheet.getCell("A1").value = "Ujian";
@@ -10157,7 +10175,6 @@ class MainController {
         // }
       })
     );
-
 
     let namaFile = `/uploads/rekap-nilai-${new Date().getTime()}.xlsx`;
 
@@ -36257,7 +36274,7 @@ class MainController {
     });
   }
 
-  async postSekolahServer({ response, request, auth,params:{server_id} }) {
+  async postSekolahServer({ response, request, auth, params: { server_id } }) {
     const { sekolah_id } = request.post();
 
     let validation = await validate(
@@ -36271,8 +36288,8 @@ class MainController {
     }
 
     const server = await TkServerSekolah.create({
-      m_server_id:server_id,
-      m_sekolah_id:sekolah_id,
+      m_server_id: server_id,
+      m_sekolah_id: sekolah_id,
       dihapus: 0,
     });
 
