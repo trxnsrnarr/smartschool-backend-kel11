@@ -5095,9 +5095,9 @@ class MainController {
               : typeof explanation.getCell("D" + rowNumber).value == "object"
               ? JSON.parse(explanation.getCell("D" + rowNumber).value).text
               : explanation.getCell("D" + rowNumber).value,
-          gender: explanation.getCell("D" + rowNumber).value,
-          role: explanation.getCell("E" + rowNumber).value,
-          password: explanation.getCell("F " + rowNumber).value,
+          gender: explanation.getCell("E" + rowNumber).value,
+          role: explanation.getCell("F" + rowNumber).value,
+          password: explanation.getCell("G " + rowNumber).value,
         });
       }
     });
