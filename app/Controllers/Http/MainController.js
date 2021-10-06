@@ -10094,10 +10094,8 @@ class MainController {
                         nilai_total: metaHasil.nilaiTotal,
                       });
                     }
-                    return;
                   })
               );
-              return
             })
         );
 
@@ -10193,7 +10191,6 @@ class MainController {
         //   from: 'A11',
         //   to: 'D99',
         // }
-        return;
       })
     );
 
