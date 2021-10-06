@@ -13989,7 +13989,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { nama, jenis, bulan, tipe_ujian, nominal, tanggal_dibuat, rombel_id } =
+    let { nama, jenis, bulan, tipe_ujian, nominal, tanggal_dibuat, rombel_id, tag } =
       request.post();
     if (bulan) {
       const rules = {
@@ -14037,7 +14037,7 @@ class MainController {
       nama,
       jenis,
       bulan,
-      tipe_ujian,
+      tipe_ujian: jenis == "lainnya" ? JSON.stringify(tag) : tipe_ujian,
       nominal,
       tanggal_dibuat,
       dihapus: 0,
@@ -14158,7 +14158,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { nama, jenis, bulan, tipe_ujian, nominal, rombel_id, tanggal_dibuat } =
+    let { nama, jenis, bulan, tipe_ujian, nominal, rombel_id, tanggal_dibuat, tag } =
       request.post();
 
     if (bulan) {
@@ -14210,7 +14210,7 @@ class MainController {
       nama,
       jenis,
       bulan,
-      tipe_ujian,
+      tipe_ujian: jenis == "lainnya" ? JSON.stringify(tag) : tipe_ujian,
       tanggal_dibuat,
       nominal,
     });
