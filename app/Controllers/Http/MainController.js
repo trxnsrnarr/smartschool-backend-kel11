@@ -10001,12 +10001,12 @@ class MainController {
           `${jadwalUjian.toJSON().rombel.nama}`
         );
 
-        await Promise.all(
+        return await Promise.all(
           pesertaUjianData
             .toJSON()
             .sort((a, b) => ("" + a.nama).localeCompare(b.nama))
             .map(async (d) => {
-              await Promise.all(
+              return await Promise.all(
                 jadwalUjian
                   .toJSON()
                   .peserta.sort((a, b) =>
