@@ -34077,8 +34077,8 @@ class MainController {
         }
       }
     }
-    if (tipe != "cari") {
-      bukuKunjungan = bukuKunjungan.paginate(page, 10);
+    if (tipe != "cari") { 
+      bukuKunjungan = await bukuKunjungan.paginate(page, 10);
     }
 
     return response.ok({
