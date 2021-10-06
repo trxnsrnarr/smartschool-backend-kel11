@@ -250,8 +250,8 @@ const hour = dateObj.getHours();
 const minute = dateObj.getMinutes();
 const second = dateObj.getSeconds();
 const keluarantanggal = day + "," + month + "," + year;
-const keluarantanggalseconds1 = moment().format("YYYY-MM-DD HH-mm-ss");
-const keluarantanggalseconds = keluarantanggalseconds1 + dateObj.getTime();
+const keluarantanggalseconds1 = moment().format("YYYY-MM-DD-HH-mm-ss");
+const keluarantanggalseconds = keluarantanggalseconds1 + "-" + dateObj.getTime();
 class MainController {
   // UTILS
 
