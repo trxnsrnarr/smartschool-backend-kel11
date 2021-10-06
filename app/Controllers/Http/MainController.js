@@ -1504,9 +1504,10 @@ class MainController {
     const fileName = new Date().getTime();
     await Drive.put(`camera/${fileName}.jpeg`, Buffer.from(foto, "base64"));
 
+    let user;
     // check registered
     if (nama) {
-      const user = await User.query()
+      user = await User.query()
         .where({ whatsapp: nama.split("-")[0] })
         .andWhere({ dihapus: 0 })
         .andWhere({ m_sekolah_id: sekolah.id })
@@ -1520,7 +1521,7 @@ class MainController {
           )
           .andWhere({ m_user_id: user.id })
           .first();
-        if (hour < 9) {
+        if (hour < 12) {
           if (!absen) {
             await MAbsen.create({
               role: user.role,
@@ -1545,7 +1546,7 @@ class MainController {
           if (!absen) {
             await MAbsen.create({
               role: user.role,
-              absen: "telat",
+              absen: "hadir",
               foto_pulang_local: `${fileName}.jpeg`,
               waktu_pulang: waktu,
               suhu: suhu,
@@ -1580,6 +1581,10 @@ class MainController {
             masker ? "menggunakan masker" : "tidak menggunakan masker"
           } pada ${moment(waktu).format("DD MMM YYYY HH:mm:ss")}`
         );
+
+        return response.ok({
+          message: messagePostSuccess,
+        });
       }
     } else {
       // unregistered
@@ -1599,7 +1604,20 @@ class MainController {
           masker ? "menggunakan masker" : "tidak menggunakan masker"
         } pada ${moment(waktu).format("DD MMM YYYY HH:mm:ss")}`
       );
+
+      return response.ok({
+        message: messagePostSuccess,
+      });
     }
+
+    await WhatsAppService.sendMessage(
+      6281316119411,
+      `${user.nama} sudah hadir di sekolah dengan suhu tubuh ${Math.abs(
+        suhu
+      )}℃ dan dalam keadaan ${
+        masker ? "menggunakan masker" : "tidak menggunakan masker"
+      } pada ${moment(waktu).format("DD MMM YYYY HH:mm:ss")}`
+    );
 
     return response.ok({
       message: messagePostSuccess,
@@ -6683,7 +6701,7 @@ class MainController {
 
               // NOTIFIKASI WHATSAPP
               // try{
-              //   await axios.post(`http://localhost:8000/send-message`, {
+              //   await axios.post(`https://whatsapp.smarteschool.net/send-message`, {
               //   number: `6285648627895@c.us`,
               //   message: `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}`
               // })
@@ -6695,7 +6713,7 @@ class MainController {
               //     const task = cron.schedule(
               //       `${menit} ${jam} ${tanggal} ${bulan} *`,
               //       async () => {
-              //         await axios.post(`http://localhost:8000/send-message`, {
+              //         await axios.post(`https://whatsapp.smarteschool.net/send-message`, {
               //           number: `6285648627895@c.us`,
               //           message: `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}`
               //         })
@@ -6728,7 +6746,7 @@ class MainController {
 
                   // NOTIFIKASI WHATSAPP
                   // try{
-                  //   await axios.post(`http://localhost:8000/send-message`, {
+                  //   await axios.post(`https://whatsapp.smarteschool.net/send-message`, {
                   //   number: `6285648627895@c.us`,
                   //   message: `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}`
                   // })
@@ -6740,7 +6758,7 @@ class MainController {
                   //     const task = cron.schedule(
                   //       `${menit} ${jam} ${tanggal} ${bulan} *`,
                   //       async () => {
-                  //         await axios.post(`http://localhost:8000/send-message`, {
+                  //         await axios.post(`https://whatsapp.smarteschool.net/send-message`, {
                   //           number: `6285648627895@c.us`,
                   //           message: `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}`
                   //         })
