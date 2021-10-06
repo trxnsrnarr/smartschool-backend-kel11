@@ -3,7 +3,7 @@ const { default: axios } = require("axios");
 class WhatsAppService {
   static async sendMessage(number, message) {
     try {
-      await axios.post(`http://localhost:8000/send-message`, {
+      await axios.post(`https://whatsapp.smarteschool.net/send-message`, {
         number: `${number}@c.us`,
         message: message,
       });
