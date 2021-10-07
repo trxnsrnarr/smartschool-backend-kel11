@@ -34182,7 +34182,7 @@ class MainController {
           .andWhere({ m_ta_id: ta.id })
           .fetch();
       } else if (tipe == "konsultasi") {
-        bukuKunjungan = await MPertemuanBk.query()
+        bukuKunjungan = MPertemuanBk.query()
           .with("userGuru", (builder) => {
             builder.select("id", "nama");
             if (search) {
@@ -34201,8 +34201,8 @@ class MainController {
         }
       }
     }
-    if (tipe != "cari") {
-      bukuKunjungan = bukuKunjungan.paginate(page, 10);
+    if (tipe != "cari") { 
+      bukuKunjungan = await bukuKunjungan.paginate(page, 10);
     }
 
     return response.ok({
