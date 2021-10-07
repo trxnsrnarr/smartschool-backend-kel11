@@ -251,7 +251,8 @@ const minute = dateObj.getMinutes();
 const second = dateObj.getSeconds();
 const keluarantanggal = day + "," + month + "," + year;
 const keluarantanggalseconds1 = moment().format("YYYY-MM-DD-HH-mm-ss");
-const keluarantanggalseconds = keluarantanggalseconds1 + "-" + dateObj.getTime();
+const keluarantanggalseconds =
+  keluarantanggalseconds1 + "-" + dateObj.getTime();
 class MainController {
   // UTILS
 
@@ -8552,7 +8553,15 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { tingkat, daftar_ujian_id, page = 1, search } = request.get();
+    const {
+      tingkat,
+      daftar_ujian_id,
+      page = 1,
+      search,
+      filter_mapel,
+      filter_tipe,
+      filter_tingkat,
+    } = request.get();
 
     if (tingkat) {
       let ujianTingkat;
@@ -8659,6 +8668,16 @@ class MainController {
     if (search) {
       ujian = ujian.where("nama", "like", `%${search}%`);
     }
+    if (filter_mapel) {
+      ujian = ujian.where({ m_user_id: filter_mapel });
+    }
+    if (filter_tingkat) {
+      ujian = ujian.where({ tingkat: filter_tingkat });
+    }
+    if (filter_tipe) {
+      ujian = ujian.where({ tipe: filter_tipe });
+    }
+
     ujian = await ujian.paginate(page, 20);
 
     let tingkatData = [];
@@ -13989,8 +14008,16 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { nama, jenis, bulan, tipe_ujian, nominal, tanggal_dibuat, rombel_id, tag } =
-      request.post();
+    let {
+      nama,
+      jenis,
+      bulan,
+      tipe_ujian,
+      nominal,
+      tanggal_dibuat,
+      rombel_id,
+      tag,
+    } = request.post();
     if (bulan) {
       const rules = {
         nama: "required",
@@ -14158,8 +14185,16 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { nama, jenis, bulan, tipe_ujian, nominal, rombel_id, tanggal_dibuat, tag } =
-      request.post();
+    let {
+      nama,
+      jenis,
+      bulan,
+      tipe_ujian,
+      nominal,
+      rombel_id,
+      tanggal_dibuat,
+      tag,
+    } = request.post();
 
     if (bulan) {
       const rules = {
@@ -14206,14 +14241,16 @@ class MainController {
     const pembayaran = await MPembayaran.query()
       .where({ id: pembayaran_id })
       .first();
-    await MPembayaran.query().where({ id: pembayaran_id }).update({
-      nama,
-      jenis,
-      bulan,
-      tipe_ujian: jenis == "lainnya" ? JSON.stringify(tag) : tipe_ujian,
-      tanggal_dibuat,
-      nominal,
-    });
+    await MPembayaran.query()
+      .where({ id: pembayaran_id })
+      .update({
+        nama,
+        jenis,
+        bulan,
+        tipe_ujian: jenis == "lainnya" ? JSON.stringify(tag) : tipe_ujian,
+        tanggal_dibuat,
+        nominal,
+      });
 
     if (!pembayaran) {
       return response.notFound({
