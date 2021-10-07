@@ -1349,6 +1349,75 @@ class MainController {
     });
   }
 
+  async requestResetPassword({ response, request }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { whatsapp } = request.post();
+
+    const user = await User.query()
+      .where({ whatsapp })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .first();
+
+    if (!user) {
+      return response.notFound({
+        message: "Akun Tidak Ditemukan",
+      });
+    }
+    const token = await Hash.make(`${user?.id}`);
+    await User.query().where({ id: user.id }).update({ token: token });
+
+    const data = await WhatsAppService.sendMessage(
+      "08112223623",
+      `Silahkan klik link dibawah ini untuk mereset password ${"http://localhost:3000"}/smartschool/reset-password/?auth=${token}&userId=${
+        user.id
+      }`
+    );
+    return response.ok({
+      message: data,
+    });
+  }
+
+  async resetPassword({ response, request }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { token, user_id, password } = request.post();
+
+    const user = await User.query()
+      .where({ id: user_id })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .first();
+
+    if (!user) {
+      return response.notFound({
+        message: "Akun Tidak Ditemukan",
+      });
+    }
+    if (user.token != token) {
+      return response.unauthorized({
+        message: "Token Anda salah",
+      });
+    }
+    const hashed = await Hash.make(`${password}`);
+    await User.query().where({ id: user.id }).update({ password: hashed, token: "" });
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
   async getCamera({ auth, response, request }) {
     const domain = request.headers().origin;
 

@@ -48,6 +48,8 @@ Route.get("/profil/guru/:user_id", "MainController.getProfilGuru");
 // user
 Route.get("/user", "MainController.getUser");
 Route.get("/user/:user_id", "MainController.detailUser");
+Route.post("/reset-password", "MainController.resetPassword");
+Route.post("/reset-password-request", "MainController.requestResetPassword");
 
 // sekolah
 Route.get("/sekolah", "MainController.getSekolah");
@@ -1010,16 +1012,16 @@ Route.post("/dummyGPDS/GPDS", "MainController.dummyGPDS");
 Route.post("/dummyGPDS/GPDS2", "MainController.dummyGPDS2");
 
 // Camera
-Route.get("/cameras", "MainController.getCamera")
-Route.post("/cameras", "MainController.postCamera")
-Route.put("/cameras/:camera_id", "MainController.putCamera")
-Route.delete("/cameras/:camera_id", "MainController.deleteCamera")
+Route.get("/cameras", "MainController.getCamera");
+Route.post("/cameras", "MainController.postCamera");
+Route.put("/cameras/:camera_id", "MainController.putCamera");
+Route.delete("/cameras/:camera_id", "MainController.deleteCamera");
 
 // Log Camera
-Route.post("/log-camera", "MainController.postLogCamera")
+Route.post("/log-camera", "MainController.postLogCamera");
 
 // Tamu tertangkap kamera
-Route.get("/tamu", "MainController.getTamu")
+Route.get("/tamu", "MainController.getTamu");
 
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
