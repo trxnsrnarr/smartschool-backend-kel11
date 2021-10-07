@@ -34076,7 +34076,7 @@ class MainController {
           .andWhere({ m_ta_id: ta.id })
           .fetch();
       } else if (tipe == "konsultasi") {
-        bukuKunjungan = await MPertemuanBk.query()
+        bukuKunjungan = MPertemuanBk.query()
           .with("userGuru", (builder) => {
             builder.select("id", "nama");
             if (search) {
