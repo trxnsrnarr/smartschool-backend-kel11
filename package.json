@@ -52,7 +52,7 @@
     "pdf2img": "^0.5.0",
     "pdfkit": "^0.12.1",
     "pdftohtmljs": "^0.6.0",
-    "puppeteer": "^10.2.0",
+    "puppeteer": "^3.3.0",
     "slugify": "^1.4.6",
     "string-strip-html": "^8.3.0",
     "striptags": "^3.1.1",

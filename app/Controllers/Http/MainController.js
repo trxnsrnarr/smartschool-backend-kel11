@@ -250,8 +250,9 @@ const hour = dateObj.getHours();
 const minute = dateObj.getMinutes();
 const second = dateObj.getSeconds();
 const keluarantanggal = day + "," + month + "," + year;
-const keluarantanggalseconds1 = moment().format("YYYY-MM-DD HH-mm-ss");
-const keluarantanggalseconds = keluarantanggalseconds1 + dateObj.getTime();
+const keluarantanggalseconds1 = moment().format("YYYY-MM-DD-HH-mm-ss");
+const keluarantanggalseconds =
+  keluarantanggalseconds1 + "-" + dateObj.getTime();
 class MainController {
   // UTILS
 
@@ -4935,7 +4936,7 @@ class MainController {
     let data = [];
 
     colComment.eachCell(async (cell, rowNumber) => {
-      if (rowNumber >= 8) {
+      if (rowNumber >= 6) {
         data.push({
           nama: explanation.getCell("B" + rowNumber).value,
           whatsapp: explanation.getCell("C" + rowNumber).value,
@@ -5095,9 +5096,9 @@ class MainController {
               : typeof explanation.getCell("D" + rowNumber).value == "object"
               ? JSON.parse(explanation.getCell("D" + rowNumber).value).text
               : explanation.getCell("D" + rowNumber).value,
-          gender: explanation.getCell("D" + rowNumber).value,
-          role: explanation.getCell("E" + rowNumber).value,
-          password: explanation.getCell("F " + rowNumber).value,
+          gender: explanation.getCell("E" + rowNumber).value,
+          role: explanation.getCell("F" + rowNumber).value,
+          password: explanation.getCell("G " + rowNumber).value,
         });
       }
     });
@@ -8552,7 +8553,15 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { tingkat, daftar_ujian_id, page = 1, search } = request.get();
+    const {
+      tingkat,
+      daftar_ujian_id,
+      page = 1,
+      search,
+      filter_mapel,
+      filter_tipe,
+      filter_tingkat,
+    } = request.get();
 
     if (tingkat) {
       let ujianTingkat;
@@ -8659,6 +8668,16 @@ class MainController {
     if (search) {
       ujian = ujian.where("nama", "like", `%${search}%`);
     }
+    if (filter_mapel) {
+      ujian = ujian.where({ m_user_id: filter_mapel });
+    }
+    if (filter_tingkat) {
+      ujian = ujian.where({ tingkat: filter_tingkat });
+    }
+    if (filter_tipe) {
+      ujian = ujian.where({ tipe: filter_tipe });
+    }
+
     ujian = await ujian.paginate(page, 20);
 
     let tingkatData = [];
@@ -13989,8 +14008,16 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { nama, jenis, bulan, tipe_ujian, nominal, tanggal_dibuat, rombel_id } =
-      request.post();
+    let {
+      nama,
+      jenis,
+      bulan,
+      tipe_ujian,
+      nominal,
+      tanggal_dibuat,
+      rombel_id,
+      tag,
+    } = request.post();
     if (bulan) {
       const rules = {
         nama: "required",
@@ -14037,7 +14064,7 @@ class MainController {
       nama,
       jenis,
       bulan,
-      tipe_ujian,
+      tipe_ujian: jenis == "lainnya" ? JSON.stringify(tag) : tipe_ujian,
       nominal,
       tanggal_dibuat,
       dihapus: 0,
@@ -14158,8 +14185,16 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { nama, jenis, bulan, tipe_ujian, nominal, rombel_id, tanggal_dibuat } =
-      request.post();
+    let {
+      nama,
+      jenis,
+      bulan,
+      tipe_ujian,
+      nominal,
+      rombel_id,
+      tanggal_dibuat,
+      tag,
+    } = request.post();
 
     if (bulan) {
       const rules = {
@@ -14206,14 +14241,16 @@ class MainController {
     const pembayaran = await MPembayaran.query()
       .where({ id: pembayaran_id })
       .first();
-    await MPembayaran.query().where({ id: pembayaran_id }).update({
-      nama,
-      jenis,
-      bulan,
-      tipe_ujian,
-      tanggal_dibuat,
-      nominal,
-    });
+    await MPembayaran.query()
+      .where({ id: pembayaran_id })
+      .update({
+        nama,
+        jenis,
+        bulan,
+        tipe_ujian: jenis == "lainnya" ? JSON.stringify(tag) : tipe_ujian,
+        tanggal_dibuat,
+        nominal,
+      });
 
     if (!pembayaran) {
       return response.notFound({
