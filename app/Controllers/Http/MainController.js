@@ -1375,7 +1375,7 @@ class MainController {
 
     const data = await WhatsAppService.sendMessage(
       `${user.whatsapp}`,
-      `Silahkan klik link dibawah ini untuk mereset password ${sekolah.domain.split(";")[0]}/smartschool/reset-password/?auth=${token}&userId=${
+      `Silahkan klik link dibawah ini untuk mereset password ${sekolah.domain.split(";")[0]}smartschool/reset-password/?auth=${token}&userId=${
         user.id
       }`
     );
