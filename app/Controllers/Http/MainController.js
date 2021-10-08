@@ -6701,6 +6701,25 @@ class MainController {
               });
 
               // NOTIFIKASI WHATSAPP
+              // try {
+              //   const task = cron.schedule(
+              //     `${menit} ${jam} ${tanggal} ${bulan} *`,
+              //     async () => {
+              //       await WhatsAppService.sendMessage(
+              //         6281316119411,
+              //         `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}?hal=tugas`
+              //       );
+              //     },
+              //     {
+              //       scheduled: true,
+              //       timezone: "Asia/Jakarta",
+              //     }
+              //   );
+              //   return task;
+              // } catch (error) {
+              //   console.log(error);
+              // }
+
               // try{
               //   await axios.post(`https://whatsapp.smarteschool.net/send-message`, {
               //   number: `6285648627895@c.us`,
@@ -6746,6 +6765,24 @@ class MainController {
                   }
 
                   // NOTIFIKASI WHATSAPP
+                  // try {
+                  //   const task = cron.schedule(
+                  //     `${menit} ${jam} ${tanggal} ${bulan} *`,
+                  //     async () => {
+                  //       await WhatsAppService.sendMessage(
+                  //         6281316119411,
+                  //         `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}?hal=tugas`
+                  //       );
+                  //     },
+                  //     {
+                  //       scheduled: true,
+                  //       timezone: "Asia/Jakarta",
+                  //     }
+                  //   );
+                  //   return task;
+                  // } catch (error) {
+                  //   console.log(error);
+                  // }
                   // try{
                   //   await axios.post(`https://whatsapp.smarteschool.net/send-message`, {
                   //   number: `6285648627895@c.us`,
@@ -7430,7 +7467,7 @@ class MainController {
 
       const anggotaRombel = await MAnggotaRombel.query()
         .with("user", (builder) => {
-          builder.select("id", "email").where({ dihapus: 0 });
+          builder.select("id", "nama", "email").where({ dihapus: 0 });
         })
         .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
         .andWhere({ dihapus: 0 })
@@ -7446,6 +7483,25 @@ class MainController {
             m_timeline_id: timeline.id,
             dihapus: 0,
           });
+          // NOTIFIKASI WHATSAPP
+          // try {
+          //   const task = cron.schedule(
+          //     `${menit} ${jam} ${tanggal} ${bulan} *`,
+          //     async () => {
+          //       await WhatsAppService.sendMessage(
+          //         6281316119411,
+          //         `Halo ${d.user.nama}, ada pertemuan dari Guru ${user.nama} (${mapel.nama}. Silahkan klik tautan berikut untuk melihat pertemuan! Semangat!! ${domain}/smartschool/timeline/${timeline.id}?hal=pertemuan`
+          //       );
+          //     },
+          //     {
+          //       scheduled: true,
+          //       timezone: "Asia/Jakarta",
+          //     }
+          //   );
+          //   return task;
+          // } catch (error) {
+          //   console.log(error);
+          // }
         })
       );
       // await Promise.all(
@@ -14139,13 +14195,23 @@ class MainController {
                 .toJSON()
                 .filter((e) => e.user)
                 .map(async (e) => {
-                  await MPembayaranSiswa.create({
+                  const bayarSiswa = await MPembayaranSiswa.create({
                     status: "belum lunas",
                     dihapus: 0,
                     m_user_id: e.m_user_id,
                     tk_pembayaran_rombel_id: tkPembayaran.id,
                     m_sekolah_id: sekolah.id,
                   });
+                  // NOTIFIKASI WHATSAPP
+                  try {
+                    await WhatsAppService.sendMessage(
+                      6281316119411,
+                      `Halo ${e.user.nama}, ${nama} telah keluar, segera lunasi pembayaran. Tekan tautan link berikut untuk melakukan pembayaran ${domain}/smartschool/tagihan/${bayarSiswa.id}`
+                    );
+                  } catch (error) {
+                    console.log(error);
+                  }
+
                   // if (e.user.email != null) {
                   // try {
                   //   const gmail = Mail.send(
@@ -14601,6 +14667,16 @@ class MainController {
       .update({
         dikonfirmasi,
       });
+
+    // NOTIFIKASI WHATSAPP
+    // try {
+    //   await WhatsAppService.sendMessage(
+    //     6281316119411,
+    //     `Halo ${e.user.nama}, Pembayaran kamu telah dikonfirmasi. Tekan tautan link berikut untuk melihat pembayaran ${domain}/smartschool/tagihan/${riwayat_pembayaran_siswa_id}`
+    //   );
+    // } catch (error) {
+    //   console.log(error);
+    // }
 
     const pembayaranSiswa = await MRiwayatPembayaranSiswa.query()
       .where({ id: riwayat_pembayaran_siswa_id })
@@ -34132,7 +34208,7 @@ class MainController {
         }
       }
     }
-    if (tipe != "cari") { 
+    if (tipe != "cari") {
       bukuKunjungan = await bukuKunjungan.paginate(page, 10);
     }
 
