@@ -958,6 +958,10 @@ Route.post(
   "/konsultasi/:konsultasi_id/jadwal",
   "MainController.postJadwalKonsultasi"
 );
+Route.post(
+  "/konsultasi/:konsultasi_id/selesai",
+  "MainController.postSelesaiKonsultasi"
+);
 Route.post("/konsultasi/download", "MainController.downloadKonsultasi");
 
 //kalender

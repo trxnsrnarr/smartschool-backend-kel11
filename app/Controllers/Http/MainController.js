@@ -34327,7 +34327,7 @@ class MainController {
             });
         })
         .with("userGuru", (builder) => {
-          builder.select("id", "nama");
+          builder.select("id", "nama","whatsapp");
         })
         .with("jadwal")
         .where({ id: konsultasi_id })
@@ -34335,10 +34335,10 @@ class MainController {
     } else if (user.role == "siswa" || user.m_sekolah_id != sekolah.id) {
       konsultasi = await MPertemuanBk.query()
         .with("user", (builder) => {
-          builder.select("id", "nama");
+          builder.select("id", "nama","whatsapp");
         })
         .with("userGuru", (builder) => {
-          builder.select("id", "nama");
+          builder.select("id", "nama","whatsapp");
         })
         .with("jadwal")
         .where({ id: konsultasi_id })
@@ -34440,6 +34440,34 @@ class MainController {
 
     await MPertemuanBk.query().where({ id: konsultasi_id }).update({
       status,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async postSelesaiKonsultasi({
+    response,
+    request,
+    auth,
+    params: { konsultasi_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { status_selesai } =
+      request.post();
+
+    await MPertemuanBk.query().where({ id: konsultasi_id }).update({
+      status_selesai,
     });
 
     return response.ok({
