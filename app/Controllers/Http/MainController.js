@@ -35052,7 +35052,7 @@ class MainController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const kalender = await MKalenderPendidikan.create({
+    const kalender = await MLabelKalender.create({
       nama,
       warna,
       dihapus: 0,
