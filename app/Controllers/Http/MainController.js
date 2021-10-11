@@ -1375,18 +1375,18 @@ class MainController {
 
     const data = await WhatsAppService.sendMessage(
       `${user.whatsapp}`,
-      `Silahkan klik link dibawah ini untuk mereset password ${sekolah.domain.split(";")[0]}smartschool/reset-password/?auth=${token}&userId=${
-        user.id
-      }`
+      `Silahkan klik link dibawah ini untuk mereset password ${
+        sekolah.domain.split(";")[0]
+      }smartschool/reset-password/?auth=${token}&userId=${user.id}`
     );
-    if(data.status){
+    if (data.status) {
       return response.ok({
         message: data,
       });
-    } else{
+    } else {
       return response.badRequest({
         message: data,
-      })
+      });
     }
   }
 
@@ -1417,7 +1417,9 @@ class MainController {
       });
     }
     const hashed = await Hash.make(`${password}`);
-    await User.query().where({ id: user.id }).update({ password: hashed, token: "" });
+    await User.query()
+      .where({ id: user.id })
+      .update({ password: hashed, token: "" });
 
     return response.ok({
       message: messagePutSuccess,
@@ -8162,6 +8164,7 @@ class MainController {
 
           return rombelData.push({
             rombel: d.nama,
+            id: d.id,
             totalHadir: totalHadir[0].total,
             totalSakit: totalSakit[0].total,
             totalIzin: totalIzin[0].total,
@@ -8363,10 +8366,10 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    const { role, tanggal } = request.post();
+    const { role, tanggal, rombel_id } = request.post();
 
     if (role == "siswa") {
-      const rombel = await MRombel.query()
+      let rombel = MRombel.query()
         .with("user")
         .with("anggotaRombel", (builder) => {
           builder.where({ dihapus: 0 }).with("user", (builder) => {
@@ -8377,8 +8380,12 @@ class MainController {
         })
         .where({ dihapus: 0 })
         .andWhere({ m_sekolah_id: sekolah.id })
-        .andWhere({ m_ta_id: ta.id })
-        .fetch();
+        .andWhere({ m_ta_id: ta.id });
+
+      if (rombel_id) {
+        rombel = rombel.andWhere({ id: rombel_id });
+      }
+      rombel = await rombel.fetch();
 
       let workbook = new Excel.Workbook();
 
