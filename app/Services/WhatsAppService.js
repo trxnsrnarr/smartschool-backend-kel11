@@ -12,8 +12,8 @@ class WhatsAppService {
       );
       return data;
     } catch (err) {
-      console.log(err);
-      return err;
+      // console.log(err.response.data);
+      return err.response.data;
     }
   }
 }
