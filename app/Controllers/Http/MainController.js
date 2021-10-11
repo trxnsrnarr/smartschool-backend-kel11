@@ -35132,7 +35132,7 @@ class MainController {
     }
 
     return response.ok({
-      message: messagePutSuccess,
+      message: messageDeleteSuccess
     });
   }
 
@@ -35270,7 +35270,7 @@ class MainController {
     }
 
     return response.ok({
-      message: messagePutSuccess,
+      message: messageDeleteSuccess,
     });
   }
 
@@ -35287,23 +35287,22 @@ class MainController {
 
     let {
       nama,
-      tanggal_awal,
+      tanggal_mulai,
       tanggal_akhir,
-      waktu_awal,
+      waktu_mulai,
       waktu_akhir,
       media,
-      tempat,
-      link,
+      isi_media,
       deskripsi,
       buku_tamu,
     } = request.post();
 
     const rules = {
       nama: "required",
-      tanggal_awal: "required",
+      tanggal_mulai: "required",
       tanggal_akhir: "required",
       buku_tamu: "required",
-      waktu_awal: "required",
+      waktu_mulai: "required",
       waktu_akhir: "required",
       media: "required",
       deskripsi: "required",
@@ -35312,9 +35311,9 @@ class MainController {
       "nama.required": "Nama harus diisi",
       "label.required": "Label harus dipilih",
       "deskripsi.required": "Deskripsi harus dipilih",
-      "tanggal_awal.required": "Tanggal Awal harus diisi",
+      "tanggal_mulai.required": "Tanggal Mulai harus diisi",
       "tanggal_akhir.required": "Tanggal Akhir harus diisi",
-      "waktu_awal.required": "Waktu Awal harus diisi",
+      "waktu_mulai.required": "Waktu Mulai harus diisi",
       "waktu_akhir.required": "Waktu Akhir harus diisi",
       "media.required": "Media Kegiatan harus dipilih",
       "buku_tamu.required": "Buku Tamu harus dipilih",
@@ -35324,17 +35323,19 @@ class MainController {
       return response.unprocessableEntity(validation.messages());
     }
 
+    const label = await MLabelKalender.query().where({m_sekolah_id:sekolah.id}).andWhere({nama: "Kegiatan"}).first()
+
     const kalender = await MKegiatanKalender.create({
       nama,
-      tanggal_awal,
+      tanggal_mulai,
       tanggal_akhir,
-      waktu_awal,
+      waktu_mulai,
       waktu_akhir,
       media,
-      tempat,
-      link,
+      isi_media,
       deskripsi,
       buku_tamu,
+      m_label_kalender_id:label.id,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
     });
@@ -35348,7 +35349,7 @@ class MainController {
     response,
     request,
     auth,
-    params: { kalender_id },
+    params: { kegiatan_id },
   }) {
     const domain = request.headers().origin;
 
@@ -35362,23 +35363,21 @@ class MainController {
 
     let {
       nama,
-      tanggal_awal,
+      tanggal_mulai,
       tanggal_akhir,
-      waktu_awal,
+      waktu_mulai,
       waktu_akhir,
-      media,
-      tempat,
-      link,
+      media,isi_media,
       deskripsi,
       buku_tamu,
     } = request.post();
 
     const rules = {
       nama: "required",
-      tanggal_awal: "required",
+      tanggal_mulai: "required",
       tanggal_akhir: "required",
       buku_tamu: "required",
-      waktu_awal: "required",
+      waktu_mulai: "required",
       waktu_akhir: "required",
       media: "required",
       deskripsi: "required",
@@ -35387,9 +35386,9 @@ class MainController {
       "nama.required": "Nama harus diisi",
       "label.required": "Label harus dipilih",
       "deskripsi.required": "Deskripsi harus dipilih",
-      "tanggal_awal.required": "Tanggal Awal harus diisi",
+      "tanggal_mulai.required": "Tanggal Mulai harus diisi",
       "tanggal_akhir.required": "Tanggal Akhir harus diisi",
-      "waktu_awal.required": "Waktu Awal harus diisi",
+      "waktu_mulai.required": "Waktu Mulai harus diisi",
       "waktu_akhir.required": "Waktu Akhir harus diisi",
       "media.required": "Media Kegiatan harus dipilih",
       "buku_tamu.required": "Buku Tamu harus dipilih",
@@ -35400,17 +35399,15 @@ class MainController {
     }
 
     const kalender = await MKegiatanKalender.query()
-      .where({ id: kalender_id })
+      .where({ id: kegiatan_id })
       .update({
         nama,
-        tanggal_awal,
+        tanggal_mulai,
         tanggal_akhir,
-        waktu_awal,
+        waktu_mulai,
         waktu_akhir,
         media,
-        deskripsi,
-        tempat,
-        link,
+        deskripsi,isi_media,
         buku_tamu,
       });
 
@@ -35429,7 +35426,7 @@ class MainController {
     response,
     request,
     auth,
-    params: { kalender_id },
+    params: { kegiatan_id },
   }) {
     const domain = request.headers().origin;
 
@@ -35446,7 +35443,7 @@ class MainController {
     // }
 
     const kalender = await MKegiatanKalender.query()
-      .where({ id: kalender_id })
+      .where({ id: kegiatan_id })
       .update({
         dihapus: 1,
       });
