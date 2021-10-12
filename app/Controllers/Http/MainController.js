@@ -1349,6 +1349,96 @@ class MainController {
     });
   }
 
+  async resendAktivasi({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { whatsapp, email } = request.post();
+
+    const code = Math.random().toString().slice(-6);
+    await User.query().where({ id: user.id }).update({ verifikasi: code });
+
+    let data;
+    if (whatsapp) {
+      data = await WhatsAppService.sendMessage(
+        `${whatsapp}`,
+        `Kode aktivasi whatsapp anda adalah ${code}`
+      );
+      if (data.status) {
+        return response.ok({
+          message: data,
+        });
+      } else {
+        return response.badRequest({
+          message: data,
+        });
+      }
+    } else if (email) {
+      data = await Mail.send(
+        `emails.kodeverifikasi`,
+        { code: code, name: user.nama },
+        (message) => {
+          message
+            .to(`${email}`)
+            .from("no-reply@smarteschool.id")
+            .subject("Code AKtivasi");
+        }
+      )
+        .then((success) =>
+          response.ok({
+            message: "Silahkan Cek Email Anda",
+          })
+        )
+        .catch((err) =>
+          response.badRequest({
+            err,
+          })
+        );
+    }
+  }
+
+  async aktivasi({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { code, email, whatsapp } = request.post();
+
+    if (code == user.verifikasi && code) {
+      if (whatsapp) {
+        await User.query().where({ id: user.id }).update({
+          verifikasi: "",
+          wa_real: whatsapp,
+        });
+      } else if (email) {
+        await User.query().where({ id: user.id }).update({
+          verifikasi: "",
+          email: email,
+        });
+      }
+      return response.ok({
+        message: `nomor ${whatsapp ? "Whatsapp" : "Email"} Terverifikasi`,
+      });
+    } else {
+      return response.badRequest({
+        message: "Kode verifikasi tidak sesuai",
+      });
+    }
+  }
+
   async requestResetPassword({ response, request }) {
     const domain = request.headers().origin;
 
@@ -23980,7 +24070,10 @@ class MainController {
     // add column headers
     await Promise.all(
       analisisNilai.toJSON().map(async (d, idx) => {
-        const ratarata2 = (d.tugas.reduce((a, b) => a + b.nilai ? b.nilai : 0, 0) / d.tugas.length).toFixed(2)
+        const ratarata2 = (
+          d.tugas.reduce((a, b) => (a + b.nilai ? b.nilai : 0), 0) /
+          d.tugas.length
+        ).toFixed(2);
 
         worksheet.getRow(7).values = ["No", "Nama", "Rata-Rata", "Dibawah KKM"];
         worksheet.columns = [
