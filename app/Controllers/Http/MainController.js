@@ -8499,7 +8499,10 @@ class MainController {
                   foto_masuk_cam: anggota.user
                     ? anggota.user.absen
                       ? anggota.user.absen.length
-                        ? "https://server1.smarteschool.net/camera/" + anggota.user.absen[0].foto_masuk_local
+                        ? anggota.user.absen[0].foto_masuk_local
+                          ? "https://server1.smarteschool.net/camera/" +
+                            anggota.user.absen[0].foto_masuk_local
+                          : "-"
                         : "-"
                       : "-"
                     : "-",
@@ -8513,7 +8516,10 @@ class MainController {
                   foto_pulang_cam: anggota.user
                     ? anggota.user.absen
                       ? anggota.user.absen.length
-                        ? "https://server1.smarteschool.net/camera/" + anggota.user.absen[0].foto_pulang_local
+                        ? anggota.user.absen[0].foto_pulang_local
+                          ? "https://server1.smarteschool.net/camera/" +
+                            anggota.user.absen[0].foto_pulang_local
+                          : "-"
                         : "-"
                       : "-"
                     : "-",
