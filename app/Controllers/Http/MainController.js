@@ -1721,7 +1721,7 @@ class MainController {
         .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ dihapus: 0 })
-        .andWhere({ role: "guru" })
+        .whereIn("role", ["guru", "admin", "kepsek"])
         .andWhere("nama", "like", `%${search}%`)
         .paginate(page, 25);
     } else {
@@ -1729,7 +1729,7 @@ class MainController {
         .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ dihapus: 0 })
-        .andWhere({ role: "guru" })
+        .whereIn("role", ["guru", "admin", "kepsek"])
         .paginate(page, 25);
     }
 
@@ -1793,7 +1793,7 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    const { gender, nama, whatsapp, password, avatar } = request.post();
+    const { gender, nama, whatsapp, password, avatar, role="guru" } = request.post();
 
     let validation = await validate(
       request.post(),
@@ -1815,7 +1815,7 @@ class MainController {
         whatsapp,
         gender,
         password: password,
-        role: "guru",
+        role,
         m_sekolah_id: sekolah.id,
         dihapus: 0,
         avatar,
@@ -1850,7 +1850,7 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    let { nama, whatsapp, gender, password, avatar, photos } = request.post();
+    let { nama, whatsapp, gender, password, avatar, photos, role } = request.post();
     const rules = {
       nama: "required",
       whatsapp: "required",
@@ -1876,6 +1876,7 @@ class MainController {
       gender,
       avatar,
       photos,
+      role
     };
 
     password ? (payload.password = await Hash.make(password)) : null;
