@@ -1793,7 +1793,14 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    const { gender, nama, whatsapp, password, avatar, role="guru" } = request.post();
+    const {
+      gender,
+      nama,
+      whatsapp,
+      password,
+      avatar,
+      role = "guru",
+    } = request.post();
 
     let validation = await validate(
       request.post(),
@@ -1850,7 +1857,8 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    let { nama, whatsapp, gender, password, avatar, photos, role } = request.post();
+    let { nama, whatsapp, gender, password, avatar, photos, role } =
+      request.post();
     const rules = {
       nama: "required",
       whatsapp: "required",
@@ -1876,7 +1884,7 @@ class MainController {
       gender,
       avatar,
       photos,
-      role
+      role,
     };
 
     password ? (payload.password = await Hash.make(password)) : null;
@@ -8395,84 +8403,122 @@ class MainController {
           let worksheet = workbook.addWorksheet(`${idx + 1}.${d.nama}`);
 
           await Promise.all(
-            d.anggotaRombel.map(async (anggota) => {
-              // add column headers
-              worksheet.getRow(10).values = [
-                "Nama",
-                "Absen",
-                "Keterangan",
-                "Lampiran",
-                "Foto Masuk",
-                "Waktu Masuk",
-                "Foto Pulang",
-                "Waktu Pulang",
-              ];
+            d.anggotaRombel
+              .sort((a, b) => ("" + a.user.nama).localeCompare(b.user.nama))
+              .map(async (anggota) => {
+                // add column headers
+                worksheet.getRow(10).values = [
+                  "Nama",
+                  "Absen",
+                  "Keterangan",
+                  "Lampiran",
+                  "Waktu Masuk",
+                  "Waktu Pulang",
+                  "suhu",
+                  "masker",
+                  "Foto Masuk",
+                  "Foto Masuk Camera",
+                  "Foto Pulang",
+                  "Foto Pulang Camera",
+                ];
 
-              worksheet.columns = [
-                { key: "user" },
-                { key: "absen" },
-                { key: "keterangan" },
-                { key: "lampiran" },
-                { key: "foto_masuk" },
-                { key: "created_at" },
-                { key: "foto_pulang" },
-                { key: "waktu_pulang" },
-              ];
+                worksheet.columns = [
+                  { key: "user" },
+                  { key: "absen" },
+                  { key: "keterangan" },
+                  { key: "lampiran" },
+                  { key: "created_at" },
+                  { key: "waktu_pulang" },
+                  { key: "suhu" },
+                  { key: "masker" },
+                  { key: "foto_masuk" },
+                  { key: "foto_masuk_cam" },
+                  { key: "foto_pulang" },
+                  { key: "foto_pulang_cam" },
+                ];
 
-              // Add row using key mapping to columns
-              let row = worksheet.addRow({
-                user: anggota.user ? anggota.user.nama : "-",
-                absen: anggota.user
-                  ? anggota.user.absen
-                    ? anggota.user.absen.length
-                      ? anggota.user.absen[0].absen
+                // Add row using key mapping to columns
+                let row = worksheet.addRow({
+                  user: anggota.user ? anggota.user.nama : "-",
+                  absen: anggota.user
+                    ? anggota.user.absen
+                      ? anggota.user.absen.length
+                        ? anggota.user.absen[0].absen
+                        : "-"
                       : "-"
-                    : "-"
-                  : "-",
-                keterangan: anggota.user
-                  ? anggota.user.absen
-                    ? anggota.user.absen.length
-                      ? anggota.user.absen[0].keterangan
+                    : "-",
+                  keterangan: anggota.user
+                    ? anggota.user.absen
+                      ? anggota.user.absen.length
+                        ? anggota.user.absen[0].keterangan
+                        : "-"
                       : "-"
-                    : "-"
-                  : "-",
-                lampiran: anggota.user
-                  ? anggota.user.absen
-                    ? anggota.user.absen.length
-                      ? anggota.user.absen[0].lampiran
+                    : "-",
+                  lampiran: anggota.user
+                    ? anggota.user.absen
+                      ? anggota.user.absen.length
+                        ? anggota.user.absen[0].lampiran
+                        : "-"
                       : "-"
-                    : "-"
-                  : "-",
-                foto_masuk: anggota.user
-                  ? anggota.user.absen
-                    ? anggota.user.absen.length
-                      ? anggota.user.absen[0].foto_masuk
+                    : "-",
+                  created_at: anggota.user
+                    ? anggota.user.absen
+                      ? anggota.user.absen.length
+                        ? anggota.user.absen[0].created_at
+                        : "-"
                       : "-"
-                    : "-"
-                  : "-",
-                created_at: anggota.user
-                  ? anggota.user.absen
-                    ? anggota.user.absen.length
-                      ? anggota.user.absen[0].created_at
+                    : "-",
+                  waktu_pulang: anggota.user
+                    ? anggota.user.absen
+                      ? anggota.user.absen.length
+                        ? anggota.user.absen[0].waktu_pulang
+                        : "-"
                       : "-"
-                    : "-"
-                  : "-",
-                foto_pulang: anggota.user
-                  ? anggota.user.absen
-                    ? anggota.user.absen.length
-                      ? anggota.user.absen[0].foto_pulang
+                    : "-",
+                  suhu: anggota.user
+                    ? anggota.user.absen
+                      ? anggota.user.absen.length
+                        ? anggota.user.absen[0].suhu
+                        : "-"
                       : "-"
-                    : "-"
-                  : "-",
-                waktu_pulang: anggota.user
-                  ? anggota.user.absen
-                    ? anggota.user.absen.length
-                      ? anggota.user.absen[0].waktu_pulang
+                    : "-",
+                  masker: anggota.user
+                    ? anggota.user.absen
+                      ? anggota.user.absen.length
+                        ? anggota.user.absen[0].masker
+                        : "-"
                       : "-"
-                    : "-"
-                  : "-",
-              });
-            })
+                    : "-",
+                  foto_masuk: anggota.user
+                    ? anggota.user.absen
+                      ? anggota.user.absen.length
+                        ? anggota.user.absen[0].foto_masuk
+                        : "-"
+                      : "-"
+                    : "-",
+                  foto_masuk_cam: anggota.user
+                    ? anggota.user.absen
+                      ? anggota.user.absen.length
+                        ? anggota.user.absen[0].foto_masuk_local
+                        : "-"
+                      : "-"
+                    : "-",
+                  foto_pulang: anggota.user
+                    ? anggota.user.absen
+                      ? anggota.user.absen.length
+                        ? anggota.user.absen[0].foto_pulang
+                        : "-"
+                      : "-"
+                    : "-",
+                  foto_pulang_cam: anggota.user
+                    ? anggota.user.absen
+                      ? anggota.user.absen.length
+                        ? anggota.user.absen[0].foto_pulang_local
+                        : "-"
+                      : "-"
+                    : "-",
+                });
+              })
           );
         })
       );
@@ -34335,7 +34381,7 @@ class MainController {
             });
         })
         .with("userGuru", (builder) => {
-          builder.select("id", "nama","whatsapp");
+          builder.select("id", "nama", "whatsapp");
         })
         .with("jadwal")
         .where({ id: konsultasi_id })
@@ -34343,10 +34389,10 @@ class MainController {
     } else if (user.role == "siswa" || user.m_sekolah_id != sekolah.id) {
       konsultasi = await MPertemuanBk.query()
         .with("user", (builder) => {
-          builder.select("id", "nama","whatsapp");
+          builder.select("id", "nama", "whatsapp");
         })
         .with("userGuru", (builder) => {
-          builder.select("id", "nama","whatsapp");
+          builder.select("id", "nama", "whatsapp");
         })
         .with("jadwal")
         .where({ id: konsultasi_id })
@@ -34471,8 +34517,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { status_selesai } =
-      request.post();
+    const { status_selesai } = request.post();
 
     await MPertemuanBk.query().where({ id: konsultasi_id }).update({
       status_selesai,
@@ -35140,7 +35185,7 @@ class MainController {
     }
 
     return response.ok({
-      message: messageDeleteSuccess
+      message: messageDeleteSuccess,
     });
   }
 
@@ -35331,7 +35376,10 @@ class MainController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const label = await MLabelKalender.query().where({m_sekolah_id:sekolah.id}).andWhere({nama: "Kegiatan"}).first()
+    const label = await MLabelKalender.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ nama: "Kegiatan" })
+      .first();
 
     const kalender = await MKegiatanKalender.create({
       nama,
@@ -35343,7 +35391,7 @@ class MainController {
       isi_media,
       deskripsi,
       buku_tamu,
-      m_label_kalender_id:label.id,
+      m_label_kalender_id: label.id,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
     });
@@ -35375,7 +35423,8 @@ class MainController {
       tanggal_akhir,
       waktu_mulai,
       waktu_akhir,
-      media,isi_media,
+      media,
+      isi_media,
       deskripsi,
       buku_tamu,
     } = request.post();
@@ -35415,7 +35464,8 @@ class MainController {
         waktu_mulai,
         waktu_akhir,
         media,
-        deskripsi,isi_media,
+        deskripsi,
+        isi_media,
         buku_tamu,
       });
 
