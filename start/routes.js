@@ -1027,5 +1027,9 @@ Route.post("/log-camera", "MainController.postLogCamera");
 // Tamu tertangkap kamera
 Route.get("/tamu", "MainController.getTamu");
 
+// Verifikasi akun
+Route.post("/aktivasi", "MainController.aktivasi")
+Route.post("/resend", "MainController.resendAktivasi")
+
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
