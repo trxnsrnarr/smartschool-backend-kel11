@@ -35112,6 +35112,9 @@ class MainController {
       .fetch();
 
     kegiatan = MKegiatanKalender.query()
+    .with("label",(builder)=>{
+      builder.select("id","warna")
+    })
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .whereBetween("tanggal_mulai", [`${tanggal + -1}`, `${tanggal + -31}`]);
@@ -35121,6 +35124,9 @@ class MainController {
     kegiatan = await kegiatan.fetch();
     
     pendidikan = MKalenderPendidikan.query()
+    .with("label",(builder)=>{
+      builder.select("id","warna")
+    })
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .whereBetween("tanggal_awal", [`${tanggal + -1}`, `${tanggal + -31}`]);
