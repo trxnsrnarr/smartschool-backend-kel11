@@ -24073,7 +24073,10 @@ class MainController {
     // add column headers
     await Promise.all(
       analisisNilai.toJSON().map(async (d, idx) => {
-        const ratarata2 = d.tugas.reduce((a, b) => a + b.nilai ? b.nilai : 0, 0) / d.tugas.length
+        const ratarata2 = await TkTimeline.query()
+          .where({ m_user_id: `${d.id}` })
+          .whereIn("m_timeline_id", timelineIds)
+          .avg("nilai as rata");
 
         worksheet.getRow(7).values = ["No", "Nama", "Rata-Rata", "Dibawah KKM"];
         worksheet.columns = [
@@ -24085,7 +24088,7 @@ class MainController {
         let row = worksheet.addRow({
           no: `${idx + 1}`,
           user: d ? d.nama : "-",
-          ratarata: `${ratarata2 ? ratarata2 : "-"}`,
+          ratarata: `${ratarata2[0].rata ? ratarata2[0].rata : "-"}`,
           dibawahkkm: `${d.__meta__.kkm} Tugas`,
         });
 
