@@ -24070,18 +24070,13 @@ class MainController {
       ],
     });
 
-    const ratarata2 = []
-    analisisNilai.toJSON().map((d, idx) => {
-      ratarata2.push((
-        d.tugas.reduce((a, b) => (a + b.nilai ? b.nilai : 0), 0) /
-        d.tugas.length
-      ).toFixed(2))
-    })
-
     // add column headers
     await Promise.all(
       analisisNilai.toJSON().map(async (d, idx) => {
-        const ratarata = ratarata2[idx]
+        const ratarata2 = (
+          d.tugas.reduce((a, b) => (a + b.nilai ? parseInt(b.nilai) : 0), 0) /
+          d.tugas.length
+        ).toFixed(2);
 
         worksheet.getRow(7).values = ["No", "Nama", "Rata-Rata", "Dibawah KKM"];
         worksheet.columns = [
