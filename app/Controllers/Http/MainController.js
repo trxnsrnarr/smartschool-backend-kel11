@@ -24236,7 +24236,7 @@ class MainController {
     worksheet.getCell(
       "A6"
     ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
-    let namaFile = `/uploads/rekap-Analisis Tugas ${keluarantanggalseconds}.xlsx`;
+    let namaFile = `/uploads/rekap-Analisis-Tugas-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
