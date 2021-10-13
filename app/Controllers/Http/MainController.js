@@ -24073,9 +24073,7 @@ class MainController {
     // add column headers
     await Promise.all(
       analisisNilai.toJSON().map(async (d, idx) => {
-        const ratarata2 =
-          d.tugas.reduce((a, b) => (a + b.nilai ? parseInt(b.nilai) : 0), 0) /
-          d.tugas.length
+        const ratarata2 = d.tugas.reduce((a, b) => a + b.nilai ? b.nilai : 0, 0) / d.tugas.length
 
         worksheet.getRow(7).values = ["No", "Nama", "Rata-Rata", "Dibawah KKM"];
         worksheet.columns = [
