@@ -35167,7 +35167,7 @@ class MainController {
   async detailKalenderPendidikan({
     response,
     request,
-    params: { kalender_id },
+    params: { pendidikan_id },
   }) {
     const domain = request.headers().origin;
 
@@ -35179,7 +35179,7 @@ class MainController {
 
     const kalender = await MKalenderPendidikan.query()
       .with("label")
-      .where({ id: kalender_id })
+      .where({ id: pendidikan_id })
       .first();
 
     return response.ok({
