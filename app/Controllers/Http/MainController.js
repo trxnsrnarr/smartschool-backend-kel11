@@ -1808,7 +1808,7 @@ class MainController {
 
     if (search) {
       guru = await User.query()
-        .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
+        .select("nama", "id", "whatsapp", "avatar", "gender", "photos", "role", "bagian")
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ dihapus: 0 })
         .whereIn("role", ["guru", "admin", "kepsek"])
@@ -1816,7 +1816,7 @@ class MainController {
         .paginate(page, 25);
     } else {
       guru = await User.query()
-        .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
+        .select("nama", "id", "whatsapp", "avatar", "gender", "photos", "role", "bagian")
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ dihapus: 0 })
         .whereIn("role", ["guru", "admin", "kepsek"])
@@ -1890,6 +1890,7 @@ class MainController {
       password,
       avatar,
       role = "guru",
+      bagian,
     } = request.post();
 
     let validation = await validate(
@@ -1916,6 +1917,7 @@ class MainController {
         m_sekolah_id: sekolah.id,
         dihapus: 0,
         avatar,
+        bagian
       });
     } else {
       const guru = await User.query()
@@ -1947,7 +1949,7 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    let { nama, whatsapp, gender, password, avatar, photos, role } =
+    let { nama, whatsapp, gender, password, avatar, photos, role, bagian } =
       request.post();
     const rules = {
       nama: "required",
@@ -1975,6 +1977,7 @@ class MainController {
       avatar,
       photos,
       role,
+      bagian,
     };
 
     password ? (payload.password = await Hash.make(password)) : null;
@@ -24072,10 +24075,10 @@ class MainController {
     // add column headers
     await Promise.all(
       analisisNilai.toJSON().map(async (d, idx) => {
-        const ratarata2 = (
-          d.tugas.reduce((a, b) => (a + b.nilai ? b.nilai : 0), 0) /
-          d.tugas.length
-        ).toFixed(2);
+        const ratarata2 = await TkTimeline.query()
+          .where({ m_user_id: `${d.id}` })
+          .whereIn("m_timeline_id", timelineIds)
+          .getSum("nilai");
 
         worksheet.getRow(7).values = ["No", "Nama", "Rata-Rata", "Dibawah KKM"];
         worksheet.columns = [
@@ -24087,7 +24090,7 @@ class MainController {
         let row = worksheet.addRow({
           no: `${idx + 1}`,
           user: d ? d.nama : "-",
-          ratarata: `${ratarata2 ? ratarata2 : "-"}`,
+          ratarata: `${ratarata2 ? (ratarata2 / d.tugas.length).toFixed(2) : "-"}`,
           dibawahkkm: `${d.__meta__.kkm} Tugas`,
         });
 
