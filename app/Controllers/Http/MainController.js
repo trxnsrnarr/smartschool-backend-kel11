@@ -1808,7 +1808,16 @@ class MainController {
 
     if (search) {
       guru = await User.query()
-        .select("nama", "id", "whatsapp", "avatar", "gender", "photos", "role", "bagian")
+        .select(
+          "nama",
+          "id",
+          "whatsapp",
+          "avatar",
+          "gender",
+          "photos",
+          "role",
+          "bagian"
+        )
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ dihapus: 0 })
         .whereIn("role", ["guru", "admin", "kepsek"])
@@ -1816,7 +1825,16 @@ class MainController {
         .paginate(page, 25);
     } else {
       guru = await User.query()
-        .select("nama", "id", "whatsapp", "avatar", "gender", "photos", "role", "bagian")
+        .select(
+          "nama",
+          "id",
+          "whatsapp",
+          "avatar",
+          "gender",
+          "photos",
+          "role",
+          "bagian"
+        )
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ dihapus: 0 })
         .whereIn("role", ["guru", "admin", "kepsek"])
@@ -1917,7 +1935,7 @@ class MainController {
         m_sekolah_id: sekolah.id,
         dihapus: 0,
         avatar,
-        bagian
+        bagian,
       });
     } else {
       const guru = await User.query()
@@ -22621,7 +22639,7 @@ class MainController {
         ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) /
           listNilai.filter((nilai) => nilai).length
         : 0;
-        
+
       await MUjianSiswa.query().where({ id: ujian.id }).update({
         nilai: nilaiAkhir,
       });
@@ -24090,7 +24108,9 @@ class MainController {
         let row = worksheet.addRow({
           no: `${idx + 1}`,
           user: d ? d.nama : "-",
-          ratarata: `${ratarata2 ? (ratarata2 / d.tugas.length).toFixed(2) : "-"}`,
+          ratarata: `${
+            ratarata2 ? (ratarata2 / d.tugas.length).toFixed(2) : "-"
+          }`,
           dibawahkkm: `${d.__meta__.kkm} Tugas`,
         });
 
@@ -35112,9 +35132,9 @@ class MainController {
       .fetch();
 
     kegiatan = MKegiatanKalender.query()
-    .with("label",(builder)=>{
-      builder.select("id","warna")
-    })
+      .with("label", (builder) => {
+        builder.select("id", "warna");
+      })
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .whereBetween("tanggal_mulai", [`${tanggal + -1}`, `${tanggal + -31}`]);
@@ -35122,11 +35142,11 @@ class MainController {
       kegiatan.andWhere("nama", "like", `%${search}%`);
     }
     kegiatan = await kegiatan.fetch();
-    
+
     pendidikan = MKalenderPendidikan.query()
-    .with("label",(builder)=>{
-      builder.select("id","warna")
-    })
+      .with("label", (builder) => {
+        builder.select("id", "warna");
+      })
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .whereBetween("tanggal_awal", [`${tanggal + -1}`, `${tanggal + -31}`]);
