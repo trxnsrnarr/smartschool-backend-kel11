@@ -35198,7 +35198,7 @@ class MainController {
 
     const kalender = await MKegiatanKalender.query()
       .with("label")
-      .where({ id: kalender_id })
+      .where({ id: kegiatan_id })
       .first();
 
     return response.ok({
