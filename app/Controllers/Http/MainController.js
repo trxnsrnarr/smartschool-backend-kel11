@@ -35118,7 +35118,8 @@ class MainController {
     if (search) {
       kegiatan.andWhere("nama", "like", `%${search}%`);
     }
-
+    kegiatan = await kegiatan.fetch();
+    
     pendidikan = MKalenderPendidikan.query()
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
@@ -35128,8 +35129,7 @@ class MainController {
       kegiatan.andWhere("nama", "like", `%${search}%`);
     }
 
-    kegiatan = kegiatan.fetch();
-    pendidikan = pendidikan.fetch();
+    pendidikan = await pendidikan.fetch();
 
     return response.ok({
       label,
