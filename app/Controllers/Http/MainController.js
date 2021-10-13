@@ -35119,7 +35119,7 @@ class MainController {
     pendidikan = MKalenderPendidikan.query()
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
-      .whereBetween("tanggal_mulai", [`${tanggal + -1}`, `${tanggal + -31}`]);
+      .whereBetween("tanggal_awal", [`${tanggal + -1}`, `${tanggal + -31}`]);
 
     if (search) {
       kegiatan.andWhere("nama", "like", `%${search}%`);
