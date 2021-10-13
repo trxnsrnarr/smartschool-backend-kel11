@@ -5292,7 +5292,7 @@ class MainController {
             whatsapp: d.whatsapp,
             gender: d.gender,
             email: d.email ? d.email : "",
-            password: d.password,
+            password: `${d.password}`,
             role: "siswa",
             m_sekolah_id: sekolah.id,
             dihapus: 0,
@@ -5309,7 +5309,7 @@ class MainController {
         }
         await User.query()
           .where({ id: checkUser.toJSON().id })
-          .update({ dihapus: 0, password: d.password });
+          .update({ dihapus: 0, password: Hash.make(`${d.password}`) });
 
         const checkAnggotaRombel = await MAnggotaRombel.query()
           .andWhere({ m_user_id: checkUser.toJSON().id })
@@ -24238,7 +24238,7 @@ class MainController {
     worksheet.getCell(
       "A6"
     ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
-    let namaFile = `/uploads/rekap-Analisis Tugas ${keluarantanggalseconds}.xlsx`;
+    let namaFile = `/uploads/rekap-Analisis-Tugas-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
