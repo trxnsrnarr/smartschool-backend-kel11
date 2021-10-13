@@ -14412,7 +14412,7 @@ class MainController {
 
             const userIds = await MAnggotaRombel.query()
               .with("user", (builder) => {
-                builder.select("id", "email").where({ dihapus: 0 });
+                builder.select("id", "email", "nama", "whatsapp").where({ dihapus: 0 });
               })
               .where({ m_rombel_id: d })
               .andWhere({ dihapus: 0 })
@@ -14433,7 +14433,7 @@ class MainController {
                   // NOTIFIKASI WHATSAPP
                   try {
                     await WhatsAppService.sendMessage(
-                      6281316119411,
+                      `${e.user.whatsapp}`,
                       `Halo ${e.user.nama}, ${nama} telah keluar, segera lunasi pembayaran. Tekan tautan link berikut untuk melakukan pembayaran ${domain}/smartschool/tagihan/${bayarSiswa.id}`
                     );
                   } catch (error) {
