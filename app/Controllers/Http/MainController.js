@@ -22613,10 +22613,12 @@ class MainController {
         ujian.toJSON().nilaiUAS ? ujian.toJSON().nilaiUAS?.nilai : null,
         ujian.toJSON().nilaiUTS ? ujian.toJSON().nilaiUTS?.nilai : null,
       ];
+
       nilaiAkhir = listNilai.filter((nilai) => nilai).length
         ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) /
           listNilai.filter((nilai) => nilai).length
         : 0;
+        
       await MUjianSiswa.query().where({ id: ujian.id }).update({
         nilai: nilaiAkhir,
       });
