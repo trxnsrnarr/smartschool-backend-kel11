@@ -1369,7 +1369,13 @@ class MainController {
     if (whatsapp) {
       data = await WhatsAppService.sendMessage(
         `${whatsapp}`,
-        `Kode aktivasi whatsapp anda adalah ${code}`
+        `Halo ${user.nama} 
+        
+        Kode aktivasi whatsapp anda adalah ${code}
+        
+        Akun terdaftar = ${user.whatsapp}
+        Berikut link Smarteschool sekolah anda
+        ${sekolah.domain.split(";")[0]}`
       );
       if (data.status) {
         return response.ok({
@@ -22085,29 +22091,37 @@ class MainController {
       .fetch();
 
     const result = await Promise.all(
-      count.toJSON().map(async (d, idx) => {
-        const checkTkMapel = await TkMapelRapor.query()
-          .where({ m_mata_pelajaran_id: d ? d.m_mata_pelajaran_id : null })
-          .whereIn(
-            "m_kategori_mapel_id",
-            kategoriMapel.toJSON().map((item) => item.id)
-          )
-          .first();
+      count
+        .toJSON()
+        .filter(
+          (d, idx, self) =>
+            self.findIndex(
+              (e) => e.m_mata_pelajaran_id == d.m_mata_pelajaran_id
+            ) == idx
+        )
+        .map(async (d, idx) => {
+          const checkTkMapel = await TkMapelRapor.query()
+            .where({ m_mata_pelajaran_id: d ? d.m_mata_pelajaran_id : null })
+            .whereIn(
+              "m_kategori_mapel_id",
+              kategoriMapel.toJSON().map((item) => item.id)
+            )
+            .first();
 
-        if (!checkTkMapel) {
-          if (d.mataPelajaran != null) {
-            await TkMapelRapor.create({
-              nama: d.mataPelajaran ? d.mataPelajaran.nama : "-",
-              kkm2: d.mataPelajaran ? d.mataPelajaran.kkm : "0",
-              m_mata_pelajaran_id: d ? d.m_mata_pelajaran_id : null,
-              m_kategori_mapel_id: kategoriMapel.toJSON()[0].id,
-              m_predikat_nilai_id: predikat ? predikat.id : "0",
-              dihapus: 0,
-              urutan: idx + 1,
-            });
+          if (!checkTkMapel) {
+            if (d.mataPelajaran != null) {
+              await TkMapelRapor.create({
+                nama: d.mataPelajaran ? d.mataPelajaran.nama : "-",
+                kkm2: d.mataPelajaran ? d.mataPelajaran.kkm : "0",
+                m_mata_pelajaran_id: d ? d.m_mata_pelajaran_id : null,
+                m_kategori_mapel_id: kategoriMapel.toJSON()[0].id,
+                m_predikat_nilai_id: predikat ? predikat.id : "0",
+                dihapus: 0,
+                urutan: idx + 1,
+              });
+            }
           }
-        }
-      })
+        })
     );
     // const mapelIds = [];
     // const noLoop = kategoriMapel.toJSON().mapelRapor.filter((d) => {
