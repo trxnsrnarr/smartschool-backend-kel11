@@ -14430,7 +14430,9 @@ class MainController {
 
             const userIds = await MAnggotaRombel.query()
               .with("user", (builder) => {
-                builder.select("id", "email", "nama", "whatsapp").where({ dihapus: 0 });
+                builder
+                  .select("id", "email", "nama", "whatsapp")
+                  .where({ dihapus: 0 });
               })
               .where({ m_rombel_id: d })
               .andWhere({ dihapus: 0 })
@@ -22565,6 +22567,7 @@ class MainController {
         builder.with("rekap", (builder) => {
           builder
             .where({ tipe: "ujian" })
+            .andWhere({teknik: null})
             .andWhere({ m_ta_id: ta.id })
             .andWhere({ dihapus: 0 })
             .andWhere({ m_materi_id: mapel.toJSON().materi.id });
@@ -22628,18 +22631,45 @@ class MainController {
 
     let nilaiAkhir;
     if (ujian) {
-      const listNilai = [
-        rataUjian,
-        rata,
-        ujian.toJSON().nilaiUAS ? ujian.toJSON().nilaiUAS?.nilai : null,
-        ujian.toJSON().nilaiUTS ? ujian.toJSON().nilaiUTS?.nilai : null,
-      ];
+      // const listNilai = [
+      //   rataUjian,
+      //   rata,
+      //   ujian.toJSON().nilaiUAS ? ujian.toJSON().nilaiUAS?.nilai : null,
+      //   ujian.toJSON().nilaiUTS ? ujian.toJSON().nilaiUTS?.nilai : null,
+      // ];
+      const nilaiPengetahuan1 = [rataUjian, rata];
 
-      nilaiAkhir = listNilai.filter((nilai) => nilai).length
-        ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) /
-          listNilai.filter((nilai) => nilai).length
-        : 0;
+      const nilaiSebelumAkhir =
+        2 * nilaiPengetahuan1.filter((nilai) => nilai).length
+          ? nilaiPengetahuan1
+              .filter((nilai) => nilai)
+              .reduce((a, b) => a + b, 0)
+          : 0;
 
+          const nilaiUTS = ujian.toJSON().nilaiUTS
+        ? ujian.toJSON().nilaiUTS?.nilai
+        : null;
+
+        const nilaiUAS = ujian.toJSON().nilaiUAS
+        ? ujian.toJSON().nilaiUAS?.nilai
+        : null;
+
+      const listNilai = [nilaiSebelumAkhir, nilaiUTS, nilaiUAS];
+
+      if (listNilai.filter((nilai) => nilai).length == 2) {
+
+        nilaiAkhir = listNilai.filter((nilai) => nilai).length
+          ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) / 3
+          : 0;
+
+      } else if (listNilai.filter((nilai) => nilai).length == 3) {
+
+        nilaiAkhir = listNilai.filter((nilai) => nilai).length
+          ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) / 4
+          : 0;
+
+      }
+      
       await MUjianSiswa.query().where({ id: ujian.id }).update({
         nilai: nilaiAkhir,
       });
