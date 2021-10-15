@@ -1369,7 +1369,13 @@ class MainController {
     if (whatsapp) {
       data = await WhatsAppService.sendMessage(
         `${whatsapp}`,
-        `Kode aktivasi whatsapp anda adalah ${code}`
+        `Halo ${user.nama} 
+        
+        Kode aktivasi whatsapp anda adalah ${code}
+        
+        Akun terdaftar = ${user.whatsapp}
+        Berikut link Smarteschool sekolah anda
+        ${sekolah.domain.split(";")[0]}`
       );
       if (data.status) {
         return response.ok({
