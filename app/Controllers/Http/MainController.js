@@ -1814,7 +1814,16 @@ class MainController {
 
     if (search) {
       guru = await User.query()
-        .select("nama", "id", "whatsapp", "avatar", "gender", "photos", "role", "bagian")
+        .select(
+          "nama",
+          "id",
+          "whatsapp",
+          "avatar",
+          "gender",
+          "photos",
+          "role",
+          "bagian"
+        )
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ dihapus: 0 })
         .whereIn("role", ["guru", "admin", "kepsek"])
@@ -1822,7 +1831,16 @@ class MainController {
         .paginate(page, 25);
     } else {
       guru = await User.query()
-        .select("nama", "id", "whatsapp", "avatar", "gender", "photos", "role", "bagian")
+        .select(
+          "nama",
+          "id",
+          "whatsapp",
+          "avatar",
+          "gender",
+          "photos",
+          "role",
+          "bagian"
+        )
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ dihapus: 0 })
         .whereIn("role", ["guru", "admin", "kepsek"])
@@ -1923,7 +1941,7 @@ class MainController {
         m_sekolah_id: sekolah.id,
         dihapus: 0,
         avatar,
-        bagian
+        bagian,
       });
     } else {
       const guru = await User.query()
@@ -14418,7 +14436,9 @@ class MainController {
 
             const userIds = await MAnggotaRombel.query()
               .with("user", (builder) => {
-                builder.select("id", "email", "nama", "whatsapp").where({ dihapus: 0 });
+                builder
+                  .select("id", "email", "nama", "whatsapp")
+                  .where({ dihapus: 0 });
               })
               .where({ m_rombel_id: d })
               .andWhere({ dihapus: 0 })
@@ -22071,29 +22091,37 @@ class MainController {
       .fetch();
 
     const result = await Promise.all(
-      count.toJSON().map(async (d, idx) => {
-        const checkTkMapel = await TkMapelRapor.query()
-          .where({ m_mata_pelajaran_id: d ? d.m_mata_pelajaran_id : null })
-          .whereIn(
-            "m_kategori_mapel_id",
-            kategoriMapel.toJSON().map((item) => item.id)
-          )
-          .first();
+      count
+        .toJSON()
+        .filter(
+          (d, idx, self) =>
+            self.findIndex(
+              (e) => e.m_mata_pelajaran_id == d.m_mata_pelajaran_id
+            ) == idx
+        )
+        .map(async (d, idx) => {
+          const checkTkMapel = await TkMapelRapor.query()
+            .where({ m_mata_pelajaran_id: d ? d.m_mata_pelajaran_id : null })
+            .whereIn(
+              "m_kategori_mapel_id",
+              kategoriMapel.toJSON().map((item) => item.id)
+            )
+            .first();
 
-        if (!checkTkMapel) {
-          if (d.mataPelajaran != null) {
-            await TkMapelRapor.create({
-              nama: d.mataPelajaran ? d.mataPelajaran.nama : "-",
-              kkm2: d.mataPelajaran ? d.mataPelajaran.kkm : "0",
-              m_mata_pelajaran_id: d ? d.m_mata_pelajaran_id : null,
-              m_kategori_mapel_id: kategoriMapel.toJSON()[0].id,
-              m_predikat_nilai_id: predikat ? predikat.id : "0",
-              dihapus: 0,
-              urutan: idx + 1,
-            });
+          if (!checkTkMapel) {
+            if (d.mataPelajaran != null) {
+              await TkMapelRapor.create({
+                nama: d.mataPelajaran ? d.mataPelajaran.nama : "-",
+                kkm2: d.mataPelajaran ? d.mataPelajaran.kkm : "0",
+                m_mata_pelajaran_id: d ? d.m_mata_pelajaran_id : null,
+                m_kategori_mapel_id: kategoriMapel.toJSON()[0].id,
+                m_predikat_nilai_id: predikat ? predikat.id : "0",
+                dihapus: 0,
+                urutan: idx + 1,
+              });
+            }
           }
-        }
-      })
+        })
     );
     // const mapelIds = [];
     // const noLoop = kategoriMapel.toJSON().mapelRapor.filter((d) => {
@@ -22627,7 +22655,7 @@ class MainController {
         ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) /
           listNilai.filter((nilai) => nilai).length
         : 0;
-        
+
       await MUjianSiswa.query().where({ id: ujian.id }).update({
         nilai: nilaiAkhir,
       });
@@ -24096,7 +24124,9 @@ class MainController {
         let row = worksheet.addRow({
           no: `${idx + 1}`,
           user: d ? d.nama : "-",
-          ratarata: `${ratarata2 ? (ratarata2 / d.tugas.length).toFixed(2) : "-"}`,
+          ratarata: `${
+            ratarata2 ? (ratarata2 / d.tugas.length).toFixed(2) : "-"
+          }`,
           dibawahkkm: `${d.__meta__.kkm} Tugas`,
         });
 
@@ -35125,7 +35155,7 @@ class MainController {
       kegiatan.andWhere("nama", "like", `%${search}%`);
     }
     kegiatan = await kegiatan.fetch();
-    
+
     pendidikan = MKalenderPendidikan.query()
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
