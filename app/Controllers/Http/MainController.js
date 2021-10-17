@@ -1375,7 +1375,7 @@ class MainController {
         
         Akun terdaftar = ${user.whatsapp}
         Berikut link Smarteschool sekolah anda
-        ${sekolah.domain.split(";")[0]}`
+        ${domain}`
       );
       if (data.status) {
         return response.ok({
@@ -1472,8 +1472,8 @@ class MainController {
     const data = await WhatsAppService.sendMessage(
       `${user.whatsapp}`,
       `Silahkan klik link dibawah ini untuk mereset password ${
-        sekolah.domain.split(";")[0]
-      }smartschool/reset-password/?auth=${token}&userId=${user.id}`
+        domain
+      }/smartschool/reset-password/?auth=${token}&userId=${user.id}`
     );
     if (data.status) {
       return response.ok({
