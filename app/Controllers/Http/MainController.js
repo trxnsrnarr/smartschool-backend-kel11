@@ -5334,7 +5334,7 @@ class MainController {
         }
         await User.query()
           .where({ id: checkUser.toJSON().id })
-          .update({ dihapus: 0, password: Hash.make(`${d.password}`) });
+          .update({ dihapus: 0, password: await Hash.make(`${d.password}`) });
 
         const checkAnggotaRombel = await MAnggotaRombel.query()
           .andWhere({ m_user_id: checkUser.toJSON().id })
