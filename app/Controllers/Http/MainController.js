@@ -22033,21 +22033,21 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .fetch();
 
-    const materiRombel = await TkMateriRombel.query()
-      .with("materi", (builder) => {
-        builder.with("mataPelajaran", (builder) => {
-          builder.where({ dihapus: 0 });
-        });
-      })
-      .where({ m_rombel_id: rombel_id })
-      .pluck("m_materi_id");
+    // const materiRombel = await TkMateriRombel.query()
+    //   .with("materi", (builder) => {
+    //     builder.where({dihapus: 0}).with("mataPelajaran", (builder) => {
+    //       builder.where({ dihapus: 0 });
+    //     });
+    //   })
+    //   .where({ m_rombel_id: rombel_id })
+    //   .pluck("m_materi_id");
 
-    const count = await MMateri.query()
+    const count = await MJadwalMengajar.query()
       .select("id", "m_mata_pelajaran_id")
       .with("mataPelajaran")
-      .distinct("id")
-      .whereIn("id", materiRombel)
-      .andWhere({ dihapus: 0 })
+      .distinct("m_mata_pelajaran_id")
+      .where({ m_rombel_id: rombel_id })
+      .whereNotNull("m_mata_pelajaran_id")
       .fetch();
 
     const predikat = await MPredikatNilai.query()
