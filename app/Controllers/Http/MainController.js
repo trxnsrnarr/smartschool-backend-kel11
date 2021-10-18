@@ -1471,9 +1471,7 @@ class MainController {
 
     const data = await WhatsAppService.sendMessage(
       `${user.whatsapp}`,
-      `Silahkan klik link dibawah ini untuk mereset password ${
-        domain
-      }/smartschool/reset-password/?auth=${token}&userId=${user.id}`
+      `Silahkan klik link dibawah ini untuk mereset password\n${domain}/smartschool/reset-password/?auth=${token}&userId=${user.id}`
     );
     if (data.status) {
       return response.ok({
@@ -22581,7 +22579,7 @@ class MainController {
         builder.with("rekap", (builder) => {
           builder
             .where({ tipe: "ujian" })
-            .andWhere({teknik: null})
+            .andWhere({ teknik: null })
             .andWhere({ m_ta_id: ta.id })
             .andWhere({ dihapus: 0 })
             .andWhere({ m_materi_id: mapel.toJSON().materi.id });
@@ -22653,37 +22651,32 @@ class MainController {
       // ];
       const nilaiPengetahuan1 = [rataUjian, rata];
 
-      const nilaiSebelumAkhir =
-        2 * nilaiPengetahuan1.filter((nilai) => nilai).length
-          ? nilaiPengetahuan1
-              .filter((nilai) => nilai)
-              .reduce((a, b) => a + b, 0)
-          : 0;
+      const nilaiSebelumAkhir = nilaiPengetahuan1.filter((nilai) => nilai)
+        .length
+        ? 2 *
+          nilaiPengetahuan1.filter((nilai) => nilai).reduce((a, b) => a + b, 0)
+        : 0;
 
-          const nilaiUTS = ujian.toJSON().nilaiUTS
+      const nilaiUTS = ujian.toJSON().nilaiUTS
         ? ujian.toJSON().nilaiUTS?.nilai
         : null;
 
-        const nilaiUAS = ujian.toJSON().nilaiUAS
+      const nilaiUAS = ujian.toJSON().nilaiUAS
         ? ujian.toJSON().nilaiUAS?.nilai
         : null;
 
       const listNilai = [nilaiSebelumAkhir, nilaiUTS, nilaiUAS];
 
       if (listNilai.filter((nilai) => nilai).length == 2) {
-
         nilaiAkhir = listNilai.filter((nilai) => nilai).length
           ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) / 3
           : 0;
-
       } else if (listNilai.filter((nilai) => nilai).length == 3) {
-
         nilaiAkhir = listNilai.filter((nilai) => nilai).length
           ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) / 4
           : 0;
-
       }
-      
+
       await MUjianSiswa.query().where({ id: ujian.id }).update({
         nilai: nilaiAkhir,
       });
