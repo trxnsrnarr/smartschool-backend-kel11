@@ -726,6 +726,10 @@ class MainController {
       // informasi
       nisn,
       asal_sekolah,
+      status_keluarga,
+      anak_ke,
+      kelas_diterima,
+      tanggal_masuk,
 
       // alamat
       alamat,
@@ -754,6 +758,10 @@ class MainController {
       telp_ibu,
       alamat_ibu,
       pekerjaan_ibu,
+      nama_wali,
+      telp_wali,
+      alamat_wali,
+      pekerjaan_wali,
 
       // rapor
       fisika1,
@@ -847,6 +855,10 @@ class MainController {
         // informasi
         nisn,
         asal_sekolah,
+        status_keluarga,
+        anak_ke,
+        kelas_diterima,
+        tanggal_masuk,
 
         // alamat
         alamat,
@@ -875,6 +887,10 @@ class MainController {
         telp_ibu,
         alamat_ibu,
         pekerjaan_ibu,
+      nama_wali,
+      telp_wali,
+      alamat_wali,
+      pekerjaan_wali,
         m_user_id: user.id,
 
         // rapor
@@ -924,6 +940,10 @@ class MainController {
         // informasi
         nisn,
         asal_sekolah,
+        status_keluarga,
+        anak_ke,
+        kelas_diterima,
+        tanggal_masuk,
 
         // alamat
         alamat,
@@ -952,6 +972,10 @@ class MainController {
         telp_ibu,
         alamat_ibu,
         pekerjaan_ibu,
+        nama_wali,
+        telp_wali,
+        alamat_wali,
+        pekerjaan_wali,
         m_user_id: user.id,
 
         // rapor
