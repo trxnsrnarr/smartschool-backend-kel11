@@ -466,31 +466,31 @@ class MainController {
   }
 
   async getMasterSekolah({ response, request }) {
-    let { page, search, bentuk, propinsi_id, kabupaten_id, kecamatan_id } = request.get();
+    let { page, search, bentuk, propinsi_id, kabupaten_id, kecamatan_id } =
+      request.get();
 
     page = page ? page : 1;
 
-    const res = Sekolah.query().with('sekolahSS');
+    const res = Sekolah.query().with("sekolahSS");
 
     if (search) {
-      res
-        .where("sekolah", "like", `%${search}%`)
+      res.where("sekolah", "like", `%${search}%`);
     }
 
     if (bentuk) {
       res.andWhere("bentuk", bentuk);
     }
 
-    if(propinsi_id) {
-      res.andWhere('kode_prop', propinsi_id)
+    if (propinsi_id) {
+      res.andWhere("kode_prop", propinsi_id);
     }
 
-    if(kabupaten_id) {
-      res.andWhere('kode_kab_kota', kabupaten_id)
+    if (kabupaten_id) {
+      res.andWhere("kode_kab_kota", kabupaten_id);
     }
 
-    if(kecamatan_id) {
-      res.andWhere('kode_kec', kecamatan_id)
+    if (kecamatan_id) {
+      res.andWhere("kode_kec", kecamatan_id);
     }
 
     return response.ok({
@@ -501,27 +501,37 @@ class MainController {
   async getMasterSekolahProvinsi({ response, request }) {
     const res = Sekolah.query();
 
-    res.distinct('kode_prop', 'propinsi')
+    res.distinct("kode_prop", "propinsi");
 
     return response.ok({
       propinsi: await res.fetch(),
     });
   }
 
-  async getMasterSekolahProvinsiDetail({ response, request, params: {propinsi_id} }) {
+  async getMasterSekolahProvinsiDetail({
+    response,
+    request,
+    params: { propinsi_id },
+  }) {
     const res = Sekolah.query();
 
-    res.where('kode_prop', propinsi_id).distinct('kode_kab_kota', 'kabupaten_kota')
+    res
+      .where("kode_prop", propinsi_id)
+      .distinct("kode_kab_kota", "kabupaten_kota");
 
     return response.ok({
       kabupaten: await res.fetch(),
     });
   }
 
-  async getMasterSekolahKabupatenDetail({ response, request, params: {kabupaten_id} }) {
+  async getMasterSekolahKabupatenDetail({
+    response,
+    request,
+    params: { kabupaten_id },
+  }) {
     const res = Sekolah.query();
 
-    res.where('kode_kab_kota', kabupaten_id).distinct('kode_kec', 'kecamatan')
+    res.where("kode_kab_kota", kabupaten_id).distinct("kode_kec", "kecamatan");
 
     return response.ok({
       kabupaten: await res.fetch(),
@@ -730,6 +740,7 @@ class MainController {
       anak_ke,
       kelas_diterima,
       tanggal_masuk,
+      telp_rumah,
 
       // alamat
       alamat,
@@ -859,6 +870,7 @@ class MainController {
         anak_ke,
         kelas_diterima,
         tanggal_masuk,
+        telp_rumah,
 
         // alamat
         alamat,
@@ -887,10 +899,10 @@ class MainController {
         telp_ibu,
         alamat_ibu,
         pekerjaan_ibu,
-      nama_wali,
-      telp_wali,
-      alamat_wali,
-      pekerjaan_wali,
+        nama_wali,
+        telp_wali,
+        alamat_wali,
+        pekerjaan_wali,
         m_user_id: user.id,
 
         // rapor
@@ -944,6 +956,7 @@ class MainController {
         anak_ke,
         kelas_diterima,
         tanggal_masuk,
+        telp_rumah,
 
         // alamat
         alamat,
@@ -1751,11 +1764,7 @@ class MainController {
         .first();
       if (user) {
         const absen = await MAbsen.query()
-          .where(
-            "created_at",
-            "like",
-            `%${moment().format("YYYY-MM-DD")}%`
-          )
+          .where("created_at", "like", `%${moment().format("YYYY-MM-DD")}%`)
           .andWhere({ m_user_id: user.id })
           .first();
         if (hour < 12) {
@@ -2305,8 +2314,6 @@ class MainController {
         .where({ id: check.toJSON().id })
         .update({ dihapus: 0 });
     }
-
-    
 
     return response.ok({
       message: messagePostSuccess,
@@ -8434,7 +8441,9 @@ class MainController {
 
     await WhatsAppService.sendMessage(
       user.whatsapp,
-      `Halo, absen anda sudah masuk. Anda masuk dengan keterangan *${absen}* \n ${keterangan ? keterangan : foto_masuk ? foto_masuk : null} \nPada pukul ${data.created_at}`
+      `Halo, absen anda sudah masuk. Anda masuk dengan keterangan *${absen}* \n ${
+        keterangan ? keterangan : foto_masuk ? foto_masuk : null
+      } \nPada pukul ${data.created_at}`
     );
 
     return response.ok({
@@ -22566,11 +22575,18 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
     const ta = await this.getTAAktif(sekolah);
-    const siswa = await User.query().where({ id: user_id }).first();
+    const siswa = await User.query()
+      .with("anggotaRombel", (builder) => {
+        builder.with("rombel");
+      })
+      .where({ id: user_id })
+      .first();
 
     const mapel = await MMataPelajaran.query()
       .with("user")
-      .with("materi")
+      .with("materi", (builder) => {
+        builder.where({ tingkat: siswa.toJSON().anggotaRombel.rombel.tingkat });
+      })
       .where({ id: mata_pelajaran_id })
       .first();
 
@@ -36876,8 +36892,7 @@ class MainController {
           "Potongan",
           "Komite Diterima",
           "% Masuk",
-          "Tunggakan"
-
+          "Tunggakan",
         ];
         worksheet.columns = [
           { key: "no" },
@@ -36911,8 +36926,7 @@ class MainController {
           worksheet.mergeCells(`F${(idx + 1) * 1 + 6}:F${(idx + 1) * 1 + 6}`);
           worksheet.mergeCells(`G${(idx + 1) * 1 + 6}:G${(idx + 1) * 1 + 6}`);
           worksheet.mergeCells(`H${(idx + 1) * 1 + 6}:H${(idx + 1) * 1 + 6}`);
-          
-          
+
           worksheet.addConditionalFormatting({
             ref: `B${(idx + 1) * 1 + 23}:I${(idx + 1) * 1 + 23}`,
             rules: [
@@ -37061,23 +37075,20 @@ class MainController {
             ],
           };
         }
-
       })
     );
 
-    worksheet.getColumn("A").width = 4 ;
-    worksheet.getColumn("B").width = 12 ;
-    worksheet.getColumn("C").width = 30 ;
-    worksheet.getColumn("D").width = 11 ;
-    worksheet.getColumn("E").width = 14 ;
-    worksheet.getColumn("F").width = 15 ;
-    worksheet.getColumn("G").width = 8 ;
-    worksheet.getColumn("H").width = 16 ;
-    worksheet.getRow(4).height =4.5;
-    worksheet.getRow(5).height =2.5;
-    worksheet.getRow(8).height =38.5;
-    
-
+    worksheet.getColumn("A").width = 4;
+    worksheet.getColumn("B").width = 12;
+    worksheet.getColumn("C").width = 30;
+    worksheet.getColumn("D").width = 11;
+    worksheet.getColumn("E").width = 14;
+    worksheet.getColumn("F").width = 15;
+    worksheet.getColumn("G").width = 8;
+    worksheet.getColumn("H").width = 16;
+    worksheet.getRow(4).height = 4.5;
+    worksheet.getRow(5).height = 2.5;
+    worksheet.getRow(8).height = 38.5;
 
     let namaFile = `/uploads/REKAPITULASI-KEUANGAN-SISWA-${keluarantanggalseconds}.xlsx`;
 
