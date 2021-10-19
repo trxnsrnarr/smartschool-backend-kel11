@@ -36761,6 +36761,386 @@ class MainController {
     });
   }
 
+  async downloadLapTunggakan({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    const user = await auth.getUser();
+    const lokasi = await MLokasi.query().where({ dihapus: 0 }).fetch();
+
+    let workbook = new Excel.Workbook();
+    let worksheet = workbook.addWorksheet(`Laporan Tunggakan`);
+    worksheet.mergeCells("A1:H1");
+    worksheet.mergeCells("A2:H2");
+    worksheet.mergeCells("A3:H3");
+    worksheet.mergeCells("A4:H4");
+    worksheet.mergeCells("A5:H5");
+    worksheet.mergeCells("A6:H6");
+    worksheet.mergeCells("A7:A8");
+    worksheet.mergeCells("B7:B8");
+    worksheet.mergeCells("C7:C8");
+    worksheet.mergeCells("D7:D8");
+
+    worksheet.getCell(
+      "A6"
+    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    worksheet.addConditionalFormatting({
+      ref: "A1:F2",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 16,
+              bold: true,
+            },
+            // fill: {
+            //   type: "pattern",
+            //   pattern: "solid",
+            //   bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            // },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            // border: {
+            //   top: { style: "thin" },
+            //   left: { style: "thin" },
+            //   bottom: { style: "thin" },
+            //   right: { style: "thin" },
+            // },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: "A4:F4",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+    await Promise.all(
+      lokasi.toJSON().map(async (d, idx) => {
+        worksheet.getCell("A1").value = "REKAPITULASI KEUANGAN SISWA";
+        worksheet.getCell("A2").value = sekolah.nama;
+        worksheet.getCell("A3").value = `TAHUN PELAJARAN ${ta.tahun}`;
+        worksheet.addConditionalFormatting({
+          ref: `B${(idx + 1) * 1 + 4}:F${(idx + 1) * 1 + 4}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet.addConditionalFormatting({
+          ref: `A${(idx + 1) * 1 + 4}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        // add column headers
+        worksheet.getRow(7).values = [
+          "No",
+          "Kelas",
+          "Wali Kelas",
+          "Jumlah Siswa",
+          `Tahun Pelajaran ${ta.tahun}`,
+        ];
+        worksheet.getRow(8).values = [
+          "",
+          "",
+          "",
+          "",
+          "Potongan",
+          "Komite Diterima",
+          "% Masuk",
+          "Tunggakan"
+
+        ];
+        worksheet.columns = [
+          { key: "no" },
+          { key: "kelas" },
+          { key: "walas" },
+          { key: "siswa" },
+          { key: "potongan" },
+          { key: "komite" },
+          { key: "masuk" },
+          { key: "tunggakan" },
+        ];
+
+        // Add row using key mapping to columns
+        let row = worksheet.addRow({
+          no: `${idx + 1}`,
+          jenis: d ? d.jenis : "-",
+          nama: d ? d.nama : "-",
+          no_regis: d ? d.no_regis : "-",
+          lebar: d ? d.lebar : "-",
+          panjang: d ? d.panjang : "-",
+        });
+
+        if (idx == ujian.toJSON().soalUjian.length - 1) {
+          worksheet.mergeCells(`B${(idx + 1) * 1 + 2}:C${(idx + 1) * 1 + 2}`);
+          worksheet.mergeCells(`B${(idx + 1) * 1 + 3}:C${(idx + 1) * 1 + 3}`);
+          worksheet.mergeCells(`B${(idx + 1) * 1 + 4}:C${(idx + 1) * 1 + 4}`);
+          worksheet.mergeCells(`B${(idx + 1) * 1 + 5}:C${(idx + 1) * 1 + 5}`);
+          worksheet.mergeCells(`B${(idx + 1) * 1 + 6}:C${(idx + 1) * 1 + 6}`);
+          worksheet.mergeCells(`D${(idx + 1) * 1 + 6}:D${(idx + 1) * 1 + 6}`);
+          worksheet.mergeCells(`E${(idx + 1) * 1 + 6}:E${(idx + 1) * 1 + 6}`);
+          worksheet.mergeCells(`F${(idx + 1) * 1 + 6}:F${(idx + 1) * 1 + 6}`);
+          worksheet.mergeCells(`G${(idx + 1) * 1 + 6}:G${(idx + 1) * 1 + 6}`);
+          worksheet.mergeCells(`H${(idx + 1) * 1 + 6}:H${(idx + 1) * 1 + 6}`);
+          
+          
+          worksheet.addConditionalFormatting({
+            ref: `B${(idx + 1) * 1 + 23}:I${(idx + 1) * 1 + 23}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thick" },
+                    right: { style: "thin" },
+                  },
+                  alignment: { wrapText: true },
+                },
+              },
+            ],
+          });
+          worksheet.addConditionalFormatting({
+            ref: "A1:J1",
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  border: {
+                    top: { style: "thick" },
+                    left: { style: "thick" },
+                    // bottom: { style: "thick" },
+                    right: { style: "thick" },
+                  },
+                },
+              },
+            ],
+          });
+          worksheet.addConditionalFormatting({
+            ref: `J1:J${(idx + 1) * 1 + 23}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  border: {
+                    // top: { style: "thick" },
+                    // left: { style: "thick" },
+                    // bottom: { style: "thick" },
+                    right: { style: "thick" },
+                  },
+                },
+              },
+            ],
+          });
+          worksheet.addConditionalFormatting({
+            ref: `A1:A${(idx + 1) * 1 + 23}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  border: {
+                    // top: { style: "thick" },
+                    left: { style: "thick" },
+                    // bottom: { style: "thick" },
+                    // right: { style: "thick" },
+                  },
+                },
+              },
+            ],
+          });
+          worksheet.addConditionalFormatting({
+            ref: `B${(idx + 1) * 1 + 24}:I${(idx + 1) * 1 + 24}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  border: {
+                    // top: { style: "thick" },
+                    // left: { style: "thick" },
+                    bottom: { style: "thick" },
+                    // right: { style: "thick" },
+                  },
+                },
+              },
+            ],
+          });
+          worksheet.getCell(`A${(idx + 2) * 1 + 23}`).border = {
+            top: { style: "thin" },
+            left: { style: "thick" },
+            bottom: { style: "thick" },
+            right: { style: "thin" },
+          };
+          worksheet.getCell(`J${(idx + 2) * 1 + 23}`).border = {
+            top: { style: "thin" },
+            left: { style: "thin" },
+            bottom: { style: "thick" },
+            right: { style: "thick" },
+          };
+          worksheet.getCell(`B${(idx + 4) * 1 + 24}`).value = {
+            richText: [
+              {
+                font: { name: "Calibri" },
+                text: "MENGETAHUI",
+              },
+            ],
+          };
+          worksheet.getCell(`B${(idx + 5) * 1 + 24}`).value = {
+            richText: [
+              {
+                font: { name: "Calibri" },
+                text: "KEPALA SEKOLAH",
+              },
+            ],
+          };
+          worksheet.getCell(`B${(idx + 9) * 1 + 24}`).value = {
+            richText: [
+              {
+                font: { name: "Calibri" },
+                text: `${kepsek}`,
+              },
+            ],
+          };
+
+          worksheet.getCell(`G${(idx + 4) * 1 + 24}`).value = {
+            richText: [
+              {
+                font: { name: "Calibri" },
+                text: "MENGETAHUI",
+              },
+            ],
+          };
+          worksheet.getCell(`G${(idx + 5) * 1 + 24}`).value = {
+            richText: [
+              {
+                font: { name: "Calibri" },
+                text: "GURU MATA PELAJARAN",
+              },
+            ],
+          };
+          worksheet.getCell(`G${(idx + 9) * 1 + 24}`).value = {
+            richText: [
+              {
+                font: { name: "Calibri" },
+                text: `${ujian.toJSON().mataPelajaran.user.nama}`,
+              },
+            ],
+          };
+        }
+
+      })
+    );
+
+    worksheet.getColumn("A").width = 4 ;
+    worksheet.getColumn("B").width = 12 ;
+    worksheet.getColumn("C").width = 30 ;
+    worksheet.getColumn("D").width = 11 ;
+    worksheet.getColumn("E").width = 14 ;
+    worksheet.getColumn("F").width = 15 ;
+    worksheet.getColumn("G").width = 8 ;
+    worksheet.getColumn("H").width = 16 ;
+    worksheet.getRow(4).height =4.5;
+    worksheet.getRow(5).height =2.5;
+    worksheet.getRow(8).height =38.5;
+    
+
+
+    let namaFile = `/uploads/REKAPITULASI-KEUANGAN-SISWA-${keluarantanggalseconds}.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
+
   async notFoundPage({ response, request, auth }) {
     return `<p>Data tidak ditemukan, silahkan kembali ke <a href="http://getsmartschool.id">Smart School</a></p>`;
   }
