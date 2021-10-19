@@ -1985,7 +1985,7 @@ class MainController {
 
       await WhatsAppService.sendMessage(
         guru.whatsapp,
-        `Halo, berikut akun Smarteschool bapak/ibu ${guru.nama} dengan password *${password}. Berikut link akses Smarteschool bapak/ibu: \n ${domain} \n\nInformasi ini bersifat *RAHASIA*`
+        `Halo, berikut akun Smarteschool bapak/ibu ${guru.nama} dengan password *${password}*. Berikut link akses Smarteschool bapak/ibu: \n ${domain} \n\nInformasi ini bersifat *RAHASIA*`
       );
     } else {
       const guru = await User.query()
@@ -2245,7 +2245,7 @@ class MainController {
 
       await WhatsAppService.sendMessage(
         siswa.whatsapp,
-        `Halo, berikut akun Smarteschool ${siswa.nama} dengan password *${password}. Berikut link akses Smarteschool: \n ${domain} \n\nInformasi ini bersifat *RAHASIA*`
+        `Halo, berikut akun Smarteschool ${siswa.nama} dengan password *${password}*. Berikut link akses Smarteschool: \n ${domain} \n\nInformasi ini bersifat *RAHASIA*`
       );
       if (m_rombel_id) {
         const rombel = await MAnggotaRombel.create({
@@ -5233,6 +5233,11 @@ class MainController {
             m_rombel_id: m_rombel_id,
           });
 
+          await WhatsAppService.sendMessage(
+            d.whatsapp,
+            `Halo, berikut akun Smarteschool ${d.nama} dengan password *${d.password || 'smarteschool'}*. Berikut link akses Smarteschool: \n ${domain} \n\nInformasi ini bersifat *RAHASIA*`
+          );
+
           return;
         }
         await User.query()
@@ -5382,6 +5387,11 @@ class MainController {
             m_user_id: createUser.toJSON().id,
             m_rombel_id: m_rombel_id,
           });
+
+          await WhatsAppService.sendMessage(
+            d.whatsapp,
+            `Halo, berikut akun Smarteschool ${d.nama} dengan password *${p*assword}. Berikut link akses Smarteschool: \n ${domain} \n\nInformasi ini bersifat *RAHASIA*`
+          );
 
           return;
         }
@@ -18522,6 +18532,11 @@ class MainController {
         });
         await MProfilUser.create(payload);
 
+        await WhatsAppService.sendMessage(
+          d.whatsapp,
+          `Halo, berikut akun Smarteschool bapak/ibu ${d.nama} dengan password *smartschool*. Berikut link akses Smarteschool bapak/ibu: \n ${domain} \n\nInformasi ini bersifat *RAHASIA*`
+        );
+
         return dataCreated++;
       })
     );
@@ -18615,6 +18630,11 @@ class MainController {
           m_sekolah_id: sekolah.id,
           dihapus: 0,
         });
+
+        await WhatsAppService.sendMessage(
+          d.whatsapp,
+          `Halo, berikut akun Smarteschool bapak/ibu ${d.nama} dengan password *${d.password || "smarteschool"}*. Berikut link akses Smarteschool bapak/ibu: \n ${domain} \n\nInformasi ini bersifat *RAHASIA*`
+        );
 
         return dataCreated++;
       })
