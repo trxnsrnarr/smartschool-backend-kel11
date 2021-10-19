@@ -466,24 +466,65 @@ class MainController {
   }
 
   async getMasterSekolah({ response, request }) {
-    let { page, search, bentuk } = request.get();
+    let { page, search, bentuk, propinsi_id, kabupaten_id, kecamatan_id } = request.get();
 
     page = page ? page : 1;
 
-    const res = Sekolah.query();
+    const res = Sekolah.query().with('sekolahSS');
 
     if (search) {
       res
         .where("sekolah", "like", `%${search}%`)
-        .orWhere("npsn", "like", `${search}`);
     }
 
     if (bentuk) {
-      res.where("bentuk", bentuk);
+      res.andWhere("bentuk", bentuk);
+    }
+
+    if(propinsi_id) {
+      res.andWhere('kode_prop', propinsi_id)
+    }
+
+    if(kabupaten_id) {
+      res.andWhere('kode_kab_kota', kabupaten_id)
+    }
+
+    if(kecamatan_id) {
+      res.andWhere('kode_kec', kecamatan_id)
     }
 
     return response.ok({
       sekolah: await res.paginate(page),
+    });
+  }
+
+  async getMasterSekolahProvinsi({ response, request }) {
+    const res = Sekolah.query();
+
+    res.distinct('kode_prop', 'propinsi')
+
+    return response.ok({
+      propinsi: await res.fetch(),
+    });
+  }
+
+  async getMasterSekolahProvinsiDetail({ response, request, params: {propinsi_id} }) {
+    const res = Sekolah.query();
+
+    res.where('kode_prop', propinsi_id).distinct('kode_kab_kota', 'kabupaten_kota')
+
+    return response.ok({
+      kabupaten: await res.fetch(),
+    });
+  }
+
+  async getMasterSekolahKabupatenDetail({ response, request, params: {kabupaten_id} }) {
+    const res = Sekolah.query();
+
+    res.where('kode_kab_kota', kabupaten_id).distinct('kode_kec', 'kecamatan')
+
+    return response.ok({
+      kabupaten: await res.fetch(),
     });
   }
 
