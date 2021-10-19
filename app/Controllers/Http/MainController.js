@@ -1639,7 +1639,7 @@ class MainController {
       ]);
     }
 
-    const waktu_sinkron = moment().utcOffset(7).format("YYYY-MM-DD HH:mm:ss");
+    const waktu_sinkron = moment().format("YYYY-MM-DD HH:mm:ss");
 
     const newCam = await MCamera.create({
       nama,
@@ -1666,7 +1666,7 @@ class MainController {
     const { nama, address, sinkron } = request.post();
 
     if (sinkron) {
-      const waktu_sinkron = moment().utcOffset(7).format("YYYY-MM-DD HH:mm:ss");
+      const waktu_sinkron = moment().format("YYYY-MM-DD HH:mm:ss");
 
       await MCamera.query().where({ id: camera_id }).update({
         waktu_sinkron,
@@ -1754,7 +1754,7 @@ class MainController {
           .where(
             "created_at",
             "like",
-            `%${moment().utcOffset(7).format("YYYY-MM-DD")}%`
+            `%${moment().format("YYYY-MM-DD")}%`
           )
           .andWhere({ m_user_id: user.id })
           .first();
@@ -2006,6 +2006,11 @@ class MainController {
         avatar,
         bagian,
       });
+
+      await WhatsAppService.sendMessage(
+        guru.whatsapp,
+        `Halo, berikut akun Smarteschool bapak/ibu ${guru.nama} dengan password *${password}. Berikut link akses Smarteschool bapak/ibu: \n ${domain} \n\nInformasi ini bersifat *RAHASIA*`
+      );
     } else {
       const guru = await User.query()
         .where({ id: check.toJSON().id })
@@ -2261,6 +2266,11 @@ class MainController {
         dihapus: 0,
         avatar,
       });
+
+      await WhatsAppService.sendMessage(
+        siswa.whatsapp,
+        `Halo, berikut akun Smarteschool ${siswa.nama} dengan password *${password}. Berikut link akses Smarteschool: \n ${domain} \n\nInformasi ini bersifat *RAHASIA*`
+      );
       if (m_rombel_id) {
         const rombel = await MAnggotaRombel.create({
           role: "Anggota",
@@ -2295,6 +2305,8 @@ class MainController {
         .where({ id: check.toJSON().id })
         .update({ dihapus: 0 });
     }
+
+    
 
     return response.ok({
       message: messagePostSuccess,
@@ -5784,12 +5796,17 @@ class MainController {
       .first();
 
     if (!check) {
-      await TkMateriKesimpulan.create({
+      const kesimpulan = await TkMateriKesimpulan.create({
         waktu_mulai,
         m_topik_id,
         m_user_id: user.id,
         dibaca: 0,
       });
+
+      await WhatsAppService.sendMessage(
+        user.whatsapp,
+        `Halo, kesimpulan mu sudah berhasil tersimpan. Tunggu gurumu mengoreksinya yaa!`
+      );
     }
 
     return response.ok({
@@ -6967,52 +6984,24 @@ class MainController {
               });
 
               // NOTIFIKASI WHATSAPP
-              // try {
-              //   const task = cron.schedule(
-              //     `${menit} ${jam} ${tanggal} ${bulan} *`,
-              //     async () => {
-              //       await WhatsAppService.sendMessage(
-              //         6281316119411,
-              //         `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}?hal=tugas`
-              //       );
-              //     },
-              //     {
-              //       scheduled: true,
-              //       timezone: "Asia/Jakarta",
-              //     }
-              //   );
-              //   return task;
-              // } catch (error) {
-              //   console.log(error);
-              // }
-
-              // try{
-              //   await axios.post(`https://whatsapp.smarteschool.net/send-message`, {
-              //   number: `6285648627895@c.us`,
-              //   message: `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}`
-              // })
-              // } catch(err) {
-              //   console.log(err)
-              // }
-
-              // try {
-              //     const task = cron.schedule(
-              //       `${menit} ${jam} ${tanggal} ${bulan} *`,
-              //       async () => {
-              //         await axios.post(`https://whatsapp.smarteschool.net/send-message`, {
-              //           number: `6285648627895@c.us`,
-              //           message: `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}`
-              //         })
-              //       },
-              //       {
-              //         scheduled: true,
-              //         timezone: "Asia/Jakarta",
-              //       }
-              //     );
-              //     return task;
-              //   } catch (error) {
-              //     console.log(error)
-              //   }
+              try {
+                const task = cron.schedule(
+                  `${menit} ${jam} ${tanggal} ${bulan} *`,
+                  async () => {
+                    await WhatsAppService.sendMessage(
+                      d.user.whatsapp,
+                      `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}?hal=tugas`
+                    );
+                  },
+                  {
+                    scheduled: true,
+                    timezone: "Asia/Jakarta",
+                  }
+                );
+                return task;
+              } catch (error) {
+                console.log(error);
+              }
             })
           );
         } else {
@@ -7031,51 +7020,24 @@ class MainController {
                   }
 
                   // NOTIFIKASI WHATSAPP
-                  // try {
-                  //   const task = cron.schedule(
-                  //     `${menit} ${jam} ${tanggal} ${bulan} *`,
-                  //     async () => {
-                  //       await WhatsAppService.sendMessage(
-                  //         6281316119411,
-                  //         `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}?hal=tugas`
-                  //       );
-                  //     },
-                  //     {
-                  //       scheduled: true,
-                  //       timezone: "Asia/Jakarta",
-                  //     }
-                  //   );
-                  //   return task;
-                  // } catch (error) {
-                  //   console.log(error);
-                  // }
-                  // try{
-                  //   await axios.post(`https://whatsapp.smarteschool.net/send-message`, {
-                  //   number: `6285648627895@c.us`,
-                  //   message: `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}`
-                  // })
-                  // } catch(err) {
-                  //   console.log(err)
-                  // }
-
-                  // try {
-                  //     const task = cron.schedule(
-                  //       `${menit} ${jam} ${tanggal} ${bulan} *`,
-                  //       async () => {
-                  //         await axios.post(`https://whatsapp.smarteschool.net/send-message`, {
-                  //           number: `6285648627895@c.us`,
-                  //           message: `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}`
-                  //         })
-                  //       },
-                  //       {
-                  //         scheduled: true,
-                  //         timezone: "Asia/Jakarta",
-                  //       }
-                  //     );
-                  //     return task;
-                  //   } catch (error) {
-                  //     console.log(error)
-                  //   }
+                  try {
+                    const task = cron.schedule(
+                      `${menit} ${jam} ${tanggal} ${bulan} *`,
+                      async () => {
+                        await WhatsAppService.sendMessage(
+                          d.user.whatsapp,
+                          `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}?hal=tugas`
+                        );
+                      },
+                      {
+                        scheduled: true,
+                        timezone: "Asia/Jakarta",
+                      }
+                    );
+                    return task;
+                  } catch (error) {
+                    console.log(error);
+                  }
                 })
               );
             })
@@ -7413,7 +7375,7 @@ class MainController {
                     .format("YYYY-MM-DD") +
                     " " +
                     d.timeline.tugas.waktu_pembagian
-                ) <= moment().utcOffset(7) ||
+                ) <= moment() ||
                 d.timeline.tugas.waktu_pembagian == null
               )
                 if (
@@ -7750,60 +7712,26 @@ class MainController {
             dihapus: 0,
           });
           // NOTIFIKASI WHATSAPP
-          // try {
-          //   const task = cron.schedule(
-          //     `${menit} ${jam} ${tanggal} ${bulan} *`,
-          //     async () => {
-          //       await WhatsAppService.sendMessage(
-          //         6281316119411,
-          //         `Halo ${d.user.nama}, ada pertemuan dari Guru ${user.nama} (${mapel.nama}. Silahkan klik tautan berikut untuk melihat pertemuan! Semangat!! ${domain}/smartschool/timeline/${timeline.id}?hal=pertemuan`
-          //       );
-          //     },
-          //     {
-          //       scheduled: true,
-          //       timezone: "Asia/Jakarta",
-          //     }
-          //   );
-          //   return task;
-          // } catch (error) {
-          //   console.log(error);
-          // }
+          try {
+            const task = cron.schedule(
+              `${menit} ${jam} ${tanggal} ${bulan} *`,
+              async () => {
+                await WhatsAppService.sendMessage(
+                  6281316119411,
+                  `Halo ${d.user.nama}, ada pertemuan dari Guru ${user.nama} (${mapel.nama}. Silahkan klik tautan berikut untuk melihat pertemuan! Semangat!! ${domain}/smartschool/timeline/${timeline.id}?hal=pertemuan`
+                );
+              },
+              {
+                scheduled: true,
+                timezone: "Asia/Jakarta",
+              }
+            );
+            return task;
+          } catch (error) {
+            console.log(error);
+          }
         })
       );
-      // await Promise.all(
-      //   anggotaRombel.toJSON().map(async (d) => {
-      //     if (d.user.email != null) {
-      //       try {
-      //         const task = cron.schedule(
-      //           `${menit} ${jam} ${tanggal} ${bulan} *`,
-      //           () => {
-      //             Mail.send(
-      //               `emails.pertemuan`,
-      //               {
-      //                 ...sekolah.toJSON(),
-      //                 timelineid: timeline.id,
-      //                 namaguru: user.nama,
-      //                 mataPelajaran: mapel.nama,
-      //               },
-      //               (message) => {
-      //                 message
-      //                   .to(`${d.user.email}`)
-      //                   .from("no-reply@smarteschool.id")
-      //                   .subject("Ada Pertemuan Baru");
-      //               }
-      //             );
-      //           },
-      //           {
-      //             scheduled: true,
-      //             timezone: "Asia/Jakarta",
-      //           }
-      //         );
-      //         return task;
-      //       } catch (error) {}
-      //     }
-      //   })
-      // );
-
       await TkTimeline.createMany(userIds);
     } else if (tipe == "diskusi") {
       timeline = await MTimeline.create({
@@ -8173,6 +8101,11 @@ class MainController {
       m_user_id: user.id,
     });
 
+    await WhatsAppService.sendMessage(
+      user.whatsapp,
+      `Halo, komentar mu sudah masuk. Tunggu gurumu membalasnya ya!`
+    );
+
     return response.ok({
       message: messagePostSuccess,
     });
@@ -8246,6 +8179,11 @@ class MainController {
       komen: komen,
       m_user_id: user.id,
     });
+
+    await WhatsAppService.sendMessage(
+      user.whatsapp,
+      `Halo, komentar mu sudah masuk. Tunggu gurumu membalasnya ya!`
+    );
 
     return response.ok({
       message: messagePostSuccess,
@@ -8475,7 +8413,7 @@ class MainController {
 
     let data;
     if (absen != "hadir") {
-      return await MAbsen.create({
+      data = await MAbsen.create({
         m_sekolah_id: sekolah.id,
         m_user_id: user.id,
         role: user.role,
@@ -8493,6 +8431,11 @@ class MainController {
         foto_masuk,
       });
     }
+
+    await WhatsAppService.sendMessage(
+      user.whatsapp,
+      `Halo, absen anda sudah masuk. Anda masuk dengan keterangan *${absen}* \n ${keterangan ? keterangan : foto_masuk ? foto_masuk : null} \nPada pukul ${data.created_at}`
+    );
 
     return response.ok({
       data: data,
@@ -10968,7 +10911,7 @@ class MainController {
     const user = await auth.getUser();
 
     const { tk_jadwal_ujian_id, ujian_id } = request.post();
-    const waktu_mulai = moment().utcOffset(7).format("YYYY-MM-DD HH:mm:ss");
+    const waktu_mulai = moment().format("YYYY-MM-DD HH:mm:ss");
 
     const ujian = await MUjian.query().where({ id: ujian_id }).first();
 
@@ -11229,7 +11172,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const waktu_selesai = moment().utcOffset(7).format("YYYY-MM-DD HH:mm:ss");
+    const waktu_selesai = moment().format("YYYY-MM-DD HH:mm:ss");
 
     const pesertaUjian = await TkPesertaUjian.query()
       .where({ id: peserta_ujian_id })
@@ -11253,6 +11196,11 @@ class MainController {
         waktu_selesai: waktu_selesai,
       },
       { merge: true }
+    );
+
+    await WhatsAppService.sendMessage(
+      user.whatsapp,
+      `Halo, jawaban ujianmu sudah masuk. Tunggu gurumu memeriksanya ya!`
     );
 
     return response.ok({
@@ -31458,7 +31406,7 @@ class MainController {
                 .format("YYYY-MM-DD") +
                 " " +
                 d.timeline.tugas.waktu_pembagian
-            ) <= moment().utcOffset(7) ||
+            ) <= moment() ||
             d.timeline.tugas.waktu_pembagian == null
           ) {
             return true;
