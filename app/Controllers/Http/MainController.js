@@ -1983,10 +1983,10 @@ class MainController {
         bagian,
       });
 
-      await WhatsAppService.sendMessage(
-        guru.whatsapp,
-        `Halo, berikut akun Smarteschool bapak/ibu ${guru.nama} dengan password *${password}*. Berikut link akses Smarteschool bapak/ibu: \n ${domain} \n\nInformasi ini bersifat *RAHASIA*`
-      );
+      // await WhatsAppService.sendMessage(
+      //   guru.whatsapp,
+      //   `Halo, berikut akun Smarteschool bapak/ibu ${guru.nama} dengan password *${password}*. Berikut link akses Smarteschool bapak/ibu: \n ${domain} \n\nInformasi ini bersifat *RAHASIA*`
+      // );
     } else {
       const guru = await User.query()
         .where({ id: check.toJSON().id })
@@ -2243,10 +2243,10 @@ class MainController {
         avatar,
       });
 
-      await WhatsAppService.sendMessage(
-        siswa.whatsapp,
-        `Halo, berikut akun Smarteschool ${siswa.nama} dengan password *${password}*. Berikut link akses Smarteschool: \n ${domain} \n\nInformasi ini bersifat *RAHASIA*`
-      );
+      // await WhatsAppService.sendMessage(
+      //   siswa.whatsapp,
+      //   `Halo, berikut akun Smarteschool ${siswa.nama} dengan password *${password}*. Berikut link akses Smarteschool: \n ${domain} \n\nInformasi ini bersifat *RAHASIA*`
+      // );
       if (m_rombel_id) {
         const rombel = await MAnggotaRombel.create({
           role: "Anggota",
@@ -5233,10 +5233,10 @@ class MainController {
             m_rombel_id: m_rombel_id,
           });
 
-          await WhatsAppService.sendMessage(
-            d.whatsapp,
-            `Halo, berikut akun Smarteschool ${d.nama} dengan password *${d.password || 'smarteschool'}*. Berikut link akses Smarteschool: \n ${domain} \n\nInformasi ini bersifat *RAHASIA*`
-          );
+          // await WhatsAppService.sendMessage(
+          //   d.whatsapp,
+          //   `Halo, berikut akun Smarteschool ${d.nama} dengan password *${d.password || 'smarteschool'}*. Berikut link akses Smarteschool: \n ${domain} \n\nInformasi ini bersifat *RAHASIA*`
+          // );
 
           return;
         }
@@ -5388,10 +5388,10 @@ class MainController {
             m_rombel_id: m_rombel_id,
           });
 
-          await WhatsAppService.sendMessage(
-            d.whatsapp,
-            `Halo, berikut akun Smarteschool ${d.nama} dengan password *${p*assword}. Berikut link akses Smarteschool: \n ${domain} \n\nInformasi ini bersifat *RAHASIA*`
-          );
+          // await WhatsAppService.sendMessage(
+          //   d.whatsapp,
+          //   `Halo, berikut akun Smarteschool ${d.nama} dengan password *${p*assword}. Berikut link akses Smarteschool: \n ${domain} \n\nInformasi ini bersifat *RAHASIA*`
+          // );
 
           return;
         }
@@ -5789,10 +5789,10 @@ class MainController {
         dibaca: 0,
       });
 
-      await WhatsAppService.sendMessage(
-        user.whatsapp,
-        `Halo, kesimpulan mu sudah berhasil tersimpan. Tunggu gurumu mengoreksinya yaa!`
-      );
+      // await WhatsAppService.sendMessage(
+      //   user.whatsapp,
+      //   `Halo, kesimpulan mu sudah berhasil tersimpan. Tunggu gurumu mengoreksinya yaa!`
+      // );
     }
 
     return response.ok({
@@ -6974,10 +6974,10 @@ class MainController {
                 const task = cron.schedule(
                   `${menit} ${jam} ${tanggal} ${bulan} *`,
                   async () => {
-                    await WhatsAppService.sendMessage(
-                      d.user.whatsapp,
-                      `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}?hal=tugas`
-                    );
+                    // await WhatsAppService.sendMessage(
+                    //   d.user.whatsapp,
+                    //   `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}?hal=tugas`
+                    // );
                   },
                   {
                     scheduled: true,
@@ -7010,10 +7010,10 @@ class MainController {
                     const task = cron.schedule(
                       `${menit} ${jam} ${tanggal} ${bulan} *`,
                       async () => {
-                        await WhatsAppService.sendMessage(
-                          d.user.whatsapp,
-                          `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}?hal=tugas`
-                        );
+                        // await WhatsAppService.sendMessage(
+                        //   d.user.whatsapp,
+                        //   `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}?hal=tugas`
+                        // );
                       },
                       {
                         scheduled: true,
@@ -7702,10 +7702,10 @@ class MainController {
             const task = cron.schedule(
               `${menit} ${jam} ${tanggal} ${bulan} *`,
               async () => {
-                await WhatsAppService.sendMessage(
-                  6281316119411,
-                  `Halo ${d.user.nama}, ada pertemuan dari Guru ${user.nama} (${mapel.nama}. Silahkan klik tautan berikut untuk melihat pertemuan! Semangat!! ${domain}/smartschool/timeline/${timeline.id}?hal=pertemuan`
-                );
+                // await WhatsAppService.sendMessage(
+                //   6281316119411,
+                //   `Halo ${d.user.nama}, ada pertemuan dari Guru ${user.nama} (${mapel.nama}. Silahkan klik tautan berikut untuk melihat pertemuan! Semangat!! ${domain}/smartschool/timeline/${timeline.id}?hal=pertemuan`
+                // );
               },
               {
                 scheduled: true,
@@ -8087,10 +8087,10 @@ class MainController {
       m_user_id: user.id,
     });
 
-    await WhatsAppService.sendMessage(
-      user.whatsapp,
-      `Halo, komentar mu sudah masuk. Tunggu gurumu membalasnya ya!`
-    );
+    // await WhatsAppService.sendMessage(
+    //   user.whatsapp,
+    //   `Halo, komentar mu sudah masuk. Tunggu gurumu membalasnya ya!`
+    // );
 
     return response.ok({
       message: messagePostSuccess,
@@ -8166,10 +8166,10 @@ class MainController {
       m_user_id: user.id,
     });
 
-    await WhatsAppService.sendMessage(
-      user.whatsapp,
-      `Halo, komentar mu sudah masuk. Tunggu gurumu membalasnya ya!`
-    );
+    // await WhatsAppService.sendMessage(
+    //   user.whatsapp,
+    //   `Halo, komentar mu sudah masuk. Tunggu gurumu membalasnya ya!`
+    // );
 
     return response.ok({
       message: messagePostSuccess,
@@ -8418,10 +8418,10 @@ class MainController {
       });
     }
 
-    await WhatsAppService.sendMessage(
-      user.whatsapp,
-      `Halo, absen anda sudah masuk. Anda masuk dengan keterangan *${absen}* \n ${keterangan ? keterangan : foto_masuk ? foto_masuk : null} \nPada pukul ${data.created_at}`
-    );
+    // await WhatsAppService.sendMessage(
+    //   user.whatsapp,
+    //   `Halo, absen anda sudah masuk. Anda masuk dengan keterangan *${absen}* \n ${keterangan ? keterangan : foto_masuk ? foto_masuk : null} \nPada pukul ${data.created_at}`
+    // );
 
     return response.ok({
       data: data,
@@ -11184,10 +11184,10 @@ class MainController {
       { merge: true }
     );
 
-    await WhatsAppService.sendMessage(
-      user.whatsapp,
-      `Halo, jawaban ujianmu sudah masuk. Tunggu gurumu memeriksanya ya!`
-    );
+    // await WhatsAppService.sendMessage(
+    //   user.whatsapp,
+    //   `Halo, jawaban ujianmu sudah masuk. Tunggu gurumu memeriksanya ya!`
+    // );
 
     return response.ok({
       message: "Jawaban berhasil direkam",
@@ -14455,10 +14455,10 @@ class MainController {
                   });
                   // NOTIFIKASI WHATSAPP
                   try {
-                    await WhatsAppService.sendMessage(
-                      `${e.user.whatsapp}`,
-                      `Halo ${e.user.nama}, ${nama} telah keluar, segera lunasi pembayaran. Tekan tautan link berikut untuk melakukan pembayaran ${domain}/smartschool/tagihan/${bayarSiswa.id}`
-                    );
+                    // await WhatsAppService.sendMessage(
+                    //   `${e.user.whatsapp}`,
+                    //   `Halo ${e.user.nama}, ${nama} telah keluar, segera lunasi pembayaran. Tekan tautan link berikut untuk melakukan pembayaran ${domain}/smartschool/tagihan/${bayarSiswa.id}`
+                    // );
                   } catch (error) {
                     console.log(error);
                   }
@@ -18532,10 +18532,10 @@ class MainController {
         });
         await MProfilUser.create(payload);
 
-        await WhatsAppService.sendMessage(
-          d.whatsapp,
-          `Halo, berikut akun Smarteschool bapak/ibu ${d.nama} dengan password *smartschool*. Berikut link akses Smarteschool bapak/ibu: \n ${domain} \n\nInformasi ini bersifat *RAHASIA*`
-        );
+        // await WhatsAppService.sendMessage(
+        //   d.whatsapp,
+        //   `Halo, berikut akun Smarteschool bapak/ibu ${d.nama} dengan password *smartschool*. Berikut link akses Smarteschool bapak/ibu: \n ${domain} \n\nInformasi ini bersifat *RAHASIA*`
+        // );
 
         return dataCreated++;
       })
@@ -18631,10 +18631,10 @@ class MainController {
           dihapus: 0,
         });
 
-        await WhatsAppService.sendMessage(
-          d.whatsapp,
-          `Halo, berikut akun Smarteschool bapak/ibu ${d.nama} dengan password *${d.password || "smarteschool"}*. Berikut link akses Smarteschool bapak/ibu: \n ${domain} \n\nInformasi ini bersifat *RAHASIA*`
-        );
+        // await WhatsAppService.sendMessage(
+        //   d.whatsapp,
+        //   `Halo, berikut akun Smarteschool bapak/ibu ${d.nama} dengan password *${d.password || "smarteschool"}*. Berikut link akses Smarteschool bapak/ibu: \n ${domain} \n\nInformasi ini bersifat *RAHASIA*`
+        // );
 
         return dataCreated++;
       })
