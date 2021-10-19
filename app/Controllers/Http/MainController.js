@@ -22761,7 +22761,9 @@ class MainController {
     auth,
     params: { user_id, mata_pelajaran_id },
   }) {
-    const siswaKeterampilan = await User.query().where({ id: user_id }).first();
+    const siswaKeterampilan = await User.query().with("anggotaRombel", (builder) => {
+      builder.with("rombel");
+    }).where({ id: user_id }).first();
 
     const domain = request.headers().origin;
 
@@ -22773,7 +22775,9 @@ class MainController {
     const ta = await this.getTAAktif(sekolah);
     const mapel = await MMataPelajaran.query()
       .with("user")
-      .with("materi")
+      .with("materi", (builder) => {
+        builder.where({ tingkat: siswa.toJSON().anggotaRombel.rombel.tingkat });
+      })
       .where({ id: mata_pelajaran_id })
       .first();
 
