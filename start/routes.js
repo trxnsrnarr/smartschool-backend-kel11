@@ -961,6 +961,10 @@ Route.post(
   "/konsultasi/:konsultasi_id/jadwal",
   "MainController.postJadwalKonsultasi"
 );
+Route.post(
+  "/konsultasi/:konsultasi_id/selesai",
+  "MainController.postSelesaiKonsultasi"
+);
 Route.post("/konsultasi/download", "MainController.downloadKonsultasi");
 
 //kalender
@@ -1025,6 +1029,10 @@ Route.post("/log-camera", "MainController.postLogCamera");
 
 // Tamu tertangkap kamera
 Route.get("/tamu", "MainController.getTamu");
+
+// Verifikasi akun
+Route.post("/aktivasi", "MainController.aktivasi")
+Route.post("/resend", "MainController.resendAktivasi")
 
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
