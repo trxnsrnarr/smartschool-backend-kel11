@@ -11,6 +11,19 @@ class MSekolah extends Model {
   informasi() {
     return this.hasOne("App/Models/MInformasiSekolah");
   }
+
+  jurusan() {
+    return this.hasMany("App/Models/MJurusan", "m_sekolah_id");
+  }
+
+  rombel() {
+    return this.hasMany("App/Models/MRombel", "m_sekolah_id");
+  }
+  siswa() {
+    return this.hasMany("App/Models/User", "m_sekolah_id");
+  }
+
+
   static get computed() {
     return ["tingkat_format"];
   }

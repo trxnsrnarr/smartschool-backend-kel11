@@ -20,12 +20,20 @@ class MTimeline extends Model {
     return "m_timeline";
   }
 
+  mataPelajaran() {
+    return this.belongsTo("App/Models/MMataPelajaran");
+  }
+
   rombel() {
     return this.belongsTo("App/Models/MRombel");
   }
 
   tkTimeline() {
     return this.hasMany("App/Models/TkTimeline");
+  }
+
+  mataPelajaran() {
+    return this.belongsTo("App/Models/MMataPelajaran");
   }
 
   ditugaskan() {

@@ -9,7 +9,7 @@ class MAlumni extends Model {
     return "m_alumni";
   }
   getDeskripsi(deskripsi) {
-    return deskripsi ? htmlEscaper.unescape(pertanyaan) : "";
+    return deskripsi ? htmlEscaper.unescape(deskripsi) : "";
   }
 
   user() {

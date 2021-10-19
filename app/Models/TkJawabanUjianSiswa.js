@@ -2,6 +2,7 @@
 
 /** @type {typeof import('@adonisjs/lucid/src/Lucid/Model')} */
 const Model = use("Model");
+const htmlEscaper = require("html-escaper");
 
 class TkJawabanUjianSiswa extends Model {
   static get table() {
@@ -10,6 +11,10 @@ class TkJawabanUjianSiswa extends Model {
 
   soal() {
     return this.belongsTo("App/Models/MSoalUjian");
+  }
+
+  getJawabanEsai(jawaban_esai) {
+    return jawaban_esai ? htmlEscaper.unescape(jawaban_esai) : "";
   }
 
   pesertaUjian() {

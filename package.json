@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node server.js",
     "test": "node ace test",
-    "deploy": "gcloud app deploy"
+    "deploy": "gcloud app deploy",
+    "pm2": "ENV_SILENT=true node server.js"
   },
   "keywords": [
     "adonisjs",
@@ -36,10 +37,13 @@
     "firebase": "^8.2.6",
     "firebase-admin": "^9.4.2",
     "html-escaper": "^3.0.3",
+    "html-sloppy-escaper": "^0.1.0",
+    "image-size": "^1.0.0",
     "moment": "^2.29.1",
     "mysql": "^2.18.1",
     "node-cron": "^3.0.0",
     "node-fetch": "^2.6.1",
+    "node-html-to-image": "^3.2.0",
     "nodejs-file-downloader": "^4.6.0",
     "pdf-image": "^2.0.0",
     "pdf-parse": "^1.1.1",
@@ -48,6 +52,7 @@
     "pdf2img": "^0.5.0",
     "pdfkit": "^0.12.1",
     "pdftohtmljs": "^0.6.0",
+    "puppeteer": "^3.3.0",
     "slugify": "^1.4.6",
     "string-strip-html": "^8.3.0",
     "striptags": "^3.1.1",

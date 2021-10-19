@@ -27,6 +27,12 @@ class MSekolahSchema extends Schema {
       table.string("alamat");
       table.string("lintang");
       table.string("bujur");
+      table.integer("sekolah_id").unsigned().index("sekolah_id");
+      table
+        .foreign("sekolah_id")
+        .references("sekolah.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
       table.timestamps();
     });
   }

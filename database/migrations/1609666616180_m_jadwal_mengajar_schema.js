@@ -15,8 +15,8 @@ class MJadwalMengajarSchema extends Schema {
       table
         .foreign("m_mata_pelajaran_id")
         .references("m_mata_pelajaran.id")
-        .onDelete("cascade")
-        .onUpdate("cascade");
+        .onDelete("set null")
+        .onUpdate("set null");
       table.integer("m_rombel_id").unsigned().index("m_rombel_id");
       table
         .foreign("m_rombel_id")

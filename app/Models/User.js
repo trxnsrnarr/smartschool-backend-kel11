@@ -126,6 +126,19 @@ class User extends Model {
   pertemuan() {
     return this.hasMany("App/Models/MTimeline", "id", "m_user_id");
   }
+
+  nilaiUjian() {
+    return this.belongsTo("App/Models/MUjianSiswa", "id", "m_user_id");
+  }
+
+  nilaiSemuaUjian() {
+    return this.hasMany("App/Models/MUjianSiswa", "id", "m_user_id");
+  }
+
+  pertemuanBk(){
+    return this.hasMany("App/Models/MPertemuanBk", "id", "m_user_guru_id");
+  }
+
 }
 
 module.exports = User;
