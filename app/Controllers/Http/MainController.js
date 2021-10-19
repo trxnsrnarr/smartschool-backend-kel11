@@ -31132,47 +31132,36 @@ class MainController {
         const sekolah = explanation.getCell("B" + rowNumber).value
           ? explanation.getCell("B" + rowNumber).value
           : "-";
-        const npsn = explanation.getCell("C" + rowNumber).value
+        const bentuk = explanation.getCell("C" + rowNumber).value
           ? explanation.getCell("C" + rowNumber).value
           : "-";
-        const provinsi = explanation.getCell("D" + rowNumber).value
+        const nama1 = explanation.getCell("D" + rowNumber).value
           ? explanation.getCell("D" + rowNumber).value
           : "-";
-        const bentuk = explanation.getCell("E" + rowNumber).value
+        const no1 = explanation.getCell("E" + rowNumber).value
           ? explanation.getCell("E" + rowNumber).value
           : "-";
-        const nama1 = explanation.getCell("F" + rowNumber).value
+        const email = explanation.getCell("F" + rowNumber).value
           ? explanation.getCell("F" + rowNumber).value
           : "-";
-        const no1 = explanation.getCell("G" + rowNumber).value
-          ? explanation.getCell("G" + rowNumber).value
-          : "-";
 
-        data.push({ npsn, nama1, no1, sekolah, bentuk, provinsi });
+        data.push({ email, nama1, no1, sekolah, bentuk });
       }
     });
 
-    const result = await Promise.all(
-      data.map(async (d, idx) => {
-        const check = await Sekolah.query().where("npsn", d.npsn).first();
-
-        if (!check) {
-          let sekolahCreate;
-
-          sekolahCreate = await MSekolah.query()
-            .where({
-              npsn: d.npsn,
-            })
-            .andWhere({
-              nama: d.sekolah,
-            })
+    await Promise.all(
+      data
+        .filter(
+          (d, idx, self) => self.findIndex((e) => e.sekolah == d.sekolah) == idx
+        )
+        .map(async (d, idx) => {
+          const check = await MSekolah.query()
+            .where("nama", "like", `%${d.sekolah}%`)
             .first();
 
-          if (!sekolahCreate) {
-            sekolahCreate = await MSekolah.create({
-              npsn: d.npsn,
+          if (!check) {
+            await MSekolah.create({
               nama: d.sekolah,
-              provinsi: d.provinsi,
               domain: `https://${slugify(d.sekolah, {
                 replacement: "", // replace spaces with replacement character, defaults to `-`
                 remove: /[*+~.()'"!:@]/g,
@@ -31185,102 +31174,46 @@ class MainController {
               trial: 1,
             });
           }
+        })
+    );
 
-          if (
-            !(await User.query()
-              .where({ whatsapp: `${d.no1}?admin` })
-              .andWhere({ m_sekolah_id: sekolahCreate.id })
-              .first())
-          ) {
-            const admin = await User.create({
-              nama: d.nama1,
-              whatsapp: `${d.no1}?admin`,
-              gender: "L",
-              password: "gpdsnasional",
-              role: "admin",
-              m_sekolah_id: sekolahCreate.id,
-              dihapus: 0,
-            });
-          }
-          if (
-            !(await User.query()
-              .where({ whatsapp: d.no1 })
-              .andWhere({ m_sekolah_id: sekolahCreate.id })
-              .first())
-          ) {
-            const guru = await User.create({
-              nama: d.nama1,
-              whatsapp: d.no1,
-              gender: "L",
-              password: "gpdsnasional",
-              role: "guru",
-              m_sekolah_id: sekolahCreate.id,
-              dihapus: 0,
-            });
-          }
-        } else {
-          let sekolahCreate;
+    const result = await Promise.all(
+      data.map(async (d, idx) => {
+        const check = await MSekolah.query()
+          .where("nama", "like", `%${d.sekolah}%`)
+          .first();
 
-          sekolahCreate = await MSekolah.query()
-            .where({
-              npsn: check.npsn,
-            })
-            .andWhere({
-              nama: check.sekolah,
-            })
-            .first();
-
-          if (!sekolahCreate) {
-            sekolahCreate = await MSekolah.create({
-              npsn: check.npsn,
-              nama: check.sekolah,
-              provinsi: check.provinsi,
-              domain: `https://${slugify(check.sekolah, {
-                replacement: "", // replace spaces with replacement character, defaults to `-`
-                remove: /[*+~.()'"!:@]/g,
-                lower: true, // convert to lower case, defaults to `false`
-              })}.smarteschool.id`,
-              status: "N",
-              tingkat: check.bentuk,
-              integrasi: "whatsapp",
-              diintegrasi: 1,
-              trial: 1,
-              sekolah_id: check.id,
-            });
-          }
-
-          if (
-            !(await User.query()
-              .where({ whatsapp: `${d.no1}?admin` })
-              .andWhere({ m_sekolah_id: sekolahCreate.id })
-              .first())
-          ) {
-            const admin = await User.create({
-              nama: d.nama1,
-              whatsapp: `${d.no1}?admin`,
-              gender: "L",
-              password: "gpdsnasional",
-              role: "admin",
-              m_sekolah_id: sekolahCreate.id,
-              dihapus: 0,
-            });
-          }
-          if (
-            !(await User.query()
-              .where({ whatsapp: d.no1 })
-              .andWhere({ m_sekolah_id: sekolahCreate.id })
-              .first())
-          ) {
-            const guru = await User.create({
-              nama: d.nama1,
-              whatsapp: d.no1,
-              gender: "L",
-              password: "gpdsnasional",
-              role: "guru",
-              m_sekolah_id: sekolahCreate.id,
-              dihapus: 0,
-            });
-          }
+        if (
+          !(await User.query()
+            .where({ whatsapp: `${d.no1}?admin` })
+            .andWhere({ m_sekolah_id: check.id })
+            .first())
+        ) {
+          const admin = await User.create({
+            nama: d.nama1,
+            whatsapp: `${d.no1}?admin`,
+            gender: "L",
+            password: "gpdsnasional",
+            role: "admin",
+            m_sekolah_id: check.id,
+            dihapus: 0,
+          });
+        }
+        if (
+          !(await User.query()
+            .where({ whatsapp: d.no1 })
+            .andWhere({ m_sekolah_id: check.id })
+            .first())
+        ) {
+          const guru = await User.create({
+            nama: d.nama1,
+            whatsapp: d.no1,
+            gender: "L",
+            password: "gpdsnasional",
+            role: "guru",
+            m_sekolah_id: check.id,
+            dihapus: 0,
+          });
         }
       })
     );
