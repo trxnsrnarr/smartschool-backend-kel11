@@ -7,6 +7,10 @@ class Sekolah extends Model {
   static get table() {
     return "sekolah";
   }
+
+  sekolahSS() {
+    return this.belongsTo('App/Models/MSekolah')
+  }
 }
 
 module.exports = Sekolah;
