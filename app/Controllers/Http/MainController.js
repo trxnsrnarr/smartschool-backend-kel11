@@ -245,14 +245,14 @@ const monthNames = [
 const dateObj = new Date();
 const month = monthNames[dateObj.getMonth()];
 const day = String(dateObj.getDate()).padStart(2, "0");
-const year = dateObj.getFullYear();
-const hour = dateObj.getHours();
-const minute = dateObj.getMinutes();
-const second = dateObj.getSeconds();
-const keluarantanggal = day + "," + month + "," + year;
-const keluarantanggalseconds1 = moment().format("YYYY-MM-DD-HH-mm-ss");
-const keluarantanggalseconds =
-  keluarantanggalseconds1 + "-" + dateObj.getTime();
+// const year = dateObj.getFullYear();
+// const hour = dateObj.getHours();
+// const minute = dateObj.getMinutes();
+// const second = dateObj.getSeconds();
+// // const keluarantanggal = day + "," + month + "," + year;
+// const keluarantanggalseconds1 = moment().format("YYYY-MM-DD-HH-mm-ss");
+// const keluarantanggalseconds =
+//   keluarantanggalseconds1 + "-" + dateObj.getTime();
 class MainController {
   // UTILS
 
@@ -7955,6 +7955,9 @@ class MainController {
 
     const { jadwal_mengajar_id } = request.post();
 
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD HH-mm-ss-") + new Date().getTime();
+
     const jadwalMengajar = await MJadwalMengajar.query()
       .with("rombel")
       .with("mataPelajaran")
@@ -8516,6 +8519,8 @@ class MainController {
     }
 
     const { role, tanggal, rombel_id } = request.post();
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
 
     if (role == "siswa") {
       let rombel = MRombel.query()
@@ -10314,6 +10319,8 @@ class MainController {
     }
 
     const { tk_jadwal_ujian_id, m_jadwal_ujian_id } = request.post();
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
 
     const jadwalUjian = await TkJadwalUjian.query()
       .with("peserta", (builder) => {
@@ -18715,6 +18722,8 @@ class MainController {
     }
     const user = await auth.getUser();
     const { role, tanggal_awal, tanggal_akhir } = request.post();
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
 
     const tanggalDistinct = await Database.raw(
       "SELECT DISTINCT DATE_FORMAT(created_at, '%Y-%m-%d') as tanggalDistinct from m_absen WHERE created_at BETWEEN ? AND  ?",
@@ -18850,7 +18859,7 @@ class MainController {
     const akhir = moment(`${tanggal_akhir}`).format("DD-MM-YYYY");
     worksheet.getCell(
       "A4"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
     worksheet.addConditionalFormatting({
       ref: `A1:G2`,
       rules: [
@@ -19274,6 +19283,8 @@ class MainController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
 
     const mapel = await MMataPelajaran.query()
       .with("user")
@@ -19289,7 +19300,7 @@ class MainController {
     worksheet.getCell("A3").value = ta.tahun;
     worksheet.getCell(
       "A4"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
     worksheet.addConditionalFormatting({
       ref: `A1:G2`,
       rules: [
@@ -19540,6 +19551,8 @@ class MainController {
     }
     const user = await auth.getUser();
     const { tanggal_awal, tanggal_akhir } = request.post();
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
 
     const mutasi = await MMutasi.query()
       .whereBetween("waktu_dibuat", [
@@ -19559,7 +19572,7 @@ class MainController {
     let worksheet = workbook.addWorksheet(`Rekap Mutasi Keuangan`);
     worksheet.getCell(
       "A4"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
     worksheet.addConditionalFormatting({
       ref: `A1:E2`,
       rules: [
@@ -20547,6 +20560,8 @@ class MainController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
 
     const rombel = await MRombel.query()
       .with("user")
@@ -20569,7 +20584,7 @@ class MainController {
         worksheet.getCell("A4 ").value = d.nama;
         worksheet.getCell(
           "A6"
-        ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+        ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
         worksheet.addConditionalFormatting({
           ref: `A1:F4`,
           rules: [
@@ -20716,7 +20731,7 @@ class MainController {
         );
       })
     );
-    let namaFile = `/uploads/rekap-rombel-${new Date().getTime()}.xlsx`;
+    let namaFile = `/uploads/rekap-rombel-${keluarantanggalseconds}-${new Date().getTime()}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -20738,6 +20753,8 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
     const user = await auth.getUser();
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
 
     const pembayaran = await MPembayaran.query()
       .with("rombel", (builder) => {
@@ -20770,7 +20787,7 @@ class MainController {
         worksheet.getCell("A7").value = pembayaran.bulan;
         worksheet.getCell(
           "A8"
-        ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+        ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
         worksheet.mergeCells(`A1:I1`);
         worksheet.mergeCells(`A2:I2`);
         worksheet.mergeCells(`A3:I3`);
@@ -21106,7 +21123,8 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
     const user = await auth.getUser();
-
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
     const alumni = await MAlumni.query()
       .with("user", (builder) => {
         builder.where({ m_sekolah_id: sekolah.id });
@@ -21120,7 +21138,7 @@ class MainController {
     worksheet.mergeCells("A2:P2");
     worksheet.getCell(
       "A3"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
     worksheet.addConditionalFormatting({
       ref: "A1:P2",
       rules: [
@@ -21323,7 +21341,8 @@ class MainController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
-
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
     const kepsek = ta.nama_kepsek;
 
     const ujian = await MUjian.query()
@@ -22779,7 +22798,9 @@ class MainController {
     const mapel = await MMataPelajaran.query()
       .with("user")
       .with("materi", (builder) => {
-        builder.where({ tingkat: siswaKeterampilan.toJSON().anggotaRombel.rombel.tingkat });
+        builder.where({
+          tingkat: siswaKeterampilan.toJSON().anggotaRombel.rombel.tingkat,
+        });
       })
       .where({ id: mata_pelajaran_id })
       .first();
@@ -23498,6 +23519,9 @@ class MainController {
 
     const user = await auth.getUser();
 
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+
     const gelombang = await MGelombangPpdb.query()
       .with("pendaftar", (builder) => {
         builder
@@ -23550,7 +23574,7 @@ class MainController {
         worksheet.getCell("A7").value = `Keterangan : ${d.keterangan}`;
         worksheet.getCell(
           "A9"
-        ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+        ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
 
         worksheet.getColumn("A").width = 28;
         worksheet.getColumn("B").width = 14;
@@ -24093,6 +24117,9 @@ class MainController {
 
     const user = await auth.getUser();
 
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+
     const jadwalMengajar = await MJadwalMengajar.query()
       .with("mataPelajaran", (builder) => {
         builder.with("user");
@@ -24139,7 +24166,7 @@ class MainController {
 
     worksheet.getCell(
       "A6"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
     worksheet.mergeCells(`A1:J1`);
     worksheet.mergeCells(`A2:J2`);
     worksheet.mergeCells(`A3:J3`);
@@ -24351,7 +24378,7 @@ class MainController {
 
     worksheet.getCell(
       "A6"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
     let namaFile = `/uploads/rekap-Analisis-Tugas-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
@@ -24377,6 +24404,9 @@ class MainController {
     const ta = await this.getTAAktif(sekolah);
 
     const user = await auth.getUser();
+
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
 
     const jadwalMengajar = await MJadwalMengajar.query()
       .with("mataPelajaran", (builder) => {
@@ -24426,7 +24456,7 @@ class MainController {
 
     worksheet.getCell(
       "A6"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
     worksheet.mergeCells(`A1:E1`);
     worksheet.mergeCells(`A2:E2`);
     worksheet.mergeCells(`A3:E3`);
@@ -24571,7 +24601,7 @@ class MainController {
 
     worksheet.getCell(
       "A6"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
     let namaFile = `/uploads/rekap-PerformaTugas-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
@@ -27236,6 +27266,9 @@ class MainController {
 
     const user = await auth.getUser();
 
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+
     const lokasi = await MLokasi.query().where({ dihapus: 0 }).fetch();
 
     let workbook = new Excel.Workbook();
@@ -27244,7 +27277,7 @@ class MainController {
     worksheet.mergeCells("A2:F2");
     worksheet.getCell(
       "A3"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
     worksheet.addConditionalFormatting({
       ref: "A1:F2",
       rules: [
@@ -27493,6 +27526,9 @@ class MainController {
 
     const user = await auth.getUser();
 
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+
     const barang = await MBarang.query()
       .with("lokasi", (builder) => {
         builder.where({ m_sekolah_id: sekolah.id }).andWhere({ dihapus: 0 });
@@ -27506,7 +27542,7 @@ class MainController {
     worksheet.mergeCells("A2:K2");
     worksheet.getCell(
       "A3"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
     worksheet.addConditionalFormatting({
       ref: "A1:K2",
       rules: [
@@ -29460,6 +29496,9 @@ class MainController {
 
     const user = await auth.getUser();
 
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+
     const buku = await MBukuTamu.query().where({ dihapus: 0 }).fetch();
 
     // const province = await this.getProvince("1");
@@ -29471,7 +29510,7 @@ class MainController {
     worksheet.mergeCells("A2:L2");
     worksheet.getCell(
       "A3"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
     worksheet.addConditionalFormatting({
       ref: "A1:L2",
       rules: [
@@ -29728,6 +29767,9 @@ class MainController {
 
     const user = await auth.getUser();
 
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+
     const { tanggal_awal, tanggal_akhir } = request.post();
 
     const tanggalDistinct = await Database.raw(
@@ -29776,7 +29818,7 @@ class MainController {
         worksheet.mergeCells("A3:K3");
         // worksheet.getCell(
         //   "A10"
-        // ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+        // ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
         worksheet.addConditionalFormatting({
           ref: "A1:K3",
           rules: [
@@ -30085,6 +30127,9 @@ class MainController {
 
     const user = await auth.getUser();
 
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+
     const { tanggal_awal, tanggal_akhir } = request.post();
 
     const tanggalDistinct = await Database.raw(
@@ -30208,7 +30253,7 @@ class MainController {
         worksheet.mergeCells("A3:K3");
         // worksheet.getCell(
         //   "A10"
-        // ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+        // ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
         worksheet.addConditionalFormatting({
           ref: "A1:K3",
           rules: [
@@ -30637,6 +30682,10 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
     const user = await auth.getUser();
+
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+
     const { role, tanggal, rombel_id } = request.post();
 
     const rombel = await MRombel.query()
@@ -30669,7 +30718,7 @@ class MainController {
     worksheet.mergeCells("A3:H3");
     worksheet.getCell(
       "A5"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
     worksheet.addConditionalFormatting({
       ref: "A1:H3",
       rules: [
@@ -30900,6 +30949,10 @@ class MainController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
+
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+
     const user = await auth.getUser();
     const { tanggal_awal, tanggal_akhir, rombel_id } = request.post();
 
@@ -30941,7 +30994,7 @@ class MainController {
         worksheet.mergeCells("A3:H3");
         worksheet.getCell(
           "A5"
-        ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+        ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
         worksheet.addConditionalFormatting({
           ref: "A1:H3",
           rules: [
@@ -34059,6 +34112,9 @@ class MainController {
 
     const user = await auth.getUser();
 
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+
     const rekapan = await MRekapRombel.query()
       .with("rekap")
       .with("rombel")
@@ -34081,7 +34137,7 @@ class MainController {
 
     worksheet.getCell(
       "A4"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
 
     worksheet.addConditionalFormatting({
       ref: "A1:D3",
@@ -34689,6 +34745,9 @@ class MainController {
 
     const user = await auth.getUser();
 
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+
     const bukuKunjunganPengajuan = await MPertemuanBk.query()
       .with("user", (builder) => {
         builder.select("id", "nama");
@@ -34736,7 +34795,7 @@ class MainController {
 
     worksheet.getCell(
       "A4"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
 
     worksheet.addConditionalFormatting({
       ref: "A1:D3",
@@ -34926,7 +34985,7 @@ class MainController {
 
     worksheet2.getCell(
       "A4"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
 
     worksheet2.addConditionalFormatting({
       ref: "A1:D3",
@@ -36198,6 +36257,9 @@ class MainController {
 
     const user = await auth.getUser();
 
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+
     const pembayaran = await TkPembayaranRombel.query()
       // .with("rombel",(builder)=>{
       //   builder.with("anggotaRombel",(builder)=>{
@@ -36222,7 +36284,7 @@ class MainController {
     worksheet.getCell("A4").value = `note : Isi nominal dengan angka`;
     worksheet.getCell(
       "A6"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
     worksheet.addConditionalFormatting({
       ref: "A1:K2",
       rules: [
@@ -36760,6 +36822,10 @@ class MainController {
     const ta = await this.getTAAktif(sekolah);
 
     const user = await auth.getUser();
+
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+
     const lokasi = await MLokasi.query().where({ dihapus: 0 }).fetch();
 
     let workbook = new Excel.Workbook();
@@ -36777,7 +36843,7 @@ class MainController {
 
     worksheet.getCell(
       "A6"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
     worksheet.addConditionalFormatting({
       ref: "A1:F2",
       rules: [
