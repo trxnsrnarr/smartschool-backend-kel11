@@ -17808,7 +17808,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { judul, tanggal, m_tugas_id } = request.post();
+    const { judul, tanggal, m_tugas_id, teknik } = request.post();
 
     let rekap;
     if (m_tugas_id) {
