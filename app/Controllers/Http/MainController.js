@@ -7770,7 +7770,7 @@ class MainController {
         ),
       })
       .ids();
-    const timelineTugas = await MTimeline.quer()
+    const timelineTugas = await MTimeline.query()
       .with("tugas", (builder) => {
         builder.with("timeline", (builder) => {
           builder.with("rombel").with("tkTimeline");
