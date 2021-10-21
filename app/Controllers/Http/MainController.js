@@ -7790,7 +7790,7 @@ class MainController {
       .whereIn("m_tugas_id", tugasIds)
       .fetch();
 
-    const timelines = timelineBiasa
+    const timelines = [...timelineBiasa, ...timelineTugas]
 
     return response.ok({
       timeline,
