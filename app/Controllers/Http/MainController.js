@@ -7596,7 +7596,7 @@ class MainController {
         .andWhere({
           m_user_id: timeline.toJSON().timeline.m_user_id,
         })
-        .whereIn("tanggal_pembagian", [
+        .whereBetween("tanggal_pembagian", [
           moment(timeline.toJSON().timeline.tanggal_pembagian).format(
             "YYYY-MM-DD 00:00:00"
           ),
@@ -7617,7 +7617,7 @@ class MainController {
         .andWhere({
           m_user_id: timeline.toJSON().timeline.m_user_id,
         })
-        .whereIn("tanggal_pembagian", [
+        .whereBetween("tanggal_pembagian", [
           moment(timeline.toJSON().timeline.tanggal_pembagian).format(
             "YYYY-MM-DD 00:00:00"
           ),
@@ -7754,7 +7754,7 @@ class MainController {
       .where({ m_user_id: timeline.m_user_id })
       .andWhere({ dihapus: 0 })
       .andWhere({ m_rombel_id: timeline.m_rombel_id })
-      .whereIn("tanggal_pembagian", [
+      .whereBetween("tanggal_pembagian", [
         moment(timeline.tanggal_pembagian).format("YYYY-MM-DD 00:00:00"),
         moment(timeline.tanggal_pembagian).format("YYYY-MM-DD 23:59:29"),
       ])
