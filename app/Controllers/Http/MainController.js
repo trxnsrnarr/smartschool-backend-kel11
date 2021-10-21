@@ -7590,9 +7590,89 @@ class MainController {
         sudah_lewat = true;
       }
 
+      const timelineId1 = await MTimeline.query()
+        .whereNull("m_mata_pelajaran_id")
+        .andWhere({ m_rombel_id: timeline.toJSON().timeline.rombel.id })
+        .andWhere({
+          m_user_id: timeline.toJSON().timeline.m_user_id,
+        })
+        .whereIn("tanggal_pembagian", [
+          moment(timeline.toJSON().timeline.tanggal_pembagian).format(
+            "YYYY-MM-DD 00:00:00"
+          ),
+          moment(timeline.toJSON().timeline.tanggal_pembagian).format(
+            "YYYY-MM-DD 23:59:59"
+          ),
+        ])
+        .andWhere({ dihapus: 0 })
+        .andWhereNot({ tipe: "tugas" })
+        .ids();
+
+      const timelineId2 = await MTimeline.query()
+        .whereNotNull("m_mata_pelajaran_id")
+        .andWhere({
+          m_mata_pelajaran_id: timeline.toJSON().timeline.m_mata_pelajaran_id,
+        })
+        .andWhere({ m_rombel_id: timeline.toJSON().timeline.rombel.id })
+        .andWhere({
+          m_user_id: timeline.toJSON().timeline.m_user_id,
+        })
+        .whereIn("tanggal_pembagian", [
+          moment(timeline.toJSON().timeline.tanggal_pembagian).format(
+            "YYYY-MM-DD 00:00:00"
+          ),
+          moment(timeline.toJSON().timeline.tanggal_pembagian).format(
+            "YYYY-MM-DD 23:59:59"
+          ),
+        ])
+        .andWhere({ dihapus: 0 })
+        .andWhereNot({ tipe: "tugas" })
+        .ids();
+
+      const tugasIds = await MTugas.query()
+        .where({ m_user_id: timeline.toJSON().timeline.m_user_id })
+        .andWhere({ dihapus: 0 })
+        .andWhere({
+          tanggal_pembagian: moment(
+            timeline.toJSON().timeline.tanggal_pembagian
+          ).format("YYYY-MM-DD"),
+        })
+        .ids();
+
+      const timelineTugas = await MTimeline.query()
+        .where({ m_rombel_id: timeline.toJSON().timeline.rombel.id })
+        .andWhere({ dihapus: 0 })
+        .andWhere({
+          m_user_id: timeline.toJSON().timeline.m_user_id,
+        })
+        .whereIn("m_tugas_id", tugasIds)
+        .ids();
+
+      const timelineIds = [...timelineId2, ...timelineId1, ...timelineTugas];
+
+      const timelines = await TkTimeline.query()
+        .with("timeline", (builder) => {
+          builder
+            .with("tugas")
+            .withCount("komen as total_komen", (builder) => {
+              builder.where({ dihapus: 0 });
+            })
+            .with("komen", (builder) => {
+              builder.with("user").where({ dihapus: 0 });
+            })
+            .with("user");
+        })
+        .with("user")
+        .where({ m_user_id: user.id })
+        .andWhere({ dihapus: 0 })
+        .whereIn("m_timeline_id", timelineIds)
+        .orderBy("id", "desc")
+        .fetch();
+
       return response.ok({
         timeline,
         sudah_lewat,
+        timelines,
       });
     }
 
@@ -7657,8 +7737,64 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .first();
 
+    const timelineBiasa = await MTimeline.query()
+      .with("tugas", (builder) => {
+        builder.with("timeline", (builder) => {
+          builder.with("rombel").with("tkTimeline");
+        });
+      })
+      .with("user")
+      .withCount("tkTimeline as total_respon", (builder) => {
+        builder.whereNotNull("waktu_pengumpulan");
+      })
+      .withCount("tkTimeline as total_absen", (builder) => {
+        builder.whereNotNull("waktu_absen");
+      })
+      .withCount("tkTimeline as total_siswa")
+      .where({ m_user_id: timeline.m_user_id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_rombel_id: timeline.m_rombel_id })
+      .whereIn("tanggal_pembagian", [
+        moment(timeline.tanggal_pembagian).format("YYYY-MM-DD 00:00:00"),
+        moment(timeline.tanggal_pembagian).format("YYYY-MM-DD 23:59:29"),
+      ])
+      .andWhereNot({ tipe: "tugas" })
+      .fetch();
+
+    const tugasIds = await MTugas.query()
+      .where({ m_user_id: timeline.m_user_id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({
+        tanggal_pembagian: moment(timeline.tanggal_pembagian).format(
+          "YYYY-MM-DD"
+        ),
+      })
+      .ids();
+    const timelineTugas = await MTimeline.quer()
+      .with("tugas", (builder) => {
+        builder.with("timeline", (builder) => {
+          builder.with("rombel").with("tkTimeline");
+        });
+      })
+      .with("user")
+      .withCount("tkTimeline as total_respon", (builder) => {
+        builder.whereNotNull("waktu_pengumpulan");
+      })
+      .withCount("tkTimeline as total_absen", (builder) => {
+        builder.whereNotNull("waktu_absen");
+      })
+      .withCount("tkTimeline as total_siswa")
+      .where({ m_user_id: timeline.m_user_id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_rombel_id: timeline.m_rombel_id })
+      .whereIn("m_tugas_id", tugasIds)
+      .fetch();
+
+    const timelines = [...timelineBiasa, ...timelineTugas]
+
     return response.ok({
       timeline,
+      timelines
     });
   }
 
@@ -17503,7 +17639,9 @@ class MainController {
         .where({ dihapus: 0 })
         .whereIn("m_rombel_id", [rombel_id])
         .fetch();
-      ujian = ujianRombel.toJSON().filter(d => d.jadwalUjian && d.jadwalUjian.ujian)
+      ujian = ujianRombel
+        .toJSON()
+        .filter((d) => d.jadwalUjian && d.jadwalUjian.ujian);
     }
     // const tugas = await MTugas.query().where({ m_user_id: user.id }).fetch();
 
@@ -17511,7 +17649,7 @@ class MainController {
       materirombel,
       rekap,
       tugas,
-      ujian
+      ujian,
     });
   }
 
