@@ -2797,7 +2797,17 @@ class MainController {
     }
 
     const ta = await Mta.query()
-      .select("tahun", "semester", "nama_kepsek", "nip_kepsek", "aktif", "id")
+      .select(
+        "tahun",
+        "semester",
+        "nama_kepsek",
+        "nip_kepsek",
+        "aktif",
+        "id",
+        "tanggal_awal",
+        "tanggal_akhir",
+        "tanggal_rapor"
+      )
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .orderBy("id", "desc")
@@ -17416,6 +17426,7 @@ class MainController {
     let rekap;
     let timelineTugas;
     let tugas;
+    let ujian;
     if (rombel_id) {
       rekap = await MRekap.query()
         .with("rekaprombel", (builder) => {
@@ -17481,6 +17492,18 @@ class MainController {
         .toJSON()
         .filter((t) => t.tugas != null)
         .map((t) => t.tugas);
+      const ujianRombel = await TkJadwalUjian.query()
+        .with("jadwalUjian", (builder) => {
+          builder
+            .with("ujian", (builder) => {
+              builder.where({ dihapus: 0 });
+            })
+            .where({ dihapus: 0 });
+        })
+        .where({ dihapus: 0 })
+        .whereIn("m_rombel_id", [rombel_id])
+        .fetch();
+      ujian = ujianRombel.toJSON().filter(d => d.jadwalUjian && d.jadwalUjian.ujian)
     }
     // const tugas = await MTugas.query().where({ m_user_id: user.id }).fetch();
 
@@ -17488,6 +17511,7 @@ class MainController {
       materirombel,
       rekap,
       tugas,
+      ujian
     });
   }
 
@@ -22779,7 +22803,9 @@ class MainController {
     const mapel = await MMataPelajaran.query()
       .with("user")
       .with("materi", (builder) => {
-        builder.where({ tingkat: siswaKeterampilan.toJSON().anggotaRombel.rombel.tingkat });
+        builder.where({
+          tingkat: siswaKeterampilan.toJSON().anggotaRombel.rombel.tingkat,
+        });
       })
       .where({ id: mata_pelajaran_id })
       .first();
