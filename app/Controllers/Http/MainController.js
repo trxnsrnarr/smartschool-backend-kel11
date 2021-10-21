@@ -7790,7 +7790,7 @@ class MainController {
       .whereIn("m_tugas_id", tugasIds)
       .fetch();
 
-    const timelines = [...timelineBiasa, ...timelineTugas]
+    const timelines = [...timelineBiasa.toJSON(), ...timelineTugas.toJSON()]
 
     return response.ok({
       timeline,
