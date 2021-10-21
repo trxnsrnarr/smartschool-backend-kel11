@@ -245,14 +245,14 @@ const monthNames = [
 const dateObj = new Date();
 const month = monthNames[dateObj.getMonth()];
 const day = String(dateObj.getDate()).padStart(2, "0");
-const year = dateObj.getFullYear();
-const hour = dateObj.getHours();
-const minute = dateObj.getMinutes();
-const second = dateObj.getSeconds();
-const keluarantanggal = day + "," + month + "," + year;
-const keluarantanggalseconds1 = moment().format("YYYY-MM-DD-HH-mm-ss");
-const keluarantanggalseconds =
-  keluarantanggalseconds1 + "-" + dateObj.getTime();
+// const year = dateObj.getFullYear();
+// const hour = dateObj.getHours();
+// const minute = dateObj.getMinutes();
+// const second = dateObj.getSeconds();
+// // const keluarantanggal = day + "," + month + "," + year;
+// const keluarantanggalseconds1 = moment().format("YYYY-MM-DD-HH-mm-ss");
+// const keluarantanggalseconds =
+//   keluarantanggalseconds1 + "-" + dateObj.getTime();
 class MainController {
   // UTILS
 
@@ -8101,6 +8101,9 @@ class MainController {
 
     const { jadwal_mengajar_id } = request.post();
 
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD HH-mm-ss-") + new Date().getTime();
+
     const jadwalMengajar = await MJadwalMengajar.query()
       .with("rombel")
       .with("mataPelajaran")
@@ -8662,6 +8665,8 @@ class MainController {
     }
 
     const { role, tanggal, rombel_id } = request.post();
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     if (role == "siswa") {
       let rombel = MRombel.query()
@@ -10460,6 +10465,8 @@ class MainController {
     }
 
     const { tk_jadwal_ujian_id, m_jadwal_ujian_id } = request.post();
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const jadwalUjian = await TkJadwalUjian.query()
       .with("peserta", (builder) => {
@@ -18781,12 +18788,18 @@ class MainController {
           nama: explanation.getCell("B" + rowNumber).value,
           gender: explanation.getCell("C" + rowNumber).value,
           whatsapp: explanation.getCell("D" + rowNumber).value,
-          email:
-            explanation.getCell("E" + rowNumber).value == null
-              ? ""
-              : typeof explanation.getCell("E" + rowNumber).value == "object"
-              ? JSON.parse(explanation.getCell("E" + rowNumber).value).text
-              : explanation.getCell("E" + rowNumber).value,
+          email: explanation.getCell("E" + rowNumber).value,
+          // == null
+          // ? ""
+          // : typeof explanation.getCell("E" + rowNumber).value == "object"
+          // ? JSON.parse(explanation.getCell("E" + rowNumber).value).text
+          // : explanation.getCell("E" + rowNumber).value
+
+          // try {
+          // } catch (error) {
+          //   console.log(error);
+          // },
+
           password: explanation.getCell("F" + rowNumber).value,
         });
       }
@@ -18808,7 +18821,7 @@ class MainController {
             .where({ id: checkUser.id })
             .update({
               dihapus: 0,
-              password: await Hash.make(d.password || "smarteschool"),
+              password: await Hash.make(d.password + "" || "smarteschool"),
             });
 
           return dataUpdated++;
@@ -18818,7 +18831,7 @@ class MainController {
           nama: d.nama,
           whatsapp: d.whatsapp,
           gender: d.gender,
-          password: d.password || "smarteschool",
+          password: d.password + "" || "smarteschool",
           role: "guru",
           m_sekolah_id: sekolah.id,
           dihapus: 0,
@@ -18877,6 +18890,8 @@ class MainController {
     }
     const user = await auth.getUser();
     const { role, tanggal_awal, tanggal_akhir } = request.post();
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const tanggalDistinct = await Database.raw(
       "SELECT DISTINCT DATE_FORMAT(created_at, '%Y-%m-%d') as tanggalDistinct from m_absen WHERE created_at BETWEEN ? AND  ?",
@@ -19012,7 +19027,7 @@ class MainController {
     const akhir = moment(`${tanggal_akhir}`).format("DD-MM-YYYY");
     worksheet.getCell(
       "A4"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
     worksheet.addConditionalFormatting({
       ref: `A1:G2`,
       rules: [
@@ -19436,6 +19451,8 @@ class MainController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const mapel = await MMataPelajaran.query()
       .with("user")
@@ -19451,7 +19468,7 @@ class MainController {
     worksheet.getCell("A3").value = ta.tahun;
     worksheet.getCell(
       "A4"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
     worksheet.addConditionalFormatting({
       ref: `A1:G2`,
       rules: [
@@ -19702,6 +19719,8 @@ class MainController {
     }
     const user = await auth.getUser();
     const { tanggal_awal, tanggal_akhir } = request.post();
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const mutasi = await MMutasi.query()
       .whereBetween("waktu_dibuat", [
@@ -19721,7 +19740,7 @@ class MainController {
     let worksheet = workbook.addWorksheet(`Rekap Mutasi Keuangan`);
     worksheet.getCell(
       "A4"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
     worksheet.addConditionalFormatting({
       ref: `A1:E2`,
       rules: [
@@ -20709,6 +20728,8 @@ class MainController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const rombel = await MRombel.query()
       .with("user")
@@ -20731,7 +20752,7 @@ class MainController {
         worksheet.getCell("A4 ").value = d.nama;
         worksheet.getCell(
           "A6"
-        ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+        ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
         worksheet.addConditionalFormatting({
           ref: `A1:F4`,
           rules: [
@@ -20878,7 +20899,7 @@ class MainController {
         );
       })
     );
-    let namaFile = `/uploads/rekap-rombel-${new Date().getTime()}.xlsx`;
+    let namaFile = `/uploads/rekap-rombel-${keluarantanggalseconds}-${new Date().getTime()}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -20900,6 +20921,8 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
     const user = await auth.getUser();
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const pembayaran = await MPembayaran.query()
       .with("rombel", (builder) => {
@@ -20932,7 +20955,7 @@ class MainController {
         worksheet.getCell("A7").value = pembayaran.bulan;
         worksheet.getCell(
           "A8"
-        ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+        ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
         worksheet.mergeCells(`A1:I1`);
         worksheet.mergeCells(`A2:I2`);
         worksheet.mergeCells(`A3:I3`);
@@ -21268,7 +21291,8 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
     const user = await auth.getUser();
-
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
     const alumni = await MAlumni.query()
       .with("user", (builder) => {
         builder.where({ m_sekolah_id: sekolah.id });
@@ -21282,7 +21306,7 @@ class MainController {
     worksheet.mergeCells("A2:P2");
     worksheet.getCell(
       "A3"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
     worksheet.addConditionalFormatting({
       ref: "A1:P2",
       rules: [
@@ -21485,7 +21509,8 @@ class MainController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
-
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
     const kepsek = ta.nama_kepsek;
 
     const ujian = await MUjian.query()
@@ -23662,6 +23687,9 @@ class MainController {
 
     const user = await auth.getUser();
 
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
     const gelombang = await MGelombangPpdb.query()
       .with("pendaftar", (builder) => {
         builder
@@ -23714,7 +23742,7 @@ class MainController {
         worksheet.getCell("A7").value = `Keterangan : ${d.keterangan}`;
         worksheet.getCell(
           "A9"
-        ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+        ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
 
         worksheet.getColumn("A").width = 28;
         worksheet.getColumn("B").width = 14;
@@ -24257,6 +24285,9 @@ class MainController {
 
     const user = await auth.getUser();
 
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
     const jadwalMengajar = await MJadwalMengajar.query()
       .with("mataPelajaran", (builder) => {
         builder.with("user");
@@ -24303,7 +24334,7 @@ class MainController {
 
     worksheet.getCell(
       "A6"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
     worksheet.mergeCells(`A1:J1`);
     worksheet.mergeCells(`A2:J2`);
     worksheet.mergeCells(`A3:J3`);
@@ -24515,7 +24546,7 @@ class MainController {
 
     worksheet.getCell(
       "A6"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
     let namaFile = `/uploads/rekap-Analisis-Tugas-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
@@ -24541,6 +24572,9 @@ class MainController {
     const ta = await this.getTAAktif(sekolah);
 
     const user = await auth.getUser();
+
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const jadwalMengajar = await MJadwalMengajar.query()
       .with("mataPelajaran", (builder) => {
@@ -24590,7 +24624,7 @@ class MainController {
 
     worksheet.getCell(
       "A6"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
     worksheet.mergeCells(`A1:E1`);
     worksheet.mergeCells(`A2:E2`);
     worksheet.mergeCells(`A3:E3`);
@@ -24735,7 +24769,7 @@ class MainController {
 
     worksheet.getCell(
       "A6"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
     let namaFile = `/uploads/rekap-PerformaTugas-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
@@ -27400,6 +27434,9 @@ class MainController {
 
     const user = await auth.getUser();
 
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
     const lokasi = await MLokasi.query().where({ dihapus: 0 }).fetch();
 
     let workbook = new Excel.Workbook();
@@ -27408,7 +27445,7 @@ class MainController {
     worksheet.mergeCells("A2:F2");
     worksheet.getCell(
       "A3"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
     worksheet.addConditionalFormatting({
       ref: "A1:F2",
       rules: [
@@ -27657,6 +27694,9 @@ class MainController {
 
     const user = await auth.getUser();
 
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
     const barang = await MBarang.query()
       .with("lokasi", (builder) => {
         builder.where({ m_sekolah_id: sekolah.id }).andWhere({ dihapus: 0 });
@@ -27670,7 +27710,7 @@ class MainController {
     worksheet.mergeCells("A2:K2");
     worksheet.getCell(
       "A3"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
     worksheet.addConditionalFormatting({
       ref: "A1:K2",
       rules: [
@@ -29624,6 +29664,9 @@ class MainController {
 
     const user = await auth.getUser();
 
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
     const buku = await MBukuTamu.query().where({ dihapus: 0 }).fetch();
 
     // const province = await this.getProvince("1");
@@ -29635,7 +29678,7 @@ class MainController {
     worksheet.mergeCells("A2:L2");
     worksheet.getCell(
       "A3"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
     worksheet.addConditionalFormatting({
       ref: "A1:L2",
       rules: [
@@ -29892,6 +29935,9 @@ class MainController {
 
     const user = await auth.getUser();
 
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
     const { tanggal_awal, tanggal_akhir } = request.post();
 
     const tanggalDistinct = await Database.raw(
@@ -29940,7 +29986,7 @@ class MainController {
         worksheet.mergeCells("A3:K3");
         // worksheet.getCell(
         //   "A10"
-        // ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+        // ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
         worksheet.addConditionalFormatting({
           ref: "A1:K3",
           rules: [
@@ -30249,6 +30295,9 @@ class MainController {
 
     const user = await auth.getUser();
 
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
     const { tanggal_awal, tanggal_akhir } = request.post();
 
     const tanggalDistinct = await Database.raw(
@@ -30372,7 +30421,7 @@ class MainController {
         worksheet.mergeCells("A3:K3");
         // worksheet.getCell(
         //   "A10"
-        // ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+        // ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
         worksheet.addConditionalFormatting({
           ref: "A1:K3",
           rules: [
@@ -30801,6 +30850,10 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
     const user = await auth.getUser();
+
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
     const { role, tanggal, rombel_id } = request.post();
 
     const rombel = await MRombel.query()
@@ -30833,7 +30886,7 @@ class MainController {
     worksheet.mergeCells("A3:H3");
     worksheet.getCell(
       "A5"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
     worksheet.addConditionalFormatting({
       ref: "A1:H3",
       rules: [
@@ -31064,6 +31117,10 @@ class MainController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
+
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
     const user = await auth.getUser();
     const { tanggal_awal, tanggal_akhir, rombel_id } = request.post();
 
@@ -31105,7 +31162,7 @@ class MainController {
         worksheet.mergeCells("A3:H3");
         worksheet.getCell(
           "A5"
-        ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+        ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
         worksheet.addConditionalFormatting({
           ref: "A1:H3",
           rules: [
@@ -34131,7 +34188,12 @@ class MainController {
     });
   }
 
-  async importNilaiRekapRombelServices(filelocation, sekolah, rekapRombel_id) {
+  async importNilaiRekapRombelServices(
+    filelocation,
+    sekolah,
+    rekapRombel_id,
+    ta
+  ) {
     var workbook = new Excel.Workbook();
 
     workbook = await workbook.xlsx.readFile(filelocation);
@@ -34152,6 +34214,21 @@ class MainController {
       }
     });
 
+    const rekapRombel = await MRekapRombel.query()
+      .with("rekap")
+      .where({ id: rekapRombel_id })
+      .first();
+
+    const materi = await MMateri.query()
+      .where({ id: rekapRombel.toJSON().rekap.m_materi_id })
+      .first();
+
+    const mapel = await MMataPelajaran.query()
+      .with("user")
+      .with("materi")
+      .where({ id: materi.m_mata_pelajaran_id })
+      .first();
+
     const result = await Promise.all(
       data.map(async (d) => {
         const userSiswa = await User.query()
@@ -34160,12 +34237,406 @@ class MainController {
           .andWhere({ dihapus: 0 })
           .andWhere({ m_sekolah_id: sekolah.id })
           .first();
+
+        const checkData = await MUjianSiswa.query()
+          .where({ m_user_id: userSiswa.id })
+          .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
+          .andWhere({ m_ta_id: ta.id })
+          .first();
+
         const nilaiSiswa = await TkRekapNilai.query()
           .where({ m_rekap_rombel_id: rekapRombel_id })
           .andWhere({ m_user_id: userSiswa.id })
           .update({
             nilai: d.nilai > 100 ? 100 : d.nilai,
           });
+
+        const nilaiSiswa1 = await TkRekapNilai.query()
+          .select("id", "m_rekap_rombel_id", "m_user_id")
+          .where({ m_rekap_rombel_id: rekapRombel_id })
+          .andWhere({ m_user_id: userSiswa.id })
+          .first();
+
+        if (rekapRombel.toJSON().rekap.teknik == "UTS") {
+          if (checkData) {
+            await MUjianSiswa.query()
+              .where({ m_user_id: userSiswa.id })
+              .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
+              .update({
+                uts_id: nilaiSiswa1.id,
+              });
+          } else {
+            await MUjianSiswa.create({
+              m_user_id: userSiswa.id,
+              m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
+              uts_id: nilaiSiswa1.id,
+              m_ta_id: ta.id,
+            });
+          }
+        } else if (rekapRombel.toJSON().rekap.teknik == "UAS") {
+          if (checkData) {
+            await MUjianSiswa.query()
+              .where({ m_user_id: userSiswa.id })
+              .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
+              .update({
+                uas_id: nilaiSiswa1.id,
+              });
+          } else {
+            await MUjianSiswa.create({
+              m_user_id: userSiswa.id,
+              m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
+              uas_id: nilaiSiswa1.id,
+              m_ta_id: ta.id,
+            });
+          }
+        } else if (rekapRombel.toJSON().rekap.teknik == "US") {
+          if (checkData) {
+            await MUjianSiswa.query()
+              .where({ m_user_id: userSiswa.id })
+              .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
+              .update({
+                us_id: nilaiSiswa1.id,
+              });
+          } else {
+            await MUjianSiswa.create({
+              m_user_id: userSiswa.id,
+              m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
+              us_id: nilaiSiswa1.id,
+              m_ta_id: ta.id,
+            });
+          }
+        }
+
+        if (
+          rekapRombel.toJSON().rekap.tipe == "tugas" ||
+          rekapRombel.toJSON().rekap.tipe == "ujian"
+        ) {
+          const rekap = await TkRekapNilai.query()
+            .with("rekapRombel", (builder) => {
+              builder.with("rekap", (builder) => {
+                builder
+                  .where({ tipe: "tugas" })
+                  .andWhere({ m_ta_id: ta.id })
+                  .andWhere({ dihapus: 0 })
+                  .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+              });
+            })
+            .where({ m_user_id: userSiswa.id })
+            .fetch();
+
+          const rekapUjian = await TkRekapNilai.query()
+            .with("rekapRombel", (builder) => {
+              builder.with("rekap", (builder) => {
+                builder
+                  .where({ tipe: "ujian" })
+                  .andWhere({ m_ta_id: ta.id })
+                  .andWhere({ dihapus: 0 })
+                  .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+              });
+            })
+            .where({ m_user_id: userSiswa.id })
+            .fetch();
+
+          const ujian = await MUjianSiswa.query()
+            .with("nilaiUAS", (builder) => {
+              builder.select("id", "nilai");
+            })
+            .with("nilaiUTS", (builder) => {
+              builder.select("id", "nilai");
+            })
+            .where({ m_user_id: userSiswa.id })
+            .andWhere({ m_mata_pelajaran_id: mapel.id })
+            .first();
+
+          const result = await Promise.all(
+            rekap.toJSON().map(async (d) => {
+              if (d.rekapRombel.rekap == null) {
+                return;
+              }
+              return d;
+            })
+          );
+
+          const data = result.filter((d) => d != null);
+
+          let jumlah1 = 0;
+
+          result
+            .filter((d) => d != null)
+            .forEach((d) => {
+              jumlah1 += d.nilai;
+            });
+
+          const rata = jumlah1 / data.length;
+
+          const result1 = await Promise.all(
+            rekapUjian.toJSON().map(async (d) => {
+              if (d.rekapRombel.rekap == null) {
+                return;
+              }
+              return d;
+            })
+          );
+
+          const dataUjian = result1.filter((d) => d != null);
+
+          let jumlah = 0;
+
+          result1
+            .filter((d) => d != null)
+            .forEach((d) => {
+              jumlah += d.nilai;
+            });
+
+          const rataUjian = jumlah / dataUjian.length;
+
+          let nilaiAkhir;
+          if (ujian) {
+            // const listNilai = [
+            //   rataUjian,
+            //   rata,
+            //   ujian.toJSON().nilaiUAS ? ujian.toJSON().nilaiUAS?.nilai : null,
+            //   ujian.toJSON().nilaiUTS ? ujian.toJSON().nilaiUTS?.nilai : null,
+            // ];
+            // nilaiAkhir = listNilai.filter((nilai) => nilai).length
+            //   ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) /
+            //     listNilai.filter((nilai) => nilai).length
+            //   : 0;
+            // await MUjianSiswa.query().where({ id: ujian.id }).update({
+            //   nilai: nilaiAkhir,
+            // });
+            const nilaiPengetahuan1 = [rataUjian, rata];
+
+            const nilaiSebelumAkhir = nilaiPengetahuan1.filter((nilai) => nilai)
+              .length
+              ? 2 *
+                nilaiPengetahuan1
+                  .filter((nilai) => nilai)
+                  .reduce((a, b) => a + b, 0)
+              : 0;
+
+            const nilaiUTS = ujian.toJSON().nilaiUTS
+              ? ujian.toJSON().nilaiUTS?.nilai
+              : null;
+
+            const nilaiUAS = ujian.toJSON().nilaiUAS
+              ? ujian.toJSON().nilaiUAS?.nilai
+              : null;
+
+            const listNilai = [nilaiSebelumAkhir, nilaiUTS, nilaiUAS];
+
+            if (listNilai.filter((nilai) => nilai).length == 2) {
+              nilaiAkhir = listNilai.filter((nilai) => nilai).length
+                ? listNilai
+                    .filter((nilai) => nilai)
+                    .reduce((a, b) => a + b, 0) / 3
+                : 0;
+            } else if (listNilai.filter((nilai) => nilai).length == 3) {
+              nilaiAkhir = listNilai.filter((nilai) => nilai).length
+                ? listNilai
+                    .filter((nilai) => nilai)
+                    .reduce((a, b) => a + b, 0) / 4
+                : 0;
+            } else if (listNilai.filter((nilai) => nilai).length == 1) {
+              nilaiAkhir = listNilai.filter((nilai) => nilai).length
+                ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0)
+                : 0;
+            }
+
+            await MUjianSiswa.query().where({ id: ujian.id }).update({
+              nilai: nilaiAkhir,
+            });
+          } else {
+            const listNilai = [rataUjian, rata];
+            nilaiAkhir = listNilai.filter((nilai) => nilai).length
+              ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) /
+                listNilai.filter((nilai) => nilai).length
+              : 0;
+            await MUjianSiswa.create({
+              m_ta_id: ta.id,
+              m_user_id: userSiswa.id,
+              m_mata_pelajaran_id: mapel.id,
+              nilai: nilaiAkhir,
+            });
+          }
+        } else if (
+          rekapNilai.toJSON().rekapRombel.rekap.tipe == "keterampilan"
+        ) {
+          const rekap = await TkRekapNilai.query()
+            .with("rekapRombel", (builder) => {
+              builder.with("rekap", (builder) => {
+                builder
+                  .where({ tipe: "keterampilan" })
+                  .andWhere({ m_ta_id: ta.id })
+                  .andWhere({ dihapus: 0 })
+                  .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+              });
+            })
+            .where({ m_user_id: userSiswa.id })
+            .fetch();
+          const result = await Promise.all(
+            rekap.toJSON().map(async (d) => {
+              if (d.rekapRombel.rekap == null) {
+                return;
+              }
+              return d;
+            })
+          );
+          const dataKeterampilan = result.filter((d) => d != null);
+          let jumlah0 = 0;
+          result
+            .filter((d) => d != null)
+            .forEach((d) => {
+              jumlah0 += d.nilai;
+            });
+
+          const rataData = dataKeterampilan.length
+            ? jumlah0 / dataKeterampilan.length
+            : 0;
+
+          const rekapPraktik = await TkRekapNilai.query()
+            .with("rekapRombel", (builder) => {
+              builder.where({ dihapus: 0 }).with("rekap", (builder) => {
+                builder
+                  .where({ tipe: "keterampilan" })
+                  .andWhere({ teknik: "praktik" })
+                  .andWhere({ m_ta_id: ta.id })
+                  .andWhere({ dihapus: 0 })
+                  .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+              });
+            })
+            .where({ m_user_id: userSiswa.id })
+            .fetch();
+          const result1 = await Promise.all(
+            rekapPraktik.toJSON().map(async (d) => {
+              if (d.rekapRombel.rekap == null) {
+                return;
+              }
+              return d;
+            })
+          );
+          let jumlah = 0;
+          result1
+            .filter((d) => d != null)
+            .forEach((d) => {
+              jumlah += d.nilai;
+            });
+          const data4 = result1.filter((d) => d != null);
+
+          const praktik = jumlah / data4.length;
+
+          const rekapProyek = await TkRekapNilai.query()
+            .with("rekapRombel", (builder) => {
+              builder.with("rekap", (builder) => {
+                builder
+                  .where({ tipe: "keterampilan" })
+                  .andWhere({ teknik: "proyek" })
+                  .andWhere({ m_ta_id: ta.id })
+                  .andWhere({ dihapus: 0 })
+                  .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+              });
+            })
+            .where({ m_user_id: userSiswa.id })
+            .fetch();
+          const result2 = await Promise.all(
+            rekapProyek.toJSON().map(async (d) => {
+              if (d.rekapRombel.rekap == null) {
+                return;
+              }
+              return d;
+            })
+          );
+          let jumlah1 = 0;
+          result2
+            .filter((d) => d != null)
+            .forEach((d) => {
+              jumlah1 += d.nilai;
+            });
+          const data1 = result2.filter((d) => d != null);
+          const proyek = jumlah1 / data1.length;
+
+          const rekapPortofolio = await TkRekapNilai.query()
+            .with("rekapRombel", (builder) => {
+              builder.with("rekap", (builder) => {
+                builder
+                  .where({ tipe: "keterampilan" })
+                  .andWhere({ teknik: "portofolio" })
+                  .andWhere({ m_ta_id: ta.id })
+                  .andWhere({ dihapus: 0 })
+                  .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+              });
+            })
+            .where({ m_user_id: userSiswa.id })
+            .fetch();
+          const result3 = await Promise.all(
+            rekapPortofolio.toJSON().map(async (d) => {
+              if (d.rekapRombel.rekap == null) {
+                return;
+              }
+              return d;
+            })
+          );
+          let jumlah2 = 0;
+          result3
+            .filter((d) => d != null)
+            .forEach((d) => {
+              jumlah2 += d.nilai;
+            });
+          const data2 = result3.filter((d) => d != null);
+          const portofolio = jumlah2 / data2.length;
+
+          const rekapProduk = await TkRekapNilai.query()
+            .with("rekapRombel", (builder) => {
+              builder.with("rekap", (builder) => {
+                builder
+                  .where({ tipe: "keterampilan" })
+                  .andWhere({ teknik: "produk" })
+                  .andWhere({ m_ta_id: ta.id })
+                  .andWhere({ dihapus: 0 })
+                  .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+              });
+            })
+            .where({ m_user_id: userSiswa.id })
+            .fetch();
+          const result4 = await Promise.all(
+            rekapProduk.toJSON().map(async (d) => {
+              if (d.rekapRombel.rekap == null) {
+                return;
+              }
+              return d;
+            })
+          );
+          let jumlah3 = 0;
+          result4
+            .filter((d) => d != null)
+            .forEach((d) => {
+              jumlah3 += d.nilai;
+            });
+          const data3 = result4.filter((d) => d != null);
+          const produk = jumlah3 / data3.length;
+
+          const nilaiAkhirKeterampilan = await MUjianSiswa.query()
+            .where({ m_user_id: userSiswa.id })
+            .andWhere({
+              m_mata_pelajaran_id: mapel.id,
+            })
+            .first();
+
+          if (nilaiAkhirKeterampilan) {
+            await MUjianSiswa.query()
+              .where({ id: nilaiAkhirKeterampilan.id })
+              .update({
+                nilai_keterampilan: rataData,
+              });
+          } else {
+            await MUjianSiswa.create({
+              m_ta_id: ta.id,
+              m_user_id: userSiswa.id,
+              m_mata_pelajaran_id: mapel.id,
+              nilai_keterampilan: rataData,
+            });
+          }
+        }
         return;
       })
     );
@@ -34187,6 +34658,8 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
+    const ta = await this.getTAAktif(sekolah);
+
     let file = request.file("file");
     let fname = `import-excel.xlsx`;
 
@@ -34203,7 +34676,8 @@ class MainController {
     return await this.importNilaiRekapRombelServices(
       `tmp/uploads/${fname}`,
       sekolah,
-      rekapRombel_id
+      rekapRombel_id,
+      ta
     );
   }
 
@@ -34222,6 +34696,9 @@ class MainController {
     }
 
     const user = await auth.getUser();
+
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const rekapan = await MRekapRombel.query()
       .with("rekap")
@@ -34245,7 +34722,7 @@ class MainController {
 
     worksheet.getCell(
       "A4"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
 
     worksheet.addConditionalFormatting({
       ref: "A1:D3",
@@ -34853,6 +35330,9 @@ class MainController {
 
     const user = await auth.getUser();
 
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
     const bukuKunjunganPengajuan = await MPertemuanBk.query()
       .with("user", (builder) => {
         builder.select("id", "nama");
@@ -34900,7 +35380,7 @@ class MainController {
 
     worksheet.getCell(
       "A4"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
 
     worksheet.addConditionalFormatting({
       ref: "A1:D3",
@@ -35090,7 +35570,7 @@ class MainController {
 
     worksheet2.getCell(
       "A4"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
 
     worksheet2.addConditionalFormatting({
       ref: "A1:D3",
@@ -36362,6 +36842,9 @@ class MainController {
 
     const user = await auth.getUser();
 
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
     const pembayaran = await TkPembayaranRombel.query()
       // .with("rombel",(builder)=>{
       //   builder.with("anggotaRombel",(builder)=>{
@@ -36386,7 +36869,7 @@ class MainController {
     worksheet.getCell("A4").value = `note : Isi nominal dengan angka`;
     worksheet.getCell(
       "A6"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
     worksheet.addConditionalFormatting({
       ref: "A1:K2",
       rules: [
@@ -36924,6 +37407,10 @@ class MainController {
     const ta = await this.getTAAktif(sekolah);
 
     const user = await auth.getUser();
+
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
     const lokasi = await MLokasi.query().where({ dihapus: 0 }).fetch();
 
     let workbook = new Excel.Workbook();
@@ -36941,7 +37428,7 @@ class MainController {
 
     worksheet.getCell(
       "A6"
-    ).value = `Diunduh tanggal ${keluarantanggal} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
     worksheet.addConditionalFormatting({
       ref: "A1:F2",
       rules: [
