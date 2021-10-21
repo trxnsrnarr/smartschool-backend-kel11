@@ -34020,7 +34020,12 @@ class MainController {
     });
   }
 
-  async importNilaiRekapRombelServices(filelocation, sekolah, rekapRombel_id) {
+  async importNilaiRekapRombelServices(
+    filelocation,
+    sekolah,
+    rekapRombel_id,
+    ta
+  ) {
     var workbook = new Excel.Workbook();
 
     workbook = await workbook.xlsx.readFile(filelocation);
@@ -34041,6 +34046,15 @@ class MainController {
       }
     });
 
+    const rekapRombel = await MRekapRombel.query()
+      .with("rekap")
+      .where({ id: rekapRombel_id })
+      .first();
+
+    const materi = await MMateri.query()
+      .where({ id: rekapRombel.toJSON().rekap.m_materi_id })
+      .first();
+
     const result = await Promise.all(
       data.map(async (d) => {
         const userSiswa = await User.query()
@@ -34049,12 +34063,411 @@ class MainController {
           .andWhere({ dihapus: 0 })
           .andWhere({ m_sekolah_id: sekolah.id })
           .first();
+
+        const checkData = await MUjianSiswa.query()
+          .where({ m_user_id: userSiswa.id })
+          .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
+          .andWhere({ m_ta_id: ta.id })
+          .first();
+
         const nilaiSiswa = await TkRekapNilai.query()
           .where({ m_rekap_rombel_id: rekapRombel_id })
           .andWhere({ m_user_id: userSiswa.id })
           .update({
             nilai: d.nilai > 100 ? 100 : d.nilai,
           });
+
+        const nilaiSiswa1 = await TkRekapNilai.query()
+          .select("id", "m_rekap_rombel_id", "m_user_id")
+          .where({ m_rekap_rombel_id: rekapRombel_id })
+          .andWhere({ m_user_id: userSiswa.id })
+          .first();
+
+        if (rekapRombel.toJSON().rekap.teknik == "UTS") {
+          if (checkData) {
+            await MUjianSiswa.query()
+              .where({ m_user_id: userSiswa.id })
+              .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
+              .update({
+                uts_id: nilaiSiswa1.id,
+              });
+          } else {
+            await MUjianSiswa.create({
+              m_user_id: userSiswa.id,
+              m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
+              uts_id: nilaiSiswa1.id,
+              m_ta_id: ta.id,
+            });
+          }
+        } else if (rekapRombel.toJSON().rekap.teknik == "UAS") {
+          if (checkData) {
+            await MUjianSiswa.query()
+              .where({ m_user_id: userSiswa.id })
+              .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
+              .update({
+                uas_id: nilaiSiswa1.id,
+              });
+          } else {
+            await MUjianSiswa.create({
+              m_user_id: userSiswa.id,
+              m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
+              uas_id: nilaiSiswa1.id,
+              m_ta_id: ta.id,
+            });
+          }
+        } else if (rekapRombel.toJSON().rekap.teknik == "US") {
+          if (checkData) {
+            await MUjianSiswa.query()
+              .where({ m_user_id: userSiswa.id })
+              .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
+              .update({
+                us_id: nilaiSiswa1.id,
+              });
+          } else {
+            await MUjianSiswa.create({
+              m_user_id: userSiswa.id,
+              m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
+              us_id: nilaiSiswa1.id,
+              m_ta_id: ta.id,
+            });
+          }
+        }
+        const mapel = await MMataPelajaran.query()
+          .with("user")
+          .with("materi")
+          .where({ id: materi.m_mata_pelajaran_id })
+          .first();
+
+        if (
+          rekapRombel.toJSON().rekap.tipe == "tugas" ||
+          rekapRombel.toJSON().rekap.tipe == "ujian"
+        ) {
+          const rekap = await TkRekapNilai.query()
+            .with("rekapRombel", (builder) => {
+              builder.with("rekap", (builder) => {
+                builder
+                  .where({ tipe: "tugas" })
+                  .andWhere({ m_ta_id: ta.id })
+                  .andWhere({ dihapus: 0 })
+                  .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+              });
+            })
+            .where({ m_user_id: nilaiSiswa1.id })
+            .fetch();
+
+          const rekapUjian = await TkRekapNilai.query()
+            .with("rekapRombel", (builder) => {
+              builder.with("rekap", (builder) => {
+                builder
+                  .where({ tipe: "ujian" })
+                  .andWhere({ m_ta_id: ta.id })
+                  .andWhere({ dihapus: 0 })
+                  .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+              });
+            })
+            .where({ m_user_id: nilaiSiswa1.id })
+            .fetch();
+
+          const ujian = await MUjianSiswa.query()
+            .with("nilaiUAS", (builder) => {
+              builder.select("id", "nilai");
+            })
+            .with("nilaiUTS", (builder) => {
+              builder.select("id", "nilai");
+            })
+            .where({ m_user_id: nilaiSiswa1.id })
+            .andWhere({ m_mata_pelajaran_id: mapel.id })
+            .first();
+
+          const result = await Promise.all(
+            rekap.toJSON().map(async (d) => {
+              if (d.rekapRombel.rekap == null) {
+                return;
+              }
+              return d;
+            })
+          );
+
+          const data = result.filter((d) => d != null);
+
+          let jumlah1 = 0;
+
+          result
+            .filter((d) => d != null)
+            .forEach((d) => {
+              jumlah1 += d.nilai;
+            });
+
+          const rata = jumlah1 / data.length;
+
+          const result1 = await Promise.all(
+            rekapUjian.toJSON().map(async (d) => {
+              if (d.rekapRombel.rekap == null) {
+                return;
+              }
+              return d;
+            })
+          );
+
+          const dataUjian = result1.filter((d) => d != null);
+
+          let jumlah = 0;
+
+          result1
+            .filter((d) => d != null)
+            .forEach((d) => {
+              jumlah += d.nilai;
+            });
+
+          const rataUjian = jumlah / dataUjian.length;
+
+          let nilaiAkhir;
+          if (ujian) {
+            // const listNilai = [
+            //   rataUjian,
+            //   rata,
+            //   ujian.toJSON().nilaiUAS ? ujian.toJSON().nilaiUAS?.nilai : null,
+            //   ujian.toJSON().nilaiUTS ? ujian.toJSON().nilaiUTS?.nilai : null,
+            // ];
+            // nilaiAkhir = listNilai.filter((nilai) => nilai).length
+            //   ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) /
+            //     listNilai.filter((nilai) => nilai).length
+            //   : 0;
+            // await MUjianSiswa.query().where({ id: ujian.id }).update({
+            //   nilai: nilaiAkhir,
+            // });
+            const nilaiPengetahuan1 = [rataUjian, rata];
+
+            const nilaiSebelumAkhir = nilaiPengetahuan1.filter((nilai) => nilai)
+              .length
+              ? 2 *
+                nilaiPengetahuan1
+                  .filter((nilai) => nilai)
+                  .reduce((a, b) => a + b, 0)
+              : 0;
+
+            const nilaiUTS = ujian.toJSON().nilaiUTS
+              ? ujian.toJSON().nilaiUTS?.nilai
+              : null;
+
+            const nilaiUAS = ujian.toJSON().nilaiUAS
+              ? ujian.toJSON().nilaiUAS?.nilai
+              : null;
+
+            const listNilai = [nilaiSebelumAkhir, nilaiUTS, nilaiUAS];
+
+            if (listNilai.filter((nilai) => nilai).length == 2) {
+              nilaiAkhir = listNilai.filter((nilai) => nilai).length
+                ? listNilai
+                    .filter((nilai) => nilai)
+                    .reduce((a, b) => a + b, 0) / 3
+                : 0;
+            } else if (listNilai.filter((nilai) => nilai).length == 3) {
+              nilaiAkhir = listNilai.filter((nilai) => nilai).length
+                ? listNilai
+                    .filter((nilai) => nilai)
+                    .reduce((a, b) => a + b, 0) / 4
+                : 0;
+            } else if(listNilai.filter((nilai) => nilai).length == 1) {
+              nilaiAkhir = listNilai.filter((nilai) => nilai).length
+                ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) 
+                : 0;
+            }
+
+            await MUjianSiswa.query().where({ id: ujian.id }).update({
+              nilai: nilaiAkhir,
+            });
+          } else {
+            const listNilai = [rataUjian, rata];
+            nilaiAkhir = listNilai.filter((nilai) => nilai).length
+              ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) /
+                listNilai.filter((nilai) => nilai).length
+              : 0;
+            await MUjianSiswa.create({
+              m_ta_id: ta.id,
+              m_user_id: nilaiSiswa1.id,
+              m_mata_pelajaran_id: mapel.id,
+              nilai: nilaiAkhir,
+            });
+          }
+        } else if (
+          rekapNilai.toJSON().rekapRombel.rekap.tipe == "keterampilan"
+        ) {
+          const rekap = await TkRekapNilai.query()
+            .with("rekapRombel", (builder) => {
+              builder.with("rekap", (builder) => {
+                builder
+                  .where({ tipe: "keterampilan" })
+                  .andWhere({ m_ta_id: ta.id })
+                  .andWhere({ dihapus: 0 })
+                  .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+              });
+            })
+            .where({ m_user_id: nilaiSiswa1.id })
+            .fetch();
+          const result = await Promise.all(
+            rekap.toJSON().map(async (d) => {
+              if (d.rekapRombel.rekap == null) {
+                return;
+              }
+              return d;
+            })
+          );
+          const dataKeterampilan = result.filter((d) => d != null);
+          let jumlah0 = 0;
+          result
+            .filter((d) => d != null)
+            .forEach((d) => {
+              jumlah0 += d.nilai;
+            });
+
+          const rataData = dataKeterampilan.length
+            ? jumlah0 / dataKeterampilan.length
+            : 0;
+
+          const rekapPraktik = await TkRekapNilai.query()
+            .with("rekapRombel", (builder) => {
+              builder.where({ dihapus: 0 }).with("rekap", (builder) => {
+                builder
+                  .where({ tipe: "keterampilan" })
+                  .andWhere({ teknik: "praktik" })
+                  .andWhere({ m_ta_id: ta.id })
+                  .andWhere({ dihapus: 0 })
+                  .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+              });
+            })
+            .where({ m_user_id: nilaiSiswa1.id })
+            .fetch();
+          const result1 = await Promise.all(
+            rekapPraktik.toJSON().map(async (d) => {
+              if (d.rekapRombel.rekap == null) {
+                return;
+              }
+              return d;
+            })
+          );
+          let jumlah = 0;
+          result1
+            .filter((d) => d != null)
+            .forEach((d) => {
+              jumlah += d.nilai;
+            });
+          const data4 = result1.filter((d) => d != null);
+
+          const praktik = jumlah / data4.length;
+
+          const rekapProyek = await TkRekapNilai.query()
+            .with("rekapRombel", (builder) => {
+              builder.with("rekap", (builder) => {
+                builder
+                  .where({ tipe: "keterampilan" })
+                  .andWhere({ teknik: "proyek" })
+                  .andWhere({ m_ta_id: ta.id })
+                  .andWhere({ dihapus: 0 })
+                  .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+              });
+            })
+            .where({ m_user_id: nilaiSiswa1.id })
+            .fetch();
+          const result2 = await Promise.all(
+            rekapProyek.toJSON().map(async (d) => {
+              if (d.rekapRombel.rekap == null) {
+                return;
+              }
+              return d;
+            })
+          );
+          let jumlah1 = 0;
+          result2
+            .filter((d) => d != null)
+            .forEach((d) => {
+              jumlah1 += d.nilai;
+            });
+          const data1 = result2.filter((d) => d != null);
+          const proyek = jumlah1 / data1.length;
+
+          const rekapPortofolio = await TkRekapNilai.query()
+            .with("rekapRombel", (builder) => {
+              builder.with("rekap", (builder) => {
+                builder
+                  .where({ tipe: "keterampilan" })
+                  .andWhere({ teknik: "portofolio" })
+                  .andWhere({ m_ta_id: ta.id })
+                  .andWhere({ dihapus: 0 })
+                  .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+              });
+            })
+            .where({ m_user_id: nilaiSiswa1.id })
+            .fetch();
+          const result3 = await Promise.all(
+            rekapPortofolio.toJSON().map(async (d) => {
+              if (d.rekapRombel.rekap == null) {
+                return;
+              }
+              return d;
+            })
+          );
+          let jumlah2 = 0;
+          result3
+            .filter((d) => d != null)
+            .forEach((d) => {
+              jumlah2 += d.nilai;
+            });
+          const data2 = result3.filter((d) => d != null);
+          const portofolio = jumlah2 / data2.length;
+
+          const rekapProduk = await TkRekapNilai.query()
+            .with("rekapRombel", (builder) => {
+              builder.with("rekap", (builder) => {
+                builder
+                  .where({ tipe: "keterampilan" })
+                  .andWhere({ teknik: "produk" })
+                  .andWhere({ m_ta_id: ta.id })
+                  .andWhere({ dihapus: 0 })
+                  .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+              });
+            })
+            .where({ m_user_id: nilaiSiswa1.id })
+            .fetch();
+          const result4 = await Promise.all(
+            rekapProduk.toJSON().map(async (d) => {
+              if (d.rekapRombel.rekap == null) {
+                return;
+              }
+              return d;
+            })
+          );
+          let jumlah3 = 0;
+          result4
+            .filter((d) => d != null)
+            .forEach((d) => {
+              jumlah3 += d.nilai;
+            });
+          const data3 = result4.filter((d) => d != null);
+          const produk = jumlah3 / data3.length;
+
+          const nilaiAkhirKeterampilan = await MUjianSiswa.query()
+            .where({ m_user_id: nilaiSiswa1.id })
+            .andWhere({
+              m_mata_pelajaran_id: mapel.id,
+            })
+            .first();
+
+          if (nilaiAkhirKeterampilan) {
+            await MUjianSiswa.query()
+              .where({ id: nilaiAkhirKeterampilan.id })
+              .update({
+                nilai_keterampilan: rataData,
+              });
+          } else {
+            await MUjianSiswa.create({
+              m_ta_id: ta.id,
+              m_user_id: nilaiSiswa1.id,
+              m_mata_pelajaran_id: mapel.id,
+              nilai_keterampilan: rataData,
+            });
+          }
+        }
         return;
       })
     );
@@ -34076,6 +34489,8 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
+    const ta = await this.getTAAktif(sekolah);
+
     let file = request.file("file");
     let fname = `import-excel.xlsx`;
 
@@ -34092,7 +34507,8 @@ class MainController {
     return await this.importNilaiRekapRombelServices(
       `tmp/uploads/${fname}`,
       sekolah,
-      rekapRombel_id
+      rekapRombel_id,
+      ta
     );
   }
 
