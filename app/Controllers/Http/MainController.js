@@ -18626,12 +18626,18 @@ class MainController {
           nama: explanation.getCell("B" + rowNumber).value,
           gender: explanation.getCell("C" + rowNumber).value,
           whatsapp: explanation.getCell("D" + rowNumber).value,
-          email:
-            explanation.getCell("E" + rowNumber).value == null
-              ? ""
-              : typeof explanation.getCell("E" + rowNumber).value == "object"
-              ? JSON.parse(explanation.getCell("E" + rowNumber).value).text
-              : explanation.getCell("E" + rowNumber).value,
+          email: explanation.getCell("E" + rowNumber).value,
+          // == null
+          // ? ""
+          // : typeof explanation.getCell("E" + rowNumber).value == "object"
+          // ? JSON.parse(explanation.getCell("E" + rowNumber).value).text
+          // : explanation.getCell("E" + rowNumber).value
+
+          // try {
+          // } catch (error) {
+          //   console.log(error);
+          // },
+
           password: explanation.getCell("F" + rowNumber).value,
         });
       }
@@ -18653,7 +18659,7 @@ class MainController {
             .where({ id: checkUser.id })
             .update({
               dihapus: 0,
-              password: await Hash.make(d.password || "smarteschool"),
+              password: await Hash.make(d.password + "" || "smarteschool"),
             });
 
           return dataUpdated++;
@@ -18663,7 +18669,7 @@ class MainController {
           nama: d.nama,
           whatsapp: d.whatsapp,
           gender: d.gender,
-          password: d.password || "smarteschool",
+          password: d.password + "" || "smarteschool",
           role: "guru",
           m_sekolah_id: sekolah.id,
           dihapus: 0,
@@ -34055,12 +34061,11 @@ class MainController {
       .where({ id: rekapRombel.toJSON().rekap.m_materi_id })
       .first();
 
-
-      const mapel = await MMataPelajaran.query()
-          .with("user")
-          .with("materi")
-          .where({ id: materi.m_mata_pelajaran_id })
-          .first();
+    const mapel = await MMataPelajaran.query()
+      .with("user")
+      .with("materi")
+      .where({ id: materi.m_mata_pelajaran_id })
+      .first();
 
     const result = await Promise.all(
       data.map(async (d) => {
@@ -34139,7 +34144,6 @@ class MainController {
             });
           }
         }
-        
 
         if (
           rekapRombel.toJSON().rekap.tipe == "tugas" ||
@@ -34271,9 +34275,9 @@ class MainController {
                     .filter((nilai) => nilai)
                     .reduce((a, b) => a + b, 0) / 4
                 : 0;
-            } else if(listNilai.filter((nilai) => nilai).length == 1) {
+            } else if (listNilai.filter((nilai) => nilai).length == 1) {
               nilaiAkhir = listNilai.filter((nilai) => nilai).length
-                ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) 
+                ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0)
                 : 0;
             }
 
