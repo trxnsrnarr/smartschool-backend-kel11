@@ -34055,6 +34055,13 @@ class MainController {
       .where({ id: rekapRombel.toJSON().rekap.m_materi_id })
       .first();
 
+
+      const mapel = await MMataPelajaran.query()
+          .with("user")
+          .with("materi")
+          .where({ id: materi.m_mata_pelajaran_id })
+          .first();
+
     const result = await Promise.all(
       data.map(async (d) => {
         const userSiswa = await User.query()
@@ -34132,11 +34139,7 @@ class MainController {
             });
           }
         }
-        const mapel = await MMataPelajaran.query()
-          .with("user")
-          .with("materi")
-          .where({ id: materi.m_mata_pelajaran_id })
-          .first();
+        
 
         if (
           rekapRombel.toJSON().rekap.tipe == "tugas" ||
@@ -34152,7 +34155,7 @@ class MainController {
                   .andWhere({ m_materi_id: mapel.toJSON().materi.id });
               });
             })
-            .where({ m_user_id: nilaiSiswa1.id })
+            .where({ m_user_id: userSiswa.id })
             .fetch();
 
           const rekapUjian = await TkRekapNilai.query()
@@ -34165,7 +34168,7 @@ class MainController {
                   .andWhere({ m_materi_id: mapel.toJSON().materi.id });
               });
             })
-            .where({ m_user_id: nilaiSiswa1.id })
+            .where({ m_user_id: userSiswa.id })
             .fetch();
 
           const ujian = await MUjianSiswa.query()
@@ -34175,7 +34178,7 @@ class MainController {
             .with("nilaiUTS", (builder) => {
               builder.select("id", "nilai");
             })
-            .where({ m_user_id: nilaiSiswa1.id })
+            .where({ m_user_id: userSiswa.id })
             .andWhere({ m_mata_pelajaran_id: mapel.id })
             .first();
 
@@ -34285,7 +34288,7 @@ class MainController {
               : 0;
             await MUjianSiswa.create({
               m_ta_id: ta.id,
-              m_user_id: nilaiSiswa1.id,
+              m_user_id: userSiswa.id,
               m_mata_pelajaran_id: mapel.id,
               nilai: nilaiAkhir,
             });
@@ -34303,7 +34306,7 @@ class MainController {
                   .andWhere({ m_materi_id: mapel.toJSON().materi.id });
               });
             })
-            .where({ m_user_id: nilaiSiswa1.id })
+            .where({ m_user_id: userSiswa.id })
             .fetch();
           const result = await Promise.all(
             rekap.toJSON().map(async (d) => {
@@ -34336,7 +34339,7 @@ class MainController {
                   .andWhere({ m_materi_id: mapel.toJSON().materi.id });
               });
             })
-            .where({ m_user_id: nilaiSiswa1.id })
+            .where({ m_user_id: userSiswa.id })
             .fetch();
           const result1 = await Promise.all(
             rekapPraktik.toJSON().map(async (d) => {
@@ -34367,7 +34370,7 @@ class MainController {
                   .andWhere({ m_materi_id: mapel.toJSON().materi.id });
               });
             })
-            .where({ m_user_id: nilaiSiswa1.id })
+            .where({ m_user_id: userSiswa.id })
             .fetch();
           const result2 = await Promise.all(
             rekapProyek.toJSON().map(async (d) => {
@@ -34397,7 +34400,7 @@ class MainController {
                   .andWhere({ m_materi_id: mapel.toJSON().materi.id });
               });
             })
-            .where({ m_user_id: nilaiSiswa1.id })
+            .where({ m_user_id: userSiswa.id })
             .fetch();
           const result3 = await Promise.all(
             rekapPortofolio.toJSON().map(async (d) => {
@@ -34427,7 +34430,7 @@ class MainController {
                   .andWhere({ m_materi_id: mapel.toJSON().materi.id });
               });
             })
-            .where({ m_user_id: nilaiSiswa1.id })
+            .where({ m_user_id: userSiswa.id })
             .fetch();
           const result4 = await Promise.all(
             rekapProduk.toJSON().map(async (d) => {
@@ -34447,7 +34450,7 @@ class MainController {
           const produk = jumlah3 / data3.length;
 
           const nilaiAkhirKeterampilan = await MUjianSiswa.query()
-            .where({ m_user_id: nilaiSiswa1.id })
+            .where({ m_user_id: userSiswa.id })
             .andWhere({
               m_mata_pelajaran_id: mapel.id,
             })
@@ -34462,7 +34465,7 @@ class MainController {
           } else {
             await MUjianSiswa.create({
               m_ta_id: ta.id,
-              m_user_id: nilaiSiswa1.id,
+              m_user_id: userSiswa.id,
               m_mata_pelajaran_id: mapel.id,
               nilai_keterampilan: rataData,
             });
