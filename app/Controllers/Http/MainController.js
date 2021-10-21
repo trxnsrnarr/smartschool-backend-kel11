@@ -8520,7 +8520,7 @@ class MainController {
 
     const { role, tanggal, rombel_id } = request.post();
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     if (role == "siswa") {
       let rombel = MRombel.query()
@@ -10320,7 +10320,7 @@ class MainController {
 
     const { tk_jadwal_ujian_id, m_jadwal_ujian_id } = request.post();
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const jadwalUjian = await TkJadwalUjian.query()
       .with("peserta", (builder) => {
@@ -18723,7 +18723,7 @@ class MainController {
     const user = await auth.getUser();
     const { role, tanggal_awal, tanggal_akhir } = request.post();
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const tanggalDistinct = await Database.raw(
       "SELECT DISTINCT DATE_FORMAT(created_at, '%Y-%m-%d') as tanggalDistinct from m_absen WHERE created_at BETWEEN ? AND  ?",
@@ -19284,7 +19284,7 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const mapel = await MMataPelajaran.query()
       .with("user")
@@ -19552,7 +19552,7 @@ class MainController {
     const user = await auth.getUser();
     const { tanggal_awal, tanggal_akhir } = request.post();
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const mutasi = await MMutasi.query()
       .whereBetween("waktu_dibuat", [
@@ -20561,7 +20561,7 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const rombel = await MRombel.query()
       .with("user")
@@ -20754,7 +20754,7 @@ class MainController {
     }
     const user = await auth.getUser();
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const pembayaran = await MPembayaran.query()
       .with("rombel", (builder) => {
@@ -21124,7 +21124,7 @@ class MainController {
     }
     const user = await auth.getUser();
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
     const alumni = await MAlumni.query()
       .with("user", (builder) => {
         builder.where({ m_sekolah_id: sekolah.id });
@@ -21342,7 +21342,7 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
     const kepsek = ta.nama_kepsek;
 
     const ujian = await MUjian.query()
@@ -23520,7 +23520,7 @@ class MainController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const gelombang = await MGelombangPpdb.query()
       .with("pendaftar", (builder) => {
@@ -24118,7 +24118,7 @@ class MainController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const jadwalMengajar = await MJadwalMengajar.query()
       .with("mataPelajaran", (builder) => {
@@ -24406,7 +24406,7 @@ class MainController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const jadwalMengajar = await MJadwalMengajar.query()
       .with("mataPelajaran", (builder) => {
@@ -27267,7 +27267,7 @@ class MainController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const lokasi = await MLokasi.query().where({ dihapus: 0 }).fetch();
 
@@ -27527,7 +27527,7 @@ class MainController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const barang = await MBarang.query()
       .with("lokasi", (builder) => {
@@ -29497,7 +29497,7 @@ class MainController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const buku = await MBukuTamu.query().where({ dihapus: 0 }).fetch();
 
@@ -29768,7 +29768,7 @@ class MainController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const { tanggal_awal, tanggal_akhir } = request.post();
 
@@ -30128,7 +30128,7 @@ class MainController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const { tanggal_awal, tanggal_akhir } = request.post();
 
@@ -30684,7 +30684,7 @@ class MainController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const { role, tanggal, rombel_id } = request.post();
 
@@ -30951,7 +30951,7 @@ class MainController {
     }
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const user = await auth.getUser();
     const { tanggal_awal, tanggal_akhir, rombel_id } = request.post();
@@ -34529,7 +34529,7 @@ class MainController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const rekapan = await MRekapRombel.query()
       .with("rekap")
@@ -35162,7 +35162,7 @@ class MainController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const bukuKunjunganPengajuan = await MPertemuanBk.query()
       .with("user", (builder) => {
@@ -36674,7 +36674,7 @@ class MainController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const pembayaran = await TkPembayaranRombel.query()
       // .with("rombel",(builder)=>{
@@ -37240,7 +37240,7 @@ class MainController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD HH-mm-ss - ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const lokasi = await MLokasi.query().where({ dihapus: 0 }).fetch();
 
