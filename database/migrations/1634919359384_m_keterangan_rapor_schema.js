@@ -7,9 +7,9 @@ class MKeteranganRaporSchema extends Schema {
   up () {
     this.table('m_keterangan_rapor', (table) => {
       // alter table
-      table.integer("sakit").unsigned();
-      table.integer("izin").unsigned();
-      table.integer("alpa").unsigned();
+      table.integer("sakit").unsigned().defaultTo(0);
+      table.integer("izin").unsigned().defaultTo(0);
+      table.integer("alpa").unsigned().defaultTo(0);
     })
   }
   
