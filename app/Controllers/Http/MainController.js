@@ -5630,6 +5630,7 @@ class MainController {
         builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id });
       })
       .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
+      .where({dihapus: 0})
       .fetch();
 
     // const materiLainnya = await MMateri.query()
