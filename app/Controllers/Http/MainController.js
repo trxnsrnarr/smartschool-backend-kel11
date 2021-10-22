@@ -7790,11 +7790,11 @@ class MainController {
       .whereIn("m_tugas_id", tugasIds)
       .fetch();
 
-    const timelines = [...timelineBiasa.toJSON(), ...timelineTugas.toJSON()]
+    const timelines = [...timelineBiasa.toJSON(), ...timelineTugas.toJSON()];
 
     return response.ok({
       timeline,
-      timelines
+      timelines,
     });
   }
 
@@ -34801,105 +34801,108 @@ class MainController {
     worksheet.getCell("A3").value = rekapan.judul;
 
     await Promise.all(
-      rekapData.toJSON().map(async (d, idx) => {
-        worksheet.addConditionalFormatting({
-          ref: `B${(idx + 1) * 1 + 5}:C${(idx + 1) * 1 + 5}`,
-          rules: [
-            {
-              type: "expression",
-              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-              style: {
-                font: {
-                  name: "Times New Roman",
-                  family: 4,
-                  size: 11,
-                  // bold: true,
-                },
-                alignment: {
-                  vertical: "middle",
-                  horizontal: "left",
-                },
-                border: {
-                  top: { style: "thin" },
-                  left: { style: "thin" },
-                  bottom: { style: "thin" },
-                  right: { style: "thin" },
-                },
-              },
-            },
-          ],
-        });
-        worksheet.addConditionalFormatting({
-          ref: `A${(idx + 1) * 1 + 5}`,
-          rules: [
-            {
-              type: "expression",
-              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-              style: {
-                font: {
-                  name: "Times New Roman",
-                  family: 4,
-                  size: 11,
-                  // bold: true,
-                },
-                alignment: {
-                  vertical: "middle",
-                  horizontal: "center",
-                },
-                border: {
-                  top: { style: "thin" },
-                  left: { style: "thin" },
-                  bottom: { style: "thin" },
-                  right: { style: "thin" },
+      rekapData
+        .toJSON()
+        .sort((a, b) => ("" + a.user.nama).localeCompare("" + b.user.nama))
+        .map(async (d, idx) => {
+          worksheet.addConditionalFormatting({
+            ref: `B${(idx + 1) * 1 + 5}:C${(idx + 1) * 1 + 5}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 11,
+                    // bold: true,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "left",
+                  },
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
                 },
               },
-            },
-          ],
-        });
-        worksheet.addConditionalFormatting({
-          ref: `D${(idx + 1) * 1 + 5}`,
-          rules: [
-            {
-              type: "expression",
-              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-              style: {
-                font: {
-                  name: "Times New Roman",
-                  family: 4,
-                  size: 11,
-                  // bold: true,
-                },
-                alignment: {
-                  vertical: "middle",
-                  horizontal: "center",
-                },
-                border: {
-                  top: { style: "thin" },
-                  left: { style: "thin" },
-                  bottom: { style: "thin" },
-                  right: { style: "thin" },
+            ],
+          });
+          worksheet.addConditionalFormatting({
+            ref: `A${(idx + 1) * 1 + 5}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 11,
+                    // bold: true,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
                 },
               },
-            },
-          ],
-        });
-        // add column headers
-        worksheet.getRow(5).values = ["No", "Nama", "Whatsapp", "Nilai"];
-        worksheet.columns = [
-          { key: "no" },
-          { key: "nama" },
-          { key: "whatsapp" },
-          { key: "nilai" },
-        ];
+            ],
+          });
+          worksheet.addConditionalFormatting({
+            ref: `D${(idx + 1) * 1 + 5}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 11,
+                    // bold: true,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
+                },
+              },
+            ],
+          });
+          // add column headers
+          worksheet.getRow(5).values = ["No", "Nama", "Whatsapp", "Nilai"];
+          worksheet.columns = [
+            { key: "no" },
+            { key: "nama" },
+            { key: "whatsapp" },
+            { key: "nilai" },
+          ];
 
-        // Add row using key mapping to columns
-        let row = worksheet.addRow({
-          no: `${idx + 1}`,
-          nama: d.user ? d.user.nama : "-",
-          whatsapp: d.user ? d.user.whatsapp : "-",
-          nilai: d ? d.nilai : "-",
-        });
-      })
+          // Add row using key mapping to columns
+          let row = worksheet.addRow({
+            no: `${idx + 1}`,
+            nama: d.user ? d.user.nama : "-",
+            whatsapp: d.user ? d.user.whatsapp : "-",
+            nilai: d ? d.nilai : "-",
+          });
+        })
     );
     worksheet.getColumn("A").width = 6;
     worksheet.getColumn("B").width = 20;
