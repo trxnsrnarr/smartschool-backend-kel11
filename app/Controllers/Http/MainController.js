@@ -5630,7 +5630,7 @@ class MainController {
         builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id });
       })
       .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
-      .where({dihapus: 0})
+      .where({ dihapus: 0 })
       .fetch();
 
     // const materiLainnya = await MMateri.query()
@@ -7593,20 +7593,26 @@ class MainController {
         sudah_lewat = true;
       }
 
+      const range = [
+        moment(
+          timeline.toJSON().tipe == "tugas"
+            ? timeline.toJSON().timeline.tugas.tanggal_pembagian
+            : timeline.toJSON().timeline.tanggal_pembagian
+        ).format("YYYY-MM-DD 00:00:00"),
+        moment(
+          timeline.toJSON().tipe == "tugas"
+            ? timeline.toJSON().timeline.tugas.tanggal_pembagian
+            : timeline.toJSON().timeline.tanggal_pembagian
+        ).format("YYYY-MM-DD 23:59:59"),
+      ];
+
       const timelineId1 = await MTimeline.query()
         .whereNull("m_mata_pelajaran_id")
         .andWhere({ m_rombel_id: timeline.toJSON().timeline.rombel.id })
         .andWhere({
           m_user_id: timeline.toJSON().timeline.m_user_id,
         })
-        .whereBetween("tanggal_pembagian", [
-          moment(timeline.toJSON().timeline.tanggal_pembagian).format(
-            "YYYY-MM-DD 00:00:00"
-          ),
-          moment(timeline.toJSON().timeline.tanggal_pembagian).format(
-            "YYYY-MM-DD 23:59:59"
-          ),
-        ])
+        .whereBetween("tanggal_pembagian", range)
         .andWhere({ dihapus: 0 })
         .andWhereNot({ tipe: "tugas" })
         .ids();
@@ -7620,14 +7626,7 @@ class MainController {
         .andWhere({
           m_user_id: timeline.toJSON().timeline.m_user_id,
         })
-        .whereBetween("tanggal_pembagian", [
-          moment(timeline.toJSON().timeline.tanggal_pembagian).format(
-            "YYYY-MM-DD 00:00:00"
-          ),
-          moment(timeline.toJSON().timeline.tanggal_pembagian).format(
-            "YYYY-MM-DD 23:59:59"
-          ),
-        ])
+        .whereBetween("tanggal_pembagian", range)
         .andWhere({ dihapus: 0 })
         .andWhereNot({ tipe: "tugas" })
         .ids();
@@ -7637,7 +7636,9 @@ class MainController {
         .andWhere({ dihapus: 0 })
         .andWhere({
           tanggal_pembagian: moment(
-            timeline.toJSON().timeline.tanggal_pembagian
+            timeline.toJSON().tipe == "tugas"
+              ? timeline.toJSON().timeline.tugas.tanggal_pembagian
+              : timeline.toJSON().timeline.tanggal_pembagian
           ).format("YYYY-MM-DD"),
         })
         .ids();
@@ -7740,6 +7741,19 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .first();
 
+    const range = [
+      moment(
+        timeline.tipe == "tugas"
+          ? timeline.tugas.tanggal_pembagian
+          : timeline.tanggal_pembagian
+      ).format("YYYY-MM-DD 00:00:00"),
+      moment(
+        timeline.tipe == "tugas"
+          ? timeline.tugas.tanggal_pembagian
+          : timeline.tanggal_pembagian
+      ).format("YYYY-MM-DD 23:59:29"),
+    ];
+
     const timelineBiasa = await MTimeline.query()
       .with("tugas", (builder) => {
         builder.with("timeline", (builder) => {
@@ -7757,10 +7771,7 @@ class MainController {
       .where({ m_user_id: timeline.m_user_id })
       .andWhere({ dihapus: 0 })
       .andWhere({ m_rombel_id: timeline.m_rombel_id })
-      .whereBetween("tanggal_pembagian", [
-        moment(timeline.tanggal_pembagian).format("YYYY-MM-DD 00:00:00"),
-        moment(timeline.tanggal_pembagian).format("YYYY-MM-DD 23:59:29"),
-      ])
+      .whereBetween("tanggal_pembagian", range)
       .andWhereNot({ tipe: "tugas" })
       .fetch();
 
@@ -7768,9 +7779,11 @@ class MainController {
       .where({ m_user_id: timeline.m_user_id })
       .andWhere({ dihapus: 0 })
       .andWhere({
-        tanggal_pembagian: moment(timeline.tanggal_pembagian).format(
-          "YYYY-MM-DD"
-        ),
+        tanggal_pembagian: moment(
+          timeline.tipe == "tugas"
+            ? timeline.tugas.tanggal_pembagian
+            : timeline.tanggal_pembagian
+        ).format("YYYY-MM-DD"),
       })
       .ids();
     const timelineTugas = await MTimeline.query()
@@ -23477,7 +23490,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { catatan, kelulusan } = request.post();
+    const { catatan, kelulusan, sakit, izin, alpa } = request.post();
     const rules = {
       kelulusan: "required",
     };
@@ -23496,6 +23509,12 @@ class MainController {
         kelulusan,
         dihapus: 0,
       });
+
+    await MKeteranganRapor.query().where({ m_user_id: user_id }).update({
+      sakit,
+      izin,
+      alpa,
+    });
 
     if (!keteranganRapor) {
       return response.notFound({
