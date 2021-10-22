@@ -23353,7 +23353,7 @@ class MainController {
       totalHadir: totalHadir,
       totalSakit: [{total: siswa.toJSON().keteranganRapor.sakit}],
       totalIzin: [{total: siswa.toJSON().keteranganRapor.izin}],
-      totalAlpa: [{total: siswa.toJSON().keteranganRapor.alpa}],
+      totalAlpa: siswa.toJSON().keteranganRapor.alpa,
       tanggalDistinct: tanggalDistinct,
       muatan,
       totalMapel,
