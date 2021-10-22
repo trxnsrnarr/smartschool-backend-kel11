@@ -37146,22 +37146,23 @@ class MainController {
   }
 
   async putSekolah({ response, request, auth, params: { sekolah_id } }) {
-    const { nama, domain, server } = request.post();
+    const { nama, domain, server, alamat } = request.post();
 
-    let validation = await validate(
-      request.post(),
-      rulesUserPost,
-      messagesUser
-    );
+    // let validation = await validate(
+    //   request.post(),
+    //   rulesUserPost,
+    //   messagesUser
+    // );
 
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
-    }
+    // if (validation.fails()) {
+    //   return response.unprocessableEntity(validation.messages());
+    // }
 
     const sekolah = await MSekolah.query().where({ id: sekolah_id }).update({
       nama,
       domain,
       server,
+      alamat
     });
 
     return response.ok({
