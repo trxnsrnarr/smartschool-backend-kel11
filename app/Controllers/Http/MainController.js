@@ -7744,13 +7744,13 @@ class MainController {
     const range = [
       moment(
         timeline.tipe == "tugas"
-          ? timeline.tugas.tanggal_pembagian
-          : timeline.tanggal_pembagian
+          ? timeline.toJSON().tugas.tanggal_pembagian
+          : timeline.toJSON().tanggal_pembagian
       ).format("YYYY-MM-DD 00:00:00"),
       moment(
         timeline.tipe == "tugas"
-          ? timeline.tugas.tanggal_pembagian
-          : timeline.tanggal_pembagian
+          ? timeline.toJSON().tugas.tanggal_pembagian
+          : timeline.toJSON().tanggal_pembagian
       ).format("YYYY-MM-DD 23:59:29"),
     ];
 
@@ -7781,8 +7781,8 @@ class MainController {
       .andWhere({
         tanggal_pembagian: moment(
           timeline.tipe == "tugas"
-            ? timeline.tugas.tanggal_pembagian
-            : timeline.tanggal_pembagian
+            ? timeline.toJSON().tugas.tanggal_pembagian
+            : timeline.toJSON().tanggal_pembagian
         ).format("YYYY-MM-DD"),
       })
       .ids();
