@@ -735,6 +735,7 @@ class MainController {
 
       // informasi
       nisn,
+      nis,
       asal_sekolah,
       status_keluarga,
       anak_ke,
@@ -865,6 +866,7 @@ class MainController {
 
         // informasi
         nisn,
+        nis,
         asal_sekolah,
         status_keluarga,
         anak_ke,
