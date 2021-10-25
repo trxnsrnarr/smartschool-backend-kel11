@@ -18003,21 +18003,8 @@ class MainController {
                 .where({ id: check.toJSON().rekapRombel.rekap.m_materi_id })
                 .first();
         
-              let rekapNilai;
-        
-              if (check) {
-                await TkRekapNilai.query()
-                  .andWhere({ m_rekap_rombel_id: rekap.id })
-                  .where({ m_user_id: e.m_user_id })
-                  .update({ nilai });
-                rekapNilai = check;
-              } else {
-                rekapNilai = await TkRekapNilai.create({
-                  m_user_id: e.m_user_id,
-                  nilai,
-                  m_rekap_rombel_id: rekap.id,
-                });
-              }
+              let rekapNilai = check;
+
               const checkData = await MUjianSiswa.query()
                 .where({ m_user_id: e.m_user_id })
                 .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
@@ -18187,60 +18174,7 @@ class MainController {
                 .andWhere({ m_ta_id: ta.id })
                 .first();
         
-              if (check.toJSON().rekapRombel.rekap.teknik == "UTS") {
-                if (checkData) {
-                  try{
-                    await MUjianSiswa.query()
-                    .where({ m_user_id: e.m_user_id })
-                    .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
-                    .andWhere({m_ta_id:ta.id})
-                    .update({
-                      uts_id: rekapNilai.id,
-                    });
-                  }catch(err){
-                    return;
-                  }
-                } else {
-                  await MUjianSiswa.create({
-                    m_user_id: e.m_user_id,
-                    m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
-                    uts_id: rekapNilai.id,
-                    m_ta_id: ta.id,
-                  });
-                }
-              } else if (check.toJSON().rekapRombel.rekap.teknik == "UAS") {
-                if (checkData) {
-                  await MUjianSiswa.query()
-                    .where({ m_user_id: e.m_user_id })
-                    .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
-                    .update({
-                      uas_id: rekapNilai.id,
-                    });
-                } else {
-                  await MUjianSiswa.create({
-                    m_user_id: e.m_user_id,
-                    m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
-                    uas_id: rekapNilai.id,
-                    m_ta_id: ta.id,
-                  });
-                }
-              } else if (check.toJSON().rekapRombel.rekap.teknik == "US") {
-                if (checkData) {
-                  await MUjianSiswa.query()
-                    .where({ m_user_id: e.m_user_id })
-                    .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
-                    .update({
-                      us_id: rekapNilai.id,
-                    });
-                } else {
-                  await MUjianSiswa.create({
-                    m_user_id: e.m_user_id,
-                    m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
-                    us_id: rekapNilai.id,
-                    m_ta_id: ta.id,
-                  });
-                }
-              }
+              
         
               const mapel = await MMataPelajaran.query()
                 .with("user")
@@ -18331,6 +18265,61 @@ class MainController {
         
                 const rataUjian = jumlah / dataUjian.length;
         
+                if (check.toJSON().rekapRombel.rekap.teknik == "UTS") {
+                  if (checkData) {
+                    try{
+                      await MUjianSiswa.query()
+                      .where({ m_user_id: e.m_user_id })
+                      .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
+                      .andWhere({m_ta_id:ta.id})
+                      .update({
+                        uts_id: rekapNilai.id,
+                      });
+                    }catch(err){
+                      return;
+                    }
+                  } else {
+                    await MUjianSiswa.create({
+                      m_user_id: e.m_user_id,
+                      m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
+                      uts_id: rekapNilai.id,
+                      m_ta_id: ta.id,
+                    });
+                  }
+                } else if (check.toJSON().rekapRombel.rekap.teknik == "UAS") {
+                  if (checkData) {
+                    await MUjianSiswa.query()
+                      .where({ m_user_id: e.m_user_id })
+                      .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
+                      .update({
+                        uas_id: rekapNilai.id,
+                      });
+                  } else {
+                    await MUjianSiswa.create({
+                      m_user_id: e.m_user_id,
+                      m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
+                      uas_id: rekapNilai.id,
+                      m_ta_id: ta.id,
+                    });
+                  }
+                } else if (check.toJSON().rekapRombel.rekap.teknik == "US") {
+                  if (checkData) {
+                    await MUjianSiswa.query()
+                      .where({ m_user_id: e.m_user_id })
+                      .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
+                      .update({
+                        us_id: rekapNilai.id,
+                      });
+                  } else {
+                    await MUjianSiswa.create({
+                      m_user_id: e.m_user_id,
+                      m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
+                      us_id: rekapNilai.id,
+                      m_ta_id: ta.id,
+                    });
+                  }
+                }
+
                 let nilaiAkhir;
                 if (ujian) {
                   const listNilai = [
@@ -18386,21 +18375,9 @@ class MainController {
                 .where({ id: check.toJSON().rekapRombel.rekap.m_materi_id })
                 .first();
         
-              let rekapNilai;
+              let rekapNilai=check;
         
-              if (check) {
-                await TkRekapNilai.query()
-                  .andWhere({ m_rekap_rombel_id: rekap.id })
-                  .where({ m_user_id: e.m_user_id })
-                  .update({ nilai });
-                rekapNilai = check;
-              } else {
-                rekapNilai = await TkRekapNilai.create({
-                  m_user_id: e.m_user_id,
-                  nilai,
-                  m_rekap_rombel_id: rekap.id,
-                });
-              }
+              
               const checkData = await MUjianSiswa.query()
                 .where({ m_user_id: e.m_user_id })
                 .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
