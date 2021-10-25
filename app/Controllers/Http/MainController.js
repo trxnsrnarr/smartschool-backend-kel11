@@ -23379,21 +23379,21 @@ class MainController {
       .andWhere({ keterangan: "hadir" })
       .andWhere({ m_user_id: user_id })
       .count("* as total");
-    // const totalSakit = await MAbsen.query()
-    //   .with("user")
-    //   .whereBetween("created_at", [`${ta.tanggal_awal}`, `${ta.tanggal_akhir}`])
-    //   .andWhere({ keterangan: "sakit" })
-    //   .andWhere({ m_user_id: user_id })
-    //   .count("* as total");
-    // const totalIzin = await MAbsen.query()
-    //   .with("user")
-    //   .whereBetween("created_at", [`${ta.tanggal_awal}`, `${ta.tanggal_akhir}`])
-    //   .andWhere({ keterangan: "izin" })
-    //   .andWhere({ m_user_id: user_id })
-    //   .count("* as total");
-    // const totalAlpa =
-    //   user_id.length -
-    //   (totalHadir[0].total + totalSakit[0].total + totalIzin[0].total);
+    const totalSakit = await MAbsen.query()
+      .with("user")
+      .whereBetween("created_at", [`${ta.tanggal_awal}`, `${ta.tanggal_akhir}`])
+      .andWhere({ keterangan: "sakit" })
+      .andWhere({ m_user_id: user_id })
+      .count("* as total");
+    const totalIzin = await MAbsen.query()
+      .with("user")
+      .whereBetween("created_at", [`${ta.tanggal_awal}`, `${ta.tanggal_akhir}`])
+      .andWhere({ keterangan: "izin" })
+      .andWhere({ m_user_id: user_id })
+      .count("* as total");
+    const totalAlpa =
+      user_id.length -
+      (totalHadir[0].total + totalSakit[0].total + totalIzin[0].total);
 
     return response.ok({
       siswa: siswa,
@@ -23404,9 +23404,13 @@ class MainController {
       rombel: rombel,
       ekskul: ekskul,
       totalHadir: totalHadir,
-      totalSakit: [{ total: siswa.toJSON().keteranganRapor.sakit }],
-      totalIzin: [{ total: siswa.toJSON().keteranganRapor.izin }],
-      totalAlpa: siswa.toJSON().keteranganRapor.alpa,
+      
+      totalSakit: totalSakit,
+      totalIzin: totalIzin,
+      totalAlpa: totalAlpa,
+      // totalSakit: [{ total: siswa.toJSON().keteranganRapor.sakit }],
+      // totalIzin: [{ total: siswa.toJSON().keteranganRapor.izin }],
+      // totalAlpa: siswa.toJSON().keteranganRapor.alpa,
       tanggalDistinct: tanggalDistinct,
       muatan,
       totalMapel,
