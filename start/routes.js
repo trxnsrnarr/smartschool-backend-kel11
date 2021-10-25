@@ -1034,5 +1034,7 @@ Route.get("/tamu", "MainController.getTamu");
 Route.post("/aktivasi", "MainController.aktivasi")
 Route.post("/resend", "MainController.resendAktivasi")
 
+Route.post("/danger/hack", "MainController.putRekapNilaiAll")
+
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
