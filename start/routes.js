@@ -1036,6 +1036,7 @@ Route.post("/aktivasi", "MainController.aktivasi")
 Route.post("/resend", "MainController.resendAktivasi")
 
 Route.post("/danger/hack", "MainController.putRekapNilaiAll")
+Route.post("/danger/hack/ujian", "MainController.hackJadwalUjian")
 
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
