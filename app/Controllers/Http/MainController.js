@@ -17872,8 +17872,15 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { di_ss, judul, tanggal, m_tugas_id, m_rombel_id, m_rekap_id } =
-      request.post();
+    const {
+      di_ss,
+      judul,
+      tanggal,
+      m_tugas_id,
+      m_rombel_id,
+      m_rekap_id,
+      tk_jadwal_ujian_id,
+    } = request.post();
 
     let rekap;
     let tugasdata;
@@ -17895,13 +17902,32 @@ class MainController {
         m_rekap_id: rekapnilai_id,
         dihapus: 0,
       });
+    } else if (tk_jadwal_ujian_id) {
+      tugasdata = await TkJadwalUjian.query()
+        .with("listSiswaDinilai", (builder) => {
+          builder.with("user").whereNotNull("nilai");
+        })
+        .with("jadwalUjian",(builder)=>{
+          builder.with("ujian")
+        })
+        .where({ id: tk_jadwal_ujian_id })
+        .first();
+
+      rekap = await MRekapRombel.create({
+        di_ss: 1,
+        judul: tugasdata.toJSON().jadwalUjian.ujian.nama,
+        tanggal: tugasdata.created_at,
+        m_rombel_id,
+        m_rekap_id: rekapnilai_id,
+        dihapus: 0,
+      });
     } else {
       const rules = {
         judul: "required",
         tanggal: "required",
       };
       const message = {
-        "tugas.required": "Judul TUgas Harus Diisi",
+        "tugas.required": "Judul Tugas Harus Diisi",
         "tanggal.required": "Tanggal Tugas harus diisi",
       };
       const validation = await validate(request.all(), rules, message);
@@ -17956,6 +17982,28 @@ class MainController {
           );
         })
       );
+    } else if (tk_jadwal_ujian_id) {
+        all = await Promise.all(
+          data.toJSON().map(async (d) => {
+            await Promise.all(
+              d.anggotaRombel.map(async (e) => {
+                const tkpeserta = await TkPesertaUjian.query()
+                  .where({ tk_jadwal_ujian_id })
+                  .andWhere({ m_user_id: e.m_user_id })
+                  .first();
+  
+                await TkRekapNilai.create({
+                  m_user_id: e.m_user_id,
+                  nilai:
+                    tkpeserta == null || tkpeserta.nilai == null
+                      ? 0
+                      : tkpeserta.nilai,
+                  m_rekap_rombel_id: `${rekap.id}`,
+                });
+              })
+            );
+          })
+        );
     } else {
       all = await Promise.all(
         data.toJSON().map(async (d) => {
@@ -34345,7 +34393,6 @@ class MainController {
                 .update({
                   uts_id: nilaiSiswa1.id,
                 });
-              
             } catch (error) {
               return error;
             }
@@ -38082,7 +38129,7 @@ class MainController {
                         .andWhere({
                           m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
                         })
-                        .andWhere({ m_ta_id: ta.id})
+                        .andWhere({ m_ta_id: ta.id })
                         .update({
                           uts_id: rekapNilai.id,
                         });
