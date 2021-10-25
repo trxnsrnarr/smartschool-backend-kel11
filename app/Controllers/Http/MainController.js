@@ -34338,12 +34338,17 @@ class MainController {
 
         if (rekapRombel.toJSON().rekap.teknik == "UTS") {
           if (checkData) {
-            await MUjianSiswa.query()
-              .where({ m_user_id: userSiswa.id })
-              .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
-              .update({
-                uts_id: nilaiSiswa1.id,
-              });
+            try {
+              await MUjianSiswa.query()
+                .where({ m_user_id: userSiswa.id })
+                .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
+                .update({
+                  uts_id: nilaiSiswa1.id,
+                });
+              
+            } catch (error) {
+              return error;
+            }
           } else {
             await MUjianSiswa.create({
               m_user_id: userSiswa.id,
