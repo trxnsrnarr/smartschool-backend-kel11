@@ -3537,7 +3537,11 @@ class MainController {
                 .with("rekapSikap", (builder) => {
                   builder.with("predikat").where({ dihapus: 0 });
                 })
-                .with("nilaiUjian")
+                .with("nilaiUjian", (builder) => {
+                  builder.where({
+                    m_mata_pelajaran_id: data.m_mata_pelajaran_id,
+                  });
+                })
                 .withCount(
                   "nilaiSemuaUjian as jumlahMapelDikerjakan",
                   (builder) => {
@@ -17703,15 +17707,25 @@ class MainController {
         .with("jadwalUjian", (builder) => {
           builder
             .with("ujian", (builder) => {
-              builder.where({ dihapus: 0 })
-              .andWhere("tipe", "like", `%${tipe}%`);
+              builder.where({ dihapus: 0 }).andWhere({ m_user_id: user.id });
+              if (rekap.teknik == "UTS") {
+                builder.andWhere("tipe", "like", `%pts%`);
+              } else if (rekap.teknik == "UAS") {
+                builder.andWhere("tipe", "like", `%pas%`);
+              } else if (rekap.teknik == "UH") {
+                builder.andWhere("tipe", "like", `%ph%`);
+              } else if (rekap.teknik == "US") {
+                builder.andWhere("tipe", "like", `%us%`);
+              }
             })
-            .where({ dihapus: 0 })
-            
+            .where({ dihapus: 0 });
         })
         .where({ dihapus: 0 })
         .whereIn("m_rombel_id", [rombel_id])
         .fetch();
+
+      // return ujianRombel;
+
       ujian = ujianRombel
         .toJSON()
         .filter((d) => d.jadwalUjian && d.jadwalUjian.ujian);
@@ -17871,7 +17885,7 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
-
+    const ta = await this.getTAAktif(sekolah);
     const user = await auth.getUser();
 
     const {
@@ -17906,11 +17920,8 @@ class MainController {
       });
     } else if (tk_jadwal_ujian_id) {
       tugasdata = await TkJadwalUjian.query()
-        .with("listSiswaDinilai", (builder) => {
-          builder.with("user").whereNotNull("nilai");
-        })
-        .with("jadwalUjian",(builder)=>{
-          builder.with("ujian")
+        .with("jadwalUjian", (builder) => {
+          builder.with("ujian");
         })
         .where({ id: tk_jadwal_ujian_id })
         .first();
@@ -17980,32 +17991,379 @@ class MainController {
                     : tktimeline.nilai,
                 m_rekap_rombel_id: `${rekap.id}`,
               });
+              const check = await TkRekapNilai.query()
+                .with("rekapRombel", (builder) => {
+                  builder.with("rekap");
+                })
+                .where({ m_user_id: e.m_user_id })
+                .andWhere({ m_rekap_rombel_id: rekap.id })
+                .first();
+        
+              const materi = await MMateri.query()
+                .where({ id: check.toJSON().rekapRombel.rekap.m_materi_id })
+                .first();
+        
+              let rekapNilai;
+        
+              if (check) {
+                await TkRekapNilai.query()
+                  .andWhere({ m_rekap_rombel_id: rekap.id })
+                  .where({ m_user_id: e.m_user_id })
+                  .update({ nilai });
+                rekapNilai = check;
+              } else {
+                rekapNilai = await TkRekapNilai.create({
+                  m_user_id: e.m_user_id,
+                  nilai,
+                  m_rekap_rombel_id: rekap.id,
+                });
+              }
+              const checkData = await MUjianSiswa.query()
+                .where({ m_user_id: e.m_user_id })
+                .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
+                .andWhere({ m_ta_id: ta.id })
+                .first();
+        
+              
+        
+              const mapel = await MMataPelajaran.query()
+                .with("user")
+                .with("materi")
+                .where({ id: materi.m_mata_pelajaran_id })
+                .first();
+        
+              if (
+                rekapNilai.toJSON().rekapRombel.rekap.tipe == "tugas" ||
+                rekapNilai.toJSON().rekapRombel.rekap.tipe == "ujian"
+              ) {
+                const rekap = await TkRekapNilai.query()
+                  .with("rekapRombel", (builder) => {
+                    builder.with("rekap", (builder) => {
+                      builder
+                        .where({ tipe: "tugas" })
+                        .andWhere({ m_ta_id: ta.id })
+                        .andWhere({ dihapus: 0 })
+                        .andWhere({ m_materi_id: materi.id });
+                    });
+                  })
+                  .where({ m_user_id: e.m_user_id })
+                  .fetch();
+        
+                const rekapUjian = await TkRekapNilai.query()
+                  .with("rekapRombel", (builder) => {
+                    builder.with("rekap", (builder) => {
+                      builder
+                        .where({ tipe: "ujian" }).andWhere({teknik:"UH"})
+                        .andWhere({ m_ta_id: ta.id })
+                        .andWhere({ dihapus: 0 })
+                        .andWhere({ m_materi_id: materi.id });
+                    });
+                  })
+                  .where({ m_user_id: e.m_user_id })
+                  .fetch();
+        
+                const ujian = await MUjianSiswa.query()
+                  .with("nilaiUAS", (builder) => {
+                    builder.select("id", "nilai");
+                  })
+                  .with("nilaiUTS", (builder) => {
+                    builder.select("id", "nilai");
+                  })
+                  .where({ m_user_id: e.m_user_id })
+                  .andWhere({ m_mata_pelajaran_id: mapel.id })
+                  .first();
+        
+                const result = await Promise.all(
+                  rekap.toJSON().map(async (d) => {
+                    if (d.rekapRombel.rekap == null) {
+                      return;
+                    }
+                    return d;
+                  })
+                );
+        
+                const data = result.filter((d) => d != null);
+        
+                let jumlah1 = 0;
+        
+                result
+                  .filter((d) => d != null)
+                  .forEach((d) => {
+                    jumlah1 += d.nilai;
+                  });
+        
+                const rata = jumlah1 / data.length;
+        
+                const result1 = await Promise.all(
+                  rekapUjian.toJSON().map(async (d) => {
+                    if (d.rekapRombel.rekap == null) {
+                      return;
+                    }
+                    return d;
+                  })
+                );
+        
+                const dataUjian = result1.filter((d) => d != null);
+        
+                let jumlah = 0;
+        
+                result1
+                  .filter((d) => d != null)
+                  .forEach((d) => {
+                    jumlah += d.nilai;
+                  });
+        
+                const rataUjian = jumlah / dataUjian.length;
+        
+                let nilaiAkhir;
+                if (ujian) {
+                  const listNilai = [
+                    rataUjian,
+                    rata,
+                    ujian.toJSON().nilaiUAS ? ujian.toJSON().nilaiUAS?.nilai : null,
+                    ujian.toJSON().nilaiUTS ? ujian.toJSON().nilaiUTS?.nilai : null,
+                  ];
+                  nilaiAkhir = listNilai.filter((nilai) => nilai).length
+                    ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) /
+                      listNilai.filter((nilai) => nilai).length
+                    : 0;
+                  await MUjianSiswa.query().where({ id: ujian.id }).update({
+                    nilai: nilaiAkhir,
+                  });
+                } else {
+                  const listNilai = [rataUjian, rata];
+                  nilaiAkhir = listNilai.filter((nilai) => nilai).length
+                    ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) /
+                      listNilai.filter((nilai) => nilai).length
+                    : 0;
+                  await MUjianSiswa.create({
+                    m_ta_id: ta.id,
+                    m_user_id: e.m_user_id,
+                    m_mata_pelajaran_id: mapel.id,
+                    nilai: nilaiAkhir,
+                  });
+                }
+              }
             })
           );
         })
       );
     } else if (tk_jadwal_ujian_id) {
-        all = await Promise.all(
-          data.toJSON().map(async (d) => {
-            await Promise.all(
-              d.anggotaRombel.map(async (e) => {
-                const tkpeserta = await TkPesertaUjian.query()
-                  .where({ tk_jadwal_ujian_id })
-                  .andWhere({ m_user_id: e.m_user_id })
+      all = await Promise.all(
+        data.toJSON().map(async (d) => {
+          await Promise.all(
+            d.anggotaRombel.map(async (e) => {
+              const tkpeserta = await TkPesertaUjian.query()
+                .where({ tk_jadwal_ujian_id })
+                .andWhere({ m_user_id: e.m_user_id })
+                .first();
+
+              await TkRekapNilai.create({
+                m_user_id: e.m_user_id,
+                nilai:
+                  tkpeserta == null || tkpeserta.nilai == null
+                    ? 0
+                    : tkpeserta.nilai,
+                m_rekap_rombel_id: `${rekap.id}`,
+              });
+
+              const check = await TkRekapNilai.query()
+                .with("rekapRombel", (builder) => {
+                  builder.with("rekap");
+                })
+                .where({ m_user_id: e.m_user_id })
+                .andWhere({ m_rekap_rombel_id: rekap.id })
+                .first();
+        
+              const materi = await MMateri.query()
+                .where({ id: check.toJSON().rekapRombel.rekap.m_materi_id })
+                .first();
+        
+              let rekapNilai = check;
+        
+              const checkData = await MUjianSiswa.query()
+                .where({ m_user_id: e.m_user_id })
+                .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
+                .andWhere({ m_ta_id: ta.id })
+                .first();
+        
+              if (check.toJSON().rekapRombel.rekap.teknik == "UTS") {
+                if (checkData) {
+                  try{
+                    await MUjianSiswa.query()
+                    .where({ m_user_id: e.m_user_id })
+                    .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
+                    .andWhere({m_ta_id:ta.id})
+                    .update({
+                      uts_id: rekapNilai.id,
+                    });
+                  }catch(err){
+                    return;
+                  }
+                } else {
+                  await MUjianSiswa.create({
+                    m_user_id: e.m_user_id,
+                    m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
+                    uts_id: rekapNilai.id,
+                    m_ta_id: ta.id,
+                  });
+                }
+              } else if (check.toJSON().rekapRombel.rekap.teknik == "UAS") {
+                if (checkData) {
+                  await MUjianSiswa.query()
+                    .where({ m_user_id: e.m_user_id })
+                    .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
+                    .update({
+                      uas_id: rekapNilai.id,
+                    });
+                } else {
+                  await MUjianSiswa.create({
+                    m_user_id: e.m_user_id,
+                    m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
+                    uas_id: rekapNilai.id,
+                    m_ta_id: ta.id,
+                  });
+                }
+              } else if (check.toJSON().rekapRombel.rekap.teknik == "US") {
+                if (checkData) {
+                  await MUjianSiswa.query()
+                    .where({ m_user_id: e.m_user_id })
+                    .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
+                    .update({
+                      us_id: rekapNilai.id,
+                    });
+                } else {
+                  await MUjianSiswa.create({
+                    m_user_id: e.m_user_id,
+                    m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
+                    us_id: rekapNilai.id,
+                    m_ta_id: ta.id,
+                  });
+                }
+              }
+        
+              const mapel = await MMataPelajaran.query()
+                .with("user")
+                .with("materi")
+                .where({ id: materi.m_mata_pelajaran_id })
+                .first();
+        
+              if (
+                rekapNilai.toJSON().rekapRombel.rekap.tipe == "tugas" ||
+                rekapNilai.toJSON().rekapRombel.rekap.tipe == "ujian"
+              ) {
+                const rekap = await TkRekapNilai.query()
+                  .with("rekapRombel", (builder) => {
+                    builder.with("rekap", (builder) => {
+                      builder
+                        .where({ tipe: "tugas" })
+                        .andWhere({ m_ta_id: ta.id })
+                        .andWhere({ dihapus: 0 })
+                        .andWhere({ m_materi_id: materi.id });
+                    });
+                  })
+                  .where({ m_user_id: e.m_user_id })
+                  .fetch();
+        
+                const rekapUjian = await TkRekapNilai.query()
+                  .with("rekapRombel", (builder) => {
+                    builder.with("rekap", (builder) => {
+                      builder
+                        .where({ tipe: "ujian" })
+                        .andWhere({ m_ta_id: ta.id })
+                        .andWhere({ dihapus: 0 })
+                        .andWhere({ m_materi_id: materi.id });
+                    });
+                  })
+                  .where({ m_user_id: e.m_user_id })
+                  .fetch();
+        
+                const ujian = await MUjianSiswa.query()
+                  .with("nilaiUAS", (builder) => {
+                    builder.select("id", "nilai");
+                  })
+                  .with("nilaiUTS", (builder) => {
+                    builder.select("id", "nilai");
+                  })
+                  .where({ m_user_id: e.m_user_id })
+                  .andWhere({ m_mata_pelajaran_id: mapel.id })
                   .first();
-  
-                await TkRekapNilai.create({
-                  m_user_id: e.m_user_id,
-                  nilai:
-                    tkpeserta == null || tkpeserta.nilai == null
-                      ? 0
-                      : tkpeserta.nilai,
-                  m_rekap_rombel_id: `${rekap.id}`,
-                });
-              })
-            );
-          })
-        );
+        
+                const result = await Promise.all(
+                  rekap.toJSON().map(async (d) => {
+                    if (d.rekapRombel.rekap == null) {
+                      return;
+                    }
+                    return d;
+                  })
+                );
+        
+                const data = result.filter((d) => d != null);
+        
+                let jumlah1 = 0;
+        
+                result
+                  .filter((d) => d != null)
+                  .forEach((d) => {
+                    jumlah1 += d.nilai;
+                  });
+        
+                const rata = jumlah1 / data.length;
+        
+                const result1 = await Promise.all(
+                  rekapUjian.toJSON().map(async (d) => {
+                    if (d.rekapRombel.rekap == null) {
+                      return;
+                    }
+                    return d;
+                  })
+                );
+        
+                const dataUjian = result1.filter((d) => d != null);
+        
+                let jumlah = 0;
+        
+                result1
+                  .filter((d) => d != null)
+                  .forEach((d) => {
+                    jumlah += d.nilai;
+                  });
+        
+                const rataUjian = jumlah / dataUjian.length;
+        
+                let nilaiAkhir;
+                if (ujian) {
+                  const listNilai = [
+                    rataUjian,
+                    rata,
+                    ujian.toJSON().nilaiUAS ? ujian.toJSON().nilaiUAS?.nilai : null,
+                    ujian.toJSON().nilaiUTS ? ujian.toJSON().nilaiUTS?.nilai : null,
+                  ];
+                  nilaiAkhir = listNilai.filter((nilai) => nilai).length
+                    ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) /
+                      listNilai.filter((nilai) => nilai).length
+                    : 0;
+                  await MUjianSiswa.query().where({ id: ujian.id }).update({
+                    nilai: nilaiAkhir,
+                  });
+                } else {
+                  const listNilai = [rataUjian, rata];
+                  nilaiAkhir = listNilai.filter((nilai) => nilai).length
+                    ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) /
+                      listNilai.filter((nilai) => nilai).length
+                    : 0;
+                  await MUjianSiswa.create({
+                    m_ta_id: ta.id,
+                    m_user_id: e.m_user_id,
+                    m_mata_pelajaran_id: mapel.id,
+                    nilai: nilaiAkhir,
+                  });
+                }
+              }
+            })
+          );
+        })
+      );
     } else {
       all = await Promise.all(
         data.toJSON().map(async (d) => {
@@ -18016,6 +18374,211 @@ class MainController {
                 nilai: 0,
                 m_rekap_rombel_id: `${rekap.id}`,
               });
+              const check = await TkRekapNilai.query()
+                .with("rekapRombel", (builder) => {
+                  builder.with("rekap");
+                })
+                .where({ m_user_id: e.m_user_id })
+                .andWhere({ m_rekap_rombel_id: rekap.id })
+                .first();
+        
+              const materi = await MMateri.query()
+                .where({ id: check.toJSON().rekapRombel.rekap.m_materi_id })
+                .first();
+        
+              let rekapNilai;
+        
+              if (check) {
+                await TkRekapNilai.query()
+                  .andWhere({ m_rekap_rombel_id: rekap.id })
+                  .where({ m_user_id: e.m_user_id })
+                  .update({ nilai });
+                rekapNilai = check;
+              } else {
+                rekapNilai = await TkRekapNilai.create({
+                  m_user_id: e.m_user_id,
+                  nilai,
+                  m_rekap_rombel_id: rekap.id,
+                });
+              }
+              const checkData = await MUjianSiswa.query()
+                .where({ m_user_id: e.m_user_id })
+                .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
+                .andWhere({ m_ta_id: ta.id })
+                .first();
+        
+              if (check.toJSON().rekapRombel.rekap.teknik == "UTS") {
+                if (checkData) {
+                  try{
+                    await MUjianSiswa.query()
+                    .where({ m_user_id: e.m_user_id })
+                    .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
+                    .update({
+                      uts_id: rekapNilai.id,
+                    });
+                  }catch(err){
+                    return;
+                  }
+                } else {
+                  await MUjianSiswa.create({
+                    m_user_id: e.m_user_id,
+                    m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
+                    uts_id: rekapNilai.id,
+                    m_ta_id: ta.id,
+                  });
+                }
+              } else if (check.toJSON().rekapRombel.rekap.teknik == "UAS") {
+                if (checkData) {
+                  await MUjianSiswa.query()
+                    .where({ m_user_id: e.m_user_id })
+                    .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
+                    .update({
+                      uas_id: rekapNilai.id,
+                    });
+                } else {
+                  await MUjianSiswa.create({
+                    m_user_id: e.m_user_id,
+                    m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
+                    uas_id: rekapNilai.id,
+                    m_ta_id: ta.id,
+                  });
+                }
+              } else if (check.toJSON().rekapRombel.rekap.teknik == "US") {
+                if (checkData) {
+                  await MUjianSiswa.query()
+                    .where({ m_user_id: e.m_user_id })
+                    .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
+                    .update({
+                      us_id: rekapNilai.id,
+                    });
+                } else {
+                  await MUjianSiswa.create({
+                    m_user_id: e.m_user_id,
+                    m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
+                    us_id: rekapNilai.id,
+                    m_ta_id: ta.id,
+                  });
+                }
+              }
+        
+              const mapel = await MMataPelajaran.query()
+                .with("user")
+                .with("materi")
+                .where({ id: materi.m_mata_pelajaran_id })
+                .first();
+        
+              if (
+                rekapNilai.toJSON().rekapRombel.rekap.tipe == "tugas" ||
+                rekapNilai.toJSON().rekapRombel.rekap.tipe == "ujian"
+              ) {
+                const rekap = await TkRekapNilai.query()
+                  .with("rekapRombel", (builder) => {
+                    builder.with("rekap", (builder) => {
+                      builder
+                        .where({ tipe: "tugas" })
+                        .andWhere({ m_ta_id: ta.id })
+                        .andWhere({ dihapus: 0 })
+                        .andWhere({ m_materi_id: materi.id });
+                    });
+                  })
+                  .where({ m_user_id: e.m_user_id })
+                  .fetch();
+        
+                const rekapUjian = await TkRekapNilai.query()
+                  .with("rekapRombel", (builder) => {
+                    builder.with("rekap", (builder) => {
+                      builder
+                        .where({ tipe: "ujian" })
+                        .andWhere({ m_ta_id: ta.id })
+                        .andWhere({ dihapus: 0 })
+                        .andWhere({ m_materi_id: materi.id });
+                    });
+                  })
+                  .where({ m_user_id: e.m_user_id })
+                  .fetch();
+        
+                const ujian = await MUjianSiswa.query()
+                  .with("nilaiUAS", (builder) => {
+                    builder.select("id", "nilai");
+                  })
+                  .with("nilaiUTS", (builder) => {
+                    builder.select("id", "nilai");
+                  })
+                  .where({ m_user_id: e.m_user_id })
+                  .andWhere({ m_mata_pelajaran_id: mapel.id })
+                  .first();
+        
+                const result = await Promise.all(
+                  rekap.toJSON().map(async (d) => {
+                    if (d.rekapRombel.rekap == null) {
+                      return;
+                    }
+                    return d;
+                  })
+                );
+        
+                const data = result.filter((d) => d != null);
+        
+                let jumlah1 = 0;
+        
+                result
+                  .filter((d) => d != null)
+                  .forEach((d) => {
+                    jumlah1 += d.nilai;
+                  });
+        
+                const rata = jumlah1 / data.length;
+        
+                const result1 = await Promise.all(
+                  rekapUjian.toJSON().map(async (d) => {
+                    if (d.rekapRombel.rekap == null) {
+                      return;
+                    }
+                    return d;
+                  })
+                );
+        
+                const dataUjian = result1.filter((d) => d != null);
+        
+                let jumlah = 0;
+        
+                result1
+                  .filter((d) => d != null)
+                  .forEach((d) => {
+                    jumlah += d.nilai;
+                  });
+        
+                const rataUjian = jumlah / dataUjian.length;
+        
+                let nilaiAkhir;
+                if (ujian) {
+                  const listNilai = [
+                    rataUjian,
+                    rata,
+                    ujian.toJSON().nilaiUAS ? ujian.toJSON().nilaiUAS?.nilai : null,
+                    ujian.toJSON().nilaiUTS ? ujian.toJSON().nilaiUTS?.nilai : null,
+                  ];
+                  nilaiAkhir = listNilai.filter((nilai) => nilai).length
+                    ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) /
+                      listNilai.filter((nilai) => nilai).length
+                    : 0;
+                  await MUjianSiswa.query().where({ id: ujian.id }).update({
+                    nilai: nilaiAkhir,
+                  });
+                } else {
+                  const listNilai = [rataUjian, rata];
+                  nilaiAkhir = listNilai.filter((nilai) => nilai).length
+                    ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) /
+                      listNilai.filter((nilai) => nilai).length
+                    : 0;
+                  await MUjianSiswa.create({
+                    m_ta_id: ta.id,
+                    m_user_id: e.m_user_id,
+                    m_mata_pelajaran_id: mapel.id,
+                    nilai: nilaiAkhir,
+                  });
+                }
+              }
             })
           );
           // }
@@ -18354,7 +18917,7 @@ class MainController {
               .where({ tipe: "tugas" })
               .andWhere({ m_ta_id: ta.id })
               .andWhere({ dihapus: 0 })
-              .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+              .andWhere({ m_materi_id: materi.id });
           });
         })
         .where({ m_user_id: user_id })
@@ -18367,7 +18930,7 @@ class MainController {
               .where({ tipe: "ujian" })
               .andWhere({ m_ta_id: ta.id })
               .andWhere({ dihapus: 0 })
-              .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+              .andWhere({ m_materi_id: materi.id });
           });
         })
         .where({ m_user_id: user_id })
@@ -18462,7 +19025,7 @@ class MainController {
               .where({ tipe: "keterampilan" })
               .andWhere({ m_ta_id: ta.id })
               .andWhere({ dihapus: 0 })
-              .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+              .andWhere({ m_materi_id: materi.id });
           });
         })
         .where({ m_user_id: user_id })
@@ -18495,7 +19058,7 @@ class MainController {
               .andWhere({ teknik: "praktik" })
               .andWhere({ m_ta_id: ta.id })
               .andWhere({ dihapus: 0 })
-              .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+              .andWhere({ m_materi_id: materi.id });
           });
         })
         .where({ m_user_id: user_id })
@@ -18526,7 +19089,7 @@ class MainController {
               .andWhere({ teknik: "proyek" })
               .andWhere({ m_ta_id: ta.id })
               .andWhere({ dihapus: 0 })
-              .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+              .andWhere({ m_materi_id: materi.id });
           });
         })
         .where({ m_user_id: user_id })
@@ -18556,7 +19119,7 @@ class MainController {
               .andWhere({ teknik: "portofolio" })
               .andWhere({ m_ta_id: ta.id })
               .andWhere({ dihapus: 0 })
-              .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+              .andWhere({ m_materi_id: materi.id });
           });
         })
         .where({ m_user_id: user_id })
@@ -18586,7 +19149,7 @@ class MainController {
               .andWhere({ teknik: "produk" })
               .andWhere({ m_ta_id: ta.id })
               .andWhere({ dihapus: 0 })
-              .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+              .andWhere({ m_materi_id: materi.id });
           });
         })
         .where({ m_user_id: user_id })
@@ -23099,7 +23662,7 @@ class MainController {
             .where({ tipe: "keterampilan" })
             .andWhere({ m_ta_id: ta.id })
             .andWhere({ dihapus: 0 })
-            .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+            .andWhere({ m_materi_id: materi.id });
         });
       })
       .where({ m_user_id: user_id })
@@ -23132,7 +23695,7 @@ class MainController {
             .andWhere({ teknik: "praktik" })
             .andWhere({ m_ta_id: ta.id })
             .andWhere({ dihapus: 0 })
-            .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+            .andWhere({ m_materi_id: materi.id });
         });
       })
       .where({ m_user_id: user_id })
@@ -23163,7 +23726,7 @@ class MainController {
             .andWhere({ teknik: "proyek" })
             .andWhere({ m_ta_id: ta.id })
             .andWhere({ dihapus: 0 })
-            .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+            .andWhere({ m_materi_id: materi.id });
         });
       })
       .where({ m_user_id: user_id })
@@ -23193,7 +23756,7 @@ class MainController {
             .andWhere({ teknik: "portofolio" })
             .andWhere({ m_ta_id: ta.id })
             .andWhere({ dihapus: 0 })
-            .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+            .andWhere({ m_materi_id: materi.id });
         });
       })
       .where({ m_user_id: user_id })
@@ -23223,7 +23786,7 @@ class MainController {
             .andWhere({ teknik: "produk" })
             .andWhere({ m_ta_id: ta.id })
             .andWhere({ dihapus: 0 })
-            .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+            .andWhere({ m_materi_id: materi.id });
         });
       })
       .where({ m_user_id: user_id })
@@ -34451,7 +35014,7 @@ class MainController {
                   .where({ tipe: "tugas" })
                   .andWhere({ m_ta_id: ta.id })
                   .andWhere({ dihapus: 0 })
-                  .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+                  .andWhere({ m_materi_id: materi.id });
               });
             })
             .where({ m_user_id: userSiswa.id })
@@ -34464,7 +35027,7 @@ class MainController {
                   .where({ tipe: "ujian" })
                   .andWhere({ m_ta_id: ta.id })
                   .andWhere({ dihapus: 0 })
-                  .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+                  .andWhere({ m_materi_id: materi.id });
               });
             })
             .where({ m_user_id: userSiswa.id })
@@ -34602,7 +35165,7 @@ class MainController {
                   .where({ tipe: "keterampilan" })
                   .andWhere({ m_ta_id: ta.id })
                   .andWhere({ dihapus: 0 })
-                  .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+                  .andWhere({ m_materi_id: materi.id });
               });
             })
             .where({ m_user_id: userSiswa.id })
@@ -34635,7 +35198,7 @@ class MainController {
                   .andWhere({ teknik: "praktik" })
                   .andWhere({ m_ta_id: ta.id })
                   .andWhere({ dihapus: 0 })
-                  .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+                  .andWhere({ m_materi_id: materi.id });
               });
             })
             .where({ m_user_id: userSiswa.id })
@@ -34666,7 +35229,7 @@ class MainController {
                   .andWhere({ teknik: "proyek" })
                   .andWhere({ m_ta_id: ta.id })
                   .andWhere({ dihapus: 0 })
-                  .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+                  .andWhere({ m_materi_id: materi.id });
               });
             })
             .where({ m_user_id: userSiswa.id })
@@ -34696,7 +35259,7 @@ class MainController {
                   .andWhere({ teknik: "portofolio" })
                   .andWhere({ m_ta_id: ta.id })
                   .andWhere({ dihapus: 0 })
-                  .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+                  .andWhere({ m_materi_id: materi.id });
               });
             })
             .where({ m_user_id: userSiswa.id })
@@ -34726,7 +35289,7 @@ class MainController {
                   .andWhere({ teknik: "produk" })
                   .andWhere({ m_ta_id: ta.id })
                   .andWhere({ dihapus: 0 })
-                  .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+                  .andWhere({ m_materi_id: materi.id });
               });
             })
             .where({ m_user_id: userSiswa.id })
@@ -38123,66 +38686,7 @@ class MainController {
                   .andWhere({ m_ta_id: ta.id })
                   .first();
 
-                if (check.toJSON().rekapRombel.rekap.teknik == "UTS") {
-                  if (checkData) {
-                    try {
-                      const postUjian = await MUjianSiswa.query()
-                        .where({ m_user_id: b.user.id })
-                        .andWhere({
-                          m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
-                        })
-                        .andWhere({ m_ta_id: ta.id })
-                        .update({
-                          uts_id: rekapNilai.id,
-                        });
-                    } catch (error) {
-                      return error;
-                    }
-                  } else {
-                    await MUjianSiswa.create({
-                      m_user_id: b.user.id,
-                      m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
-                      uts_id: rekapNilai.id,
-                      m_ta_id: ta.id,
-                    });
-                  }
-                } else if (check.toJSON().rekapRombel.rekap.teknik == "UAS") {
-                  if (checkData) {
-                    await MUjianSiswa.query()
-                      .where({ m_user_id: b.user.id })
-                      .andWhere({
-                        m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
-                      })
-                      .update({
-                        uas_id: rekapNilai.id,
-                      });
-                  } else {
-                    await MUjianSiswa.create({
-                      m_user_id: b.user.id,
-                      m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
-                      uas_id: rekapNilai.id,
-                      m_ta_id: ta.id,
-                    });
-                  }
-                } else if (check.toJSON().rekapRombel.rekap.teknik == "US") {
-                  if (checkData) {
-                    await MUjianSiswa.query()
-                      .where({ m_user_id: b.user.id })
-                      .andWhere({
-                        m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
-                      })
-                      .update({
-                        us_id: rekapNilai.id,
-                      });
-                  } else {
-                    await MUjianSiswa.create({
-                      m_user_id: b.user.id,
-                      m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
-                      us_id: rekapNilai.id,
-                      m_ta_id: ta.id,
-                    });
-                  }
-                }
+                
 
                 const mapel = await MMataPelajaran.query()
                   .with("user")
@@ -38201,7 +38705,7 @@ class MainController {
                           .where({ tipe: "tugas" })
                           .andWhere({ m_ta_id: ta.id })
                           .andWhere({ dihapus: 0 })
-                          .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+                          .andWhere({ m_materi_id: materi.id });
                       });
                     })
                     .where({ m_user_id: b.user.id })
@@ -38212,9 +38716,10 @@ class MainController {
                       builder.with("rekap", (builder) => {
                         builder
                           .where({ tipe: "ujian" })
+                          .andWhere({teknik: "UH"})
                           .andWhere({ m_ta_id: ta.id })
                           .andWhere({ dihapus: 0 })
-                          .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+                          .andWhere({ m_materi_id: materi.id });
                       });
                     })
                     .where({ m_user_id: b.user.id })
@@ -38273,6 +38778,67 @@ class MainController {
 
                   const rataUjian = jumlah / dataUjian.length;
 
+                  if (check.toJSON().rekapRombel.rekap.teknik == "UTS") {
+                    if (checkData) {
+                      try {
+                        const postUjian = await MUjianSiswa.query()
+                          .where({ m_user_id: b.user.id })
+                          .andWhere({
+                            m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
+                          })
+                          .andWhere({ m_ta_id: ta.id })
+                          .update({
+                            uts_id: rekapNilai.id,
+                          });
+                      } catch (error) {
+                        return error;
+                      }
+                    } else {
+                      await MUjianSiswa.create({
+                        m_user_id: b.user.id,
+                        m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
+                        uts_id: rekapNilai.id,
+                        m_ta_id: ta.id,
+                      });
+                    }
+                  } else if (check.toJSON().rekapRombel.rekap.teknik == "UAS") {
+                    if (checkData) {
+                      await MUjianSiswa.query()
+                        .where({ m_user_id: b.user.id })
+                        .andWhere({
+                          m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
+                        })
+                        .update({
+                          uas_id: rekapNilai.id,
+                        });
+                    } else {
+                      await MUjianSiswa.create({
+                        m_user_id: b.user.id,
+                        m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
+                        uas_id: rekapNilai.id,
+                        m_ta_id: ta.id,
+                      });
+                    }
+                  } else if (check.toJSON().rekapRombel.rekap.teknik == "US") {
+                    if (checkData) {
+                      await MUjianSiswa.query()
+                        .where({ m_user_id: b.user.id })
+                        .andWhere({
+                          m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
+                        })
+                        .update({
+                          us_id: rekapNilai.id,
+                        });
+                    } else {
+                      await MUjianSiswa.create({
+                        m_user_id: b.user.id,
+                        m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
+                        us_id: rekapNilai.id,
+                        m_ta_id: ta.id,
+                      });
+                    }
+                  }
+
                   let nilaiAkhir;
                   if (ujian) {
                     const listNilai = [
@@ -38319,7 +38885,7 @@ class MainController {
                           .where({ tipe: "keterampilan" })
                           .andWhere({ m_ta_id: ta.id })
                           .andWhere({ dihapus: 0 })
-                          .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+                          .andWhere({ m_materi_id: materi.id });
                       });
                     })
                     .where({ m_user_id: b.user.id })
@@ -38352,7 +38918,7 @@ class MainController {
                           .andWhere({ teknik: "praktik" })
                           .andWhere({ m_ta_id: ta.id })
                           .andWhere({ dihapus: 0 })
-                          .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+                          .andWhere({ m_materi_id: materi.id });
                       });
                     })
                     .where({ m_user_id: b.user.id })
@@ -38383,7 +38949,7 @@ class MainController {
                           .andWhere({ teknik: "proyek" })
                           .andWhere({ m_ta_id: ta.id })
                           .andWhere({ dihapus: 0 })
-                          .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+                          .andWhere({ m_materi_id: materi.id });
                       });
                     })
                     .where({ m_user_id: b.user.id })
@@ -38413,7 +38979,7 @@ class MainController {
                           .andWhere({ teknik: "portofolio" })
                           .andWhere({ m_ta_id: ta.id })
                           .andWhere({ dihapus: 0 })
-                          .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+                          .andWhere({ m_materi_id: materi.id });
                       });
                     })
                     .where({ m_user_id: b.user.id })
@@ -38443,7 +39009,7 @@ class MainController {
                           .andWhere({ teknik: "produk" })
                           .andWhere({ m_ta_id: ta.id })
                           .andWhere({ dihapus: 0 })
-                          .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+                          .andWhere({ m_materi_id: materi.id });
                       });
                     })
                     .where({ m_user_id: b.user.id })
