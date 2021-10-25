@@ -34926,59 +34926,7 @@ class MainController {
           .andWhere({ m_user_id: userSiswa.id })
           .first();
 
-        if (rekapRombel.toJSON().rekap.teknik == "UTS") {
-          if (checkData) {
-            try {
-              await MUjianSiswa.query()
-                .where({ m_user_id: userSiswa.id })
-                .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
-                .update({
-                  uts_id: nilaiSiswa1.id,
-                });
-            } catch (error) {
-              return error;
-            }
-          } else {
-            await MUjianSiswa.create({
-              m_user_id: userSiswa.id,
-              m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
-              uts_id: nilaiSiswa1.id,
-              m_ta_id: ta.id,
-            });
-          }
-        } else if (rekapRombel.toJSON().rekap.teknik == "UAS") {
-          if (checkData) {
-            await MUjianSiswa.query()
-              .where({ m_user_id: userSiswa.id })
-              .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
-              .update({
-                uas_id: nilaiSiswa1.id,
-              });
-          } else {
-            await MUjianSiswa.create({
-              m_user_id: userSiswa.id,
-              m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
-              uas_id: nilaiSiswa1.id,
-              m_ta_id: ta.id,
-            });
-          }
-        } else if (rekapRombel.toJSON().rekap.teknik == "US") {
-          if (checkData) {
-            await MUjianSiswa.query()
-              .where({ m_user_id: userSiswa.id })
-              .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
-              .update({
-                us_id: nilaiSiswa1.id,
-              });
-          } else {
-            await MUjianSiswa.create({
-              m_user_id: userSiswa.id,
-              m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
-              us_id: nilaiSiswa1.id,
-              m_ta_id: ta.id,
-            });
-          }
-        }
+        
 
         if (
           rekapRombel.toJSON().rekap.tipe == "tugas" ||
@@ -35062,6 +35010,59 @@ class MainController {
             });
 
           const rataUjian = jumlah / dataUjian.length;
+
+          if (rekapRombel.toJSON().rekap.teknik == "UTS") {
+            if (checkData) {
+              try {
+                await MUjianSiswa.query()
+                  .where({ m_user_id: userSiswa.id })
+                  .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
+                  .update({
+                    uts_id: nilaiSiswa1.id,
+                  });
+              } catch (error) {
+              }
+            } else {
+              await MUjianSiswa.create({
+                m_user_id: userSiswa.id,
+                m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
+                uts_id: nilaiSiswa1.id,
+                m_ta_id: ta.id,
+              });
+            }
+          } else if (rekapRombel.toJSON().rekap.teknik == "UAS") {
+            if (checkData) {
+              await MUjianSiswa.query()
+                .where({ m_user_id: userSiswa.id })
+                .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
+                .update({
+                  uas_id: nilaiSiswa1.id,
+                });
+            } else {
+              await MUjianSiswa.create({
+                m_user_id: userSiswa.id,
+                m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
+                uas_id: nilaiSiswa1.id,
+                m_ta_id: ta.id,
+              });
+            }
+          } else if (rekapRombel.toJSON().rekap.teknik == "US") {
+            if (checkData) {
+              await MUjianSiswa.query()
+                .where({ m_user_id: userSiswa.id })
+                .andWhere({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
+                .update({
+                  us_id: nilaiSiswa1.id,
+                });
+            } else {
+              await MUjianSiswa.create({
+                m_user_id: userSiswa.id,
+                m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
+                us_id: nilaiSiswa1.id,
+                m_ta_id: ta.id,
+              });
+            }
+          }
 
           let nilaiAkhir;
           if (ujian) {
