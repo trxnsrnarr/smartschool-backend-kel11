@@ -23026,7 +23026,7 @@ class MainController {
       .with("materi", (builder) => {
         builder.where({
           tingkat: siswaKeterampilan.toJSON().anggotaRombel.rombel.tingkat,
-        });
+        }).andWhere({m_jurusan_id:siswaKeterampilan.toJSON().anggotaRombel.rombel.m_jurusan_id});
       })
       .where({ id: mata_pelajaran_id })
       .first();
@@ -37987,7 +37987,7 @@ class MainController {
       .where({ dihapus: 0 })
       .andWhere({ m_ta_id: ta.id })
       .andWhere({ tipe: "keterampilan" })
-      .offset(offset)
+      .offset(90)
       .limit(limit)
       .fetch();
 
