@@ -23404,7 +23404,7 @@ class MainController {
       rombel: rombel,
       ekskul: ekskul,
       totalHadir: totalHadir,
-      
+
       totalSakit: totalSakit,
       totalIzin: totalIzin,
       totalAlpa: totalAlpa,
@@ -37860,22 +37860,29 @@ class MainController {
   async hackJadwalUjian({ response, request }) {
     const { offset, limit } = request.post();
 
-    const user = User.query()
+    const semuaUser = await User.query()
+      .select("id", "nama")
       .with("jadwalUjianSemua", (builder) => {
-        builder.with("rombelUjian").where({dihapus:0});
+        builder
+          .with("rombelUjian")
+          .where({ dihapus: 0 })
+          .offset(parseInt(offset))
+          .limit(limit);
       })
       .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: 33 })
+      // .andWhere({ m_sekolah_id: 33 })
       .andWhere({ role: "guru" })
-      .offset(parseInt(offset))
-      .limit(limit)
+      // .offset(parseInt(offset))
+      // .limit(limit)
       .fetch();
 
-    await Promise.all(
-      user.toJSON().map(async (ss) => {
-        await Promise.all(
+    // return semuaUser;
+
+    const semua = await Promise.all(
+      semuaUser.toJSON().map(async (ss) => {
+        const a = await Promise.all(
           ss.jadwalUjianSemua.map(async (a) => {
-            await Promise.all(
+            const b = await Promise.all(
               a.rombelUjian.map(async (b) => {
                 const jadwalUjian = await TkJadwalUjian.query()
                   .with("peserta", (builder) => {
@@ -37903,9 +37910,9 @@ class MainController {
                   .whereIn("id", anggotaRombel)
                   .fetch();
 
-                await Promise.all(
+                const d = await Promise.all(
                   pesertaUjianData.toJSON().map(async (d) => {
-                    await Promise.all(
+                    const e = await Promise.all(
                       jadwalUjian.toJSON().peserta.map(async (e) => {
                         if (d.id == e.m_user_id) {
                           const pesertaUjian = await TkPesertaUjian.query()
@@ -37974,22 +37981,32 @@ class MainController {
                           metaHasil.nilaiTotal =
                             metaHasil.nilaiPg + metaHasil.nilaiEsai;
 
-                          await TkPesertaUjian.query()
+                          const berhasil = await TkPesertaUjian.query()
                             .where({ id: pesertaUjian.id })
                             .update({
                               nilai: metaHasil.nilaiTotal,
                             });
+
+                          if (berhasil) {
+                            return;
+                          }
                         }
                       })
                     );
+                    return e;
                   })
                 );
+                return d;
               })
             );
+            return b;
           })
         );
+        return a;
       })
     );
+
+    return semua;
   }
 
   async putRekapNilaiAll({
@@ -38019,7 +38036,7 @@ class MainController {
       })
       .where({ dihapus: 0 })
       .andWhere({ m_ta_id: ta.id })
-      .andWhere({ tipe: "keterampilan" })
+      .andWhere({ teknik: "UTS" })
       .offset(parseInt(offset))
       .limit(limit)
       .fetch();
@@ -38060,6 +38077,7 @@ class MainController {
                         .andWhere({
                           m_mata_pelajaran_id: materi.m_mata_pelajaran_id,
                         })
+                        .andWhere({ m_ta_id: ta.id})
                         .update({
                           uts_id: rekapNilai.id,
                         });
