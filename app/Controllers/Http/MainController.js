@@ -17645,7 +17645,9 @@ class MainController {
                 `${pelajaran.toJSON().mataPelajaran.kkm}`
               );
             })
-            .with("tugas")
+            .with("tugas",(builder)=>{
+              builder.where({dihapus:0})
+            })
             .where({ dihapus: 0 });
           // .andWhere({ m_rombel_id: rombel_id });
         })
@@ -17671,7 +17673,9 @@ class MainController {
                 `${pelajaran.toJSON().mataPelajaran.kkm}`
               );
             })
-            .with("tugas")
+            .with("tugas",(builder)=>{
+              builder.where({dihapus:0})
+            })
             .where({ dihapus: 0 });
           // .andWhere({ m_rombel_id: rombel_id });
         })
@@ -17687,7 +17691,9 @@ class MainController {
       timelineTugas = await MTimeline.query()
         .where({ m_user_id: user.id })
         .andWhere({ m_rombel_id: rombel_id })
-        .with("tugas")
+        .with("tugas",(builder)=>{
+          builder.where({dihapus:0})
+        })
         .fetch();
       tugas = timelineTugas
         .toJSON()
