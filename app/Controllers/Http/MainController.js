@@ -735,6 +735,7 @@ class MainController {
 
       // informasi
       nisn,
+      nis,
       asal_sekolah,
       status_keluarga,
       anak_ke,
@@ -865,6 +866,7 @@ class MainController {
 
         // informasi
         nisn,
+        nis,
         asal_sekolah,
         status_keluarga,
         anak_ke,
@@ -2797,7 +2799,17 @@ class MainController {
     }
 
     const ta = await Mta.query()
-      .select("tahun", "semester", "nama_kepsek", "nip_kepsek", "aktif", "id")
+      .select(
+        "tahun",
+        "semester",
+        "nama_kepsek",
+        "nip_kepsek",
+        "aktif",
+        "id",
+        "tanggal_awal",
+        "tanggal_akhir",
+        "tanggal_rapor"
+      )
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .orderBy("id", "desc")
@@ -5618,6 +5630,7 @@ class MainController {
         builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id });
       })
       .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
+      .where({ dihapus: 0 })
       .fetch();
 
     // const materiLainnya = await MMateri.query()
@@ -7580,9 +7593,90 @@ class MainController {
         sudah_lewat = true;
       }
 
+      const range = [
+        moment(
+          timeline.toJSON().tipe == "tugas"
+            ? timeline.toJSON().timeline.tugas.tanggal_pembagian
+            : timeline.toJSON().timeline.tanggal_pembagian
+        ).format("YYYY-MM-DD 00:00:00"),
+        moment(
+          timeline.toJSON().tipe == "tugas"
+            ? timeline.toJSON().timeline.tugas.tanggal_pembagian
+            : timeline.toJSON().timeline.tanggal_pembagian
+        ).format("YYYY-MM-DD 23:59:59"),
+      ];
+
+      const timelineId1 = await MTimeline.query()
+        .whereNull("m_mata_pelajaran_id")
+        .andWhere({ m_rombel_id: timeline.toJSON().timeline.rombel.id })
+        .andWhere({
+          m_user_id: timeline.toJSON().timeline.m_user_id,
+        })
+        .whereBetween("tanggal_pembagian", range)
+        .andWhere({ dihapus: 0 })
+        .andWhereNot({ tipe: "tugas" })
+        .ids();
+
+      const timelineId2 = await MTimeline.query()
+        .whereNotNull("m_mata_pelajaran_id")
+        .andWhere({
+          m_mata_pelajaran_id: timeline.toJSON().timeline.m_mata_pelajaran_id,
+        })
+        .andWhere({ m_rombel_id: timeline.toJSON().timeline.rombel.id })
+        .andWhere({
+          m_user_id: timeline.toJSON().timeline.m_user_id,
+        })
+        .whereBetween("tanggal_pembagian", range)
+        .andWhere({ dihapus: 0 })
+        .andWhereNot({ tipe: "tugas" })
+        .ids();
+
+      const tugasIds = await MTugas.query()
+        .where({ m_user_id: timeline.toJSON().timeline.m_user_id })
+        .andWhere({ dihapus: 0 })
+        .andWhere({
+          tanggal_pembagian: moment(
+            timeline.toJSON().tipe == "tugas"
+              ? timeline.toJSON().timeline.tugas.tanggal_pembagian
+              : timeline.toJSON().timeline.tanggal_pembagian
+          ).format("YYYY-MM-DD"),
+        })
+        .ids();
+
+      const timelineTugas = await MTimeline.query()
+        .where({ m_rombel_id: timeline.toJSON().timeline.rombel.id })
+        .andWhere({ dihapus: 0 })
+        .andWhere({
+          m_user_id: timeline.toJSON().timeline.m_user_id,
+        })
+        .whereIn("m_tugas_id", tugasIds)
+        .ids();
+
+      const timelineIds = [...timelineId2, ...timelineId1, ...timelineTugas];
+
+      const timelines = await TkTimeline.query()
+        .with("timeline", (builder) => {
+          builder
+            .with("tugas")
+            .withCount("komen as total_komen", (builder) => {
+              builder.where({ dihapus: 0 });
+            })
+            .with("komen", (builder) => {
+              builder.with("user").where({ dihapus: 0 });
+            })
+            .with("user");
+        })
+        .with("user")
+        .where({ m_user_id: user.id })
+        .andWhere({ dihapus: 0 })
+        .whereIn("m_timeline_id", timelineIds)
+        .orderBy("id", "desc")
+        .fetch();
+
       return response.ok({
         timeline,
         sudah_lewat,
+        timelines,
       });
     }
 
@@ -7647,8 +7741,76 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .first();
 
+    const range = [
+      moment(
+        timeline.tipe == "tugas"
+          ? timeline.toJSON().tugas.tanggal_pembagian
+          : timeline.toJSON().tanggal_pembagian
+      ).format("YYYY-MM-DD 00:00:00"),
+      moment(
+        timeline.tipe == "tugas"
+          ? timeline.toJSON().tugas.tanggal_pembagian
+          : timeline.toJSON().tanggal_pembagian
+      ).format("YYYY-MM-DD 23:59:29"),
+    ];
+
+    const timelineBiasa = await MTimeline.query()
+      .with("tugas", (builder) => {
+        builder.with("timeline", (builder) => {
+          builder.with("rombel").with("tkTimeline");
+        });
+      })
+      .with("user")
+      .withCount("tkTimeline as total_respon", (builder) => {
+        builder.whereNotNull("waktu_pengumpulan");
+      })
+      .withCount("tkTimeline as total_absen", (builder) => {
+        builder.whereNotNull("waktu_absen");
+      })
+      .withCount("tkTimeline as total_siswa")
+      .where({ m_user_id: timeline.m_user_id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_rombel_id: timeline.m_rombel_id })
+      .whereBetween("tanggal_pembagian", range)
+      .andWhereNot({ tipe: "tugas" })
+      .fetch();
+
+    const tugasIds = await MTugas.query()
+      .where({ m_user_id: timeline.m_user_id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({
+        tanggal_pembagian: moment(
+          timeline.tipe == "tugas"
+            ? timeline.toJSON().tugas.tanggal_pembagian
+            : timeline.toJSON().tanggal_pembagian
+        ).format("YYYY-MM-DD"),
+      })
+      .ids();
+    const timelineTugas = await MTimeline.query()
+      .with("tugas", (builder) => {
+        builder.with("timeline", (builder) => {
+          builder.with("rombel").with("tkTimeline");
+        });
+      })
+      .with("user")
+      .withCount("tkTimeline as total_respon", (builder) => {
+        builder.whereNotNull("waktu_pengumpulan");
+      })
+      .withCount("tkTimeline as total_absen", (builder) => {
+        builder.whereNotNull("waktu_absen");
+      })
+      .withCount("tkTimeline as total_siswa")
+      .where({ m_user_id: timeline.m_user_id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_rombel_id: timeline.m_rombel_id })
+      .whereIn("m_tugas_id", tugasIds)
+      .fetch();
+
+    const timelines = [...timelineBiasa.toJSON(), ...timelineTugas.toJSON()];
+
     return response.ok({
       timeline,
+      timelines,
     });
   }
 
@@ -17465,6 +17627,7 @@ class MainController {
     let rekap;
     let timelineTugas;
     let tugas;
+    let ujian;
     if (rombel_id) {
       rekap = await MRekap.query()
         .with("rekaprombel", (builder) => {
@@ -17530,6 +17693,20 @@ class MainController {
         .toJSON()
         .filter((t) => t.tugas != null)
         .map((t) => t.tugas);
+      const ujianRombel = await TkJadwalUjian.query()
+        .with("jadwalUjian", (builder) => {
+          builder
+            .with("ujian", (builder) => {
+              builder.where({ dihapus: 0 });
+            })
+            .where({ dihapus: 0 });
+        })
+        .where({ dihapus: 0 })
+        .whereIn("m_rombel_id", [rombel_id])
+        .fetch();
+      ujian = ujianRombel
+        .toJSON()
+        .filter((d) => d.jadwalUjian && d.jadwalUjian.ujian);
     }
     // const tugas = await MTugas.query().where({ m_user_id: user.id }).fetch();
 
@@ -17537,6 +17714,7 @@ class MainController {
       materirombel,
       rekap,
       tugas,
+      ujian,
     });
   }
 
@@ -23190,21 +23368,21 @@ class MainController {
       .andWhere({ keterangan: "hadir" })
       .andWhere({ m_user_id: user_id })
       .count("* as total");
-    const totalSakit = await MAbsen.query()
-      .with("user")
-      .whereBetween("created_at", [`${ta.tanggal_awal}`, `${ta.tanggal_akhir}`])
-      .andWhere({ keterangan: "sakit" })
-      .andWhere({ m_user_id: user_id })
-      .count("* as total");
-    const totalIzin = await MAbsen.query()
-      .with("user")
-      .whereBetween("created_at", [`${ta.tanggal_awal}`, `${ta.tanggal_akhir}`])
-      .andWhere({ keterangan: "izin" })
-      .andWhere({ m_user_id: user_id })
-      .count("* as total");
-    const totalAlpa =
-      user_id.length -
-      (totalHadir[0].total + totalSakit[0].total + totalIzin[0].total);
+    // const totalSakit = await MAbsen.query()
+    //   .with("user")
+    //   .whereBetween("created_at", [`${ta.tanggal_awal}`, `${ta.tanggal_akhir}`])
+    //   .andWhere({ keterangan: "sakit" })
+    //   .andWhere({ m_user_id: user_id })
+    //   .count("* as total");
+    // const totalIzin = await MAbsen.query()
+    //   .with("user")
+    //   .whereBetween("created_at", [`${ta.tanggal_awal}`, `${ta.tanggal_akhir}`])
+    //   .andWhere({ keterangan: "izin" })
+    //   .andWhere({ m_user_id: user_id })
+    //   .count("* as total");
+    // const totalAlpa =
+    //   user_id.length -
+    //   (totalHadir[0].total + totalSakit[0].total + totalIzin[0].total);
 
     return response.ok({
       siswa: siswa,
@@ -23215,9 +23393,9 @@ class MainController {
       rombel: rombel,
       ekskul: ekskul,
       totalHadir: totalHadir,
-      totalSakit: totalSakit,
-      totalIzin: totalIzin,
-      totalAlpa: totalAlpa,
+      totalSakit: [{total: siswa.toJSON().keteranganRapor.sakit}],
+      totalIzin: [{total: siswa.toJSON().keteranganRapor.izin}],
+      totalAlpa: siswa.toJSON().keteranganRapor.alpa,
       tanggalDistinct: tanggalDistinct,
       muatan,
       totalMapel,
@@ -23354,7 +23532,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { catatan, kelulusan } = request.post();
+    const { catatan, kelulusan, sakit, izin, alpa } = request.post();
     const rules = {
       kelulusan: "required",
     };
@@ -23373,6 +23551,12 @@ class MainController {
         kelulusan,
         dihapus: 0,
       });
+
+    await MKeteranganRapor.query().where({ m_user_id: user_id }).update({
+      sakit,
+      izin,
+      alpa,
+    });
 
     if (!keteranganRapor) {
       return response.notFound({
@@ -34681,105 +34865,108 @@ class MainController {
     worksheet.getCell("A3").value = rekapan.judul;
 
     await Promise.all(
-      rekapData.toJSON().map(async (d, idx) => {
-        worksheet.addConditionalFormatting({
-          ref: `B${(idx + 1) * 1 + 5}:C${(idx + 1) * 1 + 5}`,
-          rules: [
-            {
-              type: "expression",
-              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-              style: {
-                font: {
-                  name: "Times New Roman",
-                  family: 4,
-                  size: 11,
-                  // bold: true,
-                },
-                alignment: {
-                  vertical: "middle",
-                  horizontal: "left",
-                },
-                border: {
-                  top: { style: "thin" },
-                  left: { style: "thin" },
-                  bottom: { style: "thin" },
-                  right: { style: "thin" },
-                },
-              },
-            },
-          ],
-        });
-        worksheet.addConditionalFormatting({
-          ref: `A${(idx + 1) * 1 + 5}`,
-          rules: [
-            {
-              type: "expression",
-              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-              style: {
-                font: {
-                  name: "Times New Roman",
-                  family: 4,
-                  size: 11,
-                  // bold: true,
-                },
-                alignment: {
-                  vertical: "middle",
-                  horizontal: "center",
-                },
-                border: {
-                  top: { style: "thin" },
-                  left: { style: "thin" },
-                  bottom: { style: "thin" },
-                  right: { style: "thin" },
+      rekapData
+        .toJSON()
+        .sort((a, b) => ("" + a.user.nama).localeCompare("" + b.user.nama))
+        .map(async (d, idx) => {
+          worksheet.addConditionalFormatting({
+            ref: `B${(idx + 1) * 1 + 5}:C${(idx + 1) * 1 + 5}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 11,
+                    // bold: true,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "left",
+                  },
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
                 },
               },
-            },
-          ],
-        });
-        worksheet.addConditionalFormatting({
-          ref: `D${(idx + 1) * 1 + 5}`,
-          rules: [
-            {
-              type: "expression",
-              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-              style: {
-                font: {
-                  name: "Times New Roman",
-                  family: 4,
-                  size: 11,
-                  // bold: true,
-                },
-                alignment: {
-                  vertical: "middle",
-                  horizontal: "center",
-                },
-                border: {
-                  top: { style: "thin" },
-                  left: { style: "thin" },
-                  bottom: { style: "thin" },
-                  right: { style: "thin" },
+            ],
+          });
+          worksheet.addConditionalFormatting({
+            ref: `A${(idx + 1) * 1 + 5}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 11,
+                    // bold: true,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
                 },
               },
-            },
-          ],
-        });
-        // add column headers
-        worksheet.getRow(5).values = ["No", "Nama", "Whatsapp", "Nilai"];
-        worksheet.columns = [
-          { key: "no" },
-          { key: "nama" },
-          { key: "whatsapp" },
-          { key: "nilai" },
-        ];
+            ],
+          });
+          worksheet.addConditionalFormatting({
+            ref: `D${(idx + 1) * 1 + 5}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 11,
+                    // bold: true,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
+                },
+              },
+            ],
+          });
+          // add column headers
+          worksheet.getRow(5).values = ["No", "Nama", "Whatsapp", "Nilai"];
+          worksheet.columns = [
+            { key: "no" },
+            { key: "nama" },
+            { key: "whatsapp" },
+            { key: "nilai" },
+          ];
 
-        // Add row using key mapping to columns
-        let row = worksheet.addRow({
-          no: `${idx + 1}`,
-          nama: d.user ? d.user.nama : "-",
-          whatsapp: d.user ? d.user.whatsapp : "-",
-          nilai: d ? d.nilai : "-",
-        });
-      })
+          // Add row using key mapping to columns
+          let row = worksheet.addRow({
+            no: `${idx + 1}`,
+            nama: d.user ? d.user.nama : "-",
+            whatsapp: d.user ? d.user.whatsapp : "-",
+            nilai: d ? d.nilai : "-",
+          });
+        })
     );
     worksheet.getColumn("A").width = 6;
     worksheet.getColumn("B").width = 20;
@@ -37001,22 +37188,23 @@ class MainController {
   }
 
   async putSekolah({ response, request, auth, params: { sekolah_id } }) {
-    const { nama, domain, server } = request.post();
+    const { nama, domain, server, alamat } = request.post();
 
-    let validation = await validate(
-      request.post(),
-      rulesUserPost,
-      messagesUser
-    );
+    // let validation = await validate(
+    //   request.post(),
+    //   rulesUserPost,
+    //   messagesUser
+    // );
 
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
-    }
+    // if (validation.fails()) {
+    //   return response.unprocessableEntity(validation.messages());
+    // }
 
     const sekolah = await MSekolah.query().where({ id: sekolah_id }).update({
       nama,
       domain,
       server,
+      alamat
     });
 
     return response.ok({

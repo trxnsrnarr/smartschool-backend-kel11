@@ -56,6 +56,7 @@ Route.post("/reset-password-request", "MainController.requestResetPassword");
 
 // sekolah
 Route.get("/sekolah", "MainController.getSekolah");
+Route.put("/sekolah/:sekolah_id", "MainController.putSekolah");
 
 // jurusan
 Route.get("/jurusan", "MainController.getJurusan");
