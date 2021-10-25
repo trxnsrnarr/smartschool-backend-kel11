@@ -38465,7 +38465,7 @@ class MainController {
           .limit(limit);
       })
       .where({ dihapus: 0 })
-      // .andWhere({ m_sekolah_id: 33 })
+      .andWhere({ m_sekolah_id: 33 })
       .andWhere({ role: "guru" })
       // .offset(parseInt(offset))
       // .limit(limit)
