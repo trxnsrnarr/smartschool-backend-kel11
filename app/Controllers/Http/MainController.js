@@ -3514,6 +3514,10 @@ class MainController {
     let sikapspiritual;
 
     if (rombel_id) {
+      data = await MJadwalMengajar.query()
+        .where({ id: jadwal_mengajar_id })
+        .first();
+        
       jadwalMengajar = await MJadwalMengajar.query()
         .with("mataPelajaran")
         .with("rombel", (builder) => {
