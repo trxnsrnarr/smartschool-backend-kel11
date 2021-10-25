@@ -17703,9 +17703,11 @@ class MainController {
         .with("jadwalUjian", (builder) => {
           builder
             .with("ujian", (builder) => {
-              builder.where({ dihapus: 0 });
+              builder.where({ dihapus: 0 })
+              .andWhere("tipe", "like", `%${tipe}%`);
             })
-            .where({ dihapus: 0 });
+            .where({ dihapus: 0 })
+            
         })
         .where({ dihapus: 0 })
         .whereIn("m_rombel_id", [rombel_id])
