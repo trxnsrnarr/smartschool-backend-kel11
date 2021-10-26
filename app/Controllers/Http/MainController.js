@@ -3514,6 +3514,10 @@ class MainController {
     let sikapspiritual;
 
     if (rombel_id) {
+      data = await MJadwalMengajar.query()
+        .where({ id: jadwal_mengajar_id })
+        .first();
+        
       jadwalMengajar = await MJadwalMengajar.query()
         .with("mataPelajaran")
         .with("rombel", (builder) => {
@@ -3538,9 +3542,12 @@ class MainController {
                   builder.with("predikat").where({ dihapus: 0 });
                 })
                 .with("nilaiUjian", (builder) => {
-                  builder.where({
-                    m_mata_pelajaran_id: data.m_mata_pelajaran_id,
-                  });
+                  if(data) {
+
+                    builder.where({
+                      m_mata_pelajaran_id: data.m_mata_pelajaran_id,
+                    });
+                  }
                 })
                 .withCount(
                   "nilaiSemuaUjian as jumlahMapelDikerjakan",
