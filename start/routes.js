@@ -1038,5 +1038,14 @@ Route.post("/resend", "MainController.resendAktivasi")
 Route.post("/danger/hack", "MainController.putRekapNilaiAll")
 Route.post("/danger/hack/ujian", "MainController.hackJadwalUjian")
 
+Route.post(
+  "/download/rekap-sikap/:rombel_id/:mata_pelajaran_id",
+  "MainController.downloadRekapRombelSikap"
+);
+Route.post(
+  "/import/rekap-sikap/:rombel_id/:mata_pelajaran_id",
+  "MainController.importSikapRekapRombel"
+);
+
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
