@@ -3517,7 +3517,7 @@ class MainController {
       data = await MJadwalMengajar.query()
         .where({ id: jadwal_mengajar_id })
         .first();
-        
+
       jadwalMengajar = await MJadwalMengajar.query()
         .with("mataPelajaran")
         .with("rombel", (builder) => {
@@ -3542,8 +3542,7 @@ class MainController {
                   builder.with("predikat").where({ dihapus: 0 });
                 })
                 .with("nilaiUjian", (builder) => {
-                  if(data) {
-
+                  if (data) {
                     builder.where({
                       m_mata_pelajaran_id: data.m_mata_pelajaran_id,
                     });
@@ -24037,9 +24036,23 @@ class MainController {
       totalSakit: totalSakit,
       totalIzin: totalIzin,
       totalAlpa: totalAlpa,
-      totalSakit: [{ total: siswa.toJSON().keteranganRapor.sakit ? siswa.toJSON().keteranganRapor.sakit : 0 }],
-      totalIzin: [{ total: siswa.toJSON().keteranganRapor.izin ? siswa.toJSON().keteranganRapor.izin : 0 }],
-      totalAlpa: siswa.toJSON().keteranganRapor.alpa ? siswa.toJSON().keteranganRapor.alpa : 0,
+      totalSakit: [
+        {
+          total: siswa.toJSON().keteranganRapor.sakit
+            ? siswa.toJSON().keteranganRapor.sakit
+            : 0,
+        },
+      ],
+      totalIzin: [
+        {
+          total: siswa.toJSON().keteranganRapor.izin
+            ? siswa.toJSON().keteranganRapor.izin
+            : 0,
+        },
+      ],
+      totalAlpa: siswa.toJSON().keteranganRapor.alpa
+        ? siswa.toJSON().keteranganRapor.alpa
+        : 0,
       tanggalDistinct: tanggalDistinct,
       muatan,
       totalMapel,
@@ -32445,8 +32458,14 @@ class MainController {
 
       const janganUlangRombel = [];
       const rombel = rombelMengajar.toJSON().filter((d) => {
-        if (!janganUlangRombel.includes(d.m_rombel_id)) {
-          janganUlangRombel.push(d.m_rombel_id);
+        if (
+          !janganUlangRombel.find(
+            (e) =>
+              e.m_rombel_id == d.m_rombel_id &&
+              e.m_mata_pelajaran_id == d.m_mata_pelajaran_id
+          )
+        ) {
+          janganUlangRombel.push(d);
           return true;
         } else {
           return false;
@@ -39122,7 +39141,7 @@ class MainController {
 
     const predikat = await MPredikatNilai.query()
       .where({ m_sekolah_id: sekolah.id })
-      .andWhere({dihapus:0})
+      .andWhere({ dihapus: 0 })
       .fetch();
 
     const mataPelajaran = await MMataPelajaran.query()
@@ -39421,7 +39440,6 @@ class MainController {
         })
     );
 
-    
     worksheet.mergeCells("D5:K5");
     worksheet.mergeCells("D6:K6");
     worksheet.mergeCells("D7:K7");
@@ -40004,7 +40022,6 @@ class MainController {
         })
     );
 
-    
     worksheet.mergeCells("D5:K5");
     worksheet.mergeCells("D6:K6");
     worksheet.mergeCells("D7:K7");
