@@ -35120,51 +35120,34 @@ class MainController {
             //   ujian.toJSON().nilaiUAS ? ujian.toJSON().nilaiUAS?.nilai : null,
             //   ujian.toJSON().nilaiUTS ? ujian.toJSON().nilaiUTS?.nilai : null,
             // ];
-            // nilaiAkhir = listNilai.filter((nilai) => nilai).length
-            //   ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) /
-            //     listNilai.filter((nilai) => nilai).length
-            //   : 0;
-            // await MUjianSiswa.query().where({ id: ujian.id }).update({
-            //   nilai: nilaiAkhir,
-            // });
             const nilaiPengetahuan1 = [rataUjian, rata];
-
+      
             const nilaiSebelumAkhir = nilaiPengetahuan1.filter((nilai) => nilai)
               .length
               ? 2 *
-                nilaiPengetahuan1
-                  .filter((nilai) => nilai)
-                  .reduce((a, b) => a + b, 0)
+                nilaiPengetahuan1.filter((nilai) => nilai).reduce((a, b) => a + b, 0)
               : 0;
-
+      
             const nilaiUTS = ujian.toJSON().nilaiUTS
               ? ujian.toJSON().nilaiUTS?.nilai
               : null;
-
+      
             const nilaiUAS = ujian.toJSON().nilaiUAS
               ? ujian.toJSON().nilaiUAS?.nilai
               : null;
-
+      
             const listNilai = [nilaiSebelumAkhir, nilaiUTS, nilaiUAS];
-
+      
             if (listNilai.filter((nilai) => nilai).length == 2) {
               nilaiAkhir = listNilai.filter((nilai) => nilai).length
-                ? listNilai
-                    .filter((nilai) => nilai)
-                    .reduce((a, b) => a + b, 0) / 3
+                ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) / 3
                 : 0;
             } else if (listNilai.filter((nilai) => nilai).length == 3) {
               nilaiAkhir = listNilai.filter((nilai) => nilai).length
-                ? listNilai
-                    .filter((nilai) => nilai)
-                    .reduce((a, b) => a + b, 0) / 4
-                : 0;
-            } else if (listNilai.filter((nilai) => nilai).length == 1) {
-              nilaiAkhir = listNilai.filter((nilai) => nilai).length
-                ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0)
+                ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) / 4
                 : 0;
             }
-
+      
             await MUjianSiswa.query().where({ id: ujian.id }).update({
               nilai: nilaiAkhir,
             });
@@ -35176,7 +35159,7 @@ class MainController {
               : 0;
             await MUjianSiswa.create({
               m_ta_id: ta.id,
-              m_user_id: userSiswa.id,
+              m_user_id: user_id,
               m_mata_pelajaran_id: mapel.id,
               nilai: nilaiAkhir,
             });
@@ -38513,7 +38496,7 @@ class MainController {
           .limit(limit);
       })
       .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: 33 })
+      // .andWhere({ m_sekolah_id: 33 })
       .andWhere({ role: "guru" })
       // .offset(parseInt(offset))
       // .limit(limit)
@@ -38679,7 +38662,7 @@ class MainController {
       })
       .where({ dihapus: 0 })
       .andWhere({ m_ta_id: ta.id })
-      .andWhere({ tipe: "keterampilan" })
+      // .andWhere({ tipe: "keterampilan" })
       .offset(parseInt(offset))
       .limit(limit)
       .fetch();
@@ -39063,22 +39046,28 @@ class MainController {
                     .andWhere({m_ta_id:ta.id})
                     .first();
 
-                  if (nilaiAkhirKeterampilan) {
-                    await MUjianSiswa.query()
-                      .where({ id: nilaiAkhirKeterampilan.id })
-                      .update({
-                        nilai_keterampilan: rataData,
-                      });
-                  } else {
-                    await MUjianSiswa.create({
-                      m_ta_id: ta.id,
-                      m_user_id: b.user.id,
-                      m_mata_pelajaran_id: mapel.id,
-                      nilai_keterampilan: rataData,
-                    });
-                  }
+                    try{
+
+                      if (nilaiAkhirKeterampilan) {
+                        await MUjianSiswa.query()
+                        .where({ id: nilaiAkhirKeterampilan.id })
+                        .update({
+                          nilai_keterampilan: rataData,
+                        });
+                      } else {
+                        await MUjianSiswa.create({
+                          m_ta_id: ta.id,
+                          m_user_id: b.user.id,
+                          m_mata_pelajaran_id: mapel.id,
+                          nilai_keterampilan: rataData,
+                        });
+                      }
+                    }catch(err){
+                      return err;
+                    }
+
+                    // return err;
                 }
-                return;
               })
             );
             return c;
