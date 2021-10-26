@@ -38660,7 +38660,7 @@ class MainController {
       })
       .where({ dihapus: 0 })
       .andWhere({ m_ta_id: ta.id })
-      .andWhere({ teknik: "UTS" })
+      .andWhere({ tipe: "tugas" })
       .offset(parseInt(offset))
       .limit(limit)
       .fetch();
@@ -39115,6 +39115,7 @@ class MainController {
 
     const predikat = await MPredikatNilai.query()
       .where({ m_sekolah_id: sekolah.id })
+      .andWhere({dihapus:0})
       .fetch();
 
     const mataPelajaran = await MMataPelajaran.query()
