@@ -38491,7 +38491,7 @@ class MainController {
           .limit(limit);
       })
       .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: 33 })
+      // .andWhere({ m_sekolah_id: 33 })
       .andWhere({ role: "guru" })
       // .offset(parseInt(offset))
       // .limit(limit)
@@ -38657,7 +38657,7 @@ class MainController {
       })
       .where({ dihapus: 0 })
       .andWhere({ m_ta_id: ta.id })
-      .andWhere({ tipe: "tugas" })
+      // .andWhere({ tipe: "keterampilan" })
       .offset(parseInt(offset))
       .limit(limit)
       .fetch();
@@ -39041,22 +39041,28 @@ class MainController {
                     .andWhere({m_ta_id:ta.id})
                     .first();
 
-                  if (nilaiAkhirKeterampilan) {
-                    await MUjianSiswa.query()
-                      .where({ id: nilaiAkhirKeterampilan.id })
-                      .update({
-                        nilai_keterampilan: rataData,
-                      });
-                  } else {
-                    await MUjianSiswa.create({
-                      m_ta_id: ta.id,
-                      m_user_id: b.user.id,
-                      m_mata_pelajaran_id: mapel.id,
-                      nilai_keterampilan: rataData,
-                    });
-                  }
+                    try{
+
+                      if (nilaiAkhirKeterampilan) {
+                        await MUjianSiswa.query()
+                        .where({ id: nilaiAkhirKeterampilan.id })
+                        .update({
+                          nilai_keterampilan: rataData,
+                        });
+                      } else {
+                        await MUjianSiswa.create({
+                          m_ta_id: ta.id,
+                          m_user_id: b.user.id,
+                          m_mata_pelajaran_id: mapel.id,
+                          nilai_keterampilan: rataData,
+                        });
+                      }
+                    }catch(err){
+                      return err;
+                    }
+
+                    // return err;
                 }
-                return;
               })
             );
             return c;
