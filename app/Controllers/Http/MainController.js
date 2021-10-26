@@ -23711,7 +23711,7 @@ class MainController {
             .andWhere({ teknik: "praktik" })
             .andWhere({ m_ta_id: ta.id })
             .andWhere({ dihapus: 0 })
-            .andWhere({ m_materi_id: materi.id });
+            .andWhere({ m_materi_id: mapel.toJSON().materi.id });
         });
       })
       .where({ m_user_id: user_id })
@@ -23742,7 +23742,7 @@ class MainController {
             .andWhere({ teknik: "proyek" })
             .andWhere({ m_ta_id: ta.id })
             .andWhere({ dihapus: 0 })
-            .andWhere({ m_materi_id: materi.id });
+            .andWhere({ m_materi_id: mapel.toJSON().materi.id });
         });
       })
       .where({ m_user_id: user_id })
@@ -23772,7 +23772,7 @@ class MainController {
             .andWhere({ teknik: "portofolio" })
             .andWhere({ m_ta_id: ta.id })
             .andWhere({ dihapus: 0 })
-            .andWhere({ m_materi_id: materi.id });
+            .andWhere({ m_materi_id: mapel.toJSON().materi.id });
         });
       })
       .where({ m_user_id: user_id })
@@ -23802,7 +23802,7 @@ class MainController {
             .andWhere({ teknik: "produk" })
             .andWhere({ m_ta_id: ta.id })
             .andWhere({ dihapus: 0 })
-            .andWhere({ m_materi_id: materi.id });
+            .andWhere({ m_materi_id: mapel.toJSON().materi.id });
         });
       })
       .where({ m_user_id: user_id })
