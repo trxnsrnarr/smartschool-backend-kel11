@@ -3542,9 +3542,12 @@ class MainController {
                   builder.with("predikat").where({ dihapus: 0 });
                 })
                 .with("nilaiUjian", (builder) => {
-                  builder.where({
-                    m_mata_pelajaran_id: data.m_mata_pelajaran_id,
-                  });
+                  if(data) {
+
+                    builder.where({
+                      m_mata_pelajaran_id: data.m_mata_pelajaran_id,
+                    });
+                  }
                 })
                 .withCount(
                   "nilaiSemuaUjian as jumlahMapelDikerjakan",
@@ -3647,8 +3650,8 @@ class MainController {
         .ids();
 
       checkAbsensi = await MJadwalMengajar.query()
-        .where({ m_mata_pelajaran_id: jadwalMengajar.toJSON().m_mata_pelajaran_id })
-        .andWhere({ m_rombel_id: jadwalMengajar.toJSON().m_rombel_id })
+        .where({ m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id })
+        .andWhere({ m_rombel_id: jadwalMengajar.m_rombel_id })
         .whereIn("m_jam_mengajar_id", jamMengajarIds)
         .ids();
 
@@ -3659,18 +3662,18 @@ class MainController {
       let materi = await MMateri.query()
         .where({ tingkat: jadwalMengajar.toJSON().rombel.tingkat })
         .andWhere({ m_jurusan_id: jadwalMengajar.toJSON().rombel.m_jurusan_id })
-        .andWhere({ m_mata_pelajaran_id: jadwalMengajar.toJSON().m_mata_pelajaran_id })
+        .andWhere({ m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id })
         .first();
 
       if (!materi) {
         materi = await MMateri.query()
           .where({ tingkat: jadwalMengajar.toJSON().rombel.tingkat })
-          .andWhere({ m_mata_pelajaran_id: jadwalMengajar.toJSON().m_mata_pelajaran_id })
+          .andWhere({ m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id })
           .first();
       }
 
       const userIds = await MAnggotaRombel.query()
-        .where({ m_rombel_id: jadwalMengajar.toJSON().m_rombel_id })
+        .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
         .andWhere({ dihapus: 0 })
         .pluck("m_user_id");
 
@@ -3733,7 +3736,7 @@ class MainController {
               builder.where({ dihapus: 0 });
             });
           })
-          .where({ m_rombel_id: jadwalMengajar.toJSON().m_rombel_id })
+          .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
           .andWhere({ m_materi_id: materi.id })
           .first();
       }
