@@ -23663,10 +23663,12 @@ class MainController {
           .where({
             tingkat: siswaKeterampilan.toJSON().anggotaRombel.rombel.tingkat,
           })
-          .andWhere({
-            m_jurusan_id:
+          if(siswaKeterampilan.toJSON().anggotaRombel.rombel.m_jurusan_id){
+            builder.andWhere({
+              m_jurusan_id:
               siswaKeterampilan.toJSON().anggotaRombel.rombel.m_jurusan_id,
-          });
+            });
+          }
       })
       .where({ id: mata_pelajaran_id })
       .first();
@@ -24034,12 +24036,12 @@ class MainController {
       ekskul: ekskul,
       totalHadir: totalHadir,
 
-      totalSakit: totalSakit,
-      totalIzin: totalIzin,
-      totalAlpa: totalAlpa,
-      // totalSakit: [{ total: siswa.toJSON().keteranganRapor.sakit }],
-      // totalIzin: [{ total: siswa.toJSON().keteranganRapor.izin }],
-      // totalAlpa: siswa.toJSON().keteranganRapor.alpa,
+      // totalSakit: totalSakit,
+      // totalIzin: totalIzin,
+      // totalAlpa: totalAlpa,
+      totalSakit: [{ total: siswa.toJSON().keteranganRapor.sakit }],
+      totalIzin: [{ total: siswa.toJSON().keteranganRapor.izin }],
+      totalAlpa: siswa.toJSON().keteranganRapor.alpa,
       tanggalDistinct: tanggalDistinct,
       muatan,
       totalMapel,
