@@ -17919,7 +17919,7 @@ class MainController {
       rekap = await MRekapRombel.create({
         di_ss: 1,
         judul: tugasdata.toJSON().tugas.judul,
-        tanggal,
+        tanggal: tugadata.toJSON().tugas.tanggal_pembagian,
         m_tugas_id: m_tugas_id,
         m_rombel_id,
         m_rekap_id: rekapnilai_id,
@@ -17936,7 +17936,7 @@ class MainController {
       rekap = await MRekapRombel.create({
         di_ss: 1,
         judul: tugasdata.toJSON().jadwalUjian.ujian.nama,
-        tanggal: tugasdata.created_at,
+        tanggal: tugasdata.toJSON().jadwalUjian.waktu_dibuka,
         m_rombel_id,
         m_rekap_id: rekapnilai_id,
         dihapus: 0,
