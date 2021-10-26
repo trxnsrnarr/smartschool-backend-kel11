@@ -23678,7 +23678,7 @@ class MainController {
             .where({ tipe: "keterampilan" })
             .andWhere({ m_ta_id: ta.id })
             .andWhere({ dihapus: 0 })
-            .andWhere({ m_materi_id: materi.id });
+            .andWhere({ m_materi_id: mapel.toJSON().materi.id });
         });
       })
       .where({ m_user_id: user_id })
@@ -38667,7 +38667,7 @@ class MainController {
       })
       .where({ dihapus: 0 })
       .andWhere({ m_ta_id: ta.id })
-      .andWhere({ tipe: "tugas" })
+      .andWhere({ tipe: "keterampilan" })
       .offset(parseInt(offset))
       .limit(limit)
       .fetch();
