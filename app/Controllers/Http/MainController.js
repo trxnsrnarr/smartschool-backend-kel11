@@ -7387,7 +7387,9 @@ class MainController {
         .with("timeline", (builder) => {
           builder
             .with("tugas")
-            .with("materi")
+            .with("materi", (builder) => {
+              builder.with("bab")
+            })
             .withCount("komen as total_komen", (builder) => {
               builder.where({ dihapus: 0 });
             })
@@ -7500,7 +7502,9 @@ class MainController {
           });
         })
         .with("user")
-        .with("materi")
+        .with("materi", (builder) => {
+          builder.with("bab")
+        })
         .with("komen", (builder) => {
           builder.with("user").where({ dihapus: 0 });
         })
@@ -7530,7 +7534,9 @@ class MainController {
           });
         })
         .with("user")
-        .with("materi")
+        .with("materi", (builder) => {
+          builder.with("bab")
+        })
         .with("komen", (builder) => {
           builder.with("user").where({ dihapus: 0 });
         })
@@ -7579,7 +7585,9 @@ class MainController {
         .with("timeline", (builder) => {
           builder
             .with("rombel")
-            .with("materi")
+            .with("materi", (builder) => {
+              builder.with("bab")
+            })
             .with("tugas")
             .with("komen", (builder) => {
               builder.with("user").where({ dihapus: 0 });
@@ -7672,7 +7680,9 @@ class MainController {
         .with("timeline", (builder) => {
           builder
             .with("tugas")
-            .with("materi")
+            .with("materi", (builder) => {
+              builder.with("bab")
+            })
             .withCount("komen as total_komen", (builder) => {
               builder.where({ dihapus: 0 });
             })
@@ -7698,7 +7708,9 @@ class MainController {
     const timeline = await MTimeline.query()
       .with("user")
       .with("rombel")
-      .with("materi")
+      .with("materi", (builder) => {
+        builder.with("bab")
+      })
       .with("komen", (builder) => {
         builder.with("user").where({ dihapus: 0 });
       })
@@ -7783,7 +7795,9 @@ class MainController {
       .withCount("tkTimeline as total_absen", (builder) => {
         builder.whereNotNull("waktu_absen");
       })
-      .with("materi")
+      .with("materi", (builder) => {
+        builder.with("bab")
+      })
       .withCount("tkTimeline as total_siswa")
       .where({ m_user_id: timeline.m_user_id })
       .andWhere({ dihapus: 0 })
@@ -7810,7 +7824,9 @@ class MainController {
         });
       })
       .with("user")
-      .with("materi")
+      .with("materi", (builder) => {
+        builder.with("bab")
+      })
       .withCount("tkTimeline as total_respon", (builder) => {
         builder.whereNotNull("waktu_pengumpulan");
       })
