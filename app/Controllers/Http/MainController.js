@@ -7388,7 +7388,7 @@ class MainController {
           builder
             .with("tugas")
             .with("materi", (builder) => {
-              builder.with("bab")
+              builder.with("bab");
             })
             .withCount("komen as total_komen", (builder) => {
               builder.where({ dihapus: 0 });
@@ -7503,7 +7503,7 @@ class MainController {
         })
         .with("user")
         .with("materi", (builder) => {
-          builder.with("bab")
+          builder.with("bab");
         })
         .with("komen", (builder) => {
           builder.with("user").where({ dihapus: 0 });
@@ -7535,7 +7535,7 @@ class MainController {
         })
         .with("user")
         .with("materi", (builder) => {
-          builder.with("bab")
+          builder.with("bab");
         })
         .with("komen", (builder) => {
           builder.with("user").where({ dihapus: 0 });
@@ -7586,7 +7586,7 @@ class MainController {
           builder
             .with("rombel")
             .with("materi", (builder) => {
-              builder.with("bab")
+              builder.with("bab");
             })
             .with("tugas")
             .with("komen", (builder) => {
@@ -7681,7 +7681,7 @@ class MainController {
           builder
             .with("tugas")
             .with("materi", (builder) => {
-              builder.with("bab")
+              builder.with("bab");
             })
             .withCount("komen as total_komen", (builder) => {
               builder.where({ dihapus: 0 });
@@ -7709,7 +7709,7 @@ class MainController {
       .with("user")
       .with("rombel")
       .with("materi", (builder) => {
-        builder.with("bab")
+        builder.with("bab");
       })
       .with("komen", (builder) => {
         builder.with("user").where({ dihapus: 0 });
@@ -7796,7 +7796,7 @@ class MainController {
         builder.whereNotNull("waktu_absen");
       })
       .with("materi", (builder) => {
-        builder.with("bab")
+        builder.with("bab");
       })
       .withCount("tkTimeline as total_siswa")
       .where({ m_user_id: timeline.m_user_id })
@@ -7825,7 +7825,7 @@ class MainController {
       })
       .with("user")
       .with("materi", (builder) => {
-        builder.with("bab")
+        builder.with("bab");
       })
       .withCount("tkTimeline as total_respon", (builder) => {
         builder.whereNotNull("waktu_pengumpulan");
@@ -7870,6 +7870,7 @@ class MainController {
       tanggal_dibuat,
       tanggal_pembagian,
       tanggal_akhir,
+      materi = [],
     } = request.post();
     const tanggal = moment(tanggal_pembagian).format(`DD`);
     const bulan = moment(tanggal_pembagian).format(`M`);
@@ -7969,6 +7970,44 @@ class MainController {
           userIds.push({
             m_user_id: d.m_user_id,
             tipe: "diskusi",
+            m_timeline_id: timeline.id,
+            dihapus: 0,
+          });
+        })
+      );
+
+      await TkTimeline.createMany(userIds);
+    } else if (tipe == "materi") {
+      timeline = await MTimeline.create({
+        m_user_id: user.id,
+        m_rombel_id: jadwalMengajar.m_rombel_id,
+        tipe,
+        m_mata_pelajaran_id: jadwalMengajar.toJSON().mataPelajaran.id,
+        dihapus: 0,
+        tanggal_pembagian,
+      });
+
+      await Promise.all(
+        materi.map((d) => {
+          TkTimelineTopik.create({
+            m_timeline_id: timeline.id,
+            m_topik_id: d,
+          });
+        })
+      );
+
+      const anggotaRombel = await MAnggotaRombel.query()
+        .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
+        .andWhere({ dihapus: 0 })
+        .fetch();
+
+      let userIds = [];
+
+      await Promise.all(
+        anggotaRombel.toJSON().map(async (d) => {
+          userIds.push({
+            m_user_id: d.m_user_id,
+            tipe: "materi",
             m_timeline_id: timeline.id,
             dihapus: 0,
           });
@@ -8099,6 +8138,59 @@ class MainController {
         waktu_pengumpulan: waktu_pengumpulan,
         dikumpulkan: dikumpulkan,
       });
+    }
+
+    if (tipe == "materi") {
+      timeline = await MTimeline.query().where({ id: timeline_id }).update({
+        tanggal_pembagian,
+      });
+
+      await TkTimelineTopik.query()
+        .where({ m_timeline_id: timeline_id })
+        .delete();
+      await Promise.all(
+        materi.map((d) => {
+          TkTimelineTopik.create({
+            m_timeline_id: timeline_id,
+            m_topik_id: d,
+          });
+        })
+      );
+
+      const jadwalMengajar = await MJadwalMengajar.query()
+        .with("mataPelajaran")
+        .where({ id: m_jadwal_mengajar_id })
+        .first();
+      const anggotaRombel = await MAnggotaRombel.query()
+        .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
+        .andWhere({ dihapus: 0 })
+        .fetch();
+
+      const check = await TkTimeline.query()
+        .where({ m_timeline_id: timeline_id })
+        .andWhere({ dihapus: 0 })
+        .pluck("m_user_id");
+
+      const checkJSON = check.toJSON();
+      let userIds = [];
+
+      await Promise.all(
+        anggotaRombel
+          .toJSON()
+          .filter((d) => !checkJSON.find((e) => e == d.m_user_id))
+          .map(async (d) => {
+            userIds.push({
+              m_user_id: d.m_user_id,
+              tipe: "materi",
+              m_timeline_id: timeline_id,
+              dihapus: 0,
+            });
+          })
+      );
+
+      if (userIds.length > 0) {
+        await TkTimeline.createMany(userIds);
+      }
     }
 
     if (!timeline) {
