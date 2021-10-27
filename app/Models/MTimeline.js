@@ -20,6 +20,10 @@ class MTimeline extends Model {
     return "m_timeline";
   }
 
+  materi() {
+    return this.belongsToMany("App/Models/MTopik").pivotTable("tk_timeline_topik")
+  }
+
   mataPelajaran() {
     return this.belongsTo("App/Models/MMataPelajaran");
   }
