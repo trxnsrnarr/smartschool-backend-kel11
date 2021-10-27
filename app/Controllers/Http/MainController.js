@@ -80,6 +80,7 @@ const MSoalKuis = use("App/Models/MSoalKuis");
 const MTimeline = use("App/Models/MTimeline");
 const TkTimeline = use("App/Models/TkTimeline");
 const TkTimelineKomen = use("App/Models/TkTimelineKomen");
+const TkTimelineTopik = use("App/Models/TkTimelineTopik");
 const TkMateriKesimpulan = use("App/Models/TkMateriKesimpulan");
 const MTimelineKomen = use("App/Models/MTimelineKomen");
 const MPerusahaan = use("App/Models/MPerusahaan");
@@ -6814,6 +6815,7 @@ class MainController {
           builder.with("tkTimeline").with("rombel");
         });
       })
+      .with("materi")
       .withCount("komen as total_komen", (builder) => {
         builder.where({ dihapus: 0 });
       })
@@ -6836,6 +6838,7 @@ class MainController {
           builder.with("tkTimeline").with("rombel");
         });
       })
+      .with("materi")
       .withCount("komen as total_komen", (builder) => {
         builder.where({ dihapus: 0 });
       })
@@ -6923,6 +6926,7 @@ class MainController {
       draft,
       list_anggota,
       list_rombel,
+      materi = [],
     } = request.post();
 
     const tanggal = moment(tanggal_pembagian).format(`DD`);
@@ -6970,6 +6974,14 @@ class MainController {
           tipe: "tugas",
           dihapus: 0,
         });
+        await Promise.all(
+          materi.map((d) => {
+            TkTimelineTopik.create({
+              m_timeline_id: timeline.id,
+              m_topik_id: d,
+            });
+          })
+        );
       } else {
         const timelineData = [];
 
@@ -7119,6 +7131,7 @@ class MainController {
       draft,
       list_anggota,
       list_rombel,
+      materi = [],
     } = request.post();
 
     const jadwalMengajar = await MJadwalMengajar.query()
@@ -7165,6 +7178,18 @@ class MainController {
         } else {
           timeline = check;
         }
+
+        await TkTimelineTopik.query()
+          .where({ m_timeline_id: timeline.id })
+          .delete();
+        await Promise.all(
+          materi.map((d) => {
+            TkTimelineTopik.create({
+              m_timeline_id: timeline.id,
+              m_topik_id: d,
+            });
+          })
+        );
       } else {
         const timelineData = [];
 
@@ -7224,32 +7249,14 @@ class MainController {
         let userIds = [];
 
         const check = await TkTimeline.query()
-          .select("m_user_id")
-          .whereIn(
-            "m_user_id",
-            anggotaRombel.toJSON().map((d) => d.user.id)
-          )
+          .where({ tipe: "tugas" })
           .andWhere({ m_timeline_id: timeline.id })
-          .andWhere({ tipe: "tugas" })
+          .andWhere({ dihapus: 0 })
           .fetch();
-
-        const exist = [];
-        anggotaRombel.toJSON().map((d) => {
-          exist.push(
-            check.toJSON().findIndex((e) => e.m_user_id == d.user.id) < 0
-          );
-        });
-
-        const dihapus = [];
-        anggotaRombel.toJSON().map((d, idx) => {
-          if (!exist[idx] && !list_anggota.includes(parseInt(d.m_user_id))) {
-            dihapus.push(d.m_user_id);
-          }
-        });
 
         await Promise.all(
           anggotaRombel.toJSON().map(async (d, idx) => {
-            if (list_anggota.includes(parseInt(d.m_user_id)) && exist[idx]) {
+            if (!check.toJSON().find((e) => e.m_user_id == d.m_user_id)) {
               userIds.push({
                 m_user_id: d.m_user_id,
                 tipe: "tugas",
@@ -7272,14 +7279,6 @@ class MainController {
               //   }
               //   // return d.user.nama;
               // }
-            } else if (
-              dihapus.includes(d.m_user_id) &&
-              list_anggota.length > 0
-            ) {
-              await TkTimeline.query()
-                .where({ m_user_id: d.m_user_id })
-                .andWhere({ m_timeline_id: timeline.id })
-                .delete();
             }
           })
         );
@@ -7388,6 +7387,7 @@ class MainController {
         .with("timeline", (builder) => {
           builder
             .with("tugas")
+            .with("materi")
             .withCount("komen as total_komen", (builder) => {
               builder.where({ dihapus: 0 });
             })
@@ -7500,6 +7500,7 @@ class MainController {
           });
         })
         .with("user")
+        .with("materi")
         .with("komen", (builder) => {
           builder.with("user").where({ dihapus: 0 });
         })
@@ -7529,6 +7530,7 @@ class MainController {
           });
         })
         .with("user")
+        .with("materi")
         .with("komen", (builder) => {
           builder.with("user").where({ dihapus: 0 });
         })
@@ -7577,6 +7579,7 @@ class MainController {
         .with("timeline", (builder) => {
           builder
             .with("rombel")
+            .with("materi")
             .with("tugas")
             .with("komen", (builder) => {
               builder.with("user").where({ dihapus: 0 });
@@ -7669,6 +7672,7 @@ class MainController {
         .with("timeline", (builder) => {
           builder
             .with("tugas")
+            .with("materi")
             .withCount("komen as total_komen", (builder) => {
               builder.where({ dihapus: 0 });
             })
@@ -7694,6 +7698,7 @@ class MainController {
     const timeline = await MTimeline.query()
       .with("user")
       .with("rombel")
+      .with("materi")
       .with("komen", (builder) => {
         builder.with("user").where({ dihapus: 0 });
       })
@@ -7778,6 +7783,7 @@ class MainController {
       .withCount("tkTimeline as total_absen", (builder) => {
         builder.whereNotNull("waktu_absen");
       })
+      .with("materi")
       .withCount("tkTimeline as total_siswa")
       .where({ m_user_id: timeline.m_user_id })
       .andWhere({ dihapus: 0 })
@@ -7804,6 +7810,7 @@ class MainController {
         });
       })
       .with("user")
+      .with("materi")
       .withCount("tkTimeline as total_respon", (builder) => {
         builder.whereNotNull("waktu_pengumpulan");
       })
@@ -35184,9 +35191,7 @@ class MainController {
               nilai: nilaiAkhir,
             });
           }
-        } else if (
-          rekapRombel.toJSON().rekap.tipe == "keterampilan"
-        ) {
+        } else if (rekapRombel.toJSON().rekap.tipe == "keterampilan") {
           const rekap = await TkRekapNilai.query()
             .with("rekapRombel", (builder) => {
               builder.with("rekap", (builder) => {
@@ -40246,7 +40251,7 @@ class MainController {
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
-      const rombel = await MRombel.query()
+    const rombel = await MRombel.query()
       .with("anggotaRombel", (builder) => {
         builder
           .with("user", (builder) => {
@@ -40258,8 +40263,8 @@ class MainController {
           })
           .where({ dihapus: 0 });
       })
-      .with("user",(builder)=>{
-        builder.select("id","nama")
+      .with("user", (builder) => {
+        builder.select("id", "nama");
       })
       .where({ id: rombel_id })
       .first();
@@ -40508,7 +40513,6 @@ class MainController {
 
     return namaFile;
   }
-
 
   async notFoundPage({ response, request, auth }) {
     return `<p>Data tidak ditemukan, silahkan kembali ke <a href="http://getsmartschool.id">Smart School</a></p>`;
