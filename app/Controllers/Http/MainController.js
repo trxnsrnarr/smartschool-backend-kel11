@@ -5606,6 +5606,7 @@ class MainController {
           builder.where({ dihapus: 0 });
         })
         .whereIn("id", materiIds)
+        .andWhere({ dihapus: 0 })
         .fetch();
 
       // const materiLainnya = await MMateri.query()
@@ -23657,22 +23658,21 @@ class MainController {
     const ta = await this.getTAAktif(sekolah);
 
     const mapelSingkat = await MMataPelajaran.query()
-    .where({id:mata_pelajaran_id})
-    .first()
+      .where({ id: mata_pelajaran_id })
+      .first();
 
     const mapel = await MMataPelajaran.query()
       .with("user")
       .with("materi", (builder) => {
-        builder
-          .where({
-            tingkat: siswaKeterampilan.toJSON().anggotaRombel.rombel.tingkat,
-          })
-          if(mapelSingkat.kelompok == "C"){
-            builder.andWhere({
-              m_jurusan_id:
+        builder.where({
+          tingkat: siswaKeterampilan.toJSON().anggotaRombel.rombel.tingkat,
+        });
+        if (mapelSingkat.kelompok == "C") {
+          builder.andWhere({
+            m_jurusan_id:
               siswaKeterampilan.toJSON().anggotaRombel.rombel.m_jurusan_id,
-            });
-          }
+          });
+        }
       })
       .where({ id: mata_pelajaran_id })
       .first();
@@ -24043,9 +24043,23 @@ class MainController {
       // totalSakit: totalSakit,
       // totalIzin: totalIzin,
       // totalAlpa: totalAlpa,
-      totalSakit: [{ total: siswa.toJSON().keteranganRapor ? siswa.toJSON().keteranganRapor.sakit : 0 }],
-      totalIzin: [{ total: siswa.toJSON().keteranganRapor ? siswa.toJSON().keteranganRapor.izin : 0 }],
-      totalAlpa: siswa.toJSON().keteranganRapor ? siswa.toJSON().keteranganRapor.alpa : 0,
+      totalSakit: [
+        {
+          total: siswa.toJSON().keteranganRapor
+            ? siswa.toJSON().keteranganRapor.sakit
+            : 0,
+        },
+      ],
+      totalIzin: [
+        {
+          total: siswa.toJSON().keteranganRapor
+            ? siswa.toJSON().keteranganRapor.izin
+            : 0,
+        },
+      ],
+      totalAlpa: siswa.toJSON().keteranganRapor
+        ? siswa.toJSON().keteranganRapor.alpa
+        : 0,
       tanggalDistinct: tanggalDistinct,
       muatan,
       totalMapel,
@@ -39043,7 +39057,7 @@ class MainController {
                     .andWhere({
                       m_mata_pelajaran_id: mapel.id,
                     })
-                    .andWhere({m_ta_id:ta.id})
+                    .andWhere({ m_ta_id: ta.id })
                     .first();
 
                     try{
