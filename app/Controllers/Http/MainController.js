@@ -5606,6 +5606,7 @@ class MainController {
           builder.where({ dihapus: 0 });
         })
         .whereIn("id", materiIds)
+        .andWhere({ dihapus: 0 })
         .fetch();
 
       // const materiLainnya = await MMateri.query()
