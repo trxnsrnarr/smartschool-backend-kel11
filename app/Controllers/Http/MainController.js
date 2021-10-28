@@ -23590,7 +23590,7 @@ class MainController {
     const ta = await this.getTAAktif(sekolah);
     const siswa = await User.query()
       .with("anggotaRombel", (builder) => {
-        builder.with("rombel");
+        builder.with("rombel").where({dihapus:0});
       })
       .where({ id: user_id })
       .first();
@@ -23768,7 +23768,7 @@ class MainController {
   }) {
     const siswaKeterampilan = await User.query()
       .with("anggotaRombel", (builder) => {
-        builder.with("rombel");
+        builder.with("rombel").where({dihapus:0});
       })
       .where({ id: user_id })
       .first();
@@ -40408,10 +40408,8 @@ class MainController {
     worksheet.mergeCells(`A2:J2`);
     worksheet.mergeCells(`A3:J3`);
     worksheet.mergeCells(`A4:J4`);
-    worksheet.getColumn("B").width = 14;
-    worksheet.getColumn("C").width = 28;
     worksheet.addConditionalFormatting({
-      ref: "A1:I3",
+      ref: "A1:I4",
       rules: [
         {
           type: "expression",
@@ -40437,6 +40435,8 @@ class MainController {
       ],
     });
 
+    let alreadyMerged = 0;
+    let sudahGabung = 0;
     // add column headers
     await Promise.all(
       rombel.toJSON().anggotaRombel.map(async (d, idx) => {
@@ -40480,7 +40480,16 @@ class MainController {
               `${e.mapel.kode}`,
               `K`
             ];
-            row.mergeCells(`${(nox + 1) * 2 + 3}:${(nox + 1) * 2 + 3}`);
+            worksheet.getColumn([`${(nox + 1) * 2 + 5}`]).values = [
+              ``,
+              ``,
+              ``,
+              ``,
+              ``,
+              ``,
+              `Jumlah`,
+            ];
+            // worksheet.mergeCells(`${(nox + 1) * 2 + 3}:${(nox + 1) * 2 + 4}`);
 
             row.getCell([`${(nox + 1) * 2 + 3}`]).value = `${
               e.nilai ? e.nilai : "-"
@@ -40507,22 +40516,6 @@ class MainController {
               right: { style: "thin" },
             };
             worksheet.getColumn([`${(nox + 1) * 1 + 4}`]).fill = {
-              type: "pattern",
-              pattern: "solid",
-              bgColor: {
-                argb: "C0C0C0",
-                fgColor: { argb: "C0C0C0" },
-              },
-            };
-            worksheet.getColumn([`${(nox + 1) * 1 + 5}`]).fill = {
-              type: "pattern",
-              pattern: "solid",
-              bgColor: {
-                argb: "C0C0C0",
-                fgColor: { argb: "C0C0C0" },
-              },
-            };
-            worksheet.getColumn([`${(nox + 1) * 1 + 6}`]).fill = {
               type: "pattern",
               pattern: "solid",
               bgColor: {
@@ -40563,6 +40556,20 @@ class MainController {
               ],
             });
 
+            if(!sudahGabung){
+              worksheet.mergeCells(7,`${(nox + 1) * 2 + 3}`,7,`${(nox + 1) * 2 + 4}`);
+            }
+
+            if (nox == d.user.nilaiSemuaUjian.length - 1) {
+              row.getCell([`${(nox + 1) * 2 + 5}`]).value = `${
+                d.user.nilaiSemuaUjian.reduce((a, b) => a + b.nilai + b.nilai_keterampilan, 0)
+              }`;
+              
+                alreadyMerged = (nox + 1) * 2 + 4;
+              
+
+            }
+
             // // Add row using key mapping to columns
             // let row = worksheet.addRow ({
             //   tugas1: e ? e.nilai : "-",
@@ -40571,11 +40578,12 @@ class MainController {
             //   tugas4: e ? e.nilai : "-",
             //   tugas5: e ? e.nilai : "-",
             // });
+            sudahGabung = 1
           })
         );
 
         worksheet.addConditionalFormatting({
-          ref: `A7:J7`,
+          ref: `A6:D6`,
           rules: [
             {
               type: "expression",
@@ -40590,7 +40598,7 @@ class MainController {
                 font: {
                   name: "Times New Roman",
                   family: 4,
-                  size: 14,
+                  size: 11,
                   bold: true,
                 },
                 fill: {
@@ -40611,7 +40619,7 @@ class MainController {
         });
 
         worksheet.addConditionalFormatting({
-          ref: `A${(idx + 1) * 1 + 7}:D${(idx + 1) * 1 + 7}`,
+          ref: `A${(idx + 1) * 1 + 6}:D${(idx + 1) * 1 + 6}`,
           rules: [
             {
               type: "expression",
@@ -40649,11 +40657,82 @@ class MainController {
       "A5"
     ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
 
+    // worksheet.addConditionalFormatting({
+    //   ref: `E6`,
+    //   rules: [
+    //     {
+    //       type: "expression",
+    //       formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+    //       style: {
+    //         border: {
+    //           top: { style: "thin" },
+    //           left: { style: "thin" },
+    //           bottom: { style: "thin" },
+    //           right: { style: "thin" },
+    //         },
+    //         font: {
+    //           name: "Times New Roman",
+    //           family: 4,
+    //           size: 11,
+    //           // bold: true,
+    //         },
+    //         alignment: {
+    //           vertical: "middle",
+    //           horizontal: "left",
+    //         },
+    //       },
+    //     },
+    //   ],
+    // });
+
     worksheet.mergeCells(`A6:A8`);
     worksheet.mergeCells(`B6:B8`);
     worksheet.mergeCells(`C6:C8`);
     worksheet.mergeCells(`D6:D8`);
 
+    // worksheet.getCells(`${alreadyMerged}`)
+    const huruf = alreadyMerged + 64;
+    const angka = String.fromCharCode(`${huruf}`);
+
+    return angka
+
+    worksheet.addConditionalFormatting({
+      ref: `6,5,8,${alreadyMerged}`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 11,
+              // bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "left",
+            },
+          },
+        },
+      ],
+    });
+
+
+    
+    worksheet.getColumn("B").width = 14;
+    worksheet.getColumn("C").width = 28;
+      worksheet.mergeCells(6,5,6,`${alreadyMerged}`);
+    
+    // worksheet.mergeCells(20,22,22,23);
+    
+    // worksheet.mergeCells(22,22,23,24);
     let namaFile = `/uploads/Leger-Nilai-${rombel.nama}-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
