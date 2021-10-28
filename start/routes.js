@@ -1046,6 +1046,10 @@ Route.post(
   "/import/rekap-sikap/:rombel_id/:mata_pelajaran_id",
   "MainController.importSikapRekapRombel"
 );
+Route.post(
+  "/download/ledger-nilai/:rombel_id",
+  "MainController.downloadLedgerNilai"
+);
 
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
