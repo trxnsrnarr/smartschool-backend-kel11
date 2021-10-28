@@ -23606,7 +23606,7 @@ class MainController {
         if (mapelSingkat.kelompok == "C") {
           builder.andWhere({
             m_jurusan_id:
-              siswaKeterampilan.toJSON().anggotaRombel.rombel.m_jurusan_id,
+              siswa.toJSON().anggotaRombel.rombel.m_jurusan_id,
           });
         };
       })
