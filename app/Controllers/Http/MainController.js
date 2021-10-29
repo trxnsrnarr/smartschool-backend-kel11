@@ -10172,6 +10172,13 @@ class MainController {
 
     const user = await auth.getUser();
 
+    const count = await MJadwalUjian.query()
+      .where({ m_user_id: user.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere("waktu_ditutup", ">=", hari_ini)
+      .count("* as total");
+    const total = count[0].total;
+
     if (user.role == "guru") {
       const mataPelajaranIds = await MMataPelajaran.query()
         .where({ m_user_id: user.id })
@@ -10296,12 +10303,14 @@ class MainController {
           ujian,
           total: jadwalUjian.toJSON().total,
           lastPage: jadwalUjian.toJSON().lastPage,
+          total,
         });
       } else {
         return response.ok({
           rombel,
           jadwalUjian: jadwalUjianDataFormat,
           ujian,
+          total,
         });
       }
     } else if (user.role == "admin") {
@@ -10422,12 +10431,14 @@ class MainController {
           ujian,
           total: jadwalUjian.toJSON().total,
           lastPage: jadwalUjian.toJSON().lastPage,
+          total,
         });
       } else {
         return response.ok({
           rombel,
           jadwalUjian: jadwalUjianDataFormat,
           ujian,
+          total,
         });
       }
     } else if (user.role == "siswa") {
