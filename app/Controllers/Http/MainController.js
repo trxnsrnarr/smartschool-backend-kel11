@@ -254,6 +254,20 @@ const day = String(dateObj.getDate()).padStart(2, "0");
 // const keluarantanggalseconds1 = moment().format("YYYY-MM-DD-HH-mm-ss");
 // const keluarantanggalseconds =
 //   keluarantanggalseconds1 + "-" + dateObj.getTime();
+
+function colName(n) {
+  var ordA = "a".charCodeAt(0);
+  var ordZ = "z".charCodeAt(0);
+  var len = ordZ - ordA + 1;
+
+  var s = "";
+  while (n >= 0) {
+    s = String.fromCharCode((n % len) + ordA) + s;
+    n = Math.floor(n / len) - 1;
+  }
+  return s.toUpperCase();
+}
+
 class MainController {
   // UTILS
 
@@ -23590,25 +23604,24 @@ class MainController {
     const ta = await this.getTAAktif(sekolah);
     const siswa = await User.query()
       .with("anggotaRombel", (builder) => {
-        builder.with("rombel").where({dihapus:0});
+        builder.with("rombel").where({ dihapus: 0 });
       })
       .where({ id: user_id })
       .first();
 
-      const mapelSingkat = await MMataPelajaran.query()
+    const mapelSingkat = await MMataPelajaran.query()
       .where({ id: mata_pelajaran_id })
       .first();
 
     const mapel = await MMataPelajaran.query()
       .with("user")
       .with("materi", (builder) => {
-        builder.where({ tingkat: siswa.toJSON().anggotaRombel.rombel.tingkat })
+        builder.where({ tingkat: siswa.toJSON().anggotaRombel.rombel.tingkat });
         if (mapelSingkat.kelompok == "C") {
           builder.andWhere({
-            m_jurusan_id:
-              siswa.toJSON().anggotaRombel.rombel.m_jurusan_id,
+            m_jurusan_id: siswa.toJSON().anggotaRombel.rombel.m_jurusan_id,
           });
-        };
+        }
       })
       .where({ id: mata_pelajaran_id })
       .first();
@@ -23768,7 +23781,7 @@ class MainController {
   }) {
     const siswaKeterampilan = await User.query()
       .with("anggotaRombel", (builder) => {
-        builder.with("rombel").where({dihapus:0});
+        builder.with("rombel").where({ dihapus: 0 });
       })
       .where({ id: user_id })
       .first();
@@ -40377,10 +40390,10 @@ class MainController {
               .with("nilaiSemuaUjian", (builder) => {
                 builder.with("mapel").where({ m_ta_id: ta.id });
               })
-              .with("profil",(builder)=>{
-                builder.select("m_user_id","nis")
+              .with("profil", (builder) => {
+                builder.select("m_user_id", "nis");
               })
-              .select("id", "nama","gender");
+              .select("id", "nama", "gender");
           })
           .where({ dihapus: 0 });
       })
@@ -40390,60 +40403,20 @@ class MainController {
       .where({ id: rombel_id })
       .first();
 
-      // return rombel;
+    // return rombel;
 
     let workbook = new Excel.Workbook();
 
     let worksheet = workbook.addWorksheet(`Rekap Nilai Siswa`);
-    worksheet.getCell("A1").value = `LEGER PERNILAIAN AKHIR SEMESTER GANJIL DARING`;
-    worksheet.getCell("A2").value = rombel.nama;
-    worksheet.getCell("A3").value = sekolah.nama;
-    worksheet.getCell("A4").value = `TAHUN PELAJARAN ${ta.tahun}`;
-    // worksheet.getCell("A3").value = jadwalMengajar.toJSON().mataPelajaran.nama;
-
-    worksheet.getCell(
-      "A5"
-    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
-    worksheet.mergeCells(`A1:J1`);
-    worksheet.mergeCells(`A2:J2`);
-    worksheet.mergeCells(`A3:J3`);
-    worksheet.mergeCells(`A4:J4`);
-    worksheet.addConditionalFormatting({
-      ref: "A1:I4",
-      rules: [
-        {
-          type: "expression",
-          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-          style: {
-            font: {
-              name: "Times New Roman",
-              family: 4,
-              size: 16,
-              bold: true,
-            },
-            // fill: {
-            //   type: "pattern",
-            //   pattern: "solid",
-            //   bgColor: { argb: "0000FF", fgColor: { argb: "0000FF" } },
-            // },
-            alignment: {
-              vertical: "middle",
-              horizontal: "center",
-            },
-          },
-        },
-      ],
-    });
 
     let alreadyMerged = 0;
     let sudahGabung = 0;
     // add column headers
     await Promise.all(
       rombel.toJSON().anggotaRombel.map(async (d, idx) => {
-
-        worksheet.getRow(6).values = ["No","NIS", "Nama","Gen"];
-        worksheet.getRow(7).values = ["No","NIS", "Nama","Gen"];
-        worksheet.getRow(8).values = ["No","NIS", "Nama","Gen"];
+        worksheet.getRow(6).values = ["No", "NIS", "Nama", "Gen"];
+        worksheet.getRow(7).values = ["No", "NIS", "Nama", "Gen"];
+        worksheet.getRow(8).values = ["No", "NIS", "Nama", "Gen"];
         worksheet.columns = [
           { key: "no" },
           { key: "nis" },
@@ -40468,7 +40441,7 @@ class MainController {
               ``,
               `Mata Pelajaran`,
               `${e.mapel.kode}`,
-              `P`
+              `P`,
             ];
             worksheet.getColumn([`${(nox + 1) * 2 + 4}`]).values = [
               ``,
@@ -40478,16 +40451,7 @@ class MainController {
               ``,
               ``,
               `${e.mapel.kode}`,
-              `K`
-            ];
-            worksheet.getColumn([`${(nox + 1) * 2 + 5}`]).values = [
-              ``,
-              ``,
-              ``,
-              ``,
-              ``,
-              ``,
-              `Jumlah`,
+              `K`,
             ];
             // worksheet.mergeCells(`${(nox + 1) * 2 + 3}:${(nox + 1) * 2 + 4}`);
 
@@ -40515,75 +40479,46 @@ class MainController {
               bottom: { style: "thin" },
               right: { style: "thin" },
             };
-            worksheet.getColumn([`${(nox + 1) * 1 + 4}`]).fill = {
-              type: "pattern",
-              pattern: "solid",
-              bgColor: {
-                argb: "C0C0C0",
-                fgColor: { argb: "C0C0C0" },
-              },
+            row.getCell([`${(nox + 1) * 2 + 6}`]).border = {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
             };
-            // worksheet.getCell(`E${(nox + 1) * 1 + 8}`).value = e.nilai;
-            // worksheet.columns = [
-            //   { key: `tugas${nox+1}` },
-            // ];
-
-            worksheet.addConditionalFormatting({
-              ref: `${(nox + 1) * 1 + 7}`,
-              rules: [
-                {
-                  type: "expression",
-                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-                  style: {
-                    border: {
-                      top: { style: "thin" },
-                      left: { style: "thin" },
-                      bottom: { style: "thin" },
-                      right: { style: "thin" },
-                    },
-                    font: {
-                      name: "Times New Roman",
-                      family: 4,
-                      size: 11,
-                      // bold: true,
-                    },
-                    alignment: {
-                      vertical: "middle",
-                      horizontal: "left",
-                    },
-                  },
-                },
-              ],
-            });
-
-            if(!sudahGabung){
-              worksheet.mergeCells(7,`${(nox + 1) * 2 + 3}`,7,`${(nox + 1) * 2 + 4}`);
-            }
+           
 
             if (nox == d.user.nilaiSemuaUjian.length - 1) {
-              row.getCell([`${(nox + 1) * 2 + 5}`]).value = `${
-                d.user.nilaiSemuaUjian.reduce((a, b) => a + b.nilai + b.nilai_keterampilan, 0)
-              }`;
-              
-                alreadyMerged = (nox + 1) * 2 + 4;
-              
+              row.getCell([`${(nox + 1) * 2 + 5}`]).value =
+                d.user.nilaiSemuaUjian.reduce(
+                  (a, b) => a + b.nilai + b.nilai_keterampilan,
+                  0
+                );
 
+              // const cell = row.getCell([`${(nox + 1) * 2 + 5}`]);
+
+              row.getCell([`${(nox + 1) * 2 + 6}`]).value = `=RANK(${colName(
+                (nox + 1) * 2 + 4
+              )}${idx + 9};$${colName((nox + 1) * 2 + 4)}$9:$${colName(
+                (nox + 1) * 2 + 4
+              )}$100)`;
+
+              alreadyMerged = (nox + 1) * 2 + 4;
             }
-
+            
             // // Add row using key mapping to columns
             // let row = worksheet.addRow ({
-            //   tugas1: e ? e.nilai : "-",
-            //   tugas2: e ? e.nilai : "-",
-            //   tugas3: e ? e.nilai : "-",
-            //   tugas4: e ? e.nilai : "-",
-            //   tugas5: e ? e.nilai : "-",
-            // });
-            sudahGabung = 1
+              //   tugas1: e ? e.nilai : "-",
+              //   tugas2: e ? e.nilai : "-",
+              //   tugas3: e ? e.nilai : "-",
+              //   tugas4: e ? e.nilai : "-",
+              //   tugas5: e ? e.nilai : "-",
+              // });
+
           })
         );
-
+          
         worksheet.addConditionalFormatting({
-          ref: `A6:D6`,
+          ref: `A6:D8`,
           rules: [
             {
               type: "expression",
@@ -40619,7 +40554,7 @@ class MainController {
         });
 
         worksheet.addConditionalFormatting({
-          ref: `A${(idx + 1) * 1 + 6}:D${(idx + 1) * 1 + 6}`,
+          ref: `A${(idx + 1) * 1 + 8}:D${(idx + 1) * 1 + 8}`,
           rules: [
             {
               type: "expression",
@@ -40645,9 +40580,16 @@ class MainController {
             },
           ],
         });
+
+        
+
       })
     );
-    worksheet.getCell("A1").value = `LEGER PERNILAIAN AKHIR SEMESTER GANJIL DARING`;
+
+    worksheet.getCell(
+     
+      "A1"
+    ).value = `LEGER PERNILAIAN AKHIR SEMESTER GANJIL DARING`;
     worksheet.getCell("A2").value = rombel.nama;
     worksheet.getCell("A3").value = sekolah.nama;
     worksheet.getCell("A4").value = `TAHUN PELAJARAN ${ta.tahun}`;
@@ -40656,48 +40598,51 @@ class MainController {
     worksheet.getCell(
       "A5"
     ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
-
-    // worksheet.addConditionalFormatting({
-    //   ref: `E6`,
-    //   rules: [
-    //     {
-    //       type: "expression",
-    //       formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-    //       style: {
-    //         border: {
-    //           top: { style: "thin" },
-    //           left: { style: "thin" },
-    //           bottom: { style: "thin" },
-    //           right: { style: "thin" },
-    //         },
-    //         font: {
-    //           name: "Times New Roman",
-    //           family: 4,
-    //           size: 11,
-    //           // bold: true,
-    //         },
-    //         alignment: {
-    //           vertical: "middle",
-    //           horizontal: "left",
-    //         },
-    //       },
-    //     },
-    //   ],
-    // });
+    worksheet.mergeCells(`A1:${colName(alreadyMerged + 1)}1`);
+    worksheet.mergeCells(`A2:${colName(alreadyMerged + 1)}2`);
+    worksheet.mergeCells(`A3:${colName(alreadyMerged + 1)}3`);
+    worksheet.mergeCells(`A4:${colName(alreadyMerged + 1)}4`);
+    worksheet.addConditionalFormatting({
+      ref: "A1:I4",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 16,
+              bold: true,
+            },
+            // fill: {
+            //   type: "pattern",
+            //   pattern: "solid",
+            //   bgColor: { argb: "0000FF", fgColor: { argb: "0000FF" } },
+            // },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
 
     worksheet.mergeCells(`A6:A8`);
     worksheet.mergeCells(`B6:B8`);
     worksheet.mergeCells(`C6:C8`);
     worksheet.mergeCells(`D6:D8`);
 
-    // worksheet.getCells(`${alreadyMerged}`)
-    const huruf = alreadyMerged + 64;
-    const angka = String.fromCharCode(`${huruf}`);
+    worksheet.mergeCells(6, 5, 6, `${alreadyMerged}`);
+    worksheet.mergeCells(6, `${alreadyMerged + 1}`, 8, `${alreadyMerged + 1}`);
+    worksheet.mergeCells(6, `${alreadyMerged + 2}`, 8, `${alreadyMerged + 2}`);
 
-    return angka
+    worksheet.getCell(`${colName(alreadyMerged)}6`).value = `JUMLAH`;
+    worksheet.getCell(`${colName(alreadyMerged + 1)}6`).value = `PERINGKAT`;
 
     worksheet.addConditionalFormatting({
-      ref: `6,5,8,${alreadyMerged}`,
+      ref: `E6:${colName(alreadyMerged + 1)}8`,
       rules: [
         {
           type: "expression",
@@ -40715,23 +40660,34 @@ class MainController {
               size: 11,
               // bold: true,
             },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: {
+                argb: "C0C0C0",
+                fgColor: { argb: "C0C0C0" },
+              },
+            },
             alignment: {
               vertical: "middle",
-              horizontal: "left",
+              horizontal: "center",
             },
           },
         },
       ],
     });
 
-
-    
     worksheet.getColumn("B").width = 14;
     worksheet.getColumn("C").width = 28;
-      worksheet.mergeCells(6,5,6,`${alreadyMerged}`);
-    
+    worksheet.getColumn(`${colName(alreadyMerged)}`).width = 12;
+    worksheet.getColumn(`${colName(alreadyMerged + 1)}`).width = 16;
+
+    worksheet.views = [
+      {state: 'frozen', xSplit: 4, ySplit: 8, topLeftCell: 'A6', activeCell: 'A6'}
+    ];
+
     // worksheet.mergeCells(20,22,22,23);
-    
+
     // worksheet.mergeCells(22,22,23,24);
     let namaFile = `/uploads/Leger-Nilai-${rombel.nama}-${keluarantanggalseconds}.xlsx`;
 
