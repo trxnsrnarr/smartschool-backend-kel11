@@ -7397,6 +7397,11 @@ class MainController {
       .where({ id: m_jadwal_mengajar_id })
       .first();
 
+    const userIds = await MAnggotaRombel.query()
+      .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
+      .andWhere({ dihapus: 0 })
+      .pluck("m_user_id");
+
     let timeline;
 
     if (user.role == "siswa") {
@@ -7428,14 +7433,13 @@ class MainController {
           builder
             .with("tugas")
             .with("materi", (builder) => {
-              builder.with("bab").withCount(
-                "materiKesimpulan as totalKesimpulan",
-                (builder) => {
+              builder
+                .with("bab")
+                .withCount("materiKesimpulan as totalKesimpulan", (builder) => {
                   builder
                     .whereIn("m_user_id", userIds)
                     .whereNotNull("kesimpulan");
-                }
-              );
+                });
             })
             .withCount("komen as total_komen", (builder) => {
               builder.where({ dihapus: 0 });
@@ -7550,14 +7554,11 @@ class MainController {
         })
         .with("user")
         .with("materi", (builder) => {
-          builder.with("bab").withCount(
-            "materiKesimpulan as totalKesimpulan",
-            (builder) => {
-              builder
-                .whereIn("m_user_id", userIds)
-                .whereNotNull("kesimpulan");
-            }
-          );
+          builder
+            .with("bab")
+            .withCount("materiKesimpulan as totalKesimpulan", (builder) => {
+              builder.whereIn("m_user_id", userIds).whereNotNull("kesimpulan");
+            });
         })
         .with("komen", (builder) => {
           builder.with("user").where({ dihapus: 0 });
@@ -7589,14 +7590,11 @@ class MainController {
         })
         .with("user")
         .with("materi", (builder) => {
-          builder.with("bab").withCount(
-            "materiKesimpulan as totalKesimpulan",
-            (builder) => {
-              builder
-                .whereIn("m_user_id", userIds)
-                .whereNotNull("kesimpulan");
-            }
-          );
+          builder
+            .with("bab")
+            .withCount("materiKesimpulan as totalKesimpulan", (builder) => {
+              builder.whereIn("m_user_id", userIds).whereNotNull("kesimpulan");
+            });
         })
         .with("komen", (builder) => {
           builder.with("user").where({ dihapus: 0 });
@@ -7641,20 +7639,26 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
+    const thisTimeline = await MTimeline.query()
+      .where({ id: timeline_id })
+      .first();
+    const userIds = await MAnggotaRombel.query()
+      .where({ m_rombel_id: thisTimeline.m_rombel_id })
+      .pluck("m_user_id");
+
     if (user.role == "siswa") {
       const timeline = await TkTimeline.query()
         .with("timeline", (builder) => {
           builder
             .with("rombel")
             .with("materi", (builder) => {
-              builder.with("bab").withCount(
-                "materiKesimpulan as totalKesimpulan",
-                (builder) => {
+              builder
+                .with("bab")
+                .withCount("materiKesimpulan as totalKesimpulan", (builder) => {
                   builder
                     .whereIn("m_user_id", userIds)
                     .whereNotNull("kesimpulan");
-                }
-              );
+                });
             })
             .with("tugas")
             .with("komen", (builder) => {
@@ -7749,14 +7753,13 @@ class MainController {
           builder
             .with("tugas")
             .with("materi", (builder) => {
-              builder.with("bab").withCount(
-                "materiKesimpulan as totalKesimpulan",
-                (builder) => {
+              builder
+                .with("bab")
+                .withCount("materiKesimpulan as totalKesimpulan", (builder) => {
                   builder
                     .whereIn("m_user_id", userIds)
                     .whereNotNull("kesimpulan");
-                }
-              );
+                });
             })
             .withCount("komen as total_komen", (builder) => {
               builder.where({ dihapus: 0 });
@@ -7784,14 +7787,11 @@ class MainController {
       .with("user")
       .with("rombel")
       .with("materi", (builder) => {
-        builder.with("bab").withCount(
-          "materiKesimpulan as totalKesimpulan",
-          (builder) => {
-            builder
-              .whereIn("m_user_id", userIds)
-              .whereNotNull("kesimpulan");
-          }
-        );
+        builder
+          .with("bab")
+          .withCount("materiKesimpulan as totalKesimpulan", (builder) => {
+            builder.whereIn("m_user_id", userIds).whereNotNull("kesimpulan");
+          });
       })
       .with("komen", (builder) => {
         builder.with("user").where({ dihapus: 0 });
@@ -7878,14 +7878,11 @@ class MainController {
         builder.whereNotNull("waktu_absen");
       })
       .with("materi", (builder) => {
-        builder.with("bab").withCount(
-          "materiKesimpulan as totalKesimpulan",
-          (builder) => {
-            builder
-              .whereIn("m_user_id", userIds)
-              .whereNotNull("kesimpulan");
-          }
-        );
+        builder
+          .with("bab")
+          .withCount("materiKesimpulan as totalKesimpulan", (builder) => {
+            builder.whereIn("m_user_id", userIds).whereNotNull("kesimpulan");
+          });
       })
       .withCount("tkTimeline as total_siswa")
       .where({ m_user_id: timeline.m_user_id })
@@ -7914,14 +7911,11 @@ class MainController {
       })
       .with("user")
       .with("materi", (builder) => {
-        builder.with("bab").withCount(
-          "materiKesimpulan as totalKesimpulan",
-          (builder) => {
-            builder
-              .whereIn("m_user_id", userIds)
-              .whereNotNull("kesimpulan");
-          }
-        );
+        builder
+          .with("bab")
+          .withCount("materiKesimpulan as totalKesimpulan", (builder) => {
+            builder.whereIn("m_user_id", userIds).whereNotNull("kesimpulan");
+          });
       })
       .withCount("tkTimeline as total_respon", (builder) => {
         builder.whereNotNull("waktu_pengumpulan");
@@ -40851,12 +40845,7 @@ class MainController {
     return namaFile;
   }
 
-  async putBobotNilai({
-    response,
-    request,
-    auth,
-    params:{bobot_id}
-  }) {
+  async putBobotNilai({ response, request, auth, params: { bobot_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -40868,23 +40857,23 @@ class MainController {
     const user = await auth.getUser();
 
     let {
-        tugas_pts,
-        uh_pts,
-        uts_pts,
-        uas_pts,
-        praktik_pts,
-        produk_pts,
-        proyek_pts,
-        portofolio_pts,
-        
-        tugas_pas,
-        uh_pas,
-        uts_pas,
-        uas_pas,
-        praktik_pas,
-        produk_pas,
-        proyek_pas,
-        portofolio_pas,
+      tugas_pts,
+      uh_pts,
+      uts_pts,
+      uas_pts,
+      praktik_pts,
+      produk_pts,
+      proyek_pts,
+      portofolio_pts,
+
+      tugas_pas,
+      uh_pas,
+      uts_pas,
+      uas_pas,
+      praktik_pas,
+      produk_pas,
+      proyek_pas,
+      portofolio_pas,
     } = request.post();
 
     // const rules = {
@@ -40911,27 +40900,25 @@ class MainController {
     //   return response.unprocessableEntity(validation.messages());
     // }
 
-    const bobot = await MBobotNilai.query()
-      .where({ id: bobot_id })
-      .update({ 
-        tugas_pts,
-        uh_pts,
-        uts_pts,
-        uas_pts,
-        praktik_pts,
-        produk_pts,
-        proyek_pts,
-        portofolio_pts,
-        
-        tugas_pas,
-        uh_pas,
-        uts_pas,
-        uas_pas,
-        praktik_pas,
-        produk_pas,
-        proyek_pas,
-        portofolio_pas,
-      });
+    const bobot = await MBobotNilai.query().where({ id: bobot_id }).update({
+      tugas_pts,
+      uh_pts,
+      uts_pts,
+      uas_pts,
+      praktik_pts,
+      produk_pts,
+      proyek_pts,
+      portofolio_pts,
+
+      tugas_pas,
+      uh_pas,
+      uts_pas,
+      uas_pas,
+      praktik_pas,
+      produk_pas,
+      proyek_pas,
+      portofolio_pas,
+    });
 
     if (!bobot) {
       return response.notFound({
@@ -40944,7 +40931,6 @@ class MainController {
     });
   }
 
-  
   async notFoundPage({ response, request, auth }) {
     return `<p>Data tidak ditemukan, silahkan kembali ke <a href="http://getsmartschool.id">Smart School</a></p>`;
   }
