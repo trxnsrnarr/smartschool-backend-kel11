@@ -10158,20 +10158,12 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const isTrial =
-      sekolah.trial &&
-      moment(sekolah.createdAt).format("YYYY-MM-DD") <
-        moment("2021-09-01 00:00:00").format("YYYY-MM-DD");
-
-    let total = 0;
-    if (isTrial) {
-      const count = await MJadwalUjian.query()
-        .where({ m_user_id: user.id })
-        .andWhere({ dihapus: 0 })
-        .andWhere("waktu_ditutup", ">=", hari_ini)
-        .count("* as total");
-      total = count[0].total;
-    }
+    const count = await MJadwalUjian.query()
+      .where({ m_user_id: user.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere("waktu_ditutup", ">=", hari_ini)
+      .count("* as total");
+    const total = count[0].total;
 
     if (user.role == "guru") {
       const mataPelajaranIds = await MMataPelajaran.query()
@@ -23609,25 +23601,24 @@ class MainController {
     const ta = await this.getTAAktif(sekolah);
     const siswa = await User.query()
       .with("anggotaRombel", (builder) => {
-        builder.with("rombel").where({dihapus:0});
+        builder.with("rombel").where({ dihapus: 0 });
       })
       .where({ id: user_id })
       .first();
 
-      const mapelSingkat = await MMataPelajaran.query()
+    const mapelSingkat = await MMataPelajaran.query()
       .where({ id: mata_pelajaran_id })
       .first();
 
     const mapel = await MMataPelajaran.query()
       .with("user")
       .with("materi", (builder) => {
-        builder.where({ tingkat: siswa.toJSON().anggotaRombel.rombel.tingkat })
+        builder.where({ tingkat: siswa.toJSON().anggotaRombel.rombel.tingkat });
         if (mapelSingkat.kelompok == "C") {
           builder.andWhere({
-            m_jurusan_id:
-              siswa.toJSON().anggotaRombel.rombel.m_jurusan_id,
+            m_jurusan_id: siswa.toJSON().anggotaRombel.rombel.m_jurusan_id,
           });
-        };
+        }
       })
       .where({ id: mata_pelajaran_id })
       .first();
@@ -23787,7 +23778,7 @@ class MainController {
   }) {
     const siswaKeterampilan = await User.query()
       .with("anggotaRombel", (builder) => {
-        builder.with("rombel").where({dihapus:0});
+        builder.with("rombel").where({ dihapus: 0 });
       })
       .where({ id: user_id })
       .first();
@@ -40396,10 +40387,10 @@ class MainController {
               .with("nilaiSemuaUjian", (builder) => {
                 builder.with("mapel").where({ m_ta_id: ta.id });
               })
-              .with("profil",(builder)=>{
-                builder.select("m_user_id","nis")
+              .with("profil", (builder) => {
+                builder.select("m_user_id", "nis");
               })
-              .select("id", "nama","gender");
+              .select("id", "nama", "gender");
           })
           .where({ dihapus: 0 });
       })
@@ -40409,12 +40400,14 @@ class MainController {
       .where({ id: rombel_id })
       .first();
 
-      // return rombel;
+    // return rombel;
 
     let workbook = new Excel.Workbook();
 
     let worksheet = workbook.addWorksheet(`Rekap Nilai Siswa`);
-    worksheet.getCell("A1").value = `LEGER PERNILAIAN AKHIR SEMESTER GANJIL DARING`;
+    worksheet.getCell(
+      "A1"
+    ).value = `LEGER PERNILAIAN AKHIR SEMESTER GANJIL DARING`;
     worksheet.getCell("A2").value = rombel.nama;
     worksheet.getCell("A3").value = sekolah.nama;
     worksheet.getCell("A4").value = `TAHUN PELAJARAN ${ta.tahun}`;
@@ -40459,10 +40452,9 @@ class MainController {
     // add column headers
     await Promise.all(
       rombel.toJSON().anggotaRombel.map(async (d, idx) => {
-
-        worksheet.getRow(6).values = ["No","NIS", "Nama","Gen"];
-        worksheet.getRow(7).values = ["No","NIS", "Nama","Gen"];
-        worksheet.getRow(8).values = ["No","NIS", "Nama","Gen"];
+        worksheet.getRow(6).values = ["No", "NIS", "Nama", "Gen"];
+        worksheet.getRow(7).values = ["No", "NIS", "Nama", "Gen"];
+        worksheet.getRow(8).values = ["No", "NIS", "Nama", "Gen"];
         worksheet.columns = [
           { key: "no" },
           { key: "nis" },
@@ -40487,7 +40479,7 @@ class MainController {
               ``,
               `Mata Pelajaran`,
               `${e.mapel.kode}`,
-              `P`
+              `P`,
             ];
             worksheet.getColumn([`${(nox + 1) * 2 + 4}`]).values = [
               ``,
@@ -40497,7 +40489,7 @@ class MainController {
               ``,
               ``,
               `${e.mapel.kode}`,
-              `K`
+              `K`,
             ];
             worksheet.getColumn([`${(nox + 1) * 2 + 5}`]).values = [
               ``,
@@ -40575,18 +40567,24 @@ class MainController {
               ],
             });
 
-            if(!sudahGabung){
-              worksheet.mergeCells(7,`${(nox + 1) * 2 + 3}`,7,`${(nox + 1) * 2 + 4}`);
+            if (!sudahGabung) {
+              worksheet.mergeCells(
+                7,
+                `${(nox + 1) * 2 + 3}`,
+                7,
+                `${(nox + 1) * 2 + 4}`
+              );
             }
 
             if (nox == d.user.nilaiSemuaUjian.length - 1) {
-              row.getCell([`${(nox + 1) * 2 + 5}`]).value = `${
-                d.user.nilaiSemuaUjian.reduce((a, b) => a + b.nilai + b.nilai_keterampilan, 0)
-              }`;
-              
-                alreadyMerged = (nox + 1) * 2 + 4;
-              
+              row.getCell([
+                `${(nox + 1) * 2 + 5}`,
+              ]).value = `${d.user.nilaiSemuaUjian.reduce(
+                (a, b) => a + b.nilai + b.nilai_keterampilan,
+                0
+              )}`;
 
+              alreadyMerged = (nox + 1) * 2 + 4;
             }
 
             // // Add row using key mapping to columns
@@ -40597,7 +40595,7 @@ class MainController {
             //   tugas4: e ? e.nilai : "-",
             //   tugas5: e ? e.nilai : "-",
             // });
-            sudahGabung = 1
+            sudahGabung = 1;
           })
         );
 
@@ -40666,7 +40664,9 @@ class MainController {
         });
       })
     );
-    worksheet.getCell("A1").value = `LEGER PERNILAIAN AKHIR SEMESTER GANJIL DARING`;
+    worksheet.getCell(
+      "A1"
+    ).value = `LEGER PERNILAIAN AKHIR SEMESTER GANJIL DARING`;
     worksheet.getCell("A2").value = rombel.nama;
     worksheet.getCell("A3").value = sekolah.nama;
     worksheet.getCell("A4").value = `TAHUN PELAJARAN ${ta.tahun}`;
@@ -40713,7 +40713,7 @@ class MainController {
     const huruf = alreadyMerged + 64;
     const angka = String.fromCharCode(`${huruf}`);
 
-    return angka
+    return angka;
 
     worksheet.addConditionalFormatting({
       ref: `6,5,8,${alreadyMerged}`,
@@ -40743,14 +40743,12 @@ class MainController {
       ],
     });
 
-
-    
     worksheet.getColumn("B").width = 14;
     worksheet.getColumn("C").width = 28;
-      worksheet.mergeCells(6,5,6,`${alreadyMerged}`);
-    
+    worksheet.mergeCells(6, 5, 6, `${alreadyMerged}`);
+
     // worksheet.mergeCells(20,22,22,23);
-    
+
     // worksheet.mergeCells(22,22,23,24);
     let namaFile = `/uploads/Leger-Nilai-${rombel.nama}-${keluarantanggalseconds}.xlsx`;
 
