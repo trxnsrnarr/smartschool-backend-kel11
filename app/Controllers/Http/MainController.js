@@ -7645,8 +7645,7 @@ class MainController {
           builder
             .with("rombel")
             .with("materi", (builder) => {
-              builder
-                .with("bab")
+              builder.with("bab");
             })
             .with("tugas")
             .with("komen", (builder) => {
@@ -7741,13 +7740,7 @@ class MainController {
           builder
             .with("tugas")
             .with("materi", (builder) => {
-              builder
-                .with("bab")
-                .withCount("materiKesimpulan as totalKesimpulan", (builder) => {
-                  builder
-                    .whereIn("m_user_id", userIds)
-                    .whereNotNull("kesimpulan");
-                });
+              builder.with("bab");
             })
             .withCount("komen as total_komen", (builder) => {
               builder.where({ dihapus: 0 });
