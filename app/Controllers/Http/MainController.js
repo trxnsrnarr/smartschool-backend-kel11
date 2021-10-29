@@ -7647,11 +7647,6 @@ class MainController {
             .with("materi", (builder) => {
               builder
                 .with("bab")
-                .withCount("materiKesimpulan as totalKesimpulan", (builder) => {
-                  builder
-                    .whereIn("m_user_id", userIds)
-                    .whereNotNull("kesimpulan");
-                });
             })
             .with("tugas")
             .with("komen", (builder) => {
