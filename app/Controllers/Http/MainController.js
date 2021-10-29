@@ -7428,7 +7428,14 @@ class MainController {
           builder
             .with("tugas")
             .with("materi", (builder) => {
-              builder.with("bab");
+              builder.with("bab").withCount(
+                "materiKesimpulan as totalKesimpulan",
+                (builder) => {
+                  builder
+                    .whereIn("m_user_id", userIds)
+                    .whereNotNull("kesimpulan");
+                }
+              );
             })
             .withCount("komen as total_komen", (builder) => {
               builder.where({ dihapus: 0 });
@@ -7543,7 +7550,14 @@ class MainController {
         })
         .with("user")
         .with("materi", (builder) => {
-          builder.with("bab");
+          builder.with("bab").withCount(
+            "materiKesimpulan as totalKesimpulan",
+            (builder) => {
+              builder
+                .whereIn("m_user_id", userIds)
+                .whereNotNull("kesimpulan");
+            }
+          );
         })
         .with("komen", (builder) => {
           builder.with("user").where({ dihapus: 0 });
@@ -7575,7 +7589,14 @@ class MainController {
         })
         .with("user")
         .with("materi", (builder) => {
-          builder.with("bab");
+          builder.with("bab").withCount(
+            "materiKesimpulan as totalKesimpulan",
+            (builder) => {
+              builder
+                .whereIn("m_user_id", userIds)
+                .whereNotNull("kesimpulan");
+            }
+          );
         })
         .with("komen", (builder) => {
           builder.with("user").where({ dihapus: 0 });
@@ -7626,7 +7647,14 @@ class MainController {
           builder
             .with("rombel")
             .with("materi", (builder) => {
-              builder.with("bab");
+              builder.with("bab").withCount(
+                "materiKesimpulan as totalKesimpulan",
+                (builder) => {
+                  builder
+                    .whereIn("m_user_id", userIds)
+                    .whereNotNull("kesimpulan");
+                }
+              );
             })
             .with("tugas")
             .with("komen", (builder) => {
@@ -7721,7 +7749,14 @@ class MainController {
           builder
             .with("tugas")
             .with("materi", (builder) => {
-              builder.with("bab");
+              builder.with("bab").withCount(
+                "materiKesimpulan as totalKesimpulan",
+                (builder) => {
+                  builder
+                    .whereIn("m_user_id", userIds)
+                    .whereNotNull("kesimpulan");
+                }
+              );
             })
             .withCount("komen as total_komen", (builder) => {
               builder.where({ dihapus: 0 });
@@ -7749,7 +7784,14 @@ class MainController {
       .with("user")
       .with("rombel")
       .with("materi", (builder) => {
-        builder.with("bab");
+        builder.with("bab").withCount(
+          "materiKesimpulan as totalKesimpulan",
+          (builder) => {
+            builder
+              .whereIn("m_user_id", userIds)
+              .whereNotNull("kesimpulan");
+          }
+        );
       })
       .with("komen", (builder) => {
         builder.with("user").where({ dihapus: 0 });
@@ -7836,7 +7878,14 @@ class MainController {
         builder.whereNotNull("waktu_absen");
       })
       .with("materi", (builder) => {
-        builder.with("bab");
+        builder.with("bab").withCount(
+          "materiKesimpulan as totalKesimpulan",
+          (builder) => {
+            builder
+              .whereIn("m_user_id", userIds)
+              .whereNotNull("kesimpulan");
+          }
+        );
       })
       .withCount("tkTimeline as total_siswa")
       .where({ m_user_id: timeline.m_user_id })
@@ -7865,7 +7914,14 @@ class MainController {
       })
       .with("user")
       .with("materi", (builder) => {
-        builder.with("bab");
+        builder.with("bab").withCount(
+          "materiKesimpulan as totalKesimpulan",
+          (builder) => {
+            builder
+              .whereIn("m_user_id", userIds)
+              .whereNotNull("kesimpulan");
+          }
+        );
       })
       .withCount("tkTimeline as total_respon", (builder) => {
         builder.whereNotNull("waktu_pengumpulan");
