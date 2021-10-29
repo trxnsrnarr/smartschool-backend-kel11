@@ -19139,8 +19139,8 @@ class MainController {
         const listNilai = [
           rataUjian,
           rata,
-          ujian.toJSON().nilaiUAS ? ujian.toJSON().nilaiUAS?.nilai : null,
-          ujian.toJSON().nilaiUTS ? ujian.toJSON().nilaiUTS?.nilai : null,
+          ujian.toJSON().nilaiUAS != null ? ujian.toJSON().nilaiUAS?.nilai : null,
+          ujian.toJSON().nilaiUTS != null ? ujian.toJSON().nilaiUTS?.nilai : null,
         ];
         nilaiAkhir = listNilai.filter((nilai) => nilai).length
           ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) /
@@ -23722,11 +23722,11 @@ class MainController {
           nilaiPengetahuan1.filter((nilai) => nilai).reduce((a, b) => a + b, 0)
         : 0;
 
-      const nilaiUTS = ujian.toJSON().nilaiUTS
+      const nilaiUTS = ujian.toJSON().nilaiUTS != null
         ? ujian.toJSON().nilaiUTS?.nilai
         : null;
 
-      const nilaiUAS = ujian.toJSON().nilaiUAS
+      const nilaiUAS = ujian.toJSON().nilaiUAS != null
         ? ujian.toJSON().nilaiUAS?.nilai
         : null;
 
@@ -35282,11 +35282,11 @@ class MainController {
                   .reduce((a, b) => a + b, 0)
               : 0;
 
-            const nilaiUTS = ujian.toJSON().nilaiUTS
+            const nilaiUTS = ujian.toJSON().nilaiUTS != null
               ? ujian.toJSON().nilaiUTS?.nilai
               : null;
 
-            const nilaiUAS = ujian.toJSON().nilaiUAS
+            const nilaiUAS = ujian.toJSON().nilaiUAS != null
               ? ujian.toJSON().nilaiUAS?.nilai
               : null;
 
@@ -40695,6 +40695,119 @@ class MainController {
     await workbook.xlsx.writeFile(`public${namaFile}`);
 
     return namaFile;
+  }
+
+  
+  async putInstrumenNilai({
+    response,
+    request,
+    auth,
+    params: { kegiatan_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let {
+      nama,
+      tanggal_mulai,
+      tanggal_akhir,
+      waktu_mulai,
+      waktu_akhir,
+      media,
+      isi_media,
+      deskripsi,
+      buku_tamu,
+    } = request.post();
+
+    const rules = {
+      nama: "required",
+      tanggal_mulai: "required",
+      tanggal_akhir: "required",
+      buku_tamu: "required",
+      waktu_mulai: "required",
+      waktu_akhir: "required",
+      media: "required",
+      deskripsi: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+      "label.required": "Label harus dipilih",
+      "deskripsi.required": "Deskripsi harus dipilih",
+      "tanggal_mulai.required": "Tanggal Mulai harus diisi",
+      "tanggal_akhir.required": "Tanggal Akhir harus diisi",
+      "waktu_mulai.required": "Waktu Mulai harus diisi",
+      "waktu_akhir.required": "Waktu Akhir harus diisi",
+      "media.required": "Media Kegiatan harus dipilih",
+      "buku_tamu.required": "Buku Tamu harus dipilih",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const kalender = await MKegiatanKalender.query()
+      .where({ id: kegiatan_id })
+      .update({
+        nama,
+        tanggal_mulai,
+        tanggal_akhir,
+        waktu_mulai,
+        waktu_akhir,
+        media,
+        deskripsi,
+        isi_media,
+        buku_tamu,
+      });
+
+    if (!kalender) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteKegiatanKalender({
+    response,
+    request,
+    auth,
+    params: { kegiatan_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    // if ((user.role != "admin" || user.role  == 'kurikulum') || user.m_sekolah_id != sekolah.id) {
+    //   return response.forbidden({ message: messageForbidden });
+    // }
+
+    const kalender = await MKegiatanKalender.query()
+      .where({ id: kegiatan_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!kalender) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
   }
 
   async notFoundPage({ response, request, auth }) {
