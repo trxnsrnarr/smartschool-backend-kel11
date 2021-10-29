@@ -119,6 +119,7 @@ const MLabelKalender = use("App/Models/MLabelKalender");
 const MKegiatanKalender = use("App/Models/MKegiatanKalender");
 const MKalenderPendidikan = use("App/Models/MKalenderPendidikan");
 const MBuktiPelaksanaanSanksi = use("App/Models/MBuktiPelaksanaanSanksi");
+const MBobotNilai = use("App/Models/MBobotNilai");
 
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
@@ -363,6 +364,31 @@ class MainController {
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .first();
+
+    const bobot = await MBobotNilai.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .first();
+
+    if (!bobot) {
+      await MBobotNilai.create({
+        tugas_pts: "30",
+        uh_pts: "30",
+        uts_pts: "40",
+        praktik_pts: "25",
+        produk_pts: "25",
+        proyek_pts: "25",
+        portofolio_pts: "25",
+        tugas_pas: "25",
+        uh_pas: "25",
+        uts_pas: "25",
+        uas_pas: "25",
+        praktik_pas: "25",
+        produk_pas: "25",
+        proyek_pas: "25",
+        portofolio_pas: "25",
+        m_sekolah_id: sekolah.id,
+      });
+    }
 
     if (!checkPredikat) {
       await MPredikatNilai.create({
@@ -19152,26 +19178,34 @@ class MainController {
         const nilaiSebelumAkhir = nilaiPengetahuan1.filter((nilai) => nilai)
           .length
           ? 2 *
-            nilaiPengetahuan1.filter((nilai) => nilai).reduce((a, b) => a + b, 0)
+            nilaiPengetahuan1
+              .filter((nilai) => nilai)
+              .reduce((a, b) => a + b, 0)
           : 0;
-  
-        const nilaiUTS = ujian.toJSON().nilaiUTS != null
-          ? ujian.toJSON().nilaiUTS?.nilai
-          : null;
-  
-        const nilaiUAS = ujian.toJSON().nilaiUAS != null
-          ? ujian.toJSON().nilaiUAS?.nilai
-          : null;
-  
+
+        const nilaiUTS =
+          ujian.toJSON().nilaiUTS != null
+            ? ujian.toJSON().nilaiUTS?.nilai
+            : null;
+
+        const nilaiUAS =
+          ujian.toJSON().nilaiUAS != null
+            ? ujian.toJSON().nilaiUAS?.nilai
+            : null;
+
         const listNilai = [nilaiSebelumAkhir, nilaiUTS, nilaiUAS];
-  
+
         if (listNilai.filter((nilai) => nilai != null).length == 2) {
           nilaiAkhir = listNilai.filter((nilai) => nilai != null).length
-            ? listNilai.filter((nilai) => nilai != null).reduce((a, b) => a + b, 0) / 3
+            ? listNilai
+                .filter((nilai) => nilai != null)
+                .reduce((a, b) => a + b, 0) / 3
             : 0;
         } else if (listNilai.filter((nilai) => nilai != null).length == 3) {
           nilaiAkhir = listNilai.filter((nilai) => nilai != null).length
-            ? listNilai.filter((nilai) => nilai != null).reduce((a, b) => a + b, 0) / 4
+            ? listNilai
+                .filter((nilai) => nilai != null)
+                .reduce((a, b) => a + b, 0) / 4
             : 0;
         }
         await MUjianSiswa.query().where({ id: ujian.id }).update({
@@ -19180,7 +19214,9 @@ class MainController {
       } else {
         const listNilai = [rataUjian, rata];
         nilaiAkhir = listNilai.filter((nilai) => nilai != null).length
-          ? listNilai.filter((nilai) => nilai != null).reduce((a, b) => a + b, 0) /
+          ? listNilai
+              .filter((nilai) => nilai != null)
+              .reduce((a, b) => a + b, 0) /
             listNilai.filter((nilai) => nilai != null).length
           : 0;
         await MUjianSiswa.create({
@@ -22488,6 +22524,31 @@ class MainController {
       .andWhere({ m_sekolah_id: sekolah.id })
       .first();
 
+    const checkBobot = await MBobotNilai.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .first();
+
+    if (!checkBobot) {
+      await MBobotNilai.create({
+        tugas_pts: "30",
+        uh_pts: "30",
+        uts_pts: "40",
+        praktik_pts: "25",
+        produk_pts: "25",
+        proyek_pts: "25",
+        portofolio_pts: "25",
+        tugas_pas: "25",
+        uh_pas: "25",
+        uts_pas: "25",
+        uas_pas: "25",
+        praktik_pas: "25",
+        produk_pas: "25",
+        proyek_pas: "25",
+        portofolio_pas: "25",
+        m_sekolah_id: sekolah.id,
+      });
+    }
+
     if (!checkPredikat) {
       await MPredikatNilai.create({
         predikat: "A",
@@ -22551,6 +22612,10 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .pluck("id");
 
+    const bobot = await MBobotNilai.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .first();
+
     const countMapel = await Promise.all(
       rombelIds.map(async (item) => {
         const count = await TkMateriRombel.query()
@@ -22563,6 +22628,7 @@ class MainController {
     return response.ok({
       predikat: predikat,
       rombel: rombel,
+      bobot,
       countMapel,
     });
   }
@@ -23750,23 +23816,25 @@ class MainController {
           nilaiPengetahuan1.filter((nilai) => nilai).reduce((a, b) => a + b, 0)
         : 0;
 
-      const nilaiUTS = ujian.toJSON().nilaiUTS != null
-        ? ujian.toJSON().nilaiUTS?.nilai
-        : null;
+      const nilaiUTS =
+        ujian.toJSON().nilaiUTS != null ? ujian.toJSON().nilaiUTS?.nilai : null;
 
-      const nilaiUAS = ujian.toJSON().nilaiUAS != null
-        ? ujian.toJSON().nilaiUAS?.nilai
-        : null;
+      const nilaiUAS =
+        ujian.toJSON().nilaiUAS != null ? ujian.toJSON().nilaiUAS?.nilai : null;
 
       const listNilai = [nilaiSebelumAkhir, nilaiUTS, nilaiUAS];
 
       if (listNilai.filter((nilai) => nilai != null).length == 2) {
         nilaiAkhir = listNilai.filter((nilai) => nilai != null).length
-          ? listNilai.filter((nilai) => nilai != null).reduce((a, b) => a + b, 0) / 3
+          ? listNilai
+              .filter((nilai) => nilai != null)
+              .reduce((a, b) => a + b, 0) / 3
           : 0;
       } else if (listNilai.filter((nilai) => nilai != null).length == 3) {
         nilaiAkhir = listNilai.filter((nilai) => nilai != null).length
-          ? listNilai.filter((nilai) => nilai != null).reduce((a, b) => a + b, 0) / 4
+          ? listNilai
+              .filter((nilai) => nilai != null)
+              .reduce((a, b) => a + b, 0) / 4
           : 0;
       }
 
@@ -35310,13 +35378,15 @@ class MainController {
                   .reduce((a, b) => a + b, 0)
               : 0;
 
-            const nilaiUTS = ujian.toJSON().nilaiUTS != null
-              ? ujian.toJSON().nilaiUTS?.nilai
-              : null;
+            const nilaiUTS =
+              ujian.toJSON().nilaiUTS != null
+                ? ujian.toJSON().nilaiUTS?.nilai
+                : null;
 
-            const nilaiUAS = ujian.toJSON().nilaiUAS != null
-              ? ujian.toJSON().nilaiUAS?.nilai
-              : null;
+            const nilaiUAS =
+              ujian.toJSON().nilaiUAS != null
+                ? ujian.toJSON().nilaiUAS?.nilai
+                : null;
 
             const listNilai = [nilaiSebelumAkhir, nilaiUTS, nilaiUAS];
 
@@ -40513,7 +40583,6 @@ class MainController {
               bottom: { style: "thin" },
               right: { style: "thin" },
             };
-           
 
             if (nox == d.user.nilaiSemuaUjian.length - 1) {
               row.getCell([`${(nox + 1) * 2 + 5}`]).value =
@@ -40532,19 +40601,18 @@ class MainController {
 
               alreadyMerged = (nox + 1) * 2 + 4;
             }
-            
+
             // // Add row using key mapping to columns
             // let row = worksheet.addRow ({
-              //   tugas1: e ? e.nilai : "-",
-              //   tugas2: e ? e.nilai : "-",
-              //   tugas3: e ? e.nilai : "-",
-              //   tugas4: e ? e.nilai : "-",
-              //   tugas5: e ? e.nilai : "-",
-              // });
-
+            //   tugas1: e ? e.nilai : "-",
+            //   tugas2: e ? e.nilai : "-",
+            //   tugas3: e ? e.nilai : "-",
+            //   tugas4: e ? e.nilai : "-",
+            //   tugas5: e ? e.nilai : "-",
+            // });
           })
         );
-          
+
         worksheet.addConditionalFormatting({
           ref: `A6:D8`,
           rules: [
@@ -40608,14 +40676,10 @@ class MainController {
             },
           ],
         });
-
-        
-
       })
     );
 
     worksheet.getCell(
-     
       "A1"
     ).value = `LEGER PERNILAIAN AKHIR SEMESTER GANJIL DARING`;
     worksheet.getCell("A2").value = rombel.nama;
@@ -40711,7 +40775,13 @@ class MainController {
     worksheet.getColumn(`${colName(alreadyMerged + 1)}`).width = 16;
 
     worksheet.views = [
-      {state: 'frozen', xSplit: 4, ySplit: 8, topLeftCell: 'A6', activeCell: 'A6'}
+      {
+        state: "frozen",
+        xSplit: 4,
+        ySplit: 8,
+        topLeftCell: "A6",
+        activeCell: "A6",
+      },
     ];
 
     // worksheet.mergeCells(20,22,22,23);
@@ -40725,12 +40795,11 @@ class MainController {
     return namaFile;
   }
 
-  
-  async putInstrumenNilai({
+  async putBobotNilai({
     response,
     request,
     auth,
-    params: { kegiatan_id },
+    params:{bobot_id}
   }) {
     const domain = request.headers().origin;
 
@@ -40743,58 +40812,72 @@ class MainController {
     const user = await auth.getUser();
 
     let {
-      nama,
-      tanggal_mulai,
-      tanggal_akhir,
-      waktu_mulai,
-      waktu_akhir,
-      media,
-      isi_media,
-      deskripsi,
-      buku_tamu,
+        tugas_pts,
+        uh_pts,
+        uts_pts,
+        uas_pts,
+        praktik_pts,
+        produk_pts,
+        proyek_pts,
+        portofolio_pts,
+        
+        tugas_pas,
+        uh_pas,
+        uts_pas,
+        uas_pas,
+        praktik_pas,
+        produk_pas,
+        proyek_pas,
+        portofolio_pas,
     } = request.post();
 
-    const rules = {
-      nama: "required",
-      tanggal_mulai: "required",
-      tanggal_akhir: "required",
-      buku_tamu: "required",
-      waktu_mulai: "required",
-      waktu_akhir: "required",
-      media: "required",
-      deskripsi: "required",
-    };
-    const message = {
-      "nama.required": "Nama harus diisi",
-      "label.required": "Label harus dipilih",
-      "deskripsi.required": "Deskripsi harus dipilih",
-      "tanggal_mulai.required": "Tanggal Mulai harus diisi",
-      "tanggal_akhir.required": "Tanggal Akhir harus diisi",
-      "waktu_mulai.required": "Waktu Mulai harus diisi",
-      "waktu_akhir.required": "Waktu Akhir harus diisi",
-      "media.required": "Media Kegiatan harus dipilih",
-      "buku_tamu.required": "Buku Tamu harus dipilih",
-    };
-    const validation = await validate(request.all(), rules, message);
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
-    }
+    // const rules = {
+    //     tugas:"required",
+    //     uh:"required",
+    //     uts:"required",
+    //     uas:"required",
+    //     praktik:"required",
+    //     produk:"required",
+    //     proyek:"required",
+    //     portofolio:"required",
+    // };
+    // const message = {
+    //   "tugas.required": "tugas harus diisi",
+    //   "uh.required": "uh harus diisi",
+    //   "uts.required": "uts harus diisi",
+    //   "praktik.required": "praktik harus diisi",
+    //   "produk.required": "produk harus diisi",
+    //   "proyek.required": "proyek harus diisi",
+    //   "portofolio.required": "portofolio harus diisi",
+    // };
+    // const validation = await validate(request.all(), rules, message);
+    // if (validation.fails()) {
+    //   return response.unprocessableEntity(validation.messages());
+    // }
 
-    const kalender = await MKegiatanKalender.query()
-      .where({ id: kegiatan_id })
-      .update({
-        nama,
-        tanggal_mulai,
-        tanggal_akhir,
-        waktu_mulai,
-        waktu_akhir,
-        media,
-        deskripsi,
-        isi_media,
-        buku_tamu,
+    const bobot = await MBobotNilai.query()
+      .where({ id: bobot_id })
+      .update({ 
+        tugas_pts,
+        uh_pts,
+        uts_pts,
+        uas_pts,
+        praktik_pts,
+        produk_pts,
+        proyek_pts,
+        portofolio_pts,
+        
+        tugas_pas,
+        uh_pas,
+        uts_pas,
+        uas_pas,
+        praktik_pas,
+        produk_pas,
+        proyek_pas,
+        portofolio_pas,
       });
 
-    if (!kalender) {
+    if (!bobot) {
       return response.notFound({
         message: messageNotFound,
       });
@@ -40805,39 +40888,7 @@ class MainController {
     });
   }
 
-  async deleteKegiatanKalender({
-    response,
-    request,
-    auth,
-    params: { kegiatan_id },
-  }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-
-    // if ((user.role != "admin" || user.role  == 'kurikulum') || user.m_sekolah_id != sekolah.id) {
-    //   return response.forbidden({ message: messageForbidden });
-    // }
-
-    const kalender = await MKegiatanKalender.query()
-      .where({ id: kegiatan_id })
-      .update({
-        dihapus: 1,
-      });
-
-    if (!kalender) {
-      return response.notFound({
-        message: messageNotFound,
-      });
-    }
-  }
-
+  
   async notFoundPage({ response, request, auth }) {
     return `<p>Data tidak ditemukan, silahkan kembali ke <a href="http://getsmartschool.id">Smart School</a></p>`;
   }
