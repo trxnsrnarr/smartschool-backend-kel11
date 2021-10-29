@@ -7639,13 +7639,6 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const thisTimeline = await MTimeline.query()
-      .where({ id: timeline_id })
-      .first();
-    const userIds = await MAnggotaRombel.query()
-      .where({ m_rombel_id: thisTimeline.m_rombel_id })
-      .pluck("m_user_id");
-
     if (user.role == "siswa") {
       const timeline = await TkTimeline.query()
         .with("timeline", (builder) => {
@@ -7782,6 +7775,13 @@ class MainController {
         timelines,
       });
     }
+
+    const thisTimeline = await MTimeline.query()
+      .where({ id: timeline_id })
+      .first();
+    const userIds = await MAnggotaRombel.query()
+      .where({ m_rombel_id: thisTimeline.m_rombel_id })
+      .pluck("m_user_id");
 
     const timeline = await MTimeline.query()
       .with("user")
