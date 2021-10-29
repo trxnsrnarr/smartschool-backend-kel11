@@ -10301,7 +10301,7 @@ class MainController {
           rombel,
           jadwalUjian: jadwalUjianDataFormat,
           ujian,
-          total: jadwalUjian.toJSON().total,
+          totalData: jadwalUjian.toJSON().total,
           lastPage: jadwalUjian.toJSON().lastPage,
           total,
         });
@@ -10429,7 +10429,7 @@ class MainController {
           rombel,
           jadwalUjian: jadwalUjianDataFormat,
           ujian,
-          total: jadwalUjian.toJSON().total,
+          totalData: jadwalUjian.toJSON().total,
           lastPage: jadwalUjian.toJSON().lastPage,
           total,
         });
