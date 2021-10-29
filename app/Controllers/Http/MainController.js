@@ -19147,24 +19147,41 @@ class MainController {
 
       let nilaiAkhir;
       if (ujian) {
-        const listNilai = [
-          rataUjian,
-          rata,
-          ujian.toJSON().nilaiUAS != null ? ujian.toJSON().nilaiUAS?.nilai : null,
-          ujian.toJSON().nilaiUTS != null ? ujian.toJSON().nilaiUTS?.nilai : null,
-        ];
-        nilaiAkhir = listNilai.filter((nilai) => nilai).length
-          ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) /
-            listNilai.filter((nilai) => nilai).length
+        const nilaiPengetahuan1 = [rataUjian, rata];
+
+        const nilaiSebelumAkhir = nilaiPengetahuan1.filter((nilai) => nilai)
+          .length
+          ? 2 *
+            nilaiPengetahuan1.filter((nilai) => nilai).reduce((a, b) => a + b, 0)
           : 0;
+  
+        const nilaiUTS = ujian.toJSON().nilaiUTS != null
+          ? ujian.toJSON().nilaiUTS?.nilai
+          : null;
+  
+        const nilaiUAS = ujian.toJSON().nilaiUAS != null
+          ? ujian.toJSON().nilaiUAS?.nilai
+          : null;
+  
+        const listNilai = [nilaiSebelumAkhir, nilaiUTS, nilaiUAS];
+  
+        if (listNilai.filter((nilai) => nilai != null).length == 2) {
+          nilaiAkhir = listNilai.filter((nilai) => nilai != null).length
+            ? listNilai.filter((nilai) => nilai != null).reduce((a, b) => a + b, 0) / 3
+            : 0;
+        } else if (listNilai.filter((nilai) => nilai != null).length == 3) {
+          nilaiAkhir = listNilai.filter((nilai) => nilai != null).length
+            ? listNilai.filter((nilai) => nilai != null).reduce((a, b) => a + b, 0) / 4
+            : 0;
+        }
         await MUjianSiswa.query().where({ id: ujian.id }).update({
           nilai: nilaiAkhir,
         });
       } else {
         const listNilai = [rataUjian, rata];
-        nilaiAkhir = listNilai.filter((nilai) => nilai).length
-          ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) /
-            listNilai.filter((nilai) => nilai).length
+        nilaiAkhir = listNilai.filter((nilai) => nilai != null).length
+          ? listNilai.filter((nilai) => nilai != null).reduce((a, b) => a + b, 0) /
+            listNilai.filter((nilai) => nilai != null).length
           : 0;
         await MUjianSiswa.create({
           m_ta_id: ta.id,
@@ -23743,13 +23760,13 @@ class MainController {
 
       const listNilai = [nilaiSebelumAkhir, nilaiUTS, nilaiUAS];
 
-      if (listNilai.filter((nilai) => nilai).length == 2) {
-        nilaiAkhir = listNilai.filter((nilai) => nilai).length
-          ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) / 3
+      if (listNilai.filter((nilai) => nilai != null).length == 2) {
+        nilaiAkhir = listNilai.filter((nilai) => nilai != null).length
+          ? listNilai.filter((nilai) => nilai != null).reduce((a, b) => a + b, 0) / 3
           : 0;
-      } else if (listNilai.filter((nilai) => nilai).length == 3) {
-        nilaiAkhir = listNilai.filter((nilai) => nilai).length
-          ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) / 4
+      } else if (listNilai.filter((nilai) => nilai != null).length == 3) {
+        nilaiAkhir = listNilai.filter((nilai) => nilai != null).length
+          ? listNilai.filter((nilai) => nilai != null).reduce((a, b) => a + b, 0) / 4
           : 0;
       }
 
@@ -35303,16 +35320,16 @@ class MainController {
 
             const listNilai = [nilaiSebelumAkhir, nilaiUTS, nilaiUAS];
 
-            if (listNilai.filter((nilai) => nilai).length == 2) {
-              nilaiAkhir = listNilai.filter((nilai) => nilai).length
+            if (listNilai.filter((nilai) => nilai != null).length == 2) {
+              nilaiAkhir = listNilai.filter((nilai) => nilai != null).length
                 ? listNilai
-                    .filter((nilai) => nilai)
+                    .filter((nilai) => nilai != null)
                     .reduce((a, b) => a + b, 0) / 3
                 : 0;
-            } else if (listNilai.filter((nilai) => nilai).length == 3) {
-              nilaiAkhir = listNilai.filter((nilai) => nilai).length
+            } else if (listNilai.filter((nilai) => nilai != null).length == 3) {
+              nilaiAkhir = listNilai.filter((nilai) => nilai != null).length
                 ? listNilai
-                    .filter((nilai) => nilai)
+                    .filter((nilai) => nilai != null)
                     .reduce((a, b) => a + b, 0) / 4
                 : 0;
             }
