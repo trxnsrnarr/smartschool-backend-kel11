@@ -40548,6 +40548,20 @@ class MainController {
     let alreadyMerged = 0;
     let sudahGabung = 0;
     // add column headers
+
+    const urutan = rombel.toJSON().anggotaRombel.sort((a, b) => {
+      return (
+        b.user.nilaiSemuaUjian.reduce((c, d) => {
+          return c + d.nilai + d.nilai_keterampilan;
+        }, 0) -
+        a.user.nilaiSemuaUjian.reduce((c, d) => {
+          return c + d.nilai + d.nilai_keterampilan;
+        }, 0)
+      );
+    }).map((d)=>d.id);
+
+    // return urutan;
+
     await Promise.all(
       rombel.toJSON().anggotaRombel.map(async (d, idx) => {
         worksheet.getRow(6).values = ["No", "NIS", "Nama", "Gen"];
@@ -40629,13 +40643,16 @@ class MainController {
                   0
                 );
 
-              // const cell = row.getCell([`${(nox + 1) * 2 + 5}`]);
+              const cell = row.getCell([`${(nox + 1) * 2 + 5}`]);
 
-              row.getCell([`${(nox + 1) * 2 + 6}`]).value = `=RANK(${colName(
-                (nox + 1) * 2 + 4
-              )}${idx + 9};$${colName((nox + 1) * 2 + 4)}$9:$${colName(
-                (nox + 1) * 2 + 4
-              )}$100)`;
+              // row.getCell([`${(nox + 1) * 2 + 6}`]).value = `=RANK(${colName(
+              //   (nox + 1) * 2 + 4
+              // )}${idx + 9};$${colName((nox + 1) * 2 + 4)}$9:$${colName(
+              //   (nox + 1) * 2 + 4
+              // )}$100)`;
+
+              row.getCell([`${(nox + 1) * 2 + 6}`]).value =
+                urutan.findIndex((f) => f == d.id) + 1;
 
               alreadyMerged = (nox + 1) * 2 + 4;
             }
