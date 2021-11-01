@@ -8129,6 +8129,7 @@ class MainController {
       siswa_id,
       tk_id,
       nilai,
+      materi,
     } = request.post();
 
     if (
@@ -8227,11 +8228,9 @@ class MainController {
         .where({ m_timeline_id: timeline_id })
         .delete();
       await Promise.all(
-        materi.map((d) => {
-          TkTimelineTopik.create({
-            m_timeline_id: timeline_id,
-            m_topik_id: d,
-          });
+        TkTimelineTopik.create({
+          m_timeline_id: timeline_id,
+          m_topik_id: materi,
         })
       );
 
