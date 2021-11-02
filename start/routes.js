@@ -1078,6 +1078,4 @@ Route.post(
 );
 
 // wildcard (DROP AT BOTTOM OF THE FILE)
-Route.any("*", (ctx) => {
-  return ctx
-});
+Route.any("*", "MainController.notFoundPage");
