@@ -42411,7 +42411,6 @@ class MainController {
   }
 
   async notFoundPage({ response, request, auth }) {
-    return response.ok({d: request});
     return `<p>Data tidak ditemukan, silahkan kembali ke <a href="http://getsmartschool.id">Smart School</a></p>`;
   }
 }
