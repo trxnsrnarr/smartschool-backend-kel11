@@ -7,7 +7,6 @@ class MBobotNilaiSchema extends Schema {
   up() {
     this.create("m_bobot_nilai", (table) => {
       table.increments();
-      table.string("tipe");
       table.integer("tugas_pts");
       table.integer("uh_pts");
       table.integer("uts_pts");
