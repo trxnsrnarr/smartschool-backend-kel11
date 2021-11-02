@@ -8062,43 +8062,43 @@ class MainController {
 
       await TkTimeline.createMany(userIds);
     } else if (tipe == "materi") {
-      timeline = await MTimeline.create({
-        m_user_id: user.id,
-        m_rombel_id: jadwalMengajar.m_rombel_id,
-        tipe,
-        m_mata_pelajaran_id: jadwalMengajar.toJSON().mataPelajaran.id,
-        dihapus: 0,
-        tanggal_pembagian,
-      });
+      materi.map(async (d) => {
+        timeline = await MTimeline.create({
+          m_user_id: user.id,
+          m_rombel_id: jadwalMengajar.m_rombel_id,
+          tipe,
+          m_mata_pelajaran_id: jadwalMengajar.toJSON().mataPelajaran.id,
+          dihapus: 0,
+          tanggal_pembagian,
+        });
 
-      await Promise.all(
-        materi.map((d) => {
+        await Promise.all(
           TkTimelineTopik.create({
             m_timeline_id: timeline.id,
             m_topik_id: d,
-          });
-        })
-      );
+          })
+        );
 
-      const anggotaRombel = await MAnggotaRombel.query()
-        .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
-        .andWhere({ dihapus: 0 })
-        .fetch();
+        const anggotaRombel = await MAnggotaRombel.query()
+          .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
+          .andWhere({ dihapus: 0 })
+          .fetch();
 
-      let userIds = [];
+        let userIds = [];
 
-      await Promise.all(
-        anggotaRombel.toJSON().map(async (d) => {
-          userIds.push({
-            m_user_id: d.m_user_id,
-            tipe: "materi",
-            m_timeline_id: timeline.id,
-            dihapus: 0,
-          });
-        })
-      );
+        await Promise.all(
+          anggotaRombel.toJSON().map(async (d) => {
+            userIds.push({
+              m_user_id: d.m_user_id,
+              tipe: "materi",
+              m_timeline_id: timeline.id,
+              dihapus: 0,
+            });
+          })
+        );
 
-      await TkTimeline.createMany(userIds);
+        await TkTimeline.createMany(userIds);
+      });
     }
 
     return response.ok({
@@ -8135,6 +8135,7 @@ class MainController {
       siswa_id,
       tk_id,
       nilai,
+      materi,
     } = request.post();
 
     if (
@@ -8233,11 +8234,9 @@ class MainController {
         .where({ m_timeline_id: timeline_id })
         .delete();
       await Promise.all(
-        materi.map((d) => {
-          TkTimelineTopik.create({
-            m_timeline_id: timeline_id,
-            m_topik_id: d,
-          });
+        TkTimelineTopik.create({
+          m_timeline_id: timeline_id,
+          m_topik_id: materi,
         })
       );
 
@@ -40906,16 +40905,19 @@ class MainController {
     let sudahGabung = 0;
     // add column headers
 
-    const urutan = rombel.toJSON().anggotaRombel.sort((a, b) => {
-      return (
-        b.user.nilaiSemuaUjian.reduce((c, d) => {
-          return c + d.nilai + d.nilai_keterampilan;
-        }, 0) -
-        a.user.nilaiSemuaUjian.reduce((c, d) => {
-          return c + d.nilai + d.nilai_keterampilan;
-        }, 0)
-      );
-    }).map((d)=>d.id);
+    const urutan = rombel
+      .toJSON()
+      .anggotaRombel.sort((a, b) => {
+        return (
+          b.user.nilaiSemuaUjian.reduce((c, d) => {
+            return c + d.nilai + d.nilai_keterampilan;
+          }, 0) -
+          a.user.nilaiSemuaUjian.reduce((c, d) => {
+            return c + d.nilai + d.nilai_keterampilan;
+          }, 0)
+        );
+      })
+      .map((d) => d.id);
 
     // return urutan;
 
