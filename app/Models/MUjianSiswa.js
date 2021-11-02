@@ -17,6 +17,10 @@ class MUjianSiswa extends Model {
   nilaiUS() {
     return this.belongsTo("App/Models/TkRekapNilai", "us_id", "id");
   }
+
+  mapel(){
+    return this.belongsTo("App/Models/MMataPelajaran");
+  }
 }
 
 module.exports = MUjianSiswa;
