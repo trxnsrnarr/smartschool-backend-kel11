@@ -42411,7 +42411,9 @@ class MainController {
   }
 
   async ip({ response, request }) {
-    return response.ok({ip : request.ip})
+    return response.ok({ip : request.headers['x-forwarded-for'] ||
+    request.socket.remoteAddress ||
+    null})
   }
 
   async notFoundPage({ response, request, auth }) {
