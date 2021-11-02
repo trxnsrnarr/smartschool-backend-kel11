@@ -131,6 +131,12 @@ const TkJawabanUjianSiswa = use("App/Models/TkJawabanUjianSiswa");
 const User = use("App/Models/User");
 const DownloadService = use("App/Services/DownloadService");
 const DownloadService2 = use("App/Services/DownloadService2");
+const DownloadKartuPg = use("App/Services/DownloadKartuPg");
+const DownloadKartuEsai = use("App/Services/DownloadKartuEsai");
+const Downloadkisikisi = use("App/Services/Downloadkisikisi");
+const DownloadNaskah = use("App/Services/DownloadNaskah");
+const DownloadRumusan = use("App/Services/DownloadRumusan");
+const DownloadTemplate = use("App/Services/DownloadTemplate");
 const WhatsAppService = use("App/Services/WhatsAppService");
 
 const moment = require("moment");
@@ -22518,6 +22524,357 @@ class MainController {
       ujian,
       pgFilter,
       esaiFilter,
+      keluarantanggalseconds
+      // logoFileName
+    );
+
+    return kartusoalFile;
+  }
+
+  async downloadKartuEsai({ response, request, params: { ujian_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+    const kepsek = ta.nama_kepsek;
+
+    const ujian = await MUjian.query()
+    .with("mataPelajaran", (builder) => {
+      builder.with("user");
+    })
+    .with("soalUjian", (builder) => {
+      builder.with("soal").where({ dihapus: 0 });
+    })
+    .withCount("soalUjian as TotalUjian", (builder) => {
+      builder.where({ m_ujian_id: ujian_id });
+    })
+    .where({ dihapus: 0 })
+    .andWhere({ id: ujian_id })
+    .first();
+
+    const esai = await TkSoalUjian.query()
+      .with("soal", (builder) => {
+        builder.where({ bentuk: "esai" });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_ujian_id: ujian_id })
+      .fetch();
+
+    const esaiSoal = await Promise.all(
+      esai.toJSON().map(async (d) => {
+        const esai = await MSoalUjian.query()
+          .where({ dihapus: 0 })
+          .andWhere({ bentuk: "esai" })
+          .andWhere({ id: d.m_soal_ujian_id })
+          .first();
+
+        return esai;
+      })
+    );
+
+    const esaiFilter = esaiSoal.filter((d) => d != null);
+
+    // return esaiFilter;
+
+    const kartusoalFile = await DownloadKartuEsai.kartuUjian(
+      sekolah,
+      ta,
+      kepsek,
+      ujian,
+      esaiFilter,
+      keluarantanggalseconds
+      // logoFileName
+    );
+
+    return kartusoalFile;
+  }
+
+  async downloadKartuPg({ response, request, params: { ujian_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+    const kepsek = ta.nama_kepsek;
+
+    const ujian = await MUjian.query()
+    .with("mataPelajaran", (builder) => {
+      builder.with("user");
+    })
+    .with("soalUjian", (builder) => {
+      builder.with("soal").where({ dihapus: 0 });
+    })
+    .withCount("soalUjian as TotalUjian", (builder) => {
+      builder.where({ m_ujian_id: ujian_id });
+    })
+    .where({ dihapus: 0 })
+    .andWhere({ id: ujian_id })
+    .first();
+    // return ujian;
+    const pg = await TkSoalUjian.query()
+      .with("soal", (builder) => {
+        builder.where({ bentuk: "pg" });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_ujian_id: ujian_id })
+      .fetch();
+
+    const pgSoal = await Promise.all(
+      pg.toJSON().map(async (d) => {
+        const pg = await MSoalUjian.query()
+          .where({ dihapus: 0 })
+          .andWhere({ bentuk: "pg" })
+          .andWhere({ id: d.m_soal_ujian_id })
+          .first();
+
+        return pg;
+      })
+    );
+
+    const pgFilter = pgSoal.filter((d) => d != null);
+
+    const kartusoalFile = await DownloadKartuPg.kartuUjian(
+      sekolah,
+      ta,
+      kepsek,
+      ujian,
+      pgFilter,
+      keluarantanggalseconds
+      // logoFileName
+    );
+
+    return kartusoalFile;
+  }
+
+  async downloadKisiKisi({ response, request, params: { ujian_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+    const kepsek = ta.nama_kepsek;
+
+    const ujian = await MUjian.query()
+      .with("mataPelajaran", (builder) => {
+        builder.with("user");
+      })
+      .with("soalUjian", (builder) => {
+        builder.with("soal").where({ dihapus: 0 });
+      })
+      .withCount("soalUjian as TotalUjian", (builder) => {
+        builder.where({ m_ujian_id: ujian_id });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ id: ujian_id })
+      .first();
+
+
+    const kartusoalFile = await Downloadkisikisi.kartuUjian(
+      sekolah,
+      kepsek,
+      ujian,
+      keluarantanggalseconds
+      // logoFileName
+    );
+
+    return kartusoalFile;
+  }
+
+  async downloadNaskah({ response, request, params: { ujian_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
+    const ujian = await MUjian.query()
+      .with("mataPelajaran", (builder) => {
+        builder.with("user");
+      })
+      .with("soalUjian", (builder) => {
+        builder.with("soal").where({ dihapus: 0 });
+      })
+      .withCount("soalUjian as TotalUjian", (builder) => {
+        builder.where({ m_ujian_id: ujian_id });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ id: ujian_id })
+      .first();
+
+    // return ujian;
+    const pg = await TkSoalUjian.query()
+      .with("soal", (builder) => {
+        builder.where({ bentuk: "pg" });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_ujian_id: ujian_id })
+      .fetch();
+
+    const pgSoal = await Promise.all(
+      pg.toJSON().map(async (d) => {
+        const pg = await MSoalUjian.query()
+          .where({ dihapus: 0 })
+          .andWhere({ bentuk: "pg" })
+          .andWhere({ id: d.m_soal_ujian_id })
+          .first();
+
+        return pg;
+      })
+    );
+
+    const pgFilter = pgSoal.filter((d) => d != null);
+
+    const kartusoalFile = await DownloadNaskah.kartuUjian(
+      sekolah,
+      ta,
+      ujian,
+      pgFilter,
+      keluarantanggalseconds
+      // logoFileName
+    );
+
+    return kartusoalFile;
+  }
+
+  async downloadKartuRumusan({ response, request, params: { ujian_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+    const kepsek = ta.nama_kepsek;
+
+    const ujian = await MUjian.query()
+      .with("mataPelajaran", (builder) => {
+        builder.with("user");
+      })
+      .with("soalUjian", (builder) => {
+        builder.with("soal").where({ dihapus: 0 });
+      })
+      .withCount("soalUjian as TotalUjian", (builder) => {
+        builder.where({ m_ujian_id: ujian_id });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ id: ujian_id })
+      .first();
+
+    // return ujian;
+    const pg = await TkSoalUjian.query()
+      .with("soal", (builder) => {
+        builder.where({ bentuk: "pg" });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_ujian_id: ujian_id })
+      .fetch();
+
+    const pgSoal = await Promise.all(
+      pg.toJSON().map(async (d) => {
+        const pg = await MSoalUjian.query()
+          .where({ dihapus: 0 })
+          .andWhere({ bentuk: "pg" })
+          .andWhere({ id: d.m_soal_ujian_id })
+          .first();
+
+        return pg;
+      })
+    );
+
+    const pgFilter = pgSoal.filter((d) => d != null);
+
+    const kartusoalFile = await DownloadRumusan.kartuUjian(
+      sekolah,
+      ta,
+      kepsek,
+      ujian,
+      pgFilter,
+      keluarantanggalseconds
+      // logoFileName
+    );
+
+    return kartusoalFile;
+  }
+  async downloadKartuTemplate({ response, request, params: { ujian_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+    const kepsek = ta.nama_kepsek;
+
+    const ujian = await MUjian.query()
+      .with("mataPelajaran", (builder) => {
+        builder.with("user");
+      })
+      .with("soalUjian", (builder) => {
+        builder.with("soal").where({ dihapus: 0 });
+      })
+      .withCount("soalUjian as TotalUjian", (builder) => {
+        builder.where({ m_ujian_id: ujian_id });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ id: ujian_id })
+      .first();
+
+    // return ujian;
+    
+
+    const kartusoalFile = await DownloadTemplate.kartuUjian(
+      ujian,
       keluarantanggalseconds
       // logoFileName
     );

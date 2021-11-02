@@ -618,6 +618,32 @@ Route.post(
   "MainController.downloadKartuUjian"
 );
 
+Route.post(
+  "/ujian/download-kartu-pg/:ujian_id",
+  "MainController.downloadKartuPg"
+);
+Route.post(
+  "/ujian/download-kartu-esai/:ujian_id",
+  "MainController.downloadKartuEsai"
+);
+Route.post(
+  "/ujian/download-kartu-kisi-kisi/:ujian_id",
+  "MainController.downloadKisiKisi"
+);
+Route.post(
+  "/ujian/download-kartu-naskah/:ujian_id",
+  "MainController.downloadNaskah"
+);
+Route.post(
+  "/ujian/download-kartu-rumusan/:ujian_id",
+  "MainController.downloadKartuRumusan"
+);
+Route.post(
+  "/ujian/download-kartu-template/:ujian_id",
+  "MainController.downloadKartuTemplate"
+);
+
+
 Route.get("/daftar-sekolah", "MainController.daftarsekolah");
 
 //ubah tipe data
