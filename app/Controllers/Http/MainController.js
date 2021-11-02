@@ -42411,7 +42411,7 @@ class MainController {
   }
 
   async ip({ response, request }) {
-    return response.ok({a: request})
+    return response.ok({...request})
   }
 
   async notFoundPage({ response, request, auth }) {
