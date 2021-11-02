@@ -42410,6 +42410,10 @@ class MainController {
     });
   }
 
+  async ip({ response, request }) {
+    return response.ok({a: request})
+  }
+
   async notFoundPage({ response, request, auth }) {
     return `<p>Data tidak ditemukan, silahkan kembali ke <a href="http://getsmartschool.id">Smart School</a></p>`;
   }

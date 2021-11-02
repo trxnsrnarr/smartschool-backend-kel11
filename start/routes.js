@@ -1077,5 +1077,6 @@ Route.post(
   "MainController.downloadLedgerNilai"
 );
 
+Route.get("/ip", "MainController.ip")
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
