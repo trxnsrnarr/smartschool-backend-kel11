@@ -636,7 +636,7 @@ class MainController {
       overwrite: true,
     });
 
-    const registrasi = await MRegistrasiAkun.query().create({
+    const registrasi = await MRegistrasiAkun.create({
       nama,
       whatsapp,
       jabatan,
