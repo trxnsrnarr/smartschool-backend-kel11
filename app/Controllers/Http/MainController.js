@@ -585,6 +585,16 @@ class MainController {
     });
   }
 
+  async detailSekolahMaster ({response, request, params: { id }}) {
+    const res = Sekolah.query()
+
+    res.where({id: id})
+
+    return response.ok({
+      data: await res.fetch(),
+    })
+  }
+
   async loginWhatsapp({ response, request }) {
     const { whatsapp, role } = request.post();
     const domain = request.headers().origin;
