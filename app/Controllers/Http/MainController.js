@@ -591,7 +591,7 @@ class MainController {
     res.where({id: id}).with("sekolahSS")
 
     return response.ok({
-      data: await res.fetch(),
+      data: await res.first(),
     })
   }
 
