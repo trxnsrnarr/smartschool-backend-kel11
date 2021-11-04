@@ -618,14 +618,12 @@ class MainController {
       nama: "required",
       whatsapp: "required",
       jabatan: "required",
-      lampiran: "required",
     };
     const message = {
       "id.required": "Id sekolah harus ada",
       "nama.required": "Nama Pengirim harus di isi",
       "whatsapp.required": "Whatsapp harus diisi",
       "jabatan.required": "Jabatan harus diisi",
-      "lampiran.required": "required",
     };
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
