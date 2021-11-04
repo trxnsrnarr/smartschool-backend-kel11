@@ -588,7 +588,7 @@ class MainController {
   async detailSekolahMaster ({response, request, params: { id }}) {
     const res = Sekolah.query()
 
-    res.where({id: id})
+    res.where({id: id}).with("sekolahSS")
 
     return response.ok({
       data: await res.fetch(),
