@@ -541,7 +541,7 @@ class MainController {
     }
 
     return response.ok({
-      sekolah: await res.orderBy('sekolah').paginate(page),
+      sekolah: await res.orderBy("sekolah").paginate(page),
     });
   }
 
@@ -585,14 +585,23 @@ class MainController {
     });
   }
 
-  async detailSekolahMaster ({response, request, params: { id }}) {
-    const res = Sekolah.query()
+  async detailSekolahMaster({ response, request, params: { id } }) {
+    let res = Sekolah.query();
 
-    res.where({id: id}).with("sekolahSS")
+    res = await res.where({ id: id }).with("sekolahSS").first();
+    if (res.m_sekolah_id) {
+      const ta = await MTa.query()
+        .where({ m_sekolah_id: res.m_sekolah_id })
+        .andWhere({ aktif: 1 })
+        .andWhere({ dihapus: 0 })
+        .first();
+
+      res = { ...res.toJSON(), ta };
+    }
 
     return response.ok({
-      data: await res.first(),
-    })
+      data: res,
+    });
   }
 
   async loginWhatsapp({ response, request }) {
@@ -22559,18 +22568,18 @@ class MainController {
     const kepsek = ta.nama_kepsek;
 
     const ujian = await MUjian.query()
-    .with("mataPelajaran", (builder) => {
-      builder.with("user");
-    })
-    .with("soalUjian", (builder) => {
-      builder.with("soal").where({ dihapus: 0 });
-    })
-    .withCount("soalUjian as TotalUjian", (builder) => {
-      builder.where({ m_ujian_id: ujian_id });
-    })
-    .where({ dihapus: 0 })
-    .andWhere({ id: ujian_id })
-    .first();
+      .with("mataPelajaran", (builder) => {
+        builder.with("user");
+      })
+      .with("soalUjian", (builder) => {
+        builder.with("soal").where({ dihapus: 0 });
+      })
+      .withCount("soalUjian as TotalUjian", (builder) => {
+        builder.where({ m_ujian_id: ujian_id });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ id: ujian_id })
+      .first();
 
     const esai = await TkSoalUjian.query()
       .with("soal", (builder) => {
@@ -22627,18 +22636,18 @@ class MainController {
     const kepsek = ta.nama_kepsek;
 
     const ujian = await MUjian.query()
-    .with("mataPelajaran", (builder) => {
-      builder.with("user");
-    })
-    .with("soalUjian", (builder) => {
-      builder.with("soal").where({ dihapus: 0 });
-    })
-    .withCount("soalUjian as TotalUjian", (builder) => {
-      builder.where({ m_ujian_id: ujian_id });
-    })
-    .where({ dihapus: 0 })
-    .andWhere({ id: ujian_id })
-    .first();
+      .with("mataPelajaran", (builder) => {
+        builder.with("user");
+      })
+      .with("soalUjian", (builder) => {
+        builder.with("soal").where({ dihapus: 0 });
+      })
+      .withCount("soalUjian as TotalUjian", (builder) => {
+        builder.where({ m_ujian_id: ujian_id });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ id: ujian_id })
+      .first();
     // return ujian;
     const pg = await TkSoalUjian.query()
       .with("soal", (builder) => {
@@ -22705,7 +22714,6 @@ class MainController {
       .where({ dihapus: 0 })
       .andWhere({ id: ujian_id })
       .first();
-
 
     const kartusoalFile = await Downloadkisikisi.kartuUjian(
       sekolah,
@@ -22881,7 +22889,6 @@ class MainController {
       .first();
 
     // return ujian;
-    
 
     const kartusoalFile = await DownloadTemplate.kartuUjian(
       ujian,
@@ -42421,7 +42428,7 @@ class MainController {
   }
 
   async ip({ response, request }) {
-    return response.ok({ip : [request.ip(), request.ips()]})
+    return response.ok({ ip: [request.ip(), request.ips()] });
   }
 
   async notFoundPage({ response, request, auth }) {
