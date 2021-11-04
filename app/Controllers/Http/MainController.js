@@ -120,6 +120,7 @@ const MKegiatanKalender = use("App/Models/MKegiatanKalender");
 const MKalenderPendidikan = use("App/Models/MKalenderPendidikan");
 const MBuktiPelaksanaanSanksi = use("App/Models/MBuktiPelaksanaanSanksi");
 const MBobotNilai = use("App/Models/MBobotNilai");
+const MRegistrasiAkun = use("App/Models/MRegistrasiAkun");
 
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
@@ -588,7 +589,7 @@ class MainController {
   async detailSekolahMaster({ response, request, params: { id } }) {
     let res = Sekolah.query();
 
-    res = await res.where({ id: id }).with("sekolahSS").first();
+    res = await res.where({ id: id }).with("sekolahSS").with("registrasi").first();
     if (res.m_sekolah_id) {
       const ta = await Mta.query()
         .where({ m_sekolah_id: res.m_sekolah_id })
@@ -602,6 +603,41 @@ class MainController {
     return response.ok({
       data: res,
     });
+  }
+
+  async postRegistrasiSekolah({ response, request }) {
+    const { id, nama, whatsapp, jabatan, lampiran } = request.post();
+
+    const rules = {
+      id: "required",
+      nama: "required",
+      whatsapp: "required",
+      jabatan: "required",
+      lampiran: "required",
+    };
+    const message = {
+      "id.required": "Id sekolah harus ada",
+      "nama.required": "Nama Pengirim harus di isi",
+      "whatsapp.required": "Whatsapp harus diisi",
+      "jabatan.required": "Jabatan harus diisi",
+      "lampiran.required": "required",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const registrasi = await MRegistrasiAkun.query().create({
+      nama,
+      whatsapp,
+      jabatan,
+      lampiran,
+      sekolah_id: id
+    });
+
+    return response.ok({
+      message: messagePostSuccess
+    })
   }
 
   async loginWhatsapp({ response, request }) {
