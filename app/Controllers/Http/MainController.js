@@ -590,7 +590,11 @@ class MainController {
 
     res = await res.where({ id: id }).with("sekolahSS").first();
     if (res.m_sekolah_id) {
-      const ta = await this.getTAAktif(res.toJSON().sekolahSS)
+      const ta = await Mta.query()
+        .where({ m_sekolah_id: res.m_sekolah_id })
+        .andWhere({ aktif: 1 })
+        .andWhere({ dihapus: 0 })
+        .first();
 
       res = { ...res.toJSON(), ta };
     }
