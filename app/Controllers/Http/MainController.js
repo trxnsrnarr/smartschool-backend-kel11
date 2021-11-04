@@ -589,7 +589,11 @@ class MainController {
   async detailSekolahMaster({ response, request, params: { id } }) {
     let res = Sekolah.query();
 
-    res = await res.where({ id: id }).with("sekolahSS").with("registrasi").first();
+    res = await res
+      .where({ id: id })
+      .with("sekolahSS")
+      .with("registrasi")
+      .first();
     if (res.m_sekolah_id) {
       const ta = await Mta.query()
         .where({ m_sekolah_id: res.m_sekolah_id })
@@ -606,7 +610,8 @@ class MainController {
   }
 
   async postRegistrasiSekolah({ response, request }) {
-    const { id, nama, whatsapp, jabatan, lampiran } = request.post();
+    const { id, nama, whatsapp, jabatan } = request.post();
+    const lampiran = request.file("lampiran");
 
     const rules = {
       id: "required",
@@ -627,17 +632,23 @@ class MainController {
       return response.unprocessableEntity(validation.messages());
     }
 
+    const fname = `surat-pernyataan-${id}.${lampiran.extname}`;
+    await lampiran.move(Helpers.publicPath("surat/"), {
+      name: fname,
+      overwrite: true,
+    });
+
     const registrasi = await MRegistrasiAkun.query().create({
       nama,
       whatsapp,
       jabatan,
-      lampiran,
-      sekolah_id: id
+      lampiran: `/surat/${fname}`,
+      sekolah_id: id,
     });
 
     return response.ok({
-      message: messagePostSuccess
-    })
+      message: messagePostSuccess,
+    });
   }
 
   async loginWhatsapp({ response, request }) {
