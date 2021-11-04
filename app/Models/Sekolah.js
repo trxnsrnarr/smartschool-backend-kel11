@@ -12,7 +12,7 @@ class Sekolah extends Model {
     return this.belongsTo('App/Models/MSekolah')
   }
   registrasi() {
-    return this.hasOne("App/Models/MRegistrasiAKun")
+    return this.hasOne("App/Models/MRegistrasiAkun")
   }
 }
 
