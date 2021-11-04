@@ -19,10 +19,10 @@ const { route, RouteGroup } = require("@adonisjs/framework/src/Route/Manager");
 const Route = use("Route");
 
 Route.get("/master/sekolah", "MainController.getMasterSekolah");
-Route.get("/master/sekolah/:id", "MainController.detailSekolahMaster");
 Route.get('/master/sekolah/propinsi', 'MainController.getMasterSekolahProvinsi')
 Route.get('/master/sekolah/propinsi/:propinsi_id', 'MainController.getMasterSekolahProvinsiDetail')
 Route.get('/master/sekolah/kabupaten/:kabupaten_id', 'MainController.getMasterSekolahKabupatenDetail')
+Route.get("/master/sekolah/:id", "MainController.detailSekolahMaster");
 
 // utils
 Route.get("/lokasi-saat-ini", "MainController.getLokasiSaatIni");
