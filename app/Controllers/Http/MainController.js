@@ -513,7 +513,7 @@ class MainController {
   }
 
   async getMasterSekolah({ response, request }) {
-    let { page, search, bentuk, propinsi, kabupaten, kecamatan_id } =
+    let { page, search, bentuk, propinsi, kabupaten, kecamatan } =
       request.get();
 
     page = page ? page : 1;
@@ -536,12 +536,12 @@ class MainController {
       res.andWhere("kode_kab_kota", kabupaten);
     }
 
-    if (kecamatan_id) {
-      res.andWhere("kode_kec", kecamatan_id);
+    if (kecamatan) {
+      res.andWhere("kode_kec", kecamatan);
     }
 
     return response.ok({
-      sekolah: await res.paginate(page),
+      sekolah: await res.orderBy('sekolah').paginate(page),
     });
   }
 
