@@ -38,7 +38,7 @@ class MTugas extends Model {
   }
 
   soal(){
-    return this.hasMany("App/Models/TkSoalUjian");
+    return this.hasMany("App/Models/TkSoalTugas");
   }
 }
 
