@@ -7328,17 +7328,19 @@ class MainController {
       let timeline;
 
       if (soal.length) {
-        await tugasData
-          .toJSON()
-          .soal.filter(
-            (d) =>
-              soal.filter((e) => e.id).findIndex((e) => e.id == d.soal.id) < 0
-          )
-          .map(async (d) => {
-            await TkSoalTugas.query().where({ id: d.id }).update({
-              dihapus: 1,
-            });
-          });
+        await Promise.all(
+          tugasData
+            .toJSON()
+            .soal.filter(
+              (d) =>
+                soal.filter((e) => e.id).findIndex((e) => e.id == d.soal.id) < 0
+            )
+            .map(async (d) => {
+              await TkSoalTugas.query().where({ id: d.id }).update({
+                dihapus: 1,
+              });
+            })
+        );
         const soalIds = await Promise.all(
           soal.map(async (d) => {
             if (d.id) {
