@@ -7118,7 +7118,6 @@ class MainController {
           return { m_soal_ujian_id: soal.id, m_tugas_id: tugas.id, dihapus: 0 };
         })
       );
-      return soalIds;
       await TkSoalTugas.createMany(soalIds);
     }
 
