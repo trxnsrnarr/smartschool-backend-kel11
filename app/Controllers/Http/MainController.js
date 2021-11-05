@@ -11814,22 +11814,26 @@ class MainController {
       : null;
 
     if (user.role == "guru" || user.role == "admin") {
-      const jawaban = await TkJawabanUjianSiswa.query()
+      await TkJawabanUjianSiswa.query()
         .where({ id: jawaban_ujian_siswa_id })
         .update({
           jawaban_rubrik_esai: JSON.stringify(jawaban_rubrik_esai),
           dinilai: 1,
         });
 
+      const jawaban =  await TkJawabanUjianSiswa.query()
+      .where({ id: jawaban_ujian_siswa_id })
+      .first()
+
       const pesertaUjian = await TkPesertaUjian.query()
         .with("jawabanSiswa", (builder) => {
-          builder.with("soal", (builder) => {
-            builder.where({ bentuk: "esai" });
-          });
+          builder.with("soal");
         })
         .with("user")
         .where({ id: jawaban.tk_peserta_ujian_id })
         .first();
+
+        // return pesertaUjian;
 
       let metaHasil = {
         nilaiPg: 0,
