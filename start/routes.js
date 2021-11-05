@@ -305,6 +305,10 @@ Route.post(
   "/jadwal-ujian/download-hasil",
   "MainController.downloadJadwalUjian"
 );
+Route.post(
+  "/jadwal-ujian/update-nilai",
+  "MainController.updateNilaiJadwalUjian"
+);
 Route.post("/jadwal-ujian", "MainController.postJadwalUjian");
 Route.put("/jadwal-ujian/:jadwal_ujian_id", "MainController.putJadwalUjian");
 Route.delete(
@@ -1076,6 +1080,25 @@ Route.post(
   "/download/ledger-nilai/:rombel_id",
   "MainController.downloadLedgerNilai"
 );
+
+Route.post(
+  "/naik-kelas-mapel",
+  "MainController.naikTAMapel"
+);
+
+Route.post(
+  "/naik-kelas-rombel",
+  "MainController.naikTARombel"
+);
+
+Route.post(
+  "/naik-kelas-jadwal",
+  "MainController.naikTAJadwal"
+);
+
+Route.get(
+  "/absensi-anak","MainController.getAbsensiAnak"
+)
 
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
