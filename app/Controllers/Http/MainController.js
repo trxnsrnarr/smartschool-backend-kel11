@@ -7085,37 +7085,40 @@ class MainController {
     });
 
     if (soal.length) {
-      const soalIds = await soal.map(async (d) => {
-        const soal = await MSoalUjian.create({
-          kd: d.kd,
-          kd_konten_materi: d.kd_konten_materi,
-          level_kognitif: d.level_kognitif,
-          bentuk: d.bentuk,
-          akm_konten_materi: d.akm_konten_materi,
-          akm_konteks_materi: d.akm_konteks_materi,
-          akm_proses_kognitif: d.akm_proses_kognitif,
-          audio: d.audio,
-          pertanyaan: htmlEscaper.escape(d.pertanyaan),
-          jawaban_a: htmlEscaper.escape(d.jawaban_a),
-          jawaban_b: htmlEscaper.escape(d.jawaban_b),
-          jawaban_c: htmlEscaper.escape(d.jawaban_c),
-          jawaban_d: htmlEscaper.escape(d.jawaban_d),
-          jawaban_e: htmlEscaper.escape(d.jawaban_e),
-          kj_pg: d.kj_pg,
-          kj_uraian: d.kj_uraian,
-          jawaban_pg_kompleks: d.jawaban_pg_kompleks,
-          pilihan_menjodohkan: d.pilihan_menjodohkan,
-          soal_menjodohkan: d.soal_menjodohkan,
-          opsi_a_uraian: d.opsi_a_uraian,
-          opsi_b_uraian: d.opsi_b_uraian,
-          rubrik_kj: JSON.stringify(d.rubrik_kj),
-          pembahasan: htmlEscaper.escape(d.pembahasan),
-          nilai_soal: d.nilai_soal,
-          m_user_id: user.id,
-          dihapus: 0,
-        });
-        return { m_soal_ujian_id: soal.id, m_tugas_id: tugas.id, dihapus: 0 };
-      });
+      const soalIds = await Promise.all(
+        soal.map(async (d) => {
+          const soal = await MSoalUjian.create({
+            kd: d.kd,
+            kd_konten_materi: d.kd_konten_materi,
+            level_kognitif: d.level_kognitif,
+            bentuk: d.bentuk,
+            akm_konten_materi: d.akm_konten_materi,
+            akm_konteks_materi: d.akm_konteks_materi,
+            akm_proses_kognitif: d.akm_proses_kognitif,
+            audio: d.audio,
+            pertanyaan: htmlEscaper.escape(d.pertanyaan),
+            jawaban_a: htmlEscaper.escape(d.jawaban_a),
+            jawaban_b: htmlEscaper.escape(d.jawaban_b),
+            jawaban_c: htmlEscaper.escape(d.jawaban_c),
+            jawaban_d: htmlEscaper.escape(d.jawaban_d),
+            jawaban_e: htmlEscaper.escape(d.jawaban_e),
+            kj_pg: d.kj_pg,
+            kj_uraian: d.kj_uraian,
+            jawaban_pg_kompleks: d.jawaban_pg_kompleks,
+            pilihan_menjodohkan: d.pilihan_menjodohkan,
+            soal_menjodohkan: d.soal_menjodohkan,
+            opsi_a_uraian: d.opsi_a_uraian,
+            opsi_b_uraian: d.opsi_b_uraian,
+            rubrik_kj: JSON.stringify(d.rubrik_kj),
+            pembahasan: htmlEscaper.escape(d.pembahasan),
+            nilai_soal: d.nilai_soal,
+            m_user_id: user.id,
+            dihapus: 0,
+          });
+          return { m_soal_ujian_id: soal.id, m_tugas_id: tugas.id, dihapus: 0 };
+        })
+      );
+      return soalIds;
       await TkSoalTugas.createMany(soalIds);
     }
 
@@ -7337,11 +7340,40 @@ class MainController {
               dihapus: 1,
             });
           });
-        const soalIds = await soal.map(async (d) => {
-          if (d.id) {
-            await MSoalUjian.query()
-              .where({ id: d.id })
-              .update({
+        const soalIds = await Promise.all(
+          soal.map(async (d) => {
+            if (d.id) {
+              await MSoalUjian.query()
+                .where({ id: d.id })
+                .update({
+                  kd: d.kd,
+                  kd_konten_materi: d.kd_konten_materi,
+                  level_kognitif: d.level_kognitif,
+                  bentuk: d.bentuk,
+                  akm_konten_materi: d.akm_konten_materi,
+                  akm_konteks_materi: d.akm_konteks_materi,
+                  akm_proses_kognitif: d.akm_proses_kognitif,
+                  audio: d.audio,
+                  pertanyaan: htmlEscaper.escape(d.pertanyaan),
+                  jawaban_a: htmlEscaper.escape(d.jawaban_a),
+                  jawaban_b: htmlEscaper.escape(d.jawaban_b),
+                  jawaban_c: htmlEscaper.escape(d.jawaban_c),
+                  jawaban_d: htmlEscaper.escape(d.jawaban_d),
+                  jawaban_e: htmlEscaper.escape(d.jawaban_e),
+                  kj_pg: d.kj_pg,
+                  kj_uraian: d.kj_uraian,
+                  jawaban_pg_kompleks: d.jawaban_pg_kompleks,
+                  pilihan_menjodohkan: d.pilihan_menjodohkan,
+                  soal_menjodohkan: d.soal_menjodohkan,
+                  opsi_a_uraian: d.opsi_a_uraian,
+                  opsi_b_uraian: d.opsi_b_uraian,
+                  rubrik_kj: JSON.stringify(d.rubrik_kj),
+                  pembahasan: htmlEscaper.escape(d.pembahasan),
+                  nilai_soal: d.nilai_soal,
+                });
+              return 0;
+            } else {
+              const soal = await MSoalUjian.create({
                 kd: d.kd,
                 kd_konten_materi: d.kd_konten_materi,
                 level_kognitif: d.level_kognitif,
@@ -7366,41 +7398,18 @@ class MainController {
                 rubrik_kj: JSON.stringify(d.rubrik_kj),
                 pembahasan: htmlEscaper.escape(d.pembahasan),
                 nilai_soal: d.nilai_soal,
+                m_user_id: user.id,
+                dihapus: 0,
               });
-              return 0;
-          } else {
-            const soal = await MSoalUjian.create({
-              kd: d.kd,
-              kd_konten_materi: d.kd_konten_materi,
-              level_kognitif: d.level_kognitif,
-              bentuk: d.bentuk,
-              akm_konten_materi: d.akm_konten_materi,
-              akm_konteks_materi: d.akm_konteks_materi,
-              akm_proses_kognitif: d.akm_proses_kognitif,
-              audio: d.audio,
-              pertanyaan: htmlEscaper.escape(d.pertanyaan),
-              jawaban_a: htmlEscaper.escape(d.jawaban_a),
-              jawaban_b: htmlEscaper.escape(d.jawaban_b),
-              jawaban_c: htmlEscaper.escape(d.jawaban_c),
-              jawaban_d: htmlEscaper.escape(d.jawaban_d),
-              jawaban_e: htmlEscaper.escape(d.jawaban_e),
-              kj_pg: d.kj_pg,
-              kj_uraian: d.kj_uraian,
-              jawaban_pg_kompleks: d.jawaban_pg_kompleks,
-              pilihan_menjodohkan: d.pilihan_menjodohkan,
-              soal_menjodohkan: d.soal_menjodohkan,
-              opsi_a_uraian: d.opsi_a_uraian,
-              opsi_b_uraian: d.opsi_b_uraian,
-              rubrik_kj: JSON.stringify(d.rubrik_kj),
-              pembahasan: htmlEscaper.escape(d.pembahasan),
-              nilai_soal: d.nilai_soal,
-              m_user_id: user.id,
-              dihapus: 0,
-            });
-            return { m_soal_ujian_id: soal.id, m_tugas_id: tugas.id, dihapus: 0 };
-          }
-        });
-        await TkSoalTugas.createMany(soalIds.filter(d => d));
+              return {
+                m_soal_ujian_id: soal.id,
+                m_tugas_id: tugas.id,
+                dihapus: 0,
+              };
+            }
+          })
+        );
+        await TkSoalTugas.createMany(soalIds.filter((d) => d));
       }
 
       if (list_anggota) {
