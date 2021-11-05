@@ -120,6 +120,7 @@ const MKegiatanKalender = use("App/Models/MKegiatanKalender");
 const MKalenderPendidikan = use("App/Models/MKalenderPendidikan");
 const MBuktiPelaksanaanSanksi = use("App/Models/MBuktiPelaksanaanSanksi");
 const MBobotNilai = use("App/Models/MBobotNilai");
+const MRegistrasiAkun = use("App/Models/MRegistrasiAkun");
 
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
@@ -513,7 +514,7 @@ class MainController {
   }
 
   async getMasterSekolah({ response, request }) {
-    let { page, search, bentuk, propinsi_id, kabupaten_id, kecamatan_id } =
+    let { page, search, bentuk, propinsi, kabupaten, kecamatan } =
       request.get();
 
     page = page ? page : 1;
@@ -528,20 +529,20 @@ class MainController {
       res.andWhere("bentuk", bentuk);
     }
 
-    if (propinsi_id) {
-      res.andWhere("kode_prop", propinsi_id);
+    if (propinsi) {
+      res.andWhere("kode_prop", propinsi);
     }
 
-    if (kabupaten_id) {
-      res.andWhere("kode_kab_kota", kabupaten_id);
+    if (kabupaten) {
+      res.andWhere("kode_kab_kota", kabupaten);
     }
 
-    if (kecamatan_id) {
-      res.andWhere("kode_kec", kecamatan_id);
+    if (kecamatan) {
+      res.andWhere("kode_kec", kecamatan);
     }
 
     return response.ok({
-      sekolah: await res.paginate(page),
+      sekolah: await res.orderBy("sekolah").paginate(page),
     });
   }
 
@@ -582,6 +583,69 @@ class MainController {
 
     return response.ok({
       kabupaten: await res.fetch(),
+    });
+  }
+
+  async detailSekolahMaster({ response, request, params: { id } }) {
+    let res = Sekolah.query();
+
+    res = await res
+      .where({ id: id })
+      .with("sekolahSS")
+      .with("registrasi")
+      .first();
+    if (res.m_sekolah_id) {
+      const ta = await Mta.query()
+        .where({ m_sekolah_id: res.m_sekolah_id })
+        .andWhere({ aktif: 1 })
+        .andWhere({ dihapus: 0 })
+        .first();
+
+      res = { ...res.toJSON(), ta };
+    }
+
+    return response.ok({
+      data: res,
+    });
+  }
+
+  async postRegistrasiSekolah({ response, request }) {
+    const { id, nama, whatsapp, jabatan } = request.post();
+    const lampiran = request.file("lampiran");
+
+    const rules = {
+      id: "required",
+      nama: "required",
+      whatsapp: "required",
+      jabatan: "required",
+    };
+    const message = {
+      "id.required": "Id sekolah harus ada",
+      "nama.required": "Nama Pengirim harus di isi",
+      "whatsapp.required": "Whatsapp harus diisi",
+      "jabatan.required": "Jabatan harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const fname = `surat-pernyataan-${id}.${lampiran.extname}`;
+    await lampiran.move(Helpers.publicPath("surat/"), {
+      name: fname,
+      overwrite: true,
+    });
+
+    const registrasi = await MRegistrasiAkun.create({
+      nama,
+      whatsapp,
+      jabatan,
+      lampiran: `/surat/${fname}`,
+      sekolah_id: id,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
     });
   }
 
@@ -783,6 +847,9 @@ class MainController {
       // informasi
       nisn,
       nis,
+      nrk,
+      nip,
+      nuptk,
       asal_sekolah,
       status_keluarga,
       anak_ke,
@@ -914,6 +981,9 @@ class MainController {
         // informasi
         nisn,
         nis,
+        nrk,
+        nip,
+        nuptk,
         asal_sekolah,
         status_keluarga,
         anak_ke,
@@ -1000,6 +1070,10 @@ class MainController {
 
         // informasi
         nisn,
+        nis,
+        nrk,
+        nip,
+        nuptk,
         asal_sekolah,
         status_keluarga,
         anak_ke,
@@ -6973,6 +7047,7 @@ class MainController {
       list_anggota,
       list_rombel,
       materi = [],
+      soal = [],
     } = request.post();
 
     const tanggal = moment(tanggal_pembagian).format(`DD`);
@@ -7007,6 +7082,41 @@ class MainController {
       dihapus: 0,
       m_user_id: user.id,
     });
+
+    if(soal.length){
+        const soalIds = await soal.map(async (d) => {
+          const soal = await MSoalUjian.create({
+            kd: d.kd,
+            kd_konten_materi: d.kd_konten_materi,
+            level_kognitif: d.level_kognitif,
+            bentuk: d.bentuk,
+            akm_konten_materi: d.akm_konten_materi,
+            akm_konteks_materi: d.akm_konteks_materi,
+            akm_proses_kognitif: d.akm_proses_kognitif,
+            audio: d.audio,
+            pertanyaan: htmlEscaper.escape(d.pertanyaan),
+            jawaban_a: htmlEscaper.escape(d.jawaban_a),
+            jawaban_b: htmlEscaper.escape(d.jawaban_b),
+            jawaban_c: htmlEscaper.escape(d.jawaban_c),
+            jawaban_d: htmlEscaper.escape(d.jawaban_d),
+            jawaban_e: htmlEscaper.escape(d.jawaban_e),
+            kj_pg:d.kj_pg,
+            kj_uraian:d.kj_uraian,
+            jawaban_pg_kompleks:d.jawaban_pg_kompleks,
+            pilihan_menjodohkan:d.pilihan_menjodohkan,
+            soal_menjodohkan:d.soal_menjodohkan,
+            opsi_a_uraian:d.opsi_a_uraian,
+            opsi_b_uraian:d.opsi_b_uraian,
+            rubrik_kj: JSON.stringify(d.rubrik_kj),
+            pembahasan: htmlEscaper.escape(d.pembahasan),
+            nilai_soal: d.nilai_soal,
+            m_user_id: user.id,
+            dihapus: 0,
+          });
+          return {id_soal: soal.id, tugas_id: tugas.id, dihapus: 0};
+        })
+      
+    }
 
     if (tugas) {
       let timeline;
@@ -41994,6 +42104,9 @@ class MainController {
         );
       })
     );
+  }
+  async ip({ response, request }) {
+    return response.ok({ ip: [request.ip(), request.ips()] });
   }
 
   async notFoundPage({ response, request, auth }) {

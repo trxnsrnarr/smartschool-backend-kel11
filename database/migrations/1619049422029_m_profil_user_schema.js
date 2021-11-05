@@ -18,6 +18,7 @@ class MProfilUserSchema extends Schema {
       // informasi
       table.string("nisn");
       table.string("nis");
+      table.string("nrk");
       table.string("nuptk");
       table.string("nip");
       table.string("status_kepegawaian");

@@ -11,6 +11,9 @@ class Sekolah extends Model {
   sekolahSS() {
     return this.belongsTo('App/Models/MSekolah')
   }
+  registrasi() {
+    return this.hasOne("App/Models/MRegistrasiAkun")
+  }
 }
 
 module.exports = Sekolah;
