@@ -125,6 +125,7 @@ const MRegistrasiAkun = use("App/Models/MRegistrasiAkun");
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
 const TkPerpusMapel = use("App/Models/TkPerpusMapel");
+const TkSoalTugas = use("App/Models/TkSoalTugas");
 const MPerpusTag = use("App/Models/MPerpusTag");
 const TkPerpusTag = use("App/Models/TkPerpusTag");
 const MKontak = use("App/Models/MKontak");
@@ -7083,39 +7084,39 @@ class MainController {
       m_user_id: user.id,
     });
 
-    if(soal.length){
-        const soalIds = await soal.map(async (d) => {
-          const soal = await MSoalUjian.create({
-            kd: d.kd,
-            kd_konten_materi: d.kd_konten_materi,
-            level_kognitif: d.level_kognitif,
-            bentuk: d.bentuk,
-            akm_konten_materi: d.akm_konten_materi,
-            akm_konteks_materi: d.akm_konteks_materi,
-            akm_proses_kognitif: d.akm_proses_kognitif,
-            audio: d.audio,
-            pertanyaan: htmlEscaper.escape(d.pertanyaan),
-            jawaban_a: htmlEscaper.escape(d.jawaban_a),
-            jawaban_b: htmlEscaper.escape(d.jawaban_b),
-            jawaban_c: htmlEscaper.escape(d.jawaban_c),
-            jawaban_d: htmlEscaper.escape(d.jawaban_d),
-            jawaban_e: htmlEscaper.escape(d.jawaban_e),
-            kj_pg:d.kj_pg,
-            kj_uraian:d.kj_uraian,
-            jawaban_pg_kompleks:d.jawaban_pg_kompleks,
-            pilihan_menjodohkan:d.pilihan_menjodohkan,
-            soal_menjodohkan:d.soal_menjodohkan,
-            opsi_a_uraian:d.opsi_a_uraian,
-            opsi_b_uraian:d.opsi_b_uraian,
-            rubrik_kj: JSON.stringify(d.rubrik_kj),
-            pembahasan: htmlEscaper.escape(d.pembahasan),
-            nilai_soal: d.nilai_soal,
-            m_user_id: user.id,
-            dihapus: 0,
-          });
-          return {id_soal: soal.id, tugas_id: tugas.id, dihapus: 0};
-        })
-      
+    if (soal.length) {
+      const soalIds = await soal.map(async (d) => {
+        const soal = await MSoalUjian.create({
+          kd: d.kd,
+          kd_konten_materi: d.kd_konten_materi,
+          level_kognitif: d.level_kognitif,
+          bentuk: d.bentuk,
+          akm_konten_materi: d.akm_konten_materi,
+          akm_konteks_materi: d.akm_konteks_materi,
+          akm_proses_kognitif: d.akm_proses_kognitif,
+          audio: d.audio,
+          pertanyaan: htmlEscaper.escape(d.pertanyaan),
+          jawaban_a: htmlEscaper.escape(d.jawaban_a),
+          jawaban_b: htmlEscaper.escape(d.jawaban_b),
+          jawaban_c: htmlEscaper.escape(d.jawaban_c),
+          jawaban_d: htmlEscaper.escape(d.jawaban_d),
+          jawaban_e: htmlEscaper.escape(d.jawaban_e),
+          kj_pg: d.kj_pg,
+          kj_uraian: d.kj_uraian,
+          jawaban_pg_kompleks: d.jawaban_pg_kompleks,
+          pilihan_menjodohkan: d.pilihan_menjodohkan,
+          soal_menjodohkan: d.soal_menjodohkan,
+          opsi_a_uraian: d.opsi_a_uraian,
+          opsi_b_uraian: d.opsi_b_uraian,
+          rubrik_kj: JSON.stringify(d.rubrik_kj),
+          pembahasan: htmlEscaper.escape(d.pembahasan),
+          nilai_soal: d.nilai_soal,
+          m_user_id: user.id,
+          dihapus: 0,
+        });
+        return { m_soal_ujian_id: soal.id, m_tugas_id: tugas.id, dihapus: 0 };
+      });
+      await TkSoalTugas.createMany(soalIds);
     }
 
     if (tugas) {
@@ -7288,6 +7289,7 @@ class MainController {
       list_anggota,
       list_rombel,
       materi = [],
+      soal = [],
     } = request.post();
 
     const jadwalMengajar = await MJadwalMengajar.query()
@@ -7313,8 +7315,93 @@ class MainController {
         draft,
       });
 
+    const tugasData = await MTugas.query()
+      .where({ id: tugas_id })
+      .with("soal", (builder) => {
+        builder.where({ dihapus: 0 }).with("soal");
+      })
+      .first();
+
     if (tugas) {
       let timeline;
+
+      if (soal.length) {
+        await tugasData
+          .toJSON()
+          .soal.filter(
+            (d) =>
+              soal.filter((e) => e.id).findIndex((e) => e.id == d.soal.id) < 0
+          )
+          .map(async (d) => {
+            await TkSoalTugas.query().where({ id: d.id }).update({
+              dihapus: 1,
+            });
+          });
+        const soalIds = await soal.map(async (d) => {
+          if (d.id) {
+            await MSoalUjian.query()
+              .where({ id: d.id })
+              .update({
+                kd: d.kd,
+                kd_konten_materi: d.kd_konten_materi,
+                level_kognitif: d.level_kognitif,
+                bentuk: d.bentuk,
+                akm_konten_materi: d.akm_konten_materi,
+                akm_konteks_materi: d.akm_konteks_materi,
+                akm_proses_kognitif: d.akm_proses_kognitif,
+                audio: d.audio,
+                pertanyaan: htmlEscaper.escape(d.pertanyaan),
+                jawaban_a: htmlEscaper.escape(d.jawaban_a),
+                jawaban_b: htmlEscaper.escape(d.jawaban_b),
+                jawaban_c: htmlEscaper.escape(d.jawaban_c),
+                jawaban_d: htmlEscaper.escape(d.jawaban_d),
+                jawaban_e: htmlEscaper.escape(d.jawaban_e),
+                kj_pg: d.kj_pg,
+                kj_uraian: d.kj_uraian,
+                jawaban_pg_kompleks: d.jawaban_pg_kompleks,
+                pilihan_menjodohkan: d.pilihan_menjodohkan,
+                soal_menjodohkan: d.soal_menjodohkan,
+                opsi_a_uraian: d.opsi_a_uraian,
+                opsi_b_uraian: d.opsi_b_uraian,
+                rubrik_kj: JSON.stringify(d.rubrik_kj),
+                pembahasan: htmlEscaper.escape(d.pembahasan),
+                nilai_soal: d.nilai_soal,
+              });
+              return 0;
+          } else {
+            const soal = await MSoalUjian.create({
+              kd: d.kd,
+              kd_konten_materi: d.kd_konten_materi,
+              level_kognitif: d.level_kognitif,
+              bentuk: d.bentuk,
+              akm_konten_materi: d.akm_konten_materi,
+              akm_konteks_materi: d.akm_konteks_materi,
+              akm_proses_kognitif: d.akm_proses_kognitif,
+              audio: d.audio,
+              pertanyaan: htmlEscaper.escape(d.pertanyaan),
+              jawaban_a: htmlEscaper.escape(d.jawaban_a),
+              jawaban_b: htmlEscaper.escape(d.jawaban_b),
+              jawaban_c: htmlEscaper.escape(d.jawaban_c),
+              jawaban_d: htmlEscaper.escape(d.jawaban_d),
+              jawaban_e: htmlEscaper.escape(d.jawaban_e),
+              kj_pg: d.kj_pg,
+              kj_uraian: d.kj_uraian,
+              jawaban_pg_kompleks: d.jawaban_pg_kompleks,
+              pilihan_menjodohkan: d.pilihan_menjodohkan,
+              soal_menjodohkan: d.soal_menjodohkan,
+              opsi_a_uraian: d.opsi_a_uraian,
+              opsi_b_uraian: d.opsi_b_uraian,
+              rubrik_kj: JSON.stringify(d.rubrik_kj),
+              pembahasan: htmlEscaper.escape(d.pembahasan),
+              nilai_soal: d.nilai_soal,
+              m_user_id: user.id,
+              dihapus: 0,
+            });
+            return { m_soal_ujian_id: soal.id, m_tugas_id: tugas.id, dihapus: 0 };
+          }
+        });
+        await TkSoalTugas.createMany(soalIds.filter(d => d));
+      }
 
       if (list_anggota) {
         const check = await MTimeline.query()
@@ -7547,7 +7634,11 @@ class MainController {
       const timeline = await TkTimeline.query()
         .with("timeline", (builder) => {
           builder
-            .with("tugas")
+            .with("tugas", (builder) => {
+              builder.with("soal", (builder) => {
+                builder.where({ dihapus: 0 }).with("soal");
+              });
+            })
             .with("materi", (builder) => {
               builder
                 .with("bab")
@@ -7664,9 +7755,13 @@ class MainController {
 
       const timeline1 = await MTimeline.query()
         .with("tugas", (builder) => {
-          builder.with("timeline", (builder) => {
-            builder.with("rombel").with("tkTimeline");
-          });
+          builder
+            .with("soal", (builder) => {
+              builder.where({ dihapus: 0 }).with("soal");
+            })
+            .with("timeline", (builder) => {
+              builder.with("rombel").with("tkTimeline");
+            });
         })
         .with("user")
         .with("materi", (builder) => {
@@ -7700,9 +7795,13 @@ class MainController {
 
       const timeline2 = await MTimeline.query()
         .with("tugas", (builder) => {
-          builder.with("timeline", (builder) => {
-            builder.with("rombel").with("tkTimeline");
-          });
+          builder
+            .with("soal", (builder) => {
+              builder.where({ dihapus: 0 }).with("soal");
+            })
+            .with("timeline", (builder) => {
+              builder.with("rombel").with("tkTimeline");
+            });
         })
         .with("user")
         .with("materi", (builder) => {
@@ -7763,7 +7862,11 @@ class MainController {
             .with("materi", (builder) => {
               builder.with("bab");
             })
-            .with("tugas")
+            .with("tugas", (builder) => {
+              builder.with("soal", (builder) => {
+                builder.where({ dihapus: 0 }).with("soal");
+              });
+            })
             .with("komen", (builder) => {
               builder.with("user").where({ dihapus: 0 });
             });
@@ -7854,7 +7957,11 @@ class MainController {
       const timelines = await TkTimeline.query()
         .with("timeline", (builder) => {
           builder
-            .with("tugas")
+            .with("tugas", (builder) => {
+              builder.with("soal", (builder) => {
+                builder.where({ dihapus: 0 }).with("soal");
+              });
+            })
             .with("materi", (builder) => {
               builder.with("bab");
             })
@@ -7900,7 +8007,11 @@ class MainController {
       .with("komen", (builder) => {
         builder.with("user").where({ dihapus: 0 });
       })
-      .with("tugas")
+      .with("tugas", (builder) => {
+        builder.with("soal", (builder) => {
+          builder.where({ dihapus: 0 }).with("soal");
+        });
+      })
       .with("tkTimeline", (builder) => {
         builder.with("user");
       })
@@ -7970,9 +8081,13 @@ class MainController {
 
     const timelineBiasa = await MTimeline.query()
       .with("tugas", (builder) => {
-        builder.with("timeline", (builder) => {
-          builder.with("rombel").with("tkTimeline");
-        });
+        builder
+          .with("soal", (builder) => {
+            builder.where({ dihapus: 0 }).with("soal");
+          })
+          .with("timeline", (builder) => {
+            builder.with("rombel").with("tkTimeline");
+          });
       })
       .with("user")
       .withCount("tkTimeline as total_respon", (builder) => {
@@ -8009,9 +8124,13 @@ class MainController {
       .ids();
     const timelineTugas = await MTimeline.query()
       .with("tugas", (builder) => {
-        builder.with("timeline", (builder) => {
-          builder.with("rombel").with("tkTimeline");
-        });
+        builder
+          .with("soal", (builder) => {
+            builder.where({ dihapus: 0 }).with("soal");
+          })
+          .with("timeline", (builder) => {
+            builder.with("rombel").with("tkTimeline");
+          });
       })
       .with("user")
       .with("materi", (builder) => {

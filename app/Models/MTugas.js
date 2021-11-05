@@ -36,6 +36,10 @@ class MTugas extends Model {
   getInstruksi(instruksi) {
     return instruksi ? htmlEscaper.unescape(instruksi) : "";
   }
+
+  soal(){
+    return this.hasMany("App/Models/TkSoalUjian");
+  }
 }
 
 module.exports = MTugas;
