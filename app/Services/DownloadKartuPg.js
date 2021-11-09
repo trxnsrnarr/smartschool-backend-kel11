@@ -225,7 +225,7 @@ class DownloadService {
                 size: 16,
                 bold: true,
               },
-              text: `PEMERINTAH DAERAH PROVINSI ${sekolah.provinsi}`,
+              text: `PEMERINTAH DAERAH PROVINSI ${sekolah.provinsi.toUpperCase()}`,
             },
           ],
         };
@@ -988,6 +988,11 @@ class DownloadService {
     worksheet2.getColumn("F").width = 33;
     worksheet2.getColumn("G").width = 85;
     worksheet2.getColumn("H").width = 31;
+
+    
+    worksheet2.views = [
+      {showGridLines: false}
+    ]
 
 
     let namaFile = `/uploads/kartu-soal-pg-${keluarantanggal}.xlsx`;

@@ -144,7 +144,7 @@ class DownloadService {
                 size: 16,
                 bold: true,
               },
-              text: `PEMERINTAH DAERAH PROVINSI ${sekolah.provinsi}`,
+              text: `PEMERINTAH DAERAH PROVINSI ${sekolah.provinsi.toUpperCase()}`,
             },
           ],
         };
@@ -815,6 +815,9 @@ class DownloadService {
     //   ext: { width: 100, height: 60 },
     // });
 
+    worksheet3.views = [
+      {showGridLines: false}
+    ]
 
     let namaFile = `/uploads/Kartu-Soal-Esai-${keluarantanggal}.xlsx`;
 

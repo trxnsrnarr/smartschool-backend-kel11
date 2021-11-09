@@ -752,6 +752,10 @@ class DownloadService {
         },
       ],
     });
+    worksheet5.views = [
+      {showGridLines: false}
+    ]
+
 
     let namaFile = `/uploads/kartu-soal-naskah-${keluarantanggal}.xlsx`;
 

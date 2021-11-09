@@ -75,7 +75,7 @@ class DownloadService {
         });
 
         worksheet.addConditionalFormatting({
-          ref: `A${(idx + 1) * 1 + 23}:A${(idx + 1) * 1 + 72}`,
+          ref: `A${(idx + 1) * 1 + 23}`,
           rules: [
             {
               type: "expression",
@@ -85,6 +85,12 @@ class DownloadService {
                   vertical: "top",
                   horizontal: "right",
                 },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thick" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                }
               },
             },
           ],
@@ -100,14 +106,21 @@ class DownloadService {
                 alignment: {
                   vertical: "top",
                   horizontal: "left",
+                  wrapText: true 
                 },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                }
               },
             },
           ],
         });
 
         worksheet.addConditionalFormatting({
-          ref: `F${(idx + 1) * 1 + 23}:J${(idx + 1) * 1 + 23}`,
+          ref: `F${(idx + 1) * 1 + 23}:I${(idx + 1) * 1 + 23}`,
           rules: [
             {
               type: "expression",
@@ -116,30 +129,19 @@ class DownloadService {
                 alignment: {
                   vertical: "top",
                   horizontal: "center",
+                  wrapText: true 
                 },
-              },
-            },
-          ],
-        });
-
-        worksheet.addConditionalFormatting({
-          ref: `B${(idx + 1) * 1 + 23}:I${(idx + 1) * 1 + 23}`,
-          rules: [
-            {
-              type: "expression",
-              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-              style: {
                 border: {
                   top: { style: "thin" },
                   left: { style: "thin" },
                   bottom: { style: "thin" },
                   right: { style: "thin" },
-                },
-                alignment: { wrapText: true },
+                }
               },
             },
           ],
         });
+
         worksheet.addConditionalFormatting({
           ref: `J${(idx + 1) * 1 + 23}`,
           rules: [
@@ -153,7 +155,12 @@ class DownloadService {
                   bottom: { style: "thin" },
                   right: { style: "thick" },
                 },
-                alignment: { wrapText: true },
+                alignment: {
+                  vertical: "top",
+                  horizontal: "center",
+                  wrapText: true 
+                },
+                
               },
             },
           ],
@@ -400,7 +407,7 @@ class DownloadService {
             size: 16,
             bold: true,
           },
-          text: `PEMERINTAH DAERAH PROVINSI ${sekolah.provinsi}`,
+          text: `PEMERINTAH DAERAH PROVINSI ${sekolah.provinsi.toUpperCase()}`,
         },
       ],
     };
@@ -676,6 +683,9 @@ class DownloadService {
     };
 
  
+    worksheet.views = [
+      {showGridLines: false}
+    ]
 
     let namaFile = `/uploads/kartu-soal-kisi-kisi-${keluarantanggal}.xlsx`;
 
