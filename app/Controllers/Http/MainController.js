@@ -22865,7 +22865,6 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .first();
 
-
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
     const kepsek = ta.nama_kepsek;
@@ -23008,12 +23007,12 @@ class MainController {
     }
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
-      
+
     const taa = await Mta.query()
-    .where({ m_sekolah_id: sekolah.id })
-    .andWhere({ aktif: 1 })
-    .andWhere({ dihapus: 0 })
-    .first();
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ aktif: 1 })
+      .andWhere({ dihapus: 0 })
+      .first();
 
     const kepsek = taa.nama_kepsek;
 
@@ -23055,7 +23054,7 @@ class MainController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
-    
+
     const taa = await Mta.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ aktif: 1 })
@@ -39411,9 +39410,7 @@ class MainController {
         },
       ],
     });
-    worksheet.views = [
-      {showGridLines: false, style:"pageBreakPreview"}
-    ]
+    worksheet.views = [{ showGridLines: false, style: "pageBreakPreview" }];
 
     let namaFile = `/uploads/REKAPITULASI-KEUANGAN-SISWA-${keluarantanggalseconds}.xlsx`;
 
@@ -39629,9 +39626,7 @@ class MainController {
         },
       ],
     });
-    worksheet.views = [
-      {showGridLines: false, style:"pageBreakPreview"}
-    ]
+    worksheet.views = [{ showGridLines: false, style: "pageBreakPreview" }];
 
     let namaFile = `/uploads/REKAP-KEHADIRAN-GURU-${keluarantanggalseconds}.xlsx`;
 
@@ -39855,9 +39850,7 @@ class MainController {
         },
       ],
     });
-    worksheet.views = [
-      {showGridLines: false, style:"pageBreakPreview"}
-    ]
+    worksheet.views = [{ showGridLines: false, style: "pageBreakPreview" }];
 
     let namaFile = `/uploads/DAFTAR-INVENTARIS-BARANG-${keluarantanggalseconds}.xlsx`;
 
@@ -40094,50 +40087,62 @@ class MainController {
 
           worksheet.mergeCells(`B${(idx + 1) * 1 + 7}:C${(idx + 1) * 1 + 7}`);
           worksheet.getCell(`B${(idx + 1) * 1 + 7}`).value = `Total`;
-          worksheet.getCell(`D${(idx + 1) * 1 + 7}`).value = `=SUM(D7:D${(idx + 1) * 1 + 6})`;
-          worksheet.getCell(`E${(idx + 1) * 1 + 7}`).value = `=SUM(E7:E${(idx + 1) * 1 + 6})`;
-          worksheet.getCell(`F${(idx + 1) * 1 + 7}`).value = `=SUM(F7:F${(idx + 1) * 1 + 6})`;
-          worksheet.getCell(`G${(idx + 1) * 1 + 7}`).value = `=SUM(G7:G${(idx + 1) * 1 + 6})`;
-          worksheet.getCell(`H${(idx + 1) * 1 + 7}`).value = `=H${(idx + 1) * 1 + 7}/$H$${(idx + 1) * 1 + 7}`;
-          worksheet.getCell(`I${(idx + 1) * 1 + 7}`).value = `=I${(idx + 1) * 1 + 7}/$I$${(idx + 1) * 1 + 7}`;
-          worksheet.getCell(`J${(idx + 1) * 1 + 7}`).value = `=J${(idx + 1) * 1 + 7}/$J$${(idx + 1) * 1 + 7}`;
-          
-          
+          worksheet.getCell(`D${(idx + 1) * 1 + 7}`).value = `=SUM(D7:D${
+            (idx + 1) * 1 + 6
+          })`;
+          worksheet.getCell(`E${(idx + 1) * 1 + 7}`).value = `=SUM(E7:E${
+            (idx + 1) * 1 + 6
+          })`;
+          worksheet.getCell(`F${(idx + 1) * 1 + 7}`).value = `=SUM(F7:F${
+            (idx + 1) * 1 + 6
+          })`;
+          worksheet.getCell(`G${(idx + 1) * 1 + 7}`).value = `=SUM(G7:G${
+            (idx + 1) * 1 + 6
+          })`;
+          worksheet.getCell(`H${(idx + 1) * 1 + 7}`).value = `=H${
+            (idx + 1) * 1 + 7
+          }/$H$${(idx + 1) * 1 + 7}`;
+          worksheet.getCell(`I${(idx + 1) * 1 + 7}`).value = `=I${
+            (idx + 1) * 1 + 7
+          }/$I$${(idx + 1) * 1 + 7}`;
+          worksheet.getCell(`J${(idx + 1) * 1 + 7}`).value = `=J${
+            (idx + 1) * 1 + 7
+          }/$J$${(idx + 1) * 1 + 7}`;
+
           worksheet.mergeCells(`B${(idx + 1) * 1 + 9}:C${(idx + 1) * 1 + 9}`);
           worksheet.mergeCells(`B${(idx + 1) * 1 + 10}:C${(idx + 1) * 1 + 10}`);
           worksheet.mergeCells(`B${(idx + 1) * 1 + 11}:C${(idx + 1) * 1 + 11}`);
           worksheet.getCell(`B${(idx + 1) * 1 + 9}`).value = `Update`;
           worksheet.getCell(
             `B${(idx + 1) * 1 + 10}`
-            ).value = `${moment().format("DD-MMM-YYYY")}`;
-            
-            worksheet.getCell(
-              `B${(idx + 1) * 1 + 9}:C${(idx + 1) * 1 + 9}`
-            ).border = {
-              left: { style: "thin" },
-              top: { style: "thin" },
-              right: { style: "thin" },
-            };
+          ).value = `${moment().format("DD-MMM-YYYY")}`;
 
-            worksheet.getCell(
-              `B${(idx + 1) * 1 + 10}:C${(idx + 1) * 1 + 10}`
-            ).border = {
-              right: { style: "thin" },
-              left: { style: "thin" },
-            };
-            worksheet.getCell(
-              `B${(idx + 1) * 1 + 10}:C${(idx + 1) * 1 + 10}`
-            ).alignment = { vertical: 'middle', horizontal: 'center' 
-            };
+          worksheet.getCell(
+            `B${(idx + 1) * 1 + 9}:C${(idx + 1) * 1 + 9}`
+          ).border = {
+            left: { style: "thin" },
+            top: { style: "thin" },
+            right: { style: "thin" },
+          };
 
-            worksheet.getCell(
-              `B${(idx + 1) * 1 + 11}:c${(idx + 1) * 1 + 11}`
-            ).border = {
-              bottom: { style: "thin" },
-              right: { style: "thin" },
-              left: { style: "thin" },
-            };
-            
+          worksheet.getCell(
+            `B${(idx + 1) * 1 + 10}:C${(idx + 1) * 1 + 10}`
+          ).border = {
+            right: { style: "thin" },
+            left: { style: "thin" },
+          };
+          worksheet.getCell(
+            `B${(idx + 1) * 1 + 10}:C${(idx + 1) * 1 + 10}`
+          ).alignment = { vertical: "middle", horizontal: "center" };
+
+          worksheet.getCell(
+            `B${(idx + 1) * 1 + 11}:c${(idx + 1) * 1 + 11}`
+          ).border = {
+            bottom: { style: "thin" },
+            right: { style: "thin" },
+            left: { style: "thin" },
+          };
+
           worksheet.getCell(`B${(idx + 1) * 1 + 13}`).value = `Mengetahui,`;
           worksheet.getCell(`B${(idx + 1) * 1 + 14}`).value = `Kepala Sekolah`;
           worksheet.getCell(
@@ -40147,12 +40152,8 @@ class MainController {
           worksheet.getCell(`G${(idx + 1) * 1 + 13}`).value = `${
             sekolah.kabupaten
           }, ${moment().format("DD-MMM-YYYY")}`;
-          worksheet.getCell(
-            `G${(idx + 1) * 1 + 14}`
-          ).value = `Hubin`;
-          worksheet.getCell(
-            `G${(idx + 1) * 1 + 17}`
-          ).value = `{nama hubin}`;
+          worksheet.getCell(`G${(idx + 1) * 1 + 14}`).value = `Hubin`;
+          worksheet.getCell(`G${(idx + 1) * 1 + 17}`).value = `{nama hubin}`;
         }
       })
     );
@@ -40201,9 +40202,7 @@ class MainController {
         },
       ],
     });
-    worksheet.views = [
-      {showGridLines: false, style:"pageBreakPreview"}
-    ]
+    worksheet.views = [{ showGridLines: false, style: "pageBreakPreview" }];
 
     let namaFile = `/uploads/REKAP-SISWA-PKL-${keluarantanggalseconds}.xlsx`;
 
@@ -42744,18 +42743,19 @@ class MainController {
 
     const user = await User.query()
       .where({ whatsapp: whatsapp })
+      .where({ dihapus: 0 })
       .with("sekolah")
       .first();
 
     if (!user) {
-      return `whatsapp anak salah`;
+      return response.notFound({ message: `Periksa kembali nomor yang anda masukan` });
     }
 
-    const tanggal = moment().format("YYYY-MM-DD ");
+    const tanggal = moment().format("YYYY-MM-DD");
 
     const absen = await MAbsen.query()
       .where({ m_user_id: user.id })
-      .whereBetween("waktu_masuk", [
+      .whereBetween("created_at", [
         `${tanggal} 00:00:00`,
         `${tanggal} 23:59:59`,
       ])
@@ -42767,9 +42767,13 @@ class MainController {
 
     if (absen.absen == "hadir") {
       if (!absen.waktu_pulang) {
-        return `${user.nama} ${absen.absen} masuk pada ${absen.waktu_masuk} dan belum absen pulang`;
+        return `${user.nama} ${absen.absen} masuk pada ${moment(
+          absen.created_at
+        ).format("HH:mm")} dan belum absen pulang`;
       } else {
-        return `${user.nama} ${absen.absen} masuk pada ${absen.waktu_masuk} dan pulang pada ${absen.waktu_pulang}`;
+        return `${user.nama} ${absen.absen} masuk pada ${moment(
+          absen.created_at
+        ).format("HH:mm")} dan pulang pada ${absen.waktu_pulang}`;
       }
     } else if (absen.absen == "izin") {
       return `${user.nama} ${absen.absen} dengan keterangan ${absen.keterangan} dan lampiran ${absen.lampiran}`;
@@ -42781,56 +42785,40 @@ class MainController {
   async getTugasAnak({ auth, response, request }) {
     const { whatsapp } = request.post();
 
-    const user = await User.query()
+    const userIds = await User.query()
       .where({ whatsapp: whatsapp })
-      .with("sekolah")
-      .first();
+      .where({ dihapus: 0 })
+      .ids();
 
-    if (!user) {
-      return `whatsapp anak salah`;
+    if (!userIds.length) {
+      return response.notFound({ message: `Periksa kembali nomor yang anda masukan` });
     }
-
-    const tanggal = moment().format("YYYY-MM-DD ");
-
     const timelineData = await TkTimeline.query()
       .with("timeline", (builder) => {
         builder
           .with("tugas")
-          .with("rombel")
-          .with("mataPelajaran")
-          .withCount("komen as total_komen", (builder) => {
-            builder.where({ dihapus: 0 });
-          })
-          .with("komen", (builder) => {
-            builder.with("user").where({ dihapus: 0 });
-          })
-          .with("user");
+          // .with("rombel")
+          .with("user", (builder) => builder.select("id", "nama"))
+          .with("mataPelajaran", (builder) => {
+            builder.select("id", "m_user_id", "nama");
+          });
       })
-      .with("user")
-      .where({ m_user_id: user.id })
+      .with("user", (builder) => builder.select("id", "nama"))
+      .where({ tipe: "tugas" })
+      .where({ dikumpulkan: 0 })
+      .whereIn("m_user_id", userIds)
       .andWhere({ dihapus: 0 })
-      .orderBy(order, sort)
-      .limit(parseInt(limit))
-      .offset(0)
+      .orderBy("created_at", "desc")
       .fetch();
 
-    const timeline = timelineData.toJSON().filter((d) => {
-      if (d.timeline.tipe == "diskusi") {
-        return false;
-      } else if (d.timeline.tipe == "absen") {
-        if (moment(d.timeline.tanggal_pembagian) < moment()) {
-          return true;
-        } else {
-          return false;
-        }
-      } else if (d.timeline.tipe == "tugas") {
+    const timeline = timelineData
+      .toJSON()
+      .filter((d) => {
         if (
           moment(
             moment(d.timeline.tugas.tanggal_pembagian)
               .add(7, "hours")
-              .format("YYYY-MM-DD") +
-              " " +
-              d.timeline.tugas.waktu_pembagian
+              .format("YYYY-MM-DD ") + d.timeline.tugas.waktu_pembagian
           ) <= moment() ||
           d.timeline.tugas.waktu_pembagian == null
         ) {
@@ -42838,49 +42826,77 @@ class MainController {
         } else {
           return false;
         }
-      }
-    });
+      })
+      .map((d) => {
+        return `- ${d.timeline.tugas.judul}, oleh Guru ${d.timeline.user.nama}`;
+      });
 
-    return timeline;
+    return response.ok({
+      tugas: timeline,
+    });
   }
 
   async getUjianAnak({ auth, response, request }) {
-    const { whatsapp } = request.get();
+    const { whatsapp } = request.post();
+
+    const hari_ini = moment().format("YYYY-MM-DD HH:mm");
 
     const user = await User.query()
       .where({ whatsapp: whatsapp })
-      .with("sekolah")
+      .where({ dihapus: 0 })
       .first();
 
     if (!user) {
-      return `whatsapp anak salah`;
+      return response.notFound({ message: `Periksa kembali nomor yang anda masukan` });
     }
 
-    const tanggal = moment().format("YYYY-MM-DD ");
-
-    const absen = await MAbsen.query()
-      .where({ m_user_id: user.id })
-      .whereBetween("waktu_masuk", [
-        `${tanggal} 00:00:00`,
-        `${tanggal} 23:59:59`,
-      ])
+    const guruIds = await User.query()
+      .where({ m_sekolah_id: user.m_sekolah_id })
+      .where({ dihapus: 0 })
+      .whereNot({ role: "siswa" })
+      .ids();
+    const ta = await Mta.query()
+      .where({ m_sekolah_id: user.m_sekolah_id })
+      .where({ aktif: 1 })
+      .where({ dihapus: 0 })
       .first();
-
-    if (!absen) {
-      return `${user.nama} belum absen masuk sekolah hari ini`;
+    if (!ta) {
+      return "Tahun AJaran sekolah belum terdaftar";
     }
 
-    if (absen.absen == "hadir") {
-      if (!absen.waktu_pulang) {
-        return `${user.nama} ${absen.absen} masuk pada ${absen.waktu_masuk} dan belum absen pulang`;
-      } else {
-        return `${user.nama} ${absen.absen} masuk pada ${absen.waktu_masuk} dan pulang pada ${absen.waktu_pulang}`;
-      }
-    } else if (absen.absen == "izin") {
-      return `${user.nama} ${absen.absen} dengan keterangan ${absen.keterangan} dan lampiran ${absen.lampiran}`;
-    } else if (absen.absen == "sakit") {
-      return `${user.nama} ${absen.absen} dengan keterangan ${absen.keterangan} dan lampiran ${absen.lampiran}`;
-    }
+    const rombelIds = await MRombel.query()
+      .where({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .ids();
+
+    const anggotaRombel = await MAnggotaRombel.query()
+      .where({ m_user_id: user.id })
+      .andWhere({ dihapus: 0 })
+      .whereIn("m_rombel_id", rombelIds)
+      .pluck("m_rombel_id");
+
+    const jadwalIds = await MJadwalUjian.query()
+      .where({ dihapus: 0 })
+      .andWhere("waktu_ditutup", ">=", hari_ini)
+      .whereIn("m_user_id", guruIds)
+      .ids();
+
+    const jadwalUjian = await TkJadwalUjian.query()
+      .with("jadwalUjian", (builder) => {
+        builder.with("ujian");
+      })
+      .where({ dihapus: 0 })
+      .whereIn("m_rombel_id", anggotaRombel)
+      .whereIn("m_jadwal_ujian_id", jadwalIds)
+      .fetch();
+    const ujian = jadwalUjian
+      .toJSON()
+      .filter((d) => d.jadwalUjian !== null && d.jadwalUjian.ujian)
+      .map(d => `• ${d.jadwalUjian.ujian.nama}`);
+
+    return response.ok({
+      jadwalUjian: ujian,
+    });
   }
 
   async updateNilaiJadwalUjian({ response, request }) {
