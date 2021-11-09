@@ -837,11 +837,11 @@ Route.delete(
 Route.get(
   "/tatatertib/kategori/:kategori_id",
   "MainController.detailKategoriPelanggaran"
-);
+  );
 Route.post(
   "/tatatertib/pelanggaran/:kategori_id",
   "MainController.postPelanggaran"
-);
+  );
 Route.put(
   "/tatatertib/pelanggaran/:pelanggaran_id",
   "MainController.putPelanggaran"
@@ -849,14 +849,14 @@ Route.put(
 Route.delete(
   "/tatatertib/pelanggaran/:pelanggaran_id",
   "MainController.deletePelanggaran"
-);
+  );
 
 // Penghargaan
 Route.post("/tatatertib/penghargaan", "MainController.postPenghargaan");
 Route.put(
   "/tatatertib/penghargaan/:penghargaan_id",
   "MainController.putPenghargaan"
-);
+  );
 Route.delete(
   "/tatatertib/penghargaan/:penghargaan_id",
   "MainController.deletePenghargaan"
@@ -868,13 +868,13 @@ Route.post("/tatatertib/sanksi", "MainController.postSanksiPelanggaran");
 Route.put(
   "/tatatertib/sanksi/:sanksi_id",
   "MainController.putSanksiPelanggaran"
-);
+  );
 Route.delete(
   "/tatatertib/sanksi/:sanksi_id",
   "MainController.deleteSanksiPelanggaran"
-);
-
-Route.post("/tatatertib/siswa/prestasi", "MainController.postPenghargaanSiswa");
+  );
+  
+  Route.post("/tatatertib/siswa/prestasi", "MainController.postPenghargaanSiswa");
 Route.put(
   "/tatatertib/siswa/prestasi/:penghargaan_id",
   "MainController.putPenghargaanSiswa"
@@ -889,42 +889,42 @@ Route.get("/tatatertib/rombel", "MainController.getTataTertibRombel");
 Route.get(
   "/tatatertib/rombel/:rombel_id",
   "MainController.detailTataTertibRombel"
-);
+  );
 Route.get("/tatatertib/siswa/:user_id", "MainController.detailTataTertibSiswa");
 Route.post("/tatatertib/siswa/:user_id", "MainController.postPelanggaranSiswa");
 Route.put(
   "/tatatertib/siswa/pelanggaran/:pelanggaran_id",
   "MainController.putPelanggaranSiswa"
-);
+  );
 Route.delete(
   "/tatatertib/siswa/pelanggaran/:pelanggaran_id",
   "MainController.deletePelanggaranSiswa"
-);
+  );
 
-Route.post(
+  Route.post(
   "/tatatertib/siswa/sanksi/:user_id",
   "MainController.postSanksiSiswa"
-);
+  );
 Route.put(
   "/tatatertib/siswa/sanksi/:sanksi_id",
   "MainController.putSanksiSiswa"
-);
+  );
 Route.delete(
   "/tatatertib/siswa/sanksi/:sanksi_id",
   "MainController.deleteSanksiSiswa"
-);
-
-Route.post(
+  );
+  
+  Route.post(
   "/tatatertib/siswa/bukti-sanksi/:user_id",
   "MainController.postBuktiSanksiSiswa"
-);
-Route.put(
-  "/tatatertib/siswa/bukti-sanksi/:sanksi_id",
-  "MainController.putBuktiSanksiSiswa"
-);
-Route.delete(
-  "/tatatertib/siswa/bukti-sanksi/:sanksi_id",
-  "MainController.deleteBuktiSanksiSiswa"
+  );
+  Route.put(
+    "/tatatertib/siswa/bukti-sanksi/:sanksi_id",
+    "MainController.putBuktiSanksiSiswa"
+    );
+    Route.delete(
+      "/tatatertib/siswa/bukti-sanksi/:sanksi_id",
+      "MainController.deleteBuktiSanksiSiswa"
 );
 
 //Peraturan Service
@@ -934,19 +934,19 @@ Route.put("/tatatertib/peraturan/:bab_id", "MainController.putBabPeraturan");
 Route.delete(
   "/tatatertib/peraturan/:bab_id",
   "MainController.deleteBabPeraturan"
-);
-Route.get("/tatatertib/peraturan/:bab_id", "MainController.detailBabPeraturan");
-Route.post(
-  "/tatatertib/peraturan/:bab_id",
-  "MainController.postPasalPeraturan"
-);
+  );
+  Route.get("/tatatertib/peraturan/:bab_id", "MainController.detailBabPeraturan");
+  Route.post(
+    "/tatatertib/peraturan/:bab_id",
+    "MainController.postPasalPeraturan"
+    );
 Route.put("/tatatertib/pasal/:pasal_id", "MainController.putPasalPeraturan");
 Route.delete(
   "/tatatertib/pasal/:pasal_id",
   "MainController.deletePasalPeraturan"
-);
+  );
 
-// Buku Tamu Service
+  // Buku Tamu Service
 Route.get("/buku-tamu", "MainController.getBukuTamu");
 Route.get("/buku-tamu/:buku_id", "MainController.detailBukuTamu");
 Route.get("/post-buku-tamu", "MainController.getPostBukuTamu");
@@ -964,27 +964,27 @@ Route.post("/disposisi", "MainController.postDisposisi");
 Route.post(
   "/pelaporan-disposisi/:disposisi_id",
   "MainController.postPelaporanDisposisi"
-);
-Route.put("/disposisi/:disposisi_id", "MainController.putDisposisi");
-Route.delete("/disposisi/:disposisi_id", "MainController.deleteDisposisi");
+  );
+  Route.put("/disposisi/:disposisi_id", "MainController.putDisposisi");
+  Route.delete("/disposisi/:disposisi_id", "MainController.deleteDisposisi");
 
-// changeBase64ToAscii
-Route.post("/ascii", "MainController.changeBase64ToAscii");
-
-Route.post("uji-coba/cron", "MainController.postCron");
-Route.post("/download/monev", "MainController.downloadMonev1");
-Route.post("/import/GPDS", "MainController.importGPDS");
-Route.post("/gpds-username", "MainController.gpdsUsername");
-
-Route.post(
-  "/download/rekap-rombel/:rekapRombel_id",
-  "MainController.downloadRekapRombel"
-);
-Route.post(
-  "/import/rekap-rombel/:rekapRombel_id",
-  "MainController.importNilaiRekapRombel"
-);
-Route.post("/import/GPDS", "MainController.importGPDS");
+  // changeBase64ToAscii
+  Route.post("/ascii", "MainController.changeBase64ToAscii");
+  
+  Route.post("uji-coba/cron", "MainController.postCron");
+  Route.post("/download/monev", "MainController.downloadMonev1");
+  Route.post("/import/GPDS", "MainController.importGPDS");
+  Route.post("/gpds-username", "MainController.gpdsUsername");
+  
+  Route.post(
+    "/download/rekap-rombel/:rekapRombel_id",
+    "MainController.downloadRekapRombel"
+    );
+    Route.post(
+      "/import/rekap-rombel/:rekapRombel_id",
+      "MainController.importNilaiRekapRombel"
+      );
+      Route.post("/import/GPDS", "MainController.importGPDS");
 
 //Konsultasi BK services
 Route.get("/konsultasi", "MainController.getKonsultasi");
@@ -993,7 +993,7 @@ Route.post("/konsultasi", "MainController.postKonsultasi");
 Route.post(
   "/konsultasi/:konsultasi_id/jadwal",
   "MainController.postJadwalKonsultasi"
-);
+  );
 Route.post(
   "/konsultasi/:konsultasi_id/selesai",
   "MainController.postSelesaiKonsultasi"
@@ -1009,39 +1009,39 @@ Route.delete("/kalender/label/:label_id", "MainController.deleteLabelKalender");
 Route.get(
   "/kalender/kegiatan/:kegiatan_id",
   "MainController.detailKalenderKegiatan"
-);
+  );
 Route.post("/kalender/kegiatan", "MainController.postKegiatanKalender");
 Route.put(
   "/kalender/kegiatan/:kegiatan_id",
   "MainController.putKegiatanKalender"
-);
-Route.delete(
-  "/kalender/kegiatan/:kegiatan_id",
-  "MainController.deleteKegiatanKalender"
-);
-
-Route.get(
-  "/kalender/pendidikan/:pendidikan_id",
-  "MainController.detailKalenderPendidikan"
-);
-Route.post("/kalender/pendidikan", "MainController.postKalenderPendidikan");
-Route.put(
-  "/kalender/pendidikan/:kalender_id",
-  "MainController.putKalenderPendidikan"
-);
-Route.delete(
-  "/kalender/pendidikan/:kalender_id",
-  "MainController.deleteKalenderPendidikan"
-);
-
-Route.get("/cek-nomor-whatsapp", "MainController.getCekNomorWhatsapp");
+  );
+  Route.delete(
+    "/kalender/kegiatan/:kegiatan_id",
+    "MainController.deleteKegiatanKalender"
+    );
+    
+    Route.get(
+      "/kalender/pendidikan/:pendidikan_id",
+      "MainController.detailKalenderPendidikan"
+      );
+      Route.post("/kalender/pendidikan", "MainController.postKalenderPendidikan");
+      Route.put(
+        "/kalender/pendidikan/:kalender_id",
+        "MainController.putKalenderPendidikan"
+        );
+        Route.delete(
+          "/kalender/pendidikan/:kalender_id",
+          "MainController.deleteKalenderPendidikan"
+          );
+          
+          Route.get("/cek-nomor-whatsapp", "MainController.getCekNomorWhatsapp");
 Route.get(
   "/cek-nomor-whatsapp/:user_id",
   "MainController.detailCekNomorWhatsapp"
-);
-Route.post(
-  "/cek-nomor-whatsapp/:user_id",
-  "MainController.postEmailCekNomorWhatsapp"
+  );
+  Route.post(
+    "/cek-nomor-whatsapp/:user_id",
+    "MainController.postEmailCekNomorWhatsapp"
 );
 
 //dashboard
@@ -1097,6 +1097,12 @@ Route.post(
   "/naik-kelas-jadwal",
   "MainController.naikTAJadwal"
 );
+
+
+Route.post("/download/lap-tunggakan", "MainController.downloadLapTunggakan");
+Route.post("/download/lap-kehadiran", "MainController.downloadLapKehadiran");
+Route.post("/download/lap-inventaris", "MainController.downloadLapInventaris");
+Route.post("/download/lap-psg", "MainController.downloadLapPsg");
 
 Route.get(
   "/absensi-anak","MainController.getAbsensiAnak"
