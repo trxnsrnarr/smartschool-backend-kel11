@@ -28756,6 +28756,8 @@ class MainController {
       kepemilikan,
       nama_pemilik,
       m_lokasi_id,
+      baik,
+      rusak,
     } = request.post();
 
     let foto1 = foto ? foto.toString() : null;
@@ -28807,8 +28809,8 @@ class MainController {
       nama_pemilik,
       m_lokasi_id,
       dihapus: 0,
-      baik: jumlah,
-      rusak: 0,
+      baik: baik || jumlah,
+      rusak: rusak || 0,
       m_sekolah_id: sekolah.id,
     });
 
@@ -28841,6 +28843,8 @@ class MainController {
       kepemilikan,
       nama_pemilik,
       m_lokasi_id,
+      baik,
+      rusak,
     } = request.post();
 
     const foto1 = foto ? foto.toString() : null;
@@ -28891,6 +28895,8 @@ class MainController {
       kepemilikan,
       nama_pemilik,
       m_lokasi_id,
+      baik,
+      rusak,
     });
 
     if (!barang) {
