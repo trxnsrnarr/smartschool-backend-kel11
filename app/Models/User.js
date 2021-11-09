@@ -107,6 +107,10 @@ class User extends Model {
   keteranganPkl() {
     return this.hasMany("App/Models/MKeteranganPkl", "id", "m_user_id");
   }
+  
+  keteranganPkl1() {
+    return this.belongsTo("App/Models/MKeteranganPkl", "id", "m_user_id");
+  }
   raporEkskul() {
     return this.hasMany("App/Models/MRaporEkskul", "id", "m_user_id");
   }
