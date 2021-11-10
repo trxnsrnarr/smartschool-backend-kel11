@@ -962,7 +962,7 @@ Route.post("/buku-tamu", "MainController.postBukuTamu");
 Route.post("/buku-tamu/download", "MainController.downloadBukuTamu");
 
 // Surat Masuk dan Keluar
-Route.get("/surat", "MainController.getSurat");
+Route.get("/surat-baru", "MainController.getSurat");
 Route.post("/surat", "MainController.postSurat");
 Route.put("/surat/:surat_id", "MainController.putSurat");
 Route.delete("/surat/:surat_id", "MainController.deleteSurat");
