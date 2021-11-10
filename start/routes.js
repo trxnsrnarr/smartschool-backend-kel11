@@ -1084,6 +1084,11 @@ Route.post(
 );
 
 Route.post(
+  "/naik-kelas-jam",
+  "MainController.naikTAJam"
+);
+
+Route.post(
   "/naik-kelas-mapel",
   "MainController.naikTAMapel"
 );
@@ -1097,6 +1102,7 @@ Route.post(
   "/naik-kelas-jadwal",
   "MainController.naikTAJadwal"
 );
+
 
 
 Route.post("/download/lap-tunggakan", "MainController.downloadLapTunggakan");
