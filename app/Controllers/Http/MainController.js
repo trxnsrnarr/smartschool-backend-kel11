@@ -160,6 +160,7 @@ const pdftohtml = require("pdftohtmljs");
 const http = require("http"); // or 'https' for https:// URLs
 const Downloader = require("nodejs-file-downloader");
 const cron = require("node-cron");
+var randomstring = require("randomstring");
 
 const PDFDocument = require("pdfkit");
 const fs = require("fs");
@@ -1569,7 +1570,7 @@ class MainController {
 
     let data;
     if (whatsapp) {
-      const verifWa = await Hash.make("verifikasi");
+      const verifWa = randomstring.generate(7);
       await User.query().where({ id: user.id }).update({ verifikasi: verifWa });
       return response.ok({
         message: `${verifWa}#verifikasi`,
