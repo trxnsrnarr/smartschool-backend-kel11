@@ -1680,7 +1680,7 @@ class MainController {
     await User.query().where({ id: user.id }).update({ token: token });
 
     const data = await WhatsAppService.sendMessage(
-      `${user.whatsapp}`,
+      `${user.wa_real}`,
       `Silahkan klik link dibawah ini untuk mereset password\n${domain}/smartschool/reset-password/?auth=${token}&userId=${user.id}`
     );
     if (data.status) {
