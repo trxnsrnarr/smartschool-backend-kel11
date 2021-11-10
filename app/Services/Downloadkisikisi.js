@@ -407,7 +407,7 @@ class DownloadService {
             size: 16,
             bold: true,
           },
-          text: `PEMERINTAH DAERAH PROVINSI ${sekolah.provinsi.toUpperCase()}`,
+          text: `PEMERINTAH DAERAH PROVINSI ${sekolah.provinsi ? sekolah.provinsi.toUpperCase() :''}`,
         },
       ],
     };
