@@ -33619,7 +33619,7 @@ class MainController {
     const user = await auth.getUser();
 
     const {
-      page,
+      page = 1,
       tipe,
       search,
       nav = "semua",
