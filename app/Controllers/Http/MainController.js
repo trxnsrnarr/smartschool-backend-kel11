@@ -1569,25 +1569,11 @@ class MainController {
 
     let data;
     if (whatsapp) {
-      data = await WhatsAppService.sendMessage(
-        `${whatsapp}`,
-        `Halo ${user.nama} 
-        
-        Kode aktivasi whatsapp anda adalah ${code}
-        
-        Akun terdaftar = ${user.whatsapp}
-        Berikut link Smarteschool sekolah anda
-        ${domain}`
-      );
-      if (data.status) {
-        return response.ok({
-          message: data,
-        });
-      } else {
-        return response.badRequest({
-          message: data,
-        });
-      }
+      const verifWa = await Hash.make("verifikasi");
+      await User.query().where({ id: user.id }).update({ verifikasi: verifWa });
+      return response.ok({
+        message: `${verifWa}#verifikasi`,
+      });
     } else if (email) {
       data = await Mail.send(
         `emails.kodeverifikasi`,
@@ -1610,6 +1596,23 @@ class MainController {
           })
         );
     }
+  }
+
+  async aktivasiWa({ response, request }) {
+    const { verifikasi, wa_real } = request.post();
+    if (!verifikasi || !wa_real) {
+      return "Format Verifikasi salah. Dapatkan Template verifikasi pada menu profil smarteschool";
+    }
+
+    const user = await User.query().where({ verifikasi: verifikasi }).first();
+    if (!user) {
+      return "Format Verifikasi salah. Dapatkan Template verifikasi pada menu profil smarteschool";
+    }
+
+    await User.query()
+      .where({ id: user.id })
+      .update({ wa_real: wa_real, verifikasi: "" });
+    return `Nomor whatsapp terverifikasi: ${wa_real.replace("@c.us", "")}`;
   }
 
   async aktivasi({ response, request, auth }) {
@@ -7096,12 +7099,12 @@ class MainController {
             akm_konteks_materi: d.akm_konteks_materi,
             akm_proses_kognitif: d.akm_proses_kognitif,
             audio: d.audio,
-            pertanyaan: htmlEscaper.escape(d.pertanyaan),
-            jawaban_a: htmlEscaper.escape(d.jawaban_a),
-            jawaban_b: htmlEscaper.escape(d.jawaban_b),
-            jawaban_c: htmlEscaper.escape(d.jawaban_c),
-            jawaban_d: htmlEscaper.escape(d.jawaban_d),
-            jawaban_e: htmlEscaper.escape(d.jawaban_e),
+            pertanyaan: d.pertanyaan ? htmlEscaper.escape(d.pertanyaan) : "",
+            jawaban_a: d.jawaban_a ? htmlEscaper.escape(d.jawaban_a) : "",
+            jawaban_b: d.jawaban_b ? htmlEscaper.escape(d.jawaban_b) : "",
+            jawaban_c: d.jawaban_c ? htmlEscaper.escape(d.jawaban_c) : "",
+            jawaban_d: d.jawaban_d ? htmlEscaper.escape(d.jawaban_d) : "",
+            jawaban_e: d.jawaban_e ? htmlEscaper.escape(d.jawaban_e) : "",
             kj_pg: d.kj_pg,
             kj_uraian: d.kj_uraian,
             jawaban_pg_kompleks: d.jawaban_pg_kompleks,
@@ -7110,7 +7113,7 @@ class MainController {
             opsi_a_uraian: d.opsi_a_uraian,
             opsi_b_uraian: d.opsi_b_uraian,
             rubrik_kj: JSON.stringify(d.rubrik_kj),
-            pembahasan: htmlEscaper.escape(d.pembahasan),
+            pembahasan: d.pembahasan ? htmlEscaper.escape(d.pembahasan) : "",
             nilai_soal: d.nilai_soal,
             m_user_id: user.id,
             dihapus: 0,
@@ -7383,12 +7386,12 @@ class MainController {
                 akm_konteks_materi: d.akm_konteks_materi,
                 akm_proses_kognitif: d.akm_proses_kognitif,
                 audio: d.audio,
-                pertanyaan: htmlEscaper.escape(d.pertanyaan),
-                jawaban_a: htmlEscaper.escape(d.jawaban_a),
-                jawaban_b: htmlEscaper.escape(d.jawaban_b),
-                jawaban_c: htmlEscaper.escape(d.jawaban_c),
-                jawaban_d: htmlEscaper.escape(d.jawaban_d),
-                jawaban_e: htmlEscaper.escape(d.jawaban_e),
+                pertanyaan: d.pertanyaan ? htmlEscaper.escape(d.pertanyaan) : "",
+                jawaban_a: d.jawaban_a ? htmlEscaper.escape(d.jawaban_a) : "",
+                jawaban_b: d.jawaban_b ? htmlEscaper.escape(d.jawaban_b) : "",
+                jawaban_c: d.jawaban_c ? htmlEscaper.escape(d.jawaban_c) : "",
+                jawaban_d: d.jawaban_d ? htmlEscaper.escape(d.jawaban_d) : "",
+                jawaban_e: d.jawaban_e ? htmlEscaper.escape(d.jawaban_e) : "",
                 kj_pg: d.kj_pg,
                 kj_uraian: d.kj_uraian,
                 jawaban_pg_kompleks: d.jawaban_pg_kompleks,
@@ -7397,7 +7400,7 @@ class MainController {
                 opsi_a_uraian: d.opsi_a_uraian,
                 opsi_b_uraian: d.opsi_b_uraian,
                 rubrik_kj: JSON.stringify(d.rubrik_kj),
-                pembahasan: htmlEscaper.escape(d.pembahasan),
+                pembahasan: d.pembahasan ? htmlEscaper.escape(d.pembahasan) : "",
                 nilai_soal: d.nilai_soal,
                 m_user_id: user.id,
                 dihapus: 0,
@@ -42748,7 +42751,9 @@ class MainController {
       .first();
 
     if (!user) {
-      return response.notFound({ message: `Periksa kembali nomor yang anda masukan` });
+      return response.notFound({
+        message: `Periksa kembali nomor yang anda masukan`,
+      });
     }
 
     const tanggal = moment().format("YYYY-MM-DD");
@@ -42791,7 +42796,9 @@ class MainController {
       .ids();
 
     if (!userIds.length) {
-      return response.notFound({ message: `Periksa kembali nomor yang anda masukan` });
+      return response.notFound({
+        message: `Periksa kembali nomor yang anda masukan`,
+      });
     }
     const timelineData = await TkTimeline.query()
       .with("timeline", (builder) => {
@@ -42847,7 +42854,9 @@ class MainController {
       .first();
 
     if (!user) {
-      return response.notFound({ message: `Periksa kembali nomor yang anda masukan` });
+      return response.notFound({
+        message: `Periksa kembali nomor yang anda masukan`,
+      });
     }
 
     const guruIds = await User.query()
@@ -42892,7 +42901,7 @@ class MainController {
     const ujian = jadwalUjian
       .toJSON()
       .filter((d) => d.jadwalUjian !== null && d.jadwalUjian.ujian)
-      .map(d => `• ${d.jadwalUjian.ujian.nama}`);
+      .map((d) => `• ${d.jadwalUjian.ujian.nama}`);
 
     return response.ok({
       jadwalUjian: ujian,

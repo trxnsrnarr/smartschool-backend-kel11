@@ -1073,6 +1073,7 @@ Route.get("/tamu", "MainController.getTamu");
 
 // Verifikasi akun
 Route.post("/aktivasi", "MainController.aktivasi");
+Route.post("/aktivasi-wa", "MainController.aktivasiWa");
 Route.post("/resend", "MainController.resendAktivasi");
 
 Route.post("/danger/hack", "MainController.putRekapNilaiAll");
