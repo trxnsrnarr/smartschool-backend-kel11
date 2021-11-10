@@ -2,7 +2,7 @@ const Excel = require("exceljs");
 const nodeHtmlToImage = require("node-html-to-image");
 const sizeOf = require("image-size");
 const htmlEscaper = require("html-sloppy-escaper");
-require("events").EventEmitter.defaultMaxListeners = 100;
+require("events").EventEmitter.defaultMaxListeners = 25;
 
 class DownloadService {
   static async kartuUjian(
