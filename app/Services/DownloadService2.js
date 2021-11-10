@@ -378,7 +378,7 @@ class DownloadService {
       pgFilter.map(async (d, idx) => {
         // image
         const image = await nodeHtmlToImage({
-          html: d.pertanyaan?.trim()
+          html: d.pertanyaan
             ? `<div>${htmlEscaper.unescape(d.pertanyaan)}</div>`
             : "<div>-</div>",
           type: "jpeg",
@@ -389,7 +389,7 @@ class DownloadService {
         });
         const dimensions = sizeOf(Buffer.from(image, "base64"));
         const imagea = await nodeHtmlToImage({
-          html: d.jawaban_a?.trim()
+          html: d.jawaban_a
             ? `<div>${htmlEscaper.unescape(d.jawaban_a)}</div>`
             : "<div>-</div>",
           type: "jpeg",
@@ -400,7 +400,7 @@ class DownloadService {
         });
         const dimensionsa = sizeOf(Buffer.from(imagea, "base64"));
         const imageb = await nodeHtmlToImage({
-          html: d.jawaban_b?.trim()
+          html: d.jawaban_b
             ? `<div>${htmlEscaper.unescape(d.jawaban_b)}</div>`
             : "<div>-</div>",
           type: "jpeg",
@@ -411,7 +411,7 @@ class DownloadService {
         });
         const dimensionsb = sizeOf(Buffer.from(imageb, "base64"));
         const imagec = await nodeHtmlToImage({
-          html: d.jawaban_c?.trim()
+          html: d.jawaban_c
             ? `<div>${htmlEscaper.unescape(d.jawaban_c)}</div>`
             : "<div>-</div>",
           type: "jpeg",
@@ -422,7 +422,7 @@ class DownloadService {
         });
         const dimensionsc = sizeOf(Buffer.from(imagec, "base64"));
         const imaged = await nodeHtmlToImage({
-          html: d.jawaban_d?.trim()
+          html: d.jawaban_d
             ? `<div>${htmlEscaper.unescape(d.jawaban_d)}</div>`
             : "<div>-</div>",
           type: "jpeg",
@@ -433,7 +433,7 @@ class DownloadService {
         });
         const dimensionsd = sizeOf(Buffer.from(imaged, "base64"));
         const imagee = await nodeHtmlToImage({
-          html: d.jawaban_e?.trim()
+          html: d.jawaban_e
             ? `<div>${htmlEscaper.unescape(d.jawaban_e)}</div>`
             : "<div>-</div>",
           type: "jpeg",
@@ -1638,7 +1638,7 @@ class DownloadService {
     await Promise.all(
       esaiFilter.map(async (d, idx) => {
         const imageEsai = await nodeHtmlToImage({
-          html: d.pertanyaan?.trim()
+          html: d.pertanyaan
             ? `<div>${htmlEscaper.unescape(d.pertanyaan)}</div>`
             : "<div>-</div>",
           type: "jpeg",

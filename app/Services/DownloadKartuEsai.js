@@ -33,7 +33,7 @@ class DownloadService {
     await Promise.all(
       esaiFilter.map(async (d, idx) => {
         const imageEsai = await nodeHtmlToImage({
-          html: d.pertanyaan?.trim()
+          html: d.pertanyaan
             ? `<div>${htmlEscaper.unescape(d.pertanyaan)}</div>`
             : "<div>-</div>",
           type: "jpeg",
