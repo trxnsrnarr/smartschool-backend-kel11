@@ -34,7 +34,7 @@ class DownloadService {
       esaiFilter.map(async (d, idx) => {
         const imageEsai = await nodeHtmlToImage({
           html: d.pertanyaan
-            ? `<div>${d.pertanyaan}</div>`
+            ? `<div>${htmlEscaper.unescape(d.pertanyaan)}</div>`
             : "<div>-</div>",
           type: "jpeg",
           quality: 25,
