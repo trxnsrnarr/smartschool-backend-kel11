@@ -1671,6 +1671,11 @@ class MainController {
         message: "Akun Tidak Ditemukan",
       });
     }
+    if(!user.wa_real) {
+      return resposen.badRequest({
+        message: "Nomor Whatsapp Belum terverifikasi. Hubungi admin untuk mereset password anda"
+      })
+    }
     const token = await Hash.make(`${user?.id}`);
     await User.query().where({ id: user.id }).update({ token: token });
 
