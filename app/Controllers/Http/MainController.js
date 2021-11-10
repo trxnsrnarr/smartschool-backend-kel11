@@ -255,7 +255,7 @@ const monthNames = [
 const dateObj = new Date();
 const month = monthNames[dateObj.getMonth()];
 const day = String(dateObj.getDate()).padStart(2, "0");
-// const year = dateObj.getFullYear();
+
 // const hour = dateObj.getHours();
 // const minute = dateObj.getMinutes();
 // const second = dateObj.getSeconds();
@@ -33729,6 +33729,7 @@ class MainController {
     }
 
     const user = await auth.getUser();
+    const year = dateObj.getFullYear();
 
     const { tipe, asal, nomor, tanggal, perihal, keamanan, isi, file } =
       request.post();
@@ -42389,6 +42390,25 @@ class MainController {
     }
 
     const ta = await this.getTAAktif(sekolah);
+    const taa = await Mta.query()
+      .where({ aktif: 1 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    await Mta.create({
+      tahun: taa.tahun,
+      semester: taa.semester,
+      nama_kepsek: taa.nama_kepsek,
+      nip_kepsek: taa.nip_kepsek,
+      aktif: taa.aktif,
+      dihapus: taa.dihapus,
+      m_sekolah_id: taa.m_sekolah_id,
+      semester: taa.semester,
+      mapel_sinkron: 0,
+      rombel_sinkron: 0,
+      jadwal_sinkron: 0,
+    })
 
     const jam = await MJamMengajar.query()
       .where({ m_sekolah_id: sekolah.id })
@@ -42462,7 +42482,9 @@ class MainController {
       })
     );
 
-    return all;
+    await Mta.query().where({id:taBaru.id}).update({
+      mapel_sinkron:1,
+    })
     return response.ok({
       message: messagePostSuccess,
     });
@@ -42565,7 +42587,10 @@ class MainController {
       })
     );
 
-    return all;
+    await Mta.query().where({id:taBaru.id}).update({
+      rombel_sinkron:1,
+    })
+
     return response.ok({
       message: messagePostSuccess,
     });
@@ -42735,7 +42760,13 @@ class MainController {
       })
     );
 
-    return all;
+    await Mta.query().where({id:taBaru.id}).update({
+      jadwal_sinkron:1,
+    })
+    await Mta.query().where({id:ta.id}).update({
+      aktif:0,
+    })
+
     return response.ok({
       message: messagePostSuccess,
     });
