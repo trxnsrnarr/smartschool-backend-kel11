@@ -33759,8 +33759,9 @@ class MainController {
     }
 
     let surat;
+    let total;
     if (tipe == "masuk") {
-      const total = MSurat.query()
+      total = await MSurat.query()
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ tipe: "masuk" })
         .whereBetween("created_at", [
@@ -33778,12 +33779,20 @@ class MainController {
         keamanan,
         isi,
         file,
-        kode: `SM.${total}.${dateObj.getMonth() + 1}.${year}`,
+        kode: `SM.${total + 1}.${dateObj.getMonth() + 1}.${year}`,
         m_user_id: user.id,
         m_sekolah_id: sekolah.id,
         dihapus: 0,
       });
     } else if (tipe == "keluar") {
+      total = await MSurat.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ tipe: "keluar" })
+      .whereBetween("created_at", [
+        `${dateObj.getFullYear()}-${dateObj.getMonth() + 1}-1`,
+        `${dateObj.getFullYear()}-${dateObj.getMonth() + 2}-1 `,
+      ])
+      .getCount();
       surat = await MSurat.create({
         tipe,
         asal,
@@ -33793,7 +33802,7 @@ class MainController {
         keamanan,
         isi,
         file,
-        kode: `SK.${month}.${year}`,
+        kode: `SK.${total + 1}.${month}.${year}`,
         m_user_id: user.id,
         m_sekolah_id: sekolah.id,
         dihapus: 0,
