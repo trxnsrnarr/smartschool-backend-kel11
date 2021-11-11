@@ -33663,6 +33663,8 @@ class MainController {
           surat.andWhere({ tipe: "keluar" });
         } else if (tipe == "masuk") {
           surat.andWhere({ tipe: "masuk" });
+        } else if (tipe == "keputusan") {
+          surat.andWhere({ tipe: "keputusan" });
         }
       } else {
         surat = MDisposisi.query()
@@ -33681,7 +33683,7 @@ class MainController {
           surat.andWhere({ status: 0 });
         } else if (nav == "selesai") {
           surat.andWhere({ status: 1 });
-        }
+        } 
       }
     } else if (user.role == "kepsek") {
       if (tipe != "disposisi") {
@@ -33694,6 +33696,11 @@ class MainController {
           surat
             .with("disposisi")
             .andWhere({ tipe: "masuk" })
+            .andWhere({ teruskan: 1 });
+        } else if (tipe == "keputusan") {
+          surat
+            .with("disposisi")
+            .andWhere({ tipe: "keputusan" })
             .andWhere({ teruskan: 1 });
         }
       } else if (tipe == "disposisi") {
@@ -33778,9 +33785,12 @@ class MainController {
       "isi.required": "Isi Ringakasan Surat harus diisi",
       // "file.required": "harus diisi",
     };
-    const validation = await validate(request.all(), rules, message);
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
+
+    if (tipe != "keputusan") {
+      const validation = await validate(request.all(), rules, message);
+      if (validation.fails()) {
+        return response.unprocessableEntity(validation.messages());
+      }
     }
 
     let surat;
@@ -33828,6 +33838,24 @@ class MainController {
         isi,
         file,
         kode: `SK.${total + 1}.${month}.${year}`,
+        m_user_id: user.id,
+        m_sekolah_id: sekolah.id,
+        dihapus: 0,
+      });
+    } else if (tipe == "keputusan") {
+      total = await MSurat.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ tipe: "keputusan" })
+        .whereBetween("created_at", [
+          `${dateObj.getFullYear()}-${dateObj.getMonth() + 1}-1`,
+          `${dateObj.getFullYear()}-${dateObj.getMonth() + 2}-1 `,
+        ])
+        .getCount();
+      surat = await MSurat.create({
+        tipe,
+        isi,
+        file,
+        kode: `SKP.${total + 1}.${month}.${year}`,
         m_user_id: user.id,
         m_sekolah_id: sekolah.id,
         dihapus: 0,
