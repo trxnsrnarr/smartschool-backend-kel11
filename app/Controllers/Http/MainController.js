@@ -33855,7 +33855,7 @@ class MainController {
         tipe,
         isi,
         file,
-        kode: `SKP.${total + 1}.${month}.${year}`,
+        kode: `SKEP.${total + 1}.${month}.${year}`,
         m_user_id: user.id,
         m_sekolah_id: sekolah.id,
         dihapus: 0,
