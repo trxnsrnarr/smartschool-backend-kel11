@@ -1672,10 +1672,11 @@ class MainController {
         message: "Akun Tidak Ditemukan",
       });
     }
-    if(!user.wa_real) {
+    if (!user.wa_real) {
       return resposen.badRequest({
-        message: "Nomor Whatsapp Belum terverifikasi. Hubungi admin untuk mereset password anda"
-      })
+        message:
+          "Nomor Whatsapp Belum terverifikasi. Hubungi admin untuk mereset password anda",
+      });
     }
     const token = await Hash.make(`${user?.id}`);
     await User.query().where({ id: user.id }).update({ token: token });
@@ -7392,7 +7393,9 @@ class MainController {
                 akm_konteks_materi: d.akm_konteks_materi,
                 akm_proses_kognitif: d.akm_proses_kognitif,
                 audio: d.audio,
-                pertanyaan: d.pertanyaan ? htmlEscaper.escape(d.pertanyaan) : "",
+                pertanyaan: d.pertanyaan
+                  ? htmlEscaper.escape(d.pertanyaan)
+                  : "",
                 jawaban_a: d.jawaban_a ? htmlEscaper.escape(d.jawaban_a) : "",
                 jawaban_b: d.jawaban_b ? htmlEscaper.escape(d.jawaban_b) : "",
                 jawaban_c: d.jawaban_c ? htmlEscaper.escape(d.jawaban_c) : "",
@@ -7406,7 +7409,9 @@ class MainController {
                 opsi_a_uraian: d.opsi_a_uraian,
                 opsi_b_uraian: d.opsi_b_uraian,
                 rubrik_kj: JSON.stringify(d.rubrik_kj),
-                pembahasan: d.pembahasan ? htmlEscaper.escape(d.pembahasan) : "",
+                pembahasan: d.pembahasan
+                  ? htmlEscaper.escape(d.pembahasan)
+                  : "",
                 nilai_soal: d.nilai_soal,
                 m_user_id: user.id,
                 dihapus: 0,
@@ -7510,11 +7515,23 @@ class MainController {
 
         let userIds = [];
 
-        const check = await TkTimeline.query()
-          .where({ tipe: "tugas" })
-          .andWhere({ m_timeline_id: timeline.id })
-          .andWhere({ dihapus: 0 })
-          .fetch();
+        let check;
+        if (list_anggota.length) {
+          check = await TkTimeline.query()
+            .where({ tipe: "tugas" })
+            .andWhere({ m_timeline_id: timeline.id })
+            .andWhere({ dihapus: 0 })
+            .fetch();
+        } else {
+          check = await TkTimeline.query()
+            .where({ tipe: "tugas" })
+            .whereIn(
+              "m_timeline_id",
+              timeline.map((d) => d.id)
+            )
+            .andWhere({ dihapus: 0 })
+            .fetch();
+        }
 
         await Promise.all(
           anggotaRombel.toJSON().map(async (d, idx) => {
@@ -7522,7 +7539,9 @@ class MainController {
               userIds.push({
                 m_user_id: d.m_user_id,
                 tipe: "tugas",
-                m_timeline_id: timeline.id,
+                m_timeline_id: timeline.find(
+                  (e) => e.m_rombel_id == d.m_rombel_id
+                ).id,
                 dihapus: 0,
                 dikumpulkan: 0,
               });
@@ -33792,13 +33811,13 @@ class MainController {
       });
     } else if (tipe == "keluar") {
       total = await MSurat.query()
-      .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ tipe: "keluar" })
-      .whereBetween("created_at", [
-        `${dateObj.getFullYear()}-${dateObj.getMonth() + 1}-1`,
-        `${dateObj.getFullYear()}-${dateObj.getMonth() + 2}-1 `,
-      ])
-      .getCount();
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ tipe: "keluar" })
+        .whereBetween("created_at", [
+          `${dateObj.getFullYear()}-${dateObj.getMonth() + 1}-1`,
+          `${dateObj.getFullYear()}-${dateObj.getMonth() + 2}-1 `,
+        ])
+        .getCount();
       surat = await MSurat.create({
         tipe,
         asal,
@@ -42423,7 +42442,7 @@ class MainController {
       mapel_sinkron: 0,
       rombel_sinkron: 0,
       jadwal_sinkron: 0,
-    })
+    });
 
     const jam = await MJamMengajar.query()
       .where({ m_sekolah_id: sekolah.id })
@@ -42497,9 +42516,9 @@ class MainController {
       })
     );
 
-    await Mta.query().where({id:taBaru.id}).update({
-      mapel_sinkron:1,
-    })
+    await Mta.query().where({ id: taBaru.id }).update({
+      mapel_sinkron: 1,
+    });
     return response.ok({
       message: messagePostSuccess,
     });
@@ -42602,9 +42621,9 @@ class MainController {
       })
     );
 
-    await Mta.query().where({id:taBaru.id}).update({
-      rombel_sinkron:1,
-    })
+    await Mta.query().where({ id: taBaru.id }).update({
+      rombel_sinkron: 1,
+    });
 
     return response.ok({
       message: messagePostSuccess,
@@ -42775,12 +42794,12 @@ class MainController {
       })
     );
 
-    await Mta.query().where({id:taBaru.id}).update({
-      jadwal_sinkron:1,
-    })
-    await Mta.query().where({id:ta.id}).update({
-      aktif:0,
-    })
+    await Mta.query().where({ id: taBaru.id }).update({
+      jadwal_sinkron: 1,
+    });
+    await Mta.query().where({ id: ta.id }).update({
+      aktif: 0,
+    });
 
     return response.ok({
       message: messagePostSuccess,
