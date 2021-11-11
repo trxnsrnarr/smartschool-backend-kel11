@@ -12,7 +12,7 @@ class DownloadService {
   ) {
     let workbook = new Excel.Workbook();
 
-    let worksheet6 = workbook.addWorksheet(`Template Soal`, {
+    let worksheet6 = workbook.addWorksheet(`Sheet1`, {
       properties: { tabColor: { argb: "FFC0000" } },
     });
 
