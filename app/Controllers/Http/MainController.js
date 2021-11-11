@@ -7427,7 +7427,7 @@ class MainController {
         await TkSoalTugas.createMany(soalIds.filter((d) => d));
       }
 
-      if (list_anggota) {
+      if (list_anggota.length) {
         const check = await MTimeline.query()
           .where({ m_user_id: user.id })
           .andWhere({ m_rombel_id: list_rombel[0] })
