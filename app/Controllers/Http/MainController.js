@@ -14721,8 +14721,15 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { judul, moda, deskripsi, lampiran, tingkat, m_mata_pelajaran_id } =
-      request.post();
+    const {
+      judul,
+      moda,
+      deskripsi,
+      lampiran,
+      tingkat,
+      m_mata_pelajaran_id,
+      tipe,
+    } = request.post();
 
     const rules = {
       judul: "required",
@@ -14738,9 +14745,11 @@ class MainController {
       "tingkat.required": "Tingkat/Kelas harus diisi",
       "lampiran.required": "Lampiran RPP harus diisi",
     };
-    const validation = await validate(request.all(), rules, message);
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
+    if (!tipe) {
+      const validation = await validate(request.all(), rules, message);
+      if (validation.fails()) {
+        return response.unprocessableEntity(validation.messages());
+      }
     }
 
     const rpp = await MRpp.query().where({ id: rpp_id }).update({
