@@ -124,6 +124,7 @@ const MRegistrasiAkun = use("App/Models/MRegistrasiAkun");
 
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
+const MPraktikKerja = use("App/Models/MPraktikKerja");
 const TkPerpusMapel = use("App/Models/TkPerpusMapel");
 const TkSoalTugas = use("App/Models/TkSoalTugas");
 const MPerpusTag = use("App/Models/MPerpusTag");
@@ -1549,6 +1550,97 @@ class MainController {
 
     return response.ok({
       absen,
+    });
+  }
+
+  async getPraktikKerja({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { search, page = 1 } = request.get();
+
+    let query = MPraktikKerja.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 });
+
+    if (search) {
+      query.where("nama", "like", `%${search}%`);
+    }
+    const data = await query.paginate(page, 20);
+
+    return response.ok({
+      data,
+    });
+  }
+
+  async postPraktikKerja({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { nama, siswa, surat_tugas, mou } = request.post();
+
+    await MPraktikKerja.create({
+      nama,
+      siswa,
+      surat_tugas,
+      mou,
+      m_sekolah_id: sekolah.id,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putPraktikKerja({ response, request, params: { id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { nama, siswa, surat_tugas, mou } = request.post();
+
+    await MPraktikKerja.query().where({ id: id }).update({
+      nama,
+      siswa,
+      surat_tugas,
+      mou,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async deletePraktikKerja({ response, request, params: { id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    await MPraktikKerja.query().where({ id: id }).update({
+      dihapus: 1,
+    });
+
+    return response.ok({
+      message: messageDeleteSuccess,
     });
   }
 

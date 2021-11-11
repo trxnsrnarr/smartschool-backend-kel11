@@ -100,6 +100,12 @@ Route.post("/alumni", "MainController.postAlumni");
 Route.put("/alumni/:alumni_id", "MainController.putAlumni");
 Route.delete("/alumni/:alumni_id", "MainController.deleteAlumni");
 
+// praktik kerja
+Route.get("/praktik-kerja", "MainController.getPraktikKerja");
+Route.post("/praktik-kerja", "MainController.postPraktikKerja");
+Route.put("/praktik-kerja/:id", "MainController.putPraktikKerja");
+Route.delete("/praktik-kerja/:id", "MainController.deletePraktikKerja");
+
 // ta
 Route.get("/ta", "MainController.getTA");
 Route.post("/ta", "MainController.postTA");
@@ -1092,20 +1098,11 @@ Route.post(
   "MainController.downloadLedgerNilai"
 );
 
-Route.post(
-  "/naik-kelas-jam",
-  "MainController.naikTAJam"
-);
+Route.post("/naik-kelas-jam", "MainController.naikTAJam");
 
-Route.post(
-  "/naik-kelas-mapel",
-  "MainController.naikTAMapel"
-);
+Route.post("/naik-kelas-mapel", "MainController.naikTAMapel");
 
-Route.post(
-  "/naik-kelas-rombel",
-  "MainController.naikTARombel"
-);
+Route.post("/naik-kelas-rombel", "MainController.naikTARombel");
 
 Route.post("/download/lap-tunggakan", "MainController.downloadLapTunggakan");
 Route.post("/download/lap-kehadiran", "MainController.downloadLapKehadiran");
