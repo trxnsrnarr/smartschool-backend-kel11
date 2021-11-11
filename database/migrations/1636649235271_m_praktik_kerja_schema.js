@@ -11,6 +11,12 @@ class MPraktikKerjaSchema extends Schema {
       table.string("siswa");
       table.string("surat_tugas");
       table.string("mou");
+      table.integer("m_sekolah_id").unsigned().index("m_sekolah_id");
+      table
+        .foreign("m_sekolah_id")
+        .references("m_sekolah.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
       table.boolean("dihapus").defaultTo(0);
       table.timestamps();
     });
