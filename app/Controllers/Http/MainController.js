@@ -14550,6 +14550,8 @@ class MainController {
 
     const user = await auth.getUser();
 
+    const { tipe } = request.get();
+
     let mataPelajaran;
 
     if (user.role == "guru") {
@@ -14566,13 +14568,19 @@ class MainController {
         .fetch();
     }
 
-    const rpp = await MRpp.query()
+    let query = MRpp.query()
       .with("mataPelajaran")
       .with("user")
       .with("sekolah")
       .where({ dihapus: 0 })
-      .andWhere({ m_user_id: user.id })
-      .fetch();
+      .andWhere({ m_user_id: user.id });
+    if (!tipe) {
+      query.whereNull("tipe");
+    } else {
+      query.where({ tipe: tipe });
+    }
+
+    const rpp = await query.fetch();
 
     let tingkatData = [];
 
@@ -14648,8 +14656,15 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { judul, moda, deskripsi, lampiran, tingkat, m_mata_pelajaran_id } =
-      request.post();
+    const {
+      judul,
+      moda,
+      deskripsi,
+      lampiran,
+      tingkat,
+      m_mata_pelajaran_id,
+      tipe,
+    } = request.post();
     const rules = {
       judul: "required",
       moda: "required",
@@ -14664,9 +14679,11 @@ class MainController {
       "tingkat.required": "Tingkat/Kelas harus diisi",
       "lampiran.required": "Lampiran RPP harus diisi",
     };
-    const validation = await validate(request.all(), rules, message);
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
+    if (!tipe) {
+      const validation = await validate(request.all(), rules, message);
+      if (validation.fails()) {
+        return response.unprocessableEntity(validation.messages());
+      }
     }
 
     await MRpp.create({
@@ -14675,6 +14692,7 @@ class MainController {
       deskripsi,
       lampiran,
       tingkat,
+      tipe,
       m_mata_pelajaran_id,
       m_user_id: user.id,
       m_ta_id: ta.id,
@@ -33683,7 +33701,7 @@ class MainController {
           surat.andWhere({ status: 0 });
         } else if (nav == "selesai") {
           surat.andWhere({ status: 1 });
-        } 
+        }
       }
     } else if (user.role == "kepsek") {
       if (tipe != "disposisi") {
