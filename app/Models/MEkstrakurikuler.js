@@ -8,10 +8,16 @@ class MEkstrakurikuler extends Model {
     return "m_ekstrakurikuler";
   }
   getFoto(foto) {
-      return foto ? JSON.parse(foto) : []
+    return foto ? JSON.parse(foto) : [];
   }
   getFile(file) {
-      return file ? JSON.parse(file) : []
+    return file ? JSON.parse(file) : [];
+  }
+  setFoto(foto) {
+    return foto ? JSON.stringify(foto) : NULL;
+  }
+  setFile(file) {
+    return file ? JSON.stringify(file) : NULL;
   }
 }
 

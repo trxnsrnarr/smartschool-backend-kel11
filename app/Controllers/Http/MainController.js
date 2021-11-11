@@ -125,6 +125,7 @@ const MRegistrasiAkun = use("App/Models/MRegistrasiAkun");
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
 const MPraktikKerja = use("App/Models/MPraktikKerja");
+const MEkstrakurikuler = use("App/Models/MEkstrakurikuler");
 const TkPerpusMapel = use("App/Models/TkPerpusMapel");
 const TkSoalTugas = use("App/Models/TkSoalTugas");
 const MPerpusTag = use("App/Models/MPerpusTag");
@@ -1636,6 +1637,98 @@ class MainController {
     }
 
     await MPraktikKerja.query().where({ id: id }).update({
+      dihapus: 1,
+    });
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async getEskul({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { search, page = 1 } = request.get();
+
+    let query = MEkstrakurikuler.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 });
+
+    if (search) {
+      query.where("nama", "like", `%${search}%`);
+    }
+    const data = await query.paginate(page, 20);
+
+    return response.ok({
+      data,
+    });
+  }
+
+  async postEskul({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { nama, program, file, foto } = request.post();
+
+    await MEkstrakurikuler.create({
+      nama,
+      program,
+      file,
+      foto,
+      m_sekolah_id: sekolah.id,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putEskul({ response, request, params: { id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { nama, program, file, foto } = request.post();
+
+    const eskul = await MEkstrakurikuler.find(id);
+    eskul.nama = nama;
+    eskul.program = program;
+    eskul.file = file;
+    eskul.foto = foto;
+
+    await eskul.save();
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async deleteEskul({ response, request, params: { id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    await MEkstrakurikuler.query().where({ id: id }).update({
       dihapus: 1,
     });
 

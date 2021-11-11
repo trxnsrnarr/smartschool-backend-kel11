@@ -106,6 +106,12 @@ Route.post("/praktik-kerja", "MainController.postPraktikKerja");
 Route.put("/praktik-kerja/:id", "MainController.putPraktikKerja");
 Route.delete("/praktik-kerja/:id", "MainController.deletePraktikKerja");
 
+// praktik kerja
+Route.get("/eskul", "MainController.getEskul");
+Route.post("/eskul", "MainController.postEskul");
+Route.put("/eskul/:id", "MainController.putEskul");
+Route.delete("/eskul/:id", "MainController.deleteEskul");
+
 // ta
 Route.get("/ta", "MainController.getTA");
 Route.post("/ta", "MainController.postTA");
