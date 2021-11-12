@@ -12,6 +12,7 @@ class MRegistrasiAkunSchema extends Schema {
       table.string("jabatan")
       table.text("lampiran")
       table.string("password");
+      table.boolean("verifikasi").defaultTo(0);
       table.integer("sekolah_id").unsigned().index("sekolah_id");
       table
         .foreign("sekolah_id")
