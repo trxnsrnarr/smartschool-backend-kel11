@@ -11,6 +11,7 @@ class MRegistrasiAkunSchema extends Schema {
       table.string("whatsapp")
       table.string("jabatan")
       table.text("lampiran")
+      table.string("password");
       table.integer("sekolah_id").unsigned().index("sekolah_id");
       table
         .foreign("sekolah_id")
