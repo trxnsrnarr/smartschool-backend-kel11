@@ -546,7 +546,7 @@ class MainController {
     }
 
     return response.ok({
-      sekolah: await res.orderBy("sekolah").paginate(page),
+      sekolah: await res.orderByRaw("CAST(SUBSTRING(sekolah, LOCATE(' ', sekolah ) + 1) AS signed)").paginate(page),
     });
   }
 
