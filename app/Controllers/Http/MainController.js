@@ -614,7 +614,7 @@ class MainController {
   }
 
   async postRegistrasiSekolah({ response, request }) {
-    const { id, nama, whatsapp, jabatan } = request.post();
+    const { id, nama, whatsapp, jabatan, password } = request.post();
     const lampiran = request.file("lampiran");
 
     const rules = {
@@ -622,19 +622,23 @@ class MainController {
       nama: "required",
       whatsapp: "required",
       jabatan: "required",
+      password: "required",
     };
     const message = {
       "id.required": "Id sekolah harus ada",
       "nama.required": "Nama Pengirim harus di isi",
       "whatsapp.required": "Whatsapp harus diisi",
       "jabatan.required": "Jabatan harus diisi",
+      "password.required": "Password harus diisi",
     };
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const fname = `surat-pernyataan-${id}.${lampiran.extname}`;
+    const fname = `surat-pernyataan-${new Date().getTime()}-${id}.${
+      lampiran.extname
+    }`;
     await lampiran.move(Helpers.publicPath("surat/"), {
       name: fname,
       overwrite: true,
@@ -645,11 +649,68 @@ class MainController {
       whatsapp,
       jabatan,
       lampiran: `/surat/${fname}`,
+      password,
       sekolah_id: id,
     });
 
+    let sekolahSS;
+    const sekolah = await Sekolah.query().where({ id: id }).first();
+    const domain = slugify(sekolah.sekolah, {
+      replacement: "", // replace spaces with replacement character, defaults to `-`
+      remove: /[*+~.()'"!:@]/g,
+      lower: true, // convert to lower case, defaults to `false`
+    });
+
+    const check = await MSekolah.query()
+      .where({ domain: `https://${domain}.smarteschool.id` })
+      .first();
+    if (check) {
+      sekolahSS = check;
+    } else {
+      sekolahSS = await MSekolah.create({
+        nama: sekolah.sekolah,
+        domain: `https://${domain}.smarteschool.id`,
+        status: sekolah.status,
+        tingkat: sekolah.bentuk,
+        integrasi: "whatsapp",
+        diintegrasi: 1,
+        trial: 1,
+      });
+    }
+
+    const checkAkun = await User.query()
+      .where({ whatsapp: whatsapp })
+      .where({ m_sekolah_id: sekolahSS.id })
+      .where({ dihapus: 0 })
+      .first();
+    if (checkAkun) {
+      await User.query()
+        .where({ whatsapp: whatsapp })
+        .where({ m_sekolah_id: sekolahSS.id })
+        .update({
+          password: await Hash.make(password),
+        });
+    } else {
+      await User.create({
+        nama: nama,
+        whatsapp: whatsapp,
+        gender: "L",
+        password: password,
+        role: "admin",
+        m_sekolah_id: sekolahSS.id,
+        dihapus: 0,
+      });
+    }
+
+    if (!sekolah.m_sekolah_id) {
+      await Sekolah.query()
+        .where({ id: id })
+        .update({ m_sekolah_id: sekolahSS.id });
+    }
+
     return response.ok({
       message: messagePostSuccess,
+      sekolah: sekolahSS,
     });
   }
 
