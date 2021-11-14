@@ -8144,7 +8144,12 @@ class MainController {
         .orderBy("id", "desc")
         .fetch();
 
-      timeline = [...timeline2.toJSON(), ...timeline1.toJSON()];
+      timeline = [
+        ...timeline2.toJSON().map((d) => {
+          return { ...d, bab: d.materi.map((e) => e.bab) };
+        }),
+        ...timeline1.toJSON(),
+      ];
     }
 
     return response.ok({
@@ -8465,7 +8470,10 @@ class MainController {
     const timelines = [...timelineBiasa.toJSON(), ...timelineTugas.toJSON()];
 
     return response.ok({
-      timeline,
+      timeline: {
+        ...timeline.toJSON(),
+        bab: timeline.toJSON().materi.map((e) => e.bab),
+      },
       timelines,
     });
   }
