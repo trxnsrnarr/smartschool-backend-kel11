@@ -546,7 +546,11 @@ class MainController {
     }
 
     return response.ok({
-      sekolah: await res.orderByRaw("CAST(SUBSTRING(sekolah, LOCATE(' ', sekolah ) + 1) AS signed)").paginate(page),
+      sekolah: await res
+        .orderByRaw(
+          "CAST(SUBSTRING(sekolah, LOCATE(' ', sekolah ) + 1) AS signed)"
+        )
+        .paginate(page),
     });
   }
 
@@ -7414,6 +7418,19 @@ class MainController {
         );
 
         timeline = await MTimeline.createMany(timelineData);
+
+        await Promise.all(
+          timeline.map(async (d) => {
+            await Promise.all(
+              materi.map((e) => {
+                TkTimelineTopik.create({
+                  m_timeline_id: d.id,
+                  m_topik_id: e,
+                });
+              })
+            );
+          })
+        );
       }
 
       if (timeline) {
@@ -7730,29 +7747,37 @@ class MainController {
         );
 
         timeline = timelineData;
+
+        await Promise.all(
+          timeline.map(async (d) => {
+            await Promise.all(
+              materi.map((e) => {
+                TkTimelineTopik.create({
+                  m_timeline_id: d.id,
+                  m_topik_id: e,
+                });
+              })
+            );
+          })
+        );
       }
 
       if (timeline) {
         let anggotaRombel;
 
         if (list_anggota.length) {
-          // anggotaRombel = await MAnggotaRombel.query()
-          //   .with("user", (builder) => {
-          //     builder.select("id", "email").where({ dihapus: 0 });
-          //   })
-          //   .whereIn("m_user_id", list_anggota)
-          //   .fetch();
           anggotaRombel = await MAnggotaRombel.query()
             .with("user", (builder) => {
-              builder.select("id", "email").where({ dihapus: 0 });
+              builder.select("id", "whatsapp", "nama").where({ dihapus: 0 });
             })
-            .where("m_rombel_id", list_rombel[0])
+            .where({ m_rombel_id: list_rombel[0] })
+            .whereIn("m_user_id", list_anggota)
             .andWhere({ dihapus: 0 })
             .fetch();
         } else {
           anggotaRombel = await MAnggotaRombel.query()
             .with("user", (builder) => {
-              builder.select("id", "email").where({ dihapus: 0 });
+              builder.select("id", "whatsapp", "nama").where({ dihapus: 0 });
             })
             .whereIn("m_rombel_id", list_rombel)
             .andWhere({ dihapus: 0 })
@@ -7785,9 +7810,9 @@ class MainController {
               userIds.push({
                 m_user_id: d.m_user_id,
                 tipe: "tugas",
-                m_timeline_id: timeline.find(
-                  (e) => e.m_rombel_id == d.m_rombel_id
-                ).id,
+                m_timeline_id: timeline.length
+                  ? timeline.find((e) => e.m_rombel_id == d.m_rombel_id).id
+                  : timeline.id,
                 dihapus: 0,
                 dikumpulkan: 0,
               });
