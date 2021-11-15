@@ -445,6 +445,7 @@ class MainController {
     }
 
     return response.ok({
+      whatsappBot: " 0831 8736 0324",
       sekolah: sekolah,
       integrasi: sekolah.integrasi,
       kontak,
