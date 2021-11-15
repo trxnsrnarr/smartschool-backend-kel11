@@ -668,7 +668,7 @@ class MainController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    if(lampiran){
+    if(lampiran.extname){
       const fname = `surat-pernyataan-${new Date().getTime()}-${id}.${
         lampiran.extname
       }`;
