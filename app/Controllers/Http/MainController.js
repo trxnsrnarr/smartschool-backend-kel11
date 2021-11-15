@@ -580,6 +580,7 @@ class MainController {
     }
 
     res.orderByRaw("ExtractNumber(TRIM(sekolah))");
+    res.orderBy("status")
 
     return response.ok({
       sekolah: await res.paginate(page),
