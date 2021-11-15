@@ -536,7 +536,11 @@ class MainController {
       number = parseInt(search.match(/\d/g).join(""));
       search = search.replace(/\d/g, "");
     }
-    if (!search.toLowerCase().includes(bentuk.toLowerCase())) {
+    if (
+      !search.toLowerCase().includes(bentuk.toLowerCase()) &&
+      (search.toLowerCase().includes("negeri") ||
+        search.toLowerCase().includes("negri"))
+    ) {
       search = `${bentuk} ${search}`;
     }
     if (
