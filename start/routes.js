@@ -1114,6 +1114,7 @@ Route.post("/download/lap-tunggakan", "MainController.downloadLapTunggakan");
 Route.post("/download/lap-kehadiran", "MainController.downloadLapKehadiran");
 Route.post("/download/lap-inventaris", "MainController.downloadLapInventaris");
 Route.post("/download/lap-psg", "MainController.downloadLapPsg");
+Route.post("/download/analisis-materi/:topik_id", "MainController.downloadAnalisisMateri");
 
 // Ortu anak
 Route.post("/absen-anak", "MainController.getAbsensiAnak");

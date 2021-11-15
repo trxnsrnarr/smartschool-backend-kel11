@@ -43468,6 +43468,288 @@ class MainController {
       })
     );
   }
+
+  async downloadAnalisisMateri({
+    response,
+    request,
+    auth,
+    params: { topik_id },
+  }) {
+    const user1 = await auth.getUser();
+
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { analisis, m_jadwal_mengajar_id } = request.get();
+
+    if (analisis) {
+      const jadwalMengajar = await MJadwalMengajar.query()
+        .where({ id: m_jadwal_mengajar_id })
+        .first();
+
+      const rombel = await MRombel.query()
+      .select("id","nama")
+        .where({ id: jadwalMengajar.m_rombel_id })
+        .first();
+
+        const mapel = await MMataPelajaran.query()
+        .select("id","nama")
+        .where({id: jadwalMengajar.m_mata_pelajaran_id})
+        .first()
+
+      const userIds = await MAnggotaRombel.query()
+        .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
+        .andWhere({ dihapus: 0 })
+        .pluck("m_user_id");
+
+        const jumlahSiswa = await MAnggotaRombel.query()
+        .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
+        .andWhere({ dihapus: 0 })
+        .count("* as total");
+
+      const user = await User.query().select("id","nama")
+        .with("kesimpulan", (builder) => {
+          builder.where({ m_topik_id: topik_id });
+        })
+        .whereIn("id", userIds)
+        .fetch();
+
+      const topik = await MTopik.query()
+        .with("bab")
+        .withCount("materiKesimpulan as sudahBaca", (builder) => {
+          builder.whereIn("m_user_id", userIds).whereNotNull("kesimpulan");
+        })
+        .where({ id: topik_id })
+        .first();
+
+      // return jumlahSiswa;
+
+      const keluarantanggalseconds =
+        moment().format("YYYY-MM-DD ") + new Date().getTime();
+
+      let workbook = new Excel.Workbook();
+      let worksheet = workbook.addWorksheet(`Analisis Materi`);
+      worksheet.mergeCells("A1:F1");
+      worksheet.mergeCells("A2:F2");
+      worksheet.mergeCells("A3:F3");
+      worksheet.mergeCells("A4:F4");
+      worksheet.mergeCells("A5:F5");
+      worksheet.getCell("A1").value = `${mapel.nama}`;
+      worksheet.getCell("A2").value = `Analisis Materi ${topik.judul}`;
+      worksheet.getCell("A3").value = `Bab ${topik.toJSON().bab.judul}`;
+      worksheet.getCell("A4").value = rombel.nama;
+      worksheet.getCell("A5").value = sekolah.nama;
+      worksheet.getCell(
+        "A8"
+      ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user1.nama}`;
+
+      worksheet.addConditionalFormatting({
+        ref: "A1:F5",
+        rules: [
+          {
+            type: "expression",
+            formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+            style: {
+              font: {
+                name: "Times New Roman",
+                family: 4,
+                size: 16,
+                bold: true,
+              },
+              // fill: {
+              //   type: "pattern",
+              //   pattern: "solid",
+              //   bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+              // },
+              alignment: {
+                vertical: "middle",
+                horizontal: "center",
+              },
+              // border: {
+              //   top: { style: "thin" },
+              //   left: { style: "thin" },
+              //   bottom: { style: "thin" },
+              //   right: { style: "thin" },
+              // },
+            },
+          },
+        ],
+      });
+      worksheet.getCell("B6").value = `Sudah Baca`;
+      worksheet.getCell("C6").value = `Belum Baca`;
+      worksheet.getCell("B7").value = topik.toJSON().__meta__.sudahBaca;
+      worksheet.getCell("C7").value = jumlahSiswa[0].total - topik.toJSON().__meta__.sudahBaca;
+
+      worksheet.addConditionalFormatting({
+        ref: "B6:C7",
+        rules: [
+          {
+            type: "expression",
+            formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+            style: {
+              font: {
+                name: "Times New Roman",
+                family: 4,
+                size: 12,
+                bold: true,
+              },
+              fill: {
+                type: "pattern",
+                pattern: "solid",
+                bgColor: { argb: "D9EEFF", fgColor: { argb: "D9EEFF" } },
+              },
+              alignment: {
+                vertical: "middle",
+                horizontal: "center",
+              },
+              border: {
+                top: { style: "thin" },
+                left: { style: "thin" },
+                bottom: { style: "thin" },
+                right: { style: "thin" },
+              },
+            },
+          },
+        ],
+      });
+      worksheet.addConditionalFormatting({
+        ref: "A9:F9",
+        rules: [
+          {
+            type: "expression",
+            formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+            style: {
+              font: {
+                name: "Times New Roman",
+                family: 4,
+                size: 12,
+                bold: true,
+              },
+              fill: {
+                type: "pattern",
+                pattern: "solid",
+                bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+              },
+              alignment: {
+                vertical: "middle",
+                horizontal: "center",
+              },
+              border: {
+                top: { style: "thin" },
+                left: { style: "thin" },
+                bottom: { style: "thin" },
+                right: { style: "thin" },
+              },
+            },
+          },
+        ],
+      });
+     const result= await Promise.all(
+        user.toJSON().map(async (d, idx) => {
+          worksheet.addConditionalFormatting({
+            ref: `B${(idx + 1) * 1 + 9}:F${(idx + 1) * 1 + 9}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 11,
+                    // bold: true,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "left",
+                  },
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
+                },
+              },
+            ],
+          });
+          worksheet.addConditionalFormatting({
+            ref: `A${(idx + 1) * 1 + 9}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 11,
+                    // bold: true,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
+                },
+              },
+            ],
+          });
+          // add column headers
+          worksheet.getRow(9).values = [
+            "No",
+            "Nama",
+            "Waktu Mulai",
+            "Waktu Akhir",
+            "Durasi",
+            "Kesimpulan",
+          ];
+          worksheet.columns = [
+            { key: "no" },
+            { key: "nama" },
+            { key: "waktu_mulai" },
+            { key: "waktu_akhir" },
+            { key: "durasi" },
+            { key: "kesimpulan" },
+          ];
+// return d.kesimpulan;
+          // Add row using key mapping to columns
+          let row = worksheet.addRow({
+            no: `${idx + 1}`,
+            nama: d ? d.nama : "-",
+            waktu_mulai: d.kesimpulan[0] ? d.kesimpulan[0].waktu_mulai : "-",
+            waktu_akhir: d.kesimpulan[0] ? d.kesimpulan[0].waktu_selesai : "-",
+            durasi: d.kesimpulan[0] ? d.kesimpulan[0].durasi:"-" ,
+            kesimpulan: d.kesimpulan[0] ? d.kesimpulan[0].kesimpulan : "-",
+          });
+        })
+      );
+
+      worksheet.getColumn("A").width = 6;
+      worksheet.getColumn("B").width = 25;
+      worksheet.getColumn("C").width = 17;
+      worksheet.getColumn("D").width = 17;
+      worksheet.getColumn("E").width = 9;
+      worksheet.getColumn("F").width = 18;
+
+      let namaFile = `/uploads/Rekap-Analisis-Materi-${keluarantanggalseconds}.xlsx`;
+      // save workbook to disk
+      await workbook.xlsx.writeFile(`public${namaFile}`);
+// return result;
+      return namaFile;
+    }
+  }
+
   async ip({ response, request }) {
     return response.ok({ ip: [request.ip(), request.ips()] });
   }
@@ -43477,3 +43759,4 @@ class MainController {
   }
 }
 module.exports = MainController;
+
