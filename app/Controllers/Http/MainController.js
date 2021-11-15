@@ -532,7 +532,7 @@ class MainController {
     const res = Sekolah.query().with("sekolahSS");
 
     let number;
-    if (search.match(/\d/g).length) {
+    if (search.match(/\d/g)) {
       number = parseInt(search.match(/\d/g).join(""));
       search = search.replace(/\d/g, "");
     }
