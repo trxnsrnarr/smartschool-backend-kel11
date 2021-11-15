@@ -668,21 +668,21 @@ class MainController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    if(lampiran.extname){
-      const fname = `surat-pernyataan-${new Date().getTime()}-${id}.${
-        lampiran.extname
-      }`;
-      await lampiran.move(Helpers.publicPath("surat/"), {
-        name: fname,
-        overwrite: true,
-      });
-    }
+    // if(lampiran != null){
+    //   const fname = `surat-pernyataan-${new Date().getTime()}-${id}.${
+    //     lampiran.extname
+    //   }`;
+    //   await lampiran.move(Helpers.publicPath("surat/"), {
+    //     name: fname,
+    //     overwrite: true,
+    //   });
+    // }
 
     const registrasi = await MRegistrasiAkun.create({
       nama,
       whatsapp,
       jabatan,
-      lampiran: lampiran.extname ? `/surat/${fname}` : "",
+      // lampiran: lampiran.extname != null ? `/surat/${fname}` : "",
       password,
       sekolah_id: id,
     });
