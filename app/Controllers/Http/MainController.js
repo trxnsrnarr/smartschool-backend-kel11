@@ -536,25 +536,25 @@ class MainController {
       number = parseInt(search.match(/\d/g).join(""));
       search = search.replace(/\d/g, "");
     }
+
+    if (
+      search.toLowerCase().includes("negeri") ||
+      search.toLowerCase().includes("negri")
+    ) {
+      search = search.toLowerCase().includes("negri")
+        ? `${search.split(" ")[0]}N${search.slice(
+            search.toLowerCase().search("negri") + 5
+          )}`
+        : `${search.split(" ")[0]}N${search.slice(
+            search.toLowerCase().search("negeri") + 6
+          )}`;
+    }
     if (search) {
-      res.where(
-        "sekolah",
-        "like",
-        `%${
-          search.toLowerCase().includes("negeri")
-            ? `${search.split(" ")[0]}N${search.slice(
-                search.toLowerCase().search("negeri") + 6
-              )}`
-            : search
-        }%`
-      );
+      res.where("sekolah", "like", `%${search}%`);
     }
 
     if (number) {
-      res.whereRaw(
-        "CAST(SUBSTRING(sekolah, LOCATE(' ', sekolah ) + 1) AS signed) >= ?",
-        [number]
-      );
+      res.whereRaw("ExtractNumber(TRIM(sekolah)) >= ?", [number]);
     }
 
     if (bentuk) {
@@ -573,9 +573,7 @@ class MainController {
       res.andWhere("kode_kec", kecamatan);
     }
 
-    res.orderByRaw(
-      "CAST(SUBSTRING(sekolah, LOCATE(' ', sekolah ) + 1) AS signed)"
-    );
+    res.orderByRaw("ExtractNumber(TRIM(sekolah))");
 
     return response.ok({
       sekolah: await res.paginate(page),
