@@ -537,7 +537,7 @@ class MainController {
         "like",
         `%${
           search.toLowerCase().includes("negeri")
-            ? `${search.split(" ")[0]}$N${search.slice(
+            ? `${search.split(" ")[0]}N${search.slice(
                 search.toLowerCase().search("negeri") + 6
               )}`
             : search
