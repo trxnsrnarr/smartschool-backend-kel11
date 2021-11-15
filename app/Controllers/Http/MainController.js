@@ -531,6 +531,11 @@ class MainController {
 
     const res = Sekolah.query().with("sekolahSS");
 
+    let number;
+    if (search.match(/\d/g).length) {
+      number = parseInt(search.match(/\d/g).join(""));
+      search = search.replace(/\d/g, "");
+    }
     if (search) {
       res.where(
         "sekolah",
@@ -542,6 +547,13 @@ class MainController {
               )}`
             : search
         }%`
+      );
+    }
+
+    if (number) {
+      res.whereRaw(
+        "CAST(SUBSTRING(sekolah, LOCATE(' ', sekolah ) + 1) AS signed) >= ?",
+        [number]
       );
     }
 
@@ -561,12 +573,12 @@ class MainController {
       res.andWhere("kode_kec", kecamatan);
     }
 
+    res.orderByRaw(
+      "CAST(SUBSTRING(sekolah, LOCATE(' ', sekolah ) + 1) AS signed)"
+    );
+
     return response.ok({
-      sekolah: await res
-        .orderByRaw(
-          "CAST(SUBSTRING(sekolah, LOCATE(' ', sekolah ) + 1) AS signed)"
-        )
-        .paginate(page),
+      sekolah: await res.paginate(page),
     });
   }
 
@@ -33519,7 +33531,7 @@ class MainController {
             nama: d.nama1,
             whatsapp: `${d.no1}?admin`,
             gender: "L",
-            password: "gpdsdepok",
+            password: "gpdsntt",
             role: "admin",
             m_sekolah_id: check.id,
             dihapus: 0,
@@ -33535,7 +33547,7 @@ class MainController {
             nama: d.nama1,
             whatsapp: d.no1,
             gender: "L",
-            password: "gpdsdepok",
+            password: "gpdsntt",
             role: "guru",
             m_sekolah_id: check.id,
             dihapus: 0,
