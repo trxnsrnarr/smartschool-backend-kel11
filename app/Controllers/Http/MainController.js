@@ -682,7 +682,7 @@ class MainController {
       nama,
       whatsapp,
       jabatan,
-      lampiran: lampiran ? `/surat/${fname}` : "",
+      lampiran: lampiran.extname ? `/surat/${fname}` : "",
       password,
       sekolah_id: id,
     });
