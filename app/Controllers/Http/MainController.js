@@ -518,15 +518,31 @@ class MainController {
   }
 
   async getMasterSekolah({ response, request }) {
-    let { page, search, bentuk, propinsi, kabupaten, kecamatan } =
-      request.get();
+    let {
+      page,
+      search = "",
+      bentuk,
+      propinsi,
+      kabupaten,
+      kecamatan,
+    } = request.get();
 
     page = page ? page : 1;
 
     const res = Sekolah.query().with("sekolahSS");
 
     if (search) {
-      res.where("sekolah", "like", `%${search}%`);
+      res.where(
+        "sekolah",
+        "like",
+        `%${
+          search.toLowerCase().includes("negeri")
+            ? `${search.split(" ")[0]}$N${search.slice(
+                search.toLowerCase().search("negeri") + 6
+              )}`
+            : search
+        }%`
+      );
     }
 
     if (bentuk) {
