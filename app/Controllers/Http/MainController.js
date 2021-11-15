@@ -668,19 +668,21 @@ class MainController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const fname = `surat-pernyataan-${new Date().getTime()}-${id}.${
-      lampiran.extname
-    }`;
-    await lampiran.move(Helpers.publicPath("surat/"), {
-      name: fname,
-      overwrite: true,
-    });
+    if(lampiran){
+      const fname = `surat-pernyataan-${new Date().getTime()}-${id}.${
+        lampiran.extname
+      }`;
+      await lampiran.move(Helpers.publicPath("surat/"), {
+        name: fname,
+        overwrite: true,
+      });
+    }
 
     const registrasi = await MRegistrasiAkun.create({
       nama,
       whatsapp,
       jabatan,
-      lampiran: `/surat/${fname}`,
+      lampiran: lampiran ? `/surat/${fname}` : "",
       password,
       sekolah_id: id,
     });
