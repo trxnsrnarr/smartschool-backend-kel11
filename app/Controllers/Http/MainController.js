@@ -9948,7 +9948,7 @@ class MainController {
       ujian = MUjian.query()
         .with("mataPelajaran")
         .withCount("soalUjian as jumlahSoal", (builder) => {
-          builder.whereIn("bentuk", ["pg", "esai"]).where({ dihapus: 0 });
+          builder.where({ dihapus: 0 });
         })
         .where({ dihapus: 0 })
         .andWhere({ m_user_id: user.id })
@@ -10040,7 +10040,6 @@ class MainController {
     const soalUjianIds = await TkSoalUjian.query()
       .with("soal")
       .where({ m_ujian_id: ujian_id })
-      .whereIn("bentuk", ["pg", "esai"])
       .andWhere({ dihapus: 0 })
       .fetch();
 
