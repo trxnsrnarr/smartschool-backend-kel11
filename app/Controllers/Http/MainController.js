@@ -581,7 +581,7 @@ class MainController {
     }
 
     res.orderByRaw("ExtractNumber(TRIM(sekolah))");
-    res.orderBy("status")
+    res.orderBy("status");
 
     return response.ok({
       sekolah: await res.paginate(page),
@@ -9947,7 +9947,7 @@ class MainController {
       ujian = MUjian.query()
         .with("mataPelajaran")
         .withCount("soalUjian as jumlahSoal", (builder) => {
-          builder.where({ dihapus: 0 });
+          builder.whereIn("bentuk", ["pg", "esai"]).where({ dihapus: 0 });
         })
         .where({ dihapus: 0 })
         .andWhere({ m_user_id: user.id })
@@ -10039,6 +10039,7 @@ class MainController {
     const soalUjianIds = await TkSoalUjian.query()
       .with("soal")
       .where({ m_ujian_id: ujian_id })
+      .whereIn("bentuk", ["pg", "esai"])
       .andWhere({ dihapus: 0 })
       .fetch();
 
@@ -43493,26 +43494,27 @@ class MainController {
         .first();
 
       const rombel = await MRombel.query()
-      .select("id","nama")
+        .select("id", "nama")
         .where({ id: jadwalMengajar.m_rombel_id })
         .first();
 
-        const mapel = await MMataPelajaran.query()
-        .select("id","nama")
-        .where({id: jadwalMengajar.m_mata_pelajaran_id})
-        .first()
+      const mapel = await MMataPelajaran.query()
+        .select("id", "nama")
+        .where({ id: jadwalMengajar.m_mata_pelajaran_id })
+        .first();
 
       const userIds = await MAnggotaRombel.query()
         .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
         .andWhere({ dihapus: 0 })
         .pluck("m_user_id");
 
-        const jumlahSiswa = await MAnggotaRombel.query()
+      const jumlahSiswa = await MAnggotaRombel.query()
         .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
         .andWhere({ dihapus: 0 })
         .count("* as total");
 
-      const user = await User.query().select("id","nama")
+      const user = await User.query()
+        .select("id", "nama")
         .with("kesimpulan", (builder) => {
           builder.where({ m_topik_id: topik_id });
         })
@@ -43583,7 +43585,8 @@ class MainController {
       worksheet.getCell("B6").value = `Sudah Baca`;
       worksheet.getCell("C6").value = `Belum Baca`;
       worksheet.getCell("B7").value = topik.toJSON().__meta__.sudahBaca;
-      worksheet.getCell("C7").value = jumlahSiswa[0].total - topik.toJSON().__meta__.sudahBaca;
+      worksheet.getCell("C7").value =
+        jumlahSiswa[0].total - topik.toJSON().__meta__.sudahBaca;
 
       worksheet.addConditionalFormatting({
         ref: "B6:C7",
@@ -43649,7 +43652,7 @@ class MainController {
           },
         ],
       });
-     const result= await Promise.all(
+      const result = await Promise.all(
         user.toJSON().map(async (d, idx) => {
           worksheet.addConditionalFormatting({
             ref: `B${(idx + 1) * 1 + 9}:F${(idx + 1) * 1 + 9}`,
@@ -43722,14 +43725,14 @@ class MainController {
             { key: "durasi" },
             { key: "kesimpulan" },
           ];
-// return d.kesimpulan;
+          // return d.kesimpulan;
           // Add row using key mapping to columns
           let row = worksheet.addRow({
             no: `${idx + 1}`,
             nama: d ? d.nama : "-",
             waktu_mulai: d.kesimpulan[0] ? d.kesimpulan[0].waktu_mulai : "-",
             waktu_akhir: d.kesimpulan[0] ? d.kesimpulan[0].waktu_selesai : "-",
-            durasi: d.kesimpulan[0] ? d.kesimpulan[0].durasi:"-" ,
+            durasi: d.kesimpulan[0] ? d.kesimpulan[0].durasi : "-",
             kesimpulan: d.kesimpulan[0] ? d.kesimpulan[0].kesimpulan : "-",
           });
         })
@@ -43745,7 +43748,7 @@ class MainController {
       let namaFile = `/uploads/Rekap-Analisis-Materi-${keluarantanggalseconds}.xlsx`;
       // save workbook to disk
       await workbook.xlsx.writeFile(`public${namaFile}`);
-// return result;
+      // return result;
       return namaFile;
     }
   }
@@ -43759,4 +43762,3 @@ class MainController {
   }
 }
 module.exports = MainController;
-
