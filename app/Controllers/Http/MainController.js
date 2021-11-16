@@ -1899,7 +1899,8 @@ class MainController {
     await User.query()
       .where({ id: user.id })
       .update({ wa_real: wa_real, verifikasi: "" });
-    return `Nomor whatsapp terverifikasi: ${wa_real.replace("@c.us", "")}`;
+    // return `Nomor whatsapp terverifikasi: ${wa_real.replace("@c.us", "")}`;
+    return "Selamat nomor Anda berhasil terverifikasi, kini Smarteschool Anda akan mendapatkan notifikasi melalui akun WhatsApp ini. Terimakasih.."
   }
 
   async aktivasi({ response, request, auth }) {
