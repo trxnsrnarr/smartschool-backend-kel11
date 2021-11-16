@@ -7643,7 +7643,7 @@ class MainController {
             .toJSON()
             .soal.filter(
               (d) =>
-                soal.filter((e) => e.id).findIndex((e) => e.id == d.id) < 0
+                soal.filter((e) => e.id).findIndex((e) => e.id == d.soal.id) < 0
             )
             .map(async (d) => {
               await TkSoalTugas.query().where({ id: d.id }).update({
