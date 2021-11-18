@@ -39715,6 +39715,12 @@ class MainController {
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const guru = await User.query()
+    .withCount("absen as juli",(builder)=>{
+      builder.where({absen:"hadir"}).whereBetween("waktu_masuk", [
+        `2021-07-1 00:00:00`,
+        `2021-07-31 23:59:59`,
+      ])
+    })
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .andWhere({ role: "guru" })
@@ -39869,7 +39875,7 @@ class MainController {
     worksheet.mergeCells("A7:A9");
     worksheet.mergeCells("B7:B9");
     worksheet.mergeCells("C7:C9");
-    worksheet.mergeCells("D7:D9");
+    worksheet.mergeCells("D7:07");
 
     worksheet.addConditionalFormatting({
       ref: `A7:O9`,
