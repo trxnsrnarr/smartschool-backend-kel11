@@ -445,6 +445,7 @@ class MainController {
     }
 
     return response.ok({
+      whatsappBot: " 0831 8736 0324",
       sekolah: sekolah,
       integrasi: sekolah.integrasi,
       kontak,
@@ -518,15 +519,59 @@ class MainController {
   }
 
   async getMasterSekolah({ response, request }) {
-    let { page, search, bentuk, propinsi, kabupaten, kecamatan } =
-      request.get();
+    let {
+      page,
+      search = "",
+      bentuk,
+      propinsi,
+      kabupaten,
+      kecamatan,
+    } = request.get();
 
     page = page ? page : 1;
 
     const res = Sekolah.query().with("sekolahSS");
 
+    let number;
+    if (search.match(/\d/g)) {
+      number = parseInt(search.match(/\d/g).join(""));
+      search = search.replace(/\d/g, "");
+    }
+    if (
+      !search.toLowerCase().includes(bentuk.toLowerCase()) &&
+      (search.toLowerCase().includes("negeri") ||
+        search.toLowerCase().includes("negri") ||
+        search.toLowerCase().includes("swasta"))
+    ) {
+      search = `${bentuk} ${search}`;
+    }
+    if (
+      search.toLowerCase().includes("negeri") ||
+      search.toLowerCase().includes("negri")
+    ) {
+      search = search.toLowerCase().includes("negri")
+        ? `${search.split(" ")[0]}N${search.slice(
+            search.toLowerCase().search("negri") + 5
+          )}`
+        : `${search.split(" ")[0]}N${search.slice(
+            search.toLowerCase().search("negeri") + 6
+          )}`;
+    }
+    if (search.toLowerCase().includes("swasta")) {
+      search = `${search.split(" ")[0]}S${search.slice(
+        search.toLowerCase().search("swasta") + 6
+      )}`;
+    }
     if (search) {
       res.where("sekolah", "like", `%${search}%`);
+    }
+
+    if (number) {
+      if (`${number}`.length > 3) {
+        res.orWhere("npsn", "like", `%${number}%`);
+      } else {
+        res.whereRaw("ExtractNumber(TRIM(sekolah)) >= ?", [number]);
+      }
     }
 
     if (bentuk) {
@@ -545,9 +590,30 @@ class MainController {
       res.andWhere("kode_kec", kecamatan);
     }
 
+    res.orderByRaw("ExtractNumber(TRIM(sekolah))");
+    res.orderBy("status");
+
     return response.ok({
-      sekolah: await res.orderBy("sekolah").paginate(page),
+      sekolah: await res.paginate(page),
     });
+  }
+
+  async getMasterSekolahNpsn({ response, request }) {
+    const { npsn } = request.get();
+
+    let { data } = await axios({
+      url: `https://dapo.kemdikbud.go.id/api/getHasilPencarian?keyword=${npsn}`,
+    });
+
+    const check = await Promise.all(
+      data.map((d) => {
+        return Sekolah.query().where({ npsn: d.npsn }).select("id").first();
+      })
+    );
+    data = data.map((d, idx) => {
+      return { exist: check[idx] ? true : false, ...d };
+    });
+    return data;
   }
 
   async getMasterSekolahProvinsi({ response, request }) {
@@ -608,13 +674,18 @@ class MainController {
       res = { ...res.toJSON(), ta };
     }
 
+    let { data } = await axios({
+      url: `https://dapo.kemdikbud.go.id/api/getHasilPencarian?keyword=${res.npsn}`,
+    });
+
     return response.ok({
       data: res,
+      dapo: data[0],
     });
   }
 
   async postRegistrasiSekolah({ response, request }) {
-    const { id, nama, whatsapp, jabatan } = request.post();
+    const { id, nama, whatsapp, jabatan, password } = request.post();
     const lampiran = request.file("lampiran");
 
     const rules = {
@@ -622,34 +693,97 @@ class MainController {
       nama: "required",
       whatsapp: "required",
       jabatan: "required",
+      password: "required",
     };
     const message = {
       "id.required": "Id sekolah harus ada",
       "nama.required": "Nama Pengirim harus di isi",
       "whatsapp.required": "Whatsapp harus diisi",
       "jabatan.required": "Jabatan harus diisi",
+      "password.required": "Password harus diisi",
     };
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const fname = `surat-pernyataan-${id}.${lampiran.extname}`;
-    await lampiran.move(Helpers.publicPath("surat/"), {
-      name: fname,
-      overwrite: true,
-    });
+    // if(lampiran != null){
+    //   const fname = `surat-pernyataan-${new Date().getTime()}-${id}.${
+    //     lampiran.extname
+    //   }`;
+    //   await lampiran.move(Helpers.publicPath("surat/"), {
+    //     name: fname,
+    //     overwrite: true,
+    //   });
+    // }
 
     const registrasi = await MRegistrasiAkun.create({
       nama,
       whatsapp,
       jabatan,
-      lampiran: `/surat/${fname}`,
+      // lampiran: lampiran.extname != null ? `/surat/${fname}` : "",
+      password,
       sekolah_id: id,
     });
 
+    let sekolahSS;
+    const sekolah = await Sekolah.query().where({ id: id }).first();
+    const domain = slugify(sekolah.sekolah, {
+      replacement: "", // replace spaces with replacement character, defaults to `-`
+      remove: /[*+~.()'"!:@]/g,
+      lower: true, // convert to lower case, defaults to `false`
+    });
+
+    const check = await MSekolah.query()
+      .where({ domain: `https://${domain}.smarteschool.id` })
+      .first();
+    if (check) {
+      sekolahSS = check;
+    } else {
+      sekolahSS = await MSekolah.create({
+        nama: sekolah.sekolah,
+        domain: `https://${domain}.smarteschool.id`,
+        status: sekolah.status,
+        tingkat: sekolah.bentuk,
+        integrasi: "whatsapp",
+        diintegrasi: 1,
+        trial: 1,
+      });
+    }
+
+    const checkAkun = await User.query()
+      .where({ whatsapp: whatsapp })
+      .where({ m_sekolah_id: sekolahSS.id })
+      .where({ dihapus: 0 })
+      .first();
+    if (checkAkun) {
+      await User.query()
+        .where({ whatsapp: whatsapp })
+        .where({ m_sekolah_id: sekolahSS.id })
+        .update({
+          password: await Hash.make(password),
+        });
+    } else {
+      await User.create({
+        nama: nama,
+        whatsapp: whatsapp,
+        gender: "L",
+        password: password,
+        role: "admin",
+        m_sekolah_id: sekolahSS.id,
+        dihapus: 0,
+      });
+    }
+
+    if (!sekolah.m_sekolah_id) {
+      await Sekolah.query()
+        .where({ id: id })
+        .update({ m_sekolah_id: sekolahSS.id });
+    }
+
     return response.ok({
       message: messagePostSuccess,
+      sekolah: sekolahSS,
     });
   }
 
@@ -1798,7 +1932,8 @@ class MainController {
     await User.query()
       .where({ id: user.id })
       .update({ wa_real: wa_real, verifikasi: "" });
-    return `Nomor whatsapp terverifikasi: ${wa_real.replace("@c.us", "")}`;
+    // return `Nomor whatsapp terverifikasi: ${wa_real.replace("@c.us", "")}`;
+    return "Selamat nomor Anda berhasil terverifikasi, kini Smarteschool Anda akan mendapatkan notifikasi melalui akun WhatsApp ini. Terimakasih..";
   }
 
   async aktivasi({ response, request, auth }) {
@@ -7353,6 +7488,19 @@ class MainController {
         );
 
         timeline = await MTimeline.createMany(timelineData);
+
+        await Promise.all(
+          timeline.map(async (d) => {
+            await Promise.all(
+              materi.map((e) => {
+                TkTimelineTopik.create({
+                  m_timeline_id: d.id,
+                  m_topik_id: e,
+                });
+              })
+            );
+          })
+        );
       }
 
       if (timeline) {
@@ -7669,29 +7817,37 @@ class MainController {
         );
 
         timeline = timelineData;
+
+        await Promise.all(
+          timeline.map(async (d) => {
+            await Promise.all(
+              materi.map((e) => {
+                TkTimelineTopik.create({
+                  m_timeline_id: d.id,
+                  m_topik_id: e,
+                });
+              })
+            );
+          })
+        );
       }
 
       if (timeline) {
         let anggotaRombel;
 
         if (list_anggota.length) {
-          // anggotaRombel = await MAnggotaRombel.query()
-          //   .with("user", (builder) => {
-          //     builder.select("id", "email").where({ dihapus: 0 });
-          //   })
-          //   .whereIn("m_user_id", list_anggota)
-          //   .fetch();
           anggotaRombel = await MAnggotaRombel.query()
             .with("user", (builder) => {
-              builder.select("id", "email").where({ dihapus: 0 });
+              builder.select("id", "whatsapp", "nama").where({ dihapus: 0 });
             })
-            .where("m_rombel_id", list_rombel[0])
+            .where({ m_rombel_id: list_rombel[0] })
+            .whereIn("m_user_id", list_anggota)
             .andWhere({ dihapus: 0 })
             .fetch();
         } else {
           anggotaRombel = await MAnggotaRombel.query()
             .with("user", (builder) => {
-              builder.select("id", "email").where({ dihapus: 0 });
+              builder.select("id", "whatsapp", "nama").where({ dihapus: 0 });
             })
             .whereIn("m_rombel_id", list_rombel)
             .andWhere({ dihapus: 0 })
@@ -7724,9 +7880,9 @@ class MainController {
               userIds.push({
                 m_user_id: d.m_user_id,
                 tipe: "tugas",
-                m_timeline_id: timeline.find(
-                  (e) => e.m_rombel_id == d.m_rombel_id
-                ).id,
+                m_timeline_id: timeline.length
+                  ? timeline.find((e) => e.m_rombel_id == d.m_rombel_id).id
+                  : timeline.id,
                 dihapus: 0,
                 dikumpulkan: 0,
               });
@@ -8058,7 +8214,12 @@ class MainController {
         .orderBy("id", "desc")
         .fetch();
 
-      timeline = [...timeline2.toJSON(), ...timeline1.toJSON()];
+      timeline = [
+        ...timeline2.toJSON().map((d) => {
+          return { ...d, bab: d.materi.map((e) => e.bab) };
+        }),
+        ...timeline1.toJSON(),
+      ];
     }
 
     return response.ok({
@@ -8379,7 +8540,10 @@ class MainController {
     const timelines = [...timelineBiasa.toJSON(), ...timelineTugas.toJSON()];
 
     return response.ok({
-      timeline,
+      timeline: {
+        ...timeline.toJSON(),
+        bab: timeline.toJSON().materi.map((e) => e.bab),
+      },
       timelines,
     });
   }
@@ -33409,7 +33573,7 @@ class MainController {
             nama: d.nama1,
             whatsapp: `${d.no1}?admin`,
             gender: "L",
-            password: "gpdsdepok",
+            password: "gpdsntt",
             role: "admin",
             m_sekolah_id: check.id,
             dihapus: 0,
@@ -33425,7 +33589,7 @@ class MainController {
             nama: d.nama1,
             whatsapp: d.no1,
             gender: "L",
-            password: "gpdsdepok",
+            password: "gpdsntt",
             role: "guru",
             m_sekolah_id: check.id,
             dihapus: 0,
@@ -43369,26 +43533,27 @@ class MainController {
         .first();
 
       const rombel = await MRombel.query()
-      .select("id","nama")
+        .select("id", "nama")
         .where({ id: jadwalMengajar.m_rombel_id })
         .first();
 
-        const mapel = await MMataPelajaran.query()
-        .select("id","nama")
-        .where({id: jadwalMengajar.m_mata_pelajaran_id})
-        .first()
+      const mapel = await MMataPelajaran.query()
+        .select("id", "nama")
+        .where({ id: jadwalMengajar.m_mata_pelajaran_id })
+        .first();
 
       const userIds = await MAnggotaRombel.query()
         .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
         .andWhere({ dihapus: 0 })
         .pluck("m_user_id");
 
-        const jumlahSiswa = await MAnggotaRombel.query()
+      const jumlahSiswa = await MAnggotaRombel.query()
         .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
         .andWhere({ dihapus: 0 })
         .count("* as total");
 
-      const user = await User.query().select("id","nama")
+      const user = await User.query()
+        .select("id", "nama")
         .with("kesimpulan", (builder) => {
           builder.where({ m_topik_id: topik_id });
         })
@@ -43459,7 +43624,8 @@ class MainController {
       worksheet.getCell("B6").value = `Sudah Baca`;
       worksheet.getCell("C6").value = `Belum Baca`;
       worksheet.getCell("B7").value = topik.toJSON().__meta__.sudahBaca;
-      worksheet.getCell("C7").value = jumlahSiswa[0].total - topik.toJSON().__meta__.sudahBaca;
+      worksheet.getCell("C7").value =
+        jumlahSiswa[0].total - topik.toJSON().__meta__.sudahBaca;
 
       worksheet.addConditionalFormatting({
         ref: "B6:C7",
@@ -43525,7 +43691,7 @@ class MainController {
           },
         ],
       });
-     const result= await Promise.all(
+      const result = await Promise.all(
         user.toJSON().map(async (d, idx) => {
           worksheet.addConditionalFormatting({
             ref: `B${(idx + 1) * 1 + 9}:F${(idx + 1) * 1 + 9}`,
@@ -43598,14 +43764,14 @@ class MainController {
             { key: "durasi" },
             { key: "kesimpulan" },
           ];
-// return d.kesimpulan;
+          // return d.kesimpulan;
           // Add row using key mapping to columns
           let row = worksheet.addRow({
             no: `${idx + 1}`,
             nama: d ? d.nama : "-",
             waktu_mulai: d.kesimpulan[0] ? d.kesimpulan[0].waktu_mulai : "-",
             waktu_akhir: d.kesimpulan[0] ? d.kesimpulan[0].waktu_selesai : "-",
-            durasi: d.kesimpulan[0] ? d.kesimpulan[0].durasi:"-" ,
+            durasi: d.kesimpulan[0] ? d.kesimpulan[0].durasi : "-",
             kesimpulan: d.kesimpulan[0] ? d.kesimpulan[0].kesimpulan : "-",
           });
         })
@@ -43621,7 +43787,7 @@ class MainController {
       let namaFile = `/uploads/Rekap-Analisis-Materi-${keluarantanggalseconds}.xlsx`;
       // save workbook to disk
       await workbook.xlsx.writeFile(`public${namaFile}`);
-// return result;
+      // return result;
       return namaFile;
     }
   }
@@ -43635,4 +43801,3 @@ class MainController {
   }
 }
 module.exports = MainController;
-

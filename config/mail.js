@@ -29,7 +29,7 @@ module.exports = {
     // port: 465,
     // service:"Zoho",
     // service: "aa",
-    host: Env.get("SMTP_HOST"),
+    host: Env.get("SMTP_host"),
     // host: this.service,
     secure: false,
     auth: {
