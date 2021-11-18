@@ -540,7 +540,8 @@ class MainController {
     if (
       !search.toLowerCase().includes(bentuk.toLowerCase()) &&
       (search.toLowerCase().includes("negeri") ||
-        search.toLowerCase().includes("negri"))
+        search.toLowerCase().includes("negri") ||
+        search.toLowerCase().includes("swasta"))
     ) {
       search = `${bentuk} ${search}`;
     }
@@ -556,12 +557,21 @@ class MainController {
             search.toLowerCase().search("negeri") + 6
           )}`;
     }
+    if (search.toLowerCase().includes("swasta")) {
+      search = `${search.split(" ")[0]}S${search.slice(
+        search.toLowerCase().search("swasta") + 6
+      )}`;
+    }
     if (search) {
       res.where("sekolah", "like", `%${search}%`);
     }
 
     if (number) {
-      res.whereRaw("ExtractNumber(TRIM(sekolah)) >= ?", [number]);
+      if (`${number}`.length > 3) {
+        res.orWhere("npsn", "like", `%${number}%`);
+      } else {
+        res.whereRaw("ExtractNumber(TRIM(sekolah)) >= ?", [number]);
+      }
     }
 
     if (bentuk) {
@@ -586,6 +596,24 @@ class MainController {
     return response.ok({
       sekolah: await res.paginate(page),
     });
+  }
+
+  async getMasterSekolahNpsn({ response, request }) {
+    const { npsn } = request.get();
+
+    let { data } = await axios({
+      url: `https://dapo.kemdikbud.go.id/api/getHasilPencarian?keyword=${npsn}`,
+    });
+
+    const check = await Promise.all(
+      data.map((d) => {
+        return Sekolah.query().where({ npsn: d.npsn }).select("id").first();
+      })
+    );
+    data = data.map((d, idx) => {
+      return { exist: check[idx] ? true : false, ...d };
+    });
+    return data;
   }
 
   async getMasterSekolahProvinsi({ response, request }) {
@@ -646,8 +674,13 @@ class MainController {
       res = { ...res.toJSON(), ta };
     }
 
+    let { data } = await axios({
+      url: `https://dapo.kemdikbud.go.id/api/getHasilPencarian?keyword=${res.npsn}`,
+    });
+
     return response.ok({
       data: res,
+      dapo: data[0],
     });
   }
 
@@ -1900,7 +1933,7 @@ class MainController {
       .where({ id: user.id })
       .update({ wa_real: wa_real, verifikasi: "" });
     // return `Nomor whatsapp terverifikasi: ${wa_real.replace("@c.us", "")}`;
-    return "Selamat nomor Anda berhasil terverifikasi, kini Smarteschool Anda akan mendapatkan notifikasi melalui akun WhatsApp ini. Terimakasih.."
+    return "Selamat nomor Anda berhasil terverifikasi, kini Smarteschool Anda akan mendapatkan notifikasi melalui akun WhatsApp ini. Terimakasih..";
   }
 
   async aktivasi({ response, request, auth }) {
