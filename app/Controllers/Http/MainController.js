@@ -2153,13 +2153,9 @@ class MainController {
   }
 
   async postLogCamera({ auth, response, request }) {
-    const domain = request.headers().origin;
+    const user = await auth.getUser()
 
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
+    const sekolah = user.m_sekolah_id
 
     const { nama, waktu, masker, suhu, foto } = request.post();
 
