@@ -37193,17 +37193,26 @@ class MainController {
       .with("profil")
       .first();
 
-    const rpp = await MRpp.query()
+    const rppQuery = MRpp.query()
       .with("mataPelajaran")
       .where({ m_user_id: userAuthor.id })
-      .andWhere({ m_ta_id: ta.id })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ dihapus: 0 })
+      .andWhere({ dihapus: 0 });
+
+    const rpp = await rppQuery
+      .whereNull("tipe")
+      .fetch();
+
+    const silabus = await rppQuery
+      .where({ tipe: "silabus" })
+      .fetch();
+
+    const perangkat = await rppQuery
+      .where({ tipe: "perangkat" })
       .fetch();
 
     return response.ok({
       userAuthor,
-      rpp,
+      bukuKerja: { rpp, silabus, perangkat },
       sekolah,
     });
   }
