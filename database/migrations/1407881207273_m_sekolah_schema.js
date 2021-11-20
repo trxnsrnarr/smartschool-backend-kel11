@@ -25,6 +25,8 @@ class MSekolahSchema extends Schema {
       table.string("tingkat");
       table.string("status");
       table.string("alamat");
+      table.boolean("trial").defaultTo(0);
+      table.boolean("gpds").defaultTo(0);
       table.string("lintang");
       table.string("bujur");
       table.integer("sekolah_id").unsigned().index("sekolah_id");

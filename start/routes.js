@@ -19,6 +19,7 @@ const { route, RouteGroup } = require("@adonisjs/framework/src/Route/Manager");
 const Route = use("Route");
 
 Route.get("/master/sekolah", "MainController.getMasterSekolah");
+Route.get("/master/sekolah/npsn", "MainController.getMasterSekolahNpsn");
 Route.get(
   "/master/sekolah/propinsi",
   "MainController.getMasterSekolahProvinsi"
@@ -32,6 +33,7 @@ Route.get(
   "MainController.getMasterSekolahKabupatenDetail"
 );
 Route.get("/master/sekolah/:id", "MainController.detailSekolahMaster");
+Route.post("/master/sekolah", "MainController.tambahSekolah");
 Route.post("/master/registrasi", "MainController.postRegistrasiSekolah");
 
 // utils
@@ -1114,6 +1116,10 @@ Route.post("/download/lap-tunggakan", "MainController.downloadLapTunggakan");
 Route.post("/download/lap-kehadiran", "MainController.downloadLapKehadiran");
 Route.post("/download/lap-inventaris", "MainController.downloadLapInventaris");
 Route.post("/download/lap-psg", "MainController.downloadLapPsg");
+Route.post(
+  "/download/analisis-materi/:topik_id",
+  "MainController.downloadAnalisisMateri"
+);
 
 // Ortu anak
 Route.post("/absen-anak", "MainController.getAbsensiAnak");
