@@ -37198,15 +37198,24 @@ class MainController {
       .where({ m_user_id: userAuthor.id })
       .andWhere({ dihapus: 0 });
 
-    const rpp = await rppQuery
+    const rpp = await MRpp.query()
+      .with("mataPelajaran")
+      .where({ m_user_id: userAuthor.id })
+      .andWhere({ dihapus: 0 })
       .whereNull("tipe")
       .fetch();
 
-    const silabus = await rppQuery
+    const silabus = await MRpp.query()
+      .with("mataPelajaran")
+      .where({ m_user_id: userAuthor.id })
+      .andWhere({ dihapus: 0 })
       .where({ tipe: "silabus" })
       .fetch();
 
-    const perangkat = await rppQuery
+    const perangkat = await MRpp.query()
+      .with("mataPelajaran")
+      .where({ m_user_id: userAuthor.id })
+      .andWhere({ dihapus: 0 })
       .where({ tipe: "perangkat" })
       .fetch();
 
