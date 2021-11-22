@@ -22505,7 +22505,7 @@ class MainController {
       .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ m_ta_id: ta.id });
 
-    const rombel = rombel_id ? await query.fetch() : await query.where({ m_rombel_id: rombel_id }).fetch();
+    const rombel = rombel_id ? await query.where({ id : rombel_id }).fetch() : await query.fetch();
 
     let workbook = new Excel.Workbook();
 
