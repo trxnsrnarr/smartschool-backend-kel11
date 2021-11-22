@@ -10995,6 +10995,26 @@ class MainController {
         .andWhere({ dihapus: 0 })
         .fetch();
 
+      const jadwalIds = await TkJadwalUjian.query()
+        .whereIn("m_rombel_id", rombelIds)
+        .andWhere({ dihapus: 0 })
+        .distinct("m_jadwal_ujian_id")
+        .pluck("m_jadwal_ujian_id");
+
+      const jadwalLainnya = await MJadwalUjian.query()
+        .with("ujian", (builder) => {
+          if (search) {
+            builder.where("nama", "like", `%${search}%`);
+          }
+        })
+        .whereNot({ m_user_id: user.id })
+        .whereIn("id", jadwalIds)
+        .andWhere({ dihapus: 0 })
+        .andWhere("waktu_dibuka", "<=", hari_ini)
+        .andWhere("waktu_ditutup", ">=", hari_ini)
+        .orderBy("waktu_dibuka", "desc")
+        .fetch();
+
       let jadwalUjian;
 
       if (status == "akan-datang") {
@@ -11066,6 +11086,7 @@ class MainController {
             })
         );
       } else {
+        jadwalUjian = [...jadwalUjian, ...jadwalLainnya];
         await Promise.all(
           jadwalUjian
             .toJSON()
