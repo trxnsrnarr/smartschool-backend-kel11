@@ -15421,7 +15421,7 @@ class MainController {
     });
   }
 
-  async putRekSekolah({ response, request }) {
+  async putRekSekolah({ response, request,params:{rek_sekolah_id} }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -15430,28 +15430,44 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { bank, norek, nama, saldo } = request.post();
-
-    const check = await MRekSekolah.query()
-      .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .first();
-
-    if (!check) {
-      await MRekSekolah.create({
-        dihapus: 0,
-        m_sekolah_id: sekolah.id,
-      });
-    }
-
-    const rekSekolah = await MRekSekolah.query()
-      .where({ dihapus: 0 })
+    const { bank, norek, nama, saldo,jenis } = request.post();
+   
+    const rekSekolah = await MRekSekolah.query()   
+      .where({id:rek_sekolah_id})
       .andWhere({ m_sekolah_id: sekolah.id })
       .update({
+        jenis,
         bank,
         norek,
         nama,
         saldo,
+      });
+
+    if (!rekSekolah) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+  async deleteRekSekolah({ response, request,params:{rek_sekolah_id} }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+
+    const rekSekolah = await MRekSekolah.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({id:rek_sekolah_id})
+      .update({
+        dihapus:1
       });
 
     if (!rekSekolah) {
