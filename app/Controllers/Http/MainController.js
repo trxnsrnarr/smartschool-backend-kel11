@@ -11086,7 +11086,6 @@ class MainController {
             })
         );
       } else {
-        jadwalUjian = [...jadwalUjian.toJSON(), ...jadwalLainnya.toJSON()];
         await Promise.all(
           jadwalUjian
             .toJSON()
@@ -11110,6 +11109,29 @@ class MainController {
               });
             })
         );
+        await Promise.all(
+          jadwalLainnya
+            .toJSON()
+            .filter((item) => item.ujian)
+            .map(async (jadwalUjianData) => {
+              const tkJadwalUjian = await TkJadwalUjian.query()
+                .with("rombel")
+                .where({ m_jadwal_ujian_id: jadwalUjianData.id })
+                .fetch();
+
+              let metaJadwalUjian = {
+                remedial: 0,
+                susulan: 0,
+                diatasKKM: 0,
+              };
+
+              jadwalUjianDataFormat.push({
+                jadwalUjian: jadwalUjianData,
+                rombel: tkJadwalUjian,
+                metaJadwalUjian: metaJadwalUjian,
+              });
+            })
+        )
       }
 
       const ujian = await MUjian.query()
