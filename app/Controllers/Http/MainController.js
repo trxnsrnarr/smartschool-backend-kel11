@@ -11086,7 +11086,7 @@ class MainController {
             })
         );
       } else {
-        jadwalUjian = [...jadwalUjian, ...jadwalLainnya];
+        jadwalUjian = [...jadwalUjian.toJSON(), ...jadwalLainnya.toJSON()];
         await Promise.all(
           jadwalUjian
             .toJSON()
