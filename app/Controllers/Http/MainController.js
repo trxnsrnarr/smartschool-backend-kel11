@@ -44426,7 +44426,7 @@ class MainController {
           saldo: d ? d.saldo : "-",
           pemasukan: d ? d.pemasukan : "-",
           pengeluaran: d ? d.pengeluaran : "-",
-          total: d ? d.pemasukan : "-" + d ? d.pengeluaran : "-",
+          total: d ? d.pemasukan : "0" - d ? d.pengeluaran : "0" + d ? d.saldo :"0",
         });
       })
     );
@@ -44437,7 +44437,18 @@ class MainController {
     worksheet.getCell(
       "A3"
     ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
-    let namaFile = `/uploads/rekap-Barang-${keluarantanggalseconds}.xlsx`;
+    worksheet.getColumn("A").width = 6;
+    worksheet.getColumn("B").width = 18;
+    worksheet.getColumn("C").width = 14;
+    worksheet.getColumn("D").width = 15;
+    worksheet.getColumn("E").width = 15;
+    worksheet.getColumn("F").width = 9;
+    worksheet.getColumn("G").width = 13;
+    worksheet.getColumn("H").width = 13;
+    worksheet.getColumn("I").width = 9;
+
+
+    let namaFile = `/uploads/rekap-Rekening-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
