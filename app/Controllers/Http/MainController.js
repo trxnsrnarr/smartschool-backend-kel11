@@ -15274,6 +15274,36 @@ class MainController {
   }
 
   // Validasi sampai sini
+  async postRekSekolah({ response, request }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { bank, norek, nama, saldo,jenis } = request.post();
+    
+    const rekSekolah =  await MRekSekolah.create({
+        bank,
+        norek,
+        nama,
+        saldo,jenis,
+        dihapus: 0,
+        m_sekolah_id: sekolah.id,
+      });
+
+    if (!rekSekolah) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
 
   async putRekSekolah({ response, request }) {
     const domain = request.headers().origin;
@@ -15298,15 +15328,16 @@ class MainController {
       });
     }
 
-    const rekSekolah = await MRekSekolah.query()
-      .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .update({
-        bank,
-        norek,
-        nama,
-        saldo,
-      });
+      const rekSekolah = await MRekSekolah.query()
+        .where({ dihapus: 0 })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .update({
+          bank,
+          norek,
+          nama,
+          saldo,
+        });
+
 
     if (!rekSekolah) {
       return response.notFound({
