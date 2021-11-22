@@ -11008,6 +11008,7 @@ class MainController {
           }
         })
         .whereNot({ m_user_id: user.id })
+        .whereIn("m_user_id", await User.query().where({ role: "admin" }).where({ dihapus: 0 }).where({ m_sekolah_id: sekolah.id }).ids())
         .whereIn("id", jadwalIds)
         .andWhere({ dihapus: 0 })
         .andWhere("waktu_dibuka", "<=", hari_ini)
