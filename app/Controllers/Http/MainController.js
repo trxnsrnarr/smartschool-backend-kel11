@@ -22490,18 +22490,22 @@ class MainController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
+
+    const { rombel_id } = request.post();
+
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
-    const rombel = await MRombel.query()
+    const query = MRombel.query()
       .with("user")
       .with("anggotaRombel", (builder) => {
         builder.where({ dihapus: 0 }).with("user");
       })
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta.id })
-      .fetch();
+      .andWhere({ m_ta_id: ta.id });
+
+    const rombel = rombel_id ? await query.fetch() : await query.where({ m_rombel_id: rombel_id }).fetch();
 
     let workbook = new Excel.Workbook();
 
