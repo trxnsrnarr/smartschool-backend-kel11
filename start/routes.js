@@ -214,9 +214,10 @@ Route.delete("/materi/:materi_id", "MainController.deleteMateri");
 
 // no rekening
 Route.get("/rek-sekolah", "MainController.getRekSekolah");
-Route.put("/rek-sekolah", "MainController.postRekSekolah");
+Route.post("/rek-sekolah", "MainController.postRekSekolah");
 Route.put("/rek-sekolah/:rek_sekolah_id", "MainController.putRekSekolah");
-Route.put("/rek-sekolah/:rek_sekolah_id", "MainController.deleteRekSekolah");
+Route.delete("/rek-sekolah/:rek_sekolah_id", "MainController.deleteRekSekolah");
+Route.post("/rek-sekolah/download","MainController.")
 
 // pembayaran
 Route.get("/pembayaran", "MainController.getPembayaran");
