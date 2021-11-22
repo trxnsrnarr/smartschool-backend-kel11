@@ -44207,6 +44207,202 @@ class MainController {
     }
   }
 
+  async downloadRekening({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
+    const rekening = await MRekSekolah.query()
+      .where({ dihapus: 0 })
+      .fetch();
+
+    let workbook = new Excel.Workbook();
+    let worksheet = workbook.addWorksheet(`Daftar Rekening`);
+    
+    worksheet.addConditionalFormatting({
+      ref: "A1:I2",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 16,
+              bold: true,
+            },
+            // fill: {
+            //   type: "pattern",
+            //   pattern: "solid",
+            //   bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            // },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            // border: {
+            //   top: { style: "thin" },
+            //   left: { style: "thin" },
+            //   bottom: { style: "thin" },
+            //   right: { style: "thin" },
+            // },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: "A4:I4",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+    await Promise.all(
+      rekening.toJSON().map(async (d, idx) => {
+     
+        worksheet.addConditionalFormatting({
+          ref: `B${(idx + 1) * 1 + 4}:I${(idx + 1) * 1 + 4}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet.addConditionalFormatting({
+          ref: `A${(idx + 1) * 1 + 4}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        // add column headers
+        worksheet.getRow(4).values = [
+          "No",
+          "Jenis",
+          "Nama Bank",
+          "No Rekening",
+          "Nama Pemilik",
+          "Saldo",
+          "Pemasukan",
+          "Pengeluaran",
+          "Total",
+        ];
+
+        worksheet.columns = [
+          { key: "no" },
+          { key: "jenis" },
+          { key: "bank" },
+          { key: "norek" },
+          { key: "pemilik" },
+          { key: "saldo" },
+          { key: "pemasukan" },
+          { key: "pengeluaran" },
+          { key: "total" },
+        ];
+
+        // Add row using key mapping to columns
+        let row = worksheet.addRow({
+          no: `${idx + 1}`,
+          jenis: d ? d.jenis : "-",
+          bank: d ? d.bank : "-",
+          norek: d ? d.norek : "-",
+          pemilik: d ? d.pemilik : "-",
+          saldo: d ? d.saldo : "-",
+          pemasukan: d ? d.pemasukan : "-",
+          pengeluaran: d ? d.pengeluaran : "-",
+          total: d ? d.pemasukan : "-" + d ? d.pengeluaran : "-",
+        });
+      })
+    );
+    worksheet.getCell("A1").value = "Rekap Rekening";
+    worksheet.getCell("A2").value = sekolah.nama;
+    worksheet.mergeCells("A1:I1");
+    worksheet.mergeCells("A2:I2");
+    worksheet.getCell(
+      "A3"
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
+    let namaFile = `/uploads/rekap-Barang-${keluarantanggalseconds}.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
+
   async ip({ response, request }) {
     return response.ok({ ip: [request.ip(), request.ips()] });
   }
