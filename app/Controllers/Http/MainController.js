@@ -5976,6 +5976,7 @@ class MainController {
           gender: explanation.getCell("E" + rowNumber).value,
           role: explanation.getCell("F" + rowNumber).value,
           password: explanation.getCell("G " + rowNumber).value,
+          wa_ayah: explanation.getCell("H" + rowNumber).value,
         });
       }
     });
@@ -5992,6 +5993,7 @@ class MainController {
             nama: d.nama,
             whatsapp: d.whatsapp,
             gender: d.gender,
+            wa_ayah: d.wa_ayah,
             email: d.email ? d.email : "",
             password: `${d.password}`,
             role: "siswa",
