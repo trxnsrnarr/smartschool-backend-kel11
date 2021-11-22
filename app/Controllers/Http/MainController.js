@@ -10995,6 +10995,27 @@ class MainController {
         .andWhere({ dihapus: 0 })
         .fetch();
 
+      const jadwalIds = await TkJadwalUjian.query()
+        .whereIn("m_rombel_id", rombelIds)
+        .andWhere({ dihapus: 0 })
+        .distinct("m_jadwal_ujian_id")
+        .pluck("m_jadwal_ujian_id");
+
+      const jadwalLainnya = await MJadwalUjian.query()
+        .with("ujian", (builder) => {
+          if (search) {
+            builder.where("nama", "like", `%${search}%`);
+          }
+        })
+        .whereNot({ m_user_id: user.id })
+        .whereIn("m_user_id", await User.query().where({ role: "admin" }).where({ dihapus: 0 }).where({ m_sekolah_id: sekolah.id }).ids())
+        .whereIn("id", jadwalIds)
+        .andWhere({ dihapus: 0 })
+        .andWhere("waktu_dibuka", "<=", hari_ini)
+        .andWhere("waktu_ditutup", ">=", hari_ini)
+        .orderBy("waktu_dibuka", "desc")
+        .fetch();
+
       let jadwalUjian;
 
       if (status == "akan-datang") {
@@ -11089,6 +11110,29 @@ class MainController {
               });
             })
         );
+        await Promise.all(
+          jadwalLainnya
+            .toJSON()
+            .filter((item) => item.ujian)
+            .map(async (jadwalUjianData) => {
+              const tkJadwalUjian = await TkJadwalUjian.query()
+                .with("rombel")
+                .where({ m_jadwal_ujian_id: jadwalUjianData.id })
+                .fetch();
+
+              let metaJadwalUjian = {
+                remedial: 0,
+                susulan: 0,
+                diatasKKM: 0,
+              };
+
+              jadwalUjianDataFormat.push({
+                jadwalUjian: jadwalUjianData,
+                rombel: tkJadwalUjian,
+                metaJadwalUjian: metaJadwalUjian,
+              });
+            })
+        )
       }
 
       const ujian = await MUjian.query()
@@ -22779,9 +22823,7 @@ class MainController {
       .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ m_ta_id: ta.id });
 
-    const rombel = rombel_id
-      ? await query.fetch()
-      : await query.where({ m_rombel_id: rombel_id }).fetch();
+    const rombel = rombel_id ? await query.where({ id : rombel_id }).fetch() : await query.fetch();
 
     let workbook = new Excel.Workbook();
 
