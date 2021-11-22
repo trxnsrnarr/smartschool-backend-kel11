@@ -598,6 +598,119 @@ class MainController {
     });
   }
 
+  async tambahSekolah({ response, request }) {
+    const {
+      kode_prop,
+      propinsi,
+      kode_kab_kota,
+      kabupaten_kota,
+      kode_kec,
+      kecamatan,
+      npsn,
+      sekolah,
+      bentuk,
+      status,
+      alamat_jalan,
+      telp,
+      email,
+      kode_pos,
+    } = request.post();
+
+    const rules = {
+      kode_prop: "required",
+      propinsi: "required",
+      kode_kab_kota: "required",
+      kabupaten_kota: "required",
+      kode_kec: "required",
+      kecamatan: "required",
+      npsn: "required",
+      sekolah: "required",
+      bentuk: "required",
+      status: "required",
+      alamat_jalan: "required",
+      telp: "required",
+      email: "required",
+      kode_pos: "required",
+    };
+    const message = {
+      "kode_prop.required": "kode_prop harus di isi",
+      "propinsi.required": "propinsi harus di isi",
+      "kode_kab_kota.required": "kode_kab_kota harus di isi",
+      "kabupaten_kota.required": "kabupaten_kota harus di isi",
+      "kode_kec.required": "kode_kec harus di isi",
+      "kecamatan.required": "kecamatan harus di isi",
+      "npsn.required": "npsn harus di isi",
+      "sekolah.required": "sekolah harus di isi",
+      "bentuk.required": "jenjang harus di isi",
+      "status.required": "status harus di isi",
+      "alamat_jalan.required": "alamat_jalan harus di isi",
+      "telp.required": "telp harus di isi",
+      "email.required": "email harus di isi",
+      "kode_pos.required": "kode_pos harus di isi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    let check;
+    check = await Sekolah.query().where({ npsn: npsn }).first();
+    if (check) {
+      return response.unprocessableEntity([
+        { message: "Sekolah sudah terdaftar" },
+      ]);
+    }
+    const sekolahBaru = await Sekolah.create({
+      kode_prop,
+      propinsi,
+      kode_kab_kota,
+      kabupaten_kota,
+      kode_kec,
+      kecamatan,
+      npsn,
+      sekolah,
+      bentuk,
+      status,
+      alamat_jalan,
+    });
+
+    const domain = slugify(sekolahBaru.sekolah, {
+      replacement: "", // replace spaces with replacement character, defaults to `-`
+      remove: /[*+~.()'"!:@]/g,
+      lower: true, // convert to lower case, defaults to `false`
+    });
+    check = await MSekolah.query()
+      .where({ domain: `https://${domain}.smarteschool.id` })
+      .first();
+    let sekolahSS;
+    if (check) {
+      sekolahSS = check;
+    } else {
+      sekolahSS = await MSekolah.create({
+        nama: sekolahBaru.sekolah,
+        domain: `https://${domain}.smarteschool.id`,
+        status: sekolahBaru.status,
+        tingkat: sekolahBaru.bentuk,
+        npsn: sekolahBaru.npsn,
+        telp: telp,
+        email: email,
+        kode_pos: kode_pos,
+        integrasi: "whatsapp",
+        diintegrasi: 1,
+        trial: 1,
+      });
+    }
+    await Sekolah.query().where({ id: sekolahBaru.id }).update({
+      m_sekolah_id: sekolahSS.id,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+      sekolahId: sekolahBaru.id,
+      sekolahSS: sekolahSS.id,
+    });
+  }
+
   async getMasterSekolahNpsn({ response, request }) {
     const { npsn } = request.get();
 
@@ -5863,6 +5976,7 @@ class MainController {
           gender: explanation.getCell("E" + rowNumber).value,
           role: explanation.getCell("F" + rowNumber).value,
           password: explanation.getCell("G " + rowNumber).value,
+          wa_ayah: explanation.getCell("H" + rowNumber).value,
         });
       }
     });
@@ -5879,6 +5993,7 @@ class MainController {
             nama: d.nama,
             whatsapp: d.whatsapp,
             gender: d.gender,
+            wa_ayah: d.wa_ayah,
             email: d.email ? d.email : "",
             password: `${d.password}`,
             role: "siswa",
@@ -22406,18 +22521,22 @@ class MainController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
+
+    const { rombel_id } = request.post();
+
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
-    const rombel = await MRombel.query()
+    const query = MRombel.query()
       .with("user")
       .with("anggotaRombel", (builder) => {
         builder.where({ dihapus: 0 }).with("user");
       })
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta.id })
-      .fetch();
+      .andWhere({ m_ta_id: ta.id });
+
+    const rombel = rombel_id ? await query.fetch() : await query.where({ m_rombel_id: rombel_id }).fetch();
 
     let workbook = new Excel.Workbook();
 
@@ -37111,17 +37230,35 @@ class MainController {
       .with("profil")
       .first();
 
+    const rppQuery = MRpp.query()
+      .with("mataPelajaran")
+      .where({ m_user_id: userAuthor.id })
+      .andWhere({ dihapus: 0 });
+
     const rpp = await MRpp.query()
       .with("mataPelajaran")
       .where({ m_user_id: userAuthor.id })
-      .andWhere({ m_ta_id: ta.id })
-      .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
+      .whereNull("tipe")
+      .fetch();
+
+    const silabus = await MRpp.query()
+      .with("mataPelajaran")
+      .where({ m_user_id: userAuthor.id })
+      .andWhere({ dihapus: 0 })
+      .where({ tipe: "silabus" })
+      .fetch();
+
+    const perangkat = await MRpp.query()
+      .with("mataPelajaran")
+      .where({ m_user_id: userAuthor.id })
+      .andWhere({ dihapus: 0 })
+      .where({ tipe: "perangkat" })
       .fetch();
 
     return response.ok({
       userAuthor,
-      rpp,
+      bukuKerja: { rpp, silabus, perangkat },
       sekolah,
     });
   }
