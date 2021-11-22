@@ -15398,16 +15398,17 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { bank, norek, nama, saldo,jenis } = request.post();
-    
-    const rekSekolah =  await MRekSekolah.create({
-        bank,
-        norek,
-        nama,
-        saldo,jenis,
-        dihapus: 0,
-        m_sekolah_id: sekolah.id,
-      });
+    const { bank, norek, nama, saldo, jenis } = request.post();
+
+    const rekSekolah = await MRekSekolah.create({
+      bank,
+      norek,
+      nama,
+      saldo,
+      jenis,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
 
     if (!rekSekolah) {
       return response.notFound({
@@ -15443,16 +15444,15 @@ class MainController {
       });
     }
 
-      const rekSekolah = await MRekSekolah.query()
-        .where({ dihapus: 0 })
-        .andWhere({ m_sekolah_id: sekolah.id })
-        .update({
-          bank,
-          norek,
-          nama,
-          saldo,
-        });
-
+    const rekSekolah = await MRekSekolah.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .update({
+        bank,
+        norek,
+        nama,
+        saldo,
+      });
 
     if (!rekSekolah) {
       return response.notFound({
@@ -16682,6 +16682,233 @@ class MainController {
 
     return response.ok({
       message: messagePostSuccess,
+    });
+  }
+
+  async postMutasiV1({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { tipe, nama, rek_sekolah_id, kategori, nominal, waktu_dibuat } =
+      request.post();
+
+    const rules = {
+      nama: "required",
+      tipe: "required",
+      kategori: "required",
+      nominal: "required",
+      rek_sekolah_id: "required",
+    };
+    const message = {
+      "tipe.required": "Tipe harus dipilih",
+      "nama.required": "Nama harus diisi",
+      "kategori.required": "Kategori harus diisi",
+      "nominal.required": "Nominal harus diisi",
+      rek_sekolah_id: "Rekening harus dipilih",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const mutasi = await MMutasi.create({
+      tipe,
+      nama,
+      kategori,
+      nominal,
+      dihapus: 0,
+      m_rek_sekolah_id: rek_sekolah_id,
+      m_sekolah_id: sekolah.id,
+      waktu_dibuat,
+    });
+
+    const rekSekolah = await MRekSekolah.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ id: rek_sekolah_id })
+      .first();
+
+    if (rekSekolah) {
+      let pemasukan, pengeluaran;
+      if (tipe == "debit") {
+        pemasukan = rekSekolah.pemasukan;
+        pengeluaran = rekSekolah.pengeluaran + nominal;
+      } else {
+        pemasukan = rekSekolah.pemasukan + nominal;
+        pengeluaran = rekSekolah.pengeluaran;
+      }
+
+      await MRekSekolah.query().where({ m_sekolah_id: sekolah.id }).andWhere({id:rek_sekolah_id}).update({
+        pemasukan,
+        pengeluaran,
+      });
+    }
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putMutasiV1({ response, request, auth, params: { mutasi_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const beforeUpdate = await MMutasi.query().where({ id: mutasi_id }).first();
+
+    const { tipe, rek_sekolah_id, nama, kategori, nominal, waktu_dibuat } =
+      request.post();
+    const rules = {
+      nama: "required",
+      tipe: "required",
+      kategori: "required",
+      nominal: "required",
+      rek_sekolah_id: "required",
+    };
+    const message = {
+      "tipe.required": "Tipe harus dipilih",
+      "nama.required": "Nama harus diisi",
+      "kategori.required": "Kategori harus diisi",
+      "nominal.required": "Nominal harus diisi",
+      "rek_sekolah_id.required": "Rekening harus dipilih",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const mutasi = await MMutasi.query().where({ id: mutasi_id }).update({
+      tipe,
+      nama,
+      kategori,
+      nominal,
+      waktu_dibuat,
+      m_rek_sekolah_id: rek_sekolah_id,
+    });
+
+    const rekSekolah = await MRekSekolah.query()
+    .where({ m_sekolah_id: sekolah.id })
+    .andWhere({ id: rek_sekolah_id })
+    .first();
+
+    if (rekSekolah) {
+      let pemasukan, pengeluaran;
+      if (tipe != beforeUpdate.tipe) {
+          if (tipe == "kredit") {
+            pemasukan = rekSekolah.pemasukan + nominal;
+            pengeluaran = rekSekolah.pengeluaran - beforeUpdate.nominal;
+          } else {
+            pengeluaran = rekSekolah.pengeluaran + nominal;
+            pemasukan = rekSekolah.pemasukan - beforeUpdate.nominal;
+          }
+        } else {
+          if (tipe == "kredit") {
+            pemasukan = rekSekolah.pemasukan - beforeUpdate.nominal + nominal;
+            pengeluaran = rekSekolah.pengeluaran;
+          } else {
+            pengeluaran =
+            rekSekolah.pengeluaran - beforeUpdate.nominal + nominal;
+            pemasukan = rekSekolah.pemasukan;
+          }
+        }
+        
+        await MRekSekolah.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ id: rek_sekolah_id })
+        .update({
+          pemasukan,
+          pengeluaran,
+        });
+        if (rek_sekolah_id != beforeUpdate.m_rek_sekolah_id) {
+          let masuk ,keluar;
+          if (beforeUpdate.tipe == "kredit") {
+            masuk = rekSekolah.pemasukan - beforeUpdate.nominal;
+            keluar = rekSekolah.pengeluaran;
+          } else {
+            masuk = rekSekolah.pemasukan;
+            keluar = rekSekolah.pengeluaran - beforeUpdate.nominal;
+          }
+          await MRekSekolah.query()
+            .where({id:beforeUpdate.m_rek_sekolah_id})
+            .update({
+              pemasukan:masuk,
+              pengeluaran:keluar,
+            })
+          
+      }
+    } 
+    
+
+    if (!mutasi) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteMutasiV1({ response, request, auth, params: { mutasi_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const beforeUpdate = await MMutasi.query().where({ id: mutasi_id }).first();
+    const rekSekolah = await MRekSekolah.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({m_rek_sekolah_id:beforeUpdate.m_rek_sekolah_id})
+      .first();
+
+    if (rekSekolah) {
+      let pemasukan, pengeluaran;
+      if (beforeUpdate.tipe == "kredit") {
+        // Kredit == pemasukan
+        pemasukan = rekSekolah.pemasukan - beforeUpdate.nominal;
+        if (pemasukan < 0) {
+          pemasukan = 0;
+        }
+        pengeluaran = rekSekolah.pengeluaran;
+      } else {
+        // debit == pengeluaran
+        pengeluaran = rekSekolah.pengeluaran - beforeUpdate.nominal;
+        if (pengeluaran < 0) {
+          pengeluaran = 0;
+        }
+        pemasukan = rekSekolah.pemasukan;
+      }
+
+      await MRekSekolah.query().where({ m_sekolah_id: sekolah.id }).update({
+        pemasukan,
+        pengeluaran,
+      });
+    }
+
+    const mutasi = await MMutasi.query().where({ id: mutasi_id }).update({
+      dihapus: 1,
+    });
+
+    if (!mutasi) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
     });
   }
 
@@ -22536,7 +22763,9 @@ class MainController {
       .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ m_ta_id: ta.id });
 
-    const rombel = rombel_id ? await query.fetch() : await query.where({ m_rombel_id: rombel_id }).fetch();
+    const rombel = rombel_id
+      ? await query.fetch()
+      : await query.where({ m_rombel_id: rombel_id }).fetch();
 
     let workbook = new Excel.Workbook();
 
@@ -40047,12 +40276,14 @@ class MainController {
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const guru = await User.query()
-    .withCount("absen as juli",(builder)=>{
-      builder.where({absen:"hadir"}).whereBetween("waktu_masuk", [
-        `2021-07-1 00:00:00`,
-        `2021-07-31 23:59:59`,
-      ])
-    })
+      .withCount("absen as juli", (builder) => {
+        builder
+          .where({ absen: "hadir" })
+          .whereBetween("waktu_masuk", [
+            `2021-07-1 00:00:00`,
+            `2021-07-31 23:59:59`,
+          ]);
+      })
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .andWhere({ role: "guru" })
