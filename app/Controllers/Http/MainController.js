@@ -15446,7 +15446,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { search } = request.get();
+    const { search, page } = request.get();
 
     const query = MRekSekolah.query()
       .where({ dihapus: 0 })
@@ -15456,17 +15456,20 @@ class MainController {
       query.where("jenis", "like", `%${search}%`);
     }
 
-    const rekSekolah = await query.fetch();
+    const rekSekolah = await query.paginate(page, 5);
     const totalSaldo = rekSekolah
       .toJSON()
+      .data
       .map((d) => d.saldo)
       .reduce((a, b) => a + b, 0);
     const totalPemasukkan = rekSekolah
       .toJSON()
+      .data
       .map((d) => d.pemasukan)
       .reduce((a, b) => a + b, 0);
     const totalPengeluaran = rekSekolah
       .toJSON()
+      .data
       .map((d) => d.pengeluaran)
       .reduce((a, b) => a + b, 0);
 
