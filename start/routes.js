@@ -289,8 +289,8 @@ Route.delete("/prestasi/:prestasi_id", "MainController.deletePrestasi");
 
 // mutasi
 Route.get("/mutasi", "MainController.getMutasi");
-Route.post("/mutasi", "MainController.postMutasi");
-Route.put("/mutasi/:mutasi_id", "MainController.putMutasi");
+Route.post("/mutasi", "MainController.postMutasiV1");
+Route.put("/mutasi/:mutasi_id", "MainController.putMutasiV1");
 Route.delete("/mutasi/:mutasi_id", "MainController.deleteMutasi");
 
 // topik
