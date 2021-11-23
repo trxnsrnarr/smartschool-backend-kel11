@@ -16934,14 +16934,20 @@ class MainController {
           pemasukan,
           pengeluaran,
         });
+
+        const rekBeforeUpdate = await MRekSekolah.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ id: beforeUpdate.m_rek_sekolah_id })
+        .first();
+
       if (rek_sekolah_id != beforeUpdate.m_rek_sekolah_id) {
         let masuk, keluar;
         if (beforeUpdate.tipe == "kredit") {
-          masuk = rekSekolah.pemasukan - beforeUpdate.nominal;
-          keluar = rekSekolah.pengeluaran;
+          masuk = rekBeforeUpdate.pemasukan - beforeUpdate.nominal;
+          keluar = rekBeforeUpdate.pengeluaran;
         } else {
-          masuk = rekSekolah.pemasukan;
-          keluar = rekSekolah.pengeluaran - beforeUpdate.nominal;
+          masuk = rekBeforeUpdate.pemasukan;
+          keluar = rekBeforeUpdate.pengeluaran - beforeUpdate.nominal;
         }
         await MRekSekolah.query()
           .where({ id: beforeUpdate.m_rek_sekolah_id })
@@ -44506,6 +44512,35 @@ class MainController {
 
     return namaFile;
   }
+
+  async hackUjianSiswaNilai({ response, request }) {
+    const { offset, limit } = request.post();
+
+    const semuaUser = await User.query()
+      .select("id", "nama")
+      .where({ dihapus: 0 })
+      // .andWhere({ m_sekolah_id: 33 })
+      .andWhere({ role: "siswa" })
+      .andWhere({m_sekolah_id:33})
+      // .offset(parseInt(offset))
+      // .limit(limit)
+      .ids();
+
+      const ujian = await MUjianSiswa.quey()
+      .whereIn("m_user_id",semuaUser)
+      .fetch()
+
+    // return semuaUser;
+
+    const semua = await Promise.all(
+      ujian.toJSON().map(async (ss) => {
+
+      })
+    );
+
+    return semua;
+  }
+
 
   async ip({ response, request }) {
     return response.ok({ ip: [request.ip(), request.ips()] });
