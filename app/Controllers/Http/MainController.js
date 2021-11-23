@@ -16721,9 +16721,16 @@ class MainController {
 
     sarpras = await sarpras.orderBy("created_at", "desc").paginate(page, 25);
 
+    const kategori = await MMutasi.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .distinct("kategori")
+      .pluck("kategori")
+
     return response.ok({
       sarpras: sarpras,
       grafik: grafikData,
+      kategori,
     });
   }
 
