@@ -15433,9 +15433,9 @@ class MainController {
     }
 
     const rekSekolah = await query.fetch();
-    const totalSaldo = rekSekolah.toJSON().reduce((a, b) => a.saldo || 0 + b.saldo, 0)
-    const totalPemasukkan = rekSekolah.toJSON().reduce((a, b) => a.pemasukan || 0 + b.pemasukan, 0)
-    const totalPengeluaran = rekSekolah.toJSON().reduce((a, b) => a.pengeluaran || 0 + b.pengeluaran, 0)
+    const totalSaldo = rekSekolah.toJSON().map(d => d.saldo).reduce((a, b) => a + b, 0)
+    const totalPemasukkan = rekSekolah.toJSON().map(d => d.pemasukan).reduce((a, b) => a + b, 0)
+    const totalPengeluaran = rekSekolah.toJSON().map(d => d.pengeluaran).reduce((a, b) => a + b, 0)
 
     return response.ok({
       rekSekolah: rekSekolah,
