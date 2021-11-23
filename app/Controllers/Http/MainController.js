@@ -16675,7 +16675,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { search, dari_tanggal, sampai_tanggal, tipe, page, filter_grafik } =
+    let { search, dari_tanggal, sampai_tanggal, tipe, page, filter_grafik, kategori: filterKategori, tipe_akun } =
       request.get();
     page = page ? parseInt(page) : 1;
 
@@ -16711,6 +16711,12 @@ class MainController {
 
     if (tipe) {
       sarpras.andWhere({ tipe: tipe });
+    }
+    if (filterKategori) {
+      sarpras.andWhere({ kategori: filterKategori });
+    }
+    if (tipe_akun) {
+      sarpras.andWhere({ m_rek_sekolah_id: tipe_akun });
     }
     if (dari_tanggal && sampai_tanggal) {
       sarpras.whereBetween("waktu_dibuat", [dari_tanggal, sampai_tanggal]);
