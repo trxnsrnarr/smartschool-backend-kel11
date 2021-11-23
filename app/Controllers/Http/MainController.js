@@ -10174,7 +10174,9 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const ujian = await MUjian.query()
+    const ujian = await MUjian.query().where({ id: ujian_id }).first();
+
+    const soalUjian = await MUjian.query()
       .with("soalUjian", (builder) => {
         builder
           .with("soal", (builder) => {
@@ -10184,6 +10186,21 @@ class MainController {
       })
       .where({ id: ujian_id })
       .first();
+    const filterUjian = soalUjian.toJSON().soalUjian.filter((d) => {
+      if (d.soal.bentuk) {
+        if (
+          ["menjodohkan", "uraian", "esai", "pg_kompleks", "pg"].includes(
+            d.soal.bentuk.toLowerCase()
+          )
+        ) {
+          return true;
+        } else {
+          return false;
+        }
+      } else {
+        return false;
+      }
+    });
 
     const soalUjianIds = await TkSoalUjian.query()
       .with("soal")
@@ -10308,7 +10325,7 @@ class MainController {
     }
 
     return response.ok({
-      ujian: ujian,
+      ujian: { ...ujian.toJSON(), soalUjian: filterUjian },
       kontenMateri,
       konteksMateri,
       prosesKognitif,
@@ -11008,7 +11025,14 @@ class MainController {
           }
         })
         .whereNot({ m_user_id: user.id })
-        .whereIn("m_user_id", await User.query().where({ role: "admin" }).where({ dihapus: 0 }).where({ m_sekolah_id: sekolah.id }).ids())
+        .whereIn(
+          "m_user_id",
+          await User.query()
+            .where({ role: "admin" })
+            .where({ dihapus: 0 })
+            .where({ m_sekolah_id: sekolah.id })
+            .ids()
+        )
         .whereIn("id", jadwalIds)
         .andWhere({ dihapus: 0 })
         .andWhere("waktu_dibuka", "<=", hari_ini)
@@ -11132,7 +11156,7 @@ class MainController {
                 metaJadwalUjian: metaJadwalUjian,
               });
             })
-        )
+        );
       }
 
       const ujian = await MUjian.query()
@@ -15426,22 +15450,31 @@ class MainController {
 
     const query = MRekSekolah.query()
       .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_sekolah_id: sekolah.id });
 
     if (search) {
-      query.where("jenis", "like", `%${search}%`)
+      query.where("jenis", "like", `%${search}%`);
     }
 
     const rekSekolah = await query.fetch();
-    const totalSaldo = rekSekolah.toJSON().map(d => d.saldo).reduce((a, b) => a + b, 0)
-    const totalPemasukkan = rekSekolah.toJSON().map(d => d.pemasukan).reduce((a, b) => a + b, 0)
-    const totalPengeluaran = rekSekolah.toJSON().map(d => d.pengeluaran).reduce((a, b) => a + b, 0)
+    const totalSaldo = rekSekolah
+      .toJSON()
+      .map((d) => d.saldo)
+      .reduce((a, b) => a + b, 0);
+    const totalPemasukkan = rekSekolah
+      .toJSON()
+      .map((d) => d.pemasukan)
+      .reduce((a, b) => a + b, 0);
+    const totalPengeluaran = rekSekolah
+      .toJSON()
+      .map((d) => d.pengeluaran)
+      .reduce((a, b) => a + b, 0);
 
     return response.ok({
       rekSekolah: rekSekolah,
       totalSaldo,
       totalPemasukkan,
-      totalPengeluaran
+      totalPengeluaran,
     });
   }
 
@@ -15478,7 +15511,7 @@ class MainController {
     });
   }
 
-  async putRekSekolah({ response, request,params:{rek_sekolah_id} }) {
+  async putRekSekolah({ response, request, params: { rek_sekolah_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -15487,10 +15520,10 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { bank, norek, nama, saldo,jenis } = request.post();
-   
-    const rekSekolah = await MRekSekolah.query()   
-      .where({id:rek_sekolah_id})
+    const { bank, norek, nama, saldo, jenis } = request.post();
+
+    const rekSekolah = await MRekSekolah.query()
+      .where({ id: rek_sekolah_id })
       .andWhere({ m_sekolah_id: sekolah.id })
       .update({
         jenis,
@@ -15510,7 +15543,7 @@ class MainController {
       message: messagePutSuccess,
     });
   }
-  async deleteRekSekolah({ response, request,params:{rek_sekolah_id} }) {
+  async deleteRekSekolah({ response, request, params: { rek_sekolah_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -15519,12 +15552,11 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-
     const rekSekolah = await MRekSekolah.query()
       .where({ m_sekolah_id: sekolah.id })
-      .andWhere({id:rek_sekolah_id})
+      .andWhere({ id: rek_sekolah_id })
       .update({
-        dihapus:1
+        dihapus: 1,
       });
 
     if (!rekSekolah) {
@@ -16815,10 +16847,13 @@ class MainController {
         pengeluaran = rekSekolah.pengeluaran;
       }
 
-      await MRekSekolah.query().where({ m_sekolah_id: sekolah.id }).andWhere({id:rek_sekolah_id}).update({
-        pemasukan,
-        pengeluaran,
-      });
+      await MRekSekolah.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ id: rek_sekolah_id })
+        .update({
+          pemasukan,
+          pengeluaran,
+        });
     }
 
     return response.ok({
@@ -16868,57 +16903,54 @@ class MainController {
     });
 
     const rekSekolah = await MRekSekolah.query()
-    .where({ m_sekolah_id: sekolah.id })
-    .andWhere({ id: rek_sekolah_id })
-    .first();
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ id: rek_sekolah_id })
+      .first();
 
     if (rekSekolah) {
       let pemasukan, pengeluaran;
       if (tipe != beforeUpdate.tipe) {
-          if (tipe == "kredit") {
-            pemasukan = rekSekolah.pemasukan + nominal;
-            pengeluaran = rekSekolah.pengeluaran - beforeUpdate.nominal;
-          } else {
-            pengeluaran = rekSekolah.pengeluaran + nominal;
-            pemasukan = rekSekolah.pemasukan - beforeUpdate.nominal;
-          }
+        if (tipe == "kredit") {
+          pemasukan = rekSekolah.pemasukan + nominal;
+          pengeluaran = rekSekolah.pengeluaran - beforeUpdate.nominal;
         } else {
-          if (tipe == "kredit") {
-            pemasukan = rekSekolah.pemasukan - beforeUpdate.nominal + nominal;
-            pengeluaran = rekSekolah.pengeluaran;
-          } else {
-            pengeluaran =
-            rekSekolah.pengeluaran - beforeUpdate.nominal + nominal;
-            pemasukan = rekSekolah.pemasukan;
-          }
+          pengeluaran = rekSekolah.pengeluaran + nominal;
+          pemasukan = rekSekolah.pemasukan - beforeUpdate.nominal;
         }
-        
-        await MRekSekolah.query()
+      } else {
+        if (tipe == "kredit") {
+          pemasukan = rekSekolah.pemasukan - beforeUpdate.nominal + nominal;
+          pengeluaran = rekSekolah.pengeluaran;
+        } else {
+          pengeluaran = rekSekolah.pengeluaran - beforeUpdate.nominal + nominal;
+          pemasukan = rekSekolah.pemasukan;
+        }
+      }
+
+      await MRekSekolah.query()
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ id: rek_sekolah_id })
         .update({
           pemasukan,
           pengeluaran,
         });
-        if (rek_sekolah_id != beforeUpdate.m_rek_sekolah_id) {
-          let masuk ,keluar;
-          if (beforeUpdate.tipe == "kredit") {
-            masuk = rekSekolah.pemasukan - beforeUpdate.nominal;
-            keluar = rekSekolah.pengeluaran;
-          } else {
-            masuk = rekSekolah.pemasukan;
-            keluar = rekSekolah.pengeluaran - beforeUpdate.nominal;
-          }
-          await MRekSekolah.query()
-            .where({id:beforeUpdate.m_rek_sekolah_id})
-            .update({
-              pemasukan:masuk,
-              pengeluaran:keluar,
-            })
-          
+      if (rek_sekolah_id != beforeUpdate.m_rek_sekolah_id) {
+        let masuk, keluar;
+        if (beforeUpdate.tipe == "kredit") {
+          masuk = rekSekolah.pemasukan - beforeUpdate.nominal;
+          keluar = rekSekolah.pengeluaran;
+        } else {
+          masuk = rekSekolah.pemasukan;
+          keluar = rekSekolah.pengeluaran - beforeUpdate.nominal;
+        }
+        await MRekSekolah.query()
+          .where({ id: beforeUpdate.m_rek_sekolah_id })
+          .update({
+            pemasukan: masuk,
+            pengeluaran: keluar,
+          });
       }
-    } 
-    
+    }
 
     if (!mutasi) {
       return response.notFound({
@@ -16943,7 +16975,7 @@ class MainController {
     const beforeUpdate = await MMutasi.query().where({ id: mutasi_id }).first();
     const rekSekolah = await MRekSekolah.query()
       .where({ m_sekolah_id: sekolah.id })
-      .andWhere({m_rek_sekolah_id:beforeUpdate.m_rek_sekolah_id})
+      .andWhere({ m_rek_sekolah_id: beforeUpdate.m_rek_sekolah_id })
       .first();
 
     if (rekSekolah) {
@@ -22836,7 +22868,9 @@ class MainController {
       .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ m_ta_id: ta.id });
 
-    const rombel = rombel_id ? await query.where({ id : rombel_id }).fetch() : await query.fetch();
+    const rombel = rombel_id
+      ? await query.where({ id: rombel_id }).fetch()
+      : await query.fetch();
 
     let workbook = new Excel.Workbook();
 
@@ -44276,13 +44310,11 @@ class MainController {
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
-    const rekening = await MRekSekolah.query()
-      .where({ dihapus: 0 })
-      .fetch();
+    const rekening = await MRekSekolah.query().where({ dihapus: 0 }).fetch();
 
     let workbook = new Excel.Workbook();
     let worksheet = workbook.addWorksheet(`Daftar Rekening`);
-    
+
     worksheet.addConditionalFormatting({
       ref: "A1:I2",
       rules: [
@@ -44349,7 +44381,6 @@ class MainController {
     });
     await Promise.all(
       rekening.toJSON().map(async (d, idx) => {
-     
         worksheet.addConditionalFormatting({
           ref: `B${(idx + 1) * 1 + 4}:I${(idx + 1) * 1 + 4}`,
           rules: [
@@ -44439,7 +44470,13 @@ class MainController {
           saldo: d ? d.saldo : "-",
           pemasukan: d ? d.pemasukan : "-",
           pengeluaran: d ? d.pengeluaran : "-",
-          total: d ? d.pemasukan : "0" - d ? d.pengeluaran : "0" + d ? d.saldo :"0",
+          total: d
+            ? d.pemasukan
+            : "0" - d
+            ? d.pengeluaran
+            : "0" + d
+            ? d.saldo
+            : "0",
         });
       })
     );
@@ -44459,7 +44496,6 @@ class MainController {
     worksheet.getColumn("G").width = 13;
     worksheet.getColumn("H").width = 13;
     worksheet.getColumn("I").width = 9;
-
 
     let namaFile = `/uploads/rekap-Rekening-${keluarantanggalseconds}.xlsx`;
 
