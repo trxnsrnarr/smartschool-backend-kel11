@@ -15422,7 +15422,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { search } = requets.get();
+    const { search } = request.get();
 
     const query = MRekSekolah.query()
       .where({ dihapus: 0 })
