@@ -16719,7 +16719,7 @@ class MainController {
       sarpras.andWhere("nama", "like", `%${search}%`);
     }
 
-    sarpras = await sarpras.sortBy("created_at", "desc").paginate(page, 25);
+    sarpras = await sarpras.orderBy("created_at", "desc").paginate(page, 25);
 
     return response.ok({
       sarpras: sarpras,
