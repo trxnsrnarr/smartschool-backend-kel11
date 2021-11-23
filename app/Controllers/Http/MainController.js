@@ -15429,10 +15429,7 @@ class MainController {
       .andWhere({ m_sekolah_id: sekolah.id })
 
     if (search) {
-      query.orWhere("jenis", "like", `%${search}%`)
-      query.orWhere("bank", "like", `%${search}%`)
-      query.orWhere("norek", "like", `%${search}%`)
-      query.orWhere("nama", "like", `%${search}%`)
+      query.where("jenis", "like", `%${search}%`)
     }
 
     const rekSekolah = await query.fetch();
