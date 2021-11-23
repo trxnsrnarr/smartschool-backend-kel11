@@ -25333,9 +25333,11 @@ class MainController {
       .with("materi", (builder) => {
         builder.where({ tingkat: siswa.toJSON().anggotaRombel.rombel.tingkat });
         if (mapelSingkat.kelompok == "C") {
-          builder.andWhere({
-            m_jurusan_id: siswa.toJSON().anggotaRombel.rombel.m_jurusan_id,
-          });
+          if(siswa.toJSON().anggotaRombel.rombel.m_jurusan_id != null){
+            builder.andWhere({
+              m_jurusan_id: siswa.toJSON().anggotaRombel.rombel.m_jurusan_id,
+            });
+          }
         }
       })
       .where({ id: mata_pelajaran_id })
