@@ -16919,10 +16919,18 @@ class MainController {
         }
       } else {
         if (tipe == "kredit") {
-          pemasukan = parseInt(rekSekolah.pemasukan) - parseInt(beforeUpdate.nominal) + parseInt(nominal);
+          if (rek_sekolah_id != beforeUpdate.m_rek_sekolah_id) {
+            pemasukan = parseInt(rekSekolah.pemasukan) + parseInt(nominal);
+          } else {
+            pemasukan = parseInt(rekSekolah.pemasukan) - parseInt(beforeUpdate.nominal) + parseInt(nominal);
+          }
           pengeluaran = parseInt(rekSekolah.pengeluaran);
         } else {
-          pengeluaran = parseInt(rekSekolah.pengeluaran) - parseInt(beforeUpdate.nominal) + parseInt(nominal);
+          if (rek_sekolah_id != beforeUpdate.m_rek_sekolah_id) {
+            pengeluaran = parseInt(rekSekolah.pengeluaran) + parseInt(nominal);
+          } else {
+            pengeluaran = parseInt(rekSekolah.pengeluaran) - parseInt(beforeUpdate.nominal) + parseInt(nominal);
+          }
           pemasukan = parseInt(rekSekolah.pemasukan);
         }
       }
