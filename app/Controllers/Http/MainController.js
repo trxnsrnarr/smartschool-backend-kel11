@@ -15422,23 +15422,26 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { search } = requets.get();
+    const { search } = request.get();
 
     const query = MRekSekolah.query()
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
 
     if (search) {
-      query.orWhere("jenis", "like", `%${search}%`)
-      query.orWhere("bank", "like", `%${search}%`)
-      query.orWhere("norek", "like", `%${search}%`)
-      query.orWhere("nama", "like", `%${search}%`)
+      query.where("jenis", "like", `%${search}%`)
     }
 
     const rekSekolah = await query.fetch();
+    const totalSaldo = rekSekolah.toJSON().map(d => d.saldo).reduce((a, b) => a + b, 0)
+    const totalPemasukkan = rekSekolah.toJSON().map(d => d.pemasukan).reduce((a, b) => a + b, 0)
+    const totalPengeluaran = rekSekolah.toJSON().map(d => d.pengeluaran).reduce((a, b) => a + b, 0)
 
     return response.ok({
       rekSekolah: rekSekolah,
+      totalSaldo,
+      totalPemasukkan,
+      totalPengeluaran
     });
   }
 
