@@ -16911,11 +16911,19 @@ class MainController {
       let pemasukan, pengeluaran;
       if (tipe != beforeUpdate.tipe) {
         if (tipe == "kredit") {
+          if (rek_sekolah_id != beforeUpdate.m_rek_sekolah_id) {
+            pengeluaran = parseInt(rekSekolah.pengeluaran)
+          } else {
+            pengeluaran = parseInt(rekSekolah.pengeluaran) - parseInt(beforeUpdate.nominal);
+          }
           pemasukan = parseInt(rekSekolah.pemasukan) + parseInt(nominal);
-          pengeluaran = parseInt(rekSekolah.pengeluaran) - parseInt(beforeUpdate.nominal);
         } else {
+          if (rek_sekolah_id != beforeUpdate.m_rek_sekolah_id) {
+            pemasukan = parseInt(rekSekolah.pemasukan)
+          } else {
+            pemasukan = parseInt(rekSekolah.pemasukan) - parseInt(beforeUpdate.nominal);
+          }
           pengeluaran = parseInt(rekSekolah.pengeluaran) + parseInt(nominal);
-          pemasukan = parseInt(rekSekolah.pemasukan) - parseInt(beforeUpdate.nominal);
         }
       } else {
         if (tipe == "kredit") {
