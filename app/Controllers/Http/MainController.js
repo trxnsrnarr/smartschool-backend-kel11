@@ -15753,6 +15753,7 @@ class MainController {
       tanggal_dibuat,
       rombel_id,
       tag,
+      m_rek_sekolah_id,
     } = request.post();
     if (bulan) {
       const rules = {
@@ -15761,6 +15762,7 @@ class MainController {
         nominal: "required",
         tanggal_dibuat: "required",
         rombel_id: "required",
+        m_rek_sekolah_id:"required"
       };
       const message = {
         "nama.required": "Nama harus diisi",
@@ -15768,6 +15770,7 @@ class MainController {
         "nominal.required": "Nominal harus diisi",
         "tanggal_dibuat.required": "Tanggal dibuat harus diisi",
         "rombel_id.required": "Bagikan harus dipilih",
+        "m_rek_sekolah_id.required": "Rekening harus dipilih",
       };
       const validation = await validate(request.all(), rules, message);
       if (validation.fails()) {
@@ -15780,6 +15783,7 @@ class MainController {
         nominal: "required",
         tanggal_dibuat: "required",
         rombel_id: "required",
+        m_rek_sekolah_id:"required"
       };
       const message = {
         "nama.required": "Nama harus diisi",
@@ -15787,6 +15791,7 @@ class MainController {
         "nominal.required": "Nominal harus diisi",
         "tanggal_dibuat.required": "Tanggal dibuat harus diisi",
         "rombel_id.required": "Bagikan harus dipilih",
+        "m_rek_sekolah_id.required": "Rekening harus dipilih",
       };
       const validation = await validate(request.all(), rules, message);
       if (validation.fails()) {
@@ -15803,6 +15808,7 @@ class MainController {
       tipe_ujian: jenis == "lainnya" ? JSON.stringify(tag) : tipe_ujian,
       nominal,
       tanggal_dibuat,
+      m_rek_sekolah_id,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
     });
@@ -15942,6 +15948,7 @@ class MainController {
       rombel_id,
       tanggal_dibuat,
       tag,
+      m_rek_sekolah_id
     } = request.post();
 
     if (bulan) {
@@ -15951,6 +15958,7 @@ class MainController {
         nominal: "required",
         tanggal_dibuat: "required",
         rombel_id: "required",
+        m_rek_sekolah_id:"required"
       };
       const message = {
         "nama.required": "Nama harus diisi",
@@ -15958,6 +15966,7 @@ class MainController {
         "nominal.required": "Nominal harus diisi",
         "tanggal_dibuat.required": "Tanggal dibuat harus diisi",
         "rombel_id.required": "Bagikan harus dipilih",
+        "m_rek_sekolah_id.required": "Rekening harus dipilih",
       };
       const validation = await validate(request.all(), rules, message);
       if (validation.fails()) {
@@ -15970,6 +15979,7 @@ class MainController {
         nominal: "required",
         tanggal_dibuat: "required",
         rombel_id: "required",
+        m_rek_sekolah_id:"required"
       };
       const message = {
         "nama.required": "Nama harus diisi",
@@ -15977,6 +15987,7 @@ class MainController {
         "nominal.required": "Nominal harus diisi",
         "tanggal_dibuat.required": "Tanggal dibuat harus diisi",
         "rombel_id.required": "Bagikan harus dipilih",
+        "m_rek_sekolah_id.required": "Rekening harus dipilih",
       };
       const validation = await validate(request.all(), rules, message);
       if (validation.fails()) {
@@ -15998,6 +16009,7 @@ class MainController {
         tipe_ujian: jenis == "lainnya" ? JSON.stringify(tag) : tipe_ujian,
         tanggal_dibuat,
         nominal,
+        m_rek_sekolah_id
       });
 
     if (!pembayaran) {
@@ -16407,17 +16419,20 @@ class MainController {
       }`,
       nominal: pembayaranSiswa.nominal,
       dihapus: 0,
+      m_rek_sekolah_id: riwayat.toJSON().rombelPembayaran.pembayaran.m_rek_sekolah_id,
       m_sekolah_id: sekolah.id,
       waktu_dibuat: pembayaranSiswa.updated_at,
     });
 
     const rekSekolah = await MRekSekolah.query()
       .where({ m_sekolah_id: sekolah.id })
+      .andWhere({id: riwayat.toJSON().rombelPembayaran.pembayaran.m_rek_sekolah_id})
       .first();
 
     if (rekSekolah) {
       await MRekSekolah.query()
         .where({ m_sekolah_id: sekolah.id })
+        .andWhere({id: riwayat.toJSON().rombelPembayaran.pembayaran.m_rek_sekolah_id})
         .update({
           pemasukan:
             parseInt(rekSekolah.pemasukan) + parseInt(pembayaranSiswa.nominal),
