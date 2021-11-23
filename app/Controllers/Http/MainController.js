@@ -15425,7 +15425,7 @@ class MainController {
     const rekSekolah = await MRekSekolah.query()
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
-      .first();
+      .fetch();
 
     return response.ok({
       rekSekolah: rekSekolah,
