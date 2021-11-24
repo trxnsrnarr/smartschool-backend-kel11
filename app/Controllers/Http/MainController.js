@@ -22114,27 +22114,49 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
     const user = await auth.getUser();
-    const { tanggal_awal, tanggal_akhir } = request.post();
+    const { tanggal_awal, tanggal_akhir, kategori, tipe_akun, search, tipe } = request.post();
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
-    const rekSekolah = await MRekSekolah.query()
+    const rekQuery = MRekSekolah.query()
       .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ dihapus: 0 })
-      .fetch();
-      let workbook = new Excel.Workbook();
+      .where({ dihapus: 0 })
+
+    if(tipe_akun) {
+      rekQuery.where({ m_rek_sekolah_id: tipe_akun });
+    }
+
+    const rekSekolah = await rekQuery.fetch();
+
+    let workbook = new Excel.Workbook();
 
     await Promise.all(
       rekSekolah.toJSON().map(async (r) => {
-        const mutasi = await MMutasi.query()
-          .whereBetween("waktu_dibuat", [
+        const query = MMutasi.query()
+          .where({ m_sekolah_id: sekolah.id })
+          .where({ dihapus: 0 })
+          .where({ dihapus: 0 })
+
+        if (tanggal_awal && tanggal_akhir){
+          query.whereBetween("waktu_dibuat", [
             `${tanggal_awal} 00:00:00`,
             `${tanggal_akhir} 23:59:59`,
           ])
-          .andWhere({ m_sekolah_id: sekolah.id })
-          .andWhere({ dihapus: 0 })
-          .andWhere({m_rek_sekolah_id:r.id})
-          .fetch();
+        }
+        if (tipe) {
+          query.where({ tipe: tipe });
+        }
+        if (kategori) {
+          query.where({ kategori: kategori });
+        }
+        if (tipe_akun) {
+          query.where({ m_rek_sekolah_id: tipe_akun });
+        }
+        if (search) {
+          query.andWhere("nama", "like", `%${search}%`);
+        }
+
+        const mutasi = await query.orderBy("created_at", "desc").fetch();
 
         const tanggalDistinct = await Database.raw(
           "SELECT DISTINCT DATE_FORMAT(waktu_dibuat, '%Y-%m-%d') from m_mutasi"
