@@ -635,6 +635,7 @@ Route.post("/absen/rekapdownload", "MainController.downloadRekapAbsen");
 // Mutasi Service
 Route.post("/mutasi/importmutasi", "MainController.importMutasi");
 Route.post("/mutasi/download-mutasi", "MainController.downloadMutasi");
+Route.post("/mutasi/download-rek-mutasi", "MainController.downloadRekMutasi");
 
 // Rombel Service
 Route.post("/rombel/import-rombel", "MainController.importRombel");
