@@ -22317,8 +22317,8 @@ class MainController {
             ];
 
             worksheet.getCell("A1").value = "Rekap Mutasi Keuangan";
-            const awal = moment(`${tanggal_awal}`).format("DD-MM-YYYY");
-            const akhir = moment(`${tanggal_akhir}`).format("DD-MM-YYYY");
+            const awal = moment(`${dari_tanggal}`).format("DD-MM-YYYY");
+            const akhir = moment(`${sampai_tanggal}`).format("DD-MM-YYYY");
             worksheet.getCell("A2").value = sekolah.nama;
             worksheet.getCell("A3").value = `${awal} sampai ${akhir}`;
 
