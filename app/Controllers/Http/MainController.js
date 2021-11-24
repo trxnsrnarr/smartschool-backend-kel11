@@ -11417,14 +11417,32 @@ class MainController {
           lastPage: jadwalUjian.toJSON().lastPage,
           pembayaran: pembayaran
             .toJSON()
-            .filter((item) => item.rombelPembayaran.pembayaran),
+            .filter((item) => {
+              if (!item.rombelPembayaran.pembayaran){
+                return false;
+              }
+              if (d.ditangguhkan && moment(d.ditangguhkan).toDate() > moment().toDate()) {
+                return false;
+              } else {
+                return true;
+              }
+              }),
         });
       } else {
         return response.ok({
           jadwalUjian: ujian,
           pembayaran: pembayaran
             .toJSON()
-            .filter((item) => item.rombelPembayaran.pembayaran),
+            .filter((item) => {
+              if (!item.rombelPembayaran.pembayaran){
+                return false;
+              }
+              if (d.ditangguhkan && moment(d.ditangguhkan).toDate() > moment().toDate()) {
+                return false;
+              } else {
+                return true;
+              }
+            }),
         });
       }
     }
