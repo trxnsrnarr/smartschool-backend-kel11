@@ -19154,6 +19154,10 @@ class MainController {
     }
 
     if (rombel_id) {
+      const mapelIds = await MMataPelajaran.query()
+        .where({ m_user_id : user.id })
+        .where({ dihapus: 0 })
+        .ids();
       timelineTugas = await MTimeline.query()
         .where({ m_user_id: user.id })
         .andWhere({ m_rombel_id: rombel_id })
@@ -19169,7 +19173,7 @@ class MainController {
         .with("jadwalUjian", (builder) => {
           builder
             .with("ujian", (builder) => {
-              builder.where({ dihapus: 0 }).andWhere({ m_user_id: user.id });
+              builder.where({ dihapus: 0 }).whereIn("m_mata_pelajaran_id", mapelIds);
               if (rekap.teknik == "UTS") {
                 builder.andWhere("tipe", "like", `%pts%`);
               } else if (rekap.teknik == "UAS") {
