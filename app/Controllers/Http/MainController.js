@@ -22118,9 +22118,10 @@ class MainController {
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .fetch();
+      let workbook = new Excel.Workbook();
 
     await Promise.all(
-      rekSekolah.map(async (r) => {
+      rekSekolah.toJSON().map(async (r) => {
         const mutasi = await MMutasi.query()
           .whereBetween("waktu_dibuat", [
             `${tanggal_awal} 00:00:00`,
@@ -22135,7 +22136,6 @@ class MainController {
           "SELECT DISTINCT DATE_FORMAT(waktu_dibuat, '%Y-%m-%d') from m_mutasi"
         );
 
-        let workbook = new Excel.Workbook();
 
         let worksheet = workbook.addWorksheet(`Rekap ${r.jenis} Mutasi Keuangan`);
         worksheet.getCell(
@@ -22308,7 +22308,7 @@ class MainController {
       })
     );
 
-    let namaFile = `/uploads/rekap-keuangan-${keluarantanggalseconds}.xlsx`;
+    let namaFile = `/uploads/rekap-rekening-mutasi-keuangan-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
