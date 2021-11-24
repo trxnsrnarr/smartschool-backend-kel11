@@ -22114,7 +22114,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
     const user = await auth.getUser();
-    const { tanggal_awal, tanggal_akhir, kategori, tipe_akun, search, tipe } = request.post();
+    const { dari_tanggal, sampai_tanggal, kategori, tipe_akun, search, tipe } = request.post();
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
@@ -22137,10 +22137,10 @@ class MainController {
           .where({ dihapus: 0 })
           .where({ dihapus: 0 })
 
-        if (tanggal_awal && tanggal_akhir){
+        if (dari_tanggal && sampai_tanggal){
           query.whereBetween("waktu_dibuat", [
-            `${tanggal_awal} 00:00:00`,
-            `${tanggal_akhir} 23:59:59`,
+            `${dari_tanggal} 00:00:00`,
+            `${sampai_tanggal} 23:59:59`,
           ])
         }
         if (tipe) {
