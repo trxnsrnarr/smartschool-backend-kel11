@@ -22123,7 +22123,7 @@ class MainController {
       .where({ dihapus: 0 })
 
     if(tipe_akun) {
-      rekQuery.where({ m_rek_sekolah_id: tipe_akun });
+      rekQuery.where({ id: tipe_akun });
     }
 
     const rekSekolah = await rekQuery.fetch();
@@ -22135,7 +22135,7 @@ class MainController {
         const query = MMutasi.query()
           .where({ m_sekolah_id: sekolah.id })
           .where({ dihapus: 0 })
-          .where({ dihapus: 0 })
+          .where({ m_rek_sekolah_id: r.id });
 
         if (dari_tanggal && sampai_tanggal){
           query.whereBetween("waktu_dibuat", [
@@ -22148,9 +22148,6 @@ class MainController {
         }
         if (kategori) {
           query.where({ kategori: kategori });
-        }
-        if (tipe_akun) {
-          query.where({ m_rek_sekolah_id: tipe_akun });
         }
         if (search) {
           query.andWhere("nama", "like", `%${search}%`);
