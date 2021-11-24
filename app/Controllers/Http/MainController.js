@@ -16298,8 +16298,15 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { bank, norek, nama_pemilik, nominal, bukti, m_pembayaran_siswa_id } =
+    let { bank, norek, nama_pemilik, nominal, bukti, m_pembayaran_siswa_id, ditangguhkan } =
       request.post();
+
+    if (ditangguhkan) {
+      await MPembayaranSiswa.query()
+        .where({id : m_pembayaran_siswa_id})
+        .update({ ditangguhkan: moment().add(7, "days").format("YYYY-MM-DD HH:mm:ss")})
+      return response.ok({message: messagePostSuccess})
+    }
 
     const rules = {
       bank: "required",
