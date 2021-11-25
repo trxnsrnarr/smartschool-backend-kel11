@@ -17107,27 +17107,29 @@ class MainController {
           pemasukan,
           pengeluaran,
         });
-
-      const rekBeforeUpdate = await MRekSekolah.query()
-        .where({ m_sekolah_id: sekolah.id })
-        .andWhere({ id: beforeUpdate.m_rek_sekolah_id })
-        .first();
-
-      if (rek_sekolah_id != beforeUpdate.m_rek_sekolah_id) {
-        let masuk, keluar;
-        if (beforeUpdate.tipe == "kredit") {
-          masuk = rekBeforeUpdate.pemasukan - beforeUpdate.nominal;
-          keluar = rekBeforeUpdate.pengeluaran;
-        } else {
-          masuk = rekBeforeUpdate.pemasukan;
-          keluar = rekBeforeUpdate.pengeluaran - beforeUpdate.nominal;
+      
+      if (beforeUpdate.m_rek_sekolah_id) {
+        const rekBeforeUpdate = await MRekSekolah.query()
+          .where({ m_sekolah_id: sekolah.id })
+          .andWhere({ id: beforeUpdate.m_rek_sekolah_id })
+          .first();
+  
+        if (rek_sekolah_id != beforeUpdate.m_rek_sekolah_id) {
+          let masuk, keluar;
+          if (beforeUpdate.tipe == "kredit") {
+            masuk = rekBeforeUpdate.pemasukan - beforeUpdate.nominal;
+            keluar = rekBeforeUpdate.pengeluaran;
+          } else {
+            masuk = rekBeforeUpdate.pemasukan;
+            keluar = rekBeforeUpdate.pengeluaran - beforeUpdate.nominal;
+          }
+          await MRekSekolah.query()
+            .where({ id: beforeUpdate.m_rek_sekolah_id })
+            .update({
+              pemasukan: masuk,
+              pengeluaran: keluar,
+            });
         }
-        await MRekSekolah.query()
-          .where({ id: beforeUpdate.m_rek_sekolah_id })
-          .update({
-            pemasukan: masuk,
-            pengeluaran: keluar,
-          });
       }
     }
 
