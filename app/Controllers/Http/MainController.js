@@ -19737,14 +19737,6 @@ class MainController {
                 .where({ tk_jadwal_ujian_id })
                 .andWhere({ m_user_id: e.m_user_id })
                 .first();
-              const pesertaUjianData = await TkPesertaUjian.query()
-                .with("jawabanSiswa", (builder) => {
-                  builder.with("soal");
-                })
-                .with("user")
-                .where({ tk_jadwal_ujian_id })
-                .andWhere({ m_user_id: e.m_user_id })
-                .first();
 
               let metaHasil = {
                 nilaiPg: 0,
@@ -19754,47 +19746,59 @@ class MainController {
               };
               let analisisBenar = {};
               let analisisTotal = {};
+              if (tkpeserta) {
+                const pesertaUjianData = await TkPesertaUjian.query()
+                  .with("jawabanSiswa", (builder) => {
+                    builder.with("soal");
+                  })
+                  .with("user")
+                  .where({ tk_jadwal_ujian_id })
+                  .andWhere({ m_user_id: e.m_user_id })
+                  .first();
 
-              await Promise.all(
-                pesertaUjianData.toJSON().jawabanSiswa.map(async (d) => {
-                  if (d.soal.bentuk == "pg") {
-                    if (d.jawaban_pg == d.soal.kj_pg) {
-                      metaHasil.nilaiPg = metaHasil.nilaiPg + d.soal.nilai_soal;
-                      metaHasil.benar = metaHasil.benar + 1;
-                      analisisBenar[d.soal.kd] = analisisBenar[d.soal.kd]
-                        ? analisisBenar[d.soal.kd] + 1
+                await Promise.all(
+                  pesertaUjianData.toJSON().jawabanSiswa.map(async (d) => {
+                    if (d.soal.bentuk == "pg") {
+                      if (d.jawaban_pg == d.soal.kj_pg) {
+                        metaHasil.nilaiPg =
+                          metaHasil.nilaiPg + d.soal.nilai_soal;
+                        metaHasil.benar = metaHasil.benar + 1;
+                        analisisBenar[d.soal.kd] = analisisBenar[d.soal.kd]
+                          ? analisisBenar[d.soal.kd] + 1
+                          : 1;
+                      }
+                      analisisTotal[d.soal.kd] = analisisTotal[d.soal.kd]
+                        ? analisisTotal[d.soal.kd] + 1
                         : 1;
-                    }
-                    analisisTotal[d.soal.kd] = analisisTotal[d.soal.kd]
-                      ? analisisTotal[d.soal.kd] + 1
-                      : 1;
-                  } else if (d.soal.bentuk == "esai") {
-                    if (JSON.parse(d.jawaban_rubrik_esai)) {
-                      if (JSON.parse(d.jawaban_rubrik_esai).length) {
-                        JSON.parse(d.jawaban_rubrik_esai).map((e) => {
-                          if (e.benar) {
-                            metaHasil.nilaiEsai = metaHasil.nilaiEsai + e.poin;
-                          }
-                        });
+                    } else if (d.soal.bentuk == "esai") {
+                      if (JSON.parse(d.jawaban_rubrik_esai)) {
+                        if (JSON.parse(d.jawaban_rubrik_esai).length) {
+                          JSON.parse(d.jawaban_rubrik_esai).map((e) => {
+                            if (e.benar) {
+                              metaHasil.nilaiEsai =
+                                metaHasil.nilaiEsai + e.poin;
+                            }
+                          });
 
-                        if (d.jawaban_rubrik_esai.indexOf("true") != -1) {
-                          metaHasil.benar = metaHasil.benar + 1;
+                          if (d.jawaban_rubrik_esai.indexOf("true") != -1) {
+                            metaHasil.benar = metaHasil.benar + 1;
+                          }
                         }
                       }
                     }
-                  }
-                })
-              );
+                  })
+                );
 
-              metaHasil.nilaiTotal = metaHasil.nilaiPg + metaHasil.nilaiEsai;
-              await TkPesertaUjian.query()
-                .where({ tk_jadwal_ujian_id })
-                .andWhere({ m_user_id: e.m_user_id })
-                .update({
-                  nilai_pg: metaHasil.nilaiPg,
-                  nilai_esai: metaHasil.nilaiEsai,
-                  nilai: metaHasil.nilaiTotal,
-                });
+                metaHasil.nilaiTotal = metaHasil.nilaiPg + metaHasil.nilaiEsai;
+                await TkPesertaUjian.query()
+                  .where({ tk_jadwal_ujian_id })
+                  .andWhere({ m_user_id: e.m_user_id })
+                  .update({
+                    nilai_pg: metaHasil.nilaiPg,
+                    nilai_esai: metaHasil.nilaiEsai,
+                    nilai: metaHasil.nilaiTotal,
+                  });
+              }
               await TkRekapNilai.create({
                 m_user_id: e.m_user_id,
                 nilai:
