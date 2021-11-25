@@ -319,6 +319,7 @@ Route.get(
 );
 Route.post("/peserta-ujian", "MainController.postPesertaUjian");
 Route.put("/peserta-ujian/:peserta_ujian_id", "MainController.putPesertaUjian");
+Route.put("/update-nilai/:peserta_ujian_id", "MainController.updateNilai");
 
 // jawaban siswa
 Route.put(

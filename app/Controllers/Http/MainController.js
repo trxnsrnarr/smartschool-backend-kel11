@@ -11415,34 +11415,36 @@ class MainController {
           perPage: jadwalUjian.toJSON().perPage,
           page: jadwalUjian.toJSON().page,
           lastPage: jadwalUjian.toJSON().lastPage,
-          pembayaran: pembayaran
-            .toJSON()
-            .filter((item) => {
-              if (!item.rombelPembayaran.pembayaran){
-                return false;
-              }
-              if (item.ditangguhkan && moment(item.ditangguhkan).toDate() > moment().toDate()) {
-                return false;
-              } else {
-                return true;
-              }
-              }),
+          pembayaran: pembayaran.toJSON().filter((item) => {
+            if (!item.rombelPembayaran.pembayaran) {
+              return false;
+            }
+            if (
+              item.ditangguhkan &&
+              moment(item.ditangguhkan).toDate() > moment().toDate()
+            ) {
+              return false;
+            } else {
+              return true;
+            }
+          }),
         });
       } else {
         return response.ok({
           jadwalUjian: ujian,
-          pembayaran: pembayaran
-            .toJSON()
-            .filter((item) => {
-              if (!item.rombelPembayaran.pembayaran){
-                return false;
-              }
-              if (item.ditangguhkan && moment(item.ditangguhkan).toDate() > moment().toDate()) {
-                return false;
-              } else {
-                return true;
-              }
-            }),
+          pembayaran: pembayaran.toJSON().filter((item) => {
+            if (!item.rombelPembayaran.pembayaran) {
+              return false;
+            }
+            if (
+              item.ditangguhkan &&
+              moment(item.ditangguhkan).toDate() > moment().toDate()
+            ) {
+              return false;
+            } else {
+              return true;
+            }
+          }),
         });
       }
     }
@@ -12480,6 +12482,56 @@ class MainController {
 
     return response.ok({
       message: "Jawaban berhasil direkam",
+    });
+  }
+
+  async updateNilai({ response, request, auth, params: { peserta_ujian_id } }) {
+    const pesertaUjian = await TkPesertaUjian.query()
+      .with("jawabanSiswa", (builder) => {
+        builder.with("soal");
+      })
+      .with("user")
+      .where({ id: peserta_ujian_id })
+      .first();
+
+    // return pesertaUjian;
+
+    let metaHasil = {
+      nilaiPg: 0,
+      nilaiEsai: 0,
+      nilaiTotal: 0,
+      benar: 0,
+    };
+
+    await Promise.all(
+      pesertaUjian.toJSON().jawabanSiswa.map(async (d) => {
+        if (d.soal.bentuk == "esai") {
+          if (JSON.parse(d.jawaban_rubrik_esai)) {
+            if (JSON.parse(d.jawaban_rubrik_esai).length) {
+              JSON.parse(d.jawaban_rubrik_esai).map((e) => {
+                if (e.benar) {
+                  metaHasil.nilaiEsai = metaHasil.nilaiEsai + e.poin;
+                }
+              });
+
+              if (d.jawaban_rubrik_esai.indexOf("true") != -1) {
+                metaHasil.benar = metaHasil.benar + 1;
+              }
+            }
+          }
+        }
+      })
+    );
+
+    await TkPesertaUjian.query()
+      .where({ id: peserta_ujian_id })
+      .update({
+        nilai_esai: metaHasil.nilaiEsai,
+        nilai: pesertaUjian.nilai_pg + metaHasil.nilaiEsai,
+      });
+
+    return response.ok({
+      message: messagePutSuccess,
     });
   }
 
@@ -16316,14 +16368,23 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { bank, norek, nama_pemilik, nominal, bukti, m_pembayaran_siswa_id, ditangguhkan } =
-      request.post();
+    let {
+      bank,
+      norek,
+      nama_pemilik,
+      nominal,
+      bukti,
+      m_pembayaran_siswa_id,
+      ditangguhkan,
+    } = request.post();
 
     if (ditangguhkan) {
       await MPembayaranSiswa.query()
-        .where({id : m_pembayaran_siswa_id})
-        .update({ ditangguhkan: moment().add(7, "days").format("YYYY-MM-DD HH:mm:ss")})
-      return response.ok({message: messagePostSuccess})
+        .where({ id: m_pembayaran_siswa_id })
+        .update({
+          ditangguhkan: moment().add(7, "days").format("YYYY-MM-DD HH:mm:ss"),
+        });
+      return response.ok({ message: messagePostSuccess });
     }
 
     const rules = {
@@ -16720,8 +16781,16 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { search, dari_tanggal, sampai_tanggal, tipe, page, filter_grafik, kategori: filterKategori, tipe_akun } =
-      request.get();
+    let {
+      search,
+      dari_tanggal,
+      sampai_tanggal,
+      tipe,
+      page,
+      filter_grafik,
+      kategori: filterKategori,
+      tipe_akun,
+    } = request.get();
     page = page ? parseInt(page) : 1;
 
     let grafikData = MMutasi.query()
@@ -16776,7 +16845,7 @@ class MainController {
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .distinct("kategori")
-      .pluck("kategori")
+      .pluck("kategori");
 
     return response.ok({
       sarpras: sarpras,
@@ -19193,7 +19262,7 @@ class MainController {
 
     if (rombel_id) {
       const mapelIds = await MMataPelajaran.query()
-        .where({ m_user_id : user.id })
+        .where({ m_user_id: user.id })
         .where({ dihapus: 0 })
         .ids();
       timelineTugas = await MTimeline.query()
@@ -19211,7 +19280,9 @@ class MainController {
         .with("jadwalUjian", (builder) => {
           builder
             .with("ujian", (builder) => {
-              builder.where({ dihapus: 0 }).whereIn("m_mata_pelajaran_id", mapelIds);
+              builder
+                .where({ dihapus: 0 })
+                .whereIn("m_mata_pelajaran_id", mapelIds);
               if (rekap.teknik == "UTS") {
                 builder.andWhere("tipe", "like", `%pts%`);
               } else if (rekap.teknik == "UAS") {
@@ -22139,15 +22210,16 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
     const user = await auth.getUser();
-    const { dari_tanggal, sampai_tanggal, kategori, tipe_akun, search, tipe } = request.post();
+    const { dari_tanggal, sampai_tanggal, kategori, tipe_akun, search, tipe } =
+      request.post();
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const rekQuery = MRekSekolah.query()
       .where({ m_sekolah_id: sekolah.id })
-      .where({ dihapus: 0 })
+      .where({ dihapus: 0 });
 
-    if(tipe_akun) {
+    if (tipe_akun) {
       rekQuery.where({ id: tipe_akun });
     }
 
@@ -22162,11 +22234,11 @@ class MainController {
           .where({ dihapus: 0 })
           .where({ m_rek_sekolah_id: r.id });
 
-        if (dari_tanggal && sampai_tanggal){
+        if (dari_tanggal && sampai_tanggal) {
           query.whereBetween("waktu_dibuat", [
             `${dari_tanggal} 00:00:00`,
             `${sampai_tanggal} 23:59:59`,
-          ])
+          ]);
         }
         if (tipe) {
           query.where({ tipe: tipe });
@@ -22184,8 +22256,9 @@ class MainController {
           "SELECT DISTINCT DATE_FORMAT(waktu_dibuat, '%Y-%m-%d') from m_mutasi"
         );
 
-
-        let worksheet = workbook.addWorksheet(`Rekap ${r.jenis} Mutasi Keuangan`);
+        let worksheet = workbook.addWorksheet(
+          `Rekap ${r.jenis} Mutasi Keuangan`
+        );
         worksheet.getCell(
           "A4"
         ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
