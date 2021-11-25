@@ -11421,7 +11421,7 @@ class MainController {
               if (!item.rombelPembayaran.pembayaran){
                 return false;
               }
-              if (d.ditangguhkan && moment(d.ditangguhkan).toDate() > moment().toDate()) {
+              if (item.ditangguhkan && moment(item.ditangguhkan).toDate() > moment().toDate()) {
                 return false;
               } else {
                 return true;
@@ -11437,7 +11437,7 @@ class MainController {
               if (!item.rombelPembayaran.pembayaran){
                 return false;
               }
-              if (d.ditangguhkan && moment(d.ditangguhkan).toDate() > moment().toDate()) {
+              if (item.ditangguhkan && moment(item.ditangguhkan).toDate() > moment().toDate()) {
                 return false;
               } else {
                 return true;
