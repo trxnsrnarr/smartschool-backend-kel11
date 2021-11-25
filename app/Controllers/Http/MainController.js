@@ -4200,7 +4200,9 @@ class MainController {
                       //   `${kkm.toJSON().mataPelajaran.kkm}`
                       // )
                       .where({ m_ta_id: ta.id })
-                      .with("mapel");
+                      .with("mapel", (builder) => {
+                        builder.select("id", "nama")
+                      });
                   });
               })
               .where({ dihapus: 0 });
