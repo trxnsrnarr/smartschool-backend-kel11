@@ -16619,16 +16619,24 @@ class MainController {
         nominal: pembayaranSiswa.nominal,
         dihapus: 0,
         m_sekolah_id: sekolah.id,
+        m_rek_sekolah_id:
+          riwayat.toJSON().rombelPembayaran.pembayaran.m_rek_sekolah_id,
         waktu_dibuat: pembayaranSiswa.updated_at,
       });
 
       const rekSekolah = await MRekSekolah.query()
         .where({ m_sekolah_id: sekolah.id })
+        .andWhere({
+          id: riwayat.toJSON().rombelPembayaran.pembayaran.m_rek_sekolah_id,
+        })
         .first();
 
       if (rekSekolah) {
         await MRekSekolah.query()
           .where({ m_sekolah_id: sekolah.id })
+          .andWhere({
+            id: riwayat.toJSON().rombelPembayaran.pembayaran.m_rek_sekolah_id,
+          })
           .update({
             pengeluaran:
               parseInt(rekSekolah.pengeluaran) +
