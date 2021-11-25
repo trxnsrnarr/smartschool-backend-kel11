@@ -17060,7 +17060,7 @@ class MainController {
       let pemasukan, pengeluaran;
       if (tipe != beforeUpdate.tipe) {
         if (tipe == "kredit") {
-          if (rek_sekolah_id != beforeUpdate.m_rek_sekolah_id) {
+          if (rek_sekolah_id != beforeUpdate.m_rek_sekolah_id || !beforeUpdate.m_rek_sekolah_id) {
             pengeluaran = parseInt(rekSekolah.pengeluaran);
           } else {
             pengeluaran =
@@ -17068,7 +17068,7 @@ class MainController {
           }
           pemasukan = parseInt(rekSekolah.pemasukan) + parseInt(nominal);
         } else {
-          if (rek_sekolah_id != beforeUpdate.m_rek_sekolah_id) {
+          if (rek_sekolah_id != beforeUpdate.m_rek_sekolah_id || !beforeUpdate.m_rek_sekolah_id) {
             pemasukan = parseInt(rekSekolah.pemasukan);
           } else {
             pemasukan =
@@ -17078,7 +17078,7 @@ class MainController {
         }
       } else {
         if (tipe == "kredit") {
-          if (rek_sekolah_id != beforeUpdate.m_rek_sekolah_id) {
+          if (rek_sekolah_id != beforeUpdate.m_rek_sekolah_id || !beforeUpdate.m_rek_sekolah_id) {
             pemasukan = parseInt(rekSekolah.pemasukan) + parseInt(nominal);
           } else {
             pemasukan =
@@ -17088,7 +17088,7 @@ class MainController {
           }
           pengeluaran = parseInt(rekSekolah.pengeluaran);
         } else {
-          if (rek_sekolah_id != beforeUpdate.m_rek_sekolah_id) {
+          if (rek_sekolah_id != beforeUpdate.m_rek_sekolah_id || !beforeUpdate.m_rek_sekolah_id) {
             pengeluaran = parseInt(rekSekolah.pengeluaran) + parseInt(nominal);
           } else {
             pengeluaran =
