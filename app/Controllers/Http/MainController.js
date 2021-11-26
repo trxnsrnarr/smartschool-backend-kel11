@@ -16695,8 +16695,16 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { search, dari_tanggal, sampai_tanggal, tipe, page, filter_grafik, kategori: filterKategori, tipe_akun } =
-      request.get();
+    let {
+      search,
+      dari_tanggal,
+      sampai_tanggal,
+      tipe,
+      page,
+      filter_grafik,
+      kategori: filterKategori,
+      tipe_akun,
+    } = request.get();
     page = page ? parseInt(page) : 1;
 
     let grafikData = MMutasi.query()
@@ -16751,7 +16759,7 @@ class MainController {
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .distinct("kategori")
-      .pluck("kategori")
+      .pluck("kategori");
 
     return response.ok({
       sarpras: sarpras,
@@ -18525,6 +18533,7 @@ class MainController {
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .fetch();
+
     if (!checkTemplate) {
       await Promise.all(
         predikat.toJSON().map(async (d) => {
@@ -18602,7 +18611,7 @@ class MainController {
               m_predikat_nilai_id: d.id,
               m_mata_pelajaran_id: rekap.m_mata_pelajaran_id,
               prolog:
-                "Peserta didik dinyatakan telah mengetahui, memahami, mengimplementasikan dan menganalisis pengetahuan dengan kurang mengenai",
+                "Peserta didik dinyatakan telah mengetahui, memahami, mengimplementasikan dan menganalisis pengetahuan dengan sangat baik mengenai",
               epilog: "Perlu ditingkatkan mengenai",
             });
             await MTemplateDeskripsi.create({
@@ -18610,7 +18619,7 @@ class MainController {
               m_predikat_nilai_id: d.id,
               m_mata_pelajaran_id: rekap.m_mata_pelajaran_id,
               prolog:
-                "Peserta didik dinyatakan telah dapat mengetahui, menerapkan, menganalisis, dan mengeveluasi keterampilan dengan kurang mengenai",
+                "Peserta didik dinyatakan telah dapat mengetahui, menerapkan, menganalisis, dan mengeveluasi keterampilan dengan sangat baik mengenai",
               epilog: "Perlu ditingkatkan mengenai",
             });
           }
@@ -18624,6 +18633,33 @@ class MainController {
         epilog: "Perlu ditingkatkan mengenai",
       });
     }
+
+    await Promise.all(
+      predikat.toJSON().map(async (d) => {
+        const checkTemplate1 = await MTemplateDeskripsi.query()
+          .where({ m_predikat_nilai_id: d.id })
+          .first();
+
+        if (!checkTemplate1) {
+          await MTemplateDeskripsi.create({
+            tipe: "Pengetahuan",
+            m_predikat_nilai_id: d.id,
+            m_mata_pelajaran_id: rekap.m_mata_pelajaran_id,
+            prolog:
+              "Peserta didik dinyatakan telah mengetahui, memahami, mengimplementasikan dan menganalisis pengetahuan dengan sangat baik mengenai",
+            epilog: "Perlu ditingkatkan mengenai",
+          });
+          await MTemplateDeskripsi.create({
+            tipe: "Keterampilan",
+            m_predikat_nilai_id: d.id,
+            m_mata_pelajaran_id: rekap.m_mata_pelajaran_id,
+            prolog:
+              "Peserta didik dinyatakan telah dapat mengetahui, menerapkan, menganalisis, dan mengeveluasi keterampilan dengan sangat baik mengenai",
+            epilog: "Perlu ditingkatkan mengenai",
+          });
+        }
+      })
+    );
 
     const dataTemplatePengetahuan = await MTemplateDeskripsi.query()
       .with("predikat")
@@ -22118,7 +22154,7 @@ class MainController {
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .fetch();
-      let workbook = new Excel.Workbook();
+    let workbook = new Excel.Workbook();
 
     await Promise.all(
       rekSekolah.toJSON().map(async (r) => {
@@ -22129,15 +22165,16 @@ class MainController {
           ])
           .andWhere({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
-          .andWhere({m_rek_sekolah_id:r.id})
+          .andWhere({ m_rek_sekolah_id: r.id })
           .fetch();
 
         const tanggalDistinct = await Database.raw(
           "SELECT DISTINCT DATE_FORMAT(waktu_dibuat, '%Y-%m-%d') from m_mutasi"
         );
 
-
-        let worksheet = workbook.addWorksheet(`Rekap ${r.jenis} Mutasi Keuangan`);
+        let worksheet = workbook.addWorksheet(
+          `Rekap ${r.jenis} Mutasi Keuangan`
+        );
         worksheet.getCell(
           "A4"
         ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
@@ -44792,20 +44829,423 @@ class MainController {
       .where({ dihapus: 0 })
       // .andWhere({ m_sekolah_id: 33 })
       .andWhere({ role: "siswa" })
-      .andWhere({ m_sekolah_id: 33 })
+      .andWhere({ m_sekolah_id: 13 })
       // .offset(parseInt(offset))
       // .limit(limit)
       .ids();
 
+      const ta = await Mta.query().where({m_sekolah_id:13}).andWhere({aktif:1}).first()
+
     const ujian = await MUjianSiswa.quey()
+      .with("mapel", (builder) => {
+        builder.with("materi", (builder) => {
+          builder.where({
+            tingkat: siswa.toJSON().anggotaRombel.rombel.tingkat,
+          });
+          if (mapelSingkat.kelompok == "C") {
+            if (siswa.toJSON().anggotaRombel.rombel.m_jurusan_id != null) {
+              builder.andWhere({
+                m_jurusan_id: siswa.toJSON().anggotaRombel.rombel.m_jurusan_id,
+              });
+            }
+          }
+        });
+      })
       .whereIn("m_user_id", semuaUser)
       .fetch();
 
     // return semuaUser;
 
-    const semua = await Promise.all(ujian.toJSON().map(async (ss) => {}));
+    const semua = await Promise.all(
+      ujian.toJSON().map(async (d) => {
+        const rekap = await TkRekapNilai.query()
+          .with("rekapRombel", (builder) => {
+            builder.with("rekap", (builder) => {
+              builder
+                .where({ tipe: "tugas" })
+                .andWhere({ m_ta_id: ta.id })
+                .andWhere({ dihapus: 0 })
+                .andWhere({ m_materi_id: d.mapel.materi.id });
+            });
+          })
+          .where({ m_user_id: user_id })
+          .whereBetween("created_at", [
+            `${ta.tanggal_awal} 00:00:00`,
+            `${ta.tanggal_rapor} 23:59:59`,
+          ])
+          .fetch();
+
+        const rekapUjian = await TkRekapNilai.query()
+          .with("rekapRombel", (builder) => {
+            builder.with("rekap", (builder) => {
+              builder
+                .where({ tipe: "ujian" })
+                .andWhere({ teknik: null })
+                .andWhere({ m_ta_id: ta.id })
+                .andWhere({ dihapus: 0 })
+                .andWhere({ m_materi_id: d.mapel.materi.id });
+            });
+          })
+          .where({ m_user_id: user_id })
+          .whereBetween("created_at", [
+            `${ta.tanggal_awal} 00:00:00`,
+            `${ta.tanggal_rapor} 23:59:59`,
+          ])
+          .fetch();
+
+        const result = await Promise.all(
+          rekap.toJSON().map(async (d) => {
+            if (d.rekapRombel.rekap == null) {
+              return;
+            }
+            return d;
+          })
+        );
+
+        const data = result.filter((d) => d != null);
+
+        let jumlah1 = 0;
+
+        result
+          .filter((d) => d != null)
+          .forEach((d) => {
+            jumlah1 += d.nilai;
+          });
+
+        const rata = jumlah1 / data.length;
+
+        const result1 = await Promise.all(
+          rekapUjian.toJSON().map(async (d) => {
+            if (d.rekapRombel.rekap == null) {
+              return;
+            }
+            return d;
+          })
+        );
+
+        const dataUjian = result1.filter((d) => d != null);
+
+        let jumlah = 0;
+
+        result1
+          .filter((d) => d != null)
+          .forEach((d) => {
+            jumlah += d.nilai;
+          });
+
+        const rataUjian = jumlah / dataUjian.length;
+
+        await MUjianSiswa.query().where({ id: d.id }).update({
+          nilai_uts: d.nilai,
+          nilai_keterampilan_uts: d.nilai_keterampilan,
+          avg_nilai_tugas: rata,
+          avg_nilai_ujian: rataUjian,
+        });
+      })
+    );
 
     return semua;
+  }
+
+  async downloadRekapAbsenSiswa({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+    const user = await auth.getUser();
+    const { role, tanggal_awal, tanggal_akhir,rombel_id } = request.post();
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
+    const tanggalDistinct = await Database.raw(
+      "SELECT DISTINCT DATE_FORMAT(created_at, '%Y-%m-%d') as tanggalDistinct from m_absen WHERE created_at BETWEEN ? AND  ?",
+      [tanggal_awal, tanggal_akhir]
+    );
+
+    const rombel = await MRombel.query()
+    .where({id:rombel_id})
+    .first()
+
+      const anggotaRombel = await MAnggotaRombel.query()
+      .select("m_user_id")
+      .where({m_rombel_id:rombel_id})
+      .andWhere({dihapus:0})
+      .fetch()
+
+
+      
+
+    const absenSiswa = await User.query()
+      .select("id", "nama")
+      .with("absen", (builder) => {
+        builder
+          .select("id", "m_user_id", "created_at", "absen")
+          .whereBetween("created_at", [`${tanggal_awal}`, `${tanggal_akhir}`]);
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ role: "siswa" })
+      .whereIn("id",anggotaRombel.toJSON().map((item) => item.m_user_id))
+      .fetch();
+
+    // loop pertama untuk nge looping data kepsek
+    
+    // loop pertama untuk nge looping data Siswa
+    const rekapAbsenSiswa = await Promise.all(
+      absenSiswa.toJSON().map(async (d) => {
+        let namaSiswa = d.nama;
+        let totalSakit = 0;
+        let totalHadir = 0;
+        let totalTelat = 0;
+        let totalIzin = 0;
+        let totalAlpa = 0;
+
+        // loop ketiga untuk nge looping absen Siswa
+        await Promise.all(
+          d.absen.map(async (e) => {
+            if (e.absen == "sakit") {
+              totalSakit = totalSakit + 1;
+            } else if (e.absen == "izin") {
+              totalIzin = totalIzin + 1;
+            } else if (
+              (await Promise.all(
+                tanggalDistinct.find(async (tanggal) => {
+                  tanggal.tanggalDistinct ==
+                    moment(e.created_at).format("YYYY-MM-DD");
+                })
+              )) !== undefined
+            ) {
+              totalHadir = totalHadir + 1;
+
+              if (moment(e.created_at).format("HH:mm:ss") > "06.30") {
+                totalTelat = totalTelat + 1;
+              }
+            }
+          })
+        );
+
+        totalAlpa =
+          tanggalDistinct[0].length - (totalSakit + totalHadir + totalIzin);
+
+        return {
+          namaSiswa,
+          totalSakit,
+          totalHadir,
+          totalTelat,
+          totalIzin,
+          totalAlpa,
+        };
+      })
+    );
+
+    // return rekapAbsenSiswa;
+
+    let workbook = new Excel.Workbook();
+
+    let worksheet = workbook.addWorksheet(`RekapAbsen`);
+    const awal = moment(`${tanggal_awal}`).format("DD-MM-YYYY");
+    const akhir = moment(`${tanggal_akhir}`).format("DD-MM-YYYY");
+    worksheet.getCell(
+      "A5"
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
+    worksheet.addConditionalFormatting({
+      ref: `A1:G4`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 16,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: `A4:G4`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+    worksheet.mergeCells(`A1:G1`);
+    worksheet.mergeCells(`A2:G2`);
+    worksheet.mergeCells(`A3:G3`);
+    worksheet.mergeCells(`A4:G4`);
+    worksheet.addConditionalFormatting({
+      ref: `A6:G6`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+  
+
+    await Promise.all(
+      rekapAbsenSiswa.map(async (d, idx) => {
+        worksheet.addConditionalFormatting({
+          ref: `B${(idx + 1) * 1 + 6}:G${(idx + 1) * 1 + 6}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet.addConditionalFormatting({
+          ref: `A${(idx + 1) * 1 + 6}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet.getRow(6).values = [
+          "No",
+          "Nama",
+          "Hadir",
+          "Telat",
+          "Sakit",
+          "Izin",
+          "Alpa",
+        ];
+
+        worksheet.columns = [
+          { key: "no" },
+          { key: "user" },
+          { key: "hadir" },
+          { key: "telat" },
+          { key: "sakit" },
+          { key: "izin" },
+          { key: "alpa" },
+        ];
+
+        let row = worksheet.addRow({
+          no: `${idx + 1}`,
+          user: d ? d.namaSiswa : "-",
+          hadir: d ? d.totalHadir : "-",
+          telat: d ? d.totalTelat : "-",
+          sakit: d ? d.totalSakit : "-",
+          izin: d ? d.totalIzin : "-",
+          alpa: d ? d.totalAlpa : "-",
+        });
+      })
+    );
+
+    worksheet.getCell("A1").value = "Rekap Absen";
+        worksheet.getCell("A2").value = sekolah.nama;
+        worksheet.getCell("A3").value = rombel.nama;
+        worksheet.getCell("A4").value = `${awal} sampai ${akhir}`;
+
+        worksheet.views = [
+          {
+            state: "frozen",
+            xSplit: 2,
+            ySplit: 6,
+            topLeftCell: "A6",
+            activeCell: "A6",
+          },
+        ];
+
+    let namaFile = `/uploads/rekap-absen-siswa ${keluarantanggalseconds}.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
   }
 
   async ip({ response, request }) {
