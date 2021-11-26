@@ -7,7 +7,9 @@ class MPembayaranSiswaSchema extends Schema {
   up() {
     this.create("m_pembayaran_siswa", (table) => {
       table.increments();
+      table.text("riwayat");
       table.string("status");
+      table.datetime("ditangguhkan");
       table.boolean("dihapus").defaultTo(0);
       table.integer("m_user_id").unsigned().index("m_user_id");
       table
