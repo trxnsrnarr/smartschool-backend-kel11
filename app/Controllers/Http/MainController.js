@@ -11004,6 +11004,11 @@ class MainController {
         .where({ m_user_id: user.id })
         .ids();
 
+      const rombelWalas = await MRombel.query()
+        .where({ m_user_id: user.id })
+        .andWhere({ dihapus: 0 })
+        .ids();
+
       const rombelIds = await MJadwalMengajar.query()
         .with("rombel")
         .with("mataPelajaran")
@@ -11011,7 +11016,7 @@ class MainController {
         .pluck("m_rombel_id");
 
       const rombel = await MRombel.query()
-        .whereIn("id", rombelIds)
+        .whereIn("id", [...rombelIds, ...rombelWalas])
         .andWhere({ dihapus: 0 })
         .fetch();
 
