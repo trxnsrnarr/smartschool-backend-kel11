@@ -11408,7 +11408,8 @@ class MainController {
       } else {
         ujian = jadwalUjian
           .toJSON()
-          .filter((d) => d.jadwalUjian !== null && d.jadwalUjian.ujian);
+          .filter((d) => d.jadwalUjian !== null && d.jadwalUjian.ujian)
+          .sort((a, b) => moment(a.jadwalUjian.waktu_dibuka).toDate() - moment(b.jadwalUjian.waktu_dibuka).toDate());
       }
 
       if (ujian.length == 0) {
@@ -16397,14 +16398,19 @@ class MainController {
       ditangguhkan,
     } = request.post();
 
-    if (ditangguhkan) {
+    if(ditangguhkan == 2) {
+      await MPembayaranSiswa.query()
+        .where({ id: m_pembayaran_siswa_id })
+        .update("ditangguhkan", NULL);
+      return response.ok({ message: messagePostSuccess });
+    } else if (ditangguhkan) {
       await MPembayaranSiswa.query()
         .where({ id: m_pembayaran_siswa_id })
         .update({
           ditangguhkan: moment().add(7, "days").format("YYYY-MM-DD HH:mm:ss"),
         });
       return response.ok({ message: messagePostSuccess });
-    }
+    } 
 
     const rules = {
       bank: "required",
