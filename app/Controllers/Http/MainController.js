@@ -11213,7 +11213,7 @@ class MainController {
           .whereIn("m_user_id", userIds)
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_dibuka", ">", hari_ini)
-          .orderBy("id", "desc")
+          .orderBy("waktu_dibuka", "desc")
           .fetch();
       } else if (status == "berlangsung") {
         jadwalUjian = await MJadwalUjian.query()
@@ -11226,7 +11226,7 @@ class MainController {
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_dibuka", "<=", hari_ini)
           .andWhere("waktu_ditutup", ">=", hari_ini)
-          .orderBy("id", "desc")
+          .orderBy("waktu_dibuka", "desc")
           .fetch();
       } else if (status == "sudah-selesai") {
         const ujianIds = await MUjian.query()
@@ -11241,7 +11241,7 @@ class MainController {
           .whereIn("m_ujian_id", ujianIds)
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_ditutup", "<=", hari_ini)
-          .orderBy("id", "desc")
+          .orderBy("waktu_dibuka", "desc")
           .paginate(page, 10);
       }
 
@@ -16399,9 +16399,7 @@ class MainController {
     } = request.post();
 
     if(ditangguhkan == 2) {
-      await MPembayaranSiswa.query()
-        .where({ id: m_pembayaran_siswa_id })
-        .update("ditangguhkan", NULL);
+      await Database.raw('UPDATE m_pembayaran_siswa SET ditangguhkan=NULL WHERE id = ?', [m_pembayaran_siswa_id])
       return response.ok({ message: messagePostSuccess });
     } else if (ditangguhkan) {
       await MPembayaranSiswa.query()
