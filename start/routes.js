@@ -214,7 +214,10 @@ Route.delete("/materi/:materi_id", "MainController.deleteMateri");
 
 // no rekening
 Route.get("/rek-sekolah", "MainController.getRekSekolah");
-Route.put("/rek-sekolah", "MainController.putRekSekolah");
+Route.post("/rek-sekolah", "MainController.postRekSekolah");
+Route.put("/rek-sekolah/:rek_sekolah_id", "MainController.putRekSekolah");
+Route.delete("/rek-sekolah/:rek_sekolah_id", "MainController.deleteRekSekolah");
+Route.post("/rek-sekolah/download","MainController.downloadRekening")
 
 // pembayaran
 Route.get("/pembayaran", "MainController.getPembayaran");
@@ -286,8 +289,8 @@ Route.delete("/prestasi/:prestasi_id", "MainController.deletePrestasi");
 
 // mutasi
 Route.get("/mutasi", "MainController.getMutasi");
-Route.post("/mutasi", "MainController.postMutasi");
-Route.put("/mutasi/:mutasi_id", "MainController.putMutasi");
+Route.post("/mutasi", "MainController.postMutasiV1");
+Route.put("/mutasi/:mutasi_id", "MainController.putMutasiV1");
 Route.delete("/mutasi/:mutasi_id", "MainController.deleteMutasi");
 
 // topik
@@ -316,6 +319,7 @@ Route.get(
 );
 Route.post("/peserta-ujian", "MainController.postPesertaUjian");
 Route.put("/peserta-ujian/:peserta_ujian_id", "MainController.putPesertaUjian");
+Route.put("/update-nilai/:peserta_ujian_id", "MainController.updateNilai");
 
 // jawaban siswa
 Route.put(
@@ -632,6 +636,7 @@ Route.post("/absen/rekapdownload", "MainController.downloadRekapAbsen");
 // Mutasi Service
 Route.post("/mutasi/importmutasi", "MainController.importMutasi");
 Route.post("/mutasi/download-mutasi", "MainController.downloadMutasi");
+Route.post("/mutasi/download-rek-mutasi", "MainController.downloadRekMutasi");
 
 // Rombel Service
 Route.post("/rombel/import-rombel", "MainController.importRombel");
