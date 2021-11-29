@@ -10729,11 +10729,19 @@ class MainController {
       dihapus: 0,
     });
 
-    const tkSoalUjian = await TkSoalUjian.create({
-      dihapus: 0,
-      m_ujian_id: m_ujian_id,
-      m_soal_ujian_id: soalUjian.id,
-    });
+    const check = await TkSoalUjian.query()
+      .where({ m_ujian_id: m_ujian_id })
+      .where({ m_soal_ujian_id: soalUjian.id })
+      .first();
+    if (check) {
+      await TkSoalUjian.query().where({ id: check.id }).update({ dihapus: 1 });
+    } else {
+      const tkSoalUjian = await TkSoalUjian.create({
+        dihapus: 0,
+        m_ujian_id: m_ujian_id,
+        m_soal_ujian_id: soalUjian.id,
+      });
+    }
 
     return response.ok({
       message: messagePostSuccess,
