@@ -346,7 +346,7 @@ class MainController {
   async getSekolahByDomain(domain) {
     const sekolah = await MSekolah.query()
       .with("informasi")
-      .where("domain", "like", `%${domain}%`)
+      .where("domain", "like", `%${domain.replace('https', '')}%`)
       .first();
 
     if (!sekolah) {
