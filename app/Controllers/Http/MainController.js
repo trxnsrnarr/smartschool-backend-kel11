@@ -12700,22 +12700,22 @@ class MainController {
             dijawab: 1,
           });
 
-        const nilaiSiswa = await TkJawabanUjianSiswa.query()
-          .with("soal")
-          .where({ id: jawaban_ujian_siswa_id })
-          .first();
+        // const nilaiSiswa = await TkJawabanUjianSiswa.query()
+        //   .with("soal")
+        //   .where({ id: jawaban_ujian_siswa_id })
+        //   .first();
 
-        if (jawaban_pg == nilaiSiswa.toJSON().soal.kj_pg) {
-          const nilai = await TkPesertaUjian.query()
-            .where({ id: nilaiSiswa.tk_peserta_ujian_id })
-            .first();
+        // if (jawaban_pg == nilaiSiswa.toJSON().soal.kj_pg) {
+        //   const nilai = await TkPesertaUjian.query()
+        //     .where({ id: nilaiSiswa.tk_peserta_ujian_id })
+        //     .first();
 
-          await TkPesertaUjian.query()
-            .where({ id: nilaiSiswa.tk_peserta_ujian_id })
-            .update({
-              nilai: nilai ? nilai.nilai : 0 + nilaiSiswa.toJSON().soal.poin,
-            });
-        }
+        //   await TkPesertaUjian.query()
+        //     .where({ id: nilaiSiswa.tk_peserta_ujian_id })
+        //     .update({
+        //       nilai: nilai ? nilai.nilai : 0 + nilaiSiswa.toJSON().soal.poin,
+        //     });
+        // }
       } else {
         jawabanUjianSiswa = await TkJawabanUjianSiswa.query()
           .where({ id: jawaban_ujian_siswa_id })
