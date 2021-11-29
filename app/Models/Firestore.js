@@ -20,6 +20,10 @@ class Firestore extends Model {
     return admin.firestore();
   }
 
+  FieldValue() {
+    return admin.firestore.FieldValue;
+  }
+
   bucket() {
     return bucket;
   }

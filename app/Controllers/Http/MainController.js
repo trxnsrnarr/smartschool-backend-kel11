@@ -175,6 +175,7 @@ const Firestore = use("App/Models/Firestore");
 const firestore = new Firestore();
 const db = firestore.db();
 const bucket = firestore.bucket();
+const FieldValue = firestore.FieldValue();
 var striptags = require("striptags");
 // reference to
 const jadwalUjianReference = db.collection("jadwal-ujian");
@@ -10673,7 +10674,7 @@ class MainController {
           .whereIn("m_soal_ujian_id", daftar_soal_ujian_id)
           .andWhere({ m_ujian_id: m_ujian_id })
           .fetch();
-        daftar_soal_ujian_id.map(async(d) => {
+        daftar_soal_ujian_id.map(async (d) => {
           const checkLagi = check
             .toJSON()
             .find((tk) => tk.m_soal_ujian_id == d);
@@ -12415,6 +12416,52 @@ class MainController {
     }
   }
 
+  async resetPesertaUjian({
+    response,
+    request,
+    auth,
+    params: { peserta_ujian_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { reset, hapus } = request.post();
+
+    const waktu_selesai = moment().format("YYYY-MM-DD HH:mm:ss");
+
+    const pesertaUjian = await TkPesertaUjian.query()
+      .where({ id: peserta_ujian_id })
+      .first();
+
+    if (reset) {
+      await Database.raw(
+        "UPDATE tk_peserta_ujian SET waktu_selesai=NULL, selesai=NULL WHERE id = ?",
+        [peserta_ujian_id]
+      );
+      await jadwalUjianReference.doc(`${pesertaUjianData.doc_id}`).update({
+        waktu_selesai: FieldValue.delete(),
+      });
+    } else if (hapus) {
+      await TkPesertaUjian.query().where({ id: peserta_ujian_id }).delete();
+    }
+
+    if (!pesertaUjian) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
   async putPesertaUjian({
     response,
     request,
@@ -12513,6 +12560,12 @@ class MainController {
     //   user.whatsapp,
     //   `Halo, jawaban ujianmu sudah masuk. Tunggu gurumu memeriksanya ya!`
     // );
+    if (user.wa_real) {
+      await WhatsAppService.sendMessage(
+        user.wa_real,
+        `Halo, jawaban ujianmu sudah masuk. Tunggu gurumu memeriksanya ya!`
+      );
+    }
 
     return response.ok({
       message: "Jawaban berhasil direkam",
