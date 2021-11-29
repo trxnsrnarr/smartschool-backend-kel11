@@ -10674,12 +10674,19 @@ class MainController {
           .andWhere({ m_ujian_id: m_ujian_id })
           .fetch();
         daftar_soal_ujian_id.map((d) => {
-          if (check.toJSON().findIndex((tk) => tk.m_soal_ujian_id == d) < 0) {
+          const checkLagi = check
+            .toJSON()
+            .find((tk) => tk.m_soal_ujian_id == d);
+          if (!checkLagi) {
             soalUjianData.push({
               m_ujian_id: m_ujian_id,
               m_soal_ujian_id: d,
               dihapus: 0,
             });
+          } else if (checkLagi.dihapus) {
+            await TkSoalUjian.query()
+              .where({ id: checkLagi.id })
+              .update({ dihapus: 0 });
           }
         });
       }
