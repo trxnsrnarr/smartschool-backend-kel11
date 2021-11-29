@@ -2308,9 +2308,9 @@ class MainController {
   }
 
   async postLogCamera({ auth, response, request }) {
-    const user = await auth.getUser()
+    const userGans = await auth.getUser()
 
-    const sekolah = user.m_sekolah_id
+    const sekolah = userGans.m_sekolah_id
 
     const { nama, waktu, masker, suhu, foto } = request.post();
 
