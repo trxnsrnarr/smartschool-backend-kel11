@@ -346,7 +346,7 @@ class MainController {
   async getSekolahByDomain(domain) {
     const sekolah = await MSekolah.query()
       .with("informasi")
-      .where("domain", "like", `%${domain}%`)
+      .where("domain", "like", `%${domain.replace('https', '')}%`)
       .first();
 
     if (!sekolah) {
@@ -2308,13 +2308,9 @@ class MainController {
   }
 
   async postLogCamera({ auth, response, request }) {
-    const domain = request.headers().origin;
+    const userGans = await auth.getUser()
 
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
+    const sekolah = userGans.m_sekolah_id
 
     const { nama, waktu, masker, suhu, foto } = request.post();
 
@@ -11004,6 +11000,11 @@ class MainController {
         .where({ m_user_id: user.id })
         .ids();
 
+      const rombelWalas = await MRombel.query()
+        .where({ m_user_id: user.id })
+        .andWhere({ dihapus: 0 })
+        .ids();
+
       const rombelIds = await MJadwalMengajar.query()
         .with("rombel")
         .with("mataPelajaran")
@@ -11011,7 +11012,7 @@ class MainController {
         .pluck("m_rombel_id");
 
       const rombel = await MRombel.query()
-        .whereIn("id", rombelIds)
+        .whereIn("id", [...rombelIds, ...rombelWalas])
         .andWhere({ dihapus: 0 })
         .fetch();
 
@@ -11208,7 +11209,7 @@ class MainController {
           .whereIn("m_user_id", userIds)
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_dibuka", ">", hari_ini)
-          .orderBy("id", "desc")
+          .orderBy("waktu_dibuka", "desc")
           .fetch();
       } else if (status == "berlangsung") {
         jadwalUjian = await MJadwalUjian.query()
@@ -11221,7 +11222,7 @@ class MainController {
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_dibuka", "<=", hari_ini)
           .andWhere("waktu_ditutup", ">=", hari_ini)
-          .orderBy("id", "desc")
+          .orderBy("waktu_dibuka", "desc")
           .fetch();
       } else if (status == "sudah-selesai") {
         const ujianIds = await MUjian.query()
@@ -11236,7 +11237,7 @@ class MainController {
           .whereIn("m_ujian_id", ujianIds)
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_ditutup", "<=", hari_ini)
-          .orderBy("id", "desc")
+          .orderBy("waktu_dibuka", "desc")
           .paginate(page, 10);
       }
 
@@ -11403,7 +11404,8 @@ class MainController {
       } else {
         ujian = jadwalUjian
           .toJSON()
-          .filter((d) => d.jadwalUjian !== null && d.jadwalUjian.ujian);
+          .filter((d) => d.jadwalUjian !== null && d.jadwalUjian.ujian)
+          .sort((a, b) => moment(a.jadwalUjian.waktu_dibuka).toDate() - moment(b.jadwalUjian.waktu_dibuka).toDate());
       }
 
       if (ujian.length == 0) {
@@ -12698,22 +12700,22 @@ class MainController {
             dijawab: 1,
           });
 
-        const nilaiSiswa = await TkJawabanUjianSiswa.query()
-          .with("soal")
-          .where({ id: jawaban_ujian_siswa_id })
-          .first();
+        // const nilaiSiswa = await TkJawabanUjianSiswa.query()
+        //   .with("soal")
+        //   .where({ id: jawaban_ujian_siswa_id })
+        //   .first();
 
-        if (jawaban_pg == nilaiSiswa.toJSON().soal.kj_pg) {
-          const nilai = await TkPesertaUjian.query()
-            .where({ id: nilaiSiswa.tk_peserta_ujian_id })
-            .first();
+        // if (jawaban_pg == nilaiSiswa.toJSON().soal.kj_pg) {
+        //   const nilai = await TkPesertaUjian.query()
+        //     .where({ id: nilaiSiswa.tk_peserta_ujian_id })
+        //     .first();
 
-          await TkPesertaUjian.query()
-            .where({ id: nilaiSiswa.tk_peserta_ujian_id })
-            .update({
-              nilai: nilai ? nilai.nilai : 0 + nilaiSiswa.toJSON().soal.poin,
-            });
-        }
+        //   await TkPesertaUjian.query()
+        //     .where({ id: nilaiSiswa.tk_peserta_ujian_id })
+        //     .update({
+        //       nilai: nilai ? nilai.nilai : 0 + nilaiSiswa.toJSON().soal.poin,
+        //     });
+        // }
       } else {
         jawabanUjianSiswa = await TkJawabanUjianSiswa.query()
           .where({ id: jawaban_ujian_siswa_id })
@@ -16392,14 +16394,17 @@ class MainController {
       ditangguhkan,
     } = request.post();
 
-    if (ditangguhkan) {
+    if(ditangguhkan == 2) {
+      await Database.raw('UPDATE m_pembayaran_siswa SET ditangguhkan=NULL WHERE id = ?', [m_pembayaran_siswa_id])
+      return response.ok({ message: messagePostSuccess });
+    } else if (ditangguhkan) {
       await MPembayaranSiswa.query()
         .where({ id: m_pembayaran_siswa_id })
         .update({
           ditangguhkan: moment().add(7, "days").format("YYYY-MM-DD HH:mm:ss"),
         });
       return response.ok({ message: messagePostSuccess });
-    }
+    } 
 
     const rules = {
       bank: "required",
