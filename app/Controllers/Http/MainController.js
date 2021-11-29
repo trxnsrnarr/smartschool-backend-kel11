@@ -12445,7 +12445,7 @@ class MainController {
         "UPDATE tk_peserta_ujian SET waktu_selesai=NULL, selesai=NULL WHERE id = ?",
         [peserta_ujian_id]
       );
-      await jadwalUjianReference.doc(`${pesertaUjianData.doc_id}`).update({
+      await jadwalUjianReference.doc(`${pesertaUjian.doc_id}`).update({
         waktu_selesai: FieldValue.delete(),
       });
     } else if (hapus) {
