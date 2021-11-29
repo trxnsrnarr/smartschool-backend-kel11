@@ -10673,7 +10673,7 @@ class MainController {
           .whereIn("m_soal_ujian_id", daftar_soal_ujian_id)
           .andWhere({ m_ujian_id: m_ujian_id })
           .fetch();
-        daftar_soal_ujian_id.map((d) => {
+        daftar_soal_ujian_id.map(async(d) => {
           const checkLagi = check
             .toJSON()
             .find((tk) => tk.m_soal_ujian_id == d);
