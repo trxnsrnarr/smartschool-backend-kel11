@@ -10734,7 +10734,7 @@ class MainController {
       .where({ m_soal_ujian_id: soalUjian.id })
       .first();
     if (check) {
-      await TkSoalUjian.query().where({ id: check.id }).update({ dihapus: 1 });
+      await TkSoalUjian.query().where({ id: check.id }).update({ dihapus: 0 });
     } else {
       const tkSoalUjian = await TkSoalUjian.create({
         dihapus: 0,
