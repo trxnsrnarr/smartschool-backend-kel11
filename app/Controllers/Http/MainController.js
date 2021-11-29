@@ -346,7 +346,7 @@ class MainController {
   async getSekolahByDomain(domain) {
     const sekolah = await MSekolah.query()
       .with("informasi")
-      .where("domain", "like", `%${domain.replace('https', '')}%`)
+      .where("domain", "like", `%${domain.replace("https", "")}%`)
       .first();
 
     if (!sekolah) {
@@ -2308,9 +2308,9 @@ class MainController {
   }
 
   async postLogCamera({ auth, response, request }) {
-    const userGans = await auth.getUser()
+    const userGans = await auth.getUser();
 
-    const sekolah = userGans.m_sekolah_id
+    const sekolah = userGans.m_sekolah_id;
 
     const { nama, waktu, masker, suhu, foto } = request.post();
 
@@ -4197,7 +4197,7 @@ class MainController {
                       // )
                       .where({ m_ta_id: ta.id })
                       .with("mapel", (builder) => {
-                        builder.select("id", "nama")
+                        builder.select("id", "nama");
                       });
                   });
               })
@@ -6437,15 +6437,25 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { kesimpulan, waktu_mulai, waktu_selesai, m_topik_id } =
+    const { kesimpulan, waktu_mulai, waktu_selesai, m_topik_id, dibaca } =
       request.post();
-    const materiKesimpulan = await TkMateriKesimpulan.query()
-      .where({ m_topik_id: m_topik_id })
-      .andWhere({ m_user_id: user.id })
-      .update({
-        kesimpulan: kesimpulan ? htmlEscaper.escape(kesimpulan) : "",
-        waktu_selesai,
-      });
+
+    let materiKesimpulan;
+    if (dibaca) {
+      materiKesimpulan = await TkMateriKesimpulan.query()
+        .where({ id: materi_kesimpulan_id })
+        .update({
+          dibaca,
+        });
+    } else {
+      materiKesimpulan = await TkMateriKesimpulan.query()
+        .where({ m_topik_id: m_topik_id })
+        .andWhere({ m_user_id: user.id })
+        .update({
+          kesimpulan: kesimpulan ? htmlEscaper.escape(kesimpulan) : "",
+          waktu_selesai,
+        });
+    }
 
     if (!materiKesimpulan) {
       return response.notFound({
@@ -11405,7 +11415,11 @@ class MainController {
         ujian = jadwalUjian
           .toJSON()
           .filter((d) => d.jadwalUjian !== null && d.jadwalUjian.ujian)
-          .sort((a, b) => moment(a.jadwalUjian.waktu_dibuka).toDate() - moment(b.jadwalUjian.waktu_dibuka).toDate());
+          .sort(
+            (a, b) =>
+              moment(a.jadwalUjian.waktu_dibuka).toDate() -
+              moment(b.jadwalUjian.waktu_dibuka).toDate()
+          );
       }
 
       if (ujian.length == 0) {
@@ -16394,8 +16408,11 @@ class MainController {
       ditangguhkan,
     } = request.post();
 
-    if(ditangguhkan == 2) {
-      await Database.raw('UPDATE m_pembayaran_siswa SET ditangguhkan=NULL WHERE id = ?', [m_pembayaran_siswa_id])
+    if (ditangguhkan == 2) {
+      await Database.raw(
+        "UPDATE m_pembayaran_siswa SET ditangguhkan=NULL WHERE id = ?",
+        [m_pembayaran_siswa_id]
+      );
       return response.ok({ message: messagePostSuccess });
     } else if (ditangguhkan) {
       await MPembayaranSiswa.query()
@@ -16404,7 +16421,7 @@ class MainController {
           ditangguhkan: moment().add(7, "days").format("YYYY-MM-DD HH:mm:ss"),
         });
       return response.ok({ message: messagePostSuccess });
-    } 
+    }
 
     const rules = {
       bank: "required",
@@ -17065,7 +17082,10 @@ class MainController {
       let pemasukan, pengeluaran;
       if (tipe != beforeUpdate.tipe) {
         if (tipe == "kredit") {
-          if (rek_sekolah_id != beforeUpdate.m_rek_sekolah_id || !beforeUpdate.m_rek_sekolah_id) {
+          if (
+            rek_sekolah_id != beforeUpdate.m_rek_sekolah_id ||
+            !beforeUpdate.m_rek_sekolah_id
+          ) {
             pengeluaran = parseInt(rekSekolah.pengeluaran);
           } else {
             pengeluaran =
@@ -17073,7 +17093,10 @@ class MainController {
           }
           pemasukan = parseInt(rekSekolah.pemasukan) + parseInt(nominal);
         } else {
-          if (rek_sekolah_id != beforeUpdate.m_rek_sekolah_id || !beforeUpdate.m_rek_sekolah_id) {
+          if (
+            rek_sekolah_id != beforeUpdate.m_rek_sekolah_id ||
+            !beforeUpdate.m_rek_sekolah_id
+          ) {
             pemasukan = parseInt(rekSekolah.pemasukan);
           } else {
             pemasukan =
@@ -17083,7 +17106,10 @@ class MainController {
         }
       } else {
         if (tipe == "kredit") {
-          if (rek_sekolah_id != beforeUpdate.m_rek_sekolah_id || !beforeUpdate.m_rek_sekolah_id) {
+          if (
+            rek_sekolah_id != beforeUpdate.m_rek_sekolah_id ||
+            !beforeUpdate.m_rek_sekolah_id
+          ) {
             pemasukan = parseInt(rekSekolah.pemasukan) + parseInt(nominal);
           } else {
             pemasukan =
@@ -17093,7 +17119,10 @@ class MainController {
           }
           pengeluaran = parseInt(rekSekolah.pengeluaran);
         } else {
-          if (rek_sekolah_id != beforeUpdate.m_rek_sekolah_id || !beforeUpdate.m_rek_sekolah_id) {
+          if (
+            rek_sekolah_id != beforeUpdate.m_rek_sekolah_id ||
+            !beforeUpdate.m_rek_sekolah_id
+          ) {
             pengeluaran = parseInt(rekSekolah.pengeluaran) + parseInt(nominal);
           } else {
             pengeluaran =
@@ -17112,13 +17141,13 @@ class MainController {
           pemasukan,
           pengeluaran,
         });
-      
+
       if (beforeUpdate.m_rek_sekolah_id) {
         const rekBeforeUpdate = await MRekSekolah.query()
           .where({ m_sekolah_id: sekolah.id })
           .andWhere({ id: beforeUpdate.m_rek_sekolah_id })
           .first();
-  
+
         if (rek_sekolah_id != beforeUpdate.m_rek_sekolah_id) {
           let masuk, keluar;
           if (beforeUpdate.tipe == "kredit") {
