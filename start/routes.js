@@ -217,7 +217,7 @@ Route.get("/rek-sekolah", "MainController.getRekSekolah");
 Route.post("/rek-sekolah", "MainController.postRekSekolah");
 Route.put("/rek-sekolah/:rek_sekolah_id", "MainController.putRekSekolah");
 Route.delete("/rek-sekolah/:rek_sekolah_id", "MainController.deleteRekSekolah");
-Route.post("/rek-sekolah/download","MainController.downloadRekening")
+Route.post("/rek-sekolah/download", "MainController.downloadRekening");
 
 // pembayaran
 Route.get("/pembayaran", "MainController.getPembayaran");
@@ -230,12 +230,17 @@ Route.post(
   "/pembayaran/:pembayaran_id/downloadspp",
   "MainController.downloadSPP"
 );
+Route.put("refresh-pembayaran-siswa", "MainController.refreshPembayaranSiswa");
 
 // pembayaran siswa
 Route.get("/pembayaran-siswa", "MainController.getPembayaranSiswa");
 Route.get(
   "/pembayaran-siswa/:pembayaran_siswa_id",
   "MainController.detailPembayaranSiswa"
+);
+Route.delete(
+  "/pembayaran-siswa/:pembayaran_siswa_id",
+  "MainController.deletePembayaranSiswa"
 );
 
 // riwayat pembayaran siswa
@@ -319,7 +324,10 @@ Route.get(
 );
 Route.post("/peserta-ujian", "MainController.postPesertaUjian");
 Route.put("/peserta-ujian/:peserta_ujian_id", "MainController.putPesertaUjian");
-Route.put("/reset-peserta-ujian/:peserta_ujian_id", "MainController.resetPesertaUjian");
+Route.put(
+  "/reset-peserta-ujian/:peserta_ujian_id",
+  "MainController.resetPesertaUjian"
+);
 Route.put("/update-nilai/:peserta_ujian_id", "MainController.updateNilai");
 
 // jawaban siswa
