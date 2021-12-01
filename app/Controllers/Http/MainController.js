@@ -16408,6 +16408,80 @@ class MainController {
     });
   }
 
+  async refreshPembayaranSiswa({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { id } = request.post();
+
+    const pembayaran = await TkPembayaranRombel.query()
+      .where({ id })
+      .where({ dihapus: 0 })
+      .with("siswa", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .with("pembayaran")
+      .first();
+    if (!pembayaran) {
+      return response.notFound({ message: messageNotFound });
+    }
+    const anggotaRombel = await MAnggotaRombel.query()
+      .where({ m_rombel_id: pembayaran.m_rombel_id })
+      .where({ dihapus: 0 })
+      .pluck("m_user_id");
+    await Promise.all(
+      anggotaRombel.map((d) => {
+        if (!pembayaran.toJSON().siswa.find((e) => e.m_user_id == d)) {
+          MPembayaranSiswa.create({
+            status: "belum lunas",
+            dihapus: 0,
+            m_user_id: d,
+            tk_pembayaran_rombel_id: id,
+            m_sekolah_id: pembayaran.toJSON().pembayaran.m_sekolah_id,
+          });
+        }
+      })
+    );
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async deletePembayaranSiswa({
+    response,
+    request,
+    auth,
+    params: { pembayaran_siswa_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const deletePembayaranSiswa = await MPembayaranSiswa.query()
+      .where({ id: pembayaran_siswa_id })
+      .update({
+        dihapus: 1,
+      });
+    if (!deletePembayaranSiswa) {
+      return response.notFound({ message: messageNotFound });
+    }
+    return response.ok({ message: messageDeleteSuccess });
+  }
+
   async detailPembayaranSiswa({
     response,
     request,
