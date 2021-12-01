@@ -8803,43 +8803,40 @@ class MainController {
 
       await TkTimeline.createMany(userIds);
     } else if (tipe == "materi") {
-      materi.map(async (d) => {
-        timeline = await MTimeline.create({
-          m_user_id: user.id,
-          m_rombel_id: jadwalMengajar.m_rombel_id,
-          tipe,
-          m_mata_pelajaran_id: jadwalMengajar.toJSON().mataPelajaran.id,
-          dihapus: 0,
-          tanggal_pembagian,
-        });
+      await Promise.all(
+        materi.map(async (d) => {
+          const timeline = await MTimeline.create({
+            m_user_id: user.id,
+            m_rombel_id: jadwalMengajar.m_rombel_id,
+            tipe,
+            m_mata_pelajaran_id: jadwalMengajar.toJSON().mataPelajaran.id,
+            dihapus: 0,
+            tanggal_pembagian,
+          });
 
-        await Promise.all(
-          TkTimelineTopik.create({
+          await TkTimelineTopik.create({
             m_timeline_id: timeline.id,
             m_topik_id: d,
-          })
-        );
+          });
 
-        const anggotaRombel = await MAnggotaRombel.query()
-          .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
-          .andWhere({ dihapus: 0 })
-          .fetch();
+          const anggotaRombel = await MAnggotaRombel.query()
+            .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
+            .andWhere({ dihapus: 0 })
+            .pluck("m_user_id");
 
-        let userIds = [];
-
-        await Promise.all(
-          anggotaRombel.toJSON().map(async (d) => {
+          let userIds = [];
+          anggotaRombel.map((d) => {
             userIds.push({
-              m_user_id: d.m_user_id,
+              m_user_id: d,
               tipe: "materi",
               m_timeline_id: timeline.id,
               dihapus: 0,
             });
-          })
-        );
+          });
 
-        await TkTimeline.createMany(userIds);
-      });
+          await TkTimeline.createMany(userIds);
+        })
+      );
     }
 
     return response.ok({
