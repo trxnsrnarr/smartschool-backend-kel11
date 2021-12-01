@@ -69,8 +69,8 @@ class DownloadService {
           INDIKATOR_SOAL: d.soal ? d.soal.akm_konten_materi : "-",
           LEVEL_KOGNITIF: d.soal ? d.soal.aspek_level : "-",
           BENTUK_SOAL: d.soal ? d.soal.bentuk : "-",
-          TINGAT_KESUKARAN: d.soal ? d.soal.tahun_masuk : "-",
-          SUMBER_BUKU: d.soal ? d.soal.pekerjaan : "-",
+          TINGAT_KESUKARAN: d.soal ? d.soal.tingkat_kesukaran : "-",
+          SUMBER_BUKU: d.soal ? d.soal.sumber_buku : "-",
           NO_SOAL: d.soal ? d.soal.kantor : "-",
         });
 
