@@ -1098,6 +1098,8 @@ Route.post("/resend", "MainController.resendAktivasi");
 
 Route.post("/danger/hack", "MainController.putRekapNilaiAll");
 Route.post("/danger/hack/ujian", "MainController.hackJadwalUjian");
+Route.post("/danger/hack/ujian-nilai", "MainController.hackUjianSiswaNilai");
+Route.post("/danger/hack/ujian-nilai-keterampilan", "MainController.hackUjianSiswaNilaiKeterampilan");
 
 Route.post(
   "/download/rekap-sikap/:rombel_id/:mata_pelajaran_id",

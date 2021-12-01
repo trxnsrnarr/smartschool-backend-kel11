@@ -45044,21 +45044,22 @@ class MainController {
       })
       .select("id", "nama")
       .where({ dihapus: 0 })
-      // .andWhere({ m_sekolah_id: 33 })
+      // .andWhere({ m_sekolah_id: 33 })n                                                                                  
       .andWhere({ role: "siswa" })
-      .andWhere({ m_sekolah_id: 13 })
-      // .offset(parseInt(offset))
-      // .limit(limit)
+      .andWhere({ m_sekolah_id: 33 })
+      .offset(0)
+      .limit(800)
       .ids();
 
     const ta = await Mta.query()
-      .where({ m_sekolah_id: 13 })
+      .where({ m_sekolah_id: 33 })
       .andWhere({ aktif: 1 })
       .andWhere({ dihapus: 0 })
       .first();
 
     const ujian = await MUjianSiswa.query()
       .whereIn("m_user_id", semuaUser)
+      .whereNull("nilai_uts")
       .fetch();
 
     const awal = moment(`${ta.tanggal_awal}`).format("YYYY-MM-DD ");
@@ -45187,13 +45188,13 @@ class MainController {
       .where({ dihapus: 0 })
       // .andWhere({ m_sekolah_id: 33 })
       .andWhere({ role: "siswa" })
-      .andWhere({ m_sekolah_id: 13 })
-      // .offset(parseInt(offset))
-      // .limit(limit)
+      .andWhere({ m_sekolah_id: 33 })
+      .offset(0)
+      .limit(850)
       .ids();
 
     const ta = await Mta.query()
-      .where({ m_sekolah_id: 13 })
+      .where({ m_sekolah_id: 33 })
       .andWhere({ aktif: 1 })
       .andWhere({ dihapus: 0 })
       .first();
@@ -45203,6 +45204,7 @@ class MainController {
 
     const ujian = await MUjianSiswa.query()
       .whereIn("m_user_id", semuaUser)
+      .whereNull("avg_praktik")
       .andWhere({ m_ta_id: ta.id })
       .fetch();
 
