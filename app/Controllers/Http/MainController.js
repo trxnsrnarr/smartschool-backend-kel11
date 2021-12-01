@@ -175,6 +175,7 @@ const Firestore = use("App/Models/Firestore");
 const firestore = new Firestore();
 const db = firestore.db();
 const bucket = firestore.bucket();
+const FieldValue = firestore.FieldValue();
 var striptags = require("striptags");
 // reference to
 const jadwalUjianReference = db.collection("jadwal-ujian");
@@ -346,7 +347,7 @@ class MainController {
   async getSekolahByDomain(domain) {
     const sekolah = await MSekolah.query()
       .with("informasi")
-      .where("domain", "like", `%${domain.replace('https', '')}%`)
+      .where("domain", "like", `%${domain}%`)
       .first();
 
     if (!sekolah) {
@@ -2308,9 +2309,9 @@ class MainController {
   }
 
   async postLogCamera({ auth, response, request }) {
-    const userGans = await auth.getUser()
+    const userGans = await auth.getUser();
 
-    const sekolah = userGans.m_sekolah_id
+    const sekolah = userGans.m_sekolah_id;
 
     const { nama, waktu, masker, suhu, foto } = request.post();
 
@@ -6437,15 +6438,25 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { kesimpulan, waktu_mulai, waktu_selesai, m_topik_id } =
+    const { kesimpulan, waktu_mulai, waktu_selesai, m_topik_id, dibaca } =
       request.post();
-    const materiKesimpulan = await TkMateriKesimpulan.query()
-      .where({ m_topik_id: m_topik_id })
-      .andWhere({ m_user_id: user.id })
-      .update({
-        kesimpulan: kesimpulan ? htmlEscaper.escape(kesimpulan) : "",
-        waktu_selesai,
-      });
+
+    let materiKesimpulan;
+    if (dibaca) {
+      materiKesimpulan = await TkMateriKesimpulan.query()
+        .where({ id: materi_kesimpulan_id })
+        .update({
+          dibaca,
+        });
+    } else {
+      materiKesimpulan = await TkMateriKesimpulan.query()
+        .where({ m_topik_id: m_topik_id })
+        .andWhere({ m_user_id: user.id })
+        .update({
+          kesimpulan: kesimpulan ? htmlEscaper.escape(kesimpulan) : "",
+          waktu_selesai,
+        });
+    }
 
     if (!materiKesimpulan) {
       return response.notFound({
@@ -10663,13 +10674,20 @@ class MainController {
           .whereIn("m_soal_ujian_id", daftar_soal_ujian_id)
           .andWhere({ m_ujian_id: m_ujian_id })
           .fetch();
-        daftar_soal_ujian_id.map((d) => {
-          if (check.toJSON().findIndex((tk) => tk.m_soal_ujian_id == d) < 0) {
+        daftar_soal_ujian_id.map(async (d) => {
+          const checkLagi = check
+            .toJSON()
+            .find((tk) => tk.m_soal_ujian_id == d);
+          if (!checkLagi) {
             soalUjianData.push({
               m_ujian_id: m_ujian_id,
               m_soal_ujian_id: d,
               dihapus: 0,
             });
+          } else if (checkLagi.dihapus) {
+            await TkSoalUjian.query()
+              .where({ id: checkLagi.id })
+              .update({ dihapus: 0 });
           }
         });
       }
@@ -10719,11 +10737,19 @@ class MainController {
       dihapus: 0,
     });
 
-    const tkSoalUjian = await TkSoalUjian.create({
-      dihapus: 0,
-      m_ujian_id: m_ujian_id,
-      m_soal_ujian_id: soalUjian.id,
-    });
+    const check = await TkSoalUjian.query()
+      .where({ m_ujian_id: m_ujian_id })
+      .where({ m_soal_ujian_id: soalUjian.id })
+      .first();
+    if (check) {
+      await TkSoalUjian.query().where({ id: check.id }).update({ dihapus: 0 });
+    } else {
+      const tkSoalUjian = await TkSoalUjian.create({
+        dihapus: 0,
+        m_ujian_id: m_ujian_id,
+        m_soal_ujian_id: soalUjian.id,
+      });
+    }
 
     return response.ok({
       message: messagePostSuccess,
@@ -11405,7 +11431,11 @@ class MainController {
         ujian = jadwalUjian
           .toJSON()
           .filter((d) => d.jadwalUjian !== null && d.jadwalUjian.ujian)
-          .sort((a, b) => moment(a.jadwalUjian.waktu_dibuka).toDate() - moment(b.jadwalUjian.waktu_dibuka).toDate());
+          .sort(
+            (a, b) =>
+              moment(a.jadwalUjian.waktu_dibuka).toDate() -
+              moment(b.jadwalUjian.waktu_dibuka).toDate()
+          );
       }
 
       if (ujian.length == 0) {
@@ -12386,6 +12416,52 @@ class MainController {
     }
   }
 
+  async resetPesertaUjian({
+    response,
+    request,
+    auth,
+    params: { peserta_ujian_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { reset, hapus } = request.post();
+
+    const waktu_selesai = moment().format("YYYY-MM-DD HH:mm:ss");
+
+    const pesertaUjian = await TkPesertaUjian.query()
+      .where({ id: peserta_ujian_id })
+      .first();
+
+    if (reset) {
+      await Database.raw(
+        "UPDATE tk_peserta_ujian SET waktu_selesai=NULL, selesai=NULL WHERE id = ?",
+        [peserta_ujian_id]
+      );
+      await jadwalUjianReference.doc(`${pesertaUjian.doc_id}`).update({
+        waktu_selesai: FieldValue.delete(),
+      });
+    } else if (hapus) {
+      await TkPesertaUjian.query().where({ id: peserta_ujian_id }).delete();
+    }
+
+    if (!pesertaUjian) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
   async putPesertaUjian({
     response,
     request,
@@ -12484,6 +12560,12 @@ class MainController {
     //   user.whatsapp,
     //   `Halo, jawaban ujianmu sudah masuk. Tunggu gurumu memeriksanya ya!`
     // );
+    if (user.wa_real) {
+      await WhatsAppService.sendMessage(
+        user.wa_real,
+        `Halo, jawaban ujianmu sudah masuk. Tunggu gurumu memeriksanya ya!`
+      );
+    }
 
     return response.ok({
       message: "Jawaban berhasil direkam",
@@ -16394,8 +16476,11 @@ class MainController {
       ditangguhkan,
     } = request.post();
 
-    if(ditangguhkan == 2) {
-      await Database.raw('UPDATE m_pembayaran_siswa SET ditangguhkan=NULL WHERE id = ?', [m_pembayaran_siswa_id])
+    if (ditangguhkan == 2) {
+      await Database.raw(
+        "UPDATE m_pembayaran_siswa SET ditangguhkan=NULL WHERE id = ?",
+        [m_pembayaran_siswa_id]
+      );
       return response.ok({ message: messagePostSuccess });
     } else if (ditangguhkan) {
       await MPembayaranSiswa.query()
@@ -16404,7 +16489,7 @@ class MainController {
           ditangguhkan: moment().add(7, "days").format("YYYY-MM-DD HH:mm:ss"),
         });
       return response.ok({ message: messagePostSuccess });
-    } 
+    }
 
     const rules = {
       bank: "required",
