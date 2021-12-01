@@ -10640,6 +10640,7 @@ class MainController {
       akm_konten_materi,
       akm_konteks_materi,
       akm_proses_kognitif,
+      sumber_buku,
       // pg
       pertanyaan,
       audio,
@@ -10716,6 +10717,7 @@ class MainController {
       akm_konten_materi,
       akm_konteks_materi,
       akm_proses_kognitif,
+      sumber_buku,
       audio,
       pertanyaan: htmlEscaper.escape(pertanyaan),
       jawaban_a: htmlEscaper.escape(jawaban_a),
@@ -10754,6 +10756,80 @@ class MainController {
     return response.ok({
       message: messagePostSuccess,
     });
+  }
+
+  async importSoalUjian1Services(filelocation, user, m_ujian_id) {
+    var workbook = new Excel.Workbook();
+
+    workbook = await workbook.xlsx.readFile(filelocation);
+
+    let explanation = workbook.getWorksheet("Sheet1");
+
+    let colComment = explanation.getColumn("A");
+
+    let data = [];
+
+    colComment.eachCell(async (cell, rowNumber) => {
+      if (rowNumber >= 13) {
+        data.push({
+          kd: "" + explanation.getCell("A" + rowNumber).value,
+          kd_konten_materi: "" + explanation.getCell("B" + rowNumber).value,
+          level_kognitif: "" + explanation.getCell("C" + rowNumber).value,
+          tingkat_kesukaran: '' + explanation.getCell("D" + rowNumber).value,
+          bentuk: "" + explanation.getCell("E" + rowNumber).value,
+          akm_konteks_materi: '' + explanation.getCell("F" + rowNumber).value,
+          akm_konten_materi: '' + explanation.getCell("G" + rowNumber).value,
+          // akm_proses_kognitif: '' + explanation.getCell("A" + rowNumber).value,
+          sumber_buku: '' + explanation.getCell("H" + rowNumber).value,
+          
+          pertanyaan: "" + explanation.getCell("I" + rowNumber).value,
+          jawaban_a: "" + explanation.getCell("J" + rowNumber).value,
+          jawaban_b: "" + explanation.getCell("K" + rowNumber).value,
+          jawaban_c: "" + explanation.getCell("L" + rowNumber).value,
+          jawaban_d: "" + explanation.getCell("M" + rowNumber).value,
+          jawaban_e: "" + explanation.getCell("N" + rowNumber).value,
+          kj_pg: "" + explanation.getCell("O" + rowNumber).value,
+          pembahasan: "" + explanation.getCell("P" + rowNumber).value,
+          nilai_soal: "" + explanation.getCell("Q" + rowNumber).value,
+        });
+      }
+    });
+
+    const result = await Promise.all(
+      data.map(async (d) => {
+        const soalUjian = await MSoalUjian.create({
+          kd: d.kd,
+          kd_konten_materi: d.kd_konten_materi,
+          level_kognitif: d.level_kognitif,
+          bentuk: d.bentuk,
+          akm_konten_materi,
+          akm_konteks_materi,
+          // akm_proses_kognitif,
+          sumber_buku,
+          tingkat_kesukaran,
+          pertanyaan: htmlEscaper.escape(d.pertanyaan),
+          jawaban_a: htmlEscaper.escape(d.jawaban_a),
+          jawaban_b: htmlEscaper.escape(d.jawaban_b),
+          jawaban_c: htmlEscaper.escape(d.jawaban_c),
+          jawaban_d: htmlEscaper.escape(d.jawaban_d),
+          jawaban_e: htmlEscaper.escape(d.jawaban_e),
+          kj_pg: d.kj_pg,
+          // rubrik_kj: JSON.stringify(rubrik_kj),
+          pembahasan: htmlEscaper.escape(d.pembahasan),
+          nilai_soal: d.nilai_soal,
+          m_user_id: user.id,
+          dihapus: 0,
+        });
+
+        const tkSoalUjian = await TkSoalUjian.create({
+          dihapus: 0,
+          m_ujian_id: m_ujian_id,
+          m_soal_ujian_id: soalUjian.id,
+        });
+      })
+    );
+
+    return result;
   }
 
   async importSoalUjianServices(filelocation, user, m_ujian_id) {
