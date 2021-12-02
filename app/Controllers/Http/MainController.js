@@ -11792,6 +11792,304 @@ class MainController {
     return namaFile;
   }
 
+  async downloadJadwalUjianDalamSehari({ response, request }) {
+    // const domain = request.headers().origin;
+
+    // const sekolah = await this.getSekolahByDomain(domain);
+
+    // if (sekolah == "404") {
+    //   return response.notFound({ message: "Sekolah belum terdaftar" });
+    // }
+
+    // const { tk_jadwal_ujian_id, m_jadwal_ujian_id } = request.post();
+    // const keluarantanggalseconds =
+    //   moment().format("YYYY-MM-DD ") + new Date().getTime();
+
+    const userIds = await User.query()
+      .where({ dihapus: 0 })
+      .where({ m_sekolah_id: 7144 })
+      .whereIn("role", ["guru", "admin"])
+      .ids();
+
+    const ujianIds = await MUjian.query()
+      .where({ tipe: "pas1" })
+      .where({ dihapus: 0 })
+      .whereIn("m_user_id", userIds)
+      .ids();
+
+    const jadwalIds = await MJadwalUjian.query()
+      .where("waktu_dibuka", ">", moment().format("YYYY-MM-DD 00:00:00"))
+      .where("waktu_ditutup", "<", moment().format("YYYY-MM-DD HH:mm:ss"))
+      .whereIn("m_user_id", userIds)
+      .whereIn("m_ujian_id", ujianIds)
+      .ids();
+
+    const tkJadwalUjianIds = await TkJadwalUjian.query()
+      .whereIn("m_jadwal_ujian_id", jadwalIds)
+      .where({ dihapus: 0 })
+      // .offset(60)
+      // .limit(10)
+      .ids();
+    return tkJadwalUjianIds;
+
+    await Promise.all(
+      tkJadwalUjianIds.map(async (tkId) => {
+        const jadwalUjian = await TkJadwalUjian.query()
+          .with("peserta", (builder) => {
+            builder.with("user"),
+              (builder) => {
+                builder.select("id", "nama");
+              };
+          })
+          .with("rombel")
+          .with("jadwalUjian", (builder) => {
+            builder.with("ujian");
+          })
+          .where({ id: tkId })
+          .first();
+
+        const tkJadwalUjian = await TkJadwalUjian.query()
+          .where({ id: tkId })
+          .pluck("m_rombel_id");
+
+        const anggotaRombel = await MAnggotaRombel.query()
+          .where({ m_rombel_id: tkJadwalUjian[0] })
+          .andWhere({ dihapus: 0 })
+          .pluck("m_user_id");
+
+        const pesertaUjianData = await User.query()
+          .whereIn("id", anggotaRombel)
+          .fetch();
+
+        const workbook = new Excel.Workbook();
+
+        await Promise.all(
+          [0].map(async (_, idx) => {
+            // Create workbook & add worksheet
+            const worksheet = workbook.addWorksheet(
+              `${jadwalUjian.toJSON().rombel.nama}`
+            );
+
+            await Promise.all(
+              pesertaUjianData
+                .toJSON()
+                .sort((a, b) => ("" + a.nama).localeCompare(b.nama))
+                .map(async (d) => {
+                  await Promise.all(
+                    jadwalUjian
+                      .toJSON()
+                      .peserta.sort((a, b) =>
+                        ("" + a.user.nama).localeCompare(b.user.nama)
+                      )
+                      .map(async (e) => {
+                        if (d.id == e.m_user_id) {
+                          const pesertaUjian = await TkPesertaUjian.query()
+                            .with("jawabanSiswa", (builder) => {
+                              builder.with("soal");
+                            })
+                            .with("user")
+                            .where({ id: e.id })
+                            .first();
+
+                          let metaHasil = {
+                            nilaiPg: 0,
+                            nilaiEsai: 0,
+                            nilaiTotal: 0,
+                            benar: 0,
+                          };
+                          let analisisBenar = {};
+                          let analisisTotal = {};
+
+                          await Promise.all(
+                            pesertaUjian
+                              .toJSON()
+                              .jawabanSiswa.map(async (d) => {
+                                if (d.soal.bentuk == "pg") {
+                                  if (d.jawaban_pg == d.soal.kj_pg) {
+                                    metaHasil.nilaiPg =
+                                      metaHasil.nilaiPg + d.soal.nilai_soal;
+                                    metaHasil.benar = metaHasil.benar + 1;
+                                    analisisBenar[d.soal.kd] = analisisBenar[
+                                      d.soal.kd
+                                    ]
+                                      ? analisisBenar[d.soal.kd] + 1
+                                      : 1;
+                                  }
+                                  analisisTotal[d.soal.kd] = analisisTotal[
+                                    d.soal.kd
+                                  ]
+                                    ? analisisTotal[d.soal.kd] + 1
+                                    : 1;
+                                } else if (d.soal.bentuk == "esai") {
+                                  if (JSON.parse(d.jawaban_rubrik_esai)) {
+                                    if (
+                                      JSON.parse(d.jawaban_rubrik_esai).length
+                                    ) {
+                                      JSON.parse(d.jawaban_rubrik_esai).map(
+                                        (e) => {
+                                          if (e.benar) {
+                                            metaHasil.nilaiEsai =
+                                              metaHasil.nilaiEsai + e.poin;
+                                          }
+                                        }
+                                      );
+
+                                      if (
+                                        d.jawaban_rubrik_esai.indexOf("true") !=
+                                        -1
+                                      ) {
+                                        metaHasil.benar = metaHasil.benar + 1;
+                                      }
+                                    }
+                                  }
+                                }
+                              })
+                          );
+
+                          metaHasil.nilaiTotal =
+                            metaHasil.nilaiPg + metaHasil.nilaiEsai;
+
+                          // add column headers
+                          worksheet.getRow(10).values = [
+                            "Nama",
+                            "Nilai PG",
+                            "Nilai Esai",
+                            "Nilai Total",
+                          ];
+
+                          worksheet.columns = [
+                            { key: "user" },
+                            { key: "nilai_pg" },
+                            { key: "nilai_esai" },
+                            { key: "nilai_total" },
+                          ];
+
+                          // Add row using key mapping to columns
+                          const row = worksheet.addRow({
+                            user: d.nama,
+                            nilai_pg: metaHasil.nilaiPg,
+                            nilai_esai: metaHasil.nilaiEsai,
+                            nilai_total: metaHasil.nilaiTotal,
+                          });
+                        }
+                      })
+                  );
+                })
+            );
+
+            worksheet.getCell("A1").value = "Ujian";
+            worksheet.getCell("B1").value =
+              jadwalUjian.toJSON().jadwalUjian.ujian.nama;
+            worksheet.getCell("D1").value = "Tanggal";
+            worksheet.getCell("E1").value = `${
+              jadwalUjian.toJSON().jadwalUjian.tanggalUjian
+            } ${jadwalUjian.toJSON().jadwalUjian.waktuUjian}`;
+            worksheet.getCell("D2").value = "KKM";
+            worksheet.getCell("E2").value =
+              jadwalUjian.toJSON().jadwalUjian.kkm;
+            worksheet.getCell("A2").value = "Durasi";
+            worksheet.getCell("B2").value = `${
+              jadwalUjian.toJSON().jadwalUjian.durasi
+            } menit`;
+
+            // worksheet.getCell("A4").value = "RPP";
+            // worksheet.getCell("A5").value = d.rpp.toString();
+
+            // worksheet.getCell("A7").value = "Deskripsi";
+            // worksheet.getCell("A8").value = d.deskripsi;
+
+            // worksheet.columns.forEach(function (column, i) {
+            //   let maxLength = 0;
+            //   column["eachCell"]({ includeEmpty: true }, function (cell) {
+            //     let columnLength = cell.value ? cell.value.toString().length : 10;
+
+            //     if (cell.value == "alpa") {
+            //       // red
+            //       cell.fill = {
+            //         type: "pattern",
+            //         pattern: "solid",
+            //         fgColor: { argb: "F9D5D4" },
+            //         bgColor: { argb: "F9D5D4" },
+            //       };
+
+            //       cell.font = {
+            //         color: { argb: "FC544B" },
+            //       };
+            //     }
+
+            //     if (cell.value == "sakit") {
+            //       // yellow
+            //       cell.fill = {
+            //         type: "pattern",
+            //         pattern: "solid",
+            //         fgColor: { argb: "FCE8D2" },
+            //         bgColor: { argb: "FCE8D2" },
+            //       };
+
+            //       cell.font = {
+            //         color: { argb: "F9AC50" },
+            //       };
+            //     }
+
+            //     if (cell.value == "izin") {
+            //       // green
+            //       cell.fill = {
+            //         type: "pattern",
+            //         pattern: "solid",
+            //         fgColor: { argb: "E0FCE4" },
+            //         bgColor: { argb: "E0FCE4" },
+            //       };
+
+            //       cell.font = {
+            //         color: { argb: "63ED7A" },
+            //       };
+            //     }
+
+            //     if (cell.value == "hadir") {
+            //       // green
+            //       cell.fill = {
+            //         type: "pattern",
+            //         pattern: "solid",
+            //         fgColor: { argb: "2680EB" },
+            //         bgColor: { argb: "2680EB" },
+            //       };
+
+            //       cell.font = {
+            //         color: { argb: "FFFFFF" },
+            //       };
+            //     }
+
+            //     if (columnLength > maxLength) {
+            //       maxLength = columnLength;
+            //     }
+            //   });
+
+            //   column.width = maxLength < 15 ? 15 : maxLength > 30 ? 30 : 15;
+            // });
+            // worksheet.autoFilter = {
+            //   from: 'A11',
+            //   to: 'D99',
+            // }
+          })
+        );
+
+        let namaFile = `/uploads/${jadwalUjian
+          .toJSON()
+          .jadwalUjian.ujian.nama.replace(/[\/|\\:*?"<>]/g, " ")} ${jadwalUjian
+          .toJSON()
+          .rombel.nama.replace(/[\/|\\:*?"<>]/g, " ")}.xlsx`;
+
+        // save workbook to disk
+        await workbook.xlsx.writeFile(`public${namaFile}`);
+
+        return namaFile;
+      })
+    );
+    return response.ok({
+      message: "success",
+    });
+  }
+
   async postJadwalUjian({ response, request, auth }) {
     const domain = request.headers().origin;
 
@@ -16545,7 +16843,7 @@ class MainController {
       bukti,
       m_pembayaran_siswa_id,
       ditangguhkan,
-      hari = 7
+      hari = 7,
     } = request.post();
 
     if (ditangguhkan == 2) {
@@ -16558,7 +16856,9 @@ class MainController {
       await MPembayaranSiswa.query()
         .where({ id: m_pembayaran_siswa_id })
         .update({
-          ditangguhkan: moment().add(hari, "days").format("YYYY-MM-DD HH:mm:ss"),
+          ditangguhkan: moment()
+            .add(hari, "days")
+            .format("YYYY-MM-DD HH:mm:ss"),
         });
       return response.ok({ message: messagePostSuccess });
     }
