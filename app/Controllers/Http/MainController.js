@@ -40158,7 +40158,7 @@ class MainController {
       //   })
       // })
       .with("siswa", (builder) => {
-        builder.with("user", (builder) => {
+        builder.where({ dihapus: 0 }).with("user", (builder) => {
           builder.select("id", "whatsapp", "nama");
         });
       })
