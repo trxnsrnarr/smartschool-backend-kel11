@@ -10218,6 +10218,11 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .fetch();
 
+      const totalNilai = soalUjianIds
+      .toJSON()
+      .map((d) => d.soal.nilai_soal)
+      .reduce((a, b) => a + b, 0);      
+
     let jumlahSoalPg = 0;
 
     let jumlahSoalEsai = 0;
@@ -10344,6 +10349,7 @@ class MainController {
       jumlahSoalPg: jumlahSoalPg,
       jumlahSoalEsai: jumlahSoalEsai,
       // filter
+      totalNilai,
       tingkat: tingkatData,
     });
   }
