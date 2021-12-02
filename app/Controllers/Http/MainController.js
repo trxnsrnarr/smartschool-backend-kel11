@@ -16545,6 +16545,7 @@ class MainController {
       bukti,
       m_pembayaran_siswa_id,
       ditangguhkan,
+      hari = 7
     } = request.post();
 
     if (ditangguhkan == 2) {
@@ -16557,7 +16558,7 @@ class MainController {
       await MPembayaranSiswa.query()
         .where({ id: m_pembayaran_siswa_id })
         .update({
-          ditangguhkan: moment().add(7, "days").format("YYYY-MM-DD HH:mm:ss"),
+          ditangguhkan: moment().add(hari, "days").format("YYYY-MM-DD HH:mm:ss"),
         });
       return response.ok({ message: messagePostSuccess });
     }
