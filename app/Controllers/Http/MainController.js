@@ -10197,7 +10197,7 @@ class MainController {
       if (d.soal.bentuk) {
         if (
           ["menjodohkan", "uraian", "esai", "pg_kompleks", "pg"].includes(
-            d.soal.bentuk.toLowerCase()
+            d.soal.bentuk.toLowerCase().trim()
           )
         ) {
           return true;
