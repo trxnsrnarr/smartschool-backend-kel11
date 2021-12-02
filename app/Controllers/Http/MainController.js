@@ -10221,9 +10221,9 @@ class MainController {
 
     await Promise.all(
       soalUjianIds.toJSON().map(async (d) => {
-        if (d.soal.bentuk == "pg") {
+        if (d.soal.bentuk.toLowerCase().trim() == "pg") {
           jumlahSoalPg = jumlahSoalPg + 1;
-        } else if (d.soal.bentuk == "esai") {
+        } else if (d.soal.bentuk.toLowerCase().trim() == "esai") {
           jumlahSoalEsai = jumlahSoalEsai + 1;
         }
       })
