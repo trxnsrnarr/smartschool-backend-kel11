@@ -10365,48 +10365,50 @@ class MainController {
     const { nama, tipe, tingkat, m_mata_pelajaran_id, ujian_id } =
       request.post();
 
-    const rules = {
-      nama: "required",
-      tipe: "required",
-      tingkat: "required",
-    };
-    const message = {
-      "nama.required": "Nama Ujian harus diisi",
-      "tipe.required": "Tipe Ujian harus dipilih",
-      "tingkat.required": "Tingkat Kelas harus dipilih",
-      "m_mata_pelajaran_id.required": "Mata Pelajaran harus dipilih",
-    };
-    const validation = await validate(request.all(), rules, message);
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
-    }
-
-    const ujian = await MUjian.create({
-      nama,
-      tipe,
-      tingkat,
-      m_mata_pelajaran_id,
-      m_user_id: user.id,
-      dihapus: 0,
-    });
-
-    if (ujian_id) {
-      const soalIds = await TkSoalUjian.query()
-        .where({ m_ujian_id: ujian_id })
-        .andWhere({ dihapus: 0 })
-        .pluck("m_soal_ujian_id");
-      soalIds.map(async (item) => {
-        await TkSoalUjian.create({
-          m_ujian_id: ujian.id,
-          m_soal_ujian_id: item,
-          dihapus: 0,
+    if(tipe != "ppdb"){
+      const rules = {
+        nama: "required",
+        tipe: "required",
+        tingkat: "required",
+      };
+      const message = {
+        "nama.required": "Nama Ujian harus diisi",
+        "tipe.required": "Tipe Ujian harus dipilih",
+        "tingkat.required": "Tingkat Kelas harus dipilih",
+        "m_mata_pelajaran_id.required": "Mata Pelajaran harus dipilih",
+      };
+      const validation = await validate(request.all(), rules, message);
+      if (validation.fails()) {
+        return response.unprocessableEntity(validation.messages());
+      }
+  
+      const ujian = await MUjian.create({
+        nama,
+        tipe,
+        tingkat,
+        m_mata_pelajaran_id,
+        m_user_id: user.id,
+        dihapus: 0,
+      });
+  
+      if (ujian_id) {
+        const soalIds = await TkSoalUjian.query()
+          .where({ m_ujian_id: ujian_id })
+          .andWhere({ dihapus: 0 })
+          .pluck("m_soal_ujian_id");
+        soalIds.map(async (item) => {
+          await TkSoalUjian.create({
+            m_ujian_id: ujian.id,
+            m_soal_ujian_id: item,
+            dihapus: 0,
+          });
         });
+      }
+  
+      return response.ok({
+        message: messagePostSuccess,
       });
     }
-
-    return response.ok({
-      message: messagePostSuccess,
-    });
   }
 
   async putUjian({ response, request, auth, params: { ujian_id } }) {
@@ -12584,6 +12586,7 @@ class MainController {
       await TkJawabanUjianSiswa.createMany(soalData);
 
       const res = await jadwalUjianReference.add({
+        tk_peserta_ujian_id: pesertaUjian.id,
         tk_jadwal_ujian_id: tk_jadwal_ujian_id,
         user_id: pesertaUjian.m_user_id,
         progress: 0,
@@ -40305,6 +40308,7 @@ class MainController {
 
           const checkPembayaranSiswa = await MPembayaranSiswa.query()
             .where({ m_user_id: user.id })
+            .where({ dihapus: 0 })
             .andWhere({ m_sekolah_id: sekolah.id })
             .andWhere({ tk_pembayaran_rombel_id: pembayaranRombel.id })
             .first();
