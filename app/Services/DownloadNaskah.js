@@ -2,7 +2,8 @@ const Excel = require("exceljs");
 const nodeHtmlToImage = require("node-html-to-image");
 const sizeOf = require("image-size");
 const htmlEscaper = require("html-escaper");
-require("events").EventEmitter.defaultMaxListeners = 100;;
+const { formattedHTML } = require("../../Utils/KartuSoal");
+require("events").EventEmitter.defaultMaxListeners = 100;
 
 class DownloadService {
   static async kartuUjian(
@@ -23,9 +24,7 @@ class DownloadService {
       pgFilter.map(async (d, idx) => {
         // image
         const image = await nodeHtmlToImage({
-          html: d.pertanyaan
-            ? `<div>${htmlEscaper.unescape(d.pertanyaan)}</div>`
-            : "<div>-</div>",
+          html: formattedHTML(d.pertanyaan),
           type: "jpeg",
           quality: 25,
           encoding: "base64",
@@ -34,9 +33,7 @@ class DownloadService {
         });
         const dimensions = sizeOf(Buffer.from(image, "base64"));
         const imagea = await nodeHtmlToImage({
-          html: d.jawaban_a
-            ? `<div>${htmlEscaper.unescape(d.jawaban_a)}</div>`
-            : "<div>-</div>",
+          html: formattedHTML(d.jawaban_a),
           type: "jpeg",
           quality: 25,
           encoding: "base64",
@@ -45,9 +42,7 @@ class DownloadService {
         });
         const dimensionsa = sizeOf(Buffer.from(imagea, "base64"));
         const imageb = await nodeHtmlToImage({
-          html: d.jawaban_b
-            ? `<div>${htmlEscaper.unescape(d.jawaban_b)}</div>`
-            : "<div>-</div>",
+          html: formattedHTML(d.jawaban_b),
           type: "jpeg",
           quality: 25,
           encoding: "base64",
@@ -56,9 +51,7 @@ class DownloadService {
         });
         const dimensionsb = sizeOf(Buffer.from(imageb, "base64"));
         const imagec = await nodeHtmlToImage({
-          html: d.jawaban_c
-            ? `<div>${htmlEscaper.unescape(d.jawaban_c)}</div>`
-            : "<div>-</div>",
+          html: formattedHTML(d.jawaban_c),
           type: "jpeg",
           quality: 25,
           encoding: "base64",
@@ -67,9 +60,7 @@ class DownloadService {
         });
         const dimensionsc = sizeOf(Buffer.from(imagec, "base64"));
         const imaged = await nodeHtmlToImage({
-          html: d.jawaban_d
-            ? `<div>${htmlEscaper.unescape(d.jawaban_d)}</div>`
-            : "<div>-</div>",
+          html: formattedHTML(d.jawaban_d),
           type: "jpeg",
           quality: 25,
           encoding: "base64",
@@ -78,9 +69,7 @@ class DownloadService {
         });
         const dimensionsd = sizeOf(Buffer.from(imaged, "base64"));
         const imagee = await nodeHtmlToImage({
-          html: d.jawaban_e
-            ? `<div>${htmlEscaper.unescape(d.jawaban_e)}</div>`
-            : "<div>-</div>",
+          html: formattedHTML(d.jawaban_e),
           type: "jpeg",
           quality: 25,
           encoding: "base64",
@@ -115,8 +104,6 @@ class DownloadService {
         });
 
         // worksheet 2
-
-     
 
         // worksheet4.addRow({
         //   No: `${idx + 1}`,
@@ -357,8 +344,6 @@ class DownloadService {
     );
 
     //loop Esai
-   
-    
 
     worksheet5.mergeCells("A1:L1");
     worksheet5.mergeCells("A2:L2");
@@ -752,10 +737,7 @@ class DownloadService {
         },
       ],
     });
-    worksheet5.views = [
-      {showGridLines: false}
-    ]
-
+    worksheet5.views = [{ showGridLines: false }];
 
     let namaFile = `/uploads/kartu-soal-naskah-${keluarantanggal}.xlsx`;
 

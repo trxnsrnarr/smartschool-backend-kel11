@@ -2,7 +2,8 @@ const Excel = require("exceljs");
 const nodeHtmlToImage = require("node-html-to-image");
 const sizeOf = require("image-size");
 const htmlEscaper = require("html-escaper");
-require("events").EventEmitter.defaultMaxListeners = 100;;
+const { formattedHTML } = require("../../Utils/KartuSoal");
+require("events").EventEmitter.defaultMaxListeners = 100;
 
 class DownloadService {
   static async kartuUjian(
@@ -16,7 +17,6 @@ class DownloadService {
   ) {
     let workbook = new Excel.Workbook();
 
-    
     let worksheet2 = workbook.addWorksheet(`Kartu Soal PG`, {
       properties: { tabColor: { argb: "FFC0000" } },
     });
@@ -36,9 +36,7 @@ class DownloadService {
       pgFilter.map(async (d, idx) => {
         // image
         const image = await nodeHtmlToImage({
-          html: d.pertanyaan
-            ? `<div>${htmlEscaper.unescape(d.pertanyaan)}</div>`
-            : "<div>-</div>",
+          html: formattedHTML(d.pertanyaan),
           type: "jpeg",
           quality: 25,
           encoding: "base64",
@@ -47,9 +45,7 @@ class DownloadService {
         });
         const dimensions = sizeOf(Buffer.from(image, "base64"));
         const imagea = await nodeHtmlToImage({
-          html: d.jawaban_a
-            ? `<div>${htmlEscaper.unescape(d.jawaban_a)}</div>`
-            : "<div>-</div>",
+          html: formattedHTML(d.jawaban_a),
           type: "jpeg",
           quality: 25,
           encoding: "base64",
@@ -58,9 +54,7 @@ class DownloadService {
         });
         const dimensionsa = sizeOf(Buffer.from(imagea, "base64"));
         const imageb = await nodeHtmlToImage({
-          html: d.jawaban_b
-            ? `<div>${htmlEscaper.unescape(d.jawaban_b)}</div>`
-            : "<div>-</div>",
+          html: formattedHTML(d.jawaban_b),
           type: "jpeg",
           quality: 25,
           encoding: "base64",
@@ -69,9 +63,7 @@ class DownloadService {
         });
         const dimensionsb = sizeOf(Buffer.from(imageb, "base64"));
         const imagec = await nodeHtmlToImage({
-          html: d.jawaban_c
-            ? `<div>${htmlEscaper.unescape(d.jawaban_c)}</div>`
-            : "<div>-</div>",
+          html: formattedHTML(d.jawaban_c),
           type: "jpeg",
           quality: 25,
           encoding: "base64",
@@ -80,9 +72,7 @@ class DownloadService {
         });
         const dimensionsc = sizeOf(Buffer.from(imagec, "base64"));
         const imaged = await nodeHtmlToImage({
-          html: d.jawaban_d
-            ? `<div>${htmlEscaper.unescape(d.jawaban_d)}</div>`
-            : "<div>-</div>",
+          html: formattedHTML(d.jawaban_d),
           type: "jpeg",
           quality: 25,
           encoding: "base64",
@@ -91,9 +81,7 @@ class DownloadService {
         });
         const dimensionsd = sizeOf(Buffer.from(imaged, "base64"));
         const imagee = await nodeHtmlToImage({
-          html: d.jawaban_e
-            ? `<div>${htmlEscaper.unescape(d.jawaban_e)}</div>`
-            : "<div>-</div>",
+          html: formattedHTML(d.jawaban_e),
           type: "jpeg",
           quality: 25,
           encoding: "base64",
@@ -225,7 +213,9 @@ class DownloadService {
                 size: 16,
                 bold: true,
               },
-              text: `PEMERINTAH DAERAH PROVINSI ${sekolah.provinsi ? sekolah.provinsi.toUpperCase() :''}`,
+              text: `PEMERINTAH DAERAH PROVINSI ${
+                sekolah.provinsi ? sekolah.provinsi.toUpperCase() : ""
+              }`,
             },
           ],
         };
@@ -973,12 +963,10 @@ class DownloadService {
         });
 
         // worksheet 3
-
       })
     );
 
     //loop Esai
-  
 
     worksheet2.getColumn("A").width = 3;
     worksheet2.getColumn("B").width = 28;
@@ -989,11 +977,7 @@ class DownloadService {
     worksheet2.getColumn("G").width = 85;
     worksheet2.getColumn("H").width = 31;
 
-    
-    worksheet2.views = [
-      {showGridLines: false}
-    ]
-
+    worksheet2.views = [{ showGridLines: false }];
 
     let namaFile = `/uploads/kartu-soal-pg-${keluarantanggal}.xlsx`;
 
