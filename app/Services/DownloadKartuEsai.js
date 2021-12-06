@@ -2,7 +2,8 @@ const Excel = require("exceljs");
 const nodeHtmlToImage = require("node-html-to-image");
 const sizeOf = require("image-size");
 const htmlEscaper = require("html-escaper");
-require("events").EventEmitter.defaultMaxListeners = 100;;
+const { formattedHTML } = require("../../Utils/KartuSoal");
+require("events").EventEmitter.defaultMaxListeners = 100;
 
 class DownloadService {
   static async kartuUjian(
@@ -33,9 +34,7 @@ class DownloadService {
     await Promise.all(
       esaiFilter.map(async (d, idx) => {
         const imageEsai = await nodeHtmlToImage({
-          html: d.pertanyaan
-            ? `<div>${htmlEscaper.unescape(d.pertanyaan)}</div>`
-            : "<div>-</div>",
+          html: formattedHTML(d.pertanyaan),
           type: "jpeg",
           quality: 25,
           encoding: "base64",
@@ -144,7 +143,9 @@ class DownloadService {
                 size: 16,
                 bold: true,
               },
-              text: `PEMERINTAH DAERAH PROVINSI ${sekolah.provinsi ? sekolah.provinsi.toUpperCase() :''}`,
+              text: `PEMERINTAH DAERAH PROVINSI ${
+                sekolah.provinsi ? sekolah.provinsi.toUpperCase() : ""
+              }`,
             },
           ],
         };
@@ -799,7 +800,7 @@ class DownloadService {
           ],
         });
       })
-    )
+    );
     //desain worksheet3
     worksheet3.getColumn("A").width = 3;
     worksheet3.getColumn("B").width = 28;
@@ -815,9 +816,7 @@ class DownloadService {
     //   ext: { width: 100, height: 60 },
     // });
 
-    worksheet3.views = [
-      {showGridLines: false}
-    ]
+    worksheet3.views = [{ showGridLines: false }];
 
     let namaFile = `/uploads/Kartu-Soal-Esai-${keluarantanggal}.xlsx`;
 
