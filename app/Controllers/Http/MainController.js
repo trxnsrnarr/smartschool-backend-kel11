@@ -45922,6 +45922,29 @@ class MainController {
     return namaFile;
   }
 
+  async detailLedgerNilai({
+    response,
+    request,
+    params: { pendidikan_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const kalender = await MKalenderPendidikan.query()
+      .with("label")
+      .where({ id: pendidikan_id })
+      .first();
+
+    return response.ok({
+      kalender: kalender,
+    });
+  }
+
   async ip({ response, request }) {
     return response.ok({ ip: [request.ip(), request.ips()] });
   }
