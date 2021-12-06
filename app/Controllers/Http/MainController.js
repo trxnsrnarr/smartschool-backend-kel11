@@ -11396,7 +11396,7 @@ class MainController {
               .andWhere("waktu_ditutup", ">", hari_ini);
           })
           .with("peserta", (builder) => {
-            builder.where({ m_user_id: user.id });
+            builder.where({ m_user_id: user.id }).where({ dihapus: 0 });
           })
           .where({ dihapus: 0 })
           .whereIn("m_rombel_id", anggotaRombel)
@@ -11413,7 +11413,7 @@ class MainController {
               .andWhere("waktu_ditutup", "<", hari_ini);
           })
           .with("peserta", (builder) => {
-            builder.where({ m_user_id: user.id });
+            builder.where({ m_user_id: user.id }).where({ dihapus: 0 });
           })
           .where({ dihapus: 0 })
           .whereIn("m_rombel_id", anggotaRombel)
@@ -11786,7 +11786,11 @@ class MainController {
       })
     );
 
-    let namaFile = `/uploads/rekap-nilai-${new Date().getTime()}.xlsx`;
+    let namaFile = `/uploads/${jadwalUjian
+      .toJSON()
+      .jadwalUjian.ujian.nama.replace(/[\/|\\:*?"<>]/g, " ")} ${jadwalUjian
+      .toJSON()
+      .rombel.nama.replace(/[\/|\\:*?"<>]/g, " ")}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -11794,19 +11798,9 @@ class MainController {
     return namaFile;
   }
 
-  async downloadJadwalUjianDalamSehari({ response, request }) {
-    // const domain = request.headers().origin;
-
-    // const sekolah = await this.getSekolahByDomain(domain);
-
-    // if (sekolah == "404") {
-    //   return response.notFound({ message: "Sekolah belum terdaftar" });
-    // }
-
-    // const { tk_jadwal_ujian_id, m_jadwal_ujian_id } = request.post();
-    // const keluarantanggalseconds =
-    //   moment().format("YYYY-MM-DD ") + new Date().getTime();
-
+  
+  async exportPesertaUjian({ request, response }) {
+    const { limit = 10, offset = 0 } = request.get();
     const userIds = await User.query()
       .where({ dihapus: 0 })
       .where({ m_sekolah_id: 7144 })
@@ -11832,7 +11826,102 @@ class MainController {
       // .offset(60)
       // .limit(10)
       .ids();
-    return tkJadwalUjianIds;
+    const dataPesertaCount = await TkPesertaUjian.query()
+      .whereIn("tk_jadwal_ujian_id", tkJadwalUjianIds)
+      .where({ dihapus: 0 })
+      .whereNotIn("doc_id", ["qSXQDS1ZNvgGT0bELp8J", "oZXpNBQD5wDOheR5JO8n", "b6FdEqhGWfXNc8rTi2xK", "7D3RFtM3yhRX0rOhx7r8"])
+      .count() 
+    const dataPeserta = await TkPesertaUjian.query()
+      .select('id', 'doc_id', 'waktu_mulai', 'waktu_selesai', 'nilai', 'selesai', 'dinilai', 'dihapus', 'm_user_id', 'tk_jadwal_ujian_id', 'created_at', 'updated_at', 'nilai_pg', 'nilai_esai')
+      .whereIn("tk_jadwal_ujian_id", tkJadwalUjianIds)
+      .where({ dihapus: 0 })
+      .whereNotIn("doc_id", ["qSXQDS1ZNvgGT0bELp8J", "oZXpNBQD5wDOheR5JO8n", "b6FdEqhGWfXNc8rTi2xK", "7D3RFtM3yhRX0rOhx7r8"])
+      .offset(offset)
+      .limit(limit)
+      .fetch();
+
+    const imported = [];
+    // const dataPesertaPro =  await Database.connection("dbPro")
+    //   .table('tk_peserta_ujian')
+    //   .whereIn("tk_jadwal_ujian_id", tkJadwalUjianIds)
+    //   .where({ dihapus: 0 })
+    //   .pluck("id")
+    await Promise.all(dataPeserta.toJSON().map(async d => {
+      const {id, ...dataImport} = d
+      const check = await Database.connection("dbPro")
+        .table('tk_peserta_ujian')
+        .where({ tk_jadwal_ujian_id: d.tk_jadwal_ujian_id})
+        .where({ m_user_id: d.m_user_id})
+        .first();
+      const jawaban = await TkJawabanUjianSiswa.query()
+        .where({ tk_peserta_ujian_id: id })
+        .fetch();
+      if (!check) {
+        // imported.push(1);
+        const tkBaru = await Database.connection("dbPro")
+          .table('tk_peserta_ujian')
+          .insert(dataImport)
+        imported.push(tkBaru)
+        return Database.connection("dbPro")
+          .table('tk_jawaban_ujian_siswa')
+          .insert(jawaban.toJSON().map(e => {
+            const {id, ...x} = e;
+            return {...x, tk_peserta_ujian_id: tkBaru}
+          }))
+      }
+    }))
+    
+    return {dataPesertaCount, imported: imported.length, dataPeserta}
+  }
+
+
+  async downloadJadwalUjianDalamSehari({ response, request }) {
+    // const domain = request.headers().origin;
+
+    // const sekolah = await this.getSekolahByDomain(domain);
+
+    // if (sekolah == "404") {
+    //   return response.notFound({ message: "Sekolah belum terdaftar" });
+    // }
+
+    // const { tk_jadwal_ujian_id, m_jadwal_ujian_id } = request.post();
+    // const keluarantanggalseconds =
+    //   moment().format("YYYY-MM-DD ") + new Date().getTime();
+
+    const { limit = 10, offset = 0 } = request.post();
+
+    const userIds = await User.query()
+      .where({ dihapus: 0 })
+      .where({ m_sekolah_id: 33 })
+      .whereIn("role", ["guru", "admin"])
+      .ids();
+
+    const ujianIds = await MUjian.query()
+      .where({ tipe: "pas1" })
+      .where({ dihapus: 0 })
+      .whereIn("m_user_id", userIds)
+      .ids();
+
+    const jadwalIds = await MJadwalUjian.query()
+      .where("waktu_dibuka", ">", moment().format("YYYY-MM-03 00:00:00"))
+      .where("waktu_ditutup", "<", moment().format("YYYY-MM-03 HH:mm:ss"))
+      .whereIn("m_user_id", userIds)
+      .whereIn("m_ujian_id", ujianIds)
+      .ids();
+
+    const tkJadwalUjianCount = await TkJadwalUjian.query()
+      .whereIn("m_jadwal_ujian_id", jadwalIds)
+      .where({ dihapus: 0 })
+      .count();
+    return tkJadwalUjianCount;
+    const tkJadwalUjianIds = await TkJadwalUjian.query()
+      .whereIn("m_jadwal_ujian_id", jadwalIds)
+      .where({ dihapus: 0 })
+      .offset(offset)
+      .limit(limit)
+      .ids();
+
+    const success = []
 
     await Promise.all(
       tkJadwalUjianIds.map(async (tkId) => {
@@ -12083,12 +12172,13 @@ class MainController {
 
         // save workbook to disk
         await workbook.xlsx.writeFile(`public${namaFile}`);
+        success.push(1)
 
         return namaFile;
       })
     );
     return response.ok({
-      message: "success",
+      message: success.length,
     });
   }
 
@@ -12747,7 +12837,10 @@ class MainController {
         waktu_selesai: FieldValue.delete(),
       });
     } else if (hapus) {
-      await TkPesertaUjian.query().where({ id: peserta_ujian_id }).delete();
+      await jadwalUjianReference.doc(`${pesertaUjian.doc_id}`).delete();
+      await TkPesertaUjian.query().where({ id: peserta_ujian_id }).update({
+        dihapus: 1
+      });
     }
 
     if (!pesertaUjian) {
