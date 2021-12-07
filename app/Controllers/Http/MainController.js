@@ -10121,6 +10121,8 @@ class MainController {
     }
     if (filter_tipe) {
       ujian = ujian.where({ tipe: filter_tipe });
+    } else {
+      ujian.whereNot({ tipe: "ppdb" });
     }
 
     ujian = await ujian.paginate(page, 20);
@@ -10405,6 +10407,30 @@ class MainController {
         });
       }
 
+      return response.ok({
+        message: messagePostSuccess,
+      });
+    } else {
+      const ujian = await MUjian.create({
+        nama,
+        tipe,
+        m_user_id: user.id,
+        dihapus: 0,
+      });
+
+      if (ujian_id) {
+        const soalIds = await TkSoalUjian.query()
+          .where({ m_ujian_id: ujian_id })
+          .andWhere({ dihapus: 0 })
+          .pluck("m_soal_ujian_id");
+        soalIds.map(async (item) => {
+          await TkSoalUjian.create({
+            m_ujian_id: ujian.id,
+            m_soal_ujian_id: item,
+            dihapus: 0,
+          });
+        });
+      }
       return response.ok({
         message: messagePostSuccess,
       });
