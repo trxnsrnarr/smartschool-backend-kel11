@@ -8372,9 +8372,16 @@ class MainController {
               builder.with("bab");
             })
             .with("tugas", (builder) => {
-              builder.with("soal", (builder) => {
-                builder.where({ dihapus: 0 }).with("soal");
-              });
+              builder
+                .with("soal", (builder) => {
+                  builder.where({ dihapus: 0 }).with("soal");
+                })
+                .with("peserta", (builder) => {
+                  builder
+                    .where({ m_user_id: user.id })
+                    .where({ dihapus: 0 })
+                    .with("jawabanSiswa");
+                });
             })
             .with("komen", (builder) => {
               builder.with("user").where({ dihapus: 0 });
@@ -8517,9 +8524,13 @@ class MainController {
         builder.with("user").where({ dihapus: 0 });
       })
       .with("tugas", (builder) => {
-        builder.with("soal", (builder) => {
-          builder.where({ dihapus: 0 }).with("soal");
-        });
+        builder
+          .with("soal", (builder) => {
+            builder.where({ dihapus: 0 }).with("soal");
+          })
+          .with("peserta", (builder) => {
+            builder.where({ dihapus: 0 }).with("jawabanSiswa");
+          });
       })
       .with("tkTimeline", (builder) => {
         builder.with("user");
@@ -12633,9 +12644,7 @@ class MainController {
             builder.with("ujian");
           });
         })
-        .with("tugas", (builder) => {
-          builder.with("soal");
-        })
+        .with("tugas")
         .withCount("jawabanSiswa as totalSoal")
         .withCount("jawabanSiswa as totalDijawab", (builder) => {
           builder.where({ dijawab: 1 });
@@ -41241,7 +41250,7 @@ class MainController {
     const sekolah = await MDokumenPembayaranSekolah.query()
       .where({ id: dokumenPembayaranSekolah_id })
       .update({
-        dihapu: 1,
+        dihapus: 1,
       });
 
     return response.ok({
@@ -41300,7 +41309,7 @@ class MainController {
 
   async deleteServer({ response, request, auth, params: { server_id } }) {
     const server = await MServer.query().where({ id: server_id }).update({
-      dihapu: 1,
+      dihapus: 1,
     });
 
     return response.ok({
