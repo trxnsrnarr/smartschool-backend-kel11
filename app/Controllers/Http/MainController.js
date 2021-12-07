@@ -11814,9 +11814,9 @@ class MainController {
         } menit`;
 
         worksheet.autoFilter = {
-          from: 'A10',
-          to: 'D10',
-        }
+          from: "A10",
+          to: "D10",
+        };
 
         // worksheet.getCell("A4").value = "RPP";
         // worksheet.getCell("A5").value = d.rpp.toString();
@@ -12633,6 +12633,9 @@ class MainController {
             builder.with("ujian");
           });
         })
+        .with("tugas", (builder) => {
+          builder.with("soal");
+        })
         .withCount("jawabanSiswa as totalSoal")
         .withCount("jawabanSiswa as totalDijawab", (builder) => {
           builder.where({ dijawab: 1 });
@@ -12706,7 +12709,9 @@ class MainController {
       const tugas = await MTugas.query()
         .where({ id: m_tugas_id })
         .where({ dihapus: 0 })
-        .with("soal")
+        .with("soal", (builder) => {
+          builder.where({ dihapus: 0 }).with("soal");
+        })
         .first();
       if (!tugas) {
         return response.notFound({
@@ -12722,22 +12727,22 @@ class MainController {
         m_tugas_id: m_tugas_id,
       });
       const soal = tugas.toJSON().soal.map((d) => {
-        if (d.bentuk == "pg") {
+        if (d.soal.bentuk == "pg") {
           return {
             durasi: 0,
             ragu: 0,
             dijawab: 0,
             dinilai: 1,
-            m_soal_ujian_id: d.id,
+            m_soal_ujian_id: d.soal.id,
             tk_peserta_ujian_id: pesertaUjian.id,
           };
-        } else if (d.bentuk == "esai") {
+        } else if (d.soal.bentuk == "esai") {
           return {
             durasi: 0,
             ragu: 0,
             dijawab: 0,
-            m_soal_ujian_id: d.id,
-            jawaban_rubrik_esai: d.rubrik_kj,
+            m_soal_ujian_id: d.soal.id,
+            jawaban_rubrik_esai: d.soal.rubrik_kj,
             tk_peserta_ujian_id: pesertaUjian.id,
           };
         }
@@ -44655,9 +44660,9 @@ class MainController {
               e.nilai_keterampilan ? e.nilai_keterampilan : "-"
             }`;
             row.getCell([`${(nox + 1) * 3 + 4}`]).value = `${
-            e.nilai*0.3 + e.nilai_keterampilan*0.7
+              e.nilai * 0.3 + e.nilai_keterampilan * 0.7
             }`;
-            
+
             row.getCell([`${(nox + 1) * 3 + 2}`]).border = {
               top: { style: "thin" },
               left: { style: "thin" },
@@ -44833,7 +44838,6 @@ class MainController {
     worksheet.mergeCells(`B6:B8`);
     worksheet.mergeCells(`C6:C8`);
     worksheet.mergeCells(`D6:D8`);
-
 
     worksheet.mergeCells(6, 5, 6, `${alreadyMerged}`);
     worksheet.mergeCells(6, `${alreadyMerged + 2}`, 8, `${alreadyMerged + 2}`);
