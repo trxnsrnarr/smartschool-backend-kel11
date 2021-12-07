@@ -10215,10 +10215,10 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .fetch();
 
-      const totalNilai = soalUjianIds
+    const totalNilai = soalUjianIds
       .toJSON()
       .map((d) => d.soal.nilai_soal)
-      .reduce((a, b) => a + b, 0);      
+      .reduce((a, b) => a + b, 0);
 
     let jumlahSoalPg = 0;
 
@@ -10371,7 +10371,7 @@ class MainController {
     const { nama, tipe, tingkat, m_mata_pelajaran_id, ujian_id } =
       request.post();
 
-    if(tipe != "ppdb"){
+    if (tipe != "ppdb") {
       const rules = {
         nama: "required",
         tipe: "required",
@@ -10387,7 +10387,7 @@ class MainController {
       if (validation.fails()) {
         return response.unprocessableEntity(validation.messages());
       }
-  
+
       const ujian = await MUjian.create({
         nama,
         tipe,
@@ -10396,7 +10396,7 @@ class MainController {
         m_user_id: user.id,
         dihapus: 0,
       });
-  
+
       if (ujian_id) {
         const soalIds = await TkSoalUjian.query()
           .where({ m_ujian_id: ujian_id })
@@ -10410,7 +10410,7 @@ class MainController {
           });
         });
       }
-  
+
       return response.ok({
         message: messagePostSuccess,
       });
@@ -10780,13 +10780,13 @@ class MainController {
           kd: "" + explanation.getCell("A" + rowNumber).value,
           kd_konten_materi: "" + explanation.getCell("B" + rowNumber).value,
           level_kognitif: "" + explanation.getCell("C" + rowNumber).value,
-          tingkat_kesukaran: '' + explanation.getCell("D" + rowNumber).value,
+          tingkat_kesukaran: "" + explanation.getCell("D" + rowNumber).value,
           bentuk: "" + explanation.getCell("E" + rowNumber).value,
-          akm_konteks_materi: '' + explanation.getCell("F" + rowNumber).value,
-          akm_konten_materi: '' + explanation.getCell("G" + rowNumber).value,
+          akm_konteks_materi: "" + explanation.getCell("F" + rowNumber).value,
+          akm_konten_materi: "" + explanation.getCell("G" + rowNumber).value,
           // akm_proses_kognitif: '' + explanation.getCell("A" + rowNumber).value,
-          sumber_buku: '' + explanation.getCell("H" + rowNumber).value,
-          
+          sumber_buku: "" + explanation.getCell("H" + rowNumber).value,
+
           pertanyaan: "" + explanation.getCell("I" + rowNumber).value,
           jawaban_a: "" + explanation.getCell("J" + rowNumber).value,
           jawaban_b: "" + explanation.getCell("K" + rowNumber).value,
@@ -11786,6 +11786,11 @@ class MainController {
         worksheet.getCell("B2").value = `${
           jadwalUjian.toJSON().jadwalUjian.durasi
         } menit`;
+
+        worksheet.autoFilter = {
+          from: 'A10',
+          to: 'D10',
+        }
 
         // worksheet.getCell("A4").value = "RPP";
         // worksheet.getCell("A5").value = d.rpp.toString();
@@ -44314,6 +44319,382 @@ class MainController {
 
     return namaFile;
   }
+  async downloadLedgerNilaiYadika({
+    response,
+    request,
+    auth,
+    params: { rombel_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    const user = await auth.getUser();
+
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
+    const rombel = await MRombel.query()
+      .with("anggotaRombel", (builder) => {
+        builder
+          .with("user", (builder) => {
+            builder
+              .with("nilaiSemuaUjian", (builder) => {
+                builder.with("mapel").where({ m_ta_id: ta.id });
+              })
+              .with("profil", (builder) => {
+                builder.select("m_user_id", "nis");
+              })
+              .select("id", "nama", "gender");
+          })
+          .where({ dihapus: 0 });
+      })
+      .with("user", (builder) => {
+        builder.select("id", "nama");
+      })
+      .where({ id: rombel_id })
+      .first();
+
+    // return rombel;
+
+    let workbook = new Excel.Workbook();
+
+    let worksheet = workbook.addWorksheet(`Rekap Nilai Siswa`);
+
+    let alreadyMerged = 0;
+    let sudahGabung = 0;
+    // add column headers
+
+    const urutan = rombel
+      .toJSON()
+      .anggotaRombel.sort((a, b) => {
+        return (
+          b.user.nilaiSemuaUjian.reduce((c, d) => {
+            return c + d.nilai + d.nilai_keterampilan;
+          }, 0) -
+          a.user.nilaiSemuaUjian.reduce((c, d) => {
+            return c + d.nilai + d.nilai_keterampilan;
+          }, 0)
+        );
+      })
+      .map((d) => d.id);
+
+    // return urutan;
+
+    await Promise.all(
+      rombel.toJSON().anggotaRombel.map(async (d, idx) => {
+        worksheet.getRow(6).values = ["No", "NIS", "Nama", "Gen"];
+        worksheet.getRow(7).values = ["No", "NIS", "Nama", "Gen"];
+        worksheet.getRow(8).values = ["No", "NIS", "Nama", "Gen"];
+        worksheet.columns = [
+          { key: "no" },
+          { key: "nis" },
+          { key: "user" },
+          { key: "gen" },
+        ];
+        let row = worksheet.addRow({
+          no: `${idx + 1}`,
+          nis: d.user.profil ? d.user.profil.nis : "",
+          user: d.user ? d.user.nama : "-",
+          gen: d.user ? d.user.gender : "",
+        });
+
+        // const row = worksheet.getRow(8);
+        await Promise.all(
+          d.user.nilaiSemuaUjian.map(async (e, nox) => {
+            worksheet.getColumn([`${(nox + 1) * 3 + 2}`]).values = [
+              ``,
+              ``,
+              ``,
+              ``,
+              ``,
+              `Mata Pelajaran`,
+              `${e.mapel.kode}`,
+              `P`,
+            ];
+            worksheet.getColumn([`${(nox + 1) * 3 + 3}`]).values = [
+              ``,
+              ``,
+              ``,
+              ``,
+              ``,
+              ``,
+              `${e.mapel.kode}`,
+              `K`,
+            ];
+            worksheet.getColumn([`${(nox + 1) * 3 + 4}`]).values = [
+              ``,
+              ``,
+              ``,
+              ``,
+              ``,
+              ``,
+              `${e.mapel.kode}`,
+              `A`,
+            ];
+            // worksheet.mergeCells(`${(nox + 1) * 2 + 3}:${(nox + 1) * 2 + 4}`);
+
+            row.getCell([`${(nox + 1) * 3 + 2}`]).value = `${
+              e.nilai ? e.nilai : "-"
+            }`;
+            row.getCell([`${(nox + 1) * 3 + 3}`]).value = `${
+              e.nilai_keterampilan ? e.nilai_keterampilan : "-"
+            }`;
+            row.getCell([`${(nox + 1) * 3 + 4}`]).value = `${
+            e.nilai*0.3 + e.nilai_keterampilan*0.7
+            }`;
+            
+            row.getCell([`${(nox + 1) * 3 + 2}`]).border = {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            };
+            row.getCell([`${(nox + 1) * 3 + 3}`]).border = {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            };
+            row.getCell([`${(nox + 1) * 3 + 4}`]).border = {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            };
+            row.getCell([`${(nox + 1) * 3 + 5}`]).border = {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            };
+            row.getCell([`${(nox + 1) * 3 + 6}`]).border = {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            };
+
+            if (nox == d.user.nilaiSemuaUjian.length - 1) {
+              row.getCell([`${(nox + 1) * 3 + 5}`]).value =
+                d.user.nilaiSemuaUjian.reduce(
+                  (a, b) => a + b.nilai + b.nilai_keterampilan,
+                  0
+                );
+
+              const cell = row.getCell([`${(nox + 1) * 3 + 5}`]);
+
+              // row.getCell([`${(nox + 1) * 2 + 6}`]).value = `=RANK(${colName(
+              //   (nox + 1) * 2 + 4
+              // )}${idx + 9};$${colName((nox + 1) * 2 + 4)}$9:$${colName(
+              //   (nox + 1) * 2 + 4
+              // )}$100)`;
+
+              row.getCell([`${(nox + 1) * 3 + 6}`]).value =
+                urutan.findIndex((f) => f == d.id) + 1;
+
+              alreadyMerged = (nox + 1) * 3 + 3;
+            }
+
+            // // Add row using key mapping to columns
+            // let row = worksheet.addRow ({
+            //   tugas1: e ? e.nilai : "-",
+            //   tugas2: e ? e.nilai : "-",
+            //   tugas3: e ? e.nilai : "-",
+            //   tugas4: e ? e.nilai : "-",
+            //   tugas5: e ? e.nilai : "-",
+            // });
+          })
+        );
+
+        worksheet.addConditionalFormatting({
+          ref: `A6:D8`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  bold: true,
+                },
+                fill: {
+                  type: "pattern",
+                  pattern: "solid",
+                  bgColor: {
+                    argb: "C0C0C0",
+                    fgColor: { argb: "C0C0C0" },
+                  },
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+              },
+            },
+          ],
+        });
+
+        worksheet.addConditionalFormatting({
+          ref: `A${(idx + 1) * 1 + 8}:D${(idx + 1) * 1 + 8}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+              },
+            },
+          ],
+        });
+      })
+    );
+
+    worksheet.getCell(
+      "A1"
+    ).value = `LEGER PERNILAIAN AKHIR SEMESTER GANJIL DARING`;
+    worksheet.getCell("A2").value = rombel.nama;
+    worksheet.getCell("A3").value = sekolah.nama;
+    worksheet.getCell("A4").value = `TAHUN PELAJARAN ${ta.tahun}`;
+    // worksheet.getCell("A3").value = jadwalMengajar.toJSON().mataPelajaran.nama;
+
+    worksheet.getCell(
+      "A5"
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
+    worksheet.mergeCells(`A1:${colName(alreadyMerged + 1)}1`);
+    worksheet.mergeCells(`A2:${colName(alreadyMerged + 1)}2`);
+    worksheet.mergeCells(`A3:${colName(alreadyMerged + 1)}3`);
+    worksheet.mergeCells(`A4:${colName(alreadyMerged + 1)}4`);
+    worksheet.addConditionalFormatting({
+      ref: "A1:I4",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 16,
+              bold: true,
+            },
+            // fill: {
+            //   type: "pattern",
+            //   pattern: "solid",
+            //   bgColor: { argb: "0000FF", fgColor: { argb: "0000FF" } },
+            // },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+
+    worksheet.mergeCells(`A6:A8`);
+    worksheet.mergeCells(`B6:B8`);
+    worksheet.mergeCells(`C6:C8`);
+    worksheet.mergeCells(`D6:D8`);
+
+
+    worksheet.mergeCells(6, 5, 6, `${alreadyMerged}`);
+    worksheet.mergeCells(6, `${alreadyMerged + 2}`, 8, `${alreadyMerged + 2}`);
+    worksheet.mergeCells(6, `${alreadyMerged + 3}`, 8, `${alreadyMerged + 3}`);
+
+    worksheet.getCell(`${colName(alreadyMerged + 1)}6`).value = `JUMLAH`;
+    worksheet.getCell(`${colName(alreadyMerged + 2)}6`).value = `PERINGKAT`;
+
+    worksheet.addConditionalFormatting({
+      ref: `E6:${colName(alreadyMerged + 2)}8`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 11,
+              // bold: true,
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: {
+                argb: "C0C0C0",
+                fgColor: { argb: "C0C0C0" },
+              },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+
+    worksheet.getColumn("B").width = 14;
+    worksheet.getColumn("C").width = 28;
+    worksheet.getColumn(`${colName(alreadyMerged + 1)}`).width = 12;
+    worksheet.getColumn(`${colName(alreadyMerged + 2)}`).width = 16;
+
+    worksheet.views = [
+      {
+        state: "frozen",
+        xSplit: 4,
+        ySplit: 8,
+        topLeftCell: "A6",
+        activeCell: "A6",
+      },
+    ];
+
+    // worksheet.mergeCells(20,22,22,23);
+
+    // worksheet.mergeCells(22,22,23,24);
+    let namaFile = `/uploads/Leger-Nilai-${rombel.nama}-${keluarantanggalseconds}.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
 
   async putBobotNilai({ response, request, auth, params: { bobot_id } }) {
     const domain = request.headers().origin;
@@ -45587,7 +45968,7 @@ class MainController {
       })
       .select("id", "nama")
       .where({ dihapus: 0 })
-      // .andWhere({ m_sekolah_id: 33 })n                                                                                  
+      // .andWhere({ m_sekolah_id: 33 })n
       .andWhere({ role: "siswa" })
       .andWhere({ m_sekolah_id: 33 })
       .offset(0)
@@ -46227,11 +46608,7 @@ class MainController {
     return namaFile;
   }
 
-  async detailLedgerNilai({
-    response,
-    request,
-    params: { pendidikan_id },
-  }) {
+  async detailLedgerNilai({ response, request, params: { pendidikan_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -46240,13 +46617,112 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const kalender = await MKalenderPendidikan.query()
-      .with("label")
-      .where({ id: pendidikan_id })
+    const rombel = await MRombel.query()
+      .with("anggotaRombel", (builder) => {
+        builder
+          .with("user", (builder) => {
+            builder
+              .with("nilaiSemuaUjian", (builder) => {
+                builder.with("mapel").where({ m_ta_id: ta.id });
+              })
+              .with("profil", (builder) => {
+                builder.select("m_user_id", "nis");
+              })
+              .select("id", "nama", "gender");
+          })
+          .where({ dihapus: 0 });
+      })
+      .with("user", (builder) => {
+        builder.select("id", "nama");
+      })
+      .where({ id: rombel_id })
       .first();
 
+    const urutan = rombel
+      .toJSON()
+      .anggotaRombel.sort((a, b) => {
+        return (
+          b.user.nilaiSemuaUjian.reduce((c, d) => {
+            return c + d.nilai + d.nilai_keterampilan;
+          }, 0) -
+          a.user.nilaiSemuaUjian.reduce((c, d) => {
+            return c + d.nilai + d.nilai_keterampilan;
+          }, 0)
+        );
+      })
+      .map((d) => d.id);
+
     return response.ok({
-      kalender: kalender,
+      rombel,
+      urutan,
+    });
+  }
+
+  async postRaporSikapYadika({ response, request, auth, params: { user_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const {
+      tipe,
+      sikap_integritas,
+      sikap_religius,
+      nasionalis,
+      mandiri,
+      gotong_royong,
+    } = request.post();
+
+    const checkSikap = await MSikapSiswaYadika.query()
+      .where({ m_user_id: user_id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ tipe })
+      .first();
+
+    let sikap;
+
+    if (checkSikap) {
+      sikap = await MSikapSiswaSiswa.query()
+        .where({ m_user_id: user_id })
+        .andWhere({ tipe })
+        .andWhere({ m_ta_id: ta.id })
+        .update({
+          sikap_integritas,
+          sikap_religius,
+          nasionalis,
+          mandiri,
+          gotong_royong,
+        });
+    } else {
+      sikap = await MSikapSiswa.create({
+        m_user_id: user_id,
+        tipe,
+        sikap_integritas,
+        sikap_religius,
+        nasionalis,
+        mandiri,
+        gotong_royong,
+        m_ta_id: ta.id,
+        dihapus: 0,
+      });
+    }
+    if (!sikap) {
+      return response.ok({
+        message: messagePostSuccess,
+      });
+    }
+
+    return response.ok({
+      message: messagePostSuccess,
     });
   }
 
