@@ -10365,7 +10365,7 @@ class MainController {
     const { nama, tipe, tingkat, m_mata_pelajaran_id, ujian_id } =
       request.post();
 
-    if(tipe != "ppdb"){
+    if (tipe != "ppdb") {
       const rules = {
         nama: "required",
         tipe: "required",
@@ -10381,7 +10381,7 @@ class MainController {
       if (validation.fails()) {
         return response.unprocessableEntity(validation.messages());
       }
-  
+
       const ujian = await MUjian.create({
         nama,
         tipe,
@@ -10390,7 +10390,7 @@ class MainController {
         m_user_id: user.id,
         dihapus: 0,
       });
-  
+
       if (ujian_id) {
         const soalIds = await TkSoalUjian.query()
           .where({ m_ujian_id: ujian_id })
@@ -10404,7 +10404,7 @@ class MainController {
           });
         });
       }
-  
+
       return response.ok({
         message: messagePostSuccess,
       });
@@ -11798,7 +11798,6 @@ class MainController {
     return namaFile;
   }
 
-  
   async exportPesertaUjian({ request, response }) {
     const { limit = 10, offset = 0 } = request.get();
     const userIds = await User.query()
@@ -11827,15 +11826,40 @@ class MainController {
       // .limit(10)
       .ids();
     const dataPesertaCount = await TkPesertaUjian.query()
-      .whereIn("tk_jadwal_ujian_id", tkJadwalUjianIds)
+      .whereIn("tk_jadwal_ujian_id", [21593])
       .where({ dihapus: 0 })
-      .whereNotIn("doc_id", ["qSXQDS1ZNvgGT0bELp8J", "oZXpNBQD5wDOheR5JO8n", "b6FdEqhGWfXNc8rTi2xK", "7D3RFtM3yhRX0rOhx7r8"])
-      .count() 
+      .whereNotIn("doc_id", [
+        "qSXQDS1ZNvgGT0bELp8J",
+        "oZXpNBQD5wDOheR5JO8n",
+        "b6FdEqhGWfXNc8rTi2xK",
+        "7D3RFtM3yhRX0rOhx7r8",
+      ])
+      .count();
     const dataPeserta = await TkPesertaUjian.query()
-      .select('id', 'doc_id', 'waktu_mulai', 'waktu_selesai', 'nilai', 'selesai', 'dinilai', 'dihapus', 'm_user_id', 'tk_jadwal_ujian_id', 'created_at', 'updated_at', 'nilai_pg', 'nilai_esai')
-      .whereIn("tk_jadwal_ujian_id", tkJadwalUjianIds)
+      .select(
+        "id",
+        "doc_id",
+        "waktu_mulai",
+        "waktu_selesai",
+        "nilai",
+        "selesai",
+        "dinilai",
+        "dihapus",
+        "m_user_id",
+        "tk_jadwal_ujian_id",
+        "created_at",
+        "updated_at",
+        "nilai_pg",
+        "nilai_esai"
+      )
+      .whereIn("tk_jadwal_ujian_id", [21593])
       .where({ dihapus: 0 })
-      .whereNotIn("doc_id", ["qSXQDS1ZNvgGT0bELp8J", "oZXpNBQD5wDOheR5JO8n", "b6FdEqhGWfXNc8rTi2xK", "7D3RFtM3yhRX0rOhx7r8"])
+      .whereNotIn("doc_id", [
+        "qSXQDS1ZNvgGT0bELp8J",
+        "oZXpNBQD5wDOheR5JO8n",
+        "b6FdEqhGWfXNc8rTi2xK",
+        "7D3RFtM3yhRX0rOhx7r8",
+      ])
       .offset(offset)
       .limit(limit)
       .fetch();
@@ -11846,34 +11870,37 @@ class MainController {
     //   .whereIn("tk_jadwal_ujian_id", tkJadwalUjianIds)
     //   .where({ dihapus: 0 })
     //   .pluck("id")
-    await Promise.all(dataPeserta.toJSON().map(async d => {
-      const {id, ...dataImport} = d
-      const check = await Database.connection("dbPro")
-        .table('tk_peserta_ujian')
-        .where({ tk_jadwal_ujian_id: d.tk_jadwal_ujian_id})
-        .where({ m_user_id: d.m_user_id})
-        .first();
-      const jawaban = await TkJawabanUjianSiswa.query()
-        .where({ tk_peserta_ujian_id: id })
-        .fetch();
-      if (!check) {
-        // imported.push(1);
-        const tkBaru = await Database.connection("dbPro")
-          .table('tk_peserta_ujian')
-          .insert(dataImport)
-        imported.push(tkBaru)
-        return Database.connection("dbPro")
-          .table('tk_jawaban_ujian_siswa')
-          .insert(jawaban.toJSON().map(e => {
-            const {id, ...x} = e;
-            return {...x, tk_peserta_ujian_id: tkBaru}
-          }))
-      }
-    }))
-    
-    return {dataPesertaCount, imported: imported.length, dataPeserta}
-  }
+    await Promise.all(
+      dataPeserta.toJSON().map(async (d) => {
+        const { id, ...dataImport } = d;
+        const check = await Database.connection("dbPro")
+          .table("tk_peserta_ujian")
+          .where({ tk_jadwal_ujian_id: d.tk_jadwal_ujian_id })
+          .where({ m_user_id: d.m_user_id })
+          .first();
+        const jawaban = await TkJawabanUjianSiswa.query()
+          .where({ tk_peserta_ujian_id: id })
+          .fetch();
+        if (!check) {
+          // imported.push(1);
+          const tkBaru = await Database.connection("dbPro")
+            .table("tk_peserta_ujian")
+            .insert(dataImport);
+          imported.push(tkBaru);
+          return Database.connection("dbPro")
+            .table("tk_jawaban_ujian_siswa")
+            .insert(
+              jawaban.toJSON().map((e) => {
+                const { id, ...x } = e;
+                return { ...x, tk_peserta_ujian_id: tkBaru };
+              })
+            );
+        }
+      })
+    );
 
+    return { dataPesertaCount, imported: imported.length, dataPeserta };
+  }
 
   async downloadJadwalUjianDalamSehari({ response, request }) {
     // const domain = request.headers().origin;
@@ -11892,7 +11919,7 @@ class MainController {
 
     const userIds = await User.query()
       .where({ dihapus: 0 })
-      .where({ m_sekolah_id: 33 })
+      .where({ m_sekolah_id: 7 })
       .whereIn("role", ["guru", "admin"])
       .ids();
 
@@ -11909,11 +11936,11 @@ class MainController {
       .whereIn("m_ujian_id", ujianIds)
       .ids();
 
-    const tkJadwalUjianCount = await TkJadwalUjian.query()
-      .whereIn("m_jadwal_ujian_id", jadwalIds)
-      .where({ dihapus: 0 })
-      .count();
-    return tkJadwalUjianCount;
+    // const tkJadwalUjianCount = await TkJadwalUjian.query()
+    //   .whereIn("m_jadwal_ujian_id", jadwalIds)
+    //   .where({ dihapus: 0 })
+    //   .count();
+    // return tkJadwalUjianCount;
     const tkJadwalUjianIds = await TkJadwalUjian.query()
       .whereIn("m_jadwal_ujian_id", jadwalIds)
       .where({ dihapus: 0 })
@@ -11921,7 +11948,7 @@ class MainController {
       .limit(limit)
       .ids();
 
-    const success = []
+    const success = [];
 
     await Promise.all(
       tkJadwalUjianIds.map(async (tkId) => {
@@ -12164,7 +12191,9 @@ class MainController {
           })
         );
 
-        let namaFile = `/uploads/${jadwalUjian
+        let namaFile = `/uploads/${moment(
+          `${jadwalUjian.toJSON().jadwalUjian.waktu_dibuka}`
+        ).format("HH-mm")} ${jadwalUjian
           .toJSON()
           .jadwalUjian.ujian.nama.replace(/[\/|\\:*?"<>]/g, " ")} ${jadwalUjian
           .toJSON()
@@ -12172,7 +12201,7 @@ class MainController {
 
         // save workbook to disk
         await workbook.xlsx.writeFile(`public${namaFile}`);
-        success.push(1)
+        success.push(1);
 
         return namaFile;
       })
@@ -12557,8 +12586,68 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { tk_jadwal_ujian_id, ujian_id } = request.post();
+    const { tk_jadwal_ujian_id, ujian_id, m_tugas_id } = request.post();
     const waktu_mulai = moment().format("YYYY-MM-DD HH:mm:ss");
+
+    if (m_tugas_id) {
+      const tugas = await MTugas.query()
+        .where({ id: m_tugas_id })
+        .where({ dihapus: 0 })
+        .with("soal")
+        .first();
+      if (!tugas) {
+        return response.notFound({
+          message: messageNotFound,
+        });
+      }
+      const pesertaUjian = await TkPesertaUjian.create({
+        waktu_mulai,
+        dinilai: 0,
+        selesai: 0,
+        dihapus: 0,
+        m_user_id: user.id,
+        m_tugas_id: m_tugas_id,
+      });
+      const soal = tugas.toJSON().soal.map((d) => {
+        if (d.bentuk == "pg") {
+          return {
+            durasi: 0,
+            ragu: 0,
+            dijawab: 0,
+            dinilai: 1,
+            m_soal_ujian_id: d.id,
+            tk_peserta_ujian_id: pesertaUjian.id,
+          };
+        } else if (d.bentuk == "esai") {
+          return {
+            durasi: 0,
+            ragu: 0,
+            dijawab: 0,
+            m_soal_ujian_id: d.id,
+            jawaban_rubrik_esai: d.rubrik_kj,
+            tk_peserta_ujian_id: pesertaUjian.id,
+          };
+        }
+      });
+      const trx = await Database.beginTransaction();
+      await TkJawabanUjianSiswa.createMany(soal, trx);
+      await trx.commit();
+
+      const res = await jadwalUjianReference.add({
+        tk_peserta_ujian_id: pesertaUjian.id,
+        user_id: pesertaUjian.m_user_id,
+        progress: 0,
+        waktu_mulai: waktu_mulai,
+      });
+
+      await TkPesertaUjian.query().where({ id: pesertaUjian.id }).update({
+        doc_id: res.id,
+      });
+
+      return response.ok({
+        peserta_ujian: pesertaUjian,
+      });
+    }
 
     const ujian = await MUjian.query().where({ id: ujian_id }).first();
 
@@ -12839,7 +12928,7 @@ class MainController {
     } else if (hapus) {
       await jadwalUjianReference.doc(`${pesertaUjian.doc_id}`).delete();
       await TkPesertaUjian.query().where({ id: peserta_ujian_id }).update({
-        dihapus: 1
+        dihapus: 1,
       });
     }
 

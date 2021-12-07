@@ -29,6 +29,12 @@ class TkJadwalUjianSiswaSchema extends Schema {
         .references("tk_jadwal_ujian.id")
         .onDelete("cascade")
         .onUpdate("cascade");
+      table.integer("m_tugas_id").unsigned().index("m_tugas_id");
+      table
+        .foreign("m_tugas_id")
+        .references("m_tugas.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
       table.timestamps();
     });
   }
