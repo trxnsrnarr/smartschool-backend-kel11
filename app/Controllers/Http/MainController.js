@@ -8147,9 +8147,13 @@ class MainController {
         .with("timeline", (builder) => {
           builder
             .with("tugas", (builder) => {
-              builder.with("soal", (builder) => {
-                builder.where({ dihapus: 0 }).with("soal");
-              });
+              builder
+                .with("soal", (builder) => {
+                  builder.where({ dihapus: 0 }).with("soal");
+                })
+                .with("peserta", (builder) => {
+                  builder.where({ dihapus: 0 }).where({ m_user_id: user.id });
+                });
             })
             .with("materi", (builder) => {
               builder
@@ -8537,7 +8541,9 @@ class MainController {
             builder.where({ dihapus: 0 }).with("soal");
           })
           .with("peserta", (builder) => {
-            builder.where({ dihapus: 0 }).with("jawabanSiswa");
+            builder.where({ dihapus: 0 }).with("jawabanSiswa", (builder) => {
+              builder.with("soal");
+            });
           });
       })
       .with("tkTimeline", (builder) => {
@@ -8594,6 +8600,37 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .first();
 
+    let processedTimeline = timeline.toJSON();
+    if (timeline.toJSON().tugas.peserta.length) {
+      const peserta = timeline.toJSON().tugas.peserta.map((d) => {
+        const benar = [];
+        const salah = [];
+        d.jawabanSiswa
+          .filter((e) => e.soal.bentuk.trim().toLowerCase() == "pg")
+          .map((e) => {
+            if (e.jawaban_pg == e.soal.kj_pg) {
+              benar.push(1);
+            } else {
+              salah.push(1);
+            }
+          });
+        d.jawabanSiswa
+          .filter((e) => e.soal.bentuk.trim().toLowerCase() == "esai")
+          .map((e) => {
+            if (JSON.parse(e.jawaban_rubrik_esai)) {
+              if (JSON.parse(e.jawaban_rubrik_esai).length) {
+                if (e.jawaban_rubrik_esai.indexOf("true") != -1) {
+                  benar.push(1);
+                } else {
+                  salah.push(1);
+                }
+              }
+            }
+          });
+        return { ...d, benar: benar.length, salah: salah.length };
+      });
+      processedTimeline.tugas.peserta = peserta;
+    }
     const range = [
       moment(
         timeline.tipe == "tugas"
@@ -27084,7 +27121,16 @@ class MainController {
           .andWhere({ m_ta_id: ta.id });
       })
       .with("sikap", (builder) => {
-        builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id });
+        builder
+          .where({ dihapus: 0 })
+          .andWhere({ m_ta_id: ta.id })
+          .where({ tipe: "uts" });
+      })
+      .with("sikapUas", (builder) => {
+        builder
+          .where({ dihapus: 0 })
+          .andWhere({ m_ta_id: ta.id })
+          .where({ tipe: "uas" });
       })
       .where({ id: user_id })
       .andWhere({ dihapus: 0 })
@@ -27155,7 +27201,9 @@ class MainController {
                     "m_user_id",
                     "m_mata_pelajaran_id",
                     "nilai",
-                    "nilai_keterampilan"
+                    "nilai_keterampilan",
+                    "nilai_uts",
+                    "nilai_keterampilan_uts"
                   )
                   // .where(
                   //   "nilai",
