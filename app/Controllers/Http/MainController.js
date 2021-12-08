@@ -4098,7 +4098,10 @@ class MainController {
                   builder.where({ dihapus: 0 });
                 })
                 .with("sikap", (builder) => {
-                  builder.where({ dihapus: 0 });
+                  builder.where({ dihapus: 0 }).where({ tipe: "uts" });
+                })
+                .with("sikapUas", (builder) => {
+                  builder.where({ dihapus: 0 }).where({ tipe: "uas" });
                 })
                 .with("rekapSikap", (builder) => {
                   builder.with("predikat").where({ dihapus: 0 });
@@ -4166,7 +4169,10 @@ class MainController {
                     builder.where({ dihapus: 0 });
                   })
                   .with("sikap", (builder) => {
-                    builder.where({ dihapus: 0 });
+                    builder.where({ dihapus: 0 }).where({ tipe: "uts" });
+                  })
+                  .with("sikapUas", (builder) => {
+                    builder.where({ dihapus: 0 }).where({ tipe: "uas" });
                   })
                   .with("rekapSikap", (builder) => {
                     builder.with("predikat").where({ dihapus: 0 });
