@@ -40,6 +40,10 @@ class MTugas extends Model {
   soal(){
     return this.hasMany("App/Models/TkSoalTugas");
   }
+
+  peserta() {
+    return this.hasMany("App/Models/TkPesertaUjian")
+  }
 }
 
 module.exports = MTugas;

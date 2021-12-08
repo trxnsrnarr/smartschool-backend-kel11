@@ -27,6 +27,10 @@ class TkJadwalUjianSiswa extends Model {
     return this.belongsTo("App/Models/TkJadwalUjian");
   }
 
+  tugas() {
+    return this.belongsTo("App/Models/MTugas");
+  }
+
   getJamMulai({ waktu_mulai }) {
     return moment(waktu_mulai).format("HH:mm");
   }

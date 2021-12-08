@@ -4098,7 +4098,10 @@ class MainController {
                   builder.where({ dihapus: 0 });
                 })
                 .with("sikap", (builder) => {
-                  builder.where({ dihapus: 0 });
+                  builder.where({ dihapus: 0 }).where({ tipe: "uts" });
+                })
+                .with("sikapUas", (builder) => {
+                  builder.where({ dihapus: 0 }).where({ tipe: "uas" });
                 })
                 .with("rekapSikap", (builder) => {
                   builder.with("predikat").where({ dihapus: 0 });
@@ -4166,7 +4169,10 @@ class MainController {
                     builder.where({ dihapus: 0 });
                   })
                   .with("sikap", (builder) => {
-                    builder.where({ dihapus: 0 });
+                    builder.where({ dihapus: 0 }).where({ tipe: "uts" });
+                  })
+                  .with("sikapUas", (builder) => {
+                    builder.where({ dihapus: 0 }).where({ tipe: "uas" });
                   })
                   .with("rekapSikap", (builder) => {
                     builder.with("predikat").where({ dihapus: 0 });
@@ -4189,7 +4195,9 @@ class MainController {
                         "m_user_id",
                         "m_mata_pelajaran_id",
                         "nilai",
-                        "nilai_keterampilan"
+                        "nilai_keterampilan",
+                        "nilai_uts",
+                        "nilai_keterampilan_uts"
                       )
                       // .where(
                       //   "nilai",
@@ -8372,9 +8380,16 @@ class MainController {
               builder.with("bab");
             })
             .with("tugas", (builder) => {
-              builder.with("soal", (builder) => {
-                builder.where({ dihapus: 0 }).with("soal");
-              });
+              builder
+                .with("soal", (builder) => {
+                  builder.where({ dihapus: 0 }).with("soal");
+                })
+                .with("peserta", (builder) => {
+                  builder
+                    .where({ m_user_id: user.id })
+                    .where({ dihapus: 0 })
+                    .with("jawabanSiswa");
+                });
             })
             .with("komen", (builder) => {
               builder.with("user").where({ dihapus: 0 });
@@ -8517,9 +8532,13 @@ class MainController {
         builder.with("user").where({ dihapus: 0 });
       })
       .with("tugas", (builder) => {
-        builder.with("soal", (builder) => {
-          builder.where({ dihapus: 0 }).with("soal");
-        });
+        builder
+          .with("soal", (builder) => {
+            builder.where({ dihapus: 0 }).with("soal");
+          })
+          .with("peserta", (builder) => {
+            builder.where({ dihapus: 0 }).with("jawabanSiswa");
+          });
       })
       .with("tkTimeline", (builder) => {
         builder.with("user");
@@ -10121,6 +10140,8 @@ class MainController {
     }
     if (filter_tipe) {
       ujian = ujian.where({ tipe: filter_tipe });
+    } else {
+      ujian.whereNot({ tipe: "ppdb" });
     }
 
     ujian = await ujian.paginate(page, 20);
@@ -10411,6 +10432,30 @@ class MainController {
         });
       }
 
+      return response.ok({
+        message: messagePostSuccess,
+      });
+    } else {
+      const ujian = await MUjian.create({
+        nama,
+        tipe,
+        m_user_id: user.id,
+        dihapus: 0,
+      });
+
+      if (ujian_id) {
+        const soalIds = await TkSoalUjian.query()
+          .where({ m_ujian_id: ujian_id })
+          .andWhere({ dihapus: 0 })
+          .pluck("m_soal_ujian_id");
+        soalIds.map(async (item) => {
+          await TkSoalUjian.create({
+            m_ujian_id: ujian.id,
+            m_soal_ujian_id: item,
+            dihapus: 0,
+          });
+        });
+      }
       return response.ok({
         message: messagePostSuccess,
       });
@@ -11788,9 +11833,9 @@ class MainController {
         } menit`;
 
         worksheet.autoFilter = {
-          from: 'A10',
-          to: 'D10',
-        }
+          from: "A10",
+          to: "D10",
+        };
 
         // worksheet.getCell("A4").value = "RPP";
         // worksheet.getCell("A5").value = d.rpp.toString();
@@ -12607,6 +12652,7 @@ class MainController {
             builder.with("ujian");
           });
         })
+        .with("tugas")
         .withCount("jawabanSiswa as totalSoal")
         .withCount("jawabanSiswa as totalDijawab", (builder) => {
           builder.where({ dijawab: 1 });
@@ -12680,7 +12726,9 @@ class MainController {
       const tugas = await MTugas.query()
         .where({ id: m_tugas_id })
         .where({ dihapus: 0 })
-        .with("soal")
+        .with("soal", (builder) => {
+          builder.where({ dihapus: 0 }).with("soal");
+        })
         .first();
       if (!tugas) {
         return response.notFound({
@@ -12696,22 +12744,22 @@ class MainController {
         m_tugas_id: m_tugas_id,
       });
       const soal = tugas.toJSON().soal.map((d) => {
-        if (d.bentuk == "pg") {
+        if (d.soal.bentuk == "pg") {
           return {
             durasi: 0,
             ragu: 0,
             dijawab: 0,
             dinilai: 1,
-            m_soal_ujian_id: d.id,
+            m_soal_ujian_id: d.soal.id,
             tk_peserta_ujian_id: pesertaUjian.id,
           };
-        } else if (d.bentuk == "esai") {
+        } else if (d.soal.bentuk == "esai") {
           return {
             durasi: 0,
             ragu: 0,
             dijawab: 0,
-            m_soal_ujian_id: d.id,
-            jawaban_rubrik_esai: d.rubrik_kj,
+            m_soal_ujian_id: d.soal.id,
+            jawaban_rubrik_esai: d.soal.rubrik_kj,
             tk_peserta_ujian_id: pesertaUjian.id,
           };
         }
@@ -19698,17 +19746,19 @@ class MainController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
-    const checkSikap = await MSikapSiswa.query()
-      .where({ m_user_id: user_id })
-      .andWhere({ dihapus: 0 })
-      .andWhere({ m_ta_id: ta.id })
-      .first();
-
     const {
       m_sikap_sosial_ditunjukkan_id,
       m_sikap_sosial_ditingkatkan_id,
       tipe,
     } = request.post();
+
+    const checkSikap = await MSikapSiswa.query()
+      .where({ m_user_id: user_id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_ta_id: ta.id })
+      .where({ tipe })
+      .first();
+
     const rules = {
       m_sikap_sosial_ditingkatkan_id: "required",
       m_sikap_sosial_ditunjukkan_id: "required",
@@ -19728,6 +19778,7 @@ class MainController {
     if (checkSikap) {
       sikap = await MSikapSiswa.query()
         .where({ m_user_id: user_id })
+        .where({ id: checkSikap.id })
         .update({
           tipe,
           m_sikap_sosial_ditunjukkan_id: m_sikap_sosial_ditunjukkan_id
@@ -19757,6 +19808,7 @@ class MainController {
           : null,
         m_ta_id: ta.id,
         status: 1,
+        tipe,
         dihapus: 0,
       });
     }
@@ -19789,17 +19841,19 @@ class MainController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
-    const checkSikap = await MSikapSiswa.query()
-      .where({ m_user_id: user_id })
-      .andWhere({ dihapus: 0 })
-      .andWhere({ m_ta_id: ta.id })
-      .first();
-
     const {
       m_sikap_spiritual_ditingkatkan_id,
       m_sikap_spiritual_ditunjukkan_id,
       tipe,
     } = request.post();
+
+    const checkSikap = await MSikapSiswa.query()
+      .where({ m_user_id: user_id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_ta_id: ta.id })
+      .where({ tipe })
+      .first();
+
     const rules = {
       m_sikap_spiritual_ditingkatkan_id: "required",
       m_sikap_spiritual_ditunjukkan_id: "required",
@@ -19820,6 +19874,7 @@ class MainController {
     if (checkSikap) {
       sikap = await MSikapSiswa.query()
         .where({ m_user_id: user_id })
+        .where({ id: checkSikap.id })
         .update({
           tipe,
           m_sikap_spiritual_ditunjukkan_id: m_sikap_spiritual_ditunjukkan_id
@@ -19848,6 +19903,7 @@ class MainController {
             : null
           : null,
         status: 1,
+        tipe,
         m_ta_id: ta.id,
         dihapus: 0,
       });
@@ -41210,7 +41266,7 @@ class MainController {
     const sekolah = await MDokumenPembayaranSekolah.query()
       .where({ id: dokumenPembayaranSekolah_id })
       .update({
-        dihapu: 1,
+        dihapus: 1,
       });
 
     return response.ok({
@@ -41269,7 +41325,7 @@ class MainController {
 
   async deleteServer({ response, request, auth, params: { server_id } }) {
     const server = await MServer.query().where({ id: server_id }).update({
-      dihapu: 1,
+      dihapus: 1,
     });
 
     return response.ok({
@@ -44629,9 +44685,9 @@ class MainController {
               e.nilai_keterampilan ? e.nilai_keterampilan : "-"
             }`;
             row.getCell([`${(nox + 1) * 3 + 4}`]).value = `${
-            e.nilai*0.3 + e.nilai_keterampilan*0.7
+              e.nilai * 0.3 + e.nilai_keterampilan * 0.7
             }`;
-            
+
             row.getCell([`${(nox + 1) * 3 + 2}`]).border = {
               top: { style: "thin" },
               left: { style: "thin" },
@@ -44807,7 +44863,6 @@ class MainController {
     worksheet.mergeCells(`B6:B8`);
     worksheet.mergeCells(`C6:C8`);
     worksheet.mergeCells(`D6:D8`);
-
 
     worksheet.mergeCells(6, 5, 6, `${alreadyMerged}`);
     worksheet.mergeCells(6, `${alreadyMerged + 2}`, 8, `${alreadyMerged + 2}`);
