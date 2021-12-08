@@ -4195,7 +4195,9 @@ class MainController {
                         "m_user_id",
                         "m_mata_pelajaran_id",
                         "nilai",
-                        "nilai_keterampilan"
+                        "nilai_keterampilan",
+                        "nilai_uts",
+                        "nilai_keterampilan_uts"
                       )
                       // .where(
                       //   "nilai",
@@ -19744,17 +19746,19 @@ class MainController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
-    const checkSikap = await MSikapSiswa.query()
-      .where({ m_user_id: user_id })
-      .andWhere({ dihapus: 0 })
-      .andWhere({ m_ta_id: ta.id })
-      .first();
-
     const {
       m_sikap_sosial_ditunjukkan_id,
       m_sikap_sosial_ditingkatkan_id,
       tipe,
     } = request.post();
+
+    const checkSikap = await MSikapSiswa.query()
+      .where({ m_user_id: user_id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_ta_id: ta.id })
+      .where({ tipe })
+      .first();
+
     const rules = {
       m_sikap_sosial_ditingkatkan_id: "required",
       m_sikap_sosial_ditunjukkan_id: "required",
@@ -19774,6 +19778,7 @@ class MainController {
     if (checkSikap) {
       sikap = await MSikapSiswa.query()
         .where({ m_user_id: user_id })
+        .where({ id: checkSikap.id })
         .update({
           tipe,
           m_sikap_sosial_ditunjukkan_id: m_sikap_sosial_ditunjukkan_id
@@ -19803,6 +19808,7 @@ class MainController {
           : null,
         m_ta_id: ta.id,
         status: 1,
+        tipe,
         dihapus: 0,
       });
     }
@@ -19835,17 +19841,19 @@ class MainController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
-    const checkSikap = await MSikapSiswa.query()
-      .where({ m_user_id: user_id })
-      .andWhere({ dihapus: 0 })
-      .andWhere({ m_ta_id: ta.id })
-      .first();
-
     const {
       m_sikap_spiritual_ditingkatkan_id,
       m_sikap_spiritual_ditunjukkan_id,
       tipe,
     } = request.post();
+
+    const checkSikap = await MSikapSiswa.query()
+      .where({ m_user_id: user_id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_ta_id: ta.id })
+      .where({ tipe })
+      .first();
+
     const rules = {
       m_sikap_spiritual_ditingkatkan_id: "required",
       m_sikap_spiritual_ditunjukkan_id: "required",
@@ -19866,6 +19874,7 @@ class MainController {
     if (checkSikap) {
       sikap = await MSikapSiswa.query()
         .where({ m_user_id: user_id })
+        .where({ id: checkSikap.id })
         .update({
           tipe,
           m_sikap_spiritual_ditunjukkan_id: m_sikap_spiritual_ditunjukkan_id
@@ -19894,6 +19903,7 @@ class MainController {
             : null
           : null,
         status: 1,
+        tipe,
         m_ta_id: ta.id,
         dihapus: 0,
       });
