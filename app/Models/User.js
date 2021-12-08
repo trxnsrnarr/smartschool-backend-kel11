@@ -98,6 +98,9 @@ class User extends Model {
   sikap() {
     return this.hasOne("App/Models/MSikapSiswa", "id", "m_user_id");
   }
+  sikapYadika() {
+    return this.hasOne("App/Models/MSikapSiswaYadika", "id", "m_user_id");
+  }
   rekapSikap() {
     return this.hasOne("App/Models/MSikapRombel", "id", "m_user_id");
   }
