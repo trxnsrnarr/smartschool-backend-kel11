@@ -219,6 +219,9 @@ Route.put("/rek-sekolah/:rek_sekolah_id", "MainController.putRekSekolah");
 Route.delete("/rek-sekolah/:rek_sekolah_id", "MainController.deleteRekSekolah");
 Route.post("/rek-sekolah/download", "MainController.downloadRekening");
 
+// tunggakan 
+Route.get("/tunggakan", "SecondController.getTunggakan");
+
 // pembayaran
 Route.get("/pembayaran", "MainController.getPembayaran");
 Route.get("/pembayaran/:pembayaran_id", "MainController.detailPembayaran");

@@ -150,6 +150,9 @@ class User extends Model {
     return this.hasMany("App/Models/MJadwalUjian", "id", "m_user_id");
   }
 
+  pembayaran(){
+    return this.hasMany("App/Models/MPembayaranSiswa", "id", "m_user_id")
+  }
 }
 
 module.exports = User;

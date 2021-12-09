@@ -294,4 +294,115 @@ class SecondController {
 
     return sekolah;
   }
+
+  async getTAAktif(sekolah) {
+    const ta = await Mta.query()
+      .select("id", "tahun")
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ aktif: 1 })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    if (!ta) {
+      return "404";
+    }
+
+    return ta;
+  }
+
+  async getTunggakan({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+    const pembayaran = await MPembayaran.query()
+      .select("id", "nama", "bulan")
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+    const jenisPembayaran = await MPembayaran.query()
+      .select("jenis")
+      .distinct("jenis")
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+    const tingkatRombel = await MRombel.query()
+      .distinct("tingkat")
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .pluck("tingkat");
+
+    const {
+      page = 1,
+      search_nama,
+      tingkat,
+      pembayaran_id,
+      rombel_id,
+      jenis,
+    } = request.get();
+
+    let rombelIds = MRombel.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 });
+
+    if (tingkat) {
+      rombelIds.where({ tingkat });
+    }
+    rombelIds = await rombelIds.ids();
+
+    const pembayaranIds = await MPembayaran.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .ids();
+
+    const pembayaranRombelIds = await TkPembayaranRombel.query()
+      .whereIn("m_rombel_id", rombelIds)
+      .whereIn("m_pembayaran_id", pembayaranIds)
+      .where({ dihapus: 0 })
+      .ids();
+    const siswaIds = await MPembayaranSiswa.query()
+      .distinct("m_user_id")
+      .whereIn("tk_pembayaran_rombel_id", pembayaranRombelIds)
+      .where({ dihapus: 0 })
+      .pluck("m_user_id");
+    let tunggakan = User.query()
+      .select("id", "nama")
+      .whereIn("id", siswaIds)
+      .with("pembayaran", (builder) => {
+        builder
+          .whereNot({ status: "lunas" })
+          .whereNull("ditangguhkan")
+          .with("rombelPembayaran", (builder) => {
+            builder
+              .select("id", "m_pembayaran_id")
+              .with("pembayaran", (builder) => {
+                builder.select("id", "jenis", "nominal", "tipe_ujian", "nama");
+              });
+          });
+      });
+    if (search_nama) {
+      tunggakan.where("nama", "like", `%${search_nama}%`);
+    }
+    tunggakan = await tunggakan.paginate(page, 20);
+
+    return {
+      pembayaran,
+      jenisPembayaran,
+      tingkatRombel,
+      tunggakan,
+    };
+  }
 }
+
+module.exports = SecondController;
