@@ -13220,7 +13220,7 @@ class MainController {
     });
 
     if (pesertaUjianData.tk_timeline_id) {
-      timeline = await TkTimeline.query()
+      const timeline = await TkTimeline.query()
         .where({ id: pesertaUjianData.tk_timeline_id })
         .update({
           waktu_pengumpulan: moment().format("YYYY-MM-DD HH:mm:ss"),
