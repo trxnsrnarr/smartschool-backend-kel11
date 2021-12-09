@@ -12088,7 +12088,7 @@ class MainController {
 
     const userIds = await User.query()
       .where({ dihapus: 0 })
-      .where({ m_sekolah_id: 7 })
+      .where({ m_sekolah_id: 33 })
       .whereIn("role", ["guru", "admin"])
       .ids();
 
@@ -12099,8 +12099,8 @@ class MainController {
       .ids();
 
     const jadwalIds = await MJadwalUjian.query()
-      .where("waktu_dibuka", ">", moment().format("YYYY-MM-03 00:00:00"))
-      .where("waktu_ditutup", "<", moment().format("YYYY-MM-03 HH:mm:ss"))
+      .where("waktu_dibuka", ">", moment().format("YYYY-MM-02 00:00:00"))
+      .where("waktu_ditutup", "<", moment().format("YYYY-MM-02 HH:mm:ss"))
       .whereIn("m_user_id", userIds)
       .whereIn("m_ujian_id", ujianIds)
       .ids();
@@ -16405,6 +16405,23 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
+    const semuaTa = await Mta.query()
+      .select(
+        "tahun",
+        "semester",
+        "nama_kepsek",
+        "nip_kepsek",
+        "aktif",
+        "id",
+        "tanggal_awal",
+        "tanggal_akhir",
+        "tanggal_rapor"
+      )
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .orderBy("id", "desc")
+      .fetch();
+
     let { tipe, search } = request.get();
 
     tipe = tipe ? tipe : "spp";
@@ -16481,6 +16498,7 @@ class MainController {
       rombel: rombel,
       tipeUjian: tipeUjian,
       pembayaran_kategori: pembayaranKategori,
+      ta: semuaTa,
       totalPelunasan,
     });
   }
@@ -16572,6 +16590,7 @@ class MainController {
       nominal,
       tanggal_dibuat,
       rombel_id,
+      ta_id,
       tag,
       m_rek_sekolah_id,
     } = request.post();
@@ -16631,6 +16650,7 @@ class MainController {
       m_rek_sekolah_id,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
+      m_ta_id: ta_id,
     });
 
     //   // email Service
@@ -16769,6 +16789,7 @@ class MainController {
       tanggal_dibuat,
       tag,
       m_rek_sekolah_id,
+      ta_id,
     } = request.post();
 
     if (bulan) {
@@ -16830,6 +16851,7 @@ class MainController {
         tanggal_dibuat,
         nominal,
         m_rek_sekolah_id,
+        m_ta_id: ta_id,
       });
 
     if (!pembayaran) {
