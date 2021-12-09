@@ -110,6 +110,7 @@ Route.delete("/praktik-kerja/:id", "MainController.deletePraktikKerja");
 
 // praktik kerja
 Route.get("/eskul", "MainController.getEskul");
+Route.get("/eskul/:ekskul_id", "MainController.detailEskul");
 Route.post("/eskul", "MainController.postEskul");
 Route.put("/eskul/:id", "MainController.putEskul");
 Route.delete("/eskul/:id", "MainController.deleteEskul");
@@ -159,6 +160,11 @@ Route.post(
   "/anggota-rombel/import-password",
   "MainController.importAnggotaRombelPassword"
 );
+
+// anggota ekskul
+Route.post("/anggota-ekskul", "MainController.postSiswaEkskul");
+Route.put("/anggota-ekskul", "MainController.putSiswaEkskul");
+Route.post("/anggota-ekskul/import", "MainController.importAnggotaEkskul");
 
 // MATA PELAJARAN SERVICE - START
 Route.get("/mata-pelajaran", "MainController.getMataPelajaran");
@@ -712,7 +718,7 @@ Route.get(
 );
 
 Route.post(
-  "/rapor/ekskul/:rombel_id/:user_id",
+  "/rapor/ekskul/:ekskul_id/:user_id",
   "MainController.postRaporEkskul"
 );
 Route.put(
