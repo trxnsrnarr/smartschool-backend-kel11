@@ -9,18 +9,12 @@ class UpdateProfilSchema extends Schema {
       // alter table
       table.string("nama_panggilan");
     });
-    this.hasColumn("m_profil_user", "gender").then((exist) => {
-      if (exist) table.dropColumn("gender");
-    });
   }
 
   down() {
     this.table("m_profil_user", (table) => {
       // reverse alternations
       table.dropColumn("nama_panggilan");
-    });
-    this.hasColumn("m_profil_user", "gender").then((exist) => {
-      if (!exist) table.enu("gender", ["L", "P"]);
     });
   }
 }
