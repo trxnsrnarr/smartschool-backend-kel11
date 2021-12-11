@@ -8594,46 +8594,48 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .first();
 
-    // let processedTimeline = timeline.toJSON();
-    // if (timeline.toJSON().tugas.peserta.length) {
-    //   const peserta = timeline.toJSON().tugas.peserta.map((d) => {
-    //     const benar = [];
-    //     const salah = [];
-    //     d.jawabanSiswa
-    //       .filter((e) => e.soal.bentuk.trim().toLowerCase() == "pg")
-    //       .map((e) => {
-    //         if (e.jawaban_pg == e.soal.kj_pg) {
-    //           benar.push(1);
-    //         } else {
-    //           salah.push(1);
-    //         }
-    //       });
-    //     d.jawabanSiswa
-    //       .filter((e) => e.soal.bentuk.trim().toLowerCase() == "esai")
-    //       .map((e) => {
-    //         if (JSON.parse(e.jawaban_rubrik_esai)) {
-    //           if (JSON.parse(e.jawaban_rubrik_esai).length) {
-    //             if (e.jawaban_rubrik_esai.indexOf("true") != -1) {
-    //               benar.push(1);
-    //             } else {
-    //               salah.push(1);
-    //             }
-    //           }
-    //         }
-    //       });
-    //     return { ...d, benar: benar.length, salah: salah.length };
-    //   });
-    //   const listSiswaDinilai = [];
-    //   processedTimeline.tkTimeline.map(d => {
-    //     if (processedTimeline.tugas.peserta.find(e => e.m_user_id == d.user.m_user_id)) {
-    //       listSiswaDinilai.push(d)
-    //     } else {
+    let processedTimeline = timeline.toJSON();
+    if (processedTimeline.tkTimeline.length) {
+      await Promise.all(
+        processedTimeline.listSiswaTerkumpul.map(async (d, idx) => {
+          const pesertaUjian = d.peserta[d.peserta.length - 1];
+          let metaHasil = { benar: 0 };
+          let analisisBenar = {};
+          let analisisTotal = {};
 
-    //     }
-    //   })
-    //   processedTimeline.tugas.peserta = peserta;
-    //   processedTimeline.tugas.peserta = peserta;
-    // }
+          await Promise.all(
+            pesertaUjian.toJSON().jawabanSiswa.map(async (d) => {
+              if (d.soal.bentuk == "pg") {
+                if (d.jawaban_pg == d.soal.kj_pg) {
+                  metaHasil.benar = metaHasil.benar + 1;
+                  analisisBenar[d.soal.kd] = analisisBenar[d.soal.kd]
+                    ? analisisBenar[d.soal.kd] + 1
+                    : 1;
+                }
+                analisisTotal[d.soal.kd] = analisisTotal[d.soal.kd]
+                  ? analisisTotal[d.soal.kd] + 1
+                  : 1;
+              } else if (d.soal.bentuk == "esai") {
+                if (JSON.parse(d.jawaban_rubrik_esai)) {
+                  if (JSON.parse(d.jawaban_rubrik_esai).length) {
+                    if (d.jawaban_rubrik_esai.indexOf("true") != -1) {
+                      metaHasil.benar = metaHasil.benar + 1;
+                    }
+                  }
+                }
+              }
+            })
+          );
+
+          processedTimeline.listSiswaTerkumpul[idx] = {
+            ...processedTimeline.listSiswaTerkumpul[idx],
+            ...metaHasil,
+            analisisBenar,
+            analisisTotal,
+          };
+        })
+      );
+    }
     const range = [
       moment(
         timeline.tipe == "tugas"
@@ -8725,7 +8727,7 @@ class MainController {
 
     return response.ok({
       timeline: {
-        ...timeline.toJSON(),
+        ...processedTimeline,
         bab: timeline.toJSON().materi.map((e) => e.bab),
       },
       timelines,
