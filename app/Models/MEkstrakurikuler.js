@@ -19,6 +19,9 @@ class MEkstrakurikuler extends Model {
   setFile(file) {
     return file ? JSON.stringify(file) : NULL;
   }
+  anggotaEkskul() {
+    return this.hasMany("App/Models/MAnggotaEkskul");
+  }
 }
 
 module.exports = MEkstrakurikuler;
