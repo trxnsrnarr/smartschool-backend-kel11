@@ -162,6 +162,7 @@ Route.post(
 );
 
 // anggota ekskul
+Route.get("/ekskul-post/:ekskul_id", "MainController.getPostSiswaEkskul");
 Route.post("/anggota-ekskul", "MainController.postSiswaEkskul");
 Route.put("/anggota-ekskul", "MainController.putSiswaEkskul");
 Route.post("/anggota-ekskul/import", "MainController.importAnggotaEkskul");
