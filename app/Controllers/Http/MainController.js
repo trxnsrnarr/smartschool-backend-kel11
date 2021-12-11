@@ -8935,6 +8935,7 @@ class MainController {
       tk_id,
       nilai,
       materi,
+      ulangi,
     } = request.post();
 
     if (
@@ -9022,6 +9023,11 @@ class MainController {
         waktu_pengumpulan: waktu_pengumpulan,
         dikumpulkan: dikumpulkan,
       });
+      if (ulangi) {
+        await TkPesertaUjian.query()
+          .whwere({ tk_timeline_id: timeline_id })
+          .update({ dihapus: 1 });
+      }
     }
 
     if (tipe == "materi") {
