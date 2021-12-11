@@ -1179,7 +1179,6 @@ class MainController {
     let userPayload = {
       // identitas
       nama,
-      nama_panggilan,
       whatsapp,
       gender,
       agama,
@@ -1229,6 +1228,7 @@ class MainController {
         portofolio,
         bahasa,
         keahlian,
+        nama_panggilan,
 
         // informasi
         nisn,
@@ -8200,6 +8200,9 @@ class MainController {
             .with("user");
         })
         .with("user")
+        .with("peserta", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .whereIn("m_timeline_id", timelineIds)
@@ -8411,16 +8414,9 @@ class MainController {
               builder.with("bab");
             })
             .with("tugas", (builder) => {
-              builder
-                .with("soal", (builder) => {
-                  builder.where({ dihapus: 0 }).with("soal");
-                })
-                .with("peserta", (builder) => {
-                  builder
-                    .where({ m_user_id: user.id })
-                    .where({ dihapus: 0 })
-                    .with("jawabanSiswa");
-                });
+              builder.with("soal", (builder) => {
+                builder.where({ dihapus: 0 }).with("soal");
+              });
             })
             .with("komen", (builder) => {
               builder.with("user").where({ dihapus: 0 });
@@ -8428,6 +8424,9 @@ class MainController {
         })
         .with("komen", (builder) => {
           builder.with("user");
+        })
+        .with("peserta", (builder) => {
+          builder.where({ dihapus: 0 }).with("jawabanSiswa");
         })
         .with("user")
         .where({ id: timeline_id })
@@ -8563,13 +8562,9 @@ class MainController {
         builder.with("user").where({ dihapus: 0 });
       })
       .with("tugas", (builder) => {
-        builder
-          .with("soal", (builder) => {
-            builder.where({ dihapus: 0 }).with("soal");
-          })
-          .with("peserta", (builder) => {
-            builder.where({ dihapus: 0 }).with("jawabanSiswa");
-          });
+        builder.with("soal", (builder) => {
+          builder.where({ dihapus: 0 }).with("soal");
+        });
       })
       .with("tkTimeline", (builder) => {
         builder.with("user");
@@ -8580,6 +8575,11 @@ class MainController {
       .with("listSiswaTerkumpul", (builder) => {
         builder
           .with("user")
+          .with("peserta", (builder) => {
+            builder.where({ dihapus: 0 }).with("jawabanSiswa", (builder) => {
+              builder.with("soal");
+            });
+          })
           .where({ dikumpulkan: 1 })
           .with("komen", (builder) => {
             builder.with("user").where({ dihapus: 0 });
@@ -8625,6 +8625,48 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .first();
 
+    let processedTimeline = timeline.toJSON();
+    if (processedTimeline.tkTimeline.length) {
+      await Promise.all(
+        processedTimeline.listSiswaTerkumpul.map(async (d, idx) => {
+          const pesertaUjian = d.peserta[d.peserta.length - 1];
+          let metaHasil = { benar: 0 };
+          let analisisBenar = {};
+          let analisisTotal = {};
+
+          await Promise.all(
+            pesertaUjian.toJSON().jawabanSiswa.map(async (d) => {
+              if (d.soal.bentuk == "pg") {
+                if (d.jawaban_pg == d.soal.kj_pg) {
+                  metaHasil.benar = metaHasil.benar + 1;
+                  analisisBenar[d.soal.kd] = analisisBenar[d.soal.kd]
+                    ? analisisBenar[d.soal.kd] + 1
+                    : 1;
+                }
+                analisisTotal[d.soal.kd] = analisisTotal[d.soal.kd]
+                  ? analisisTotal[d.soal.kd] + 1
+                  : 1;
+              } else if (d.soal.bentuk == "esai") {
+                if (JSON.parse(d.jawaban_rubrik_esai)) {
+                  if (JSON.parse(d.jawaban_rubrik_esai).length) {
+                    if (d.jawaban_rubrik_esai.indexOf("true") != -1) {
+                      metaHasil.benar = metaHasil.benar + 1;
+                    }
+                  }
+                }
+              }
+            })
+          );
+
+          processedTimeline.listSiswaTerkumpul[idx] = {
+            ...processedTimeline.listSiswaTerkumpul[idx],
+            ...metaHasil,
+            analisisBenar,
+            analisisTotal,
+          };
+        })
+      );
+    }
     const range = [
       moment(
         timeline.tipe == "tugas"
@@ -8716,7 +8758,7 @@ class MainController {
 
     return response.ok({
       timeline: {
-        ...timeline.toJSON(),
+        ...processedTimeline,
         bab: timeline.toJSON().materi.map((e) => e.bab),
       },
       timelines,
@@ -8924,6 +8966,7 @@ class MainController {
       tk_id,
       nilai,
       materi,
+      ulangi,
     } = request.post();
 
     if (
@@ -9011,6 +9054,11 @@ class MainController {
         waktu_pengumpulan: waktu_pengumpulan,
         dikumpulkan: dikumpulkan,
       });
+      if (ulangi) {
+        await TkPesertaUjian.query()
+          .whwere({ tk_timeline_id: timeline_id })
+          .update({ dihapus: 1 });
+      }
     }
 
     if (tipe == "materi") {
@@ -12082,7 +12130,7 @@ class MainController {
 
     const userIds = await User.query()
       .where({ dihapus: 0 })
-      .where({ m_sekolah_id: 7 })
+      .where({ m_sekolah_id: 33 })
       .whereIn("role", ["guru", "admin"])
       .ids();
 
@@ -12093,8 +12141,8 @@ class MainController {
       .ids();
 
     const jadwalIds = await MJadwalUjian.query()
-      .where("waktu_dibuka", ">", moment().format("YYYY-MM-03 00:00:00"))
-      .where("waktu_ditutup", "<", moment().format("YYYY-MM-03 HH:mm:ss"))
+      .where("waktu_dibuka", ">", moment().format("YYYY-MM-02 00:00:00"))
+      .where("waktu_ditutup", "<", moment().format("YYYY-MM-02 HH:mm:ss"))
       .whereIn("m_user_id", userIds)
       .whereIn("m_ujian_id", ujianIds)
       .ids();
@@ -12750,10 +12798,18 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { tk_jadwal_ujian_id, ujian_id, m_tugas_id } = request.post();
+    const { tk_jadwal_ujian_id, ujian_id, tk_timeline_id } = request.post();
     const waktu_mulai = moment().format("YYYY-MM-DD HH:mm:ss");
 
-    if (m_tugas_id) {
+    if (tk_timeline_id) {
+      const tk = await TkTimeline.query()
+        .select("m_timeline_id")
+        .where({ id: tk_timeline_id })
+        .first();
+      const timeline = await MTimeline.query()
+        .where({ id: tk.m_timeline_id })
+        .first();
+      const m_tugas_id = timeline.m_tugas_id;
       const tugas = await MTugas.query()
         .where({ id: m_tugas_id })
         .where({ dihapus: 0 })
@@ -12772,7 +12828,7 @@ class MainController {
         selesai: 0,
         dihapus: 0,
         m_user_id: user.id,
-        m_tugas_id: m_tugas_id,
+        tk_timeline_id: tk_timeline_id,
       });
       const soal = tugas.toJSON().soal.map((d) => {
         if (d.soal.bentuk == "pg") {
@@ -13201,6 +13257,15 @@ class MainController {
       nilai_esai: metaHasil.nilaiEsai,
       nilai: metaHasil.nilaiTotal,
     });
+
+    if (pesertaUjianData.tk_timeline_id) {
+      const timeline = await TkTimeline.query()
+        .where({ id: pesertaUjianData.tk_timeline_id })
+        .update({
+          waktu_pengumpulan: moment().format("YYYY-MM-DD HH:mm:ss"),
+          dikumpulkan: 1,
+        });
+    }
 
     // await WhatsAppService.sendMessage(
     //   user.whatsapp,
@@ -14149,6 +14214,7 @@ class MainController {
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ m_ta_id: ta.id })
       .andWhere({ dihapus: 0 })
+      .withCount("pendaftar as jumlahPendaftar")
       .fetch();
 
     const jumlahPeserta = await User.query()
@@ -16399,6 +16465,23 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
+    const semuaTa = await Mta.query()
+      .select(
+        "tahun",
+        "semester",
+        "nama_kepsek",
+        "nip_kepsek",
+        "aktif",
+        "id",
+        "tanggal_awal",
+        "tanggal_akhir",
+        "tanggal_rapor"
+      )
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .orderBy("id", "desc")
+      .fetch();
+
     let { tipe, search } = request.get();
 
     tipe = tipe ? tipe : "spp";
@@ -16475,6 +16558,7 @@ class MainController {
       rombel: rombel,
       tipeUjian: tipeUjian,
       pembayaran_kategori: pembayaranKategori,
+      ta: semuaTa,
       totalPelunasan,
     });
   }
@@ -16566,6 +16650,7 @@ class MainController {
       nominal,
       tanggal_dibuat,
       rombel_id,
+      ta_id,
       tag,
       m_rek_sekolah_id,
     } = request.post();
@@ -16625,6 +16710,7 @@ class MainController {
       m_rek_sekolah_id,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
+      m_ta_id: ta_id,
     });
 
     //   // email Service
@@ -16763,6 +16849,7 @@ class MainController {
       tanggal_dibuat,
       tag,
       m_rek_sekolah_id,
+      ta_id,
     } = request.post();
 
     if (bulan) {
@@ -16824,6 +16911,7 @@ class MainController {
         tanggal_dibuat,
         nominal,
         m_rek_sekolah_id,
+        m_ta_id: ta_id,
       });
 
     if (!pembayaran) {
@@ -27115,7 +27203,16 @@ class MainController {
           .andWhere({ m_ta_id: ta.id });
       })
       .with("sikap", (builder) => {
-        builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id });
+        builder
+          .where({ dihapus: 0 })
+          .andWhere({ m_ta_id: ta.id })
+          .where({ tipe: "uts" });
+      })
+      .with("sikapUas", (builder) => {
+        builder
+          .where({ dihapus: 0 })
+          .andWhere({ m_ta_id: ta.id })
+          .where({ tipe: "uas" });
       })
       .where({ id: user_id })
       .andWhere({ dihapus: 0 })
@@ -27186,7 +27283,9 @@ class MainController {
                     "m_user_id",
                     "m_mata_pelajaran_id",
                     "nilai",
-                    "nilai_keterampilan"
+                    "nilai_keterampilan",
+                    "nilai_uts",
+                    "nilai_keterampilan_uts"
                   )
                   // .where(
                   //   "nilai",

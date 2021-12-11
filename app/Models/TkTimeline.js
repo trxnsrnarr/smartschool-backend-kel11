@@ -34,6 +34,10 @@ class TkTimeline extends Model {
   getWaktuAbsen(waktu_absen) {
     return waktu_absen ? moment(waktu_absen).format("HH:mm:ss") : "-";
   }
+  
+  peserta() {
+    return this.hasMany("App/Models/TkPesertaUjian")
+  }
 }
 
 module.exports = TkTimeline;
