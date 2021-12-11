@@ -1179,7 +1179,6 @@ class MainController {
     let userPayload = {
       // identitas
       nama,
-      nama_panggilan,
       whatsapp,
       gender,
       agama,
@@ -1229,6 +1228,7 @@ class MainController {
         portofolio,
         bahasa,
         keahlian,
+        nama_panggilan,
 
         // informasi
         nisn,
@@ -14175,6 +14175,7 @@ class MainController {
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ m_ta_id: ta.id })
       .andWhere({ dihapus: 0 })
+      .withCount("pendaftar as jumlahPendaftar")
       .fetch();
 
     const jumlahPeserta = await User.query()
