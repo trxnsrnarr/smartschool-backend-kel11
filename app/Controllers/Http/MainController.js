@@ -4124,12 +4124,6 @@ class MainController {
                 .with("prestasi", (builder) => {
                   builder.where({ dihapus: 0 });
                 })
-                .with("sikap", (builder) => {
-                  builder.where({ dihapus: 0 }).where({ tipe: "uts" });
-                })
-                .with("sikapUas", (builder) => {
-                  builder.where({ dihapus: 0 }).where({ tipe: "uas" });
-                })
                 .with("rekapSikap", (builder) => {
                   builder.with("predikat").where({ dihapus: 0 });
                 })
@@ -4146,6 +4140,19 @@ class MainController {
                     builder.andWhere({ m_ta_id: ta.id });
                   }
                 );
+              if (sekolah.id == 33) {
+                builder.with("sikapYadika", (builder) => {
+                  builder.where({ dihapus: 0 });
+                });
+              } else {
+                builder
+                  .with("sikapUas", (builder) => {
+                    builder.where({ dihapus: 0 }).where({ tipe: "uas" });
+                  })
+                  .with("sikap", (builder) => {
+                    builder.where({ dihapus: 0 }).where({ tipe: "uts" });
+                  });
+              }
             });
           });
         })
@@ -4198,12 +4205,6 @@ class MainController {
                   .with("prestasi", (builder) => {
                     builder.where({ dihapus: 0 });
                   })
-                  .with("sikap", (builder) => {
-                    builder.where({ dihapus: 0 }).where({ tipe: "uts" });
-                  })
-                  .with("sikapUas", (builder) => {
-                    builder.where({ dihapus: 0 }).where({ tipe: "uas" });
-                  })
                   .with("rekapSikap", (builder) => {
                     builder.with("predikat").where({ dihapus: 0 });
                   })
@@ -4239,6 +4240,19 @@ class MainController {
                         builder.select("id", "nama");
                       });
                   });
+                if (sekolah.id == 33) {
+                  builder.with("sikapYadika", (builder) => {
+                    builder.where({ dihapus: 0 });
+                  });
+                } else {
+                  builder
+                    .with("sikapUas", (builder) => {
+                      builder.where({ dihapus: 0 }).where({ tipe: "uas" });
+                    })
+                    .with("sikap", (builder) => {
+                      builder.where({ dihapus: 0 }).where({ tipe: "uts" });
+                    });
+                }
               })
               .where({ dihapus: 0 });
           });
@@ -8263,7 +8277,9 @@ class MainController {
       );
 
       return response.ok({
-        timeline: timelineData,
+        timeline: timelineData.map((d) => {
+          return { ...d, bab: d.timeline.materi.map((e) => e.bab) };
+        }),
         role: user.role,
       });
     }
@@ -27183,7 +27199,7 @@ class MainController {
       [`${ta.tanggal_awal}`, `${ta.tanggal_akhir}`]
     );
 
-    const siswa = await User.query()
+    const builder = User.query()
       .with("profil")
       .with("keteranganRapor", (builder) => {
         builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id });
@@ -27202,21 +27218,29 @@ class MainController {
           .where({ dihapus: 0 })
           .andWhere({ m_ta_id: ta.id });
       })
-      .with("sikap", (builder) => {
-        builder
-          .where({ dihapus: 0 })
-          .andWhere({ m_ta_id: ta.id })
-          .where({ tipe: "uts" });
-      })
-      .with("sikapUas", (builder) => {
-        builder
-          .where({ dihapus: 0 })
-          .andWhere({ m_ta_id: ta.id })
-          .where({ tipe: "uas" });
-      })
       .where({ id: user_id })
-      .andWhere({ dihapus: 0 })
-      .first();
+      .andWhere({ dihapus: 0 });
+
+    if (sekolah.id == 33) {
+      builder.with("sikapYadika", (builder) => {
+        builder.where({ dihapus: 0 });
+      });
+    } else {
+      builder
+        .with("sikap", (builder) => {
+          builder
+            .where({ dihapus: 0 })
+            .andWhere({ m_ta_id: ta.id })
+            .where({ tipe: "uts" });
+        })
+        .with("sikapUas", (builder) => {
+          builder
+            .where({ dihapus: 0 })
+            .andWhere({ m_ta_id: ta.id })
+            .where({ tipe: "uas" });
+        });
+    }
+    const siswa = await builder.first();
 
     const muatan = await MKategoriMapel.query()
       .with("mapelRapor", (builder) => {
