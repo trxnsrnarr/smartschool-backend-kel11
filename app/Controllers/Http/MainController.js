@@ -12017,7 +12017,7 @@ class MainController {
       .toJSON()
       .jadwalUjian.ujian.nama.replace(/[\/|\\:*?"<>]/g, " ")} ${jadwalUjian
       .toJSON()
-      .rombel.nama.replace(/[\/|\\:*?"<>]/g, " ")}.xlsx`;
+      .rombel.nama.replace(/[\/|\\:*?"<>]/g, " ")}-${Date.now()}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
