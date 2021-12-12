@@ -8595,7 +8595,7 @@ class MainController {
       .first();
 
     let processedTimeline = timeline.toJSON();
-    if (processedTimeline.tkTimeline.length) {
+    if (processedTimeline.tugas.soal.length) {
       await Promise.all(
         processedTimeline.listSiswaTerkumpul.map(async (d, idx) => {
           const pesertaUjian = d.peserta[d.peserta.length - 1];
