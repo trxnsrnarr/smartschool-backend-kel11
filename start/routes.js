@@ -139,6 +139,10 @@ Route.post(
   "/rapor-sikap/spiritual/:user_id",
   "MainController.postRaporSikapSpiritual"
 );
+Route.post(
+  "/rapor-sikap/yadika/:user_id",
+  "MainController.postRaporSikapYadika"
+);
 Route.delete("/rapor-sikap/:user_id", "MainController.deleteRaporSikap");
 Route.delete(
   "/rapor-sikap/sosial/:user_id",
