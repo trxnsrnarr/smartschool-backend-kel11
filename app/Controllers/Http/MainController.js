@@ -39020,6 +39020,10 @@ class MainController {
     worksheet.getColumn("B").width = 20;
     worksheet.getColumn("C").width = 23;
     worksheet.getColumn("D").width = 6;
+    worksheet.autoFilter = {
+      from: "A5",
+      to: "D5",
+    }
 
     let namaFile = `/uploads/rekapan-nilai-${
       rekapan.toJSON().rekap.tipe
