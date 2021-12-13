@@ -4201,6 +4201,8 @@ class MainController {
         .where({ m_sekolah_id: sekolah.id })
         .fetch();
 
+      
+
       jadwalMengajar = await MJadwalMengajar.query()
         .with("mataPelajaran", (builder) => {
           builder.with("user");
@@ -4224,7 +4226,7 @@ class MainController {
                     builder.where({ dihapus: 0 });
                   })
                   .with("rekapSikap", (builder) => {
-                    builder.with("predikat").where({ dihapus: 0 });
+                    builder.with("predikat").where({ dihapus: 0 }).andWhere({m_mata_pelajaran: data.m_mata_pelajaran});
                   })
                   .with("nilaiUjian", (builder) => {
                     builder.where({
@@ -26502,6 +26504,36 @@ class MainController {
       message: messagePutSuccess,
     });
   }
+
+  async deleteMapelRapor({ response, request, auth, params: { mapelRapor_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { hide } = request.post();
+
+    
+    const mapelRapor = await TkMapelRapor.query()
+      .where({ id: mapelRapor_id })
+      .update({
+        dihapus: hide,
+      });
+
+    if (!mapelRapor) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
   async putMapelRaporKKM({ response, request, auth }) {
     const domain = request.headers().origin;
 
@@ -26563,7 +26595,7 @@ class MainController {
     });
   }
 
-  async deleteMapelRapor({ response, request, auth }) {
+  async deleteMapelRapor1({ response, request, auth }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
