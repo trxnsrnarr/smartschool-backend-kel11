@@ -2065,12 +2065,29 @@ class MainController {
       return "Format Verifikasi salah. Dapatkan Template verifikasi pada menu profil smarteschool";
     }
 
-    const user = await User.query().where({ verifikasi: verifikasi }).first();
+    let dbConn = "mysql";
+    let user = await User.query().where({ verifikasi: verifikasi }).first();
     if (!user) {
+      ["smkn26", "sman94", "sman96", "smkn6tangsel", "smkyadika13"].map(
+        async (d) => {
+          if (!user) {
+            user = await Database.connection(d)
+              .table("m_user")
+              .where({ verifikasi: verifikasi })
+              .first();
+            if (user) {
+              dbConn = d;
+            }
+          }
+          return 0;
+        }
+      );
+    } else if (!user) {
       return "Format Verifikasi salah. Dapatkan Template verifikasi pada menu profil smarteschool";
     }
 
-    await User.query()
+    await Database.connection(dbConn)
+      .table("m_user")
       .where({ id: user.id })
       .update({ wa_real: wa_real, verifikasi: "" });
     // return `Nomor whatsapp terverifikasi: ${wa_real.replace("@c.us", "")}`;
@@ -8643,7 +8660,7 @@ class MainController {
       .first();
 
     let processedTimeline = timeline.toJSON();
-    if(processedTimeline.tipe == "tugas") {
+    if (processedTimeline.tipe == "tugas") {
       if (processedTimeline.tugas.soal.length) {
         await Promise.all(
           processedTimeline.listSiswaTerkumpul.map(async (d, idx) => {
@@ -8651,7 +8668,7 @@ class MainController {
             let metaHasil = { benar: 0 };
             let analisisBenar = {};
             let analisisTotal = {};
-  
+
             await Promise.all(
               pesertaUjian.toJSON().jawabanSiswa.map(async (d) => {
                 if (d.soal.bentuk == "pg") {
@@ -8675,7 +8692,7 @@ class MainController {
                 }
               })
             );
-  
+
             processedTimeline.listSiswaTerkumpul[idx] = {
               ...processedTimeline.listSiswaTerkumpul[idx],
               ...metaHasil,
