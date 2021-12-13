@@ -46756,7 +46756,7 @@ class MainController {
     return semua;
   }
 
-  async downloadRekapAbsenSiswa({ response, request, auth }) {
+  async downloadRekapAbsenSiswa1({ response, request, auth }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -47023,6 +47023,306 @@ class MainController {
           no: `${idx + 1}`,
           user: d ? d.namaSiswa : "-",
           hadir: d ? d.totalHadir : "-",
+          telat: d ? d.totalTelat : "-",
+          sakit: d ? d.totalSakit : "-",
+          izin: d ? d.totalIzin : "-",
+          alpa: d ? d.totalAlpa : "-",
+        });
+      })
+    );
+
+    worksheet.getCell("A1").value = "Rekap Absen";
+    worksheet.getCell("A2").value = sekolah.nama;
+    worksheet.getCell("A3").value = rombel.nama;
+    worksheet.getCell("A4").value = `${awal} sampai ${akhir}`;
+
+    worksheet.views = [
+      {
+        state: "frozen",
+        xSplit: 2,
+        ySplit: 6,
+        topLeftCell: "A6",
+        activeCell: "A6",
+      },
+    ];
+
+    let namaFile = `/uploads/rekap-absen-siswa ${keluarantanggalseconds}.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
+
+  async downloadRekapAbsenSiswa({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+    const user = await auth.getUser();
+    const { role, tanggal_awal, tanggal_akhir, rombel_id } = request.post();
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
+    const tanggalDistinct = await Database.raw(
+      "SELECT DISTINCT DATE_FORMAT(created_at, '%Y-%m-%d') as tanggalDistinct from m_absen WHERE created_at BETWEEN ? AND  ?",
+      [tanggal_awal, tanggal_akhir]
+    );
+
+    const rombel = await MRombel.query().where({ id: rombel_id }).first();
+
+    const anggotaRombel = await MAnggotaRombel.query()
+      .select("m_user_id")
+      .where({ m_rombel_id: rombel_id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    const absenSiswa = await User.query()
+      .select("id", "nama")
+      .with("absen", (builder) => {
+        builder
+          .select("id", "m_user_id", "created_at", "absen")
+          .whereBetween("created_at", [`${tanggal_awal}`, `${tanggal_akhir}`]);
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ role: "siswa" })
+      .whereIn(
+        "id",
+        anggotaRombel.toJSON().map((item) => item.m_user_id)
+      )
+      .fetch();
+
+    // loop pertama untuk nge looping data kepsek
+
+    // loop pertama untuk nge looping data Siswa
+    const rekapAbsenSiswa = await Promise.all(
+      absenSiswa.toJSON().map(async (d) => {
+        let namaSiswa = d.nama;
+        let waSiswa = d.whatsapp;
+        let totalSakit = 0;
+        let totalHadir = 0;
+        let totalTelat = 0;
+        let totalIzin = 0;
+        let totalAlpa = 0;
+
+        // loop ketiga untuk nge looping absen Siswa
+        await Promise.all(
+          d.absen.map(async (e) => {
+            if (e.absen == "sakit") {
+              totalSakit = totalSakit + 1;
+            } else if (e.absen == "izin") {
+              totalIzin = totalIzin + 1;
+            } else if (
+              (await Promise.all(
+                tanggalDistinct.find(async (tanggal) => {
+                  tanggal.tanggalDistinct ==
+                    moment(e.created_at).format("YYYY-MM-DD");
+                })
+              )) !== undefined
+            ) {
+              totalHadir = totalHadir + 1;
+
+              if (moment(e.created_at).format("HH:mm:ss") > "06.30") {
+                totalTelat = totalTelat + 1;
+              }
+            }
+          })
+        );
+
+        totalAlpa =
+          tanggalDistinct[0].length - (totalSakit + totalHadir + totalIzin);
+
+        return {
+          namaSiswa,
+          waSiswa,
+          totalSakit,
+          totalHadir,
+          totalTelat,
+          totalIzin,
+          totalAlpa,
+        };
+      })
+    );
+
+    // return rekapAbsenSiswa;
+
+    let workbook = new Excel.Workbook();
+
+    let worksheet = workbook.addWorksheet(`RekapAbsen`);
+    const awal = moment(`${tanggal_awal}`).format("DD-MM-YYYY");
+    const akhir = moment(`${tanggal_akhir}`).format("DD-MM-YYYY");
+    worksheet.getCell(
+      "A5"
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
+    worksheet.addConditionalFormatting({
+      ref: `A1:G4`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 16,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: `A4:G4`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+    worksheet.mergeCells(`A1:G1`);
+    worksheet.mergeCells(`A2:G2`);
+    worksheet.mergeCells(`A3:G3`);
+    worksheet.mergeCells(`A4:G4`);
+    worksheet.addConditionalFormatting({
+      ref: `A6:G6`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+
+    await Promise.all(
+      rekapAbsenSiswa.map(async (d, idx) => {
+        worksheet.addConditionalFormatting({
+          ref: `B${(idx + 1) * 1 + 6}:G${(idx + 1) * 1 + 6}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet.addConditionalFormatting({
+          ref: `A${(idx + 1) * 1 + 6}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet.getRow(6).values = [
+          "No",
+          "Nama",
+          "Whatsapp",
+          "Telat",
+          "Sakit",
+          "Izin",
+          "Alpa",
+        ];
+
+        worksheet.columns = [
+          { key: "no" },
+          { key: "user" },
+          { key: "whatsapp" },
+          { key: "telat" },
+          { key: "sakit" },
+          { key: "izin" },
+          { key: "alpa" },
+        ];
+
+        let row = worksheet.addRow({
+          no: `${idx + 1}`,
+          user: d ? d.namaSiswa : "-",
+          hadir: d ? d.waSiswa : "-",
           telat: d ? d.totalTelat : "-",
           sakit: d ? d.totalSakit : "-",
           izin: d ? d.totalIzin : "-",
