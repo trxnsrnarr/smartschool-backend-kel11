@@ -44451,16 +44451,13 @@ class MainController {
         builder
           .with("user", (builder) => {
             builder
-              // .with("nilaiSemuaUjian", (builder) => {
-              //   builder.with("mapel").where({ m_ta_id: ta.id });
-              // })
+              .with("nilaiSemuaUjian", (builder) => {
+                builder.with("mapel").where({ m_ta_id: ta.id });
+              })
               .with("profil", (builder) => {
                 builder.select("m_user_id", "nis");
               })
-              .select("id", "nama", "gender")
-              .withCount("nilaiSemuaUjian as total", (builder) => {
-                builder.where({ m_ta_id: ta.id });
-              });
+              .select("id", "nama", "gender");
           })
           .where({ dihapus: 0 });
       })
@@ -44470,7 +44467,7 @@ class MainController {
       .where({ id: rombel_id })
       .first();
 
-    return rombel;
+    // return rombel;
 
     let workbook = new Excel.Workbook();
 
