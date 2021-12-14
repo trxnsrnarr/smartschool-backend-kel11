@@ -4221,6 +4221,9 @@ class MainController {
                   .with("raporEkskul", (builder) => {
                     builder.with("ekskul").where({ dihapus: 0 });
                   })
+                  .with("anggotaEkskul",(builder) => {
+                    builder.with("ekskul").where({ dihapus: 0 });
+                  })
                   .with("prestasi", (builder) => {
                     builder.where({ dihapus: 0 });
                   })
