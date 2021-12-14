@@ -114,6 +114,7 @@ Route.get("/eskul/:ekskul_id", "MainController.detailEskul");
 Route.post("/eskul", "MainController.postEskul");
 Route.put("/eskul/:id", "MainController.putEskul");
 Route.delete("/eskul/:id", "MainController.deleteEskul");
+Route.delete("/anggota-eskul/:ekskul_id", "MainController.deleteAnggotaEskul");
 
 // ta
 Route.get("/ta", "MainController.getTA");
@@ -1158,6 +1159,10 @@ Route.post(
 Route.post(
   "/import/catatan-rapor/",
   "MainController.importKeteranganKelulusan"
+);
+Route.post(
+  "/import/absensi-siswa/",
+  "MainController.importAbsensiSiswa"
 );
 
 // Ortu anak
