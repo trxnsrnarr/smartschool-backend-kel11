@@ -48706,7 +48706,7 @@ class MainController {
     return namaFile;
   }
 
-   async deleteAnggotaEkskul({
+   async deleteAnggotaEskul({
     response,
     request,
     auth,
