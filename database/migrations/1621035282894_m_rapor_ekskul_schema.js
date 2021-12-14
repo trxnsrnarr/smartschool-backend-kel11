@@ -15,10 +15,10 @@ class MRaporEkskulSchema extends Schema {
             .references("m_user.id")
             .onDelete("cascade")
             .onUpdate("cascade");
-          table.integer("m_rombel_id").unsigned().index("m_rombel_id");
+          table.integer("m_ekstrakurikuler_id").unsigned().index("m_ekstrakurikuler_id");
           table
-            .foreign("m_rombel_id")
-            .references("m_rombel.id")
+            .foreign("m_ekstrakurikuler_id")
+            .references("m_ekstrakurikuler.id")
             .onDelete("cascade")
             .onUpdate("cascade");
           table.string("keterangan");
