@@ -122,6 +122,7 @@ const MKalenderPendidikan = use("App/Models/MKalenderPendidikan");
 const MBuktiPelaksanaanSanksi = use("App/Models/MBuktiPelaksanaanSanksi");
 const MBobotNilai = use("App/Models/MBobotNilai");
 const MRegistrasiAkun = use("App/Models/MRegistrasiAkun");
+const MAnggotaEkskul = use("App/Models/MAnggotaEkskul");
 
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
@@ -1907,6 +1908,13 @@ class MainController {
     const { search, page = 1 } = request.get();
 
     let query = MEkstrakurikuler.query()
+      .with("anggotaEkskul", (builder) => {
+        builder
+          .with("user", (builder) => {
+            builder.select("id", "nama");
+          })
+          .where({ dihapus: 0 });
+      })
       .where({ m_sekolah_id: sekolah.id })
       .where({ dihapus: 0 });
 
@@ -1919,7 +1927,7 @@ class MainController {
       data,
     });
   }
-  async detailEkskul({ response, request, auth, params: { ekskul_id } }) {
+  async detailEskul({ response, request, auth, params: { ekskul_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -1932,7 +1940,7 @@ class MainController {
       .with("anggotaEkskul", (builder) => {
         builder
           .with("user", (builder) => {
-            builder.select("id", "nama");
+            builder.select("id", "nama", "whatsapp", "avatar");
           })
           .where({ dihapus: 0 });
       })
@@ -4185,7 +4193,7 @@ class MainController {
       if (data) {
         kkm = await MKategoriMapel.query()
           .with("mapelRapor", (builder) => {
-            builder.with("mataPelajaran").where({dihapus:0});
+            builder.with("mataPelajaran").where({ dihapus: 0 });
           })
           .where({ dihapus: 0 })
           .andWhere({ m_rombel_id: data.m_rombel_id })
@@ -27334,7 +27342,7 @@ class MainController {
     // if (data) {
     const kkm = await MKategoriMapel.query()
       .with("mapelRapor", (builder) => {
-        builder.with("mataPelajaran").where({dihapus:0});
+        builder.with("mataPelajaran").where({ dihapus: 0 });
       })
       .where({ dihapus: 0 })
       .andWhere({ m_rombel_id: rombel_id })
@@ -47537,14 +47545,13 @@ class MainController {
           return `${d.nama} belum terdaftar di Smarteschool`;
         }
 
-        const checkAnggotaEksktrakurikuler =
-          await MAnggotaEksktrakurikuler.query()
-            .andWhere({ m_user_id: checkUser.toJSON().id })
-            .andWhere({ m_ekstrakurikuler_id: m_ekstrakurikuler_id })
-            .first();
+        const checkAnggotaEksktrakurikuler = await MAnggotaEkskul.query()
+          .andWhere({ m_user_id: checkUser.toJSON().id })
+          .andWhere({ m_ekstrakurikuler_id: m_ekstrakurikuler_id })
+          .first();
 
         if (checkAnggotaEksktrakurikuler) {
-          await MAnggotaEksktrakurikuler.query()
+          await MAnggotaEkskul.query()
             .andWhere({ m_user_id: checkUser.toJSON().id })
             .andWhere({ m_ekstrakurikuler_id: m_ekstrakurikuler_id })
             .update({ dihapus: 0, role: d.role });
@@ -47554,7 +47561,7 @@ class MainController {
           };
         }
 
-        await MAnggotaEksktrakurikuler.create({
+        await MAnggotaEkskul.create({
           role: d.role,
           dihapus: 0,
           m_user_id: checkUser.toJSON().id,
@@ -48527,7 +48534,8 @@ class MainController {
     worksheet.getCell("A1").value = "Import Keterangan Kelulusan";
     worksheet.getCell("A2").value = sekolah.nama;
     worksheet.getCell("H4").value = "Catatan : ";
-    worksheet.getCell("H4").value = "Keterangan diisi dengan lulus atau tidak lulus";
+    worksheet.getCell("H4").value =
+      "Keterangan diisi dengan lulus atau tidak lulus";
     worksheet.getCell(
       "A3"
     ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
@@ -48596,96 +48604,99 @@ class MainController {
       ],
     });
     await Promise.all(
-      anggotaRombel.toJSON().sort((a, b) => ("" + a.user.nama).localeCompare(b.user.nama)).map(async (d, idx) => {
-        const keterangan = await MKeteranganRapor.query()
-          .where({ dihapus: 0 })
-          .andWhere({ tipe: tipe })
-          .andWhere({ m_ta_id: ta.id })
-          .andWhere({ m_user_id: d.m_user_id })
-          .first();
+      anggotaRombel
+        .toJSON()
+        .sort((a, b) => ("" + a.user.nama).localeCompare(b.user.nama))
+        .map(async (d, idx) => {
+          const keterangan = await MKeteranganRapor.query()
+            .where({ dihapus: 0 })
+            .andWhere({ tipe: tipe })
+            .andWhere({ m_ta_id: ta.id })
+            .andWhere({ m_user_id: d.m_user_id })
+            .first();
 
-        const user = await User.query().where({ id: d.m_user_id }).first();
+          const user = await User.query().where({ id: d.m_user_id }).first();
 
-        worksheet.addConditionalFormatting({
-          ref: `B${(idx + 1) * 1 + 4}:E${(idx + 1) * 1 + 4}`,
-          rules: [
-            {
-              type: "expression",
-              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-              style: {
-                font: {
-                  name: "Times New Roman",
-                  family: 4,
-                  size: 11,
-                  // bold: true,
-                },
-                alignment: {
-                  vertical: "middle",
-                  horizontal: "left",
-                },
-                border: {
-                  top: { style: "thin" },
-                  left: { style: "thin" },
-                  bottom: { style: "thin" },
-                  right: { style: "thin" },
+          worksheet.addConditionalFormatting({
+            ref: `B${(idx + 1) * 1 + 4}:E${(idx + 1) * 1 + 4}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 11,
+                    // bold: true,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "left",
+                  },
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
                 },
               },
-            },
-          ],
-        });
-        worksheet.addConditionalFormatting({
-          ref: `A${(idx + 1) * 1 + 4}`,
-          rules: [
-            {
-              type: "expression",
-              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-              style: {
-                font: {
-                  name: "Times New Roman",
-                  family: 4,
-                  size: 11,
-                  // bold: true,
-                },
-                alignment: {
-                  vertical: "middle",
-                  horizontal: "center",
-                },
-                border: {
-                  top: { style: "thin" },
-                  left: { style: "thin" },
-                  bottom: { style: "thin" },
-                  right: { style: "thin" },
+            ],
+          });
+          worksheet.addConditionalFormatting({
+            ref: `A${(idx + 1) * 1 + 4}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 11,
+                    // bold: true,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
                 },
               },
-            },
-          ],
-        });
+            ],
+          });
 
-        // add column headers
-        worksheet.getRow(4).values = [
-          "No",
-          "Nama",
-          "Whatsapp",
-          "Catatan",
-          "Keterangan",
-        ];
-        worksheet.columns = [
-          { key: "no" },
-          { key: "nama" },
-          { key: "whatsapp" },
-          { key: "catatan" },
-          { key: "kelulusan" },
-        ];
+          // add column headers
+          worksheet.getRow(4).values = [
+            "No",
+            "Nama",
+            "Whatsapp",
+            "Catatan",
+            "Keterangan",
+          ];
+          worksheet.columns = [
+            { key: "no" },
+            { key: "nama" },
+            { key: "whatsapp" },
+            { key: "catatan" },
+            { key: "kelulusan" },
+          ];
 
-        // Add row using key mapping to columns
-        let row = worksheet.addRow({
-          no: `${idx + 1}`,
-          nama: user ? user.nama : "-",
-          whatsapp: user ? user.whatsapp : "-",
-          catatan: keterangan ? keterangan.catatan : "",
-          kelulusan: keterangan ? keterangan.kelulusan : "",
-        });
-      })
+          // Add row using key mapping to columns
+          let row = worksheet.addRow({
+            no: `${idx + 1}`,
+            nama: user ? user.nama : "-",
+            whatsapp: user ? user.whatsapp : "-",
+            catatan: keterangan ? keterangan.catatan : "",
+            kelulusan: keterangan ? keterangan.kelulusan : "",
+          });
+        })
     );
     let namaFile = `/uploads/rekap-Catatan-Kelulusan-${keluarantanggalseconds}.xlsx`;
 
