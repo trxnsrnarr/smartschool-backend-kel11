@@ -1151,6 +1151,14 @@ Route.post(
   "/download/analisis-materi/:topik_id",
   "MainController.downloadAnalisisMateri"
 );
+Route.post(
+  "/download/catatan-rapor/:rombel_id",
+  "MainController.downloadCatatanKelulusan"
+);
+Route.post(
+  "/import/catatan-rapor/",
+  "MainController.importKeteranganKelulusan"
+);
 
 // Ortu anak
 Route.post("/absen-anak", "MainController.getAbsensiAnak");
