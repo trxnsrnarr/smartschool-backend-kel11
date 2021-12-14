@@ -99,7 +99,8 @@ class User extends Model {
     return this.hasOne("App/Models/MSikapSiswa", "id", "m_user_id");
   }
   sikapYadika() {
-    return this.hasMany("App/Models/MSikapSiswaYadika", "id", "m_user_id");}
+    return this.hasMany("App/Models/MSikapSiswaYadika", "id", "m_user_id");
+  }
   sikapUas() {
     return this.hasOne("App/Models/MSikapSiswa", "id", "m_user_id");
   }
@@ -112,7 +113,7 @@ class User extends Model {
   keteranganPkl() {
     return this.hasMany("App/Models/MKeteranganPkl", "id", "m_user_id");
   }
-  
+
   keteranganPkl1() {
     return this.belongsTo("App/Models/MKeteranganPkl", "id", "m_user_id");
   }
@@ -144,16 +145,16 @@ class User extends Model {
     return this.hasMany("App/Models/MUjianSiswa", "id", "m_user_id");
   }
 
-  pertemuanBk(){
+  pertemuanBk() {
     return this.hasMany("App/Models/MPertemuanBk", "id", "m_user_guru_id");
   }
 
-  jadwalUjianSemua(){
+  jadwalUjianSemua() {
     return this.hasMany("App/Models/MJadwalUjian", "id", "m_user_id");
   }
 
-  pembayaran(){
-    return this.hasMany("App/Models/MPembayaranSiswa", "id", "m_user_id")
+  pembayaran() {
+    return this.hasMany("App/Models/MPembayaranSiswa", "id", "m_user_id");
   }
 }
 

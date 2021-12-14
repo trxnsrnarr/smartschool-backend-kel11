@@ -4143,7 +4143,16 @@ class MainController {
                   builder.where({ dihapus: 0 });
                 })
                 .with("rekapSikap", (builder) => {
+<<<<<<< HEAD
                   builder.with("predikat").where({ dihapus: 0 });
+=======
+                  builder
+                    .with("predikat")
+                    .where({ dihapus: 0 })
+                    .andWhere({
+                      m_mata_pelajaran_id: data.m_mata_pelajaran_id,
+                    });
+>>>>>>> 5a7f4ae9fc566da743491a3164692b96870cdd4f
                 })
                 .with("nilaiUjian", (builder) => {
                   if (data) {
@@ -4201,8 +4210,6 @@ class MainController {
         .where({ m_sekolah_id: sekolah.id })
         .fetch();
 
-      
-
       jadwalMengajar = await MJadwalMengajar.query()
         .with("mataPelajaran", (builder) => {
           builder.with("user");
@@ -4226,7 +4233,12 @@ class MainController {
                     builder.where({ dihapus: 0 });
                   })
                   .with("rekapSikap", (builder) => {
-                    builder.with("predikat").where({ dihapus: 0 }).andWhere({m_mata_pelajaran_id: data.m_mata_pelajaran_id});
+                    builder
+                      .with("predikat")
+                      .where({ dihapus: 0 })
+                      .andWhere({
+                        m_mata_pelajaran_id: data.m_mata_pelajaran_id,
+                      });
                   })
                   .with("nilaiUjian", (builder) => {
                     builder.where({
@@ -8446,7 +8458,9 @@ class MainController {
           builder
             .with("rombel")
             .with("materi", (builder) => {
-              builder.with("bab");
+              builder.with("bab").with("materiKesimpulan", (builder) => {
+                builder.where({ m_user_id: user.id });
+              });
             })
             .with("tugas", (builder) => {
               builder.with("soal", (builder) => {
@@ -26505,7 +26519,12 @@ class MainController {
     });
   }
 
-  async deleteMapelRapor({ response, request, auth, params: { mapelRapor_id } }) {
+  async deleteMapelRapor({
+    response,
+    request,
+    auth,
+    params: { mapelRapor_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -26516,7 +26535,6 @@ class MainController {
 
     const { hide } = request.post();
 
-    
     const mapelRapor = await TkMapelRapor.query()
       .where({ id: mapelRapor_id })
       .update({
@@ -39055,7 +39073,7 @@ class MainController {
     worksheet.autoFilter = {
       from: "A5",
       to: "D5",
-    }
+    };
 
     let namaFile = `/uploads/rekapan-nilai-${
       rekapan.toJSON().rekap.tipe
