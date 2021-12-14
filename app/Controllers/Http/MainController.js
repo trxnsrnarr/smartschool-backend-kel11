@@ -47102,7 +47102,7 @@ class MainController {
       .fetch();
 
     const absenSiswa = await User.query()
-      .select("id", "nama")
+      .select("id", "nama", "whatsapp")
       .with("absen", (builder) => {
         builder
           .select("id", "m_user_id", "created_at", "absen")
