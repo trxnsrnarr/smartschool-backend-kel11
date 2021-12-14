@@ -47337,7 +47337,7 @@ class MainController {
         let row = worksheet.addRow({
           no: `${idx + 1}`,
           user: d ? d.namaSiswa : "-",
-          hadir: d ? d.waSiswa : "-",
+          whatsapp: d ? d.waSiswa : "-",
           telat: d ? d.totalTelat : "-",
           sakit: d ? d.totalSakit : "-",
           izin: d ? d.totalIzin : "-",
