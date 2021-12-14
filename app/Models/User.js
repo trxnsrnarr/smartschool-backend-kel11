@@ -129,6 +129,9 @@ class User extends Model {
   anggotaRombel() {
     return this.belongsTo("App/Models/MAnggotaRombel", "id", "m_user_id");
   }
+  anggotaEkskul() {
+    return this.hasMany("App/Models/MAnggotaEkskul", "id", "m_user_id");
+  }
   sanksiSiswa() {
     return this.hasMany("App/Models/MSanksiSiswa", "id", "m_user_id");
   }
