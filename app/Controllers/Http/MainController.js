@@ -916,6 +916,7 @@ class MainController {
       .select("nama", "whatsapp", "role")
       .where({ whatsapp: `${whatsapp}` })
       .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
       .first();
 
     if (!res) {
