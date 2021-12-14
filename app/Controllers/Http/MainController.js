@@ -5797,6 +5797,41 @@ class MainController {
     });
   }
 
+  async getAnggotaRombel({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { rombel_id } = request.get();
+
+    const rombelBuilder = MRombel.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 });
+    if (rombel_id) {
+      rombelBuilder.where({ id: rombel_id });
+    }
+    const rombelIds = await rombelBuilder.ids();
+    const userIds = await MAnggotaRombel.query()
+      .distinct("m_user_id")
+      .where({ dihapus: 0 })
+      .whereIn("m_rombel_id", rombelIds)
+      .pluck("m_user_id");
+
+    const anggota = await User.query()
+      .select("id", "nama", "whatsapp")
+      .whereIn("id", userIds)
+      .where({ dihapus: 0 })
+      .limit(300)
+      .fetch();
+    return response.ok({
+      anggota,
+    });
+  }
+
   // Belum Validasi
   async postAnggotaRombel({ response, request, auth }) {
     const domain = request.headers().origin;
@@ -21657,41 +21692,35 @@ class MainController {
 
       let nilaiAkhir;
       const nilaiPengetahuan1 = [rataUjian, rata];
-      
+
       const nilaiSebelumAkhir = nilaiPengetahuan1.filter((nilai) => nilai)
-          .length
-          ? 2 *
-            nilaiPengetahuan1
-              .filter((nilai) => nilai)
-              .reduce((a, b) => a + b, 0)
-              : 0;
+        .length
+        ? 2 *
+          nilaiPengetahuan1.filter((nilai) => nilai).reduce((a, b) => a + b, 0)
+        : 0;
 
-        const nilaiUTS =
-          ujian.toJSON().nilaiUTS != null
-            ? ujian.toJSON().nilaiUTS?.nilai
-            : null;
+      const nilaiUTS =
+        ujian.toJSON().nilaiUTS != null ? ujian.toJSON().nilaiUTS?.nilai : null;
 
-        const nilaiUAS =
-          ujian.toJSON().nilaiUAS != null
-            ? ujian.toJSON().nilaiUAS?.nilai
-            : null;
+      const nilaiUAS =
+        ujian.toJSON().nilaiUAS != null ? ujian.toJSON().nilaiUAS?.nilai : null;
 
-        const listNilai = [nilaiSebelumAkhir, nilaiUTS, nilaiUAS];
+      const listNilai = [nilaiSebelumAkhir, nilaiUTS, nilaiUAS];
 
-        if (listNilai.filter((nilai) => nilai != null).length == 2) {
-          nilaiAkhir = listNilai.filter((nilai) => nilai != null).length
-            ? listNilai
-                .filter((nilai) => nilai != null)
-                .reduce((a, b) => a + b, 0) / 3
-            : 0;
-        } else if (listNilai.filter((nilai) => nilai != null).length == 3) {
-          nilaiAkhir = listNilai.filter((nilai) => nilai != null).length
-            ? listNilai
-                .filter((nilai) => nilai != null)
-                .reduce((a, b) => a + b, 0) / 4
-            : 0;
-        }
-        if (ujian) {
+      if (listNilai.filter((nilai) => nilai != null).length == 2) {
+        nilaiAkhir = listNilai.filter((nilai) => nilai != null).length
+          ? listNilai
+              .filter((nilai) => nilai != null)
+              .reduce((a, b) => a + b, 0) / 3
+          : 0;
+      } else if (listNilai.filter((nilai) => nilai != null).length == 3) {
+        nilaiAkhir = listNilai.filter((nilai) => nilai != null).length
+          ? listNilai
+              .filter((nilai) => nilai != null)
+              .reduce((a, b) => a + b, 0) / 4
+          : 0;
+      }
+      if (ujian) {
         await MUjianSiswa.query().where({ id: ujian.id }).update({
           nilai: nilaiAkhir,
         });
@@ -26939,41 +26968,40 @@ class MainController {
 
     let nilaiAkhir;
     // const listNilai = [
-      //   rataUjian,
-      //   rata,
-      //   ujian.toJSON().nilaiUAS ? ujian.toJSON().nilaiUAS?.nilai : null,
-      //   ujian.toJSON().nilaiUTS ? ujian.toJSON().nilaiUTS?.nilai : null,
-      // ];
-      const nilaiPengetahuan1 = [rataUjian, rata];
+    //   rataUjian,
+    //   rata,
+    //   ujian.toJSON().nilaiUAS ? ujian.toJSON().nilaiUAS?.nilai : null,
+    //   ujian.toJSON().nilaiUTS ? ujian.toJSON().nilaiUTS?.nilai : null,
+    // ];
+    const nilaiPengetahuan1 = [rataUjian, rata];
 
-      const nilaiSebelumAkhir = nilaiPengetahuan1.filter((nilai) => nilai)
-      .length
-        ? 2 *
-          nilaiPengetahuan1.filter((nilai) => nilai).reduce((a, b) => a + b, 0)
-        : 0;
+    const nilaiSebelumAkhir = nilaiPengetahuan1.filter((nilai) => nilai).length
+      ? 2 *
+        nilaiPengetahuan1.filter((nilai) => nilai).reduce((a, b) => a + b, 0)
+      : 0;
 
-      const nilaiUTS =
-        ujian.toJSON().nilaiUTS != null ? ujian.toJSON().nilaiUTS?.nilai : null;
+    const nilaiUTS =
+      ujian.toJSON().nilaiUTS != null ? ujian.toJSON().nilaiUTS?.nilai : null;
 
-      const nilaiUAS =
-        ujian.toJSON().nilaiUAS != null ? ujian.toJSON().nilaiUAS?.nilai : null;
+    const nilaiUAS =
+      ujian.toJSON().nilaiUAS != null ? ujian.toJSON().nilaiUAS?.nilai : null;
 
-      const listNilai = [nilaiSebelumAkhir, nilaiUTS, nilaiUAS];
+    const listNilai = [nilaiSebelumAkhir, nilaiUTS, nilaiUAS];
 
-      if (listNilai.filter((nilai) => nilai != null).length == 2) {
-        nilaiAkhir = listNilai.filter((nilai) => nilai != null).length
-          ? listNilai
-              .filter((nilai) => nilai != null)
-              .reduce((a, b) => a + b, 0) / 3
-          : 0;
-      } else if (listNilai.filter((nilai) => nilai != null).length == 3) {
-        nilaiAkhir = listNilai.filter((nilai) => nilai != null).length
+    if (listNilai.filter((nilai) => nilai != null).length == 2) {
+      nilaiAkhir = listNilai.filter((nilai) => nilai != null).length
         ? listNilai
-        .filter((nilai) => nilai != null)
-        .reduce((a, b) => a + b, 0) / 4
+            .filter((nilai) => nilai != null)
+            .reduce((a, b) => a + b, 0) / 3
         : 0;
-      }
-      
+    } else if (listNilai.filter((nilai) => nilai != null).length == 3) {
+      nilaiAkhir = listNilai.filter((nilai) => nilai != null).length
+        ? listNilai
+            .filter((nilai) => nilai != null)
+            .reduce((a, b) => a + b, 0) / 4
+        : 0;
+    }
+
     if (ujian) {
       await MUjianSiswa.query().where({ id: ujian.id }).update({
         nilai: nilaiAkhir,
@@ -38566,48 +38594,48 @@ class MainController {
 
           let nilaiAkhir;
           // const listNilai = [
-            //   rataUjian,
-            //   rata,
-            //   ujian.toJSON().nilaiUAS ? ujian.toJSON().nilaiUAS?.nilai : null,
-            //   ujian.toJSON().nilaiUTS ? ujian.toJSON().nilaiUTS?.nilai : null,
-            // ];
-            const nilaiPengetahuan1 = [rataUjian, rata];
+          //   rataUjian,
+          //   rata,
+          //   ujian.toJSON().nilaiUAS ? ujian.toJSON().nilaiUAS?.nilai : null,
+          //   ujian.toJSON().nilaiUTS ? ujian.toJSON().nilaiUTS?.nilai : null,
+          // ];
+          const nilaiPengetahuan1 = [rataUjian, rata];
 
-            const nilaiSebelumAkhir = nilaiPengetahuan1.filter((nilai) => nilai)
-              .length
-              ? 2 *
-                nilaiPengetahuan1
-                  .filter((nilai) => nilai)
-                  .reduce((a, b) => a + b, 0)
+          const nilaiSebelumAkhir = nilaiPengetahuan1.filter((nilai) => nilai)
+            .length
+            ? 2 *
+              nilaiPengetahuan1
+                .filter((nilai) => nilai)
+                .reduce((a, b) => a + b, 0)
+            : 0;
+
+          const nilaiUTS =
+            ujian.toJSON().nilaiUTS != null
+              ? ujian.toJSON().nilaiUTS?.nilai
+              : null;
+
+          const nilaiUAS =
+            ujian.toJSON().nilaiUAS != null
+              ? ujian.toJSON().nilaiUAS?.nilai
+              : null;
+
+          const listNilai = [nilaiSebelumAkhir, nilaiUTS, nilaiUAS];
+
+          if (listNilai.filter((nilai) => nilai != null).length == 2) {
+            nilaiAkhir = listNilai.filter((nilai) => nilai != null).length
+              ? listNilai
+                  .filter((nilai) => nilai != null)
+                  .reduce((a, b) => a + b, 0) / 3
               : 0;
+          } else if (listNilai.filter((nilai) => nilai != null).length == 3) {
+            nilaiAkhir = listNilai.filter((nilai) => nilai != null).length
+              ? listNilai
+                  .filter((nilai) => nilai != null)
+                  .reduce((a, b) => a + b, 0) / 4
+              : 0;
+          }
 
-            const nilaiUTS =
-              ujian.toJSON().nilaiUTS != null
-                ? ujian.toJSON().nilaiUTS?.nilai
-                : null;
-
-            const nilaiUAS =
-              ujian.toJSON().nilaiUAS != null
-                ? ujian.toJSON().nilaiUAS?.nilai
-                : null;
-
-            const listNilai = [nilaiSebelumAkhir, nilaiUTS, nilaiUAS];
-
-            if (listNilai.filter((nilai) => nilai != null).length == 2) {
-              nilaiAkhir = listNilai.filter((nilai) => nilai != null).length
-                ? listNilai
-                    .filter((nilai) => nilai != null)
-                    .reduce((a, b) => a + b, 0) / 3
-                : 0;
-            } else if (listNilai.filter((nilai) => nilai != null).length == 3) {
-              nilaiAkhir = listNilai.filter((nilai) => nilai != null).length
-                ? listNilai
-                    .filter((nilai) => nilai != null)
-                    .reduce((a, b) => a + b, 0) / 4
-                : 0;
-            }
-
-            if (ujian) {
+          if (ujian) {
             await MUjianSiswa.query().where({ id: ujian.id }).update({
               nilai: nilaiAkhir,
             });
@@ -48706,12 +48734,7 @@ class MainController {
     return namaFile;
   }
 
-   async deleteAnggotaEskul({
-    response,
-    request,
-    auth,
-    params: { ekskul_id },
-  }) {
+  async deleteAnggotaEskul({ response, request, auth, params: { ekskul_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -48736,9 +48759,11 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    const ekskul = await MAnggotaEkskul.query().where({ id: ekskul_id }).update({
-      dihapus: 1,
-    });
+    const ekskul = await MAnggotaEkskul.query()
+      .where({ id: ekskul_id })
+      .update({
+        dihapus: 1,
+      });
 
     if (!ekskul) {
       return response.notFound({
