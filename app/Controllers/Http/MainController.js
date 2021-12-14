@@ -21589,6 +21589,7 @@ class MainController {
           builder.with("rekap", (builder) => {
             builder
               .where({ tipe: "ujian" })
+              .andWhere({ teknik: null })
               .andWhere({ m_ta_id: ta.id })
               .andWhere({ dihapus: 0 })
               .andWhere({ m_materi_id: materi.id });
@@ -38446,6 +38447,7 @@ class MainController {
               builder.with("rekap", (builder) => {
                 builder
                   .where({ tipe: "ujian" })
+                  .andWhere({ teknik: null })
                   .andWhere({ m_ta_id: ta.id })
                   .andWhere({ dihapus: 0 })
                   .andWhere({ m_materi_id: materi.id });
