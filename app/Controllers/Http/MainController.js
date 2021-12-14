@@ -4143,16 +4143,7 @@ class MainController {
                   builder.where({ dihapus: 0 });
                 })
                 .with("rekapSikap", (builder) => {
-<<<<<<< HEAD
                   builder.with("predikat").where({ dihapus: 0 });
-=======
-                  builder
-                    .with("predikat")
-                    .where({ dihapus: 0 })
-                    .andWhere({
-                      m_mata_pelajaran_id: data.m_mata_pelajaran_id,
-                    });
->>>>>>> 5a7f4ae9fc566da743491a3164692b96870cdd4f
                 })
                 .with("nilaiUjian", (builder) => {
                   if (data) {
