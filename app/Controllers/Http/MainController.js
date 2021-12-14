@@ -48695,6 +48695,51 @@ class MainController {
     return namaFile;
   }
 
+   async deleteAnggotaEkskul({
+    response,
+    request,
+    auth,
+    params: { ekskul_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
+      return response.forbidden({ message: messageForbidden });
+    }
+
+    const ekskul = await MAnggotaEkskul.query().where({ id: ekskul_id }).update({
+      dihapus: 1,
+    });
+
+    if (!ekskul) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
   async ip({ response, request }) {
     return response.ok({ ip: [request.ip(), request.ips()] });
   }
