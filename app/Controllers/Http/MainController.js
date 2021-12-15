@@ -4143,10 +4143,10 @@ class MainController {
               builder
                 .where({ dihapus: 0 })
                 .with("keteranganRapor", (builder) => {
-                  builder.where({ dihapus: 0 }).where({ tipe: "uts"});
+                  builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id }).where({ tipe: "uts"});
                 })
                 .with("keteranganRaporUas", (builder) => {
-                  builder.where({ dihapus: 0 }).where({ tipe: "uas" });;
+                  builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id }).where({ tipe: "uas" });
                 })
                 .with("keteranganPkl", (builder) => {
                   builder.where({ dihapus: 0 });
@@ -4225,10 +4225,10 @@ class MainController {
                 builder
                   .select("id", "nama", "whatsapp", "email", "avatar", "gender", "agama", "m_sekolah_id")
                   .with("keteranganRapor", (builder) => {
-                    builder.where({ dihapus: 0 }).where({ tipe: "uts"});
+                     builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id }).where({ tipe: "uts"});
                   })
                   .with("keteranganRaporUas", (builder) => {
-                    builder.where({ dihapus: 0 }).where({ tipe: "uas" });;
+                     builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id }).where({ tipe: "uas" });;
                   })
                   .with("keteranganPkl", (builder) => {
                     builder.where({ dihapus: 0 });
@@ -27118,7 +27118,10 @@ class MainController {
     const builder = User.query()
       .with("profil")
       .with("keteranganRapor", (builder) => {
-        builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id });
+        builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id }).where({ tipe: "uts"});
+      })
+      .with("keteranganRaporUas", (builder) => {
+        builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id }).where({ tipe: "uas" });;
       })
       .with("keteranganPkl", (builder) => {
         builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id });
@@ -27283,23 +27286,6 @@ class MainController {
       // totalSakit: totalSakit,
       // totalIzin: totalIzin,
       // totalAlpa: totalAlpa,
-      totalSakit: [
-        {
-          total: siswa.toJSON().keteranganRapor
-            ? siswa.toJSON().keteranganRapor.sakit
-            : 0,
-        },
-      ],
-      totalIzin: [
-        {
-          total: siswa.toJSON().keteranganRapor
-            ? siswa.toJSON().keteranganRapor.izin
-            : 0,
-        },
-      ],
-      totalAlpa: siswa.toJSON().keteranganRapor
-        ? siswa.toJSON().keteranganRapor.alpa
-        : 0,
       tanggalDistinct: tanggalDistinct,
       muatan,
       totalMapel,
