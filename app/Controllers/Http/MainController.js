@@ -27456,13 +27456,10 @@ class MainController {
         catatan,
         kelulusan,
         dihapus: 0,
+        sakit,
+        izin,
+        alpa,
       });
-
-    await MKeteranganRapor.query().where({ m_user_id: user_id }).update({
-      sakit,
-      izin,
-      alpa,
-    });
 
     if (!keteranganRapor) {
       return response.notFound({
@@ -47154,7 +47151,7 @@ class MainController {
       .fetch();
 
     const absenSiswa = await User.query()
-      .select("id", "nama")
+      .select("id", "nama", "whatsapp")
       .with("absen", (builder) => {
         builder
           .select("id", "m_user_id", "created_at", "absen")
@@ -47389,7 +47386,7 @@ class MainController {
         let row = worksheet.addRow({
           no: `${idx + 1}`,
           user: d ? d.namaSiswa : "-",
-          hadir: d ? d.waSiswa : "-",
+          whatsapp: d ? d.waSiswa : "-",
           telat: d ? d.totalTelat : "-",
           sakit: d ? d.totalSakit : "-",
           izin: d ? d.totalIzin : "-",
@@ -48395,9 +48392,10 @@ class MainController {
         }
 
         await MKeteranganRapor.create({
-          tipe:tipe,
+          m_user_id: userSiswa.id,
+          tipe: tipe,
           dihapus: 0,
-          m_ta_id:ta.id,
+          m_ta_id: ta.id,
           sakit: d.sakit ? d.sakit:"-",
           izin: d.izin ? d.izin:"-",
           alpa: d.alpa ? d.alpa:"-",
