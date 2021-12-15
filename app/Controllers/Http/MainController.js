@@ -13002,6 +13002,7 @@ class MainController {
       const checkIfExist = await TkPesertaUjian.query()
         .where({ m_user_id: user.id })
         .andWhere({ tk_jadwal_ujian_id: tk_jadwal_ujian_id })
+        .where({ dihapus: 0 })
         .first();
 
       if (checkIfExist) {
@@ -26357,7 +26358,7 @@ class MainController {
       .with("mapelRapor", (builder) => {
         builder
           .with("mataPelajaran")
-          .where({ dihapus: 0 })
+          // .where({ dihapus: 0 })
           .orderBy("urutan", "asc");
       })
       .where({ dihapus: 0 })
