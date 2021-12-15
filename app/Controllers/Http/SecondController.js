@@ -403,6 +403,310 @@ class SecondController {
       tunggakan,
     };
   }
+
+  async downloadTunggakan({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
+    const pembayaran = await MPembayaran.query()
+      .select("id", "nama", "bulan")
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+    const jenisPembayaran = await MPembayaran.query()
+      .select("jenis")
+      .distinct("jenis")
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+    const tingkatRombel = await MRombel.query()
+      .distinct("tingkat")
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .pluck("tingkat");
+
+    const {
+      tingkat,
+      pembayaran_id,
+      rombel_id,
+      jenis,
+      tanggal_awal,
+      tanggal_akhir,
+    } = request.get();
+
+    let rombelIds = MRombel.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 });
+
+    if (tingkat) {
+      rombelIds.where({ tingkat });
+    }
+    rombelIds = await rombelIds.ids();
+
+    const pembayaranIds = await MPembayaran.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .ids();
+
+    const pembayaranRombelIds = await TkPembayaranRombel.query()
+      .whereIn("m_rombel_id", rombelIds)
+      .whereIn("m_pembayaran_id", pembayaranIds)
+      .where({ dihapus: 0 })
+      .ids();
+    const siswaIds = await MPembayaranSiswa.query()
+      .distinct("m_user_id")
+      .whereIn("tk_pembayaran_rombel_id", pembayaranRombelIds)
+      .where({ dihapus: 0 })
+      .pluck("m_user_id");
+    let tunggakan = await User.query()
+      .select("id", "nama")
+      .with("pembayaran", (builder) => {
+        builder
+          .whereNot({ status: "lunas" })
+          .whereNull("ditangguhkan")
+          .with("rombelPembayaran", (builder) => {
+            builder
+              .select("id", "m_pembayaran_id")
+              .with("pembayaran", (builder) => {
+                builder.select("id", "jenis", "nominal", "tipe_ujian", "nama");
+              });
+          });
+      })
+      .whereIn("id", siswaIds)
+      .fetch();
+
+    // return {
+    //   pembayaran,
+    //   jenisPembayaran,
+    //   tingkatRombel,
+    //   tunggakan,
+    // };
+    let workbook = new Excel.Workbook();
+
+    let worksheet = workbook.addWorksheet(`Rekap Tunggakan`);
+    worksheet.getCell(
+      "A4"
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
+    worksheet.addConditionalFormatting({
+      ref: `A1:F2`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 16,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: `A3:F3`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+    worksheet.mergeCells(`A1:F1`);
+    worksheet.mergeCells(`A2:F2`);
+    worksheet.mergeCells(`A3:F3`);
+    worksheet.addConditionalFormatting({
+      ref: `A5:F5`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+    await Promise.all(
+      tunggakan.toJSON().map(async (d, idx) => {
+        worksheet.addConditionalFormatting({
+          ref: `B${(idx + 1) * 1 + 5}:F${(idx + 1) * 1 + 5}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet.addConditionalFormatting({
+          ref: `A${(idx + 1) * 1 + 5}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet.getRow(5).values = [
+          "No",
+          "Nama",
+          "SPP",
+          "Ujian",
+          "Lainnya",
+          "Total",
+        ];
+
+        worksheet.columns = [
+          { key: "no" },
+          { key: "nama" },
+          { key: "spp" },
+          { key: "ujian" },
+          { key: "lainnya" },
+          { key: "total" },
+        ];
+
+        let row = worksheet.addRow({
+          no: `${idx + 1}`,
+          nama: d ? d.nama : "-",
+          spp: `${
+            d.pembayaran
+              ? d.pembayaran.filter(
+                  (s) => s.rombelPembayaran.pembayaran.jenis == "spp"
+                ).length
+              : ""
+          } bulan : ${d.pembayaran
+            .filter((c) => c.rombelPembayaran.pembayaran.jenis == "spp")
+            .reduce((a, b) => {
+              return (
+                parseInt(a) + parseInt(b.rombelPembayaran.pembayaran.nominal)
+              );
+            }, 0)}`,
+          ujian: `${d.pembayaran
+            .filter((s) => s.rombelPembayaran.pembayaran.jenis == "ujian")
+            .map((e, nox) => {
+              return `${
+                nox + 1
+              }. ${e.rombelPembayaran.pembayaran.tipe_ujian.toUpperCase()} : Rp${
+                e.rombelPembayaran.pembayaran.nominal
+              }
+              `;
+            })}`,
+          lainnya: `${d.pembayaran
+            .filter((s) => s.rombelPembayaran.pembayaran.jenis == "lainnya")
+            .map((e) => {
+              return `${e.rombelPembayaran.pembayaran.nama} : Rp${e.rombelPembayaran.pembayaran.nominal}
+              `;
+            })}`,
+          total: `Rp${d.pembayaran.reduce((a, b) => {
+            return (
+              parseInt(a) + parseInt(b.rombelPembayaran.pembayaran.nominal)
+              )
+            ;
+          }, 0)}`,
+        });
+      })
+    );
+    worksheet.getCell("A1").value = "Rekap Tunggakan";
+    worksheet.getCell("A2").value = sekolah.nama;
+    worksheet.getCell("A3").value = `${tingkat}`;
+
+    let namaFile = `/uploads/rekap-tunggakan-${keluarantanggalseconds}.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
 }
 
 module.exports = SecondController;
