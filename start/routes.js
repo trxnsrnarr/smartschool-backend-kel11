@@ -662,6 +662,10 @@ Route.post(
   "/absen-siswa/rekapdownload",
   "MainController.downloadRekapAbsenSiswa"
 );
+Route.post(
+  "/absen-siswa2/rekapdownload",
+  "MainController.downloadRekapAbsenSiswa2"
+);
 
 // Mutasi Service
 Route.post("/mutasi/importmutasi", "MainController.importMutasi");
