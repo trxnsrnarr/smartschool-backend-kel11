@@ -4142,7 +4142,10 @@ class MainController {
               builder
                 .where({ dihapus: 0 })
                 .with("keteranganRapor", (builder) => {
-                  builder.where({ dihapus: 0 });
+                  builder.where({ dihapus: 0 }).where({ tipe: "uts"});
+                })
+                .with("keteranganRaporUas", (builder) => {
+                  builder.where({ dihapus: 0 }).where({ tipe: "uas" });;
                 })
                 .with("keteranganPkl", (builder) => {
                   builder.where({ dihapus: 0 });
@@ -4221,7 +4224,10 @@ class MainController {
                 builder
                   .select("id", "nama", "whatsapp", "email", "avatar", "gender", "agama", "m_sekolah_id")
                   .with("keteranganRapor", (builder) => {
-                    builder.where({ dihapus: 0 });
+                    builder.where({ dihapus: 0 }).where({ tipe: "uts"});
+                  })
+                  .with("keteranganRaporUas", (builder) => {
+                    builder.where({ dihapus: 0 }).where({ tipe: "uas" });;
                   })
                   .with("keteranganPkl", (builder) => {
                     builder.where({ dihapus: 0 });
@@ -27585,7 +27591,7 @@ class MainController {
     const ta = await this.getTAAktif(sekolah);
     const user = await auth.getUser();
 
-    const { catatan, kelulusan } = request.post();
+    const { catatan, kelulusan, tipe } = request.post();
     const rules = {
       kelulusan: "required",
     };
@@ -27600,6 +27606,7 @@ class MainController {
     const keteranganRapor = await MKeteranganRapor.create({
       catatan,
       kelulusan,
+      tipe,
       m_ta_id: ta.id,
       m_user_id: user_id,
       dihapus: 0,
@@ -27619,7 +27626,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { catatan, kelulusan, sakit, izin, alpa } = request.post();
+    const { catatan, kelulusan, sakit, izin, alpa, tipe } = request.post();
     const rules = {
       kelulusan: "required",
     };
@@ -27633,6 +27640,7 @@ class MainController {
 
     const keteranganRapor = await MKeteranganRapor.query()
       .where({ m_user_id: user_id })
+      .where({ tipe })
       .update({
         catatan,
         kelulusan,
@@ -48328,7 +48336,7 @@ class MainController {
     return namaFile;
   }
 
-  async importAbsensiSiswaServices(filelocation, sekolah, ta, tipe) {
+  async importAbsensiSiswaServices(filelocation, sekolah, ta, tipe = "uas") {
     var workbook = new Excel.Workbook();
 
     workbook = await workbook.xlsx.readFile(filelocation);
@@ -48380,15 +48388,14 @@ class MainController {
           return;
         }
 
-        // await MKeteranganRapor.create({
-        //   tipe:tipe,
-        //   dihapus: 0,
-        //   m_ta_id:ta.id,
-        //   sakit: d.sakit ? d.sakit:"-",
-        //   izin: d.izin ? d.izin:"-",
-        //   alpa: d.alpa ? d.alpa:"-",
-
-        // })
+        await MKeteranganRapor.create({
+          tipe:tipe,
+          dihapus: 0,
+          m_ta_id:ta.id,
+          sakit: d.sakit ? d.sakit:"-",
+          izin: d.izin ? d.izin:"-",
+          alpa: d.alpa ? d.alpa:"-",
+        })
 
         return "Siswa Belum ada Keterangan";
       })

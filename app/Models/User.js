@@ -110,6 +110,9 @@ class User extends Model {
   keteranganRapor() {
     return this.hasOne("App/Models/MKeteranganRapor", "id", "m_user_id");
   }
+  keteranganRaporUas() {
+    return this.hasOne("App/Models/MKeteranganRapor", "id", "m_user_id");
+  }
   keteranganPkl() {
     return this.hasMany("App/Models/MKeteranganPkl", "id", "m_user_id");
   }
