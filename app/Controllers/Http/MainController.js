@@ -4219,7 +4219,7 @@ class MainController {
             builder
               .with("user", async (builder) => {
                 builder
-                  .select("id", "nama", "whatsapp", "email", "avatar", "gender")
+                  .select("id", "nama", "whatsapp", "email", "avatar", "gender", "agama", "m_sekolah_id")
                   .with("keteranganRapor", (builder) => {
                     builder.where({ dihapus: 0 });
                   })
