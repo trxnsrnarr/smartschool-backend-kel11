@@ -658,6 +658,7 @@ Route.post("/gtk/import-singkat", "MainController.importGTK2");
 
 Route.post("/absen/rekapdownload", "MainController.downloadRekapAbsen");
 Route.post("/absen-siswa/rekapdownload", "MainController.downloadRekapAbsenSiswa");
+Route.post("/absen-siswa2/rekapdownload", "MainController.downloadRekapAbsenSiswa2");
 
 // Mutasi Service
 Route.post("/mutasi/importmutasi", "MainController.importMutasi");
