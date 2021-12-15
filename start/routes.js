@@ -233,6 +233,7 @@ Route.post("/rek-sekolah/download", "MainController.downloadRekening");
 
 // tunggakan 
 Route.get("/tunggakan", "SecondController.getTunggakan");
+Route.post("/download/tunggakan", "SecondController.downloadTunggakan");
 
 // pembayaran
 Route.get("/pembayaran", "MainController.getPembayaran");
@@ -1136,6 +1137,10 @@ Route.post(
 Route.post(
   "/download/ledger-nilai/:rombel_id",
   "MainController.downloadLedgerNilai"
+);
+Route.post(
+  "/download/ledger-nilai-yadika/:rombel_id",
+  "MainController.downloadLedgerNilaiYadika"
 );
 
 Route.post("/naik-kelas-jam", "MainController.naikTAJam");
