@@ -10,6 +10,9 @@ class MRaporEkskul extends Model {
   ekskul() {
     return this.belongsTo("App/Models/MEkstrakurikuler");
   }
+  rombel() {
+    return this.belongsTo("App/Models/MRombel");
+  }
 }
 
 module.exports = MRaporEkskul;

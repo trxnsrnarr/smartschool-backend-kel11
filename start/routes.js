@@ -159,6 +159,7 @@ Route.get(
 );
 // Route.get("/rombel/rapor/:user_id", "MainController.getRombelRapor");
 // anggota rombel
+Route.get("/anggota-rombel", "MainController.getAnggotaRombel");
 Route.post("/anggota-rombel", "MainController.postAnggotaRombel");
 Route.post("/anggota-rombel/import", "MainController.importAnggotaRombel");
 Route.post(
@@ -231,7 +232,7 @@ Route.put("/rek-sekolah/:rek_sekolah_id", "MainController.putRekSekolah");
 Route.delete("/rek-sekolah/:rek_sekolah_id", "MainController.deleteRekSekolah");
 Route.post("/rek-sekolah/download", "MainController.downloadRekening");
 
-// tunggakan 
+// tunggakan
 Route.get("/tunggakan", "SecondController.getTunggakan");
 Route.post("/download/tunggakan", "SecondController.downloadTunggakan");
 
@@ -657,8 +658,14 @@ Route.post("/gtk/import", "MainController.importGTK");
 Route.post("/gtk/import-singkat", "MainController.importGTK2");
 
 Route.post("/absen/rekapdownload", "MainController.downloadRekapAbsen");
-Route.post("/absen-siswa/rekapdownload", "MainController.downloadRekapAbsenSiswa");
-Route.post("/absen-siswa2/rekapdownload", "MainController.downloadRekapAbsenSiswa2");
+Route.post(
+  "/absen-siswa/rekapdownload",
+  "MainController.downloadRekapAbsenSiswa"
+);
+Route.post(
+  "/absen-siswa2/rekapdownload",
+  "MainController.downloadRekapAbsenSiswa2"
+);
 
 // Mutasi Service
 Route.post("/mutasi/importmutasi", "MainController.importMutasi");
@@ -774,7 +781,10 @@ Route.put(
   "/buku-induk/rapor/mapel/:mapelRapor_id",
   "MainController.putMapelRapor"
 );
-Route.delete("/buku-induk/rapor/mapel", "MainController.deleteMapelRapor");
+Route.delete(
+  "/buku-induk/rapor/mapel/:mapelRapor_id",
+  "MainController.deleteMapelRapor"
+);
 Route.get(
   "/buku-induk/:rombel_id/:user_id",
   "MainController.detailBukuIndukSiswa"
@@ -1125,7 +1135,10 @@ Route.post("/resend", "MainController.resendAktivasi");
 Route.post("/danger/hack", "MainController.putRekapNilaiAll");
 Route.post("/danger/hack/ujian", "MainController.hackJadwalUjian");
 Route.post("/danger/hack/ujian-nilai", "MainController.hackUjianSiswaNilai");
-Route.post("/danger/hack/ujian-nilai-keterampilan", "MainController.hackUjianSiswaNilaiKeterampilan");
+Route.post(
+  "/danger/hack/ujian-nilai-keterampilan",
+  "MainController.hackUjianSiswaNilaiKeterampilan"
+);
 
 Route.post(
   "/download/rekap-sikap/:rombel_id/:mata_pelajaran_id",
@@ -1166,10 +1179,7 @@ Route.post(
   "/import/catatan-rapor/",
   "MainController.importKeteranganKelulusan"
 );
-Route.post(
-  "/import/absensi-siswa/",
-  "MainController.importAbsensiSiswa"
-);
+Route.post("/import/absensi-siswa/", "MainController.importAbsensiSiswa");
 
 // Ortu anak
 Route.post("/absen-anak", "MainController.getAbsensiAnak");

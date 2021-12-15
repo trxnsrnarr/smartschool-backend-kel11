@@ -122,6 +122,7 @@ const MKalenderPendidikan = use("App/Models/MKalenderPendidikan");
 const MBuktiPelaksanaanSanksi = use("App/Models/MBuktiPelaksanaanSanksi");
 const MBobotNilai = use("App/Models/MBobotNilai");
 const MRegistrasiAkun = use("App/Models/MRegistrasiAkun");
+const MAnggotaEkskul = use("App/Models/MAnggotaEkskul");
 
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
@@ -1908,6 +1909,13 @@ class MainController {
     const { search, page = 1 } = request.get();
 
     let query = MEkstrakurikuler.query()
+      .with("anggotaEkskul", (builder) => {
+        builder
+          .with("user", (builder) => {
+            builder.select("id", "nama");
+          })
+          .where({ dihapus: 0 });
+      })
       .where({ m_sekolah_id: sekolah.id })
       .where({ dihapus: 0 });
 
@@ -1920,7 +1928,7 @@ class MainController {
       data,
     });
   }
-  async detailEkskul({ response, request, auth, params: { ekskul_id } }) {
+  async detailEskul({ response, request, auth, params: { ekskul_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -1933,7 +1941,7 @@ class MainController {
       .with("anggotaEkskul", (builder) => {
         builder
           .with("user", (builder) => {
-            builder.select("id", "nama");
+            builder.select("id", "nama", "whatsapp", "avatar");
           })
           .where({ dihapus: 0 });
       })
@@ -4212,7 +4220,7 @@ class MainController {
             builder
               .with("user", async (builder) => {
                 builder
-                  .select("id", "nama", "whatsapp", "email", "avatar", "gender")
+                  .select("id", "nama", "whatsapp", "email", "avatar", "gender", "agama", "m_sekolah_id")
                   .with("keteranganRapor", (builder) => {
                     builder.where({ dihapus: 0 });
                   })
@@ -5790,6 +5798,41 @@ class MainController {
 
     return response.ok({
       message: messageDeleteSuccess,
+    });
+  }
+
+  async getAnggotaRombel({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { rombel_id } = request.get();
+
+    const rombelBuilder = MRombel.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 });
+    if (rombel_id) {
+      rombelBuilder.where({ id: rombel_id });
+    }
+    const rombelIds = await rombelBuilder.ids();
+    const userIds = await MAnggotaRombel.query()
+      .distinct("m_user_id")
+      .where({ dihapus: 0 })
+      .whereIn("m_rombel_id", rombelIds)
+      .pluck("m_user_id");
+
+    const anggota = await User.query()
+      .select("id", "nama", "whatsapp")
+      .whereIn("id", userIds)
+      .where({ dihapus: 0 })
+      .limit(300)
+      .fetch();
+    return response.ok({
+      anggota,
     });
   }
 
@@ -12960,6 +13003,7 @@ class MainController {
       const checkIfExist = await TkPesertaUjian.query()
         .where({ m_user_id: user.id })
         .andWhere({ tk_jadwal_ujian_id: tk_jadwal_ujian_id })
+        .where({ dihapus: 0 })
         .first();
 
       if (checkIfExist) {
@@ -26223,7 +26267,7 @@ class MainController {
       .with("mapelRapor", (builder) => {
         builder
           .with("mataPelajaran")
-          .where({ dihapus: 0 })
+          // .where({ dihapus: 0 })
           .orderBy("urutan", "asc");
       })
       .where({ dihapus: 0 })
@@ -26782,6 +26826,7 @@ class MainController {
       .where({ m_user_id: user_id })
       .fetch();
 
+<<<<<<< HEAD
     const { nilaiAkhir, ujian, rata, rataUjian, data, dataUjian } =
       await HitungNilaiAkhir({
         rekap,
@@ -26790,6 +26835,100 @@ class MainController {
         user_id,
         ta,
         sekolah,
+=======
+    const ujian = await MUjianSiswa.query()
+      .with("nilaiUAS", (builder) => {
+        builder.select("id", "nilai");
+      })
+      .with("nilaiUTS", (builder) => {
+        builder.select("id", "nilai");
+      })
+      .where({ m_user_id: user_id })
+      .andWhere({ m_mata_pelajaran_id: mapel.id })
+      .first();
+
+    const result = await Promise.all(
+      rekap.toJSON().map(async (d) => {
+        if (d.rekapRombel.rekap == null) {
+          return;
+        }
+        return d;
+      })
+    );
+
+    const data = result.filter((d) => d != null);
+
+    let jumlah1 = 0;
+
+    result
+      .filter((d) => d != null)
+      .forEach((d) => {
+        jumlah1 += d.nilai;
+      });
+
+    const rata = jumlah1 / data.length;
+
+    const result1 = await Promise.all(
+      rekapUjian.toJSON().map(async (d) => {
+        if (d.rekapRombel.rekap == null) {
+          return;
+        }
+        return d;
+      })
+    );
+
+    const dataUjian = result1.filter((d) => d != null);
+
+    let jumlah = 0;
+
+    result1
+      .filter((d) => d != null)
+      .forEach((d) => {
+        jumlah += d.nilai;
+      });
+
+    const rataUjian = jumlah / dataUjian.length;
+
+    let nilaiAkhir;
+    // const listNilai = [
+    //   rataUjian,
+    //   rata,
+    //   ujian.toJSON().nilaiUAS ? ujian.toJSON().nilaiUAS?.nilai : null,
+    //   ujian.toJSON().nilaiUTS ? ujian.toJSON().nilaiUTS?.nilai : null,
+    // ];
+    const nilaiPengetahuan1 = [rataUjian, rata];
+
+    const nilaiSebelumAkhir = nilaiPengetahuan1.filter((nilai) => nilai).length
+      ? 2 *
+        nilaiPengetahuan1.filter((nilai) => nilai).reduce((a, b) => a + b, 0)
+      : 0;
+
+    const nilaiUTS =
+      ujian.toJSON().nilaiUTS != null ? ujian.toJSON().nilaiUTS?.nilai : null;
+
+    const nilaiUAS =
+      ujian.toJSON().nilaiUAS != null ? ujian.toJSON().nilaiUAS?.nilai : null;
+
+    const listNilai = [nilaiSebelumAkhir, nilaiUTS, nilaiUAS];
+
+    if (listNilai.filter((nilai) => nilai != null).length == 2) {
+      nilaiAkhir = listNilai.filter((nilai) => nilai != null).length
+        ? listNilai
+            .filter((nilai) => nilai != null)
+            .reduce((a, b) => a + b, 0) / 3
+        : 0;
+    } else if (listNilai.filter((nilai) => nilai != null).length == 3) {
+      nilaiAkhir = listNilai.filter((nilai) => nilai != null).length
+        ? listNilai
+            .filter((nilai) => nilai != null)
+            .reduce((a, b) => a + b, 0) / 4
+        : 0;
+    }
+
+    if (ujian) {
+      await MUjianSiswa.query().where({ id: ujian.id }).update({
+        nilai: nilaiAkhir,
+>>>>>>> 7a680de45ec018bc0f30f4416dca48b0e03aa60d
       });
     // const dataUjian1 =
     //   result1.reduce((a, b) => a.nilai + b, 0) / result1.length;
@@ -38312,6 +38451,7 @@ class MainController {
             }
           }
 
+<<<<<<< HEAD
           await HitungNilaiAkhir({
             rekap,
             rekapUjian,
@@ -38320,6 +38460,68 @@ class MainController {
             ta,
             sekolah,
           });
+=======
+          let nilaiAkhir;
+          // const listNilai = [
+          //   rataUjian,
+          //   rata,
+          //   ujian.toJSON().nilaiUAS ? ujian.toJSON().nilaiUAS?.nilai : null,
+          //   ujian.toJSON().nilaiUTS ? ujian.toJSON().nilaiUTS?.nilai : null,
+          // ];
+          const nilaiPengetahuan1 = [rataUjian, rata];
+
+          const nilaiSebelumAkhir = nilaiPengetahuan1.filter((nilai) => nilai)
+            .length
+            ? 2 *
+              nilaiPengetahuan1
+                .filter((nilai) => nilai)
+                .reduce((a, b) => a + b, 0)
+            : 0;
+
+          const nilaiUTS =
+            ujian.toJSON().nilaiUTS != null
+              ? ujian.toJSON().nilaiUTS?.nilai
+              : null;
+
+          const nilaiUAS =
+            ujian.toJSON().nilaiUAS != null
+              ? ujian.toJSON().nilaiUAS?.nilai
+              : null;
+
+          const listNilai = [nilaiSebelumAkhir, nilaiUTS, nilaiUAS];
+
+          if (listNilai.filter((nilai) => nilai != null).length == 2) {
+            nilaiAkhir = listNilai.filter((nilai) => nilai != null).length
+              ? listNilai
+                  .filter((nilai) => nilai != null)
+                  .reduce((a, b) => a + b, 0) / 3
+              : 0;
+          } else if (listNilai.filter((nilai) => nilai != null).length == 3) {
+            nilaiAkhir = listNilai.filter((nilai) => nilai != null).length
+              ? listNilai
+                  .filter((nilai) => nilai != null)
+                  .reduce((a, b) => a + b, 0) / 4
+              : 0;
+          }
+
+          if (ujian) {
+            await MUjianSiswa.query().where({ id: ujian.id }).update({
+              nilai: nilaiAkhir,
+            });
+          } else {
+            // const listNilai = [rataUjian, rata];
+            // nilaiAkhir = listNilai.filter((nilai) => nilai).length
+            //   ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) /
+            //     listNilai.filter((nilai) => nilai).length
+            //   : 0;
+            await MUjianSiswa.create({
+              m_ta_id: ta.id,
+              m_user_id: user_id,
+              m_mata_pelajaran_id: mapel.id,
+              nilai: nilaiAkhir,
+            });
+          }
+>>>>>>> 7a680de45ec018bc0f30f4416dca48b0e03aa60d
         } else if (rekapRombel.toJSON().rekap.tipe == "keterampilan") {
           const rekap = await TkRekapNilai.query()
             .with("rekapRombel", (builder) => {
@@ -46802,7 +47004,7 @@ class MainController {
       .fetch();
 
     const absenSiswa = await User.query()
-      .select("id", "nama")
+      .select("id", "nama", "whatsapp")
       .with("absen", (builder) => {
         builder
           .select("id", "m_user_id", "created_at", "absen")
@@ -47037,7 +47239,7 @@ class MainController {
         let row = worksheet.addRow({
           no: `${idx + 1}`,
           user: d ? d.namaSiswa : "-",
-          hadir: d ? d.waSiswa : "-",
+          whatsapp: d ? d.waSiswa : "-",
           telat: d ? d.totalTelat : "-",
           sakit: d ? d.totalSakit : "-",
           izin: d ? d.totalIzin : "-",
@@ -47541,14 +47743,13 @@ class MainController {
           return `${d.nama} belum terdaftar di Smarteschool`;
         }
 
-        const checkAnggotaEksktrakurikuler =
-          await MAnggotaEksktrakurikuler.query()
-            .andWhere({ m_user_id: checkUser.toJSON().id })
-            .andWhere({ m_ekstrakurikuler_id: m_ekstrakurikuler_id })
-            .first();
+        const checkAnggotaEksktrakurikuler = await MAnggotaEkskul.query()
+          .andWhere({ m_user_id: checkUser.toJSON().id })
+          .andWhere({ m_ekstrakurikuler_id: m_ekstrakurikuler_id })
+          .first();
 
         if (checkAnggotaEksktrakurikuler) {
-          await MAnggotaEksktrakurikuler.query()
+          await MAnggotaEkskul.query()
             .andWhere({ m_user_id: checkUser.toJSON().id })
             .andWhere({ m_ekstrakurikuler_id: m_ekstrakurikuler_id })
             .update({ dihapus: 0, role: d.role });
@@ -47558,7 +47759,7 @@ class MainController {
           };
         }
 
-        await MAnggotaEksktrakurikuler.create({
+        await MAnggotaEkskul.create({
           role: d.role,
           dihapus: 0,
           m_user_id: checkUser.toJSON().id,
@@ -48703,12 +48904,16 @@ class MainController {
     return namaFile;
   }
 
+<<<<<<< HEAD
   async deleteAnggotaEkskul({
     response,
     request,
     auth,
     params: { ekskul_id },
   }) {
+=======
+  async deleteAnggotaEskul({ response, request, auth, params: { ekskul_id } }) {
+>>>>>>> 7a680de45ec018bc0f30f4416dca48b0e03aa60d
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
