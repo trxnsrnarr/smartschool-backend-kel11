@@ -123,6 +123,8 @@ const MBobotNilai = use("App/Models/MBobotNilai");
 const MRegistrasiAkun = use("App/Models/MRegistrasiAkun");
 const MKeuAkun = use("App/Models/MKeuAkun");
 const MKeuTemplateAkun = use("App/Models/MKeuTemplateAkun");
+const MKeuJurnal = use("App/Models/MKeuJurnal");
+const MKeuTransaksi = use("App/Models/MKeuTransaksi");
 
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
@@ -1009,6 +1011,179 @@ class SecondController {
 
     return response.ok({
       message: messagePutSuccess,
+    });
+  }
+  async postTransaksi({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { nama, nomor, tanggal, jurnal = [] } = request.post();
+
+    const rules = {
+      nama: "required",
+      nomor: "required",
+      tanggal: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+      "nomor.required": "Nomor harus diisi",
+      "tanggal.required": "Tanggal harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const transaksi = await MKeuTransaksi.create({
+      nama,
+      nomor,
+      tanggal,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+
+    await Promise.all(jurnal.toJSON().map(async (d) => {
+      await MKeuJurnal.create({
+        jenis: d.jenis,
+        m_keu_transaksi_id: transaksi.id,
+        m_keu_akun_id: d.m_keu_akun_id,
+        saldo: d.saldo,
+        dihapus:0,
+      })
+    }));
+
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+  async putKeuAkun({ response, request, auth, params: { keu_akun_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let template = await MKeuTemplateAkun.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .first();
+    if (!template) {
+      template = await MKeuTemplateAkun.create({
+        m_sekolah_id: sekolah.id,
+        template: "[]",
+      });
+    }
+
+    const user = await auth.getUser();
+
+    let { nama, kode, bank, norek, saldo, rek, struktur } = request.post();
+
+    const rules = {
+      nama: "required",
+      kode: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+      "kode.required": "Kode harus dipilih",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const akun = await MKeuAkun.query().where({ id: keu_akun_id }).first();
+    let update;
+
+    const check = await MRekSekolah.query()
+      .where({ m_keu_akun_id: akun.id })
+      .first();
+    if (rek) {
+      if (check) {
+        await MRekSekolah.query().where({ id: check.id }).update({
+          bank,
+          norek,
+          saldo,
+          jenis: nama,
+          dihapus: 0,
+        });
+      } else {
+        await MRekSekolah.create({
+          bank,
+          norek,
+          nama,
+          jenis: nama,
+          saldo,
+          dihapus: 0,
+          m_sekolah_id: sekolah.id,
+          m_keu_akun_id: akun.id,
+        });
+      }
+    } else if (check) {
+      await MRekSekolah.query().where({ id: check.id }).update({
+        dihapus: 1,
+      });
+    }
+
+    update = await MKeuAkun.query().where({ id: keu_akun_id }).update({
+      nama,
+      kode,
+      dihapus: 0,
+      m_rek_sekolah_id: null,
+    });
+    if (!update) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteKeuAkun({ response, request, auth, params: { keu_akun_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const akun = await MKeuAkun.query().where({ id: keu_akun_id }).first();
+    const rek = await MRekSekolah.query()
+      .where({ m_keu_akun_id: akun.id })
+      .first();
+
+    if (rek) {
+      await MRekSekolah.query().where({ id: rek.id }).update({
+        dihapus: 1,
+      });
+    }
+
+    const update = await MKeuAkun.query().where({ id: keu_akun_id }).update({
+      dihapus: 1,
+    });
+
+    if (!update) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
     });
   }
 }
