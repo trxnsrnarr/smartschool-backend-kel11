@@ -13,7 +13,7 @@ class MKeuTemplateAkunSchema extends Schema {
         .references("m_sekolah.id")
         .onDelete("cascade")
         .onUpdate("cascade");
-      table.text("template")
+      table.text("template", ["mediumtext"])
       table.timestamps();
     });
   }
