@@ -4143,10 +4143,16 @@ class MainController {
               builder
                 .where({ dihapus: 0 })
                 .with("keteranganRapor", (builder) => {
-                  builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id }).where({ tipe: "uts"});
+                  builder
+                    .where({ dihapus: 0 })
+                    .andWhere({ m_ta_id: ta.id })
+                    .where({ tipe: "uts" });
                 })
                 .with("keteranganRaporUas", (builder) => {
-                  builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id }).where({ tipe: "uas" });
+                  builder
+                    .where({ dihapus: 0 })
+                    .andWhere({ m_ta_id: ta.id })
+                    .where({ tipe: "uas" });
                 })
                 .with("keteranganPkl", (builder) => {
                   builder.where({ dihapus: 0 });
@@ -4234,10 +4240,16 @@ class MainController {
                     "m_sekolah_id"
                   )
                   .with("keteranganRapor", (builder) => {
-                     builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id }).where({ tipe: "uts"});
+                    builder
+                      .where({ dihapus: 0 })
+                      .andWhere({ m_ta_id: ta.id })
+                      .where({ tipe: "uts" });
                   })
                   .with("keteranganRaporUas", (builder) => {
-                     builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id }).where({ tipe: "uas" });;
+                    builder
+                      .where({ dihapus: 0 })
+                      .andWhere({ m_ta_id: ta.id })
+                      .where({ tipe: "uas" });
                   })
                   .with("keteranganPkl", (builder) => {
                     builder.where({ dihapus: 0 });
@@ -27127,10 +27139,16 @@ class MainController {
     const builder = User.query()
       .with("profil")
       .with("keteranganRapor", (builder) => {
-        builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id }).where({ tipe: "uts"});
+        builder
+          .where({ dihapus: 0 })
+          .andWhere({ m_ta_id: ta.id })
+          .where({ tipe: "uts" });
       })
       .with("keteranganRaporUas", (builder) => {
-        builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id }).where({ tipe: "uas" });;
+        builder
+          .where({ dihapus: 0 })
+          .andWhere({ m_ta_id: ta.id })
+          .where({ tipe: "uas" });
       })
       .with("keteranganPkl", (builder) => {
         builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id });
@@ -48362,47 +48380,53 @@ class MainController {
       }
     });
 
-    const result = await Promise.all(
-      data.map(async (d) => {
-        const userSiswa = await User.query()
-          .select("id", "whatsapp", "dihapus")
-          .where({ whatsapp: d.whatsapp })
-          .andWhere({ dihapus: 0 })
-          .andWhere({ m_sekolah_id: sekolah.id })
-          .first();
+    const result = [];
+    const trx = await Database.beginTransaction();
+    for (let i = 0; i < data.length; i++) {
+      const d = data[i];
+      const userSiswa = await User.query()
+        .select("id", "whatsapp", "dihapus")
+        .where({ whatsapp: d.whatsapp })
+        .andWhere({ dihapus: 0 })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .first();
 
-        const checkData = await MKeteranganRapor.query()
-          .where({ m_user_id: userSiswa.id })
-          .andWhere({ tipe: tipe })
+      const checkData = await MKeteranganRapor.query()
+        .where({ m_user_id: userSiswa.id })
+        .andWhere({ tipe: tipe })
+        .andWhere({ m_ta_id: ta.id })
+        .first();
+
+      if (checkData) {
+        await MKeteranganRapor.query()
+          .where({ tipe: tipe })
+          .andWhere({ m_user_id: userSiswa.id })
           .andWhere({ m_ta_id: ta.id })
-          .first();
-
-        if (checkData) {
-          await MKeteranganRapor.query()
-            .where({ tipe: tipe })
-            .andWhere({ m_user_id: userSiswa.id })
-            .andWhere({ m_ta_id: ta.id })
-            .update({
+          .update(
+            {
               sakit: d.sakit ? d.sakit : "-",
               izin: d.izin ? d.izin : "-",
               alpa: d.alpa ? d.alpa : "-",
-            });
-          return;
-        }
-
-        await MKeteranganRapor.create({
-          m_user_id: userSiswa.id,
-          tipe: tipe,
-          dihapus: 0,
-          m_ta_id: ta.id,
-          sakit: d.sakit ? d.sakit:"-",
-          izin: d.izin ? d.izin:"-",
-          alpa: d.alpa ? d.alpa:"-",
-        })
-
-        return "Siswa Belum ada Keterangan";
-      })
-    );
+            },
+            trx
+          );
+      } else {
+        await MKeteranganRapor.create(
+          {
+            m_user_id: userSiswa.id,
+            tipe: tipe,
+            dihapus: 0,
+            m_ta_id: ta.id,
+            sakit: d.sakit ? d.sakit : "-",
+            izin: d.izin ? d.izin : "-",
+            alpa: d.alpa ? d.alpa : "-",
+          },
+          trx
+        );
+      }
+      result.push(1);
+    }
+    await trx.commit();
 
     return result;
   }
@@ -48463,45 +48487,57 @@ class MainController {
       }
     });
 
-    const result = await Promise.all(
-      data.map(async (d) => {
-        const userSiswa = await User.query()
-          .select("id", "whatsapp", "dihapus")
-          .where({ whatsapp: d.whatsapp })
-          .andWhere({ dihapus: 0 })
-          .andWhere({ m_sekolah_id: sekolah.id })
-          .first();
+    const result = [];
+    const trx = await Database.beginTransaction();
+    for (let i = 0; i < data.length; i++) {
+      const d = data[i];
+      const userSiswa = await User.query()
+        .select("id", "whatsapp", "dihapus")
+        .where({ whatsapp: d.whatsapp })
+        .andWhere({ dihapus: 0 })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .first();
 
-        const checkData = await MKeteranganRapor.query()
-          .where({ m_user_id: userSiswa.id })
-          .andWhere({ tipe: tipe })
-          .andWhere({ m_ta_id: ta.id })
-          .first();
+      const checkData = await MKeteranganRapor.query()
+        .where({ m_user_id: userSiswa.id })
+        .andWhere({ tipe: tipe })
+        .andWhere({ m_ta_id: ta.id })
+        .first();
 
-        if (!checkData) {
-          if (d.catatan && d.kelulusan) {
-            await MKeteranganRapor.create({
+      if (!checkData) {
+        if (d.catatan && d.kelulusan) {
+          await MKeteranganRapor.create(
+            {
               tipe: tipe,
               dihapus: 0,
               m_ta_id: ta.id,
               m_user_id: userSiswa.id,
               catatan: d.catatan ? d.catatan : "-",
               kelulusan: d.kelulusan ? d.kelulusan : "-",
-            });
-          }
-
-          return;
+            },
+            trx
+          );
         }
-        await MKeteranganRapor.query()
-          .where({ tipe: tipe })
-          .andWhere({ m_user_id: userSiswa.id })
-          .andWhere({ m_ta_id: ta.id })
-          .update({
+
+        return;
+      }
+      const update = await MKeteranganRapor.query()
+        .where({ tipe: tipe })
+        .andWhere({ m_user_id: userSiswa.id })
+        .andWhere({ m_ta_id: ta.id })
+        .update(
+          {
             catatan: d.catatan ? d.catatan : "-",
             kelulusan: d.kelulusan ? d.kelulusan : "-",
-          });
-      })
-    );
+          },
+          trx
+        );
+      result.push(1);
+    }
+    await trx.commit();
+
+    // data.forEach(async (d) => {
+    // });
 
     return result;
   }
