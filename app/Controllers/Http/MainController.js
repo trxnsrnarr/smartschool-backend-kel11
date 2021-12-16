@@ -4143,7 +4143,10 @@ class MainController {
               builder
                 .where({ dihapus: 0 })
                 .with("keteranganRapor", (builder) => {
-                  builder.where({ dihapus: 0 });
+                  builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id }).where({ tipe: "uts"});
+                })
+                .with("keteranganRaporUas", (builder) => {
+                  builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id }).where({ tipe: "uas" });
                 })
                 .with("keteranganPkl", (builder) => {
                   builder.where({ dihapus: 0 });
@@ -4231,7 +4234,10 @@ class MainController {
                     "m_sekolah_id"
                   )
                   .with("keteranganRapor", (builder) => {
-                    builder.where({ dihapus: 0 });
+                     builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id }).where({ tipe: "uts"});
+                  })
+                  .with("keteranganRaporUas", (builder) => {
+                     builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id }).where({ tipe: "uas" });;
                   })
                   .with("keteranganPkl", (builder) => {
                     builder.where({ dihapus: 0 });
@@ -27121,7 +27127,10 @@ class MainController {
     const builder = User.query()
       .with("profil")
       .with("keteranganRapor", (builder) => {
-        builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id });
+        builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id }).where({ tipe: "uts"});
+      })
+      .with("keteranganRaporUas", (builder) => {
+        builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id }).where({ tipe: "uas" });;
       })
       .with("keteranganPkl", (builder) => {
         builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id });
@@ -27286,23 +27295,6 @@ class MainController {
       // totalSakit: totalSakit,
       // totalIzin: totalIzin,
       // totalAlpa: totalAlpa,
-      totalSakit: [
-        {
-          total: siswa.toJSON().keteranganRapor
-            ? siswa.toJSON().keteranganRapor.sakit
-            : 0,
-        },
-      ],
-      totalIzin: [
-        {
-          total: siswa.toJSON().keteranganRapor
-            ? siswa.toJSON().keteranganRapor.izin
-            : 0,
-        },
-      ],
-      totalAlpa: siswa.toJSON().keteranganRapor
-        ? siswa.toJSON().keteranganRapor.alpa
-        : 0,
       tanggalDistinct: tanggalDistinct,
       muatan,
       totalMapel,
@@ -27405,7 +27397,7 @@ class MainController {
     const ta = await this.getTAAktif(sekolah);
     const user = await auth.getUser();
 
-    const { catatan, kelulusan } = request.post();
+    const { catatan, kelulusan, tipe } = request.post();
     const rules = {
       kelulusan: "required",
     };
@@ -27420,6 +27412,7 @@ class MainController {
     const keteranganRapor = await MKeteranganRapor.create({
       catatan,
       kelulusan,
+      tipe,
       m_ta_id: ta.id,
       m_user_id: user_id,
       dihapus: 0,
@@ -27439,7 +27432,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { catatan, kelulusan, sakit, izin, alpa } = request.post();
+    const { catatan, kelulusan, sakit, izin, alpa, tipe } = request.post();
     const rules = {
       kelulusan: "required",
     };
@@ -27453,17 +27446,15 @@ class MainController {
 
     const keteranganRapor = await MKeteranganRapor.query()
       .where({ m_user_id: user_id })
+      .where({ tipe })
       .update({
         catatan,
         kelulusan,
         dihapus: 0,
+        sakit,
+        izin,
+        alpa,
       });
-
-    await MKeteranganRapor.query().where({ m_user_id: user_id }).update({
-      sakit,
-      izin,
-      alpa,
-    });
 
     if (!keteranganRapor) {
       return response.notFound({
@@ -47159,7 +47150,7 @@ class MainController {
       .fetch();
 
     const absenSiswa = await User.query()
-      .select("id", "nama")
+      .select("id", "nama", "whatsapp")
       .with("absen", (builder) => {
         builder
           .select("id", "m_user_id", "created_at", "absen")
@@ -47394,7 +47385,7 @@ class MainController {
         let row = worksheet.addRow({
           no: `${idx + 1}`,
           user: d ? d.namaSiswa : "-",
-          hadir: d ? d.waSiswa : "-",
+          whatsapp: d ? d.waSiswa : "-",
           telat: d ? d.totalTelat : "-",
           sakit: d ? d.totalSakit : "-",
           izin: d ? d.totalIzin : "-",
@@ -48347,7 +48338,7 @@ class MainController {
     return namaFile;
   }
 
-  async importAbsensiSiswaServices(filelocation, sekolah, ta, tipe) {
+  async importAbsensiSiswaServices(filelocation, sekolah, ta, tipe = "uas") {
     var workbook = new Excel.Workbook();
 
     workbook = await workbook.xlsx.readFile(filelocation);
@@ -48399,15 +48390,15 @@ class MainController {
           return;
         }
 
-        // await MKeteranganRapor.create({
-        //   tipe:tipe,
-        //   dihapus: 0,
-        //   m_ta_id:ta.id,
-        //   sakit: d.sakit ? d.sakit:"-",
-        //   izin: d.izin ? d.izin:"-",
-        //   alpa: d.alpa ? d.alpa:"-",
-
-        // })
+        await MKeteranganRapor.create({
+          m_user_id: userSiswa.id,
+          tipe: tipe,
+          dihapus: 0,
+          m_ta_id: ta.id,
+          sakit: d.sakit ? d.sakit:"-",
+          izin: d.izin ? d.izin:"-",
+          alpa: d.alpa ? d.alpa:"-",
+        })
 
         return "Siswa Belum ada Keterangan";
       })
