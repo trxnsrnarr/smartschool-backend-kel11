@@ -16,6 +16,7 @@ class MKeuTransaksiSchema extends Schema {
         .references("m_sekolah.id")
         .onDelete("cascade")
         .onUpdate("cascade");
+      table.boolean("dihapus").defaultTo(0);
       table.timestamps();
     });
   }

@@ -14,13 +14,17 @@ class MKeuJurnalSchema extends Schema {
         .references("m_keu_akun.id")
         .onDelete("cascade")
         .onUpdate("cascade");
-        table.integer("m_riwayat_pembayaran_siswa_id").unsigned().index("m_riwayat_pembayaran_siswa_id");
-        table
-          .foreign("m_riwayat_pembayaran_siswa_id")
-          .references("m_riwayat_pembayaran_siswa.id")
-          .onDelete("cascade")
-          .onUpdate("cascade");
-      table.integer("saldo")
+      table
+        .integer("m_riwayat_pembayaran_siswa_id")
+        .unsigned()
+        .index("m_riwayat_pembayaran_siswa_id");
+      table
+        .foreign("m_riwayat_pembayaran_siswa_id")
+        .references("m_riwayat_pembayaran_siswa.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
+      table.integer("saldo");
+      table.boolean("dihapus").defaultTo(0);
       table.timestamps();
     });
   }
