@@ -123,6 +123,8 @@ const MBobotNilai = use("App/Models/MBobotNilai");
 const MRegistrasiAkun = use("App/Models/MRegistrasiAkun");
 const MKeuAkun = use("App/Models/MKeuAkun");
 const MKeuTemplateAkun = use("App/Models/MKeuTemplateAkun");
+const MKeuJurnal = use("App/Models/MKeuJurnal");
+const MKeuTransaksi = use("App/Models/MKeuTransaksi");
 
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
@@ -1334,6 +1336,144 @@ class SecondController {
       berlangsung,
       terjadwal,
       selesai,
+    });
+  }
+  async postTransaksi({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const user = await auth.getUser();
+
+    let { nama, nomor, tanggal, jurnal = [] } = request.post();
+
+    const rules = {
+      nama: "required",
+      nomor: "required",
+      tanggal: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+      "nomor.required": "Nomor harus diisi",
+      "tanggal.required": "Tanggal harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const transaksi = await MKeuTransaksi.create({
+      nama,
+      nomor,
+      tanggal,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+
+    await Promise.all(
+      jurnal.toJSON().map(async (d) => {
+        await MKeuJurnal.create({
+          jenis: d.jenis,
+          m_keu_transaksi_id: transaksi.id,
+          m_keu_akun_id: d.m_keu_akun_id,
+          saldo: d.saldo,
+          dihapus: 0,
+        });
+      })
+    );
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+  async putTransaksi({ response, request, auth, params: { transaksi_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { nama, nomor, tanggal, jurnal = [] } = request.post();
+
+    const rules = {
+      nama: "required",
+      kode: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+      "kode.required": "Kode harus dipilih",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const transaksi = await MKeuTransaksi.query()
+      .with("jurnal")
+      .where({ id: transaksi_id })
+      .first();
+
+    await Promise.all(
+      jurnal.toJSON().map(async (d) => {
+        await MKeuJurnal.where({ id: d.id }).update({
+          jenis: d.jenis,
+          m_keu_akun_id: d.m_keu_akun_id,
+          saldo: d.saldo,
+          dihapus: 0,
+        });
+      })
+    );
+
+    let update = await MKeuTransaksi.query()
+      .where({ id: transaksi_id })
+      .update({
+        nama,
+        nomor,
+        tanggal,
+      });
+    if (!update) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteTransaksi({ response, request, auth, params: { transaksi_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const update = await MKeuTransaksi.query()
+      .where({ id: transaksi_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!update) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
     });
   }
 }
