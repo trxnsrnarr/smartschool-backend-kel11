@@ -225,6 +225,15 @@ Route.post("/materi", "MainController.postMateri");
 Route.put("/materi/:materi_id", "MainController.putMateri");
 Route.delete("/materi/:materi_id", "MainController.deleteMateri");
 
+// keuangan sekolah
+Route.get("/keuangan-sekolah", "SecondController.getAkunKeuangan")
+Route.put("/keuangan-sekolah", "SecondController.putAkunKeuangan")
+
+// Akun Keuangan sekolah
+Route.post("/akun-sekolah", "SecondController.postKeuAkun")
+Route.put("/akun-sekolah/:keu_akun_id", "SecondController.putKeuAkun")
+Route.delete("/akun-sekolah/:keu_akun_id", "SecondController.deleteKeuAkun")
+
 // no rekening
 Route.get("/rek-sekolah", "MainController.getRekSekolah");
 Route.post("/rek-sekolah", "MainController.postRekSekolah");

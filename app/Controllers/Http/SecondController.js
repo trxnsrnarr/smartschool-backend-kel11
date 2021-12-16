@@ -722,7 +722,7 @@ class SecondController {
 
     const { search } = request.get();
 
-    const query = MKeuTemplateAkunSchema.query().andWhere({
+    const query = MKeuTemplateAkun.query().andWhere({
       m_sekolah_id: sekolah.id,
     });
 
@@ -730,10 +730,55 @@ class SecondController {
       query.where("template", "like", `%${search}%`);
     }
 
-    const template = await query.fetch();
+    const keuangan = await query.first();
+    const akun = await MKeuAkun.query()
+      .with("rek")
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+    const rekening = await MRekSekolah.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
 
     return response.ok({
-      template,
+      keuangan,
+      rekening,
+      akun,
+    });
+  }
+
+  async putAkunKeuangan({ response, request, auth }) {
+    const user = await auth.getUser();
+
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let template = await MKeuTemplateAkun.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .first();
+    if (!template) {
+      template = await MKeuTemplateAkun.create({
+        m_sekolah_id: sekolah.id,
+        template: "[]",
+      });
+    }
+
+    const { struktur } = request.post();
+
+    if (struktur) {
+      await MKeuTemplateAkun.query()
+        .where({ id: template.id })
+        .update({ template: JSON.stringify(struktur) });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
     });
   }
 
@@ -746,9 +791,19 @@ class SecondController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
+    let template = await MKeuTemplateAkun.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .first();
+    if (!template) {
+      template = await MKeuTemplateAkun.create({
+        m_sekolah_id: sekolah.id,
+        template: "[]",
+      });
+    }
+
     const user = await auth.getUser();
 
-    let { nama, kode, nama_bank, norek, saldo, rek } = request.post();
+    let { nama, kode, bank, norek, saldo, rek, struktur } = request.post();
 
     const rules = {
       nama: "required",
@@ -763,49 +818,40 @@ class SecondController {
       return response.unprocessableEntity(validation.messages());
     }
 
+    const akun = await MKeuAkun.create({
+      m_sekolah_id: sekolah.id,
+      nama,
+      kode,
+      dihapus: 0,
+    });
+
     if (rek) {
       await MRekSekolah.create({
         bank,
         norek,
         nama,
         saldo,
-        jenis,
+        jenis: nama,
         dihapus: 0,
         m_sekolah_id: sekolah.id,
-      });
-      const rekening = await MRekSekolah.query()
-        .where({ bank: nama_bank })
-        .andWhere({ m_sekolah_id: sekolah.id })
-        .andWhere({ dihapus: 0 })
-        .andWhere({ saldo: saldo })
-        .andWhere({ norek: norek })
-        .first();
-
-      await MKeuAkun.create({
-        nama,
-        kode,
-        m_rek_sekolah: rekening.id,
-        dihapus: 0,
-      });
-    } else {
-      await MKeuAkun.create({
-        nama,
-        kode,
-        dihapus: 0,
+        m_keu_akun_id: akun.id,
       });
     }
-
-    const akun = await MKeuAkun.query()
-      .where({ nama: nama })
-      .andWhere({ kode: kode })
-      .andWhere({ dihapus: 0 })
-      .first();
-
-    const template = await MKeuTemplateAkunSchema.query()
-      .where({ m_sekolah_id: sekolah.id })
-      .update({
-        template: JSON.stringify(akun),
-      });
+    if (struktur) {
+      await MKeuTemplateAkun.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .update({
+          template: JSON.stringify(struktur),
+        });
+    } else {
+      struktur = JSON.parse(template.template) || [];
+      struktur = [...struktur, { id: akun.id, text: akun.nama }];
+      await MKeuTemplateAkun.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .update({
+          template: JSON.stringify(struktur),
+        });
+    }
 
     return response.ok({
       message: messagePostSuccess,
@@ -820,9 +866,19 @@ class SecondController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
+    let template = await MKeuTemplateAkun.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .first();
+    if (!template) {
+      template = await MKeuTemplateAkun.create({
+        m_sekolah_id: sekolah.id,
+        template: "[]",
+      });
+    }
+
     const user = await auth.getUser();
 
-    let { nama, kode, nama_bank, norek, saldo, rek } = request.post();
+    let { nama, kode, bank, norek, saldo, rek, struktur } = request.post();
 
     const rules = {
       nama: "required",
@@ -840,12 +896,16 @@ class SecondController {
     const akun = await MKeuAkun.query().where({ id: keu_akun_id }).first();
     let update;
 
+    const check = await MRekSekolah.query()
+      .where({ m_keu_akun_id: akun.id })
+      .first();
     if (rek) {
-      if (akun.m_rek_sekolah_id) {
-        await MRekSekolah.where({ id: akun.m_rek_sekolah_id }).update({
+      if (check) {
+        await MRekSekolah.query().where({ id: check.id }).update({
           bank,
           norek,
           saldo,
+          jenis: nama,
           dihapus: 0,
         });
       } else {
@@ -853,35 +913,25 @@ class SecondController {
           bank,
           norek,
           nama,
+          jenis: nama,
           saldo,
-          jenis,
           dihapus: 0,
           m_sekolah_id: sekolah.id,
+          m_keu_akun_id: akun.id,
         });
       }
-      const rekening = await MRekSekolah.query()
-        .where({ bank: nama_bank })
-        .andWhere({ m_sekolah_id: sekolah.id })
-        .andWhere({ dihapus: 0 })
-        .andWhere({ saldo: saldo })
-        .andWhere({ norek: norek })
-        .first();
-
-      update = await MKeuAkun.create({
-        nama,
-        kode,
-        m_rek_sekolah_id: rekening.id,
-        dihapus: 0,
-      });
-    } else {
-      update = await MKeuAkun.where({ id: keu_akun_id }).update({
-        nama,
-        kode,
-        dihapus: 0,
-        m_rek_sekolah_id: null,
+    } else if (check) {
+      await MRekSekolah.query().where({ id: check.id }).update({
+        dihapus: 1,
       });
     }
 
+    update = await MKeuAkun.query().where({ id: keu_akun_id }).update({
+      nama,
+      kode,
+      dihapus: 0,
+      m_rek_sekolah_id: null,
+    });
     if (!update) {
       return response.notFound({
         message: messageNotFound,
@@ -905,14 +955,17 @@ class SecondController {
     const user = await auth.getUser();
 
     const akun = await MKeuAkun.query().where({ id: keu_akun_id }).first();
+    const rek = await MRekSekolah.query()
+      .where({ m_keu_akun_id: akun.id })
+      .first();
 
-    if (akun.m_rek_sekolah_id) {
-      await MRekSekolah.where({ id: akun.m_rek_sekolah_id }).update({
+    if (rek) {
+      await MRekSekolah.query().where({ id: rek.id }).update({
         dihapus: 1,
       });
     }
 
-    const update = await MKeuAkun.create({
+    const update = await MKeuAkun.query().where({ id: keu_akun_id }).update({
       dihapus: 1,
     });
 
@@ -942,7 +995,7 @@ class SecondController {
 
     template = JSON.stringify(template);
 
-    const template = await MKeuTemplateAkunSchema.query()
+    const keuangan = await MKeuTemplateAkun.query()
       .where({ m_sekolah_id: sekolah.id })
       .update({
         template: JSON.stringify(akun),
