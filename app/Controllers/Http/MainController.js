@@ -48404,9 +48404,9 @@ class MainController {
           .andWhere({ m_ta_id: ta.id })
           .update(
             {
-              sakit: d.sakit ? d.sakit : "-",
-              izin: d.izin ? d.izin : "-",
-              alpa: d.alpa ? d.alpa : "-",
+              sakit: d.sakit ? d.sakit : "0",
+              izin: d.izin ? d.izin : "0",
+              alpa: d.alpa ? d.alpa : "0",
             },
             trx
           );
@@ -48417,9 +48417,9 @@ class MainController {
             tipe: tipe,
             dihapus: 0,
             m_ta_id: ta.id,
-            sakit: d.sakit ? d.sakit : "-",
-            izin: d.izin ? d.izin : "-",
-            alpa: d.alpa ? d.alpa : "-",
+            sakit: d.sakit ? d.sakit : "0",
+            izin: d.izin ? d.izin : "0",
+            alpa: d.alpa ? d.alpa : "0",
           },
           trx
         );
