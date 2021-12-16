@@ -1049,22 +1049,23 @@ class SecondController {
       m_sekolah_id: sekolah.id,
     });
 
-    await Promise.all(jurnal.toJSON().map(async (d) => {
-      await MKeuJurnal.create({
-        jenis: d.jenis,
-        m_keu_transaksi_id: transaksi.id,
-        m_keu_akun_id: d.m_keu_akun_id,
-        saldo: d.saldo,
-        dihapus:0,
+    await Promise.all(
+      jurnal.toJSON().map(async (d) => {
+        await MKeuJurnal.create({
+          jenis: d.jenis,
+          m_keu_transaksi_id: transaksi.id,
+          m_keu_akun_id: d.m_keu_akun_id,
+          saldo: d.saldo,
+          dihapus: 0,
+        });
       })
-    }));
-
+    );
 
     return response.ok({
       message: messagePostSuccess,
     });
   }
-  async putKeuAkun({ response, request, auth, params: { keu_akun_id } }) {
+  async putTransaksi({ response, request, auth, params: { transaksi_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -1073,19 +1074,9 @@ class SecondController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let template = await MKeuTemplateAkun.query()
-      .where({ m_sekolah_id: sekolah.id })
-      .first();
-    if (!template) {
-      template = await MKeuTemplateAkun.create({
-        m_sekolah_id: sekolah.id,
-        template: "[]",
-      });
-    }
-
     const user = await auth.getUser();
 
-    let { nama, kode, bank, norek, saldo, rek, struktur } = request.post();
+    let { nama, nomor, tanggal, jurnal = [] } = request.post();
 
     const rules = {
       nama: "required",
@@ -1100,45 +1091,29 @@ class SecondController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const akun = await MKeuAkun.query().where({ id: keu_akun_id }).first();
-    let update;
-
-    const check = await MRekSekolah.query()
-      .where({ m_keu_akun_id: akun.id })
+    const transaksi = await MKeuTransaksi.query()
+      .with("jurnal")
+      .where({ id: transaksi_id })
       .first();
-    if (rek) {
-      if (check) {
-        await MRekSekolah.query().where({ id: check.id }).update({
-          bank,
-          norek,
-          saldo,
-          jenis: nama,
-          dihapus: 0,
-        });
-      } else {
-        await MRekSekolah.create({
-          bank,
-          norek,
-          nama,
-          jenis: nama,
-          saldo,
-          dihapus: 0,
-          m_sekolah_id: sekolah.id,
-          m_keu_akun_id: akun.id,
-        });
-      }
-    } else if (check) {
-      await MRekSekolah.query().where({ id: check.id }).update({
-        dihapus: 1,
-      });
-    }
 
-    update = await MKeuAkun.query().where({ id: keu_akun_id }).update({
-      nama,
-      kode,
-      dihapus: 0,
-      m_rek_sekolah_id: null,
-    });
+    await Promise.all(
+      jurnal.toJSON().map(async (d) => {
+        await MKeuJurnal.where({ id: d.id }).update({
+          jenis: d.jenis,
+          m_keu_akun_id: d.m_keu_akun_id,
+          saldo: d.saldo,
+          dihapus: 0,
+        });
+      })
+    );
+
+    let update = await MKeuTransaksi.query()
+      .where({ id: transaksi_id })
+      .update({
+        nama,
+        nomor,
+        tanggal,
+      });
     if (!update) {
       return response.notFound({
         message: messageNotFound,
@@ -1150,7 +1125,7 @@ class SecondController {
     });
   }
 
-  async deleteKeuAkun({ response, request, auth, params: { keu_akun_id } }) {
+  async deleteTransaksi({ response, request, auth, params: { transaksi_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -1161,20 +1136,11 @@ class SecondController {
 
     const user = await auth.getUser();
 
-    const akun = await MKeuAkun.query().where({ id: keu_akun_id }).first();
-    const rek = await MRekSekolah.query()
-      .where({ m_keu_akun_id: akun.id })
-      .first();
-
-    if (rek) {
-      await MRekSekolah.query().where({ id: rek.id }).update({
+    const update = await MKeuTransaksi.query()
+      .where({ id: transaksi_id })
+      .update({
         dihapus: 1,
       });
-    }
-
-    const update = await MKeuAkun.query().where({ id: keu_akun_id }).update({
-      dihapus: 1,
-    });
 
     if (!update) {
       return response.notFound({
