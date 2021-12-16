@@ -1011,6 +1011,331 @@ class SecondController {
       message: messagePutSuccess,
     });
   }
+
+  async getTimelineBaru({ response, request, auth }) {
+    const user = await auth.getUser();
+
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { m_jadwal_mengajar_id, absen, hari_ini, waktu_saat_ini } =
+      request.get();
+
+    const jadwalMengajar = await MJadwalMengajar.query()
+      .with("rombel")
+      .with("mataPelajaran")
+      .where({ id: m_jadwal_mengajar_id })
+      .first();
+
+    const userIds = await MAnggotaRombel.query()
+      .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
+      .andWhere({ dihapus: 0 })
+      .pluck("m_user_id");
+
+    let berlangsung = [],
+      terjadwal = [],
+      selesai = [];
+
+    if (user.role == "siswa") {
+      const timelineId1 = await MTimeline.query()
+        .whereNull("m_mata_pelajaran_id")
+        .andWhere({ m_rombel_id: jadwalMengajar.toJSON().rombel.id })
+        .andWhere({
+          m_user_id: jadwalMengajar.toJSON().mataPelajaran.m_user_id,
+        })
+        .orWhere({ m_user_id: user.id })
+        .andWhere({ dihapus: 0 })
+        .ids();
+
+      const timelineId2 = await MTimeline.query()
+        .whereNotNull("m_mata_pelajaran_id")
+        .andWhere({ m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id })
+        .andWhere({ m_rombel_id: jadwalMengajar.toJSON().rombel.id })
+        .andWhere({
+          m_user_id: jadwalMengajar.toJSON().mataPelajaran.m_user_id,
+        })
+        .orWhere({ m_user_id: user.id })
+        .andWhere({ dihapus: 0 })
+        .ids();
+
+      const timelineIds = [...timelineId2, ...timelineId1];
+
+      const timeline = await TkTimeline.query()
+        .with("timeline", (builder) => {
+          builder
+            .with("tugas", (builder) => {
+              builder.with("soal", (builder) => {
+                builder.where({ dihapus: 0 }).with("soal");
+              });
+            })
+            .with("materi", (builder) => {
+              builder
+                .with("bab")
+                .withCount("materiKesimpulan as totalKesimpulan", (builder) => {
+                  builder
+                    .whereIn("m_user_id", [user.id])
+                    .whereNotNull("kesimpulan");
+                });
+            })
+            .withCount("komen as total_komen", (builder) => {
+              builder.where({ dihapus: 0 });
+            })
+            .with("komen", (builder) => {
+              builder.with("user").where({ dihapus: 0 });
+            })
+            .with("user");
+        })
+        .with("user")
+        .with("peserta", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .where({ m_user_id: user.id })
+        .andWhere({ dihapus: 0 })
+        .whereIn("m_timeline_id", timelineIds)
+        .orderBy("id", "desc")
+        .fetch();
+
+      await Promise.all(
+        timeline.toJSON().map(async (d) => {
+          const data = { ...d, bab: d.timeline.materi.map((e) => e.bab) };
+
+          const tipe = d.timeline.tipe;
+          let dibagikan = d.timeline.tanggal_pembagian;
+          if (tipe == "tugas") {
+            dibagikan = d.timeline.tugas.tanggal_pembagian;
+          }
+          if (moment(dibagikan).toDate() < moment().toDate()) {
+            if (tipe == "tugas") {
+              if (d.waktu_pengumpulan) {
+                selesai.push(data);
+              } else {
+                berlangsung.push(data);
+              }
+            } else if (tipe == "absen") {
+              if (d.waktu_absen) {
+                selesai.push(data);
+              } else {
+                berlangsung.push(data);
+              }
+            } else if (tipe == "materi") {
+              if (d.timeline.materi[0].__meta__.totalKesimpulan > 0) {
+                selesai.push(data);
+              } else {
+                berlangsung.push(data);
+              }
+            }
+          }
+          return 1;
+        })
+      );
+
+      return response.ok({
+        berlangsung,
+        selesai,
+        role: user.role,
+      });
+    }
+
+    if (absen) {
+      timeline = await MTimeline.query()
+        .withCount("tkTimeline as total_respon", (builder) => {
+          builder.whereNotNull("absen");
+        })
+        .with("user")
+        .withCount("tkTimeline as total_siswa")
+        .where({ m_rombel_id: jadwalMengajar.toJSON().rombel.id })
+        .andWhere({ m_user_id: user.id })
+        .andWhere({ tipe: "absen" })
+        .andWhere({ dihapus: 0 })
+        .orderBy("id", "desc")
+        .fetch();
+    } else {
+      // const tugasIds = await MTugas.query()
+      //   .where({ m_user_id: user.id })
+      //   .andWhere({ dihapus: 0 })
+      //   .ids();
+
+      const userIds = await MAnggotaRombel.query()
+        .where({ m_rombel_id: jadwalMengajar.toJSON().rombel.id })
+        .andWhere({ dihapus: 0 })
+        .pluck("m_user_id");
+
+      const timelineLainnya = await MTimeline.query()
+        .whereNull("m_mata_pelajaran_id")
+        .andWhere({ dihapus: 0 })
+        .andWhere("m_rombel_id", jadwalMengajar.toJSON().rombel.id)
+        .whereIn("m_user_id", userIds)
+        .ids();
+
+      const timeline1 = await MTimeline.query()
+        .with("tugas", (builder) => {
+          builder
+            .with("soal", (builder) => {
+              builder.where({ dihapus: 0 }).with("soal");
+            })
+            .with("timeline", (builder) => {
+              builder.with("rombel").with("tkTimeline");
+            });
+        })
+        .with("user")
+        .with("materi", (builder) => {
+          builder
+            .with("bab")
+            .withCount("materiKesimpulan as totalKesimpulan", (builder) => {
+              builder.whereIn("m_user_id", userIds).whereNotNull("kesimpulan");
+            });
+        })
+        .with("komen", (builder) => {
+          builder.with("user").where({ dihapus: 0 });
+        })
+        .withCount("tkTimeline as total_respon", (builder) => {
+          builder.whereNotNull("waktu_pengumpulan");
+        })
+        .withCount("tkTimeline as total_absen", (builder) => {
+          builder.whereNotNull("waktu_absen");
+        })
+        .withCount("tkTimeline as total_siswa")
+        .withCount("komen as total_komen", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .whereNull("m_mata_pelajaran_id")
+        .andWhere({ m_rombel_id: jadwalMengajar.toJSON().rombel.id })
+        .andWhere({ m_user_id: user.id })
+        .andWhere({ dihapus: 0 })
+        // .whereIn("m_tugas_id", tugasIds)
+        .orWhereIn("id", timelineLainnya)
+        .orderBy("id", "desc")
+        .fetch();
+
+      const timeline2 = await MTimeline.query()
+        .with("tugas", (builder) => {
+          builder
+            .with("soal", (builder) => {
+              builder.where({ dihapus: 0 }).with("soal");
+            })
+            .with("timeline", (builder) => {
+              builder.with("rombel").with("tkTimeline");
+            });
+        })
+        .with("user")
+        .with("materi", (builder) => {
+          builder
+            .with("bab")
+            .withCount("materiKesimpulan as totalKesimpulan", (builder) => {
+              builder.whereIn("m_user_id", userIds).whereNotNull("kesimpulan");
+            });
+        })
+        .with("komen", (builder) => {
+          builder.with("user").where({ dihapus: 0 });
+        })
+        .withCount("tkTimeline as total_respon", (builder) => {
+          builder.whereNotNull("waktu_pengumpulan");
+        })
+        .withCount("tkTimeline as total_absen", (builder) => {
+          builder.whereNotNull("waktu_absen");
+        })
+        .withCount("tkTimeline as total_siswa")
+        .withCount("komen as total_komen", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .whereNotNull("m_mata_pelajaran_id")
+        .andWhere({
+          m_mata_pelajaran_id: jadwalMengajar.toJSON().mataPelajaran.id,
+        })
+        .andWhere({ m_rombel_id: jadwalMengajar.toJSON().rombel.id })
+        .andWhere({ m_user_id: user.id })
+        .andWhere({ dihapus: 0 })
+        // .whereIn("m_tugas_id", tugasIds)
+        .orderBy("id", "desc")
+        .fetch();
+      // return timeline2;
+
+      await Promise.all(
+        timeline2.toJSON().map((d) => {
+          const data = { ...d, bab: d.materi.map((e) => e.bab) };
+
+          let dibagikan = d.tanggal_pembagian;
+          if (d.tipe == "tugas") {
+            dibagikan = d.tugas.tanggal_pembagian;
+          }
+
+          if (moment(dibagikan).toDate() > moment().toDate()) {
+            terjadwal.push(data);
+          } else {
+            if (d.tipe == "tugas") {
+              if (d.__meta__.total_respon >= d.__meta__.total_siswa) {
+                selesai.push(data);
+              } else {
+                berlangsung.push(data);
+              }
+            } else if (d.tipe == "absen") {
+              if (moment(d.tanggal_akhir).toDate() < moment().toDate()) {
+                selesai.push(data);
+              } else {
+                berlangsung.push(data);
+              }
+            } else if (d.tipe == "materi") {
+              if (
+                d.materi[0].__meta__.totalKesimpulan >= d.__meta__.total_siswa
+              ) {
+                selesai.push(data);
+              } else {
+                berlangsung.push(data);
+              }
+            }
+          }
+          return 1;
+        })
+      );
+      await Promise.all(
+        timeline1.toJSON().map((d) => {
+          const data = d;
+
+          let dibagikan = d.tanggal_pembagian;
+          if (d.tipe == "tugas") {
+            dibagikan = d.tugas.tanggal_pembagian;
+          }
+
+          if (moment(dibagikan).toDate() > moment().toDate()) {
+            terjadwal.push(data);
+          } else {
+            if (d.tipe == "tugas") {
+              if (d.__meta__.total_respon >= d.__meta__.total_siswa) {
+                selesai.push(data);
+              } else {
+                berlangsung.push(data);
+              }
+            } else if (d.tipe == "absen") {
+              if (moment(d.tanggal_akhir).toDate() < moment().toDate()) {
+                selesai.push(data);
+              } else {
+                berlangsung.push(data);
+              }
+            } else if (d.tipe == "materi") {
+              if (
+                d.materi[0].__meta__.totalKesimpulan >= d.__meta__.total_siswa
+              ) {
+                selesai.push(data);
+              } else {
+                berlangsung.push(data);
+              }
+            }
+          }
+        })
+      );
+    }
+
+    return response.ok({
+      berlangsung,
+      terjadwal,
+      selesai,
+    });
+  }
 }
 
 module.exports = SecondController;
