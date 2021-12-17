@@ -7,14 +7,14 @@ class UpdateKeuJurnalSchema extends Schema {
   up () {
     this.table('m_keu_jurnal', (table) => {
       // alter table
-      table.bigInteger("saldo")
+      table.bigInteger("saldo").alter();
     })
   }
 
   down () {
     this.table('m_keu_jurnal', (table) => {
       // reverse alternations
-      table.integer("saldo");
+      table.integer("saldo").alter();
     })
   }
 }
