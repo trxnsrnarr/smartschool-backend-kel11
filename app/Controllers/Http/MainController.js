@@ -1047,6 +1047,7 @@ class MainController {
       wa_ayah,
       nama_ibu,
       wa_ibu,
+
     });
 
     if (!update) {
@@ -1099,6 +1100,9 @@ class MainController {
       tanggal_lahir,
       avatar,
       home,
+      no_ijazah,
+      tahun_ijazah,
+      file_ijazah,
 
       // informasi
       nisn,
@@ -1246,6 +1250,9 @@ class MainController {
         kelas_diterima,
         tanggal_masuk,
         telp_rumah,
+        no_ijazah,
+        tahun_ijazah,
+        file_ijazah,
 
         // alamat
         alamat,
@@ -1336,6 +1343,9 @@ class MainController {
         kelas_diterima,
         tanggal_masuk,
         telp_rumah,
+        no_ijazah,
+        tahun_ijazah,
+        file_ijazah,
 
         // alamat
         alamat,
