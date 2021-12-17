@@ -12651,13 +12651,31 @@ class MainController {
     }
 
     let tkJadwalUjianData = [];
+    const tkJadwalIds = await TkJadwalUjian.query()
+      .andWhere({ m_jadwal_ujian_id: jadwal_ujian_id })
+      .where({ dihapus: 0 })
+      .pluck("m_rombel_id");
 
     if (rombel_id.length) {
+      await Promise.all(
+        tkJadwalIds
+          .filter((d) => !rombel_id.includes(d))
+          .map(async (d) => {
+            await TkJadwalUjian.query()
+              .where({ m_rombel_id: d })
+              .andWhere({ m_jadwal_ujian_id: jadwal_ujian_id })
+              .where({ dihapus: 0 })
+              .update({
+                dihapus: 1,
+              });
+          })
+      );
       await Promise.all(
         rombel_id.map(async (rombel) => {
           const check = await TkJadwalUjian.query()
             .where({ m_rombel_id: rombel })
             .andWhere({ m_jadwal_ujian_id: jadwal_ujian_id })
+            .where({ dihapus: 0 })
             .first();
 
           if (!check) {
