@@ -11829,7 +11829,7 @@ class MainController {
 
     const jadwalUjian = await MJadwalUjian.query()
       .with("rombelUjian", (builder) => {
-        builder.with("rombel");
+        builder.where({ dihapus: 0 }).with("rombel");
       })
       .with("ujian")
       .where({ id: jadwal_ujian_id })
