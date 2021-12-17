@@ -1387,12 +1387,10 @@ class SecondController {
 
     const rules = {
       nama: "required",
-      nomor: "required",
       tanggal: "required",
     };
     const message = {
       "nama.required": "Nama harus diisi",
-      "nomor.required": "Nomor harus diisi",
       "tanggal.required": "Tanggal harus diisi",
     };
     const validation = await validate(request.all(), rules, message);
@@ -1439,11 +1437,9 @@ class SecondController {
 
     const rules = {
       nama: "required",
-      nomor: "required",
     };
     const message = {
       "nama.required": "Nama harus diisi",
-      "nomor.required": "nomor harus dipilih",
     };
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
