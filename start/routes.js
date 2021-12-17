@@ -226,13 +226,13 @@ Route.put("/materi/:materi_id", "MainController.putMateri");
 Route.delete("/materi/:materi_id", "MainController.deleteMateri");
 
 // keuangan sekolah
-Route.get("/keuangan-sekolah", "SecondController.getAkunKeuangan")
-Route.put("/keuangan-sekolah", "SecondController.putAkunKeuangan")
+Route.get("/keuangan-sekolah", "SecondController.getAkunKeuangan");
+Route.put("/keuangan-sekolah", "SecondController.putAkunKeuangan");
 
 // Akun Keuangan sekolah
-Route.post("/akun-sekolah", "SecondController.postKeuAkun")
-Route.put("/akun-sekolah/:keu_akun_id", "SecondController.putKeuAkun")
-Route.delete("/akun-sekolah/:keu_akun_id", "SecondController.deleteKeuAkun")
+Route.post("/akun-sekolah", "SecondController.postKeuAkun");
+Route.put("/akun-sekolah/:keu_akun_id", "SecondController.putKeuAkun");
+Route.delete("/akun-sekolah/:keu_akun_id", "SecondController.deleteKeuAkun");
 
 // no rekening
 Route.get("/rek-sekolah", "MainController.getRekSekolah");
@@ -396,6 +396,7 @@ Route.delete("/soal-kuis/:soal_kuis_id", "MainController.deleteSoalKuis");
 
 // timeline
 Route.get("/timeline", "MainController.getTimeline");
+Route.get("/v2/timeline", "SecondController.getTimelineBaru");
 Route.get("/timeline/:timeline_id", "MainController.detailTimeline");
 Route.post("/timeline", "MainController.postTimeline");
 Route.put("/timeline/:timeline_id", "MainController.putTimeline");
