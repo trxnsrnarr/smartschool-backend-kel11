@@ -11455,6 +11455,7 @@ class MainController {
               const tkJadwalUjian = await TkJadwalUjian.query()
                 .with("rombel")
                 .where({ m_jadwal_ujian_id: jadwalUjianData.id })
+                .where({ dihapus: 0 })
                 .fetch();
 
               let metaJadwalUjian = {
@@ -11478,6 +11479,7 @@ class MainController {
               const tkJadwalUjian = await TkJadwalUjian.query()
                 .with("rombel")
                 .where({ m_jadwal_ujian_id: jadwalUjianData.id })
+                .where({ dihapus: 0 })
                 .fetch();
 
               let metaJadwalUjian = {
@@ -11501,6 +11503,7 @@ class MainController {
               const tkJadwalUjian = await TkJadwalUjian.query()
                 .with("rombel")
                 .where({ m_jadwal_ujian_id: jadwalUjianData.id })
+                .where({ dihapus: 0 })
                 .fetch();
 
               let metaJadwalUjian = {
@@ -11607,6 +11610,7 @@ class MainController {
               const tkJadwalUjian = await TkJadwalUjian.query()
                 .with("rombel")
                 .where({ m_jadwal_ujian_id: jadwalUjianData.id })
+                .where({ dihapus: 0 })
                 .fetch();
 
               let metaJadwalUjian = {
@@ -11630,6 +11634,7 @@ class MainController {
               const tkJadwalUjian = await TkJadwalUjian.query()
                 .with("rombel")
                 .where({ m_jadwal_ujian_id: jadwalUjianData.id })
+                .where({ dihapus: 0 })
                 .fetch();
 
               let metaJadwalUjian = {
@@ -11834,7 +11839,7 @@ class MainController {
 
     const jadwalUjian = await MJadwalUjian.query()
       .with("rombelUjian", (builder) => {
-        builder.with("rombel");
+        builder.where({ dihapus: 0 }).with("rombel");
       })
       .with("ujian")
       .where({ id: jadwal_ujian_id })
