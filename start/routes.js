@@ -324,6 +324,12 @@ Route.post("/mutasi", "MainController.postMutasiV1");
 Route.put("/mutasi/:mutasi_id", "MainController.putMutasiV1");
 Route.delete("/mutasi/:mutasi_id", "MainController.deleteMutasi");
 
+// mutasi v2
+Route.get("/v2/mutasi", "SecondController.getTransaksi");
+Route.post("/v2/mutasi", "SecondController.postTransaksi");
+Route.put("/v2/mutasi/:transaksi_id", "SecondController.putTransaksi");
+Route.delete("/v2/mutasi/:transaksi_id", "SecondController.deleteTransaksi");
+
 // topik
 Route.get("/topik/:topik_id", "MainController.detailTopik");
 Route.post("/topik", "MainController.postTopik");
