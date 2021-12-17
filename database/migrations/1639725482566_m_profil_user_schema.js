@@ -9,6 +9,7 @@ class MProfilUserSchema extends Schema {
       table.string("no_ijazah");
       table.string("tahun_ijazah");
       table.text("file_ijazah");
+      table.string("alamat_asal_sekolah");
       // alter table
     })
   }
