@@ -1,12 +1,12 @@
-'use strict'
+"use strict";
 
 /** @type {typeof import('@adonisjs/lucid/src/Lucid/Model')} */
-const Model = use('Model')
+const Model = use("Model");
 
 class MKeuJurnal extends Model {
-    static get table() {
-        return "m_keu_jurnal";
-      }
+  static get table() {
+    return "m_keu_jurnal";
+  }
 }
 
-module.exports = MKeuJurnal
+module.exports = MKeuJurnal;
