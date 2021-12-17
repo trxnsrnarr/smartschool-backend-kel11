@@ -419,9 +419,9 @@ class MainController {
       await MPredikatNilai.create({
         predikat: "B",
         bb_pengetahuan: "71",
-        ba_pengetahuan: "85",
+        ba_pengetahuan: "86",
         bb_keterampilan: "71",
-        ba_keterampilan: "85",
+        ba_keterampilan: "86",
         sikap: "Baik",
         m_sekolah_id: sekolah.id,
         dihapus: 0,
@@ -429,9 +429,9 @@ class MainController {
       await MPredikatNilai.create({
         predikat: "C",
         bb_pengetahuan: "56",
-        ba_pengetahuan: "70",
+        ba_pengetahuan: "71",
         bb_keterampilan: "56",
-        ba_keterampilan: "70",
+        ba_keterampilan: "71",
         sikap: "Cukup",
         m_sekolah_id: sekolah.id,
         dihapus: 0,
@@ -439,9 +439,9 @@ class MainController {
       await MPredikatNilai.create({
         predikat: "D",
         bb_pengetahuan: "0",
-        ba_pengetahuan: "55",
+        ba_pengetahuan: "56",
         bb_keterampilan: "0",
-        ba_keterampilan: "55",
+        ba_keterampilan: "56",
         sikap: "Kurang",
         m_sekolah_id: sekolah.id,
         dihapus: 0,
@@ -12652,9 +12652,9 @@ class MainController {
 
     let tkJadwalUjianData = [];
     const tkJadwalIds = await TkJadwalUjian.query()
-      .andWhere({ m_jadwal_ujian_id: jadwal_ujian_id })
-      .where({ dihapus: 0 })
-      .pluck("m_rombel_id");
+    .andWhere({ m_jadwal_ujian_id: jadwal_ujian_id })
+    .where({ dihapus: 0 })
+    .pluck("m_rombel_id");
 
     if (rombel_id.length) {
       await Promise.all(
@@ -19652,9 +19652,9 @@ class MainController {
       await MPredikatNilai.create({
         predikat: "B",
         bb_pengetahuan: "71",
-        ba_pengetahuan: "85",
+        ba_pengetahuan: "86",
         bb_keterampilan: "71",
-        ba_keterampilan: "85",
+        ba_keterampilan: "86",
         sikap: "Baik",
         m_sekolah_id: sekolah.id,
         dihapus: 0,
@@ -19662,9 +19662,9 @@ class MainController {
       await MPredikatNilai.create({
         predikat: "C",
         bb_pengetahuan: "56",
-        ba_pengetahuan: "70",
+        ba_pengetahuan: "71",
         bb_keterampilan: "56",
-        ba_keterampilan: "70",
+        ba_keterampilan: "71",
         sikap: "Cukup",
         m_sekolah_id: sekolah.id,
         dihapus: 0,
@@ -19672,9 +19672,9 @@ class MainController {
       await MPredikatNilai.create({
         predikat: "D",
         bb_pengetahuan: "0",
-        ba_pengetahuan: "55",
+        ba_pengetahuan: "56",
         bb_keterampilan: "0",
-        ba_keterampilan: "55",
+        ba_keterampilan: "56",
         sikap: "Kurang",
         m_sekolah_id: sekolah.id,
         dihapus: 0,
