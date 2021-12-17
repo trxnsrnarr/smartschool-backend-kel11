@@ -15,6 +15,15 @@ class MKeuJurnalSchema extends Schema {
         .onDelete("cascade")
         .onUpdate("cascade");
       table
+        .integer("m_keu_transaksi_id")
+        .unsigned()
+        .index("m_keu_transaksi_id");
+      table
+        .foreign("m_keu_transaksi_id")
+        .references("m_keu_transaksi.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
+      table
         .integer("m_riwayat_pembayaran_siswa_id")
         .unsigned()
         .index("m_riwayat_pembayaran_siswa_id");
