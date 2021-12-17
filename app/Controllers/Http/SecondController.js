@@ -1338,6 +1338,41 @@ class SecondController {
       selesai,
     });
   }
+
+  async getTransaksi({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const user = await auth.getUser();
+
+    const { page } = request.get();
+
+    const transaksi = await MKeuTransaksi.query()
+      .with("jurnal", (builder) => {
+        builder.where({ dihapus: 0 }).with("akun", (builder) => {
+          builder.select("nama", "id");
+        });
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
+      .paginate(page, 25);
+
+    const akun = await MKeuAkun.query()
+      .with("rek")
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
+    return response.ok({
+      transaksi,
+      akun,
+    });
+  }
+
   async postTransaksi({ response, request, auth }) {
     const domain = request.headers().origin;
 
@@ -1374,7 +1409,7 @@ class SecondController {
     });
 
     await Promise.all(
-      jurnal.toJSON().map(async (d) => {
+      jurnal.map(async (d) => {
         await MKeuJurnal.create({
           jenis: d.jenis,
           m_keu_transaksi_id: transaksi.id,
@@ -1404,11 +1439,11 @@ class SecondController {
 
     const rules = {
       nama: "required",
-      kode: "required",
+      nomor: "required",
     };
     const message = {
       "nama.required": "Nama harus diisi",
-      "kode.required": "Kode harus dipilih",
+      "nomor.required": "nomor harus dipilih",
     };
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
@@ -1420,10 +1455,34 @@ class SecondController {
       .where({ id: transaksi_id })
       .first();
 
+    const jurnalIds = await MKeuJurnal.query()
+      .where({ m_keu_transaksi_id: transaksi_id })
+      .where({ dihapus: 0 })
+      .ids();
+    const editJurnal = jurnal.filter((d) => d.id);
+    const editJurnalId = editJurnal.map((d) => d.id);
+    const newJurnal = jurnal.filter((d) => !d.id);
+
     await Promise.all(
-      jurnal.toJSON().map(async (d) => {
-        await MKeuJurnal.where({ id: d.id }).update({
+      jurnalIds
+        .filter((d) => !editJurnalId.includes(d))
+        .map(async (d) => {
+          await MKeuJurnal.query().where({ id: d }).update({
+            dihapus: 1,
+          });
+        }),
+      editJurnal.map(async (d) => {
+        await MKeuJurnal.query().where({ id: d.id }).update({
           jenis: d.jenis,
+          m_keu_akun_id: d.m_keu_akun_id,
+          saldo: d.saldo,
+          dihapus: 0,
+        });
+      }),
+      newJurnal.map(async (d) => {
+        await MKeuJurnal.create({
+          jenis: d.jenis,
+          m_keu_transaksi_id: transaksi.id,
           m_keu_akun_id: d.m_keu_akun_id,
           saldo: d.saldo,
           dihapus: 0,
@@ -1851,7 +1910,6 @@ class SecondController {
 
     return namaFile;
   }
-  
 }
 
 module.exports = SecondController;

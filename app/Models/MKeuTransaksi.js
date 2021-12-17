@@ -9,7 +9,7 @@ class MKeuTransaksi extends Model {
   }
 
   jurnal() {
-    this.hasMany("App/Models/MKeuJurnal");
+    return this.hasMany("App/Models/MKeuJurnal");
   }
 }
 

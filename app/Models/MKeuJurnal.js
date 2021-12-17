@@ -7,6 +7,10 @@ class MKeuJurnal extends Model {
   static get table() {
     return "m_keu_jurnal";
   }
+
+  akun () {
+    return this.belongsTo("App/Models/MKeuAkun")
+  }
 }
 
 module.exports = MKeuJurnal;
