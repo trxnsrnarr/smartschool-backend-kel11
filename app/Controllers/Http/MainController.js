@@ -818,7 +818,38 @@ class MainController {
       alamat,
       email,
       telp,
+      link,
     } = request.post();
+
+    if (link) {
+      const sekolah = await Sekolah.query()
+        .with("sekolahSS")
+        .where({ id: id })
+        .first();
+      if (sekolah.sekolahSS) {
+        return response.ok({
+          sekolah: sekolah.sekolahSS,
+        });
+      } else {
+        const domain = slugify(sekolah.sekolah, {
+          replacement: "", // replace spaces with replacement character, defaults to `-`
+          remove: /[*+~.()'"!:@]/g,
+          lower: true, // convert to lower case, defaults to `false`
+        });
+        sekolahSS = await MSekolah.create({
+          nama: sekolah.Sekolah,
+          domain: `https://${domain}.smarteschool.id`,
+          status: sekolah.status || "N",
+          tingkat: sekolah.bentuk || "SMK",
+          integrasi: "whatsapp",
+          diintegrasi: 1,
+          trial: 1,
+        });
+        return response.ok({
+          sekolah: sekolahSS,
+        });
+      }
+    }
 
     const domain = slugify(sekolah, {
       replacement: "", // replace spaces with replacement character, defaults to `-`
@@ -1118,7 +1149,6 @@ class MainController {
       wa_ayah,
       nama_ibu,
       wa_ibu,
-
     });
 
     if (!update) {
@@ -12738,9 +12768,9 @@ class MainController {
 
     let tkJadwalUjianData = [];
     const tkJadwalIds = await TkJadwalUjian.query()
-    .andWhere({ m_jadwal_ujian_id: jadwal_ujian_id })
-    .where({ dihapus: 0 })
-    .pluck("m_rombel_id");
+      .andWhere({ m_jadwal_ujian_id: jadwal_ujian_id })
+      .where({ dihapus: 0 })
+      .pluck("m_rombel_id");
 
     if (rombel_id.length) {
       await Promise.all(
@@ -44310,9 +44340,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    let {ranking = [] } = request.post();
-
-    
+    let { ranking = [] } = request.post();
 
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
@@ -44441,8 +44469,9 @@ class MainController {
               };
 
               if (nox == d.user.nilaiSemuaUjian.length - 1) {
-                row.getCell([`${(nox + 1) * 2 + 5}`]).value =
-                 ranking.find((f)=> f.m_user_id == d.m_user_id).total_nilai;
+                row.getCell([`${(nox + 1) * 2 + 5}`]).value = ranking.find(
+                  (f) => f.m_user_id == d.m_user_id
+                ).total_nilai;
 
                 const cell = row.getCell([`${(nox + 1) * 2 + 5}`]);
 
@@ -44452,8 +44481,9 @@ class MainController {
                 //   (nox + 1) * 2 + 4
                 // )}$100)`;
 
-                row.getCell([`${(nox + 1) * 2 + 6}`]).value =
-                ranking.find((f)=> f.m_user_id == d.m_user_id).ranking;
+                row.getCell([`${(nox + 1) * 2 + 6}`]).value = ranking.find(
+                  (f) => f.m_user_id == d.m_user_id
+                ).ranking;
 
                 alreadyMerged = (nox + 1) * 2 + 4;
               }
@@ -44668,9 +44698,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    let {ranking = [] } = request.post();
-
-    
+    let { ranking = [] } = request.post();
 
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
@@ -44819,8 +44847,9 @@ class MainController {
               };
 
               if (nox == d.user.nilaiSemuaUjian.length - 1) {
-                row.getCell([`${(nox + 1) * 3 + 5}`]).value =
-                 ranking.find((f)=> f.m_user_id == d.m_user_id).total_nilai;
+                row.getCell([`${(nox + 1) * 3 + 5}`]).value = ranking.find(
+                  (f) => f.m_user_id == d.m_user_id
+                ).total_nilai;
 
                 const cell = row.getCell([`${(nox + 1) * 3 + 5}`]);
 
@@ -44830,8 +44859,9 @@ class MainController {
                 //   (nox + 1) * 2 + 4
                 // )}$100)`;
 
-                row.getCell([`${(nox + 1) * 3 + 6}`]).value =
-                ranking.find((f)=> f.m_user_id == d.m_user_id).ranking;
+                row.getCell([`${(nox + 1) * 3 + 6}`]).value = ranking.find(
+                  (f) => f.m_user_id == d.m_user_id
+                ).ranking;
 
                 alreadyMerged = (nox + 1) * 3 + 3;
               }
