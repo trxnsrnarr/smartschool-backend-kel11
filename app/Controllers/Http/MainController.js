@@ -4539,11 +4539,20 @@ class MainController {
         .andWhere({ m_materi_id: materi.id })
         .first();
 
-        mapelKelas = await MJadwalMengajar.query()
-          .distinct("m_mata_pelajaran_id")
-          .with("mataPelajaran")
-          .where({ m_rombel_id: data.m_rombel_id })
-          .fetch();
+      const jadwalIds = await MJadwalMengajar.query()
+        .min("id as id")
+        .select("m_mata_pelajaran_id")
+        .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
+        .whereNotNull("m_mata_pelajaran_id")
+        .groupBy("m_mata_pelajaran_id");
+
+      mapelKelas = await MJadwalMengajar.query()
+        .whereIn(
+          "id",
+          jadwalIds.map((d) => d.id)
+        )
+        .with("mataPelajaran")
+        .fetch();
       if (jadwalMengajar.rombel.m_user_id == user.id) {
       }
     }
