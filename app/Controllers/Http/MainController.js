@@ -11636,19 +11636,19 @@ class MainController {
       const ujian = await MUjian.query()
         .select("id", "nama", "tipe")
         .withCount("soal as soal_pg", (builder) => {
-          builder.where({ bentuk: "pg"})
+          builder.where({ bentuk: "pg" });
         })
         .withCount("soal as soal_esai", (builder) => {
-          builder.where({ bentuk: "esai"})
+          builder.where({ bentuk: "esai" });
         })
         .withCount("soal as soal_pg_kompleks", (builder) => {
-          builder.where({ bentuk: "pg_kompleks"})
+          builder.where({ bentuk: "pg_kompleks" });
         })
         .withCount("soal as soal_uraian", (builder) => {
-          builder.where({ bentuk: "uraian"})
+          builder.where({ bentuk: "uraian" });
         })
         .withCount("soal as soal_menjodohkan", (builder) => {
-          builder.where({ bentuk: "menjodohkan"})
+          builder.where({ bentuk: "menjodohkan" });
         })
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
@@ -11783,19 +11783,19 @@ class MainController {
       const ujian = await MUjian.query()
         .select("id", "nama", "tipe")
         .withCount("soal as soal_pg", (builder) => {
-          builder.where({ bentuk: "pg"})
+          builder.where({ bentuk: "pg" });
         })
         .withCount("soal as soal_esai", (builder) => {
-          builder.where({ bentuk: "esai"})
+          builder.where({ bentuk: "esai" });
         })
         .withCount("soal as soal_pg_kompleks", (builder) => {
-          builder.where({ bentuk: "pg_kompleks"})
+          builder.where({ bentuk: "pg_kompleks" });
         })
         .withCount("soal as soal_uraian", (builder) => {
-          builder.where({ bentuk: "uraian"})
+          builder.where({ bentuk: "uraian" });
         })
         .withCount("soal as soal_menjodohkan", (builder) => {
-          builder.where({ bentuk: "menjodohkan"})
+          builder.where({ bentuk: "menjodohkan" });
         })
         .whereIn("m_user_id", userIds)
         .andWhere({ dihapus: 0 })
@@ -13194,28 +13194,6 @@ class MainController {
     }
 
     if (ujian.tipe == "literasi" || ujian.tipe == "numerasi") {
-      const soalIds = await TkSoalUjian.query()
-        .where({ dihapus: 0 })
-        .andWhere({ m_ujian_id: ujian_id })
-        .pluck("m_soal_ujian_id");
-
-      const soalMasterIds = await MSoalUjian.query()
-        .where({ dihapus: 0 })
-        .whereIn("id", soalIds)
-        .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_soal_akm)
-        .ids();
-
-      const soalAKM = await TkSoalUjian.query()
-        .with("soal", (builder) => {
-          builder.where({ dihapus: 0 });
-        })
-        .whereIn("m_soal_ujian_id", soalMasterIds)
-        .orderByRaw(`${diacak}`)
-        .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_soal_akm)
-        .fetch();
-
-      const soalData = [];
-
       const checkIfExist = await TkPesertaUjian.query()
         .where({ m_user_id: user.id })
         .andWhere({ tk_jadwal_ujian_id: tk_jadwal_ujian_id })
@@ -13228,6 +13206,67 @@ class MainController {
         });
       }
 
+      const soalIds = await TkSoalUjian.query()
+        .where({ dihapus: 0 })
+        .andWhere({ m_ujian_id: ujian_id })
+        .pluck("m_soal_ujian_id");
+
+      const soalMasterPG = await MSoalUjian.query()
+        .where({ dihapus: 0 })
+        .whereIn("id", soalIds)
+        .where({ tipe: "pg" })
+        .orderByRaw(`${diacak}`)
+        .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_pg)
+        .ids();
+
+      const soalMasterEsai = await MSoalUjian.query()
+        .where({ dihapus: 0 })
+        .whereIn("id", soalIds)
+        .where({ tipe: "esai" })
+        .orderByRaw(`${diacak}`)
+        .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_esai)
+        .ids();
+
+      const soalMasterMenjodohkan = await MSoalUjian.query()
+        .where({ dihapus: 0 })
+        .whereIn("id", soalIds)
+        .where({ tipe: "menjodohkan" })
+        .orderByRaw(`${diacak}`)
+        .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_menjodohkan)
+        .ids();
+
+      const soalMasterUraian = await MSoalUjian.query()
+        .where({ dihapus: 0 })
+        .whereIn("id", soalIds)
+        .where({ tipe: "uraian" })
+        .orderByRaw(`${diacak}`)
+        .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_uraian)
+        .ids();
+
+      const soalMasterPgKompleks = await MSoalUjian.query()
+        .where({ dihapus: 0 })
+        .whereIn("id", soalIds)
+        .where({ tipe: "pg_kompleks" })
+        .orderByRaw(`${diacak}`)
+        .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_pg_kompleks)
+        .ids();
+
+      const soalAKM = await TkSoalUjian.query()
+        .with("soal", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .whereIn("m_soal_ujian_id", [
+          ...soalMasterPG,
+          ...soalMasterEsai,
+          ...soalMasterMenjodohkan,
+          ...soalMasterPgKompleks,
+          ...soalMasterUraian,
+        ])
+        .orderByRaw(`${diacak}`)
+        .fetch();
+
+      const soalData = [];
+
       const pesertaUjian = await TkPesertaUjian.create({
         waktu_mulai,
         dinilai: 0,
@@ -13239,7 +13278,7 @@ class MainController {
 
       await Promise.all(
         soalAKM.toJSON().map(async (d) => {
-          if (d.soal.bentuk == "uraian") {
+          if (d.soal.bentuk.toLowerCase().trim() == "uraian") {
             soalData.push({
               durasi: 0,
               ragu: 0,
@@ -13248,7 +13287,7 @@ class MainController {
               m_soal_ujian_id: d.soal.id,
               tk_peserta_ujian_id: pesertaUjian.id,
             });
-          } else if (d.soal.bentuk == "pg_kompleks") {
+          } else if (d.soal.bentuk.toLowerCase().trim() == "pg_kompleks") {
             soalData.push({
               durasi: 0,
               ragu: 0,
@@ -13257,7 +13296,7 @@ class MainController {
               m_soal_ujian_id: d.soal.id,
               tk_peserta_ujian_id: pesertaUjian.id,
             });
-          } else if (d.soal.bentuk == "menjodohkan") {
+          } else if (d.soal.bentuk.toLowerCase().trim() == "menjodohkan") {
             soalData.push({
               durasi: 0,
               ragu: 0,
@@ -13266,7 +13305,7 @@ class MainController {
               m_soal_ujian_id: d.soal.id,
               tk_peserta_ujian_id: pesertaUjian.id,
             });
-          } else if (d.soal.bentuk == "esai") {
+          } else if (d.soal.bentuk.toLowerCase().trim() == "esai") {
             soalData.push({
               durasi: 0,
               ragu: 0,
@@ -13275,7 +13314,7 @@ class MainController {
               jawaban_rubrik_esai: d.soal.rubrik_kj,
               tk_peserta_ujian_id: pesertaUjian.id,
             });
-          } else if (d.soal.bentuk == "pg") {
+          } else if (d.soal.bentuk.toLowerCase().trim() == "pg") {
             soalData.push({
               durasi: 0,
               ragu: 0,
