@@ -4540,12 +4540,12 @@ class MainController {
         .first();
 
       if (jadwalMengajar.rombel.m_user_id == user.id) {
+        mapelKelas = await MJadwalMengajar.query()
+          .distinct("m_mata_pelajaran_id")
+          .with("mataPelajaran")
+          .where({ m_rombel_id: data.m_rombel_id })
+          .fetch();
       }
-      mapelKelas = await MJadwalMengajar.query()
-        .distinct("m_mata_pelajaran_id")
-        .with("mataPelajaran")
-        .where({ m_rombel_id: data.m_rombel_id })
-        .fetch();
     }
 
     return response.ok({
