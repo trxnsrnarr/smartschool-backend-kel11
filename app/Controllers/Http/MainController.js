@@ -4251,6 +4251,7 @@ class MainController {
     let sikapsosial;
     let sikapspiritual;
     let ekskul;
+    let mapelKelas;
 
     if (rombel_id) {
       data = await MJadwalMengajar.query()
@@ -4540,6 +4541,11 @@ class MainController {
 
       if (jadwalMengajar.rombel.m_user_id == user.id) {
       }
+      mapelKelas = await MJadwalMengajar.query()
+        .distinct("m_mata_pelajaran_id")
+        .with("mataPelajaran")
+        .where({ m_rombel_id: data.m_rombel_id })
+        .fetch();
     }
 
     return response.ok({
@@ -4555,6 +4561,7 @@ class MainController {
       kkm,
       totalMapel,
       ekskul,
+      mapelKelas,
     });
   }
 
@@ -9306,11 +9313,11 @@ class MainController {
         .where({ m_timeline_id: timeline_id })
         .delete();
       await Promise.all(
-        materi.map(d => {
+        materi.map((d) => {
           return TkTimelineTopik.create({
             m_timeline_id: timeline_id,
             m_topik_id: d,
-          })
+          });
         })
       );
 
