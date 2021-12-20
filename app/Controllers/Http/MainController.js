@@ -13214,7 +13214,7 @@ class MainController {
       const soalMasterPG = await MSoalUjian.query()
         .where({ dihapus: 0 })
         .whereIn("id", soalIds)
-        .where({ tipe: "pg" })
+        .where({ bentuk: "pg" })
         .orderByRaw(`${diacak}`)
         .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_pg)
         .ids();
@@ -13222,7 +13222,7 @@ class MainController {
       const soalMasterEsai = await MSoalUjian.query()
         .where({ dihapus: 0 })
         .whereIn("id", soalIds)
-        .where({ tipe: "esai" })
+        .where({ bentuk: "esai" })
         .orderByRaw(`${diacak}`)
         .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_esai)
         .ids();
@@ -13230,7 +13230,7 @@ class MainController {
       const soalMasterMenjodohkan = await MSoalUjian.query()
         .where({ dihapus: 0 })
         .whereIn("id", soalIds)
-        .where({ tipe: "menjodohkan" })
+        .where({ bentuk: "menjodohkan" })
         .orderByRaw(`${diacak}`)
         .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_menjodohkan)
         .ids();
@@ -13238,7 +13238,7 @@ class MainController {
       const soalMasterUraian = await MSoalUjian.query()
         .where({ dihapus: 0 })
         .whereIn("id", soalIds)
-        .where({ tipe: "uraian" })
+        .where({ bentuk: "uraian" })
         .orderByRaw(`${diacak}`)
         .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_uraian)
         .ids();
@@ -13246,7 +13246,7 @@ class MainController {
       const soalMasterPgKompleks = await MSoalUjian.query()
         .where({ dihapus: 0 })
         .whereIn("id", soalIds)
-        .where({ tipe: "pg_kompleks" })
+        .where({ bentuk: "pg_kompleks" })
         .orderByRaw(`${diacak}`)
         .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_pg_kompleks)
         .ids();
@@ -13345,6 +13345,18 @@ class MainController {
         peserta_ujian: pesertaUjian,
       });
     } else {
+      const checkIfExist = await TkPesertaUjian.query()
+        .where({ m_user_id: user.id })
+        .andWhere({ tk_jadwal_ujian_id: tk_jadwal_ujian_id })
+        .where({ dihapus: 0 })
+        .first();
+
+      if (checkIfExist) {
+        return response.ok({
+          peserta_ujian: checkIfExist,
+        });
+      }
+
       const soalPGIds = await TkSoalUjian.query()
         .where({ dihapus: 0 })
         .andWhere({ m_ujian_id: ujian_id })
@@ -13387,17 +13399,6 @@ class MainController {
         .fetch();
 
       const soalData = [];
-
-      const checkIfExist = await TkPesertaUjian.query()
-        .where({ m_user_id: user.id })
-        .andWhere({ tk_jadwal_ujian_id: tk_jadwal_ujian_id })
-        .first();
-
-      if (checkIfExist) {
-        return response.ok({
-          peserta_ujian: checkIfExist,
-        });
-      }
 
       const trx = await Database.beginTransaction();
       const pesertaUjian = await TkPesertaUjian.create(
