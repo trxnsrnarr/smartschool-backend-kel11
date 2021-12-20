@@ -13717,7 +13717,7 @@ class MainController {
       jawaban_foto,
     } = request.post();
     jawaban_esai = jawaban_esai ? htmlEscaper.escape(jawaban_esai) : "";
-    jawaban_pg_kompleks = jawaban_pg_kompleks
+    const jawaban_pg_kompleks1 = jawaban_pg_kompleks
       ? jawaban_pg_kompleks.toString()
       : null;
     jawaban_foto = jawaban_foto ? jawaban_foto.toString() : null;
@@ -13802,7 +13802,7 @@ class MainController {
         jawabanUjianSiswa = await TkJawabanUjianSiswa.query()
           .where({ id: jawaban_ujian_siswa_id })
           .update({
-            jawaban_pg_kompleks,
+            jawaban_pg_kompleks: jawaban_pg_kompleks1,
             durasi,
             ragu,
             dijawab: 1,
