@@ -329,6 +329,8 @@ Route.get("/v2/mutasi", "SecondController.getTransaksi");
 Route.post("/v2/mutasi", "SecondController.postTransaksi");
 Route.put("/v2/mutasi/:transaksi_id", "SecondController.putTransaksi");
 Route.delete("/v2/mutasi/:transaksi_id", "SecondController.deleteTransaksi");
+Route.post("/download/neraca", "SecondController.downloadNeraca");
+Route.post("/download/jurnal", "SecondController.downloadJurnal");
 
 // topik
 Route.get("/topik/:topik_id", "MainController.detailTopik");
