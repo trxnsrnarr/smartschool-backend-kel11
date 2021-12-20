@@ -44239,6 +44239,10 @@ class MainController {
 
     const user = await auth.getUser();
 
+    let {ranking = [] } = request.post();
+
+    
+
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
@@ -44367,10 +44371,7 @@ class MainController {
 
               if (nox == d.user.nilaiSemuaUjian.length - 1) {
                 row.getCell([`${(nox + 1) * 2 + 5}`]).value =
-                  d.user.nilaiSemuaUjian.reduce(
-                    (a, b) => a + b.nilai + b.nilai_keterampilan,
-                    0
-                  );
+                 ranking.find((f)=> f.m_user_id == d.m_user_id).total_nilai;
 
                 const cell = row.getCell([`${(nox + 1) * 2 + 5}`]);
 
@@ -44381,7 +44382,7 @@ class MainController {
                 // )}$100)`;
 
                 row.getCell([`${(nox + 1) * 2 + 6}`]).value =
-                  urutan.findIndex((f) => f == d.id) + 1;
+                ranking.find((f)=> f.m_user_id == d.m_user_id).ranking;
 
                 alreadyMerged = (nox + 1) * 2 + 4;
               }
@@ -44596,6 +44597,10 @@ class MainController {
 
     const user = await auth.getUser();
 
+    let {ranking = [] } = request.post();
+
+    
+
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
@@ -44744,10 +44749,7 @@ class MainController {
 
               if (nox == d.user.nilaiSemuaUjian.length - 1) {
                 row.getCell([`${(nox + 1) * 3 + 5}`]).value =
-                  d.user.nilaiSemuaUjian.reduce(
-                    (a, b) => a + b.nilai + b.nilai_keterampilan,
-                    0
-                  );
+                 ranking.find((f)=> f.m_user_id == d.m_user_id).total_nilai;
 
                 const cell = row.getCell([`${(nox + 1) * 3 + 5}`]);
 
@@ -44758,7 +44760,7 @@ class MainController {
                 // )}$100)`;
 
                 row.getCell([`${(nox + 1) * 3 + 6}`]).value =
-                  urutan.findIndex((f) => f == d.id) + 1;
+                ranking.find((f)=> f.m_user_id == d.m_user_id).ranking;
 
                 alreadyMerged = (nox + 1) * 3 + 3;
               }
