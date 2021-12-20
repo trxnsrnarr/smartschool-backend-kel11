@@ -16,6 +16,10 @@ class MUjian extends Model {
     return this.hasMany("App/Models/TkSoalUjian");
   }
 
+  soal() {
+    return this.belongsToMany("App/Models/MSoalUjian").pivotTable("tk_soal_ujian")
+  }
+
   static get computed() {
     return ["tipe_format"];
   }

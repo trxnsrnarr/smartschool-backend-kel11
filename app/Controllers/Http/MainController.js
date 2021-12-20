@@ -11634,6 +11634,22 @@ class MainController {
       }
 
       const ujian = await MUjian.query()
+        .select("id", "nama", "tipe")
+        .withCount("soal as soal_pg", (builder) => {
+          builder.where({ bentuk: "pg"})
+        })
+        .withCount("soal as soal_esai", (builder) => {
+          builder.where({ bentuk: "esai"})
+        })
+        .withCount("soal as soal_pg_kompleks", (builder) => {
+          builder.where({ bentuk: "pg_kompleks"})
+        })
+        .withCount("soal as soal_uraian", (builder) => {
+          builder.where({ bentuk: "uraian"})
+        })
+        .withCount("soal as soal_menjodohkan", (builder) => {
+          builder.where({ bentuk: "menjodohkan"})
+        })
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .fetch();
@@ -11765,6 +11781,22 @@ class MainController {
       }
 
       const ujian = await MUjian.query()
+        .select("id", "nama", "tipe")
+        .withCount("soal as soal_pg", (builder) => {
+          builder.where({ bentuk: "pg"})
+        })
+        .withCount("soal as soal_esai", (builder) => {
+          builder.where({ bentuk: "esai"})
+        })
+        .withCount("soal as soal_pg_kompleks", (builder) => {
+          builder.where({ bentuk: "pg_kompleks"})
+        })
+        .withCount("soal as soal_uraian", (builder) => {
+          builder.where({ bentuk: "uraian"})
+        })
+        .withCount("soal as soal_menjodohkan", (builder) => {
+          builder.where({ bentuk: "menjodohkan"})
+        })
         .whereIn("m_user_id", userIds)
         .andWhere({ dihapus: 0 })
         .fetch();
@@ -12677,6 +12709,9 @@ class MainController {
     const {
       jumlah_pg,
       jumlah_esai,
+      jumlah_menjodohkan,
+      jumlah_uraian,
+      jumlah_pg_kompleks,
       kkm,
       waktu_dibuka,
       jumlah_soal_akm,
@@ -12693,6 +12728,9 @@ class MainController {
       jumlah_pg,
       jumlah_esai,
       jumlah_soal_akm,
+      jumlah_menjodohkan,
+      jumlah_uraian,
+      jumlah_pg_kompleks,
       m_ujian_id,
       kkm,
       waktu_dibuka,
@@ -12747,6 +12785,9 @@ class MainController {
       jumlah_pg,
       jumlah_esai,
       jumlah_soal_akm,
+      jumlah_menjodohkan,
+      jumlah_uraian,
+      jumlah_pg_kompleks,
       kkm,
       waktu_dibuka,
       durasi,
@@ -12761,6 +12802,9 @@ class MainController {
         jumlah_pg,
         jumlah_esai,
         jumlah_soal_akm,
+        jumlah_menjodohkan,
+        jumlah_uraian,
+        jumlah_pg_kompleks,
         kkm,
         waktu_dibuka,
         waktu_ditutup: moment(waktu_dibuka)
