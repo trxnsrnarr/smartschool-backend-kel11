@@ -1118,7 +1118,6 @@ class MainController {
       wa_ayah,
       nama_ibu,
       wa_ibu,
-
     });
 
     if (!update) {
@@ -12738,9 +12737,9 @@ class MainController {
 
     let tkJadwalUjianData = [];
     const tkJadwalIds = await TkJadwalUjian.query()
-    .andWhere({ m_jadwal_ujian_id: jadwal_ujian_id })
-    .where({ dihapus: 0 })
-    .pluck("m_rombel_id");
+      .andWhere({ m_jadwal_ujian_id: jadwal_ujian_id })
+      .where({ dihapus: 0 })
+      .pluck("m_rombel_id");
 
     if (rombel_id.length) {
       await Promise.all(
@@ -44310,9 +44309,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    let {ranking = [] } = request.post();
-
-    
+    let { ranking = [] } = request.post();
 
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
@@ -44441,8 +44438,9 @@ class MainController {
               };
 
               if (nox == d.user.nilaiSemuaUjian.length - 1) {
-                row.getCell([`${(nox + 1) * 2 + 5}`]).value =
-                 ranking.find((f)=> f.m_user_id == d.m_user_id).total_nilai;
+                row.getCell([`${(nox + 1) * 2 + 5}`]).value = ranking.find(
+                  (f) => f.m_user_id == d.m_user_id
+                ).total_nilai;
 
                 const cell = row.getCell([`${(nox + 1) * 2 + 5}`]);
 
@@ -44452,8 +44450,9 @@ class MainController {
                 //   (nox + 1) * 2 + 4
                 // )}$100)`;
 
-                row.getCell([`${(nox + 1) * 2 + 6}`]).value =
-                ranking.find((f)=> f.m_user_id == d.m_user_id).ranking;
+                row.getCell([`${(nox + 1) * 2 + 6}`]).value = ranking.find(
+                  (f) => f.m_user_id == d.m_user_id
+                ).ranking;
 
                 alreadyMerged = (nox + 1) * 2 + 4;
               }
@@ -44668,9 +44667,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    let {ranking = [] } = request.post();
-
-    
+    let { ranking = [] } = request.post();
 
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
@@ -44819,8 +44816,9 @@ class MainController {
               };
 
               if (nox == d.user.nilaiSemuaUjian.length - 1) {
-                row.getCell([`${(nox + 1) * 3 + 5}`]).value =
-                 ranking.find((f)=> f.m_user_id == d.m_user_id).total_nilai;
+                row.getCell([`${(nox + 1) * 3 + 5}`]).value = ranking.find(
+                  (f) => f.m_user_id == d.m_user_id
+                ).total_nilai;
 
                 const cell = row.getCell([`${(nox + 1) * 3 + 5}`]);
 
@@ -44830,8 +44828,9 @@ class MainController {
                 //   (nox + 1) * 2 + 4
                 // )}$100)`;
 
-                row.getCell([`${(nox + 1) * 3 + 6}`]).value =
-                ranking.find((f)=> f.m_user_id == d.m_user_id).ranking;
+                row.getCell([`${(nox + 1) * 3 + 6}`]).value = ranking.find(
+                  (f) => f.m_user_id == d.m_user_id
+                ).ranking;
 
                 alreadyMerged = (nox + 1) * 3 + 3;
               }
@@ -48626,18 +48625,19 @@ class MainController {
         }
 
         // return;
+      } else {
+        const update = await MKeteranganRapor.query()
+          .where({ tipe: tipe })
+          .andWhere({ m_user_id: userSiswa.id })
+          .andWhere({ m_ta_id: ta.id })
+          .update(
+            {
+              catatan: d.catatan ? d.catatan : "-",
+              kelulusan: d.kelulusan ? d.kelulusan : "-",
+            },
+            trx
+          );
       }
-      const update = await MKeteranganRapor.query()
-        .where({ tipe: tipe })
-        .andWhere({ m_user_id: userSiswa.id })
-        .andWhere({ m_ta_id: ta.id })
-        .update(
-          {
-            catatan: d.catatan ? d.catatan : "-",
-            kelulusan: d.kelulusan ? d.kelulusan : "-",
-          },
-          trx
-        );
       result.push(1);
     }
     await trx.commit();
