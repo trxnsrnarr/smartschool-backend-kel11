@@ -1042,6 +1042,7 @@ class SecondController {
     let berlangsung = [],
       terjadwal = [],
       selesai = [];
+    const tanggalBerlangsung = [];
 
     if (user.role == "siswa") {
       const timelineId1 = await MTimeline.query()
@@ -1116,18 +1117,45 @@ class SecondController {
               if (d.waktu_pengumpulan) {
                 selesai.push(data);
               } else {
+                if (
+                  tanggalBerlangsung.includes(
+                    moment(dibagikan).format("YYYY-MM-DD")
+                  )
+                ) {
+                  tanggalBerlangsung.push(
+                    moment(dibagikan).format("YYYY-MM-DD")
+                  );
+                }
                 berlangsung.push(data);
               }
             } else if (tipe == "absen") {
               if (d.waktu_absen) {
                 selesai.push(data);
               } else {
+                if (
+                  tanggalBerlangsung.includes(
+                    moment(dibagikan).format("YYYY-MM-DD")
+                  )
+                ) {
+                  tanggalBerlangsung.push(
+                    moment(dibagikan).format("YYYY-MM-DD")
+                  );
+                }
                 berlangsung.push(data);
               }
             } else if (tipe == "materi") {
               if (d.timeline.materi[0].__meta__.totalKesimpulan > 0) {
                 selesai.push(data);
               } else {
+                if (
+                  tanggalBerlangsung.includes(
+                    moment(dibagikan).format("YYYY-MM-DD")
+                  )
+                ) {
+                  tanggalBerlangsung.push(
+                    moment(dibagikan).format("YYYY-MM-DD")
+                  );
+                }
                 berlangsung.push(data);
               }
             }
@@ -1142,7 +1170,6 @@ class SecondController {
         role: user.role,
       });
     }
-
     if (absen) {
       timeline = await MTimeline.query()
         .withCount("tkTimeline as total_respon", (builder) => {
@@ -1257,8 +1284,10 @@ class SecondController {
         .fetch();
       // return timeline2;
 
+      const timeline = [...timeline2.toJSON(), ...timeline1.toJSON()];
+
       await Promise.all(
-        timeline2.toJSON().map((d) => {
+        timeline.map((d) => {
           const data = { ...d, bab: d.materi.map((e) => e.bab) };
 
           let dibagikan = d.tanggal_pembagian;
@@ -1273,12 +1302,30 @@ class SecondController {
               if (d.__meta__.total_respon >= d.__meta__.total_siswa) {
                 selesai.push(data);
               } else {
+                if (
+                  tanggalBerlangsung.includes(
+                    moment(dibagikan).format("YYYY-MM-DD")
+                  )
+                ) {
+                  tanggalBerlangsung.push(
+                    moment(dibagikan).format("YYYY-MM-DD")
+                  );
+                }
                 berlangsung.push(data);
               }
             } else if (d.tipe == "absen") {
               if (moment(d.tanggal_akhir).toDate() < moment().toDate()) {
                 selesai.push(data);
               } else {
+                if (
+                  tanggalBerlangsung.includes(
+                    moment(dibagikan).format("YYYY-MM-DD")
+                  )
+                ) {
+                  tanggalBerlangsung.push(
+                    moment(dibagikan).format("YYYY-MM-DD")
+                  );
+                }
                 berlangsung.push(data);
               }
             } else if (d.tipe == "materi") {
@@ -1287,6 +1334,15 @@ class SecondController {
               ) {
                 selesai.push(data);
               } else {
+                if (
+                  tanggalBerlangsung.includes(
+                    moment(dibagikan).format("YYYY-MM-DD")
+                  )
+                ) {
+                  tanggalBerlangsung.push(
+                    moment(dibagikan).format("YYYY-MM-DD")
+                  );
+                }
                 berlangsung.push(data);
               }
             }
@@ -1294,48 +1350,26 @@ class SecondController {
           return 1;
         })
       );
-      await Promise.all(
-        timeline1.toJSON().map((d) => {
-          const data = d;
-
-          let dibagikan = d.tanggal_pembagian;
-          if (d.tipe == "tugas") {
-            dibagikan = d.tugas.tanggal_pembagian;
-          }
-
-          if (moment(dibagikan).toDate() > moment().toDate()) {
-            terjadwal.push(data);
-          } else {
-            if (d.tipe == "tugas") {
-              if (d.__meta__.total_respon >= d.__meta__.total_siswa) {
-                selesai.push(data);
-              } else {
-                berlangsung.push(data);
-              }
-            } else if (d.tipe == "absen") {
-              if (moment(d.tanggal_akhir).toDate() < moment().toDate()) {
-                selesai.push(data);
-              } else {
-                berlangsung.push(data);
-              }
-            } else if (d.tipe == "materi") {
-              if (
-                d.materi[0].__meta__.totalKesimpulan >= d.__meta__.total_siswa
-              ) {
-                selesai.push(data);
-              } else {
-                berlangsung.push(data);
-              }
-            }
-          }
-        })
-      );
     }
 
     return response.ok({
-      berlangsung,
+      berlangsung: timeline.filter((d) => {
+        let dibagikan = d.tanggal_pembagian;
+        if (d.tipe == "tugas") {
+          dibagikan = d.tugas.tanggal_pembagian;
+        }
+        dibagikan = moment(dibagikan).format("YYYY-MM-DD");
+        return tanggalBerlangsung.includes(dibagikan);
+      }),
       terjadwal,
-      selesai,
+      selesai: timeline.filter((d) => {
+        let dibagikan = d.tanggal_pembagian;
+        if (d.tipe == "tugas") {
+          dibagikan = d.tugas.tanggal_pembagian;
+        }
+        dibagikan = moment(dibagikan).format("YYYY-MM-DD");
+        return !tanggalBerlangsung.includes(dibagikan);
+      }),
     });
   }
 
@@ -1541,14 +1575,14 @@ class SecondController {
     }
 
     const user = await auth.getUser();
-    
+
     const { tanggal_awal, tanggal_akhir } = request.post();
 
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
-      const awal1 = moment(tanggal_awal).locale('id').format("DD MMMM YYYY ");
-      const akhir1 =  moment(tanggal_akhir).locale('id').format("DD MMMM YYYY ")
+    const awal1 = moment(tanggal_awal).locale("id").format("DD MMMM YYYY ");
+    const akhir1 = moment(tanggal_akhir).locale("id").format("DD MMMM YYYY ");
 
     const transaksi = await MKeuTransaksi.query()
       .with("jurnal", (builder) => {
@@ -1569,7 +1603,7 @@ class SecondController {
     worksheet.mergeCells("A1:D1");
     worksheet.mergeCells("A2:D2");
     worksheet.mergeCells("A3:D3");
-   
+
     worksheet.addConditionalFormatting({
       ref: "A1:D1",
       rules: [
@@ -1674,7 +1708,6 @@ class SecondController {
 
     await Promise.all(
       transaksi.toJSON().map(async (d, idx) => {
-      
         // add column headers
         worksheet.getRow(5).values = [
           "Tanggal",
@@ -1695,17 +1728,17 @@ class SecondController {
             if (e.jenis == "debit") {
               let row = worksheet.addRow({
                 akun: e.akun ? e.akun.nama : "-",
-                debit: `${(e ? e.saldo:'0').toLocaleString('id-ID', {
-                  style: 'currency',
-                  currency: 'IDR',
+                debit: `${(e ? e.saldo : "0").toLocaleString("id-ID", {
+                  style: "currency",
+                  currency: "IDR",
                 })}`,
               });
             } else if (e.jenis == "kredit") {
               let row = worksheet.addRow({
                 akun: e.akun ? e.akun.nama : "-",
-                kredit: `${(e ? e.saldo:'0').toLocaleString('id-ID', {
-                  style: 'currency',
-                  currency: 'IDR',
+                kredit: `${(e ? e.saldo : "0").toLocaleString("id-ID", {
+                  style: "currency",
+                  currency: "IDR",
                 })}`,
               });
             }
@@ -1718,18 +1751,10 @@ class SecondController {
           worksheet.mergeCells(
             `A${(idx + 1) * 1 + 5}:A${(idx + 1) * 1 + 4 + d.__meta__.total}`
           );
-        } else if(idx > 0) {
+        } else if (idx > 0) {
+          worksheet.getCell(`A${6 + awal}`).value = `${tanggalUtama}`;
 
-          worksheet.getCell(
-            `A${  6 + awal}`
-          ).value = `${tanggalUtama}`;
-
-          worksheet.mergeCells(
-            `A${  6 + awal }:A${
-                5 + awal + d.__meta__.total
-            }`
-          );
-
+          worksheet.mergeCells(`A${6 + awal}:A${5 + awal + d.__meta__.total}`);
         }
         awal = awal + d.__meta__.total;
       })
@@ -1791,7 +1816,7 @@ class SecondController {
     });
 
     worksheet.getCell(
-      `A${7+ awal}`
+      `A${7 + awal}`
     ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
 
     worksheet.getCell("A1").value = sekolah.nama;
