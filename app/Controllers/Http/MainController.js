@@ -826,24 +826,35 @@ class MainController {
         .with("sekolahSS")
         .where({ id: id })
         .first();
-      if (sekolah.sekolahSS) {
+
+      const domain = slugify(sekolah.sekolah, {
+        replacement: "", // replace spaces with replacement character, defaults to `-`
+        remove: /[*+~.()'"!:@]/g,
+        lower: true, // convert to lower case, defaults to `false`
+      });
+      const check = await MSekolah.query()
+        .where({ domain: `https://${domain}.smarteschool.id` })
+        .first();
+
+      if (check) {
+        await Sekolah.query().where({ id: id }).update({
+          m_sekolah_id: check.id,
+        });
         return response.ok({
-          sekolah: sekolah.sekolahSS,
+          sekolah: check,
         });
       } else {
-        const domain = slugify(sekolah.sekolah, {
-          replacement: "", // replace spaces with replacement character, defaults to `-`
-          remove: /[*+~.()'"!:@]/g,
-          lower: true, // convert to lower case, defaults to `false`
-        });
-        sekolahSS = await MSekolah.create({
-          nama: sekolah.Sekolah,
+        const sekolahSS = await MSekolah.create({
+          nama: sekolah.sekolah,
           domain: `https://${domain}.smarteschool.id`,
           status: sekolah.status || "N",
           tingkat: sekolah.bentuk || "SMK",
           integrasi: "whatsapp",
           diintegrasi: 1,
           trial: 1,
+        });
+        await Sekolah.query().where({ id: id }).update({
+          m_sekolah_id: sekolahSS.id,
         });
         return response.ok({
           sekolah: sekolahSS,
