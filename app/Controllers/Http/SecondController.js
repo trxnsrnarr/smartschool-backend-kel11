@@ -1547,6 +1547,9 @@ class SecondController {
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
+      const awal1 = moment(tanggal_awal).locale('id').format("DD MMMM YYYY ");
+      const akhir1 =  moment(tanggal_akhir).locale('id').format("DD MMMM YYYY ")
+
     const transaksi = await MKeuTransaksi.query()
       .with("jurnal", (builder) => {
         builder.with("akun").where({ dihapus: 0 });
@@ -1566,11 +1569,9 @@ class SecondController {
     worksheet.mergeCells("A1:D1");
     worksheet.mergeCells("A2:D2");
     worksheet.mergeCells("A3:D3");
-    worksheet.getCell(
-      "A4"
-    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
+   
     worksheet.addConditionalFormatting({
-      ref: "A1:D3",
+      ref: "A1:D1",
       rules: [
         {
           type: "expression",
@@ -1579,8 +1580,40 @@ class SecondController {
             font: {
               name: "Times New Roman",
               family: 4,
-              size: 16,
+              size: 14,
               bold: true,
+            },
+            // fill: {
+            //   type: "pattern",
+            //   pattern: "solid",
+            //   bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            // },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            // border: {
+            //   top: { style: "thin" },
+            //   left: { style: "thin" },
+            //   bottom: { style: "thin" },
+            //   right: { style: "thin" },
+            // },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: "A2:D3",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 14,
+              // bold: true,
             },
             // fill: {
             //   type: "pattern",
@@ -1662,12 +1695,18 @@ class SecondController {
             if (e.jenis == "debit") {
               let row = worksheet.addRow({
                 akun: e.akun ? e.akun.nama : "-",
-                debit: e ? e.saldo : "-",
+                debit: `${(e ? e.saldo:'0').toLocaleString('id-ID', {
+                  style: 'currency',
+                  currency: 'IDR',
+                })}`,
               });
             } else if (e.jenis == "kredit") {
               let row = worksheet.addRow({
                 akun: e.akun ? e.akun.nama : "-",
-                kredit: e ? e.saldo : "-",
+                kredit: `${(e ? e.saldo:'0').toLocaleString('id-ID', {
+                  style: 'currency',
+                  currency: 'IDR',
+                })}`,
               });
             }
           })
@@ -1751,14 +1790,18 @@ class SecondController {
       ],
     });
 
+    worksheet.getCell(
+      `A${7+ awal}`
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
+
     worksheet.getCell("A1").value = sekolah.nama;
-    worksheet.getCell("A2").value = "Jurnal Umum";
-    worksheet.getCell("A3").value = `${bulan} ${tahun}`;
+    worksheet.getCell("A2").value = "JURNAL UMUM";
+    worksheet.getCell("A3").value = `Tanggal : ${awal1}-${akhir1}`;
 
     worksheet.getColumn("B").width = 15;
     worksheet.getColumn("C").width = 23;
-    worksheet.getColumn("D").width = 16;
-    worksheet.getColumn("E").width = 16;
+    worksheet.getColumn("D").width = 28;
+    worksheet.getColumn("E").width = 28;
 
     let namaFile = `/uploads/Jurnal-Umum-${bulan}-${keluarantanggalseconds}.xlsx`;
 
