@@ -9306,9 +9306,11 @@ class MainController {
         .where({ m_timeline_id: timeline_id })
         .delete();
       await Promise.all(
-        TkTimelineTopik.create({
-          m_timeline_id: timeline_id,
-          m_topik_id: materi,
+        materi.map(d => {
+          return TkTimelineTopik.create({
+            m_timeline_id: timeline_id,
+            m_topik_id: d,
+          })
         })
       );
 
