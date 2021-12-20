@@ -1170,6 +1170,7 @@ class SecondController {
         role: user.role,
       });
     }
+    let timeline;
     if (absen) {
       timeline = await MTimeline.query()
         .withCount("tkTimeline as total_respon", (builder) => {
@@ -1284,7 +1285,7 @@ class SecondController {
         .fetch();
       // return timeline2;
 
-      const timeline = [...timeline2.toJSON(), ...timeline1.toJSON()];
+      timeline = [...timeline2.toJSON(), ...timeline1.toJSON()];
 
       await Promise.all(
         timeline.map((d) => {
