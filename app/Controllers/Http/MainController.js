@@ -4539,12 +4539,12 @@ class MainController {
         .andWhere({ m_materi_id: materi.id })
         .first();
 
-      if (jadwalMengajar.rombel.m_user_id == user.id) {
         mapelKelas = await MJadwalMengajar.query()
           .distinct("m_mata_pelajaran_id")
           .with("mataPelajaran")
           .where({ m_rombel_id: data.m_rombel_id })
           .fetch();
+      if (jadwalMengajar.rombel.m_user_id == user.id) {
       }
     }
 
