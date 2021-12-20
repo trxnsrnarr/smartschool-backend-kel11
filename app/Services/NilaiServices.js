@@ -2,7 +2,7 @@ const MBobotNilai = use("App/Models/MBobotNilai");
 const MUjianSiswa = use("App/Models/MUjianSiswa");
 
 const HitungNilaiAkhir = async({rekap, rekapUjian, mapel, user_id, ta, sekolah}) => {
-  let nilaiAkhir;
+  let nilaiAkhir = 0;
   // const listNilai = [
   //   rataUjian,
   //   rata,

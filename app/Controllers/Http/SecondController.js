@@ -1541,16 +1541,25 @@ class SecondController {
     }
 
     const user = await auth.getUser();
+    
+    const { tanggal_awal, tanggal_akhir } = request.post();
 
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const transaksi = await MKeuTransaksi.query()
       .with("jurnal", (builder) => {
-        builder.where({ m_sekolah_id: sekolah.id }).andWhere({ dihapus: 0 });
+        builder.with("akun").where({ dihapus: 0 });
+      })
+      .withCount("jurnal as total", (builder) => {
+        builder.where({ dihapus: 0 });
       })
       .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .whereBetween("tanggal", [`${tanggal_awal}`, `${tanggal_akhir}`])
       .fetch();
+
+    // return transaksi;
 
     let workbook = new Excel.Workbook();
     let worksheet = workbook.addWorksheet(`Jurnal Umum`);
@@ -1628,93 +1637,147 @@ class SecondController {
     const dateObj = new Date();
     const tahun = dateObj.getYear();
     const bulan = monthNames[dateObj.getMonth()];
+    let awal = 0;
 
     await Promise.all(
-      jurnal.toJSON().map(async (d, idx) => {
-        worksheet.getCell("A1").value = sekolah.nama;
-        worksheet.getCell("A2").value = "Jurnal Umum";
-        worksheet.getCell("A3").value = `${bulan} ${tahun}`;
-        worksheet.addConditionalFormatting({
-          ref: `B${(idx + 1) * 1 + 5}:D${(idx + 1) * 1 + 5}`,
-          rules: [
-            {
-              type: "expression",
-              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-              style: {
-                font: {
-                  name: "Times New Roman",
-                  family: 4,
-                  size: 11,
-                  // bold: true,
-                },
-                alignment: {
-                  vertical: "middle",
-                  horizontal: "left",
-                },
-                border: {
-                  top: { style: "thin" },
-                  left: { style: "thin" },
-                  bottom: { style: "thin" },
-                  right: { style: "thin" },
-                },
-              },
-            },
-          ],
-        });
-        worksheet.addConditionalFormatting({
-          ref: `A${(idx + 1) * 1 + 5}`,
-          rules: [
-            {
-              type: "expression",
-              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-              style: {
-                font: {
-                  name: "Times New Roman",
-                  family: 4,
-                  size: 11,
-                  // bold: true,
-                },
-                alignment: {
-                  vertical: "middle",
-                  horizontal: "center",
-                },
-                border: {
-                  top: { style: "thin" },
-                  left: { style: "thin" },
-                  bottom: { style: "thin" },
-                  right: { style: "thin" },
-                },
-              },
-            },
-          ],
-        });
+      transaksi.toJSON().map(async (d, idx) => {
+      
         // add column headers
         worksheet.getRow(5).values = [
           "Tanggal",
           "Nama Akun",
-          "Debet",
+          "Debit",
           "Kredit",
         ];
-        worksheet.columns = [
-          { key: "Tanggal" },
-          { key: "akun" },
-          { key: "debet" },
-          { key: "kredit" },
-        ];
+        await Promise.all(
+          d.jurnal.map(async (e) => {
+            worksheet.columns = [
+              { key: "" },
+              { key: "akun" },
+              { key: "debit" },
+              { key: "kredit" },
+            ];
 
-        // Add row using key mapping to columns
-        let row = worksheet.addRow({
-          Tanggal: `${idx + 1}`,
-          akun: d ? d.akun : "-",
-          debet: d ? d.debet : "-",
-          kredit: d ? d.kredit : "-",
-        });
+            // Add row using key mapping to columns
+            if (e.jenis == "debit") {
+              let row = worksheet.addRow({
+                akun: e.akun ? e.akun.nama : "-",
+                debit: e ? e.saldo : "-",
+              });
+            } else if (e.jenis == "kredit") {
+              let row = worksheet.addRow({
+                akun: e.akun ? e.akun.nama : "-",
+                kredit: e ? e.saldo : "-",
+              });
+            }
+          })
+        );
+        const tanggalUtama = moment(`${d.tanggal}`).format("DD-MM-YYYY");
+
+        if (idx == 0) {
+          worksheet.getCell(`A${(idx + 1) * 1 + 5}`).value = `${tanggalUtama}`;
+          worksheet.mergeCells(
+            `A${(idx + 1) * 1 + 5}:A${(idx + 1) * 1 + 4 + d.__meta__.total}`
+          );
+        } else if(idx > 0) {
+
+          worksheet.getCell(
+            `A${  6 + awal}`
+          ).value = `${tanggalUtama}`;
+
+          worksheet.mergeCells(
+            `A${  6 + awal }:A${
+                5 + awal + d.__meta__.total
+            }`
+          );
+
+        }
+        awal = awal + d.__meta__.total;
       })
     );
+
+    worksheet.addConditionalFormatting({
+      ref: `B6:D${5 + awal}`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 11,
+              // bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "left",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: `A6:A${5 + awal}`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 11,
+              // bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+
+    worksheet.getCell("A1").value = sekolah.nama;
+    worksheet.getCell("A2").value = "Jurnal Umum";
+    worksheet.getCell("A3").value = `${bulan} ${tahun}`;
+
+    worksheet.getColumn("B").width = 15;
+    worksheet.getColumn("C").width = 23;
+    worksheet.getColumn("D").width = 16;
+    worksheet.getColumn("E").width = 16;
+
     let namaFile = `/uploads/Jurnal-Umum-${bulan}-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
+    // worksheet.columns = [
+    //   { key: "Tanggal" },
+    //   { key: "akun" },
+    //   { key: "debet" },
+    //   { key: "kredit" },
+    // ];
+
+    // // Add row using key mapping to columns
+    // let row = worksheet.addRow({
+    //   Tanggal: d ? d.transaksi:"-",
+    //   akun: d.jurnal.akun ? d.jurnal.akun.nama : "-",
+    //   debet: d ? d.debet : "-",
+    //   kredit: d ? d.kredit : "-",
+    // });
 
     return namaFile;
   }
@@ -1730,14 +1793,18 @@ class SecondController {
 
     const user = await auth.getUser();
 
+    const { tanggal_awal, tanggal_akhir } = request.post();
+
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
-    const barang = await MBarang.query()
-      .with("lokasi", (builder) => {
-        builder.where({ m_sekolah_id: sekolah.id }).andWhere({ dihapus: 0 });
+    const transaksi = await MKeuTransaksi.query()
+      .with("jurnal", (builder) => {
+        builder.with("akun").where({ dihapus: 0 });
       })
       .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .whereBetween("tanggal", [`${tanggal_awal}`, `${tanggal_akhir}`])
       .fetch();
 
     let workbook = new Excel.Workbook();
@@ -1818,7 +1885,7 @@ class SecondController {
     const bulan = monthNames[dateObj.getMonth()];
 
     await Promise.all(
-      jurnal.toJSON().map(async (d, idx) => {
+      transaksi.toJSON().map(async (d, idx) => {
         worksheet.getCell("A1").value = sekolah.nama;
         worksheet.getCell("A2").value = "NERACA";
         worksheet.getCell("A3").value = `per 31 ${bulan} ${tahun}`;

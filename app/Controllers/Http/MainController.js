@@ -419,9 +419,9 @@ class MainController {
       await MPredikatNilai.create({
         predikat: "B",
         bb_pengetahuan: "71",
-        ba_pengetahuan: "85",
+        ba_pengetahuan: "86",
         bb_keterampilan: "71",
-        ba_keterampilan: "85",
+        ba_keterampilan: "86",
         sikap: "Baik",
         m_sekolah_id: sekolah.id,
         dihapus: 0,
@@ -429,9 +429,9 @@ class MainController {
       await MPredikatNilai.create({
         predikat: "C",
         bb_pengetahuan: "56",
-        ba_pengetahuan: "70",
+        ba_pengetahuan: "71",
         bb_keterampilan: "56",
-        ba_keterampilan: "70",
+        ba_keterampilan: "71",
         sikap: "Cukup",
         m_sekolah_id: sekolah.id,
         dihapus: 0,
@@ -439,9 +439,9 @@ class MainController {
       await MPredikatNilai.create({
         predikat: "D",
         bb_pengetahuan: "0",
-        ba_pengetahuan: "55",
+        ba_pengetahuan: "56",
         bb_keterampilan: "0",
-        ba_keterampilan: "55",
+        ba_keterampilan: "56",
         sikap: "Kurang",
         m_sekolah_id: sekolah.id,
         dihapus: 0,
@@ -1118,6 +1118,7 @@ class MainController {
       wa_ayah,
       nama_ibu,
       wa_ibu,
+
     });
 
     if (!update) {
@@ -1170,6 +1171,9 @@ class MainController {
       tanggal_lahir,
       avatar,
       home,
+      no_ijazah,
+      tahun_ijazah,
+      file_ijazah,
 
       // informasi
       nisn,
@@ -1317,6 +1321,9 @@ class MainController {
         kelas_diterima,
         tanggal_masuk,
         telp_rumah,
+        no_ijazah,
+        tahun_ijazah,
+        file_ijazah,
 
         // alamat
         alamat,
@@ -1407,6 +1414,9 @@ class MainController {
         kelas_diterima,
         tanggal_masuk,
         telp_rumah,
+        no_ijazah,
+        tahun_ijazah,
+        file_ijazah,
 
         // alamat
         alamat,
@@ -12728,9 +12738,9 @@ class MainController {
 
     let tkJadwalUjianData = [];
     const tkJadwalIds = await TkJadwalUjian.query()
-      .andWhere({ m_jadwal_ujian_id: jadwal_ujian_id })
-      .where({ dihapus: 0 })
-      .pluck("m_rombel_id");
+    .andWhere({ m_jadwal_ujian_id: jadwal_ujian_id })
+    .where({ dihapus: 0 })
+    .pluck("m_rombel_id");
 
     if (rombel_id.length) {
       await Promise.all(
@@ -19728,9 +19738,9 @@ class MainController {
       await MPredikatNilai.create({
         predikat: "B",
         bb_pengetahuan: "71",
-        ba_pengetahuan: "85",
+        ba_pengetahuan: "86",
         bb_keterampilan: "71",
-        ba_keterampilan: "85",
+        ba_keterampilan: "86",
         sikap: "Baik",
         m_sekolah_id: sekolah.id,
         dihapus: 0,
@@ -19738,9 +19748,9 @@ class MainController {
       await MPredikatNilai.create({
         predikat: "C",
         bb_pengetahuan: "56",
-        ba_pengetahuan: "70",
+        ba_pengetahuan: "71",
         bb_keterampilan: "56",
-        ba_keterampilan: "70",
+        ba_keterampilan: "71",
         sikap: "Cukup",
         m_sekolah_id: sekolah.id,
         dihapus: 0,
@@ -19748,9 +19758,9 @@ class MainController {
       await MPredikatNilai.create({
         predikat: "D",
         bb_pengetahuan: "0",
-        ba_pengetahuan: "55",
+        ba_pengetahuan: "56",
         bb_keterampilan: "0",
-        ba_keterampilan: "55",
+        ba_keterampilan: "56",
         sikap: "Kurang",
         m_sekolah_id: sekolah.id,
         dihapus: 0,
@@ -44300,6 +44310,10 @@ class MainController {
 
     const user = await auth.getUser();
 
+    let {ranking = [] } = request.post();
+
+    
+
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
@@ -44428,10 +44442,7 @@ class MainController {
 
               if (nox == d.user.nilaiSemuaUjian.length - 1) {
                 row.getCell([`${(nox + 1) * 2 + 5}`]).value =
-                  d.user.nilaiSemuaUjian.reduce(
-                    (a, b) => a + b.nilai + b.nilai_keterampilan,
-                    0
-                  );
+                 ranking.find((f)=> f.m_user_id == d.m_user_id).total_nilai;
 
                 const cell = row.getCell([`${(nox + 1) * 2 + 5}`]);
 
@@ -44442,7 +44453,7 @@ class MainController {
                 // )}$100)`;
 
                 row.getCell([`${(nox + 1) * 2 + 6}`]).value =
-                  urutan.findIndex((f) => f == d.id) + 1;
+                ranking.find((f)=> f.m_user_id == d.m_user_id).ranking;
 
                 alreadyMerged = (nox + 1) * 2 + 4;
               }
@@ -44657,6 +44668,10 @@ class MainController {
 
     const user = await auth.getUser();
 
+    let {ranking = [] } = request.post();
+
+    
+
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
@@ -44805,10 +44820,7 @@ class MainController {
 
               if (nox == d.user.nilaiSemuaUjian.length - 1) {
                 row.getCell([`${(nox + 1) * 3 + 5}`]).value =
-                  d.user.nilaiSemuaUjian.reduce(
-                    (a, b) => a + b.nilai + b.nilai_keterampilan,
-                    0
-                  );
+                 ranking.find((f)=> f.m_user_id == d.m_user_id).total_nilai;
 
                 const cell = row.getCell([`${(nox + 1) * 3 + 5}`]);
 
@@ -44819,7 +44831,7 @@ class MainController {
                 // )}$100)`;
 
                 row.getCell([`${(nox + 1) * 3 + 6}`]).value =
-                  urutan.findIndex((f) => f == d.id) + 1;
+                ranking.find((f)=> f.m_user_id == d.m_user_id).ranking;
 
                 alreadyMerged = (nox + 1) * 3 + 3;
               }
