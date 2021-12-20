@@ -9326,7 +9326,7 @@ class MainController {
         .andWhere({ dihapus: 0 })
         .pluck("m_user_id");
 
-      const checkJSON = check.toJSON();
+      const checkJSON = check;
       let userIds = [];
 
       await Promise.all(
