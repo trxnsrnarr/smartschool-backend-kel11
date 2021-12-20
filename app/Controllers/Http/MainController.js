@@ -801,6 +801,77 @@ class MainController {
     });
   }
 
+  async postSekolahSS({ response, request, params: { id } }) {
+    const {
+      nama,
+      whatsapp,
+      jabatan,
+      password,
+      propinsi1: propinsi,
+      kabupaten1: kabupaten,
+      kecamatan1: kecamatan,
+      kode_pos,
+      npsn,
+      sekolah,
+      kepsek,
+      waKepsek,
+      alamat,
+      email,
+      telp,
+    } = request.post();
+
+    const domain = slugify(sekolah, {
+      replacement: "", // replace spaces with replacement character, defaults to `-`
+      remove: /[*+~.()'"!:@]/g,
+      lower: true, // convert to lower case, defaults to `false`
+    });
+    const check = await MSekolah.query()
+      .where({
+        domain: `https://${domain}.smarteschool.id`,
+      })
+      .first();
+    let sekolahSS = check;
+    if (!check) {
+      sekolahSS = await MSekolah.create({
+        nama: sekolah,
+        npsn,
+        provinsi: propinsi,
+        kabupaten: kabupaten,
+        kecamatan,
+        alamat,
+        telp,
+        email,
+        domain: `https://${domain}.smarteschool.id`,
+      });
+    }
+    await Sekolah.query().where({ id: id }).update({
+      m_sekolah_id: sekolahSS.id,
+    });
+
+    const checkUser = await User.query()
+      .where({ m_sekolah_id: sekolahSS.id })
+      .where({ dihapus: 0 })
+      .where({ whatsapp })
+      .first();
+    let user = checkUser;
+    if (!checkUser) {
+      user = await User.create({
+        m_sekolah_id: sekolahSS.id,
+        nama,
+        role: jabatan,
+        whatsapp,
+        password: password,
+        dihapus: 0,
+      });
+      user = { ...user.$attributes, password };
+    }
+
+    return response.ok({
+      sekolahSS,
+      user,
+    });
+  }
+
   async postRegistrasiSekolah({ response, request }) {
     const { id, nama, whatsapp, jabatan, password } = request.post();
     const lampiran = request.file("lampiran");

@@ -34,6 +34,7 @@ Route.get(
 );
 Route.get("/master/sekolah/:id", "MainController.detailSekolahMaster");
 Route.post("/master/sekolah", "MainController.tambahSekolah");
+Route.post("/master/sekolah/:id", "MainController.postSekolahSS");
 Route.post("/master/registrasi", "MainController.postRegistrasiSekolah");
 
 // utils
