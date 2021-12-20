@@ -21,8 +21,20 @@ class MJadwalUjian extends Model {
     ];
   }
 
-  getJumlahSoal({ jumlah_pg, jumlah_esai }) {
-    return jumlah_pg + jumlah_esai;
+  getJumlahSoal({
+    jumlah_pg,
+    jumlah_esai,
+    jumlah_menjodohkan,
+    jumlah_pg_kompleks,
+    jumlah_uraian,
+  }) {
+    return (
+      jumlah_pg +
+      jumlah_esai +
+      jumlah_menjodohkan +
+      jumlah_pg_kompleks +
+      jumlah_uraian
+    );
   }
 
   getTanggalUjian({ waktu_dibuka }) {
