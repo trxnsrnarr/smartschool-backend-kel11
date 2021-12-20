@@ -48609,6 +48609,23 @@ class MainController {
         .andWhere({ m_ta_id: ta.id })
         .first();
 
+      let keterangan;
+
+      if (d.kelulusan == "lulus" || d.kelulusan == "Lulus") {
+        keterangan = "lulus";
+      } else if (
+        d.kelulusan == "tidak Lulus" ||
+        d.kelulusan == "Tidak Lulus" ||
+        d.kelulusan == "Tidak lulus" ||
+        d.kelulusan == "tidak lulus" ||
+        d.kelulusan == "TidakLulus" ||
+        d.kelulusan == "Tidaklulus" ||
+        d.kelulusan == "tidakLulus" ||
+        d.kelulusan == "tidaklulus"
+      ) {
+        keterangan = "tidak lulus";
+      }
+
       if (!checkData) {
         if (d.catatan && d.kelulusan) {
           await MKeteranganRapor.create(
@@ -48618,7 +48635,7 @@ class MainController {
               m_ta_id: ta.id,
               m_user_id: userSiswa.id,
               catatan: d.catatan ? d.catatan : "-",
-              kelulusan: d.kelulusan ? d.kelulusan : "-",
+              kelulusan: keterangan,
             },
             trx
           );
@@ -48626,17 +48643,19 @@ class MainController {
 
         // return;
       } else {
-        const update = await MKeteranganRapor.query()
-          .where({ tipe: tipe })
-          .andWhere({ m_user_id: userSiswa.id })
-          .andWhere({ m_ta_id: ta.id })
-          .update(
-            {
-              catatan: d.catatan ? d.catatan : "-",
-              kelulusan: d.kelulusan ? d.kelulusan : "-",
-            },
-            trx
-          );
+        if (d.catatan && d.kelulusan) {
+          const update = await MKeteranganRapor.query()
+            .where({ tipe: tipe })
+            .andWhere({ m_user_id: userSiswa.id })
+            .andWhere({ m_ta_id: ta.id })
+            .update(
+              {
+                catatan: d.catatan ? d.catatan : "-",
+                kelulusan: keterangan,
+              },
+              trx
+            );
+        }
       }
       result.push(1);
     }
