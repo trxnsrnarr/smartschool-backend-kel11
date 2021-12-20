@@ -48554,7 +48554,7 @@ class MainController {
           );
         }
 
-        return;
+        // return;
       }
       const update = await MKeteranganRapor.query()
         .where({ tipe: tipe })
