@@ -41317,7 +41317,23 @@ class MainController {
   }
 
   async putSekolah({ response, request, auth, params: { sekolah_id } }) {
-    const { nama, domain, server, alamat } = request.post();
+    const {
+      nama,
+      domain,
+      server,
+      alamat,
+      foto_logo,
+      email,
+      telp,
+      provinsi,
+      kabupaten,
+      kecamatan,
+      kelurahan,
+      kode_pos,
+      link_rapor,
+      link_web,
+      link_dapodik,
+    } = request.post();
 
     // let validation = await validate(
     //   request.post(),
@@ -41334,6 +41350,19 @@ class MainController {
       domain,
       server,
       alamat,
+      logo: foto_logo,
+      logo_ss: foto_logo,
+      favicon: foto_logo,
+      email,
+      telp,
+      provinsi,
+      kabupaten,
+      kecamatan,
+      kelurahan,
+      kode_pos,
+      link_rapor,
+      link_web,
+      link_dapodik,
     });
 
     return response.ok({
