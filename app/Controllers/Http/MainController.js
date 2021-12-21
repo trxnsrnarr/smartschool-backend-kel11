@@ -8886,7 +8886,7 @@ class MainController {
             let analisisTotal = {};
 
             await Promise.all(
-              pesertaUjian.toJSON().jawabanSiswa.map(async (d) => {
+              pesertaUjian.jawabanSiswa.map(async (d) => {
                 if (d.soal.bentuk == "pg") {
                   if (d.jawaban_pg == d.soal.kj_pg) {
                     metaHasil.benar = metaHasil.benar + 1;
