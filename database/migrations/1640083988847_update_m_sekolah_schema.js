@@ -8,6 +8,7 @@ class UpdateMSekolahSchema extends Schema {
     this.table("m_sekolah", (table) => {
       // alter table
       table.string("link_rapor");
+      table.string("link_web");
       table.string("link_dapodik");
     });
   }
@@ -15,6 +16,7 @@ class UpdateMSekolahSchema extends Schema {
   down() {
     this.table("m_sekolah", (table) => {
       table.dropColumn("link_rapor");
+      table.dropColumn("link_web");
       table.dropColumn("link_dapodik");
       // reverse alternations
     });
