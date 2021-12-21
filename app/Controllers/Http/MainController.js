@@ -13281,6 +13281,8 @@ class MainController {
           ...soalMasterUraian,
         ])
         .orderByRaw(`${diacak}`)
+        .where({ dihapus: 0 })
+        .where({ m_ujian_id: ujian_id })
         .fetch();
 
       const soalData = [];
