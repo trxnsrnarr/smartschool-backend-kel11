@@ -7,6 +7,10 @@ class MJadwalPpdb extends Model {
   static get table() {
     return "m_jadwal_ppdb";
   }
+
+  soal() {
+    return this.belongsTo("App/Models/MUjian");
+  }
 }
 
 module.exports = MJadwalPpdb;

@@ -1,154 +1,15 @@
 "use strict";
 
-const Drive = use("Drive");
-const Province = use("App/Models/Province");
-const Regency = use("App/Models/Regency");
-const District = use("App/Models/District");
-const Village = use("App/Models/Village");
-const Sekolah = use("App/Models/Sekolah");
 const MSekolah = use("App/Models/MSekolah");
-const MSekolahIndustri = use("App/Models/MSekolahIndustri");
-const MSarpras = use("App/Models/MSarpras");
-const MKegiatanGaleri = use("App/Models/MKegiatanGaleri");
-const MProyek = use("App/Models/MProyek");
-const MPerpusKomen = use("App/Models/MPerpusKomen");
-const MRpp = use("App/Models/MRpp");
-const MSikapSiswa = use("App/Models/MSikapSiswa");
-const MSikapRombel = use("App/Models/MSikapRombel");
-const MRekap = use("App/Models/MRekap");
-const MPredikatNilai = use("App/Models/MPredikatNilai");
-const MKeteranganRapor = use("App/Models/MKeteranganRapor");
-const MCamera = use("App/Models/MCamera");
-const MAbsenBelumTerdaftar = use("App/Models/MAbsenBelumTerdaftar");
-const MKeteranganPkl = use("App/Models/MKeteranganPkl");
-const MRaporEkskul = use("App/Models/MRaporEkskul");
-const MRekapRombel = use("App/Models/MRekapRombel");
-const TkRekapNilai = use("App/Models/TkRekapNilai");
 const MGelombangPpdb = use("App/Models/MGelombangPpdb");
 const MPendaftarPpdb = use("App/Models/MPendaftarPpdb");
-const MAnggotaProyek = use("App/Models/MAnggotaProyek");
-const MAnggotaProyekRole = use("App/Models/MAnggotaProyekRole");
-const MKategoriPekerjaan = use("App/Models/MKategoriPekerjaan");
-const MPekerjaanProyek = use("App/Models/MPekerjaanProyek");
-const MDitugaskanPekerjaan = use("App/Models/MDitugaskanPekerjaan");
-const MProyekForum = use("App/Models/MProyekForum");
-const MProyekForumKomen = use("App/Models/MProyekForumKomen");
-const MAlurPPDB = use("App/Models/MAlurPpdb");
-const TkPerpusAktivitas = use("App/Models/TkPerpusAktivitas");
-const MJurusan = use("App/Models/MJurusan");
-const MRekSekolah = use("App/Models/MRekSekolah");
-const MIndustri = use("App/Models/MIndustri");
-const MPembayaran = use("App/Models/MPembayaran");
-const MPembayaranSiswa = use("App/Models/MPembayaranSiswa");
-const MMutasi = use("App/Models/MMutasi");
-const MAlumni = use("App/Models/MAlumni");
-const MProfilUser = use("App/Models/MProfilUser");
-const MRiwayatPembayaranSiswa = use("App/Models/MRiwayatPembayaranSiswa");
-const MPembayaranKategori = use("App/Models/MPembayaranKategori");
 const Mta = use("App/Models/Mta");
-const MSlider = use("App/Models/MSlider");
-const MTugas = use("App/Models/MTugas");
-const MKegiatan = use("App/Models/MKegiatan");
-const MInformasiSekolah = use("App/Models/MInformasiSekolah");
-const MInformasiJurusan = use("App/Models/MInformasiJurusan");
-const MGuruJurusan = use("App/Models/MGuruJurusan");
-const MRombel = use("App/Models/MRombel");
-const TkPembayaranRombel = use("App/Models/TkPembayaranRombel");
-const MJamMengajar = use("App/Models/MJamMengajar");
-const MJadwalMengajar = use("App/Models/MJadwalMengajar");
-const MMataPelajaran = use("App/Models/MMataPelajaran");
-const TkPost = use("App/Models/TkPost");
-const MPost = use("App/Models/MPost");
-const MKategori = use("App/Models/MKategori");
-const MTopik = use("App/Models/MTopik");
-const MAnggotaRombel = use("App/Models/MAnggotaRombel");
-const TkMateriRombel = use("App/Models/TkMateriRombel");
-const MBab = use("App/Models/MBab");
-const MPrestasi = use("App/Models/MPrestasi");
-const MAbsen = use("App/Models/MAbsen");
-const MSoalUjian = use("App/Models/MSoalUjian");
-const TkSoalUjian = use("App/Models/TkSoalUjian");
-const MJadwalUjian = use("App/Models/MJadwalUjian");
-const TkJadwalUjian = use("App/Models/TkJadwalUjian");
-const TkPesertaUjian = use("App/Models/TkPesertaUjian");
-const MUjian = use("App/Models/MUjian");
-const MUjianSiswa = use("App/Models/MUjianSiswa");
-const MMateri = use("App/Models/MMateri");
-const MSikapSosial = use("App/Models/MSikapSosial");
-const MSikapSpiritual = use("App/Models/MSikapSpiritual");
-const MSoalKuis = use("App/Models/MSoalKuis");
-const MTimeline = use("App/Models/MTimeline");
-const TkTimeline = use("App/Models/TkTimeline");
-const TkTimelineKomen = use("App/Models/TkTimelineKomen");
-const TkTimelineTopik = use("App/Models/TkTimelineTopik");
-const TkMateriKesimpulan = use("App/Models/TkMateriKesimpulan");
-const MTimelineKomen = use("App/Models/MTimelineKomen");
-const MPerusahaan = use("App/Models/MPerusahaan");
-const TkPerusahaanSekolah = use("App/Models/TkPerusahaanSekolah");
-const MPekerjaan = use("App/Models/MPekerjaan");
-const MInformasiPekerjaan = use("App/Models/MInformasiPekerjaan");
-const MPekerjaanPengumuman = use("App/Models/MPekerjaanPengumuman");
-const MAcaraPerusahaan = use("App/Models/MAcaraPerusahaan");
-const TkStatusPekerjaan = use("App/Models/TkStatusPekerjaan");
-const MKotakMasuk = use("App/Models/MKotakMasuk");
-const MKotakMasukKomen = use("App/Models/MKotakMasukKomen");
-const MSurel = use("App/Models/MSurel");
-const MSurelKomen = use("App/Models/MSurelKomen");
-const MFolderArsip = use("App/Models/MFolderArsip");
-const TkTipeSurel = use("App/Models/TkTipeSurel");
-const MBarang = use("App/Models/MBarang");
-const MLokasi = use("App/Models/MLokasi");
-const MKategoriPelanggaran = use("App/Models/MKategoriPelanggaran");
-const MPelanggaran = use("App/Models/MPelanggaran");
-const MPenghargaan = use("App/Models/MPenghargaan");
-const MSanksiPelanggaran = use("App/Models/MSanksiPelanggaran");
-const MSanksiSiswa = use("App/Models/MSanksiSiswa");
-const TkSiswaPelanggaran = use("App/Models/TkSiswaPelanggaran");
-const MBabPeraturan = use("App/Models/MBabPeraturan");
-const MPasalPeraturan = use("App/Models/MPasalPeraturan");
-const MBukuTamu = use("App/Models/MBukuTamu");
-const MKategoriMapel = use("App/Models/MKategoriMapel");
-const TkMapelRapor = use("App/Models/TkMapelRapor");
-const MSurat = use("App/Models/MSurat");
-const MDisposisi = use("App/Models/MDisposisi");
-const MPelaporanDisposisi = use("App/Models/MPelaporanDisposisi");
-const MTemplateDeskripsi = use("App/Models/MTemplateDeskripsi");
-const MPertemuanBk = use("App/Models/MPertemuanBk");
-const MJadwalKonsultasi = use("App/Models/MJadwalKonsultasi");
-const MLabelKalender = use("App/Models/MLabelKalender");
-const MKegiatanKalender = use("App/Models/MKegiatanKalender");
-const MKalenderPendidikan = use("App/Models/MKalenderPendidikan");
-const MBuktiPelaksanaanSanksi = use("App/Models/MBuktiPelaksanaanSanksi");
-const MBobotNilai = use("App/Models/MBobotNilai");
-const MRegistrasiAkun = use("App/Models/MRegistrasiAkun");
-const MKeuAkun = use("App/Models/MKeuAkun");
-const MKeuTemplateAkun = use("App/Models/MKeuTemplateAkun");
-const MKeuJurnal = use("App/Models/MKeuJurnal");
-const MKeuTransaksi = use("App/Models/MKeuTransaksi");
 const MJalurPpdb = use("App/Models/MJalurPpdb");
 const MInformasiJalurPpdb = use("App/Models/MInformasiJalurPpdb");
 const MInformasiGelombang = use("App/Models/MInformasiGelombang");
+const MJadwalPpdb = use("App/Models/MJadwalPpdb");
 
-const MBuku = use("App/Models/MBuku");
-const MPerpus = use("App/Models/MPerpus");
-const MPraktikKerja = use("App/Models/MPraktikKerja");
-const MEkstrakurikuler = use("App/Models/MEkstrakurikuler");
-const TkPerpusMapel = use("App/Models/TkPerpusMapel");
-const TkSoalTugas = use("App/Models/TkSoalTugas");
-const MPerpusTag = use("App/Models/MPerpusTag");
-const TkPerpusTag = use("App/Models/TkPerpusTag");
-const MKontak = use("App/Models/MKontak");
-const TkJawabanUjianSiswa = use("App/Models/TkJawabanUjianSiswa");
 const User = use("App/Models/User");
-const DownloadService = use("App/Services/DownloadService");
-const DownloadService2 = use("App/Services/DownloadService2");
-const DownloadKartuPg = use("App/Services/DownloadKartuPg");
-const DownloadKartuEsai = use("App/Services/DownloadKartuEsai");
-const Downloadkisikisi = use("App/Services/Downloadkisikisi");
-const DownloadNaskah = use("App/Services/DownloadNaskah");
-const DownloadRumusan = use("App/Services/DownloadRumusan");
-const DownloadTemplate = use("App/Services/DownloadTemplate");
-const WhatsAppService = use("App/Services/WhatsAppService");
 
 const moment = require("moment");
 require("moment/locale/id");
@@ -456,7 +317,11 @@ class PPDBController {
           .where({ dihapus: 0 })
           .withCount("pendaftar as jumlahPendaftar")
           .with("informasi", (builder) => {
-            builder.where({ dihapus: 0 });
+            builder
+              .with("ujian", (builder) => {
+                builder.with("soal");
+              })
+              .where({ dihapus: 0 });
           });
       })
       .with("informasi", (builder) => {
@@ -617,20 +482,12 @@ class PPDBController {
         .fetch();
     }
 
-    const jalur = await MJalurPpdb.query()
-      .with("gelombang", (builder) => {
-        builder
-          .where({ dihapus: 0 })
-          .withCount("pendaftar as jumlahPendaftar")
-          .with("informasi", (builder) => {
-            builder.where({ dihapus: 0 });
-          });
-      })
-      .with("informasi", (builder) => {
-        builder.where({ dihapus: 0 });
-      })
+    const gelombang = await MGelombangPpdb.query()
+      .with("jalur")
       .where({ m_sekolah_id: sekolah.id })
-      .where({ dihapus: 0 })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .withCount("pendaftar as jumlahPendaftar")
       .fetch();
 
     const jumlahPeserta = await User.query()
@@ -640,7 +497,7 @@ class PPDBController {
       .count("* as total");
 
     return response.ok({
-      jalur: jalur,
+      gelombang: gelombang,
       terdaftar: terdaftar,
       gelombangAktif: gelombangAktif,
       jumlahPeserta: jumlahPeserta[0].total,
@@ -891,6 +748,189 @@ class PPDBController {
       dihapus: 1,
     });
     if (!informasi) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async postJadwalPPDB({ request, response }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const {
+      tipe,
+      nama,
+      keterangan,
+      lokasi,
+      link,
+      jumlah_pg,
+      jumlah_esai,
+      jumlah_soal_akm,
+      kkm,
+      waktu_dibuka,
+      waktu_ditutup,
+      durasi,
+      gmeet,
+      diacak,
+      dihapus,
+      m_gelombang_ppdb_id,
+      m_ujian_id,
+      m_user_id,
+      terlihat,
+    } = request.post();
+
+    const informasi = await MInformasiGelombang.create({
+      nama,
+      tipe: "ujian",
+      dibuka: waktu_dibuka,
+      ditutup: waktu_ditutup,
+      m_gelombang_ppdb_id,
+      dihapus: 0,
+    });
+
+    const jadwal = await MJadwalPpdb.create({
+      tipe,
+      nama,
+      keterangan,
+      lokasi,
+      link,
+      jumlah_pg,
+      jumlah_esai,
+      jumlah_soal_akm,
+      kkm,
+      waktu_dibuka,
+      waktu_ditutup,
+      durasi,
+      gmeet,
+      diacak,
+      dihapus,
+      m_informasi_gelombang_id: informasi.id,
+      m_ujian_id,
+      m_user_id,
+      terlihat,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putJadwalPPDB({ request, response, params: { id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const {
+      tipe,
+      nama,
+      keterangan,
+      lokasi,
+      link,
+      jumlah_pg,
+      jumlah_esai,
+      jumlah_soal_akm,
+      kkm,
+      waktu_dibuka,
+      waktu_ditutup,
+      durasi,
+      gmeet,
+      diacak,
+      dihapus,
+      m_informasi_gelombang_id,
+      m_ujian_id,
+      m_user_id,
+      terlihat,
+    } = request.post();
+
+    const informasi = await MInformasiGelombang.query()
+      .where({ id: m_informasi_gelombang_id })
+      .update({
+        nama,
+        tipe: "ujian",
+        dibuka: waktu_dibuka,
+        ditutup: waktu_ditutup,
+        dihapus: 0,
+      });
+
+    const jadwal = await MJadwalPpdb.query().where({ id }).update({
+      tipe,
+      nama,
+      keterangan,
+      lokasi,
+      link,
+      jumlah_pg,
+      jumlah_esai,
+      jumlah_soal_akm,
+      kkm,
+      waktu_dibuka,
+      waktu_ditutup,
+      durasi,
+      gmeet,
+      diacak,
+      dihapus,
+      m_informasi_gelombang_id,
+      m_ujian_id,
+      m_user_id,
+      terlihat,
+      dihapus: 0,
+    });
+    if (!jadwal) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteJadwalPPDB({ request, response, params: { id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const jadwal = await MJadwalPpdb.query().where({ id }).first();
+
+    const informasi = await MInformasiGelombang.query()
+      .where({ id: jadwal.m_informasi_gelombang_id })
+      .update({
+        dihapus: 1,
+      });
+
+    await MJadwalPpdb.query().where({ id }).update({
+      dihapus: 1,
+    });
+    if (!jadwal) {
       return response.notFound({
         message: messageNotFound,
       });

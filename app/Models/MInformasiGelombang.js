@@ -7,6 +7,10 @@ class MInformasiGelombang extends Model {
   static get table() {
     return "m_informasi_gelombang";
   }
+
+  ujian() {
+    return this.hasOne("App/Models/MJadwalPpdb");
+  }
 }
 
 module.exports = MInformasiGelombang;
