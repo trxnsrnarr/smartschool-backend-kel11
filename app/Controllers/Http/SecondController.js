@@ -1541,14 +1541,14 @@ class SecondController {
     }
 
     const user = await auth.getUser();
-    
+
     const { tanggal_awal, tanggal_akhir } = request.post();
 
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
-      const awal1 = moment(tanggal_awal).locale('id').format("DD MMMM YYYY ");
-      const akhir1 =  moment(tanggal_akhir).locale('id').format("DD MMMM YYYY ")
+    const awal1 = moment(tanggal_awal).locale("id").format("DD MMMM YYYY ");
+    const akhir1 = moment(tanggal_akhir).locale("id").format("DD MMMM YYYY ");
 
     const transaksi = await MKeuTransaksi.query()
       .with("jurnal", (builder) => {
@@ -1569,7 +1569,7 @@ class SecondController {
     worksheet.mergeCells("A1:D1");
     worksheet.mergeCells("A2:D2");
     worksheet.mergeCells("A3:D3");
-   
+
     worksheet.addConditionalFormatting({
       ref: "A1:D1",
       rules: [
@@ -1671,10 +1671,11 @@ class SecondController {
     const tahun = dateObj.getYear();
     const bulan = monthNames[dateObj.getMonth()];
     let awal = 0;
+    let nilaiDebit = 0;
+    let nilaiKredit = 0;
 
     await Promise.all(
       transaksi.toJSON().map(async (d, idx) => {
-      
         // add column headers
         worksheet.getRow(5).values = [
           "Tanggal",
@@ -1695,19 +1696,22 @@ class SecondController {
             if (e.jenis == "debit") {
               let row = worksheet.addRow({
                 akun: e.akun ? e.akun.nama : "-",
-                debit: `${(e ? e.saldo:'0').toLocaleString('id-ID', {
-                  style: 'currency',
-                  currency: 'IDR',
+                debit: `${(e ? e.saldo : "0").toLocaleString("id-ID", {
+                  style: "currency",
+                  currency: "IDR",
                 })}`,
               });
+
+              nilaiDebit = nilaiDebit + e.saldo;
             } else if (e.jenis == "kredit") {
               let row = worksheet.addRow({
                 akun: e.akun ? e.akun.nama : "-",
-                kredit: `${(e ? e.saldo:'0').toLocaleString('id-ID', {
-                  style: 'currency',
-                  currency: 'IDR',
+                kredit: `${(e ? e.saldo : "0").toLocaleString("id-ID", {
+                  style: "currency",
+                  currency: "IDR",
                 })}`,
               });
+              nilaiKredit = nilaiKredit + e.saldo;
             }
           })
         );
@@ -1718,25 +1722,17 @@ class SecondController {
           worksheet.mergeCells(
             `A${(idx + 1) * 1 + 5}:A${(idx + 1) * 1 + 4 + d.__meta__.total}`
           );
-        } else if(idx > 0) {
+        } else if (idx > 0) {
+          worksheet.getCell(`A${6 + awal}`).value = `${tanggalUtama}`;
 
-          worksheet.getCell(
-            `A${  6 + awal}`
-          ).value = `${tanggalUtama}`;
-
-          worksheet.mergeCells(
-            `A${  6 + awal }:A${
-                5 + awal + d.__meta__.total
-            }`
-          );
-
+          worksheet.mergeCells(`A${6 + awal}:A${5 + awal + d.__meta__.total}`);
         }
         awal = awal + d.__meta__.total;
       })
     );
 
     worksheet.addConditionalFormatting({
-      ref: `B6:D${5 + awal}`,
+      ref: `B6:D${6 + awal}`,
       rules: [
         {
           type: "expression",
@@ -1763,7 +1759,7 @@ class SecondController {
       ],
     });
     worksheet.addConditionalFormatting({
-      ref: `A6:A${5 + awal}`,
+      ref: `A6:A${6 + awal}`,
       rules: [
         {
           type: "expression",
@@ -1791,14 +1787,24 @@ class SecondController {
     });
 
     worksheet.getCell(
-      `A${7+ awal}`
+      `A${8 + awal}`
     ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
+
+    worksheet.getCell(`B${6 + awal}`).value = `Total`;
+    worksheet.getCell(`C${6 + awal}`).value = `${(nilaiDebit).toLocaleString("id-ID", {
+      style: "currency",
+      currency: "IDR",
+    })}`;
+    worksheet.getCell(`D${6 + awal}`).value = `${(nilaiKredit).toLocaleString("id-ID", {
+      style: "currency",
+      currency: "IDR",
+    })}`;
 
     worksheet.getCell("A1").value = sekolah.nama;
     worksheet.getCell("A2").value = "JURNAL UMUM";
-    worksheet.getCell("A3").value = `Tanggal : ${awal1}-${akhir1}`;
+    worksheet.getCell("A3").value = `Tanggal : ${awal1} - ${akhir1}`;
 
-    worksheet.getColumn("B").width = 15;
+    worksheet.getColumn("B").width = 20;
     worksheet.getColumn("C").width = 23;
     worksheet.getColumn("D").width = 28;
     worksheet.getColumn("E").width = 28;
@@ -1841,14 +1847,14 @@ class SecondController {
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
-    const transaksi = await MKeuTransaksi.query()
-      .with("jurnal", (builder) => {
-        builder.with("akun").where({ dihapus: 0 });
-      })
-      .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .whereBetween("tanggal", [`${tanggal_awal}`, `${tanggal_akhir}`])
-      .fetch();
+    const awal1 = moment(tanggal_awal).locale("id").format("DD MMMM YYYY ");
+    const akhir1 = moment(tanggal_akhir).locale("id").format("DD MMMM YYYY ");
+
+    const template = await MKeuTemplateAkun.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .first();
+
+      const isi = JSON.parse(template.template);
 
     let workbook = new Excel.Workbook();
     let worksheet = workbook.addWorksheet(`Neraca`);
@@ -1929,9 +1935,6 @@ class SecondController {
 
     await Promise.all(
       transaksi.toJSON().map(async (d, idx) => {
-        worksheet.getCell("A1").value = sekolah.nama;
-        worksheet.getCell("A2").value = "NERACA";
-        worksheet.getCell("A3").value = `per 31 ${bulan} ${tahun}`;
         worksheet.addConditionalFormatting({
           ref: `B${(idx + 1) * 1 + 5}:D${(idx + 1) * 1 + 5}`,
           rules: [
@@ -2009,6 +2012,14 @@ class SecondController {
         });
       })
     );
+    worksheet.getCell("A1").value = sekolah.nama;
+    worksheet.getCell("A2").value = "NERACA";
+    worksheet.getCell("A3").value = `Tanggal : ${awal1} - ${akhir1}`;
+
+    worksheet.getColumn("B").width = 20;
+    worksheet.getColumn("C").width = 23;
+    worksheet.getColumn("D").width = 28;
+    worksheet.getColumn("E").width = 28;
     let namaFile = `/uploads/Neraca-${bulan}-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
