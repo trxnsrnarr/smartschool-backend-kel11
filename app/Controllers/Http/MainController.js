@@ -11467,7 +11467,7 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    const { status, page, search } = request.get();
+    const { status, page, search, tipe_ujian } = request.get();
 
     const hari_ini = moment().format("YYYY-MM-DD HH:mm");
 
@@ -11798,7 +11798,7 @@ class MainController {
         );
       }
 
-      const ujian = await MUjian.query()
+      let ujian = MUjian.query()
         .select("id", "nama", "tipe")
         .withCount("soal as soal_pg", (builder) => {
           builder.where({ bentuk: "pg" });
@@ -11816,8 +11816,13 @@ class MainController {
           builder.where({ bentuk: "menjodohkan" });
         })
         .whereIn("m_user_id", userIds)
-        .andWhere({ dihapus: 0 })
-        .fetch();
+        .andWhere({ dihapus: 0 });
+
+      if (tipe_ujian) {
+        ujian.whereIn("tipe", tipe_ujian);
+      }
+
+      ujian = await ujian.fetch();
       if (status == "sudah-selesai") {
         return response.ok({
           rombel,
