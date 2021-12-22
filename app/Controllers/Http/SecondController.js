@@ -1042,6 +1042,7 @@ class SecondController {
     let berlangsung = [],
       terjadwal = [],
       selesai = [];
+    const tanggalBerlangsung = [];
 
     if (user.role == "siswa") {
       const timelineId1 = await MTimeline.query()
@@ -1116,18 +1117,45 @@ class SecondController {
               if (d.waktu_pengumpulan) {
                 selesai.push(data);
               } else {
+                if (
+                  tanggalBerlangsung.includes(
+                    moment(dibagikan).format("YYYY-MM-DD")
+                  )
+                ) {
+                  tanggalBerlangsung.push(
+                    moment(dibagikan).format("YYYY-MM-DD")
+                  );
+                }
                 berlangsung.push(data);
               }
             } else if (tipe == "absen") {
               if (d.waktu_absen) {
                 selesai.push(data);
               } else {
+                if (
+                  tanggalBerlangsung.includes(
+                    moment(dibagikan).format("YYYY-MM-DD")
+                  )
+                ) {
+                  tanggalBerlangsung.push(
+                    moment(dibagikan).format("YYYY-MM-DD")
+                  );
+                }
                 berlangsung.push(data);
               }
             } else if (tipe == "materi") {
               if (d.timeline.materi[0].__meta__.totalKesimpulan > 0) {
                 selesai.push(data);
               } else {
+                if (
+                  tanggalBerlangsung.includes(
+                    moment(dibagikan).format("YYYY-MM-DD")
+                  )
+                ) {
+                  tanggalBerlangsung.push(
+                    moment(dibagikan).format("YYYY-MM-DD")
+                  );
+                }
                 berlangsung.push(data);
               }
             }
@@ -1142,7 +1170,7 @@ class SecondController {
         role: user.role,
       });
     }
-
+    let timeline;
     if (absen) {
       timeline = await MTimeline.query()
         .withCount("tkTimeline as total_respon", (builder) => {
@@ -1257,8 +1285,10 @@ class SecondController {
         .fetch();
       // return timeline2;
 
+      timeline = [...timeline2.toJSON(), ...timeline1.toJSON()];
+
       await Promise.all(
-        timeline2.toJSON().map((d) => {
+        timeline.map((d) => {
           const data = { ...d, bab: d.materi.map((e) => e.bab) };
 
           let dibagikan = d.tanggal_pembagian;
@@ -1273,12 +1303,30 @@ class SecondController {
               if (d.__meta__.total_respon >= d.__meta__.total_siswa) {
                 selesai.push(data);
               } else {
+                if (
+                  tanggalBerlangsung.includes(
+                    moment(dibagikan).format("YYYY-MM-DD")
+                  )
+                ) {
+                  tanggalBerlangsung.push(
+                    moment(dibagikan).format("YYYY-MM-DD")
+                  );
+                }
                 berlangsung.push(data);
               }
             } else if (d.tipe == "absen") {
               if (moment(d.tanggal_akhir).toDate() < moment().toDate()) {
                 selesai.push(data);
               } else {
+                if (
+                  tanggalBerlangsung.includes(
+                    moment(dibagikan).format("YYYY-MM-DD")
+                  )
+                ) {
+                  tanggalBerlangsung.push(
+                    moment(dibagikan).format("YYYY-MM-DD")
+                  );
+                }
                 berlangsung.push(data);
               }
             } else if (d.tipe == "materi") {
@@ -1287,6 +1335,15 @@ class SecondController {
               ) {
                 selesai.push(data);
               } else {
+                if (
+                  tanggalBerlangsung.includes(
+                    moment(dibagikan).format("YYYY-MM-DD")
+                  )
+                ) {
+                  tanggalBerlangsung.push(
+                    moment(dibagikan).format("YYYY-MM-DD")
+                  );
+                }
                 berlangsung.push(data);
               }
             }
@@ -1294,48 +1351,26 @@ class SecondController {
           return 1;
         })
       );
-      await Promise.all(
-        timeline1.toJSON().map((d) => {
-          const data = d;
-
-          let dibagikan = d.tanggal_pembagian;
-          if (d.tipe == "tugas") {
-            dibagikan = d.tugas.tanggal_pembagian;
-          }
-
-          if (moment(dibagikan).toDate() > moment().toDate()) {
-            terjadwal.push(data);
-          } else {
-            if (d.tipe == "tugas") {
-              if (d.__meta__.total_respon >= d.__meta__.total_siswa) {
-                selesai.push(data);
-              } else {
-                berlangsung.push(data);
-              }
-            } else if (d.tipe == "absen") {
-              if (moment(d.tanggal_akhir).toDate() < moment().toDate()) {
-                selesai.push(data);
-              } else {
-                berlangsung.push(data);
-              }
-            } else if (d.tipe == "materi") {
-              if (
-                d.materi[0].__meta__.totalKesimpulan >= d.__meta__.total_siswa
-              ) {
-                selesai.push(data);
-              } else {
-                berlangsung.push(data);
-              }
-            }
-          }
-        })
-      );
     }
 
     return response.ok({
-      berlangsung,
+      berlangsung: timeline.filter((d) => {
+        let dibagikan = d.tanggal_pembagian;
+        if (d.tipe == "tugas") {
+          dibagikan = d.tugas.tanggal_pembagian;
+        }
+        dibagikan = moment(dibagikan).format("YYYY-MM-DD");
+        return tanggalBerlangsung.includes(dibagikan);
+      }),
       terjadwal,
-      selesai,
+      selesai: timeline.filter((d) => {
+        let dibagikan = d.tanggal_pembagian;
+        if (d.tipe == "tugas") {
+          dibagikan = d.tugas.tanggal_pembagian;
+        }
+        dibagikan = moment(dibagikan).format("YYYY-MM-DD");
+        return !tanggalBerlangsung.includes(dibagikan);
+      }),
     });
   }
 

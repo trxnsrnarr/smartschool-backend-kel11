@@ -818,7 +818,49 @@ class MainController {
       alamat,
       email,
       telp,
+      link,
     } = request.post();
+
+    if (link) {
+      const sekolah = await Sekolah.query()
+        .with("sekolahSS")
+        .where({ id: id })
+        .first();
+
+      const domain = slugify(sekolah.sekolah, {
+        replacement: "", // replace spaces with replacement character, defaults to `-`
+        remove: /[*+~.()'"!:@]/g,
+        lower: true, // convert to lower case, defaults to `false`
+      });
+      const check = await MSekolah.query()
+        .where({ domain: `https://${domain}.smarteschool.id` })
+        .first();
+
+      if (check) {
+        await Sekolah.query().where({ id: id }).update({
+          m_sekolah_id: check.id,
+        });
+        return response.ok({
+          sekolah: check,
+        });
+      } else {
+        const sekolahSS = await MSekolah.create({
+          nama: sekolah.sekolah,
+          domain: `https://${domain}.smarteschool.id`,
+          status: sekolah.status || "N",
+          tingkat: sekolah.bentuk || "SMK",
+          integrasi: "whatsapp",
+          diintegrasi: 1,
+          trial: 1,
+        });
+        await Sekolah.query().where({ id: id }).update({
+          m_sekolah_id: sekolahSS.id,
+        });
+        return response.ok({
+          sekolah: sekolahSS,
+        });
+      }
+    }
 
     const domain = slugify(sekolah, {
       replacement: "", // replace spaces with replacement character, defaults to `-`
@@ -4209,6 +4251,7 @@ class MainController {
     let sikapsosial;
     let sikapspiritual;
     let ekskul;
+    let mapelKelas;
 
     if (rombel_id) {
       data = await MJadwalMengajar.query()
@@ -4496,6 +4539,20 @@ class MainController {
         .andWhere({ m_materi_id: materi.id })
         .first();
 
+      const jadwalIds = await MJadwalMengajar.query()
+        .min("id as id")
+        .select("m_mata_pelajaran_id")
+        .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
+        .whereNotNull("m_mata_pelajaran_id")
+        .groupBy("m_mata_pelajaran_id");
+
+      mapelKelas = await MJadwalMengajar.query()
+        .whereIn(
+          "id",
+          jadwalIds.map((d) => d.id)
+        )
+        .with("mataPelajaran")
+        .fetch();
       if (jadwalMengajar.rombel.m_user_id == user.id) {
       }
     }
@@ -4513,6 +4570,7 @@ class MainController {
       kkm,
       totalMapel,
       ekskul,
+      mapelKelas,
     });
   }
 
@@ -8828,7 +8886,7 @@ class MainController {
             let analisisTotal = {};
 
             await Promise.all(
-              pesertaUjian.toJSON().jawabanSiswa.map(async (d) => {
+              pesertaUjian.jawabanSiswa.map(async (d) => {
                 if (d.soal.bentuk == "pg") {
                   if (d.jawaban_pg == d.soal.kj_pg) {
                     metaHasil.benar = metaHasil.benar + 1;
@@ -9264,9 +9322,11 @@ class MainController {
         .where({ m_timeline_id: timeline_id })
         .delete();
       await Promise.all(
-        TkTimelineTopik.create({
-          m_timeline_id: timeline_id,
-          m_topik_id: materi,
+        materi.map((d) => {
+          return TkTimelineTopik.create({
+            m_timeline_id: timeline_id,
+            m_topik_id: d,
+          });
         })
       );
 
@@ -9284,7 +9344,7 @@ class MainController {
         .andWhere({ dihapus: 0 })
         .pluck("m_user_id");
 
-      const checkJSON = check.toJSON();
+      const checkJSON = check;
       let userIds = [];
 
       await Promise.all(
@@ -11592,6 +11652,22 @@ class MainController {
       }
 
       const ujian = await MUjian.query()
+        .select("id", "nama", "tipe")
+        .withCount("soal as soal_pg", (builder) => {
+          builder.where({ bentuk: "pg" });
+        })
+        .withCount("soal as soal_esai", (builder) => {
+          builder.where({ bentuk: "esai" });
+        })
+        .withCount("soal as soal_pg_kompleks", (builder) => {
+          builder.where({ bentuk: "pg_kompleks" });
+        })
+        .withCount("soal as soal_uraian", (builder) => {
+          builder.where({ bentuk: "uraian" });
+        })
+        .withCount("soal as soal_menjodohkan", (builder) => {
+          builder.where({ bentuk: "menjodohkan" });
+        })
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .fetch();
@@ -11723,6 +11799,22 @@ class MainController {
       }
 
       const ujian = await MUjian.query()
+        .select("id", "nama", "tipe")
+        .withCount("soal as soal_pg", (builder) => {
+          builder.where({ bentuk: "pg" });
+        })
+        .withCount("soal as soal_esai", (builder) => {
+          builder.where({ bentuk: "esai" });
+        })
+        .withCount("soal as soal_pg_kompleks", (builder) => {
+          builder.where({ bentuk: "pg_kompleks" });
+        })
+        .withCount("soal as soal_uraian", (builder) => {
+          builder.where({ bentuk: "uraian" });
+        })
+        .withCount("soal as soal_menjodohkan", (builder) => {
+          builder.where({ bentuk: "menjodohkan" });
+        })
         .whereIn("m_user_id", userIds)
         .andWhere({ dihapus: 0 })
         .fetch();
@@ -12635,6 +12727,9 @@ class MainController {
     const {
       jumlah_pg,
       jumlah_esai,
+      jumlah_menjodohkan,
+      jumlah_uraian,
+      jumlah_pg_kompleks,
       kkm,
       waktu_dibuka,
       jumlah_soal_akm,
@@ -12651,6 +12746,9 @@ class MainController {
       jumlah_pg,
       jumlah_esai,
       jumlah_soal_akm,
+      jumlah_menjodohkan,
+      jumlah_uraian,
+      jumlah_pg_kompleks,
       m_ujian_id,
       kkm,
       waktu_dibuka,
@@ -12705,6 +12803,9 @@ class MainController {
       jumlah_pg,
       jumlah_esai,
       jumlah_soal_akm,
+      jumlah_menjodohkan,
+      jumlah_uraian,
+      jumlah_pg_kompleks,
       kkm,
       waktu_dibuka,
       durasi,
@@ -12719,6 +12820,9 @@ class MainController {
         jumlah_pg,
         jumlah_esai,
         jumlah_soal_akm,
+        jumlah_menjodohkan,
+        jumlah_uraian,
+        jumlah_pg_kompleks,
         kkm,
         waktu_dibuka,
         waktu_ditutup: moment(waktu_dibuka)
@@ -13108,28 +13212,6 @@ class MainController {
     }
 
     if (ujian.tipe == "literasi" || ujian.tipe == "numerasi") {
-      const soalIds = await TkSoalUjian.query()
-        .where({ dihapus: 0 })
-        .andWhere({ m_ujian_id: ujian_id })
-        .pluck("m_soal_ujian_id");
-
-      const soalMasterIds = await MSoalUjian.query()
-        .where({ dihapus: 0 })
-        .whereIn("id", soalIds)
-        .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_soal_akm)
-        .ids();
-
-      const soalAKM = await TkSoalUjian.query()
-        .with("soal", (builder) => {
-          builder.where({ dihapus: 0 });
-        })
-        .whereIn("m_soal_ujian_id", soalMasterIds)
-        .orderByRaw(`${diacak}`)
-        .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_soal_akm)
-        .fetch();
-
-      const soalData = [];
-
       const checkIfExist = await TkPesertaUjian.query()
         .where({ m_user_id: user.id })
         .andWhere({ tk_jadwal_ujian_id: tk_jadwal_ujian_id })
@@ -13142,6 +13224,69 @@ class MainController {
         });
       }
 
+      const soalIds = await TkSoalUjian.query()
+        .where({ dihapus: 0 })
+        .andWhere({ m_ujian_id: ujian_id })
+        .pluck("m_soal_ujian_id");
+
+      const soalMasterPG = await MSoalUjian.query()
+        .where({ dihapus: 0 })
+        .whereIn("id", soalIds)
+        .where({ bentuk: "pg" })
+        .orderByRaw(`${diacak}`)
+        .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_pg)
+        .ids();
+
+      const soalMasterEsai = await MSoalUjian.query()
+        .where({ dihapus: 0 })
+        .whereIn("id", soalIds)
+        .where({ bentuk: "esai" })
+        .orderByRaw(`${diacak}`)
+        .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_esai)
+        .ids();
+
+      const soalMasterMenjodohkan = await MSoalUjian.query()
+        .where({ dihapus: 0 })
+        .whereIn("id", soalIds)
+        .where({ bentuk: "menjodohkan" })
+        .orderByRaw(`${diacak}`)
+        .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_menjodohkan)
+        .ids();
+
+      const soalMasterUraian = await MSoalUjian.query()
+        .where({ dihapus: 0 })
+        .whereIn("id", soalIds)
+        .where({ bentuk: "uraian" })
+        .orderByRaw(`${diacak}`)
+        .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_uraian)
+        .ids();
+
+      const soalMasterPgKompleks = await MSoalUjian.query()
+        .where({ dihapus: 0 })
+        .whereIn("id", soalIds)
+        .where({ bentuk: "pg_kompleks" })
+        .orderByRaw(`${diacak}`)
+        .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_pg_kompleks)
+        .ids();
+
+      const soalAKM = await TkSoalUjian.query()
+        .with("soal", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .whereIn("m_soal_ujian_id", [
+          ...soalMasterPG,
+          ...soalMasterEsai,
+          ...soalMasterMenjodohkan,
+          ...soalMasterPgKompleks,
+          ...soalMasterUraian,
+        ])
+        .orderByRaw(`${diacak}`)
+        .where({ dihapus: 0 })
+        .where({ m_ujian_id: ujian_id })
+        .fetch();
+
+      const soalData = [];
+
       const pesertaUjian = await TkPesertaUjian.create({
         waktu_mulai,
         dinilai: 0,
@@ -13153,7 +13298,7 @@ class MainController {
 
       await Promise.all(
         soalAKM.toJSON().map(async (d) => {
-          if (d.soal.bentuk == "uraian") {
+          if (d.soal.bentuk.toLowerCase().trim() == "uraian") {
             soalData.push({
               durasi: 0,
               ragu: 0,
@@ -13162,7 +13307,7 @@ class MainController {
               m_soal_ujian_id: d.soal.id,
               tk_peserta_ujian_id: pesertaUjian.id,
             });
-          } else if (d.soal.bentuk == "pg_kompleks") {
+          } else if (d.soal.bentuk.toLowerCase().trim() == "pg_kompleks") {
             soalData.push({
               durasi: 0,
               ragu: 0,
@@ -13171,7 +13316,7 @@ class MainController {
               m_soal_ujian_id: d.soal.id,
               tk_peserta_ujian_id: pesertaUjian.id,
             });
-          } else if (d.soal.bentuk == "menjodohkan") {
+          } else if (d.soal.bentuk.toLowerCase().trim() == "menjodohkan") {
             soalData.push({
               durasi: 0,
               ragu: 0,
@@ -13180,7 +13325,7 @@ class MainController {
               m_soal_ujian_id: d.soal.id,
               tk_peserta_ujian_id: pesertaUjian.id,
             });
-          } else if (d.soal.bentuk == "esai") {
+          } else if (d.soal.bentuk.toLowerCase().trim() == "esai") {
             soalData.push({
               durasi: 0,
               ragu: 0,
@@ -13189,7 +13334,7 @@ class MainController {
               jawaban_rubrik_esai: d.soal.rubrik_kj,
               tk_peserta_ujian_id: pesertaUjian.id,
             });
-          } else if (d.soal.bentuk == "pg") {
+          } else if (d.soal.bentuk.toLowerCase().trim() == "pg") {
             soalData.push({
               durasi: 0,
               ragu: 0,
@@ -13220,6 +13365,18 @@ class MainController {
         peserta_ujian: pesertaUjian,
       });
     } else {
+      const checkIfExist = await TkPesertaUjian.query()
+        .where({ m_user_id: user.id })
+        .andWhere({ tk_jadwal_ujian_id: tk_jadwal_ujian_id })
+        .where({ dihapus: 0 })
+        .first();
+
+      if (checkIfExist) {
+        return response.ok({
+          peserta_ujian: checkIfExist,
+        });
+      }
+
       const soalPGIds = await TkSoalUjian.query()
         .where({ dihapus: 0 })
         .andWhere({ m_ujian_id: ujian_id })
@@ -13262,17 +13419,6 @@ class MainController {
         .fetch();
 
       const soalData = [];
-
-      const checkIfExist = await TkPesertaUjian.query()
-        .where({ m_user_id: user.id })
-        .andWhere({ tk_jadwal_ujian_id: tk_jadwal_ujian_id })
-        .first();
-
-      if (checkIfExist) {
-        return response.ok({
-          peserta_ujian: checkIfExist,
-        });
-      }
 
       const trx = await Database.beginTransaction();
       const pesertaUjian = await TkPesertaUjian.create(
@@ -13591,7 +13737,7 @@ class MainController {
       jawaban_foto,
     } = request.post();
     jawaban_esai = jawaban_esai ? htmlEscaper.escape(jawaban_esai) : "";
-    jawaban_pg_kompleks = jawaban_pg_kompleks
+    const jawaban_pg_kompleks1 = jawaban_pg_kompleks
       ? jawaban_pg_kompleks.toString()
       : null;
     jawaban_foto = jawaban_foto ? jawaban_foto.toString() : null;
@@ -13676,7 +13822,7 @@ class MainController {
         jawabanUjianSiswa = await TkJawabanUjianSiswa.query()
           .where({ id: jawaban_ujian_siswa_id })
           .update({
-            jawaban_pg_kompleks,
+            jawaban_pg_kompleks: jawaban_pg_kompleks1,
             durasi,
             ragu,
             dijawab: 1,
@@ -41171,7 +41317,23 @@ class MainController {
   }
 
   async putSekolah({ response, request, auth, params: { sekolah_id } }) {
-    const { nama, domain, server, alamat } = request.post();
+    const {
+      nama,
+      domain,
+      server,
+      alamat,
+      foto_logo,
+      email,
+      telp,
+      provinsi,
+      kabupaten,
+      kecamatan,
+      kelurahan,
+      kode_pos,
+      link_rapor,
+      link_web,
+      link_dapodik,
+    } = request.post();
 
     // let validation = await validate(
     //   request.post(),
@@ -41188,6 +41350,19 @@ class MainController {
       domain,
       server,
       alamat,
+      logo: foto_logo,
+      logo_ss: foto_logo,
+      favicon: foto_logo,
+      email,
+      telp,
+      provinsi,
+      kabupaten,
+      kecamatan,
+      kelurahan,
+      kode_pos,
+      link_rapor,
+      link_web,
+      link_dapodik,
     });
 
     return response.ok({
