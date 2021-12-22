@@ -1204,6 +1204,14 @@ Route.delete(
   "PPDBController.deleteInformasiJalur"
 );
 
+// Informasi Gelombang
+Route.post("/informasi-gelombang", "PPDBController.postInformasiGelombang");
+Route.put("/informasi-gelombang/:id", "PPDBController.putInformasiGelombang");
+Route.delete(
+  "/informasi-gelombang/:id",
+  "PPDBController.deleteInformasiGelombang"
+);
+
 // gelombang-ppdb
 Route.get("/gelombang-ppdb", "PPDBController.getGelombangPPDB");
 Route.get(
