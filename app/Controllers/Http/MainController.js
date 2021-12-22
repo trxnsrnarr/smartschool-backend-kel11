@@ -44869,15 +44869,19 @@ class MainController {
       })
       .with("user", (builder) => {
         builder.select("id", "nama");
-      })    
+      })
       .where({ id: rombel_id })
       .first();
 
-    const mapelMax = Math.max(...rombel.toJSON().anggotaRombel.map((d)=>{
-      return d.user.nilaiSemuaUjian.length;
-    }))
+    const mapelMax = Math.max(
+      ...rombel.toJSON().anggotaRombel.map((d) => {
+        return d.user.nilaiSemuaUjian.length;
+      })
+    );
 
-    const userMax = rombel.toJSON().anggotaRombel.find(d=>d.user.nilaiSemuaUjian.length == mapelMax)
+    const userMax = rombel
+      .toJSON()
+      .anggotaRombel.find((d) => d.user.nilaiSemuaUjian.length == mapelMax);
 
     let workbook = new Excel.Workbook();
 
@@ -44904,197 +44908,202 @@ class MainController {
     // return urutan;
 
     await Promise.all(
-      rombel.toJSON().anggotaRombel.sort((a, b) =>
+      rombel
+        .toJSON()
+        .anggotaRombel.sort((a, b) =>
           ("" + a.user.nama).localeCompare(b.user.nama)
-        ).map(async (d, idx) => {
-        worksheet.getRow(6).values = ["No", "NIS", "Nama", "Gen"];
-        worksheet.getRow(7).values = ["No", "NIS", "Nama", "Gen"];
-        worksheet.getRow(8).values = ["No", "NIS", "Nama", "Gen"];
-        worksheet.columns = [
-          { key: "no" },
-          { key: "nis" },
-          { key: "user" },
-          { key: "gen" },
-        ];
-        let row = worksheet.addRow({
-          no: `${idx + 1}`,
-          nis: d.user.profil ? d.user.profil.nis : "",
-          user: d.user ? d.user.nama : "-",
-          gen: d.user ? d.user.gender : "",
-        });
+        )
+        .map(async (d, idx) => {
+          worksheet.getRow(6).values = ["No", "NIS", "Nama", "Gen"];
+          worksheet.getRow(7).values = ["No", "NIS", "Nama", "Gen"];
+          worksheet.getRow(8).values = ["No", "NIS", "Nama", "Gen"];
+          worksheet.columns = [
+            { key: "no" },
+            { key: "nis" },
+            { key: "user" },
+            { key: "gen" },
+          ];
+          let row = worksheet.addRow({
+            no: `${idx + 1}`,
+            nis: d.user.profil ? d.user.profil.nis : "",
+            user: d.user ? d.user.nama : "-",
+            gen: d.user ? d.user.gender : "",
+          });
 
-        // const row = worksheet.getRow(8);
-        await Promise.all(
-          d.user.nilaiSemuaUjian
-            .sort((a, b) => ("" + a.mapel.nama).localeCompare(b.mapel.nama))
-            .map(async (e, nox) => {
-              worksheet.getColumn([`${(nox + 1) * 3 + 2}`]).values = [
-                ``,
-                ``,
-                ``,
-                ``,
-                ``,
-                `Mata Pelajaran`,
-                `${e.mapel.kode}`,
-                `P`,
-              ];
-              worksheet.getColumn([`${(nox + 1) * 3 + 3}`]).values = [
-                ``,
-                ``,
-                ``,
-                ``,
-                ``,
-                ``,
-                `${e.mapel.kode}`,
-                `K`,
-              ];
-              worksheet.getColumn([`${(nox + 1) * 3 + 4}`]).values = [
-                ``,
-                ``,
-                ``,
-                ``,
-                ``,
-                ``,
-                `${e.mapel.kode}`,
-                `A`,
-              ];
-              // worksheet.mergeCells(`${(nox + 1) * 2 + 3}:${(nox + 1) * 2 + 4}`);
+          // const row = worksheet.getRow(8);
+          await Promise.all(
+            d.user.nilaiSemuaUjian
+              .sort((a, b) => ("" + a.mapel.nama).localeCompare(b.mapel.nama))
+              .map(async (e, nox) => {
+                worksheet.getColumn([`${(nox + 1) * 3 + 2}`]).values = [
+                  ``,
+                  ``,
+                  ``,
+                  ``,
+                  ``,
+                  `Mata Pelajaran`,
+                  `${e.mapel.kode}`,
+                  `P`,
+                ];
+                worksheet.getColumn([`${(nox + 1) * 3 + 3}`]).values = [
+                  ``,
+                  ``,
+                  ``,
+                  ``,
+                  ``,
+                  ``,
+                  `${e.mapel.kode}`,
+                  `K`,
+                ];
+                worksheet.getColumn([`${(nox + 1) * 3 + 4}`]).values = [
+                  ``,
+                  ``,
+                  ``,
+                  ``,
+                  ``,
+                  ``,
+                  `${e.mapel.kode}`,
+                  `A`,
+                ];
+                // worksheet.mergeCells(`${(nox + 1) * 2 + 3}:${(nox + 1) * 2 + 4}`);
 
-              row.getCell([`${(nox + 1) * 3 + 2}`]).value = `${
-                e.nilai ? e.nilai : "-"
-              }`;
-              row.getCell([`${(nox + 1) * 3 + 3}`]).value = `${
-                e.nilai_keterampilan ? e.nilai_keterampilan : "-"
-              }`;
-              const nilaiA = Math.round(e.nilai * 0.3 + e.nilai_keterampilan * 0.7);
-              row.getCell([`${(nox + 1) * 3 + 4}`]).value = `${nilaiA}`;
+                row.getCell([`${(nox + 1) * 3 + 2}`]).value = `${
+                  e.nilai ? e.nilai : "-"
+                }`;
+                row.getCell([`${(nox + 1) * 3 + 3}`]).value = `${
+                  e.nilai_keterampilan ? e.nilai_keterampilan : "-"
+                }`;
+                const nilaiA = Math.round(
+                  e.nilai * 0.3 + e.nilai_keterampilan * 0.7
+                );
+                row.getCell([`${(nox + 1) * 3 + 4}`]).value = `${nilaiA}`;
 
-              row.getCell([`${(nox + 1) * 3 + 2}`]).border = {
-                top: { style: "thin" },
-                left: { style: "thin" },
-                bottom: { style: "thin" },
-                right: { style: "thin" },
-              };
-              row.getCell([`${(nox + 1) * 3 + 3}`]).border = {
-                top: { style: "thin" },
-                left: { style: "thin" },
-                bottom: { style: "thin" },
-                right: { style: "thin" },
-              };
-              row.getCell([`${(nox + 1) * 3 + 4}`]).border = {
-                top: { style: "thin" },
-                left: { style: "thin" },
-                bottom: { style: "thin" },
-                right: { style: "thin" },
-              };
-              row.getCell([`${(nox + 1) * 3 + 5}`]).border = {
-                top: { style: "thin" },
-                left: { style: "thin" },
-                bottom: { style: "thin" },
-                right: { style: "thin" },
-              };
-              row.getCell([`${(nox + 1) * 3 + 6}`]).border = {
-                top: { style: "thin" },
-                left: { style: "thin" },
-                bottom: { style: "thin" },
-                right: { style: "thin" },
-              };
-
-              if (nox == d.user.nilaiSemuaUjian.length - 1) {
-                row.getCell([`${(nox + 1) * 3 + 5}`]).value = ranking.find(
-                  (f) => f.m_user_id == d.m_user_id
-                ).total_nilai;
-
-                const cell = row.getCell([`${(nox + 1) * 3 + 5}`]);
-
-                // row.getCell([`${(nox + 1) * 2 + 6}`]).value = `=RANK(${colName(
-                //   (nox + 1) * 2 + 4
-                // )}${idx + 9};$${colName((nox + 1) * 2 + 4)}$9:$${colName(
-                //   (nox + 1) * 2 + 4
-                // )}$100)`;
-
-                row.getCell([`${(nox + 1) * 3 + 6}`]).value = ranking.find(
-                  (f) => f.m_user_id == d.m_user_id
-                ).ranking;
-
-                alreadyMerged = (nox + 1) * 3 + 3;
-              }
-
-              // // Add row using key mapping to columns
-              // let row = worksheet.addRow ({
-              //   tugas1: e ? e.nilai : "-",
-              //   tugas2: e ? e.nilai : "-",
-              //   tugas3: e ? e.nilai : "-",
-              //   tugas4: e ? e.nilai : "-",
-              //   tugas5: e ? e.nilai : "-",
-              // });
-            })
-        );
-
-        worksheet.addConditionalFormatting({
-          ref: `A6:D8`,
-          rules: [
-            {
-              type: "expression",
-              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-              style: {
-                border: {
+                row.getCell([`${(nox + 1) * 3 + 2}`]).border = {
                   top: { style: "thin" },
                   left: { style: "thin" },
                   bottom: { style: "thin" },
                   right: { style: "thin" },
-                },
-                font: {
-                  name: "Times New Roman",
-                  family: 4,
-                  size: 11,
-                  bold: true,
-                },
-                fill: {
-                  type: "pattern",
-                  pattern: "solid",
-                  bgColor: {
-                    argb: "C0C0C0",
-                    fgColor: { argb: "C0C0C0" },
+                };
+                row.getCell([`${(nox + 1) * 3 + 3}`]).border = {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                };
+                row.getCell([`${(nox + 1) * 3 + 4}`]).border = {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                };
+                row.getCell([`${(nox + 1) * 3 + 5}`]).border = {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                };
+                row.getCell([`${(nox + 1) * 3 + 6}`]).border = {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                };
+
+                if (nox == d.user.nilaiSemuaUjian.length - 1) {
+                  row.getCell([`${(nox + 1) * 3 + 5}`]).value = ranking.find(
+                    (f) => f.m_user_id == d.m_user_id
+                  ).total_nilai;
+
+                  const cell = row.getCell([`${(nox + 1) * 3 + 5}`]);
+
+                  // row.getCell([`${(nox + 1) * 2 + 6}`]).value = `=RANK(${colName(
+                  //   (nox + 1) * 2 + 4
+                  // )}${idx + 9};$${colName((nox + 1) * 2 + 4)}$9:$${colName(
+                  //   (nox + 1) * 2 + 4
+                  // )}$100)`;
+
+                  row.getCell([`${(nox + 1) * 3 + 6}`]).value = ranking.find(
+                    (f) => f.m_user_id == d.m_user_id
+                  ).ranking;
+
+                  alreadyMerged = (nox + 1) * 3 + 3;
+                }
+
+                // // Add row using key mapping to columns
+                // let row = worksheet.addRow ({
+                //   tugas1: e ? e.nilai : "-",
+                //   tugas2: e ? e.nilai : "-",
+                //   tugas3: e ? e.nilai : "-",
+                //   tugas4: e ? e.nilai : "-",
+                //   tugas5: e ? e.nilai : "-",
+                // });
+              })
+          );
+
+          worksheet.addConditionalFormatting({
+            ref: `A6:D8`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 11,
+                    bold: true,
+                  },
+                  fill: {
+                    type: "pattern",
+                    pattern: "solid",
+                    bgColor: {
+                      argb: "C0C0C0",
+                      fgColor: { argb: "C0C0C0" },
+                    },
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "center",
                   },
                 },
-                alignment: {
-                  vertical: "middle",
-                  horizontal: "center",
-                },
               },
-            },
-          ],
-        });
+            ],
+          });
 
-        worksheet.addConditionalFormatting({
-          ref: `A${(idx + 1) * 1 + 8}:D${(idx + 1) * 1 + 8}`,
-          rules: [
-            {
-              type: "expression",
-              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-              style: {
-                border: {
-                  top: { style: "thin" },
-                  left: { style: "thin" },
-                  bottom: { style: "thin" },
-                  right: { style: "thin" },
-                },
-                font: {
-                  name: "Times New Roman",
-                  family: 4,
-                  size: 11,
-                  // bold: true,
-                },
-                alignment: {
-                  vertical: "middle",
-                  horizontal: "left",
+          worksheet.addConditionalFormatting({
+            ref: `A${(idx + 1) * 1 + 8}:D${(idx + 1) * 1 + 8}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 11,
+                    // bold: true,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "left",
+                  },
                 },
               },
-            },
-          ],
-        });
-      })
+            ],
+          });
+        })
     );
 
     worksheet.getCell(
@@ -45196,7 +45205,6 @@ class MainController {
       from: "A8",
       to: `${colName(alreadyMerged + 2)}8`,
     };
-
 
     worksheet.views = [
       {
@@ -47445,7 +47453,11 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const ta = await this.getTAAktif(sekolah);
+    const ta = await Mta.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ aktif: 1 })
+      .andWhere({ dihapus: 0 })
+      .first();
 
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
@@ -47455,9 +47467,12 @@ class MainController {
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
+    const tanggalS = ta ? ta.tanggal_awal : "2022-1-1";
+    const tanggalE = ta ? ta.tanggal_akhir : "2022-1-1";
+
     const tanggalDistinct = await Database.raw(
       "SELECT DISTINCT DATE_FORMAT(created_at, '%Y-%m-%d') as tanggalDistinct from m_absen WHERE created_at BETWEEN ? AND  ?",
-      [`2021-1-1 `, `2021-1-1`]
+      [`${tanggalS}`, `${tanggalE}`]
     );
 
     const rombel = await MRombel.query().where({ id: rombel_id }).first();
@@ -47473,7 +47488,7 @@ class MainController {
       .with("absen", (builder) => {
         builder
           .select("id", "m_user_id", "created_at", "absen")
-          .whereBetween("created_at", [`2021-1-1 `, `2021-1-1`]);
+          .whereBetween("created_at", [`${tanggalS} `, `${tanggalE}`]);
       })
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
