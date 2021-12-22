@@ -1205,6 +1205,18 @@ Route.post("/absen-anak", "MainController.getAbsensiAnak");
 Route.post("/tugas-anak", "MainController.getTugasAnak");
 Route.post("/ujian-anak", "MainController.getUjianAnak");
 
+// Jalur PPDB
+Route.get("/jalur-ppdb", "PPDBController.getJalur");
+Route.post("/jalur-ppdb", "PPDBController.postJalur");
+Route.put("/jalur-ppdb/:id", "PPDBController.putJalur");
+Route.delete("/jalur-ppdb/:id", "PPDBController.deleteJalur");
+Route.get("/jalur-ppdb/:id", "PPDBController.detailJalur");
+
+// Informasi Jalur PPDB
+Route.post("/informasi-jalur-ppdb", "PPDBController.postInformasiJalur");
+Route.put("/informasi-jalur-ppdb/:id", "PPDBController.putInformasiJalur");
+Route.delete("/informasi-jalur-ppdb/:id", "PPDBController.deleteInformasiJalur");
+
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
