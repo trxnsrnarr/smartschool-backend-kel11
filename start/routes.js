@@ -1212,6 +1212,14 @@ Route.delete(
   "PPDBController.deleteInformasiGelombang"
 );
 
+// Informasi Gelombang
+Route.post("/jadwal-ppdb", "PPDBController.postJadwalPPDB");
+Route.put("/jadwal-ppdb/:id", "PPDBController.putJadwalPPDB");
+Route.delete(
+  "/jadwal-ppdb/:id",
+  "PPDBController.deleteJadwalPPDB"
+);
+
 // gelombang-ppdb
 Route.get("/gelombang-ppdb", "PPDBController.getGelombangPPDB");
 Route.get(
