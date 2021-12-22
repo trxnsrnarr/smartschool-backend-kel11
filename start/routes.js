@@ -455,22 +455,6 @@ Route.post("/kegiatan", "MainController.postKegiatan");
 Route.put("/kegiatan/:kegiatan_id", "MainController.putKegiatan");
 Route.delete("/kegiatan/:kegiatan_id", "MainController.deleteKegiatan");
 
-// gelombang-ppdb
-Route.get("/gelombang-ppdb", "MainController.getGelombangPPDB");
-Route.get(
-  "/gelombang-ppdb/:gelombang_ppdb_id",
-  "MainController.detailGelombangPPDB"
-);
-Route.post("/gelombang-ppdb", "MainController.postGelombangPPDB");
-Route.put(
-  "/gelombang-ppdb/:gelombang_ppdb_id",
-  "MainController.putGelombangPPDB"
-);
-Route.delete(
-  "/gelombang-ppdb/:gelombang_ppdb_id",
-  "MainController.deleteGelombangPPDB"
-);
-
 // pendaftar-ppdb
 Route.get(
   "/pendaftar-ppdb/:pendaftar_ppdb_id",
@@ -1215,7 +1199,26 @@ Route.get("/jalur-ppdb/:id", "PPDBController.detailJalur");
 // Informasi Jalur PPDB
 Route.post("/informasi-jalur-ppdb", "PPDBController.postInformasiJalur");
 Route.put("/informasi-jalur-ppdb/:id", "PPDBController.putInformasiJalur");
-Route.delete("/informasi-jalur-ppdb/:id", "PPDBController.deleteInformasiJalur");
+Route.delete(
+  "/informasi-jalur-ppdb/:id",
+  "PPDBController.deleteInformasiJalur"
+);
+
+// gelombang-ppdb
+Route.get("/gelombang-ppdb", "PPDBController.getGelombangPPDB");
+Route.get(
+  "/gelombang-ppdb/:gelombang_ppdb_id",
+  "PPDBController.detailGelombangPPDB"
+);
+Route.post("/gelombang-ppdb", "PPDBController.postGelombangPPDB");
+Route.put(
+  "/gelombang-ppdb/:gelombang_ppdb_id",
+  "PPDBController.putGelombangPPDB"
+);
+Route.delete(
+  "/gelombang-ppdb/:gelombang_ppdb_id",
+  "PPDBController.deleteGelombangPPDB"
+);
 
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
