@@ -38899,9 +38899,21 @@ class MainController {
       .where({ tipe: "modul" })
       .fetch();
 
+    const atp = await MRpp.query()
+      .where({ m_user_id: userAuthor.id })
+      .andWhere({ dihapus: 0 })
+      .where({ tipe: "atp" })
+      .fetch();
+
+    const cp = await MRpp.query()
+      .where({ m_user_id: userAuthor.id })
+      .andWhere({ dihapus: 0 })
+      .where({ tipe: "cp" })
+      .fetch();
+
     return response.ok({
       userAuthor,
-      bukuKerja: { rpp, silabus, perangkat, modul },
+      bukuKerja: { rpp, silabus, perangkat, modul, atp, cp },
       sekolah,
     });
   }
