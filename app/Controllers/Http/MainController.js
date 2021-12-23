@@ -16152,12 +16152,14 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
+    const { user_id } = request.get();
+
     const rpp = await MRpp.query()
       .with("mataPelajaran")
       .with("user")
       .with("sekolah")
       .where({ dihapus: 0 })
-      .andWhere({ m_user_id: user.id })
+      .andWhere({ m_user_id: user_id || user.id })
       .andWhere({ id: rpp_id })
       .first();
 
@@ -38891,9 +38893,15 @@ class MainController {
       .where({ tipe: "perangkat" })
       .fetch();
 
+    const modul = await MRpp.query()
+      .where({ m_user_id: userAuthor.id })
+      .andWhere({ dihapus: 0 })
+      .where({ tipe: "modul" })
+      .fetch();
+
     return response.ok({
       userAuthor,
-      bukuKerja: { rpp, silabus, perangkat },
+      bukuKerja: { rpp, silabus, perangkat, modul },
       sekolah,
     });
   }
