@@ -11,6 +11,10 @@ class MInformasiGelombang extends Model {
   ujian() {
     return this.hasOne("App/Models/MJadwalPpdb");
   }
+
+  gelombang() {
+    return this.belongsTo("App/Models/MGelombangPpdb");
+  }
 }
 
 module.exports = MInformasiGelombang;

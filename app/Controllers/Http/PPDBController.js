@@ -4,6 +4,7 @@ const MSekolah = use("App/Models/MSekolah");
 const MGelombangPpdb = use("App/Models/MGelombangPpdb");
 const MPendaftarPpdb = use("App/Models/MPendaftarPpdb");
 const Mta = use("App/Models/Mta");
+const MUjian = use("App/Models/MUjian");
 const MJalurPpdb = use("App/Models/MJalurPpdb");
 const MInformasiJalurPpdb = use("App/Models/MInformasiJalurPpdb");
 const MInformasiGelombang = use("App/Models/MInformasiGelombang");
@@ -340,6 +341,113 @@ class PPDBController {
     });
   }
 
+  async getJadwalPPDB({ request, response }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const {
+      tingkat,
+      daftar_ujian_id,
+      page = 1,
+      search,
+      filter_mapel,
+      filter_tipe,
+      filter_tingkat,
+    } = request.get();
+
+    const userIds = await User.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .whereIn("role", ["guru", "admin"])
+      .ids();
+
+    let ujian;
+    ujian = MUjian.query()
+      .where({ dihapus: 0 })
+      .whereIn("m_user_id", userIds)
+      .orderBy("id", "desc");
+
+    if (search) {
+      ujian = ujian.where("nama", "like", `%${search}%`);
+    }
+    if (filter_mapel) {
+      ujian = ujian.where({ m_user_id: filter_mapel });
+    }
+    if (filter_tingkat) {
+      ujian = ujian.where({ tingkat: filter_tingkat });
+    }
+    if (filter_tipe) {
+      ujian = ujian.where({ tipe: filter_tipe });
+    }
+    ujian.where({ tipe: "ppdb" });
+
+    ujian = await ujian.ids();
+
+    const jadwal = await MJadwalPpdb.query()
+      .with("soal")
+      .with("info", (builder) => {
+        builder.with("gelombang", (builder) => {
+          builder.with("jalur");
+        });
+      })
+      .whereIn("m_ujian_id", ujian)
+      .where({ dihapus: 0 })
+      .paginate(page, 20);
+
+    return response.ok({
+      jadwal,
+    });
+  }
+
+  async detailJadwalPPDB({ request, response, params: { id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const jalur = await MJalurPpdb.query()
+      .with("gelombang", (builder) => {
+        builder
+          .where({ dihapus: 0 })
+          .withCount("pendaftar as jumlahPendaftar")
+          .with("informasi", (builder) => {
+            builder
+              .with("ujian", (builder) => {
+                builder.with("soal");
+              })
+              .where({ dihapus: 0 });
+          });
+      })
+      .with("informasi", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .where({ id })
+      .first();
+
+    if (!jalur) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+    return response.ok({
+      jalur,
+    });
+  }
+
   async postInformasiJalur({ request, response }) {
     const domain = request.headers().origin;
 
@@ -463,23 +571,29 @@ class PPDBController {
     let terdaftar;
 
     if (checkIds.length && is_public == false) {
-      const user = await auth.getUser();
+      let user;
+      try {
+        user = await auth.getUser();
+      } catch {
+        //
+      }
+      if (user) {
+        gelombangAktif = await MPendaftarPpdb.query()
+          .with("gelombang")
+          .where({ dihapus: 0 })
+          .andWhere({ m_user_id: user.id })
+          .whereIn("m_gelombang_ppdb_id", checkIds)
+          .first();
 
-      gelombangAktif = await MPendaftarPpdb.query()
-        .with("gelombang")
-        .where({ dihapus: 0 })
-        .andWhere({ m_user_id: user.id })
-        .whereIn("m_gelombang_ppdb_id", checkIds)
-        .first();
+        pendaftarIds = await MPendaftarPpdb.query()
+          .where({ dihapus: 0 })
+          .andWhere({ m_user_id: user.id })
+          .pluck("m_gelombang_ppdb_id");
 
-      pendaftarIds = await MPendaftarPpdb.query()
-        .where({ dihapus: 0 })
-        .andWhere({ m_user_id: user.id })
-        .pluck("m_gelombang_ppdb_id");
-
-      terdaftar = await MGelombangPpdb.query()
-        .whereIn("id", pendaftarIds)
-        .fetch();
+        terdaftar = await MGelombangPpdb.query()
+          .whereIn("id", pendaftarIds)
+          .fetch();
+      }
     }
 
     const gelombang = await MGelombangPpdb.query()

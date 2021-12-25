@@ -11,6 +11,10 @@ class MJadwalPpdb extends Model {
   soal() {
     return this.belongsTo("App/Models/MUjian");
   }
+
+  info() {
+    return this.belongsTo("App/Models/MInformasiGelombang");
+  }
 }
 
 module.exports = MJadwalPpdb;

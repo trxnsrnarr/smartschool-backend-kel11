@@ -1196,6 +1196,13 @@ Route.put("/jalur-ppdb/:id", "PPDBController.putJalur");
 Route.delete("/jalur-ppdb/:id", "PPDBController.deleteJalur");
 Route.get("/jalur-ppdb/:id", "PPDBController.detailJalur");
 
+// Jadwal Ujian PPDB
+Route.get("/jadwal-ppdb", "PPDBController.getJadwalPPDB");
+Route.post("/jadwal-ppdb", "PPDBController.postJadwalPPDB");
+Route.put("/jadwal-ppdb/:id", "PPDBController.putJadwalPPDB");
+Route.delete("/jadwal-ppdb/:id", "PPDBController.deleteJadwalPPDB");
+Route.get("/jadwal-ppdb/:id", "PPDBController.detailJadwalPPDB");
+
 // Informasi Jalur PPDB
 Route.post("/informasi-jalur-ppdb", "PPDBController.postInformasiJalur");
 Route.put("/informasi-jalur-ppdb/:id", "PPDBController.putInformasiJalur");
