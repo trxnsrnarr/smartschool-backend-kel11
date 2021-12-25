@@ -401,7 +401,6 @@ class PPDBController {
           builder.with("jalur");
         });
       })
-      .whereIn("m_ujian_id", ujian)
       .where({ dihapus: 0 })
       .paginate(page, 20);
 
