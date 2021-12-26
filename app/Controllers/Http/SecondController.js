@@ -1025,8 +1025,14 @@ class SecondController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { m_jadwal_mengajar_id, absen, hari_ini, waktu_saat_ini } =
-      request.get();
+    const {
+      m_jadwal_mengajar_id,
+      absen,
+      hari_ini,
+      waktu_saat_ini,
+      mulai: waktu_mulai,
+      selesai: waktu_selesai,
+    } = request.get();
 
     const jadwalMengajar = await MJadwalMengajar.query()
       .with("rombel")
@@ -1285,7 +1291,20 @@ class SecondController {
         .fetch();
       // return timeline2;
 
-      timeline = [...timeline2.toJSON(), ...timeline1.toJSON()];
+      timeline = [...timeline2.toJSON(), ...timeline1.toJSON()].filter((d) => {
+        let dibagikan = d.tanggal_pembagian;
+        if (d.tipe == "tugas") {
+          dibagikan = d.tugas.tanggal_pembagian;
+        }
+        if (waktu_mulai && waktu_selesai) {
+          return (
+            moment(dibagikan) > moment(waktu_mulai).startOf("day") &&
+            moment(dibagikan) < moment(waktu_selesai).startOf("day")
+          );
+        } else {
+          return 1;
+        }
+      });
 
       await Promise.all(
         timeline.map((d) => {

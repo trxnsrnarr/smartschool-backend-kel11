@@ -1223,6 +1223,7 @@ class MainController {
       nip,
       nuptk,
       asal_sekolah,
+      alamat_asal_sekolah,
       status_keluarga,
       anak_ke,
       kelas_diterima,
@@ -1357,6 +1358,10 @@ class MainController {
         nip,
         nuptk,
         asal_sekolah,
+        alamat_asal_sekolah,
+        no_ijazah,
+        tahun_ijazah,
+        file_ijazah,
         status_keluarga,
         anak_ke,
         kelas_diterima,
@@ -1449,7 +1454,10 @@ class MainController {
         nrk,
         nip,
         nuptk,
-        asal_sekolah,
+        alamat_asal_sekolah,
+        no_ijazah,
+        tahun_ijazah,
+        file_ijazah,
         status_keluarga,
         anak_ke,
         kelas_diterima,
@@ -11467,7 +11475,7 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    const { status, page, search } = request.get();
+    const { status, page, search, tipe_ujian } = request.get();
 
     const hari_ini = moment().format("YYYY-MM-DD HH:mm");
 
@@ -11798,7 +11806,7 @@ class MainController {
         );
       }
 
-      const ujian = await MUjian.query()
+      let ujian = MUjian.query()
         .select("id", "nama", "tipe")
         .withCount("soal as soal_pg", (builder) => {
           builder.where({ bentuk: "pg" });
@@ -11816,8 +11824,13 @@ class MainController {
           builder.where({ bentuk: "menjodohkan" });
         })
         .whereIn("m_user_id", userIds)
-        .andWhere({ dihapus: 0 })
-        .fetch();
+        .andWhere({ dihapus: 0 });
+
+      if (tipe_ujian) {
+        ujian.whereIn("tipe", tipe_ujian);
+      }
+
+      ujian = await ujian.fetch();
       if (status == "sudah-selesai") {
         return response.ok({
           rombel,
@@ -14522,260 +14535,6 @@ class MainController {
     });
   }
 
-  async getGelombangPPDB({ response, request, auth }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const ta = await this.getTAAktif(sekolah);
-
-    if (!ta) {
-      return response.notFound({
-        message: "Aktifkan tahun ajaran yg tersedia di menu kurikulum",
-      });
-    }
-
-    let { is_public } = request.get();
-    is_public = is_public ? is_public : false;
-
-    const checkIds = await MGelombangPpdb.query()
-      .where("dibuka", "<=", moment().format("YYYY-MM-DD"))
-      .andWhere("ditutup", ">=", moment().format("YYYY-MM-DD"))
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta.id })
-      .andWhere({ dihapus: 0 })
-      .ids();
-
-    let gelombangAktif;
-    let pendaftarIds;
-    let terdaftar;
-
-    if (checkIds.length && is_public == false) {
-      const user = await auth.getUser();
-
-      gelombangAktif = await MPendaftarPpdb.query()
-        .with("gelombang")
-        .where({ dihapus: 0 })
-        .andWhere({ m_user_id: user.id })
-        .whereIn("m_gelombang_ppdb_id", checkIds)
-        .first();
-
-      pendaftarIds = await MPendaftarPpdb.query()
-        .where({ dihapus: 0 })
-        .andWhere({ m_user_id: user.id })
-        .pluck("m_gelombang_ppdb_id");
-
-      terdaftar = await MGelombangPpdb.query()
-        .whereIn("id", pendaftarIds)
-        .fetch();
-    }
-
-    const gelombang = await MGelombangPpdb.query()
-      .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta.id })
-      .andWhere({ dihapus: 0 })
-      .withCount("pendaftar as jumlahPendaftar")
-      .fetch();
-
-    const jumlahPeserta = await User.query()
-      .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ dihapus: 0 })
-      .andWhere({ role: "ppdb" })
-      .count("* as total");
-
-    return response.ok({
-      gelombang: gelombang,
-      terdaftar: terdaftar,
-      gelombangAktif: gelombangAktif,
-      jumlahPeserta: jumlahPeserta[0].total,
-    });
-  }
-
-  async detailGelombangPPDB({ response, params: { gelombang_ppdb_id } }) {
-    const gelombang = await MGelombangPpdb.query()
-      .with("pendaftar", (builder) => {
-        builder.with("user");
-      })
-      .where({ id: gelombang_ppdb_id })
-      .andWhere({ dihapus: 0 })
-      .first();
-
-    return response.ok({
-      gelombang: gelombang,
-    });
-  }
-
-  async postGelombangPPDB({ response, request, auth }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-
-    if (
-      user.role != "admin" ||
-      user.role == "guru" ||
-      user.m_sekolah_id != sekolah.id
-    ) {
-      return response.forbidden({ message: messageForbidden });
-    }
-
-    const ta = await this.getTAAktif(sekolah);
-
-    const { nama, dibuka, ditutup, tes_akademik, biaya_pendaftaran } =
-      request.post();
-
-    const rules = {
-      nama: "required",
-      biaya_pendaftaran: "required",
-      dibuka: "required",
-      ditutup: "required",
-      tes_akademik: "required",
-    };
-    const message = {
-      "nama.required": "Nama Gelombang harus diisi",
-      "biaya_pendaftaran.required": "Biaya Pendaftaran harus diisi",
-      "dibuka.required": "Tanggal dibuka harus diisi",
-      "ditutup.required": "Tanggal ditutup harus diisi",
-      "tes_akademik.required": "Tes Akademik harus dipilih",
-    };
-    const validation = await validate(request.all(), rules, message);
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
-    }
-
-    await MGelombangPpdb.create({
-      nama,
-      dibuka,
-      ditutup,
-      dihapus: 0,
-      tes_akademik,
-      biaya_pendaftaran,
-      m_sekolah_id: sekolah.id,
-      m_ta_id: ta.id,
-    });
-
-    return response.ok({
-      message: messagePostSuccess,
-    });
-  }
-
-  async putGelombangPPDB({
-    response,
-    request,
-    auth,
-    params: { gelombang_ppdb_id },
-  }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-
-    if (
-      user.role != "admin" ||
-      user.role == "guru" ||
-      user.m_sekolah_id != sekolah.id
-    ) {
-      return response.forbidden({ message: messageForbidden });
-    }
-
-    const { nama, dibuka, ditutup, tes_akademik, biaya_pendaftaran } =
-      request.post();
-
-    const rules = {
-      nama: "required",
-      biaya_pendaftaran: "required",
-      dibuka: "required",
-      ditutup: "required",
-      tes_akademik: "required",
-    };
-    const message = {
-      "nama.required": "Nama Gelombang harus diisi",
-      "biaya_pendaftaran.required": "Biaya Pendaftaran harus diisi",
-      "dibuka.required": "Tanggal dibuka harus diisi",
-      "ditutup.required": "Tanggal ditutup harus diisi",
-      "tes_akademik.required": "Tes Akademik harus dipilih",
-    };
-    const validation = await validate(request.all(), rules, message);
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
-    }
-
-    const gelombang = await MGelombangPpdb.query()
-      .where({ id: gelombang_ppdb_id })
-      .update({
-        nama,
-        dibuka,
-        ditutup,
-        tes_akademik,
-        biaya_pendaftaran,
-      });
-
-    if (!gelombang) {
-      return response.notFound({
-        message: messageNotFound,
-      });
-    }
-
-    return response.ok({
-      message: messagePutSuccess,
-    });
-  }
-
-  async deleteGelombangPPDB({
-    response,
-    request,
-    auth,
-    params: { gelombang_ppdb_id },
-  }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-
-    if (
-      user.role != "admin" ||
-      user.role == "guru" ||
-      user.m_sekolah_id != sekolah.id
-    ) {
-      return response.forbidden({ message: messageForbidden });
-    }
-
-    const gelombang = await MGelombangPpdb.query()
-      .where({ id: gelombang_ppdb_id })
-      .update({
-        dihapus: 1,
-      });
-
-    if (!gelombang) {
-      return response.notFound({
-        message: messageNotFound,
-      });
-    }
-
-    return response.ok({
-      message: messagePutSuccess,
-    });
-  }
-
   async downloadPendaftarPPDB({ response, request, auth }) {
     // Create a document
     const doc = new PDFDocument({ size: "A4" });
@@ -16401,12 +16160,14 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
+    const { user_id } = request.get();
+
     const rpp = await MRpp.query()
       .with("mataPelajaran")
       .with("user")
       .with("sekolah")
       .where({ dihapus: 0 })
-      .andWhere({ m_user_id: user.id })
+      .andWhere({ m_user_id: user_id || user.id })
       .andWhere({ id: rpp_id })
       .first();
 
@@ -39140,9 +38901,27 @@ class MainController {
       .where({ tipe: "perangkat" })
       .fetch();
 
+    const modul = await MRpp.query()
+      .where({ m_user_id: userAuthor.id })
+      .andWhere({ dihapus: 0 })
+      .where({ tipe: "modul" })
+      .fetch();
+
+    const atp = await MRpp.query()
+      .where({ m_user_id: userAuthor.id })
+      .andWhere({ dihapus: 0 })
+      .where({ tipe: "atp" })
+      .fetch();
+
+    const cp = await MRpp.query()
+      .where({ m_user_id: userAuthor.id })
+      .andWhere({ dihapus: 0 })
+      .where({ tipe: "cp" })
+      .fetch();
+
     return response.ok({
       userAuthor,
-      bukuKerja: { rpp, silabus, perangkat },
+      bukuKerja: { rpp, silabus, perangkat, modul, atp, cp },
       sekolah,
     });
   }

@@ -24,6 +24,10 @@ class MGelombangPpdb extends Model {
     return this.hasMany("App/Models/MPendaftarPpdb");
   }
 
+  informasi() {
+    return this.hasMany("App/Models/MInformasiGelombang");
+  }
+
   getKeterangan({ dibuka, ditutup }) {
     if (moment().format("YYYY-MM-DD") <= moment(dibuka).format("YYYY-MM-DD")) {
       return "Akan Dibuka";
