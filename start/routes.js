@@ -469,6 +469,10 @@ Route.put(
   "/pendaftar-ppdb/:pendaftar_ppdb_id/konfirmasi",
   "MainController.konfirmasiPendaftarPPDB"
 );
+Route.delete(
+  "/pendaftar-ppdb/:pendaftar_ppdb_id",
+  "PPDBController.deletePendaftarPPDB"
+);
 
 // alur-ppdb
 Route.get("/alur-ppdb", "MainController.getAlurPPDB");

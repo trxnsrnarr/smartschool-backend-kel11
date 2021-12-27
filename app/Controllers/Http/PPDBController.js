@@ -579,7 +579,9 @@ class PPDBController {
       }
       if (user) {
         gelombangAktif = await MPendaftarPpdb.query()
-          .with("gelombang")
+          .with("gelombang", (builder) => {
+            builder.with("jalur");
+          })
           .where({ dihapus: 0 })
           .andWhere({ m_user_id: user.id })
           .whereIn("m_gelombang_ppdb_id", checkIds)
@@ -591,17 +593,19 @@ class PPDBController {
           .pluck("m_gelombang_ppdb_id");
 
         terdaftar = await MGelombangPpdb.query()
+          .with("jalur")
           .whereIn("id", pendaftarIds)
+          .where({ dihapus: 0 })
           .fetch();
       }
     }
 
     const gelombang = await MGelombangPpdb.query()
       .with("jalur")
+      .withCount("pendaftar as jumlahPendaftar")
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ m_ta_id: ta.id })
       .andWhere({ dihapus: 0 })
-      .withCount("pendaftar as jumlahPendaftar")
       .fetch();
 
     const jumlahPeserta = await User.query()
@@ -621,7 +625,7 @@ class PPDBController {
   async detailGelombangPPDB({ response, params: { gelombang_ppdb_id } }) {
     const gelombang = await MGelombangPpdb.query()
       .with("pendaftar", (builder) => {
-        builder.with("user");
+        builder.with("user").where({ dihapus: 0 });
       })
       .where({ id: gelombang_ppdb_id })
       .andWhere({ dihapus: 0 })
@@ -1054,6 +1058,35 @@ class PPDBController {
     });
   }
 
+  async deletePendaftarPPDB({
+    response,
+    request,
+    params: { pendaftar_ppdb_id },
+  }) {
+    const check = await MPendaftarPpdb.query()
+      .where({ id: pendaftar_ppdb_id })
+      .first();
+
+    const gelombang = await MGelombangPpdb.query()
+      .where({ id: check.m_gelombang_ppdb_id })
+      .first();
+
+    const hapus = await MPendaftarPpdb.query()
+      .where({ id: pendaftar_ppdb_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!hapus) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
   async detailJadwalUjianPPDB({
     response,
     request,
