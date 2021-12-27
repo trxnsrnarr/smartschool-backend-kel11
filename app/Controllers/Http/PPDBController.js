@@ -9,7 +9,8 @@ const MJalurPpdb = use("App/Models/MJalurPpdb");
 const MInformasiJalurPpdb = use("App/Models/MInformasiJalurPpdb");
 const MInformasiGelombang = use("App/Models/MInformasiGelombang");
 const MJadwalPpdb = use("App/Models/MJadwalPpdb");
-
+const MJadwalPpdb = use("App/Models/MJadwalPpdb");
+const TkPesertaUjianPpdb = use("App/Models/TkPesertaUjianPpdb");
 const User = use("App/Models/User");
 
 const moment = require("moment");
@@ -1051,6 +1052,367 @@ class PPDBController {
     return response.ok({
       message: messageDeleteSuccess,
     });
+  }
+
+  async detailJadwalUjianPPDB({
+    response,
+    request,
+    auth,
+    params: { jadwal_ppdb_id },
+  }) {
+    const user = await auth.getUser();
+
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const jadwalPpdb = await MJadwalPpdb.query()
+      .with("soal")
+      .with("info", (builder) => {
+        builder.with("gelombang");
+      })
+      .where({ id: jadwal_ppdb_id })
+      .first();
+
+    const peserta = await TkPesertaUjianPpdb.query()
+      .with("user", (builder) => {
+        builder.select("id", "nama");
+      })
+      .where({ m_jadwal_ppdb_id: jadwal_ppdb_id })
+      .fetch();
+
+    return response.ok({
+      jadwalPpdb,
+      pesertaUjianPpdb: peserta,
+    });
+  }
+
+  async postPesertaUjianPpdb({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { m_jadwal_ppdb_id, ujian_id } = request.post();
+    const waktu_mulai = moment().format("YYYY-MM-DD HH:mm:ss");
+
+    const ujian = await MUjian.query().where({ id: ujian_id }).first();
+
+    const jadwalPpdb = await MJadwalPpdb.query()
+      .where({ id: m_jadwal_ppdb_id })
+      .first();
+
+    if (jadwalPpdb.waktu_dibuka > waktu_mulai) {
+      return response.forbidden({
+        message: messageForbidden,
+      });
+    }
+
+    let diacak = "id ASC";
+
+    if (jadwalPpdb.diacak) {
+      diacak = "RAND()";
+    }
+
+    const checkIfExist = await TkPesertaUjianPpdb.query()
+      .where({ m_user_id: user.id })
+      .andWhere({ m_jadwal_ppdb_id: m_jadwal_ppdb_id })
+      .where({ dihapus: 0 })
+      .first();
+
+    if (checkIfExist) {
+      return response.ok({
+        peserta_ujian: checkIfExist,
+      });
+    }
+
+    const soalPGIds = await TkSoalUjian.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_ujian_id: ujian_id })
+      .pluck("m_soal_ujian_id");
+
+    const soalMasterPGIds = await MSoalUjian.query()
+      .where({ bentuk: "pg" })
+      .andWhere({ dihapus: 0 })
+      .whereIn("id", soalPGIds)
+      .limit(jadwalPpdb.jumlah_pg)
+      .ids();
+
+    const soalPG = await TkSoalUjian.query()
+      .where({ m_ujian_id: ujian_id })
+      .whereIn("m_soal_ujian_id", soalMasterPGIds)
+      .orderByRaw(`${diacak}`)
+      .limit(jadwalPpdb.jumlah_pg)
+      .fetch();
+
+    const soalEsaiIds = await TkSoalUjian.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_ujian_id: ujian_id })
+      .pluck("m_soal_ujian_id");
+
+    const soalMasterEsaiIds = await MSoalUjian.query()
+      .where({ bentuk: "esai" })
+      .andWhere({ dihapus: 0 })
+      .whereIn("id", soalEsaiIds)
+      .limit(jadwalPpdb.jumlah_esai)
+      .ids();
+
+    const soalEsai = await TkSoalUjian.query()
+      .with("soal", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .where({ m_ujian_id: ujian_id })
+      .whereIn("m_soal_ujian_id", soalMasterEsaiIds)
+      .orderByRaw(`${diacak}`)
+      .limit(jadwalPpdb.jumlah_esai)
+      .fetch();
+
+    const soalData = [];
+
+    const trx = await Database.beginTransaction();
+    const pesertaUjian = await TkPesertaUjianPpdb.create(
+      {
+        waktu_mulai,
+        dinilai: 0,
+        selesai: 0,
+        dihapus: 0,
+        m_user_id: user.id,
+        m_jadwal_ppdb_id: m_jadwal_ppdb_id,
+      },
+      trx
+    );
+
+    await Promise.all(
+      soalPG.toJSON().map(async (d) => {
+        soalData.push({
+          durasi: 0,
+          ragu: 0,
+          dijawab: 0,
+          dinilai: 1,
+          m_soal_ujian_id: d.m_soal_ujian_id,
+          tk_peserta_ujian_ppdb_id: pesertaUjian.id,
+        });
+      })
+    );
+
+    await Promise.all(
+      soalEsai.toJSON().map(async (d) => {
+        soalData.push({
+          durasi: 0,
+          ragu: 0,
+          dijawab: 0,
+          m_soal_ujian_id: d.soal.id,
+          jawaban_rubrik_esai: d.soal.rubrik_kj,
+          tk_peserta_ujian_ppdb_id: pesertaUjian.id,
+        });
+      })
+    );
+
+    await TkJawabanUjianSiswa.createMany(soalData, trx);
+    await trx.commit();
+
+    const res = await jadwalUjianReference.add({
+      m_jadwal_ppdb_id: m_jadwal_ppdb_id,
+      user_id: pesertaUjian.m_user_id,
+      progress: 0,
+      waktu_mulai: waktu_mulai,
+    });
+
+    await TkPesertaUjianPpdb.query().where({ id: pesertaUjian.id }).update({
+      doc_id: res.id,
+    });
+
+    return response.ok({
+      peserta_ujian: pesertaUjian,
+    });
+  }
+
+  async detailPesertaUjianPpdb({
+    response,
+    request,
+    auth,
+    params: { peserta_ujian_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { jawaban_siswa_id, siswa } = request.get();
+
+    let pesertaUjian;
+
+    if (user.role == "guru" || siswa || user.role == "admin") {
+      pesertaUjian = await TkPesertaUjianPpdb.query()
+        .with("jadwalPpdb", (builder) => {
+          builder.with("soal");
+        })
+        .with("jawabanSiswa", (builder) => {
+          builder.with("soal");
+        })
+        .with("user")
+        .where({ id: peserta_ujian_id })
+        .first();
+
+      let semuaPeserta = await MJadwalPpdb.query()
+        .with("peserta", (builder) => {
+          builder
+            .with("user", (builder) => {
+              builder.select("id", "nama");
+            })
+            .select("id", "m_user_id", "m_jadwal_ppdb_id")
+            .whereNotNull("waktu_selesai")
+            .orderBy("m_user_id", "asc");
+        })
+        .where({
+          m_jadwal_ppdb_id:
+            pesertaUjian.m_jadwal_ppdb_id,
+        })
+        .fetch();
+
+      let metaHasil = { nilaiPg: 0, nilaiEsai: 0, nilaiTotal: 0, benar: 0 };
+      let analisisBenar = {};
+      let analisisTotal = {};
+
+      await Promise.all(
+        pesertaUjian.toJSON().jawabanSiswa.map(async (d) => {
+          if (d.soal.bentuk == "pg") {
+            if (d.jawaban_pg == d.soal.kj_pg) {
+              metaHasil.nilaiPg = metaHasil.nilaiPg + d.soal.nilai_soal;
+              metaHasil.benar = metaHasil.benar + 1;
+              analisisBenar[d.soal.kd] = analisisBenar[d.soal.kd]
+                ? analisisBenar[d.soal.kd] + 1
+                : 1;
+            }
+            analisisTotal[d.soal.kd] = analisisTotal[d.soal.kd]
+              ? analisisTotal[d.soal.kd] + 1
+              : 1;
+          } else if (d.soal.bentuk == "esai") {
+            if (JSON.parse(d.jawaban_rubrik_esai)) {
+              if (JSON.parse(d.jawaban_rubrik_esai).length) {
+                JSON.parse(d.jawaban_rubrik_esai).map((e) => {
+                  if (e.benar) {
+                    metaHasil.nilaiEsai = metaHasil.nilaiEsai + e.poin;
+                  }
+                });
+
+                if (d.jawaban_rubrik_esai.indexOf("true") != -1) {
+                  metaHasil.benar = metaHasil.benar + 1;
+                }
+              }
+            }
+          }
+        })
+      );
+
+      metaHasil.nilaiTotal = metaHasil.nilaiPg + metaHasil.nilaiEsai;
+
+      analisisBenar = Object.entries(analisisBenar);
+      analisisTotal = Object.entries(analisisTotal);
+
+      let analisisData = [];
+      let idTmp;
+
+      analisisTotal.map((d) => {
+        analisisBenar.map((e) => {
+          if (d[0] == e[0]) {
+            idTmp = e[0];
+            analisisData.push({
+              kd: d[0],
+              nilai: (e[1] / d[1]) * 100,
+              total: d[1],
+            });
+          }
+        });
+
+        if (idTmp != d[0]) {
+          analisisData.push({
+            kd: d[0],
+            nilai: 0 * 100,
+            total: d[1],
+          });
+        }
+      });
+
+      return response.ok({
+        peserta_ujian: pesertaUjian,
+        metaHasil,
+        analisisData: analisisData,
+        semuaPeserta: semuaPeserta,
+      });
+    } else {
+      pesertaUjian = await TkPesertaUjianPpdb.query()
+        .with("jadwalPpdb", (builder) => {
+            builder.with("soal");
+        })
+        .with("tugas")
+        .withCount("jawabanSiswa as totalSoal")
+        .withCount("jawabanSiswa as totalDijawab", (builder) => {
+          builder.where({ dijawab: 1 });
+        })
+        .with("user")
+        .where({ id: peserta_ujian_id })
+        .first();
+
+      const soal_ids = await TkJawabanUjianSiswa.query()
+        .where({ tk_peserta_ujian_ppdb_id: peserta_ujian_id })
+        .select("id", "ragu", "dijawab")
+        .fetch();
+
+      let soal_siswa;
+
+      if (jawaban_siswa_id) {
+        soal_siswa = await TkJawabanUjianSiswa.query()
+          .with("soal", (builder) => {
+            builder.select(
+              "id",
+              "kd",
+              "kd_konten_materi",
+              "level_kognitif",
+              "bentuk_soal",
+              "akm_konten_materi",
+              "akm_konteks_materi",
+              "akm_proses_kognitif",
+              "pertanyaan",
+              "jawaban_a",
+              "jawaban_b",
+              "jawaban_c",
+              "jawaban_d",
+              "jawaban_e",
+              "opsi_a_uraian",
+              "opsi_b_uraian",
+              "pilihan_menjodohkan",
+              "soal_menjodohkan",
+              "bentuk",
+              "dihapus",
+              "m_user_id",
+              "audio"
+            );
+          })
+          .where({ id: jawaban_siswa_id })
+          .first();
+      }
+
+      return response.ok({
+        peserta_ujian: pesertaUjian,
+        soal_ids: soal_ids,
+        soal_siswa: soal_siswa,
+      });
+    }
   }
 }
 
