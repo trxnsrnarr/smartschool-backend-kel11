@@ -15,6 +15,10 @@ class MJadwalPpdb extends Model {
   info() {
     return this.belongsTo("App/Models/MInformasiGelombang");
   }
+
+  peserta() {
+    return this.hasMany("App/Models/TkPesertaUjianPpdb");
+  }
 }
 
 module.exports = MJadwalPpdb;

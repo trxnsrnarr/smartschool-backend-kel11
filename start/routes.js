@@ -1157,7 +1157,7 @@ Route.post(
 );
 Route.post(
   "/download/ledger-nilai/:rombel_id",
-  "MainController.downloadLedgerNilai"
+  "MainController.downloadLedgerNilai2"
 );
 Route.post(
   "/download/ledger-nilai-yadika/:rombel_id",
@@ -1187,6 +1187,12 @@ Route.post(
   "MainController.importKeteranganKelulusan"
 );
 Route.post("/import/absensi-siswa/", "MainController.importAbsensiSiswa");
+
+
+Route.post(
+  "/uts-to-uas/sikap-siswa",
+  "SecondController.postRaporSikapUAS"
+);
 
 // Ortu anak
 Route.post("/absen-anak", "MainController.getAbsensiAnak");

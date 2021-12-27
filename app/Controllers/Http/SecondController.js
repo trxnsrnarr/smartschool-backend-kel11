@@ -2087,6 +2087,75 @@ class SecondController {
 
     return namaFile;
   }
+
+  async postRaporSikapUAS({ response, request, auth, params: { rombel_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await MSekolah.query().where({ id: 578 }).first();
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    // const anggota = MAnggotaRombel.query()
+    //   .where({ m_rombel_id: rombel_id })
+    //   .fetch();
+    const userIds = await User.query()
+      .where({ m_sekolah_id: 578 })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ role: "siswa" })
+      .ids();
+
+    const checkSikap = await MSikapSiswa.query()
+      .where({ tipe: "uts" })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_ta_id: ta.id })
+      .whereIn("m_user_id", userIds)
+      .fetch();
+
+    let sikap;
+
+    await Promise.all(
+      checkSikap.toJSON().map(async (d) => {
+        const check = await MSikapSiswa.query()
+          .where({ tipe: "uas" })
+          .andWhere({ dihapus: 0 })
+          .andWhere({ m_ta_id: ta.id })
+          .andWhere({ m_user_id: d.m_user_id })
+          .first();
+        if (!check) {
+          const sikap = await MSikapSiswa.create({
+            m_sikap_sosial_ditunjukkan_id: d.m_sikap_sosial_ditunjukkan_id,
+            m_sikap_sosial_ditingkatkan_id: d.m_sikap_sosial_ditingkatkan_id,
+            m_user_id: d.m_user_id,
+            m_sikap_spiritual_ditunjukkan_id:
+              d.m_sikap_spiritual_ditunjukkan_id,
+            m_sikap_spiritual_ditingkatkan_id:
+              d.m_sikap_spiritual_ditingkatkan_id,
+            status: 1,
+            tipe: "uas",
+            m_ta_id: ta.id,
+            dihapus: 0,
+          });
+        }
+      })
+    );
+
+    if (!sikap) {
+      return response.ok({
+        message: messagePostSuccess,
+      });
+    }
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
 }
 
 module.exports = SecondController;
