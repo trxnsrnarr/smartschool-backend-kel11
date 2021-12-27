@@ -1299,7 +1299,9 @@ class MainController {
 
     let userPayload = {
       // identitas
-      nama,
+      nama_ibu,
+      nama,      
+      nama_ayah,
       whatsapp,
       gender,
       agama,
@@ -14659,6 +14661,7 @@ class MainController {
     await MPendaftarPpdb.create({
       m_gelombang_ppdb_id,
       m_user_id: user.id,
+      status: "menungguSeleksiBerkas"
     });
 
     return response.ok({
@@ -14674,6 +14677,7 @@ class MainController {
       nama_pemilik,
       nominal,
       bukti,
+      pembayaran,
       m_jurusan_1_id,
       m_jurusan_2_id,
       m_jurusan_3_id,
@@ -14694,6 +14698,7 @@ class MainController {
         m_jurusan_3_id,
         m_jurusan_4_id,
         m_jurusan_5_id,
+        pembayaran,
       });
 
     if (!check) {
