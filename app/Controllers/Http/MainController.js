@@ -1300,7 +1300,7 @@ class MainController {
     let userPayload = {
       // identitas
       nama_ibu,
-      nama,      
+      nama,
       nama_ayah,
       whatsapp,
       gender,
@@ -3545,23 +3545,19 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
+    let { search } = request.get();
+    let ta;
 
-    const ta = await Mta.query()
-      .select(
-        "tahun",
-        "semester",
-        "nama_kepsek",
-        "nip_kepsek",
-        "aktif",
-        "id",
-        "tanggal_awal",
-        "tanggal_akhir",
-        "tanggal_rapor"
-      )
+    ta = Mta.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
-      .orderBy("id", "desc")
-      .fetch();
+      .orderBy("id", "desc");
+
+    if (search) {
+      ta = ta.andWhere("tahun", "like", `%${search}%`);
+    }
+
+    ta = await ta.fetch();
 
     return response.ok({
       ta: ta,
@@ -14661,7 +14657,7 @@ class MainController {
     await MPendaftarPpdb.create({
       m_gelombang_ppdb_id,
       m_user_id: user.id,
-      status: "menungguSeleksiBerkas"
+      status: "menungguSeleksiBerkas",
     });
 
     return response.ok({
@@ -45137,10 +45133,10 @@ class MainController {
           await Promise.all(
             muatan.toJSON().map(async (e) => {
               muatanTotal = muatanTotal + 1;
-              let maPor=0;
+              let maPor = 0;
               await Promise.all(
                 e.mapelRapor.map(async (r, nox) => {
-                  maPor = maPor+1;
+                  maPor = maPor + 1;
                   worksheet.getColumn([`${(total + 1) * 2 + 3}`]).values = [
                     ``,
                     ``,
@@ -45200,7 +45196,9 @@ class MainController {
 
                   if (
                     muatanRombel[0].total == muatanTotal &&
-                    maPor == muatan.toJSON()[`${muatanRombel[0].total - 1}`].mapelRapor.length
+                    maPor ==
+                      muatan.toJSON()[`${muatanRombel[0].total - 1}`].mapelRapor
+                        .length
                   ) {
                     row.getCell([`${(total + 1) * 2 + 5}`]).value =
                       ranking.find(
@@ -45562,7 +45560,7 @@ class MainController {
       jam_sinkron: 1,
     });
 
-    return all;
+    // return all;
 
     return response.ok({
       message: messagePostSuccess,
