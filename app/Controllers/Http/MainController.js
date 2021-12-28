@@ -16948,7 +16948,7 @@ class MainController {
         })
       );
     }
-
+      
     // return result;
 
     return response.ok({
@@ -36071,7 +36071,7 @@ class MainController {
       total = await MSurat.query()
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ tipe: "masuk" })
-        .andWhere({dihapus:0})
+        .andWhere({ dihapus: 0 })
         .whereBetween("created_at", [
           `${dateObj.getFullYear()}-${dateObj.getMonth() + 1}-1`,
           `${dateObj.getFullYear()}-${dateObj.getMonth() + 2}-1 `,
@@ -38921,10 +38921,16 @@ class MainController {
       .where({ tipe: "cp" })
       .fetch();
 
+    // const surat = TkSuratKeputusan.query()
+    //   .with("surat")
+    //   .where({ m_sekolah_id: sekolah.id })
+    //   .fetch();
+
     return response.ok({
       userAuthor,
       bukuKerja: { rpp, silabus, perangkat, modul, atp, cp },
       sekolah,
+      // surat
     });
   }
 
@@ -45549,7 +45555,7 @@ class MainController {
           hari: d.hari,
           jam_ke: d.jam_ke,
           jam_mulai: d.jam_mulai,
-          jam_akhir: d.jam_akhir,
+          jam_selesai: d.jam_selesai,
           istirahat: d.istirahat,
           m_sekolah_id: d.m_sekolah_id,
           m_ta_id: taBaru.id,
