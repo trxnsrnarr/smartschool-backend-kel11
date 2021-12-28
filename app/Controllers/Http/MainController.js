@@ -36071,6 +36071,7 @@ class MainController {
       total = await MSurat.query()
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ tipe: "masuk" })
+        .andWhere({dihapus:0})
         .whereBetween("created_at", [
           `${dateObj.getFullYear()}-${dateObj.getMonth() + 1}-1`,
           `${dateObj.getFullYear()}-${dateObj.getMonth() + 2}-1 `,
