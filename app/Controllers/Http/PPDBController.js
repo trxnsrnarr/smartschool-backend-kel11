@@ -9,7 +9,6 @@ const MJalurPpdb = use("App/Models/MJalurPpdb");
 const MInformasiJalurPpdb = use("App/Models/MInformasiJalurPpdb");
 const MInformasiGelombang = use("App/Models/MInformasiGelombang");
 const MJadwalPpdb = use("App/Models/MJadwalPpdb");
-const MJadwalPpdb = use("App/Models/MJadwalPpdb");
 const TkPesertaUjianPpdb = use("App/Models/TkPesertaUjianPpdb");
 const User = use("App/Models/User");
 
