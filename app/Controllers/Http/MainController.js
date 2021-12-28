@@ -45549,7 +45549,7 @@ class MainController {
           jam_ke: d.jam_ke,
           jam_mulai: d.jam_mulai,
           jam_akhir: d.jam_akhir,
-          istirahar: d.istirahar,
+          istirahat: d.istirahat,
           m_sekolah_id: d.m_sekolah_id,
           m_ta_id: taBaru.id,
         });
