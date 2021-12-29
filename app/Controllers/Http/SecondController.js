@@ -125,6 +125,14 @@ const MKeuAkun = use("App/Models/MKeuAkun");
 const MKeuTemplateAkun = use("App/Models/MKeuTemplateAkun");
 const MKeuJurnal = use("App/Models/MKeuJurnal");
 const MKeuTransaksi = use("App/Models/MKeuTransaksi");
+const MKeuKategoriNeraca = use("App/Models/MKeuKategoriNeraca");
+const TkKategoriAkunNeraca = use("App/Models/TkKategoriAkunNeraca");
+const MKeuKategoriLabaRugi = use("App/Models/MKeuKategoriLabaRugi");
+const TkKategoriAkunLabaRugi = use("App/Models/TkKategoriAkunLabaRugi");
+const MRumusLabaRugi = use("App/Models/MRumusLabaRugi");
+const MSuratKeputusan = use("App/Models/MSuratKeputusan");
+const TkSuratKeputusanUser = use("App/Models/TkSuratKeputusanUser");
+
 
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
@@ -1769,7 +1777,9 @@ class SecondController {
             }
           })
         );
-        const tanggalUtama = moment(`${d.tanggal}`).format("DD-MM-YYYY");
+        const tanggalUtama = moment(`${d.tanggal}`).format(
+          "DD-MM-YYYY HH:mm:ss"
+        );
 
         if (idx == 0) {
           worksheet.getCell(`A${(idx + 1) * 1 + 5}`).value = `${tanggalUtama}`;
@@ -1828,6 +1838,7 @@ class SecondController {
             alignment: {
               vertical: "middle",
               horizontal: "center",
+              wrapText: true,
             },
             border: {
               top: { style: "thin" },
@@ -1864,10 +1875,10 @@ class SecondController {
     worksheet.getCell("A2").value = "JURNAL UMUM";
     worksheet.getCell("A3").value = `Tanggal : ${awal1} - ${akhir1}`;
 
-    worksheet.getColumn("B").width = 20;
-    worksheet.getColumn("C").width = 23;
+    worksheet.getColumn("A").width = 20;
+    worksheet.getColumn("B").width = 23;
+    worksheet.getColumn("C").width = 28;
     worksheet.getColumn("D").width = 28;
-    worksheet.getColumn("E").width = 28;
 
     let namaFile = `/uploads/Jurnal-Umum-${bulan}-${keluarantanggalseconds}.xlsx`;
 
@@ -2088,6 +2099,816 @@ class SecondController {
     return namaFile;
   }
 
+  async getNeraca({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let { search, tanggal_awal, tanggal_akhir } = request.get();
+
+    let kategori;
+
+    kategori = await MKeuKategoriNeraca.query()
+      .with("akunNeraca", (builder) => {
+        builder
+          .with("akun", (builder) => {
+            builder
+              .with("jurnal", (builder) => {
+                builder.where({ dihapus: 0 });
+                if (tanggal_awal && tanggal_akhir) {
+                  builder.whereBetween("update_at", [
+                    `${tanggal_awal}`,
+                    `${tanggal_akhir}`,
+                  ]);
+                }
+              })
+              .where({ dihapus: 0 });
+          })
+          .where({ dihapus: 0 });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id });
+
+    if (search) {
+      kategori.andWhere("nama", "like", `%${search}%`);
+    }
+
+    kategori = kategori.fetch();
+
+    return response.ok({
+      kategori,
+    });
+  }
+
+  async postKategoriNeraca({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { tipe, nama } = request.post();
+
+    const rules = {
+      tipe: "required",
+      nama: "required",
+    };
+    const message = {
+      "tipe.required": "Tipe harus diisi",
+      "nama.required": "Nama harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const kategori = await MKeuKategoriNeraca.create({
+      tipe,
+      nama,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putKategoriNeraca({
+    response,
+    request,
+    auth,
+    params: { kategori_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { nama } = request.post();
+
+    const rules = {
+      nama: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const kategori = await MKeuKategoriNeraca.query()
+      .where({ id: kategori_id })
+      .update({
+        nama,
+      });
+
+    if (!kategori) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteKategoriNeraca({
+    response,
+    request,
+    auth,
+    params: { kategori_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const kategori = await MKeuKategoriNeraca.query()
+      .where({ id: kategori_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!kategori) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async postNeraca({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { m_keu_kategori_neraca_id, m_keu_akun_id, urutan } = request.post();
+
+    const rules = {
+      m_keu_akun_id: "required",
+    };
+    const message = {
+      "m_keu_akun_id.required": "Akun harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const kategori = await TkKategoriAkunNeraca.create({
+      m_keu_akun_id,
+      m_keu_kategori_neraca_id,
+      urutan,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putNeraca({ response, request, auth, params: { neraca_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { m_keu_akun_id } = request.post();
+
+    const rules = {
+      m_keu_akun_id: "required",
+    };
+    const message = {
+      "m_keu_akun_id.required": "Akun harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const neraca = await TkKategoriAkunNeraca.query()
+      .where({ id: neraca_id })
+      .update({
+        m_keu_akun_id,
+      });
+
+    if (!neraca) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteNeraca({ response, request, auth, params: { neraca_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const neraca = await TkKategoriAkunNeraca.query()
+      .where({ id: neraca_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!neraca) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async getLabaRugi({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let { search, tanggal_awal, tanggal_akhir } = request.get();
+
+    let kategori;
+
+    kategori = await MKeuKategoriLabaRugi.query()
+      .with("akunLabaRugi", (builder) => {
+        builder
+          .with("akun", (builder) => {
+            builder
+              .with("jurnal", (builder) => {
+                builder.where({ dihapus: 0 });
+                if (tanggal_awal && tanggal_akhir) {
+                  builder.whereBetween("update_at", [
+                    `${tanggal_awal}`,
+                    `${tanggal_akhir}`,
+                  ]);
+                }
+              })
+              .where({ dihapus: 0 });
+          })
+          .where({ dihapus: 0 });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id });
+
+    if (search) {
+      kategori.andWhere("nama", "like", `%${search}%`);
+    }
+
+    kategori = kategori.fetch();
+
+    const rumus = await MRumusLabaRugi.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    return response.ok({
+      kategori,
+      rumus,
+    });
+  }
+
+  async postKategoriLabaRugi({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { nama } = request.post();
+
+    const rules = {
+      nama: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const kategori = await MKeuKategoriLabaRugi.create({
+      nama,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putKategoriLabaRugi({
+    response,
+    request,
+    auth,
+    params: { kategori_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { nama } = request.post();
+
+    const rules = {
+      nama: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const kategori = await MKeuKategoriLabaRugi.query()
+      .where({ id: kategori_id })
+      .update({
+        nama,
+      });
+
+    if (!kategori) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteKategoriLabaRugi({
+    response,
+    request,
+    auth,
+    params: { kategori_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const kategori = await MKeuKategoriLabaRugi.query()
+      .where({ id: kategori_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!kategori) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async postLabaRugi({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { m_keu_kategori_labarugi_id, m_keu_akun_id, urutan } = request.post();
+
+    const rules = {
+      m_keu_akun_id: "required",
+    };
+    const message = {
+      "m_keu_akun_id.required": "Akun harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const kategori = await TkKategoriAkunLabaRugi.create({
+      m_keu_akun_id,
+      m_keu_kategori_labarugi_id,
+      urutan,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putLabaRugi({ response, request, auth, params: { labarugi_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { m_keu_akun_id } = request.post();
+
+    const rules = {
+      m_keu_akun_id: "required",
+    };
+    const message = {
+      "m_keu_akun_id.required": "Akun harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const labarugi = await TkKategoriAkunLabaRugi.query()
+      .where({ id: labarugi_id })
+      .update({
+        m_keu_akun_id,
+      });
+
+    if (!labarugi) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteLabaRugi({ response, request, auth, params: { labarugi_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const labarugi = await TkKategoriAkunLabaRugi.query()
+      .where({ id: labarugi_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!labarugi) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async postRumusLabaRugi({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { rumus } = request.post();
+
+    const rules = {
+      rumus: "required",
+    };
+    const message = {
+      "rumus.required": "Rumus harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const rumus = await MRumusLabaRugi.create({
+      rumus,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putRumusLabaRugi({ response, request, auth, params: { rumus_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { rumus } = request.post();
+
+    const rules = {
+      rumus: "required",
+    };
+    const message = {
+      "rumus.required": "Rumus harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const rumus = await MRumusLabaRugi.query().where({ id: rumus_id }).update({
+      nama,
+    });
+
+    if (!rumus) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteRumusLabaRugi({ response, request, auth, params: { rumus_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const rumus = await MRumusLabaRugi.query().where({ id: rumus_id }).update({
+      dihapus: 1,
+    });
+
+    if (!rumus) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async postSuratKeputusan({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { nama, file, user_id } = request.post();
+
+    user_id = user_id.length ? user_id : [];
+
+    const rules = {
+      nama: "required",
+      file: "required",
+      user_id: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+      "file.required": "File harus diisi",
+      "user_id.required": "Penerima harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const surat = await MSuratKeputusan.create({
+      nama,
+      file,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+
+    if (user_id.length) {
+      await Promise.all(
+        user_id.map(async (d) => {
+          await TkSuratKeputusanUser.create({
+            m_user_id: d,
+            dihapus: 0,
+            m_surat_keputusan_id: surat.id,
+          });
+        })
+      );
+    }
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putSuratKeputusan({ response, request, auth, params: { surat_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { nama, file, user_id } = request.post();
+
+    user_id = user_id.length ? user_id : [];
+
+    const rules = {
+      nama: "required",
+      file: "required",
+      user_id: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+      "file.required": "File harus diisi",
+      "user_id.required": "Penerima harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const surat = await MSuratKeputusan.query().where({ id: surat_id }).update({
+      nama,
+      file,
+    });
+    const surat1 = await MSuratKeputusan.query()
+      .with("suratUser")
+      .where({ id: surat_id })
+      .first();
+
+    if (user_id.length) {
+      await Promise.all(
+        surat1.toJSON().suratUser.map(async (d) => {
+          await Promise.all(
+            user_id.map(async (e) => {
+              const suratUser = await TkSuratKeputusanUser.query()
+                .where({ m_user_id: d.m_user_Id })
+                .andWhere({ m_surat_keputusan_id: surat1.id })
+                .first();
+
+              const suratUser1 = await TkSuratKeputusanUser.query()
+                .where({ m_user_id: e })
+                .andWhere({ m_surat_keputusan_id: surat1.id })
+                .first();
+
+              if (suratUser == suratUser1) {
+                if (!suratUser) {
+                  await TkSuratKeputusanUser.create({
+                    m_user_id: d,
+                    dihapus: 0,
+                    m_surat_keputusan_id: surat.id,
+                  });
+                } else {
+                  await TkSuratKeputusanUser.query()
+                    .where({ id: suratUser.id })
+                    .update({
+                      dihapus: 0,
+                    });
+                }
+              }
+            })
+          );
+        })
+      );
+    }
+
+    if (!surat) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteSuratKeputusan({
+    response,
+    request,
+    auth,
+    params: { surat_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const surat = await MSuratKeputusan.query()
+      .where({ id: surat_id })
+      .update({ dihapus: 1 });
+
+    const surat1 = await TkSuratKeputusanUser.query()
+      .where({ m_surat_keputusan_id: surat_id })
+      .update({ dihapus: 1 });
+
+    if (!surat) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
   async postRaporSikapUAS({ response, request, auth, params: { rombel_id } }) {
     const domain = request.headers().origin;
 
@@ -2102,20 +2923,23 @@ class SecondController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    // const anggota = MAnggotaRombel.query()
-    //   .where({ m_rombel_id: rombel_id })
-    //   .fetch();
+    const anggota = await MAnggotaRombel.query()
+      .where({ m_rombel_id: 40507 })
+      .pluck("m_user_id");
+
+    // return anggota;
     const userIds = await User.query()
-      .where({ m_sekolah_id: 578 })
+      .whereIn("id", anggota)
+      .andWhere({ m_sekolah_id: 578 })
       .andWhere({ dihapus: 0 })
       .andWhere({ role: "siswa" })
       .ids();
 
     const checkSikap = await MSikapSiswa.query()
-      .where({ tipe: "uts" })
+      .whereIn("m_user_id", userIds)
+      .andWhere({ tipe: "uts" })
       .andWhere({ dihapus: 0 })
       .andWhere({ m_ta_id: ta.id })
-      .whereIn("m_user_id", userIds)
       .fetch();
 
     let sikap;
@@ -2129,7 +2953,7 @@ class SecondController {
           .andWhere({ m_user_id: d.m_user_id })
           .first();
         if (!check) {
-          const sikap = await MSikapSiswa.create({
+          sikap = await MSikapSiswa.create({
             m_sikap_sosial_ditunjukkan_id: d.m_sikap_sosial_ditunjukkan_id,
             m_sikap_sosial_ditingkatkan_id: d.m_sikap_sosial_ditingkatkan_id,
             m_user_id: d.m_user_id,
@@ -2140,6 +2964,15 @@ class SecondController {
             status: 1,
             tipe: "uas",
             m_ta_id: ta.id,
+            dihapus: 0,
+          });
+        } else {
+          sikap = await MSikapSiswa.query().where({ id: check.id }).update({
+            m_sikap_spiritual_ditunjukkan_id:
+              d.m_sikap_spiritual_ditunjukkan_id,
+            m_sikap_spiritual_ditingkatkan_id:
+              d.m_sikap_spiritual_ditingkatkan_id,
+            status: 1,
             dihapus: 0,
           });
         }
