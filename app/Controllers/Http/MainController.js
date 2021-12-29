@@ -14658,7 +14658,9 @@ class MainController {
       .with("user", (builder) => {
         builder.with("profil");
       })
-      .with("gelombang")
+      .with("gelombang", builder => {
+        builder.with("jalur")
+      })
       .where({ id: pendaftar_ppdb_id })
       .first();
 
@@ -14693,7 +14695,7 @@ class MainController {
     await MPendaftarPpdb.create({
       m_gelombang_ppdb_id,
       m_user_id: user.id,
-      status: "menungguSeleksiBerkas",
+      status: "menungguKonfirmasiPembayaran",
     });
 
     return response.ok({
@@ -14715,6 +14717,7 @@ class MainController {
       m_jurusan_3_id,
       m_jurusan_4_id,
       m_jurusan_5_id,
+      status,
     } = request.post();
 
     const check = await MPendaftarPpdb.query()
@@ -14731,6 +14734,7 @@ class MainController {
         m_jurusan_4_id,
         m_jurusan_5_id,
         pembayaran,
+        status,
       });
 
     if (!check) {

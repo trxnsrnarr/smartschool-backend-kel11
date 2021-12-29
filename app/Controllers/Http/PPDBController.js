@@ -198,7 +198,9 @@ class PPDBController {
       .with("gelombang", (builder) => {
         builder
           .where({ dihapus: 0 })
-          .withCount("pendaftar as jumlahPendaftar")
+          .withCount("pendaftar as jumlahPendaftar", builder => {
+            builder.where({ dihapus: 0 })
+          })
           .with("informasi", (builder) => {
             builder.where({ dihapus: 0 });
           });
@@ -341,7 +343,7 @@ class PPDBController {
     });
   }
 
-  async getJadwalPPDB({ request, response }) {
+  async getJadwalPPDB({ request, response, auth }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -355,6 +357,8 @@ class PPDBController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
+
+    const user = await auth.getUser();
 
     const {
       tingkat,
@@ -394,7 +398,11 @@ class PPDBController {
 
     ujian = await ujian.ids();
 
-    const jadwal = await MJadwalPpdb.query()
+    let jadwal;
+    if (user.role == "siswa") {
+    }
+
+    jadwal = await MJadwalPpdb.query()
       .with("soal")
       .with("info", (builder) => {
         builder.with("gelombang", (builder) => {
@@ -629,9 +637,14 @@ class PPDBController {
       .where({ id: gelombang_ppdb_id })
       .andWhere({ dihapus: 0 })
       .first();
+    const gelombangs = await  MGelombangPpdb.query()
+      .where({ m_jalur_ppdb_id: gelombang.m_jalur_ppdb_id })
+      .where({ dihapus: 0 })
+      .fetch();
 
     return response.ok({
       gelombang: gelombang,
+      gelombangs
     });
   }
 
@@ -1311,8 +1324,7 @@ class PPDBController {
             .orderBy("m_user_id", "asc");
         })
         .where({
-          m_jadwal_ppdb_id:
-            pesertaUjian.m_jadwal_ppdb_id,
+          m_jadwal_ppdb_id: pesertaUjian.m_jadwal_ppdb_id,
         })
         .fetch();
 
@@ -1389,7 +1401,7 @@ class PPDBController {
     } else {
       pesertaUjian = await TkPesertaUjianPpdb.query()
         .with("jadwalPpdb", (builder) => {
-            builder.with("soal");
+          builder.with("soal");
         })
         .with("tugas")
         .withCount("jawabanSiswa as totalSoal")
