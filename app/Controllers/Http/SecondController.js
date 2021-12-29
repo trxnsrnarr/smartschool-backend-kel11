@@ -2658,7 +2658,7 @@ class SecondController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const rumus = await MRumusLabaRugi.create({
+    const rumus1 = await MRumusLabaRugi.create({
       rumus,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
@@ -2693,11 +2693,11 @@ class SecondController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const rumus = await MRumusLabaRugi.query().where({ id: rumus_id }).update({
+    const rumus1 = await MRumusLabaRugi.query().where({ id: rumus_id }).update({
       nama,
     });
 
-    if (!rumus) {
+    if (!rumus1) {
       return response.notFound({
         message: messageNotFound,
       });
