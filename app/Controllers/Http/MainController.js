@@ -522,6 +522,20 @@ class MainController {
     return response.ok(res);
   }
 
+  async getMasterSekolahSS({ response, request }) {
+    let {
+      page,
+    } = request.get();
+
+    page = page ? page : 1;
+
+    const res = MSekolah.query().select('nama', 'gpds', 'trial');
+
+    return response.ok({
+      sekolah: await res.paginate(page),
+    });
+  }
+
   async getMasterSekolah({ response, request }) {
     let {
       page,
@@ -728,7 +742,7 @@ class MainController {
       })
     );
     data = data.map((d, idx) => {
-      return { exist: check[idx] ? true : false, ...d };
+      return { exist: check[idx] ? true : false, ...d, nama_sekolah: check[idx]  ? check[idx].sekolah : d.nama_sekolah};
     });
     return data;
   }
@@ -1072,6 +1086,7 @@ class MainController {
     const userData = await User.query()
       .where({ id: user.id })
       .with("sekolah")
+      .with("profil")
       .first();
 
     let rombel;
@@ -1295,6 +1310,10 @@ class MainController {
       semester4,
       semester5,
       semester6,
+
+      //
+      file_ppdb,
+      data_absensi,
     } = request.post();
 
     let userPayload = {
@@ -1328,6 +1347,15 @@ class MainController {
     }
     if (keahlian) {
       keahlian = keahlian.toString();
+    }
+    if(!gender){
+      delete userPayload.gender;
+    }
+    if(!agama){
+      delete userPayload.agama;
+    }
+    if(!tempat_lahir){
+      delete userPayload.tempat_lahir;
     }
     tanggal_lahir == "Invalid date" ? delete userPayload.tanggal_lahir : null;
 
@@ -1439,6 +1467,10 @@ class MainController {
         semester4,
         semester5,
         semester6,
+
+        // 
+        file_ppdb,
+        data_absensi,
       });
     } else {
       profil = await MProfilUser.create({
@@ -1535,6 +1567,10 @@ class MainController {
         semester4,
         semester5,
         semester6,
+
+        // 
+        file_ppdb,
+        data_absensi,
       });
     }
 
@@ -14622,7 +14658,9 @@ class MainController {
       .with("user", (builder) => {
         builder.with("profil");
       })
-      .with("gelombang")
+      .with("gelombang", builder => {
+        builder.with("jalur")
+      })
       .where({ id: pendaftar_ppdb_id })
       .first();
 
@@ -14657,7 +14695,7 @@ class MainController {
     await MPendaftarPpdb.create({
       m_gelombang_ppdb_id,
       m_user_id: user.id,
-      status: "menungguSeleksiBerkas",
+      status: "menungguKonfirmasiPembayaran",
     });
 
     return response.ok({
@@ -14679,6 +14717,7 @@ class MainController {
       m_jurusan_3_id,
       m_jurusan_4_id,
       m_jurusan_5_id,
+      status,
     } = request.post();
 
     const check = await MPendaftarPpdb.query()
@@ -14695,6 +14734,7 @@ class MainController {
         m_jurusan_4_id,
         m_jurusan_5_id,
         pembayaran,
+        status,
       });
 
     if (!check) {
