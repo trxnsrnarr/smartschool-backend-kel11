@@ -522,6 +522,20 @@ class MainController {
     return response.ok(res);
   }
 
+  async getMasterSekolahSS({ response, request }) {
+    let {
+      page,
+    } = request.get();
+
+    page = page ? page : 1;
+
+    const res = MSekolah.query().select('nama', 'gpds', 'trial');
+
+    return response.ok({
+      sekolah: await res.paginate(page),
+    });
+  }
+
   async getMasterSekolah({ response, request }) {
     let {
       page,
