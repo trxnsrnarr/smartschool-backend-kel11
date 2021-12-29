@@ -728,7 +728,7 @@ class MainController {
       })
     );
     data = data.map((d, idx) => {
-      return { exist: check[idx] ? true : false, ...d };
+      return { exist: check[idx] ? true : false, ...d, nama_sekolah: check[idx]  ? check[idx].sekolah : d.nama_sekolah};
     });
     return data;
   }
