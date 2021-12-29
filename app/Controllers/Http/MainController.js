@@ -1086,6 +1086,7 @@ class MainController {
     const userData = await User.query()
       .where({ id: user.id })
       .with("sekolah")
+      .with("profil")
       .first();
 
     let rombel;
@@ -1309,6 +1310,10 @@ class MainController {
       semester4,
       semester5,
       semester6,
+
+      //
+      file_ppdb,
+      data_absensi,
     } = request.post();
 
     let userPayload = {
@@ -1342,6 +1347,15 @@ class MainController {
     }
     if (keahlian) {
       keahlian = keahlian.toString();
+    }
+    if(!gender){
+      delete userPayload.gender;
+    }
+    if(!agama){
+      delete userPayload.agama;
+    }
+    if(!tempat_lahir){
+      delete userPayload.tempat_lahir;
     }
     tanggal_lahir == "Invalid date" ? delete userPayload.tanggal_lahir : null;
 
@@ -1453,6 +1467,10 @@ class MainController {
         semester4,
         semester5,
         semester6,
+
+        // 
+        file_ppdb,
+        data_absensi,
       });
     } else {
       profil = await MProfilUser.create({
@@ -1549,6 +1567,10 @@ class MainController {
         semester4,
         semester5,
         semester6,
+
+        // 
+        file_ppdb,
+        data_absensi,
       });
     }
 
