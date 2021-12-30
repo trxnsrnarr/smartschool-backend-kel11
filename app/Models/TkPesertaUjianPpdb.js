@@ -25,13 +25,13 @@ class TkPesertaUjianPpdb extends Model {
         return this.belongsTo("App/Models/MJadwalPpdb");
       }
     
-      getJamMulai({ waktu_mulai }) {
-        return moment(waktu_mulai).format("HH:mm");
-      }
+      // getJamMulai({ waktu_mulai }) {
+      //   return moment(waktu_mulai).format("HH:mm");
+      // }
     
-      getJamSelesai({ waktu_selesai }) {
-        return !waktu_selesai ? "-" : moment(waktu_selesai).format("HH:mm");
-      }
+      // getJamSelesai({ waktu_selesai }) {
+      //   return !waktu_selesai ? "-" : moment(waktu_selesai).format("HH:mm");
+      // }
     
       user() {
         return this.belongsTo("App/Models/User", "m_user_id");
