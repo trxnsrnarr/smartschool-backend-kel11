@@ -133,7 +133,6 @@ const MRumusLabaRugi = use("App/Models/MRumusLabaRugi");
 const MSuratKeputusan = use("App/Models/MSuratKeputusan");
 const TkSuratKeputusanUser = use("App/Models/TkSuratKeputusanUser");
 
-
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
 const MPraktikKerja = use("App/Models/MPraktikKerja");
@@ -2829,33 +2828,49 @@ class SecondController {
 
     if (user_id.length) {
       await Promise.all(
-        surat1.toJSON().suratUser.map(async (d) => {
+        user_id.map(async (d) => {
+          const suratUser = await TkSuratKeputusanUser.query()
+            .where({ m_user_id: d })
+            .andWhere({ m_surat_keputusan_id: surat1.id })
+            .first();
+
+          if (!suratUser) {
+            await TkSuratKeputusanUser.create({
+              m_user_id: d,
+              dihapus: 0,
+              m_surat_keputusan_id: surat.id,
+            });
+          } else {
+            await TkSuratKeputusanUser.query()
+              .where({ id: suratUser.id })
+              .update({
+                dihapus: 0,
+              });
+          }
+        })
+      );
+      await Promise.all(
+        surat1.toJSON().suratUser.map(async (e) => {
           await Promise.all(
-            user_id.map(async (e) => {
+            user_id.map(async (d) => {
               const suratUser = await TkSuratKeputusanUser.query()
-                .where({ m_user_id: d.m_user_Id })
+                .where({ m_user_id: e.m_user_id })
                 .andWhere({ m_surat_keputusan_id: surat1.id })
                 .first();
 
               const suratUser1 = await TkSuratKeputusanUser.query()
-                .where({ m_user_id: e })
+                .where({ m_user_id: d })
                 .andWhere({ m_surat_keputusan_id: surat1.id })
                 .first();
 
               if (suratUser == suratUser1) {
-                if (!suratUser) {
-                  await TkSuratKeputusanUser.create({
-                    m_user_id: d,
-                    dihapus: 0,
-                    m_surat_keputusan_id: surat.id,
+                return;
+              } else if (suratUser != null && suratUser1 == null) {
+                await TkSuratKeputusanUser.query()
+                  .where({ id: suratUser.id })
+                  .update({
+                    dihapus: 1,
                   });
-                } else {
-                  await TkSuratKeputusanUser.query()
-                    .where({ id: suratUser.id })
-                    .update({
-                      dihapus: 0,
-                    });
-                }
               }
             })
           );
