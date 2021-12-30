@@ -45563,14 +45563,14 @@ class MainController {
       .first();
 
     await Mta.create({
-      tahun: taa.tahun,
-      semester: taa.semester,
+      tahun: "2021 / 2022",
+      semester: "Genap",
       nama_kepsek: taa.nama_kepsek,
       nip_kepsek: taa.nip_kepsek,
       aktif: taa.aktif,
       dihapus: taa.dihapus,
       m_sekolah_id: taa.m_sekolah_id,
-      semester: taa.semester,
+      jam_sinkron:0,
       mapel_sinkron: 0,
       rombel_sinkron: 0,
       jadwal_sinkron: 0,
