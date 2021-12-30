@@ -562,6 +562,16 @@ class PPDBController {
       });
     }
 
+    const jalurIds = await MJalurPpdb.query()
+      .where({ dihapus: 0 })
+      .where({ m_sekolah_id: sekolah.id })
+      .ids();
+    const gelombangIds = await MGelombangPpdb.query()
+      .where({ dihapus: 0 })
+      .whereIn("m_jalur_ppdb_id", jalurIds)
+      .where({m_ta_id: ta.id})
+      .ids();
+
     let { is_public } = request.get();
     is_public = is_public ? is_public : false;
 
@@ -569,6 +579,7 @@ class PPDBController {
       .where("dibuka", "<=", moment().format("YYYY-MM-DD"))
       .andWhere("ditutup", ">=", moment().format("YYYY-MM-DD"))
       .andWhere({ m_sekolah_id: sekolah.id })
+      .whereIn("id", gelombangIds)
       .andWhere({ m_ta_id: ta.id })
       .andWhere({ dihapus: 0 })
       .ids();
@@ -590,12 +601,14 @@ class PPDBController {
             builder.with("jalur");
           })
           .where({ dihapus: 0 })
+          .whereIn("m_gelombang_ppdb_id", gelombangIds)
           .andWhere({ m_user_id: user.id })
           .whereIn("m_gelombang_ppdb_id", checkIds)
           .first();
 
         pendaftarIds = await MPendaftarPpdb.query()
           .where({ dihapus: 0 })
+          .whereIn("m_gelombang_ppdb_id", gelombangIds)
           .andWhere({ m_user_id: user.id })
           .pluck("m_gelombang_ppdb_id");
 
@@ -611,6 +624,7 @@ class PPDBController {
       .with("jalur")
       .withCount("pendaftar as jumlahPendaftar")
       .where({ m_sekolah_id: sekolah.id })
+      .whereIn("id", gelombangIds)
       .andWhere({ m_ta_id: ta.id })
       .andWhere({ dihapus: 0 })
       .fetch();
