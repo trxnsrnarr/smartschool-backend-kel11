@@ -1214,7 +1214,7 @@ Route.get(
   "PPDBController.detailJadwalUjianPPDB"
 );
 Route.post(
-  "/download-jadwal-ppdb/:jadwal_ppdb_id",
+  "/download-nilai-jadwal-ppdb/:jadwal_ppdb_id",
   "PPDBController.downloadNilaiUjianPPDB"
 );
 Route.post(

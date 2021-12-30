@@ -1214,7 +1214,7 @@ class PPDBController {
     const peserta = await TkPesertaUjianPpdb.query()
       .where({ m_jadwal_ppdb_id: jadwal_ppdb_id })
       .fetch();
-    const pesertaData = peserta.toJSON;
+    const pesertaData = peserta.toJSON();
 
     const data = jadwalPpdb.toJSON().info.gelombang.pendaftar.map((d) => {
       const nilai = pesertaData.find((e) => e.id == d.id);
@@ -1224,6 +1224,7 @@ class PPDBController {
         nilai: nilai ? nilai.nilai : 0,
       };
     });
+    return data;
   }
 
   async importNilaiUjianPPDBServices(filelocation, sekolah, jadwalPPDB) {
