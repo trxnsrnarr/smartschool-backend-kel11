@@ -29,7 +29,7 @@ class MGelombangPpdb extends Model {
   }
 
   getKeterangan({ dibuka, ditutup }) {
-    if (moment().format("YYYY-MM-DD") <= moment(dibuka).format("YYYY-MM-DD")) {
+    if (moment().format("YYYY-MM-DD") < moment(dibuka).format("YYYY-MM-DD")) {
       return "Akan Dibuka";
     } else if (
       moment().format("YYYY-MM-DD") <= moment(ditutup).format("YYYY-MM-DD")
