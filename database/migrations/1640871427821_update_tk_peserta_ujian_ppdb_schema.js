@@ -19,6 +19,7 @@ class UpdateTkPesertaUjianPpdbSchema extends Schema {
   down () {
     this.table('m_pendaftar_ppdb', (table) => {
       // reverse alternations
+      table.dropForeign("m_pendaftar_ppdb_id");
       table.dropColumn("m_pendaftar_ppdb_id")
     })
   }
