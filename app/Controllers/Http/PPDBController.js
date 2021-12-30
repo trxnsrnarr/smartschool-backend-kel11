@@ -198,8 +198,8 @@ class PPDBController {
       .with("gelombang", (builder) => {
         builder
           .where({ dihapus: 0 })
-          .withCount("pendaftar as jumlahPendaftar", builder => {
-            builder.where({ dihapus: 0 })
+          .withCount("pendaftar as jumlahPendaftar", (builder) => {
+            builder.where({ dihapus: 0 });
           })
           .with("informasi", (builder) => {
             builder.where({ dihapus: 0 });
@@ -360,6 +360,34 @@ class PPDBController {
 
     const user = await auth.getUser();
 
+    const jalurIds = await MJalurPpdb.query()
+      .where({ dihapus: 0 })
+      .where({ m_sekolah_id: sekolah.id })
+      .ids();
+    const gelombangIds = await MGelombangPpdb.query()
+      .where({ dihapus: 0 })
+      .whereIn("m_jalur_ppdb_id", jalurIds)
+      .where({ m_ta_id: ta.id })
+      .ids();
+
+    let pendaftarIds, infoIds;
+    if (user.role == "ppdb") {
+      pendaftarIds = await MPendaftarPpdb.query()
+        .where({ dihapus: 0 })
+        .whereIn("m_gelombang_ppdb_id", gelombangIds)
+        .andWhere({ m_user_id: user.id })
+        .pluck("m_gelombang_ppdb_id");
+      infoIds = await MInformasiGelombang.query()
+        .where({ dihapus: 0 })
+        .whereIn("m_gelombang_ppdb_id", pendaftarIds)
+        .ids();
+    } else {
+      infoIds = await MInformasiGelombang.query()
+        .where({ dihapus: 0 })
+        .whereIn("m_gelombang_ppdb_id", gelombangIds)
+        .ids();
+    }
+
     const {
       tingkat,
       daftar_ujian_id,
@@ -398,17 +426,14 @@ class PPDBController {
 
     ujian = await ujian.ids();
 
-    let jadwal;
-    if (user.role == "siswa") {
-    }
-
-    jadwal = await MJadwalPpdb.query()
+    const jadwal = await MJadwalPpdb.query()
       .with("soal")
       .with("info", (builder) => {
         builder.with("gelombang", (builder) => {
           builder.with("jalur");
         });
       })
+      .whereIn("m_informasi_gelombang_id", infoIds)
       .where({ dihapus: 0 })
       .paginate(page, 20);
 
@@ -562,6 +587,16 @@ class PPDBController {
       });
     }
 
+    const jalurIds = await MJalurPpdb.query()
+      .where({ dihapus: 0 })
+      .where({ m_sekolah_id: sekolah.id })
+      .ids();
+    const gelombangIds = await MGelombangPpdb.query()
+      .where({ dihapus: 0 })
+      .whereIn("m_jalur_ppdb_id", jalurIds)
+      .where({ m_ta_id: ta.id })
+      .ids();
+
     let { is_public } = request.get();
     is_public = is_public ? is_public : false;
 
@@ -569,6 +604,7 @@ class PPDBController {
       .where("dibuka", "<=", moment().format("YYYY-MM-DD"))
       .andWhere("ditutup", ">=", moment().format("YYYY-MM-DD"))
       .andWhere({ m_sekolah_id: sekolah.id })
+      .whereIn("id", gelombangIds)
       .andWhere({ m_ta_id: ta.id })
       .andWhere({ dihapus: 0 })
       .ids();
@@ -590,12 +626,14 @@ class PPDBController {
             builder.with("jalur");
           })
           .where({ dihapus: 0 })
+          .whereIn("m_gelombang_ppdb_id", gelombangIds)
           .andWhere({ m_user_id: user.id })
           .whereIn("m_gelombang_ppdb_id", checkIds)
           .first();
 
         pendaftarIds = await MPendaftarPpdb.query()
           .where({ dihapus: 0 })
+          .whereIn("m_gelombang_ppdb_id", gelombangIds)
           .andWhere({ m_user_id: user.id })
           .pluck("m_gelombang_ppdb_id");
 
@@ -611,6 +649,7 @@ class PPDBController {
       .with("jalur")
       .withCount("pendaftar as jumlahPendaftar")
       .where({ m_sekolah_id: sekolah.id })
+      .whereIn("id", gelombangIds)
       .andWhere({ m_ta_id: ta.id })
       .andWhere({ dihapus: 0 })
       .fetch();
@@ -637,14 +676,14 @@ class PPDBController {
       .where({ id: gelombang_ppdb_id })
       .andWhere({ dihapus: 0 })
       .first();
-    const gelombangs = await  MGelombangPpdb.query()
+    const gelombangs = await MGelombangPpdb.query()
       .where({ m_jalur_ppdb_id: gelombang.m_jalur_ppdb_id })
       .where({ dihapus: 0 })
       .fetch();
 
     return response.ok({
       gelombang: gelombang,
-      gelombangs
+      gelombangs,
     });
   }
 
@@ -1118,7 +1157,13 @@ class PPDBController {
     const jadwalPpdb = await MJadwalPpdb.query()
       .with("soal")
       .with("info", (builder) => {
-        builder.with("gelombang");
+        builder.with("gelombang", (builder) => {
+          builder
+            .with("pendaftar", (builder) => {
+              builder.with("user");
+            })
+            .with("jalur");
+        });
       })
       .where({ id: jadwal_ppdb_id })
       .first();
@@ -1134,6 +1179,135 @@ class PPDBController {
       jadwalPpdb,
       pesertaUjianPpdb: peserta,
     });
+  }
+
+  async downloadNilaiUjianPPDB({
+    request,
+    response,
+    auth,
+    params: { jadwal_ppdb_id },
+  }) {
+    const user = await auth.getUser();
+
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const jadwalPpdb = await MJadwalPpdb.query()
+      .with("soal")
+      .with("info", (builder) => {
+        builder.with("gelombang", (builder) => {
+          builder
+            .with("pendaftar", (builder) => {
+              builder.with("user");
+            })
+            .with("jalur");
+        });
+      })
+      .where({ id: jadwal_ppdb_id })
+      .first();
+
+    const peserta = await TkPesertaUjianPpdb.query()
+      .where({ m_jadwal_ppdb_id: jadwal_ppdb_id })
+      .fetch();
+    const pesertaData = peserta.toJSON();
+
+    const data = jadwalPpdb.toJSON().info.gelombang.pendaftar.map((d) => {
+      const nilai = pesertaData.find((e) => e.id == d.id);
+      return {
+        id: d.id,
+        nama: d.user.nama,
+        nilai: nilai ? nilai.nilai : 0,
+      };
+    });
+    return data;
+  }
+
+  async importNilaiUjianPPDBServices(filelocation, sekolah, jadwalPPDB) {
+    var workbook = new Excel.Workbook();
+
+    workbook = await workbook.xlsx.readFile(filelocation);
+
+    let explanation = workbook.getWorksheet("sheet1");
+
+    let colComment = explanation.getColumn("A");
+
+    let data = [];
+
+    colComment.eachCell(async (cell, rowNumber) => {
+      if (rowNumber > 7) {
+        data.push({
+          id: explanation.getCell("A" + rowNumber).value,
+          nilai: explanation.getCell("C" + rowNumber).value,
+        });
+      }
+    });
+
+    const result = await Promise.all(
+      data.map(async (d) => {
+        const check = await TkPesertaUjianPpdb.query()
+          .where({ dihapus: 0 })
+          .where({ m_pendaftar_ppdb_id: d.id })
+          .where({ m_jadwal_ppdb_id: jadwalPPDB.id })
+          .first();
+        if (check) {
+          await TkPesertaUjianPpdb.query().where({ id: check.id }).update({
+            nilai: d.nilai,
+          });
+        } else {
+          await TkPesertaUjianPpdb.create({
+            dihapus: 0,
+            m_pendaftar_ppdb_id: d.id,
+            nilai: d.nilai,
+            m_jadwal_ppdb_id: jadwalPPDB.id,
+          });
+        }
+      })
+    );
+
+    return result;
+  }
+
+  async importNilaiUjianPPDB({
+    request,
+    response,
+    auth,
+    params: { jadwal_ppdb_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let file = request.file("file");
+    let fname = `import-excel-nilai-ppdb.xlsx`;
+
+    //move uploaded file into custom folder
+    await file.move(Helpers.tmpPath("/uploads"), {
+      name: fname,
+      overwrite: true,
+    });
+
+    if (!file.moved()) {
+      return fileUpload.error();
+    }
+
+    const jadwalPPDB = await MJadwalPpdb.query()
+      .where({ id: jadwal_ppdb_id })
+      .first();
+
+    return await this.importNilaiUjianPPDBServices(
+      `tmp/uploads/${fname}`,
+      sekolah,
+      jadwalPPDB
+    );
   }
 
   async postPesertaUjianPpdb({ response, request, auth }) {
