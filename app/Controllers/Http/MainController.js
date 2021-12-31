@@ -3668,6 +3668,10 @@ class MainController {
       tanggal_akhir,
       m_sekolah_id: sekolah.id,
       dihapus: 0,
+      jam_sinkron:1,
+      mapel_sinkron:1,
+      rombel_sinkron:1,
+      jadwal_sinkron:1,
     });
 
     const jamMengajar = [];
