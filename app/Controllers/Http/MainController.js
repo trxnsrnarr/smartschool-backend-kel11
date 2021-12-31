@@ -14722,6 +14722,7 @@ class MainController {
       m_jurusan_4_id,
       m_jurusan_5_id,
       status,
+      surat_rekomendasi,
     } = request.post();
 
     const check = await MPendaftarPpdb.query()
@@ -14739,6 +14740,7 @@ class MainController {
         m_jurusan_5_id,
         pembayaran,
         status,
+        surat_rekomendasi,
       });
 
     if (!check) {
