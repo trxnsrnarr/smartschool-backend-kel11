@@ -8177,7 +8177,7 @@ class MainController {
                 });
               return 0;
             } else {
-              const soal = await MSoalUjian.create({
+              const soalBaru = await MSoalUjian.create({
                 kd: d.kd,
                 kd_konten_materi: d.kd_konten_materi,
                 level_kognitif: d.level_kognitif,
@@ -8209,15 +8209,19 @@ class MainController {
                 m_user_id: user.id,
                 dihapus: 0,
               });
+              await TkSoalTugas.create({
+                m_soal_ujian_id: soalBaru.id,
+                m_tugas_id: tugas.id,
+                dihapus: 0,
+              });
               return {
-                m_soal_ujian_id: soal.id,
+                m_soal_ujian_id: soalBaru.id,
                 m_tugas_id: tugas.id,
                 dihapus: 0,
               };
             }
           })
         );
-        await TkSoalTugas.createMany(soalIds.filter((d) => d));
       }
 
       if (list_anggota.length) {
