@@ -8,12 +8,12 @@ class TkKategoriAkunLabaRugiSchema extends Schema {
     this.create("tk_kategori_akun_laba_rugi", (table) => {
       table.increments();
       table
-        .integer("m_kategori_laba_rugi_id")
+        .integer("m_keu_kategori_laba_rugi_id")
         .unsigned()
-        .index("m_kategori_laba_rugi_id");
+        .index("m_keu_kategori_laba_rugi_id");
       table
-        .foreign("m_kategori_laba_rugi_id")
-        .references("m_kategori_laba_rugi.id")
+        .foreign("m_keu_kategori_laba_rugi_id")
+        .references("m_keu_kategori_laba_rugi.id")
         .onDelete("cascade")
         .onUpdate("cascade");
       table.integer("m_keu_akun_id").unsigned().index("m_keu_akun_id");
