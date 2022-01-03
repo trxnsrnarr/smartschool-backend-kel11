@@ -8,12 +8,12 @@ class TkKategoriAkunNeracaSchema extends Schema {
     this.create("tk_kategori_akun_neraca", (table) => {
       table.increments();
       table
-        .integer("m_kategori_neraca_id")
+        .integer("m_keu_kategori_neraca_id")
         .unsigned()
-        .index("m_kategori_neraca_id");
+        .index("m_keu_kategori_neraca_id");
       table
-        .foreign("m_kategori_neraca_id")
-        .references("m_kategori_neraca.id")
+        .foreign("m_keu_kategori_neraca_id")
+        .references("m_keu_kategori_neraca.id")
         .onDelete("cascade")
         .onUpdate("cascade");
       table.integer("m_keu_akun_id").unsigned().index("m_keu_akun_id");
