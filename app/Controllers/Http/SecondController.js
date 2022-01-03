@@ -1326,11 +1326,16 @@ class SecondController {
             terjadwal.push(data);
           } else {
             if (d.tipe == "tugas") {
-              if (d.__meta__.total_respon >= d.__meta__.total_siswa) {
+              if (
+                d.__meta__.total_respon >= d.__meta__.total_siswa &&
+                !tanggalBerlangsung.includes(
+                  moment(dibagikan).format("YYYY-MM-DD")
+                )
+              ) {
                 selesai.push(data);
               } else {
                 if (
-                  tanggalBerlangsung.includes(
+                  !tanggalBerlangsung.includes(
                     moment(dibagikan).format("YYYY-MM-DD")
                   )
                 ) {
@@ -1341,11 +1346,16 @@ class SecondController {
                 berlangsung.push(data);
               }
             } else if (d.tipe == "absen") {
-              if (moment(d.tanggal_akhir).toDate() < moment().toDate()) {
+              if (
+                moment(d.tanggal_akhir).toDate() < moment().toDate() &&
+                !tanggalBerlangsung.includes(
+                  moment(dibagikan).format("YYYY-MM-DD")
+                )
+              ) {
                 selesai.push(data);
               } else {
                 if (
-                  tanggalBerlangsung.includes(
+                  !tanggalBerlangsung.includes(
                     moment(dibagikan).format("YYYY-MM-DD")
                   )
                 ) {
@@ -1357,12 +1367,16 @@ class SecondController {
               }
             } else if (d.tipe == "materi") {
               if (
-                d.materi[0].__meta__.totalKesimpulan >= d.__meta__.total_siswa
+                d.materi[0].__meta__.totalKesimpulan >=
+                  d.__meta__.total_siswa &&
+                !tanggalBerlangsung.includes(
+                  moment(dibagikan).format("YYYY-MM-DD")
+                )
               ) {
                 selesai.push(data);
               } else {
                 if (
-                  tanggalBerlangsung.includes(
+                  !tanggalBerlangsung.includes(
                     moment(dibagikan).format("YYYY-MM-DD")
                   )
                 ) {
