@@ -694,6 +694,7 @@ class PPDBController {
       .with("pendaftar", (builder) => {
         builder.with("user").where({ dihapus: 0 });
       })
+      .with("jalur")
       .where({ id: gelombang_ppdb_id })
       .andWhere({ dihapus: 0 })
       .first();
