@@ -300,6 +300,10 @@ Route.delete(
   "MainController.deletePembayaranKategori"
 );
 
+// Neraca
+Route.get("/neraca-keuangan", "SecondController.getNeraca");
+Route.post("/kategori-neraca", "SecondController.postKategoriNeraca");
+
 // materi kesimpulan
 Route.post("/materi-kesimpulan", "MainController.postMateriKesimpulan");
 Route.put(
