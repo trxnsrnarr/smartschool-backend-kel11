@@ -1394,23 +1394,25 @@ class SecondController {
     }
 
     return response.ok({
-      berlangsung: timeline.filter((d) => {
-        let dibagikan = d.tanggal_pembagian;
-        if (d.tipe == "tugas") {
-          dibagikan = d.tugas.tanggal_pembagian;
-        }
-        dibagikan = moment(dibagikan).format("YYYY-MM-DD");
-        return tanggalBerlangsung.includes(dibagikan);
-      }),
+      berlangsung,
       terjadwal,
-      selesai: timeline.filter((d) => {
-        let dibagikan = d.tanggal_pembagian;
-        if (d.tipe == "tugas") {
-          dibagikan = d.tugas.tanggal_pembagian;
-        }
-        dibagikan = moment(dibagikan).format("YYYY-MM-DD");
-        return !tanggalBerlangsung.includes(dibagikan);
-      }),
+      selesai,
+      // berlangsung: timeline.filter((d) => {
+      //   let dibagikan = d.tanggal_pembagian;
+      //   if (d.tipe == "tugas") {
+      //     dibagikan = d.tugas.tanggal_pembagian;
+      //   }
+      //   dibagikan = moment(dibagikan).format("YYYY-MM-DD");
+      //   return tanggalBerlangsung.includes(dibagikan);
+      // }),
+      // selesai: timeline.filter((d) => {
+      //   let dibagikan = d.tanggal_pembagian;
+      //   if (d.tipe == "tugas") {
+      //     dibagikan = d.tugas.tanggal_pembagian;
+      //   }
+      //   dibagikan = moment(dibagikan).format("YYYY-MM-DD");
+      //   return !tanggalBerlangsung.includes(dibagikan);
+      // }),
     });
   }
 
