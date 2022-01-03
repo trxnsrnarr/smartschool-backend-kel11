@@ -623,7 +623,28 @@ class PPDBController {
       if (user) {
         gelombangAktif = await MPendaftarPpdb.query()
           .with("gelombang", (builder) => {
-            builder.with("jalur");
+            builder
+              .with("jalur")
+              .with("pendaftar", (builder) => {
+                builder
+                  .select("id", "m_gelombang_ppdb_id")
+                  .where({ dihapus: 0 });
+              })
+              .with("informasi", (builder) => {
+                builder
+                  .where({ tipe: "ujian" })
+                  .where(
+                    "dibuka",
+                    "<",
+                    moment().endOf("day").format("YYYY-MM-DD HH:mm:ss")
+                  )
+                  .where(
+                    "ditutup",
+                    ">",
+                    moment().startOf("day").format("YYYY-MM-DD HH:mm:ss")
+                  )
+                  .with("ujian");
+              });
           })
           .where({ dihapus: 0 })
           .whereIn("m_gelombang_ppdb_id", gelombangIds)
