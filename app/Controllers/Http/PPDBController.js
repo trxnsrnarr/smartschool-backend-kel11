@@ -1236,11 +1236,11 @@ class PPDBController {
       })
       .where({ id: jadwal_ppdb_id })
       .first();
-      
-      const peserta = await TkPesertaUjianPpdb.query()
+
+    const peserta = await TkPesertaUjianPpdb.query()
       .where({ m_jadwal_ppdb_id: jadwal_ppdb_id })
       .fetch();
-      const pesertaData = peserta.toJSON();
+    const pesertaData = peserta.toJSON();
 
     const data = jadwalPpdb.toJSON().info.gelombang.pendaftar.map((d) => {
       const nilai = pesertaData.find((e) => e.id == d.id);
@@ -1452,7 +1452,7 @@ class PPDBController {
     await workbook.xlsx.writeFile(`public${namaFile}`);
 
     return namaFile;
-  } 
+  }
 
   async importNilaiUjianPPDBServices(filelocation, sekolah, jadwalPPDB) {
     var workbook = new Excel.Workbook();
@@ -1879,29 +1879,35 @@ class PPDBController {
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
-      const gelombang = await MGelombangPpdb.query()
+    const gelombang = await MGelombangPpdb.query()
       .with("pendaftar", (builder) => {
-        builder.with("user").where({ dihapus: 0 });
+        builder
+          .with("user", (builder) => {
+            builder.select("id", "nama").with("profil");
+          })
+          .where({ dihapus: 0 });
       })
       .where({ id: gelombang_ppdb_id })
       .andWhere({ dihapus: 0 })
       .first();
 
-      return gelombang
+    // return gelombang;
+    const awal = moment(`${gelombang.dibuka}`).format("DD-MM-YYYY ");
+    const akhir = moment(`${gelombang.ditutup}`).format("DD-MM-YYYY ");
     // return data;
     let workbook = new Excel.Workbook();
     let worksheet = workbook.addWorksheet(`Daftar Pendaftar`);
 
-    worksheet.mergeCells("A1:D1");
-    worksheet.mergeCells("A2:D2");
-    worksheet.mergeCells("A3:D3");
+    worksheet.mergeCells("A1:G1");
+    worksheet.mergeCells("A2:G2");
+    worksheet.mergeCells("A3:G3");
 
     worksheet.getCell(
       "A4"
     ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
 
     worksheet.addConditionalFormatting({
-      ref: "A1:D3",
+      ref: "A1:G3",
       rules: [
         {
           type: "expression",
@@ -1934,7 +1940,7 @@ class PPDBController {
     });
 
     worksheet.addConditionalFormatting({
-      ref: "A5:D5",
+      ref: "A5:AT6",
       rules: [
         {
           type: "expression",
@@ -1966,17 +1972,47 @@ class PPDBController {
       ],
     });
 
-    worksheet.getCell("A1").value = "Rekapan Nilai Ujian PPDB";
-
-    worksheet.getCell("A2").value = jadwalPpdb.nama;
-    worksheet.getCell("A3").value = jadwalPpdb.tipe;
+    worksheet.getCell("A1").value = "Rekapan Gelombang PPDB";
+    worksheet.getCell("A2").value = gelombang.nama;
+    worksheet.getCell("A3").value = `${awal} - ${akhir}`;
 
     await Promise.all(
-      data
-        .sort((a, b) => ("" + a.nama).localeCompare("" + b.nama))
+      gelombang
+        .toJSON()
+        .pendaftar.sort((a, b) =>
+          ("" + a.user.nama).localeCompare("" + b.user.nama)
+        )
         .map(async (d, idx) => {
           worksheet.addConditionalFormatting({
-            ref: `B${(idx + 1) * 1 + 5}:C${(idx + 1) * 1 + 5}`,
+            ref: `A${(idx + 1) * 1 + 5}:A${(idx + 1) * 1 + 6}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 11,
+                    // bold: true,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
+                },
+              },
+            ],
+          });
+
+          worksheet.addConditionalFormatting({
+            ref: `B${(idx + 1) * 1 + 5}:AT${(idx + 1) * 1 + 6}`,
             rules: [
               {
                 type: "expression",
@@ -2002,85 +2038,293 @@ class PPDBController {
               },
             ],
           });
-          worksheet.addConditionalFormatting({
-            ref: `A${(idx + 1) * 1 + 5}`,
-            rules: [
-              {
-                type: "expression",
-                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-                style: {
-                  font: {
-                    name: "Times New Roman",
-                    family: 4,
-                    size: 11,
-                    // bold: true,
-                  },
-                  alignment: {
-                    vertical: "middle",
-                    horizontal: "center",
-                  },
-                  border: {
-                    top: { style: "thin" },
-                    left: { style: "thin" },
-                    bottom: { style: "thin" },
-                    right: { style: "thin" },
-                  },
-                },
-              },
-            ],
-          });
-          worksheet.addConditionalFormatting({
-            ref: `D${(idx + 1) * 1 + 5}`,
-            rules: [
-              {
-                type: "expression",
-                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-                style: {
-                  font: {
-                    name: "Times New Roman",
-                    family: 4,
-                    size: 11,
-                    // bold: true,
-                  },
-                  alignment: {
-                    vertical: "middle",
-                    horizontal: "center",
-                  },
-                  border: {
-                    top: { style: "thin" },
-                    left: { style: "thin" },
-                    bottom: { style: "thin" },
-                    right: { style: "thin" },
-                  },
-                },
-              },
-            ],
-          });
+
           // add column headers
-          worksheet.getRow(5).values = ["No", "Nama", "Id", "Nilai"];
+          worksheet.getRow(5).values = [
+            "No",
+            "Nama",
+            "Tanggal Mendaftar",
+            "Status",
+            "Semester 1",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "Semester 2",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "Semester 3",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "Semester 4",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "Semester 5",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "Semester 6",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+          ];
+          worksheet.getRow(6).values = [
+            "No",
+            "Nama",
+            "Tanggal Mendaftar",
+            "Status",
+            "Alpa",
+            "Izin",
+            "sakit",
+            "Fisika",
+            "Matematika",
+            "B.Indo",
+            "B.Ing",
+            "Alpa",
+            "Izin",
+            "sakit",
+            "Fisika",
+            "Matematika",
+            "B.Indo",
+            "B.Ing",
+            "Alpa",
+            "Izin",
+            "sakit",
+            "Fisika",
+            "Matematika",
+            "B.Indo",
+            "B.Ing",
+            "Alpa",
+            "Izin",
+            "sakit",
+            "Fisika",
+            "Matematika",
+            "B.Indo",
+            "B.Ing",
+            "Alpa",
+            "Izin",
+            "sakit",
+            "Fisika",
+            "Matematika",
+            "B.Indo",
+            "B.Ing",
+            "Alpa",
+            "Izin",
+            "sakit",
+            "Fisika",
+            "Matematika",
+            "B.Indo",
+            "B.Ing",
+          ];
           worksheet.columns = [
             { key: "no" },
             { key: "nama" },
-            { key: "id" },
-            { key: "nilai" },
+            { key: "tanggal" },
+            { key: "status" },
+            { key: "alpa1" },
+            { key: "izin1" },
+            { key: "sakit1" },
+            { key: "fisika1" },
+            { key: "matematika1" },
+            { key: "bindo1" },
+            { key: "bing1" },
+            { key: "alpa2" },
+            { key: "izin2" },
+            { key: "sakit2" },
+            { key: "fisika2" },
+            { key: "matematika2" },
+            { key: "bindo2" },
+            { key: "bing2" },
+            { key: "alpa3" },
+            { key: "izin3" },
+            { key: "sakit3" },
+            { key: "fisika3" },
+            { key: "matematika3" },
+            { key: "bindo3" },
+            { key: "bing3" },
+            { key: "alpa4" },
+            { key: "izin4" },
+            { key: "sakit4" },
+            { key: "fisika4" },
+            { key: "matematika4" },
+            { key: "bindo4" },
+            { key: "bing4" },
+            { key: "alpa5" },
+            { key: "izin5" },
+            { key: "sakit5" },
+            { key: "fisika5" },
+            { key: "matematika5" },
+            { key: "bindo5" },
+            { key: "bing5" },
+            { key: "alpa6" },
+            { key: "izin6" },
+            { key: "sakit6" },
+            { key: "fisika6" },
+            { key: "matematika6" },
+            { key: "bindo6" },
+            { key: "bing6" },
           ];
 
           // Add row using key mapping to columns
           let row = worksheet.addRow({
             no: `${idx + 1}`,
-            nama: d ? d.nama : "-",
-            id: d ? d.id : "-",
-            nilai: d ? d.nilai : "-",
+            nama: d.user ? d.user.nama : "-",
+            tanggal: d ? d.created_at : "-",
+            status: d ? d.status : "-",
+            alpa1: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.alpa1
+                : "0"
+              : "0",
+            izin1: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.izin1
+                : "0"
+              : "0",
+            sakit1: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.sakit1
+                : "0"
+              : "0",
+            fisika1: d.user.profil ? d.user.profil.fisika1 : "-",
+            matematika1: d.user.profil ? d.user.profil.matematika1 : "-",
+            bindo1: d.user.profil ? d.user.profil.bindo1 : "-",
+            bing1: d.user.profil ? d.user.profil.bing1 : "-",
+            alpa2: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.alpa2
+                : "0"
+              : "0",
+            izin2: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.izin2
+                : "0"
+              : "0",
+            sakit2: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.sakit2
+                : "0"
+              : "0",
+            fisika2: d.user.profil ? d.user.profil.fisika2 : "-",
+            matematika2: d.user.profil ? d.user.profil.matematika2 : "-",
+            bindo2: d.user.profil ? d.user.profil.bindo2 : "-",
+            bing2: d.user.profil ? d.user.profil.bing2 : "-",
+            alpa3: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.alpa3
+                : "0"
+              : "0",
+            izin3: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.izin3
+                : "0"
+              : "0",
+            sakit3: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.sakit3
+                : "0"
+              : "0",
+            fisika3: d.user.profil ? d.user.profil.fisika3 : "-",
+            matematika3: d.user.profil ? d.user.profil.matematika3 : "-",
+            bindo3: d.user.profil ? d.user.profil.bindo3 : "-",
+            bing3: d.user.profil ? d.user.profil.bing3 : "-",
+            alpa4: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.alpa4
+                : "0"
+              : "0",
+            izin4: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.izin4
+                : "0"
+              : "0",
+            sakit4: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.sakit4
+                : "0"
+              : "0",
+            fisika4: d.user.profil ? d.user.profil.fisika4 : "-",
+            matematika4: d.user.profil ? d.user.profil.matematika4 : "-",
+            bindo4: d.user.profil ? d.user.profil.bindo4 : "-",
+            bing4: d.user.profil ? d.user.profil.bing4 : "-",
+            alpa5: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.alpa5
+                : "0"
+              : "0",
+            izin5: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.izin5
+                : "0"
+              : "0",
+            sakit5: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.sakit5
+                : "0"
+              : "0",
+            fisika5: d.user.profil ? d.user.profil.fisika5 : "-",
+            matematika5: d.user.profil ? d.user.profil.matematika5 : "-",
+            bindo5: d.user.profil ? d.user.profil.bindo5 : "-",
+            bing5: d.user.profil ? d.user.profil.bing5 : "-",
+            alpa6: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.alpa6
+                : "0"
+              : "0",
+            izin6: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.izin6
+                : "0"
+              : "0",
+            sakit6: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.sakit6
+                : "0"
+              : "0",
+            fisika6: d.user.profil ? d.user.profil.fisika6 : "-",
+            matematika6: d.user.profil ? d.user.profil.matematika6 : "-",
+            bindo6: d.user.profil ? d.user.profil.bindo6 : "-",
+            bing6: d.user.profil ? d.user.profil.bing6 : "-",
           });
         })
     );
+    worksheet.mergeCells(`A5:A6`);
+    worksheet.mergeCells(`B5:B6`);
+    worksheet.mergeCells(`C5:C6`);
+    worksheet.mergeCells(`D5:D6`);
+    worksheet.mergeCells(`E5:K5`);
+    worksheet.mergeCells(`L5:R5`);
+    worksheet.mergeCells(`S5:Y5`);
+    worksheet.mergeCells(`Z5:AF5`);
+    worksheet.mergeCells(`AG5:AM5`);
+    worksheet.mergeCells(`AN5:AT5`);
     worksheet.getColumn("A").width = 6;
     worksheet.getColumn("B").width = 20;
     worksheet.getColumn("C").width = 0;
     worksheet.getColumn("D").width = 6;
     worksheet.autoFilter = {
-      from: "A5",
-      to: "D5",
+      from: "A6",
+      to: "AT6",
     };
 
     let namaFile = `/uploads/rekapan-pendaftar-ppdb-${keluarantanggalseconds}.xlsx`;
@@ -2089,8 +2333,7 @@ class PPDBController {
     await workbook.xlsx.writeFile(`public${namaFile}`);
 
     return namaFile;
-  } 
-
+  }
 }
 
 module.exports = PPDBController;
