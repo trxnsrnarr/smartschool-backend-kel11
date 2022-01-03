@@ -523,13 +523,11 @@ class MainController {
   }
 
   async getMasterSekolahSS({ response, request }) {
-    let {
-      page,
-    } = request.get();
+    let { page } = request.get();
 
     page = page ? page : 1;
 
-    const res = MSekolah.query().select('nama', 'gpds', 'trial');
+    const res = MSekolah.query().select("nama", "gpds", "trial");
 
     return response.ok({
       sekolah: await res.paginate(page),
@@ -742,7 +740,11 @@ class MainController {
       })
     );
     data = data.map((d, idx) => {
-      return { exist: check[idx] ? true : false, ...d, nama_sekolah: check[idx]  ? check[idx].sekolah : d.nama_sekolah};
+      return {
+        exist: check[idx] ? true : false,
+        ...d,
+        nama_sekolah: check[idx] ? check[idx].sekolah : d.nama_sekolah,
+      };
     });
     return data;
   }
@@ -1348,13 +1350,13 @@ class MainController {
     if (keahlian) {
       keahlian = keahlian.toString();
     }
-    if(!gender){
+    if (!gender) {
       delete userPayload.gender;
     }
-    if(!agama){
+    if (!agama) {
       delete userPayload.agama;
     }
-    if(!tempat_lahir){
+    if (!tempat_lahir) {
       delete userPayload.tempat_lahir;
     }
     tanggal_lahir == "Invalid date" ? delete userPayload.tanggal_lahir : null;
@@ -1468,7 +1470,7 @@ class MainController {
         semester5,
         semester6,
 
-        // 
+        //
         file_ppdb,
         data_absensi,
       });
@@ -1568,7 +1570,7 @@ class MainController {
         semester5,
         semester6,
 
-        // 
+        //
         file_ppdb,
         data_absensi,
       });
@@ -3668,10 +3670,10 @@ class MainController {
       tanggal_akhir,
       m_sekolah_id: sekolah.id,
       dihapus: 0,
-      jam_sinkron:1,
-      mapel_sinkron:1,
-      rombel_sinkron:1,
-      jadwal_sinkron:1,
+      jam_sinkron: 1,
+      mapel_sinkron: 1,
+      rombel_sinkron: 1,
+      jadwal_sinkron: 1,
     });
 
     const jamMengajar = [];
@@ -14662,8 +14664,8 @@ class MainController {
       .with("user", (builder) => {
         builder.with("profil");
       })
-      .with("gelombang", builder => {
-        builder.with("jalur")
+      .with("gelombang", (builder) => {
+        builder.with("jalur");
       })
       .where({ id: pendaftar_ppdb_id })
       .first();
@@ -16992,7 +16994,7 @@ class MainController {
         })
       );
     }
-      
+
     // return result;
 
     return response.ok({
@@ -45574,7 +45576,7 @@ class MainController {
       aktif: taa.aktif,
       dihapus: taa.dihapus,
       m_sekolah_id: taa.m_sekolah_id,
-      jam_sinkron:0,
+      jam_sinkron: 0,
       mapel_sinkron: 0,
       rombel_sinkron: 0,
       jadwal_sinkron: 0,
