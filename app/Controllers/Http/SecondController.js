@@ -2111,7 +2111,7 @@ class SecondController {
 
     let kategori;
 
-    kategori = await MKeuKategoriNeraca.query()
+    kategori = MKeuKategoriNeraca.query()
       .with("akunNeraca", (builder) => {
         builder
           .with("akun", (builder) => {
@@ -2136,7 +2136,7 @@ class SecondController {
       kategori.andWhere("nama", "like", `%${search}%`);
     }
 
-    kategori = kategori.fetch();
+    kategori = await kategori.fetch();
 
     return response.ok({
       kategori,
@@ -2154,7 +2154,7 @@ class SecondController {
 
     const user = await auth.getUser();
 
-    let { tipe, nama } = request.post();
+    let { tipe, nama, warna } = request.post();
 
     const rules = {
       tipe: "required",
@@ -2172,6 +2172,7 @@ class SecondController {
     const kategori = await MKeuKategoriNeraca.create({
       tipe,
       nama,
+      warna,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
     });

@@ -4609,6 +4609,7 @@ class MainController {
       jadwalMengajar: jadwalMengajar,
       analisisMateri: analisisMateri,
       analisisNilai: analisisNilai,
+      m_materi_id: materi.id,
       integrasi: sekolah.integrasi,
       checkAbsensi: checkAbsensi.length,
       judulTugas: judulTugas,
