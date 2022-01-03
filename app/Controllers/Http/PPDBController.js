@@ -694,6 +694,7 @@ class PPDBController {
       .with("pendaftar", (builder) => {
         builder.with("user").where({ dihapus: 0 });
       })
+      .with("jalur")
       .where({ id: gelombang_ppdb_id })
       .andWhere({ dihapus: 0 })
       .first();
@@ -737,6 +738,9 @@ class PPDBController {
       biaya_pendaftaran,
       m_jalur_ppdb_id,
       diterima,
+      nama_akun,
+      norek,
+      bank,
     } = request.post();
 
     await MGelombangPpdb.create({
@@ -748,6 +752,9 @@ class PPDBController {
       biaya_pendaftaran,
       diterima,
       m_jalur_ppdb_id,
+      nama_akun,
+      norek,
+      bank,
       m_sekolah_id: sekolah.id,
       m_ta_id: ta.id,
     });
@@ -789,6 +796,9 @@ class PPDBController {
       biaya_pendaftaran,
       m_jalur_ppdb_id,
       diterima,
+      nama_akun,
+      norek,
+      bank,
     } = request.post();
 
     const gelombang = await MGelombangPpdb.query()
@@ -801,6 +811,9 @@ class PPDBController {
         biaya_pendaftaran,
         m_jalur_ppdb_id,
         diterima,
+        nama_akun,
+        norek,
+        bank,
       });
 
     if (!gelombang) {
