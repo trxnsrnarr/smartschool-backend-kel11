@@ -4293,7 +4293,7 @@ class MainController {
 
     const { rombel_id, kode_hari } = request.get();
 
-    let materi;
+    let materi = {id: 0};
     let jadwalMengajar;
     let analisisMateri;
     let analisisNilai;
