@@ -12,13 +12,18 @@ class MSekolah extends Model {
     return this.hasOne("App/Models/MInformasiSekolah");
   }
 
+  ta() {
+    return this.hasMany("App/Models/Mta", 'id', "m_sekolah_id");
+  }
+
   jurusan() {
     return this.hasMany("App/Models/MJurusan", "m_sekolah_id");
   }
 
   rombel() {
-    return this.hasMany("App/Models/MRombel", "m_sekolah_id");
+    return this.hasMany("App/Models/MRombel", 'id', "m_sekolah_id");
   }
+
   siswa() {
     return this.hasMany("App/Models/User", "m_sekolah_id");
   }

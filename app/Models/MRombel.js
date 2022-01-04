@@ -23,8 +23,17 @@ class MRombel extends Model {
   materiRombel() {
     return this.hasMany("App/Models/TkMateriRombel");
   }
+
   jurusan() {
     return this.belongsTo("App/Models/MJurusan");
+  }
+
+  ta() {
+    return this.belongsTo("App/Models/Mta");
+  }
+
+  sekolah() {
+    return this.belongsTo("App/Models/MSekolah");
   }
 }
 
