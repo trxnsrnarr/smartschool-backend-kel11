@@ -527,10 +527,16 @@ class MainController {
 
     page = page ? page : 1;
 
-    const res = MSekolah.query().select("nama", "gpds", "trial");
+    const res = MSekolah.query().select('id', 'nama', 'gpds', 'trial').with('ta', (builder) => {
+      builder.select('id', 'm_sekolah_id').with('rombel', (builder) => {
+        builder.select('id', 'm_ta_id', 'm_sekolah_id').withCount('anggotaRombel as total', (builder) => {
+          builder.where('dihapus', 0)
+        }).where('dihapus', 0)
+      }).where('aktif', 1)
+    })
 
     return response.ok({
-      sekolah: await res.paginate(page),
+      sekolah: await res.paginate(page, 10),
     });
   }
 
@@ -4287,7 +4293,7 @@ class MainController {
 
     const { rombel_id, kode_hari } = request.get();
 
-    let materi;
+    let materi = {id: 0};
     let jadwalMengajar;
     let analisisMateri;
     let analisisNilai;
