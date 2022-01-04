@@ -1326,11 +1326,16 @@ class SecondController {
             terjadwal.push(data);
           } else {
             if (d.tipe == "tugas") {
-              if (d.__meta__.total_respon >= d.__meta__.total_siswa) {
+              if (
+                d.__meta__.total_respon >= d.__meta__.total_siswa &&
+                !tanggalBerlangsung.includes(
+                  moment(dibagikan).format("YYYY-MM-DD")
+                )
+              ) {
                 selesai.push(data);
               } else {
                 if (
-                  tanggalBerlangsung.includes(
+                  !tanggalBerlangsung.includes(
                     moment(dibagikan).format("YYYY-MM-DD")
                   )
                 ) {
@@ -1341,11 +1346,16 @@ class SecondController {
                 berlangsung.push(data);
               }
             } else if (d.tipe == "absen") {
-              if (moment(d.tanggal_akhir).toDate() < moment().toDate()) {
+              if (
+                moment(d.tanggal_akhir).toDate() < moment().toDate() &&
+                !tanggalBerlangsung.includes(
+                  moment(dibagikan).format("YYYY-MM-DD")
+                )
+              ) {
                 selesai.push(data);
               } else {
                 if (
-                  tanggalBerlangsung.includes(
+                  !tanggalBerlangsung.includes(
                     moment(dibagikan).format("YYYY-MM-DD")
                   )
                 ) {
@@ -1357,12 +1367,16 @@ class SecondController {
               }
             } else if (d.tipe == "materi") {
               if (
-                d.materi[0].__meta__.totalKesimpulan >= d.__meta__.total_siswa
+                d.materi[0].__meta__.totalKesimpulan >=
+                  d.__meta__.total_siswa &&
+                !tanggalBerlangsung.includes(
+                  moment(dibagikan).format("YYYY-MM-DD")
+                )
               ) {
                 selesai.push(data);
               } else {
                 if (
-                  tanggalBerlangsung.includes(
+                  !tanggalBerlangsung.includes(
                     moment(dibagikan).format("YYYY-MM-DD")
                   )
                 ) {
@@ -1380,23 +1394,25 @@ class SecondController {
     }
 
     return response.ok({
-      berlangsung: timeline.filter((d) => {
-        let dibagikan = d.tanggal_pembagian;
-        if (d.tipe == "tugas") {
-          dibagikan = d.tugas.tanggal_pembagian;
-        }
-        dibagikan = moment(dibagikan).format("YYYY-MM-DD");
-        return tanggalBerlangsung.includes(dibagikan);
-      }),
+      berlangsung,
       terjadwal,
-      selesai: timeline.filter((d) => {
-        let dibagikan = d.tanggal_pembagian;
-        if (d.tipe == "tugas") {
-          dibagikan = d.tugas.tanggal_pembagian;
-        }
-        dibagikan = moment(dibagikan).format("YYYY-MM-DD");
-        return !tanggalBerlangsung.includes(dibagikan);
-      }),
+      selesai,
+      // berlangsung: timeline.filter((d) => {
+      //   let dibagikan = d.tanggal_pembagian;
+      //   if (d.tipe == "tugas") {
+      //     dibagikan = d.tugas.tanggal_pembagian;
+      //   }
+      //   dibagikan = moment(dibagikan).format("YYYY-MM-DD");
+      //   return tanggalBerlangsung.includes(dibagikan);
+      // }),
+      // selesai: timeline.filter((d) => {
+      //   let dibagikan = d.tanggal_pembagian;
+      //   if (d.tipe == "tugas") {
+      //     dibagikan = d.tugas.tanggal_pembagian;
+      //   }
+      //   dibagikan = moment(dibagikan).format("YYYY-MM-DD");
+      //   return !tanggalBerlangsung.includes(dibagikan);
+      // }),
     });
   }
 
@@ -2111,7 +2127,7 @@ class SecondController {
 
     let kategori;
 
-    kategori = await MKeuKategoriNeraca.query()
+    kategori = MKeuKategoriNeraca.query()
       .with("akunNeraca", (builder) => {
         builder
           .with("akun", (builder) => {
@@ -2136,7 +2152,7 @@ class SecondController {
       kategori.andWhere("nama", "like", `%${search}%`);
     }
 
-    kategori = kategori.fetch();
+    kategori = await kategori.fetch();
 
     return response.ok({
       kategori,
@@ -2154,7 +2170,7 @@ class SecondController {
 
     const user = await auth.getUser();
 
-    let { tipe, nama } = request.post();
+    let { tipe, nama, warna } = request.post();
 
     const rules = {
       tipe: "required",
@@ -2172,6 +2188,7 @@ class SecondController {
     const kategori = await MKeuKategoriNeraca.create({
       tipe,
       nama,
+      warna,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
     });
