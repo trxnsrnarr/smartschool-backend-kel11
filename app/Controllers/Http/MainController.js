@@ -523,9 +523,7 @@ class MainController {
   }
 
   async getMasterSekolahSS({ response, request }) {
-    let {
-      page,
-    } = request.get();
+    let { page } = request.get();
 
     page = page ? page : 1;
 
@@ -748,7 +746,11 @@ class MainController {
       })
     );
     data = data.map((d, idx) => {
-      return { exist: check[idx] ? true : false, ...d };
+      return {
+        exist: check[idx] ? true : false,
+        ...d,
+        nama_sekolah: check[idx] ? check[idx].sekolah : d.nama_sekolah,
+      };
     });
     return data;
   }
@@ -1092,6 +1094,7 @@ class MainController {
     const userData = await User.query()
       .where({ id: user.id })
       .with("sekolah")
+      .with("profil")
       .first();
 
     let rombel;
@@ -1315,6 +1318,10 @@ class MainController {
       semester4,
       semester5,
       semester6,
+
+      //
+      file_ppdb,
+      data_absensi,
     } = request.post();
 
     let userPayload = {
@@ -1348,6 +1355,15 @@ class MainController {
     }
     if (keahlian) {
       keahlian = keahlian.toString();
+    }
+    if (!gender) {
+      delete userPayload.gender;
+    }
+    if (!agama) {
+      delete userPayload.agama;
+    }
+    if (!tempat_lahir) {
+      delete userPayload.tempat_lahir;
     }
     tanggal_lahir == "Invalid date" ? delete userPayload.tanggal_lahir : null;
 
@@ -1459,6 +1475,10 @@ class MainController {
         semester4,
         semester5,
         semester6,
+
+        //
+        file_ppdb,
+        data_absensi,
       });
     } else {
       profil = await MProfilUser.create({
@@ -1555,6 +1575,10 @@ class MainController {
         semester4,
         semester5,
         semester6,
+
+        //
+        file_ppdb,
+        data_absensi,
       });
     }
 
@@ -3652,6 +3676,10 @@ class MainController {
       tanggal_akhir,
       m_sekolah_id: sekolah.id,
       dihapus: 0,
+      jam_sinkron: 1,
+      mapel_sinkron: 1,
+      rombel_sinkron: 1,
+      jadwal_sinkron: 1,
     });
 
     const jamMengajar = [];
@@ -4265,6 +4293,7 @@ class MainController {
 
     const { rombel_id, kode_hari } = request.get();
 
+    let materi;
     let jadwalMengajar;
     let analisisMateri;
     let analisisNilai;
@@ -4484,7 +4513,7 @@ class MainController {
         checkAbsensi = [];
       }
 
-      let materi = await MMateri.query()
+      materi = await MMateri.query()
         .where({ tingkat: jadwalMengajar.toJSON().rombel.tingkat })
         .andWhere({ m_jurusan_id: jadwalMengajar.toJSON().rombel.m_jurusan_id })
         .andWhere({ m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id })
@@ -4587,6 +4616,7 @@ class MainController {
       jadwalMengajar: jadwalMengajar,
       analisisMateri: analisisMateri,
       analisisNilai: analisisNilai,
+      m_materi_id: materi.id,
       integrasi: sekolah.integrasi,
       checkAbsensi: checkAbsensi.length,
       judulTugas: judulTugas,
@@ -8153,7 +8183,7 @@ class MainController {
                 });
               return 0;
             } else {
-              const soal = await MSoalUjian.create({
+              const soalBaru = await MSoalUjian.create({
                 kd: d.kd,
                 kd_konten_materi: d.kd_konten_materi,
                 level_kognitif: d.level_kognitif,
@@ -8185,15 +8215,19 @@ class MainController {
                 m_user_id: user.id,
                 dihapus: 0,
               });
+              await TkSoalTugas.create({
+                m_soal_ujian_id: soalBaru.id,
+                m_tugas_id: tugas.id,
+                dihapus: 0,
+              });
               return {
-                m_soal_ujian_id: soal.id,
+                m_soal_ujian_id: soalBaru.id,
                 m_tugas_id: tugas.id,
                 dihapus: 0,
               };
             }
           })
         );
-        await TkSoalTugas.createMany(soalIds.filter((d) => d));
       }
 
       if (list_anggota.length) {
@@ -14642,7 +14676,9 @@ class MainController {
       .with("user", (builder) => {
         builder.with("profil");
       })
-      .with("gelombang")
+      .with("gelombang", (builder) => {
+        builder.with("jalur");
+      })
       .where({ id: pendaftar_ppdb_id })
       .first();
 
@@ -14677,7 +14713,7 @@ class MainController {
     await MPendaftarPpdb.create({
       m_gelombang_ppdb_id,
       m_user_id: user.id,
-      status: "menungguSeleksiBerkas",
+      status: "menungguKonfirmasiPembayaran",
     });
 
     return response.ok({
@@ -14699,6 +14735,8 @@ class MainController {
       m_jurusan_3_id,
       m_jurusan_4_id,
       m_jurusan_5_id,
+      status,
+      surat_rekomendasi,
     } = request.post();
 
     const check = await MPendaftarPpdb.query()
@@ -14715,6 +14753,8 @@ class MainController {
         m_jurusan_4_id,
         m_jurusan_5_id,
         pembayaran,
+        status,
+        surat_rekomendasi,
       });
 
     if (!check) {
@@ -16968,7 +17008,7 @@ class MainController {
         })
       );
     }
-      
+
     // return result;
 
     return response.ok({
@@ -45543,14 +45583,14 @@ class MainController {
       .first();
 
     await Mta.create({
-      tahun: taa.tahun,
-      semester: taa.semester,
+      tahun: "2021 / 2022",
+      semester: "Genap",
       nama_kepsek: taa.nama_kepsek,
       nip_kepsek: taa.nip_kepsek,
       aktif: taa.aktif,
       dihapus: taa.dihapus,
       m_sekolah_id: taa.m_sekolah_id,
-      semester: taa.semester,
+      jam_sinkron: 0,
       mapel_sinkron: 0,
       rombel_sinkron: 0,
       jadwal_sinkron: 0,

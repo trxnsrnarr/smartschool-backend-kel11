@@ -300,6 +300,10 @@ Route.delete(
   "MainController.deletePembayaranKategori"
 );
 
+// Neraca
+Route.get("/neraca-keuangan", "SecondController.getNeraca");
+Route.post("/kategori-neraca", "SecondController.postKategoriNeraca");
+
 // materi kesimpulan
 Route.post("/materi-kesimpulan", "MainController.postMateriKesimpulan");
 Route.put(
@@ -1190,11 +1194,7 @@ Route.post(
 );
 Route.post("/import/absensi-siswa/", "MainController.importAbsensiSiswa");
 
-
-Route.post(
-  "/uts-to-uas/sikap-siswa",
-  "SecondController.postRaporSikapUAS"
-);
+Route.post("/uts-to-uas/sikap-siswa", "SecondController.postRaporSikapUAS");
 
 // Ortu anak
 Route.post("/absen-anak", "MainController.getAbsensiAnak");
@@ -1213,7 +1213,18 @@ Route.get("/jadwal-ppdb", "PPDBController.getJadwalPPDB");
 Route.post("/jadwal-ppdb", "PPDBController.postJadwalPPDB");
 Route.put("/jadwal-ppdb/:id", "PPDBController.putJadwalPPDB");
 Route.delete("/jadwal-ppdb/:id", "PPDBController.deleteJadwalPPDB");
-Route.get("/jadwal-ppdb/:id", "PPDBController.detailJadwalPPDB");
+Route.get(
+  "/jadwal-ppdb/:jadwal_ppdb_id",
+  "PPDBController.detailJadwalUjianPPDB"
+);
+Route.post(
+  "/download-nilai-jadwal-ppdb/:jadwal_ppdb_id",
+  "PPDBController.downloadNilaiUjianPPDB"
+);
+Route.post(
+  "/import-jadwal-ppdb/:jadwal_ppdb_id",
+  "PPDBController.importNilaiUjianPPDB"
+);
 
 // Informasi Jalur PPDB
 Route.post("/informasi-jalur-ppdb", "PPDBController.postInformasiJalur");
@@ -1234,10 +1245,7 @@ Route.delete(
 // Informasi Gelombang
 Route.post("/jadwal-ppdb", "PPDBController.postJadwalPPDB");
 Route.put("/jadwal-ppdb/:id", "PPDBController.putJadwalPPDB");
-Route.delete(
-  "/jadwal-ppdb/:id",
-  "PPDBController.deleteJadwalPPDB"
-);
+Route.delete("/jadwal-ppdb/:id", "PPDBController.deleteJadwalPPDB");
 
 // gelombang-ppdb
 Route.get("/gelombang-ppdb", "PPDBController.getGelombangPPDB");

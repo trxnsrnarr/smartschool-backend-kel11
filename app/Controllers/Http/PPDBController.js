@@ -198,7 +198,9 @@ class PPDBController {
       .with("gelombang", (builder) => {
         builder
           .where({ dihapus: 0 })
-          .withCount("pendaftar as jumlahPendaftar")
+          .withCount("pendaftar as jumlahPendaftar", (builder) => {
+            builder.where({ dihapus: 0 });
+          })
           .with("informasi", (builder) => {
             builder.where({ dihapus: 0 });
           });
@@ -341,7 +343,7 @@ class PPDBController {
     });
   }
 
-  async getJadwalPPDB({ request, response }) {
+  async getJadwalPPDB({ request, response, auth }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -354,6 +356,36 @@ class PPDBController {
 
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const jalurIds = await MJalurPpdb.query()
+      .where({ dihapus: 0 })
+      .where({ m_sekolah_id: sekolah.id })
+      .ids();
+    const gelombangIds = await MGelombangPpdb.query()
+      .where({ dihapus: 0 })
+      .whereIn("m_jalur_ppdb_id", jalurIds)
+      .where({ m_ta_id: ta.id })
+      .ids();
+
+    let pendaftarIds, infoIds;
+    if (user.role == "ppdb") {
+      pendaftarIds = await MPendaftarPpdb.query()
+        .where({ dihapus: 0 })
+        .whereIn("m_gelombang_ppdb_id", gelombangIds)
+        .andWhere({ m_user_id: user.id })
+        .pluck("m_gelombang_ppdb_id");
+      infoIds = await MInformasiGelombang.query()
+        .where({ dihapus: 0 })
+        .whereIn("m_gelombang_ppdb_id", pendaftarIds)
+        .ids();
+    } else {
+      infoIds = await MInformasiGelombang.query()
+        .where({ dihapus: 0 })
+        .whereIn("m_gelombang_ppdb_id", gelombangIds)
+        .ids();
     }
 
     const {
@@ -401,6 +433,7 @@ class PPDBController {
           builder.with("jalur");
         });
       })
+      .whereIn("m_informasi_gelombang_id", infoIds)
       .where({ dihapus: 0 })
       .paginate(page, 20);
 
@@ -554,6 +587,16 @@ class PPDBController {
       });
     }
 
+    const jalurIds = await MJalurPpdb.query()
+      .where({ dihapus: 0 })
+      .where({ m_sekolah_id: sekolah.id })
+      .ids();
+    const gelombangIds = await MGelombangPpdb.query()
+      .where({ dihapus: 0 })
+      .whereIn("m_jalur_ppdb_id", jalurIds)
+      .where({ m_ta_id: ta.id })
+      .ids();
+
     let { is_public } = request.get();
     is_public = is_public ? is_public : false;
 
@@ -561,6 +604,7 @@ class PPDBController {
       .where("dibuka", "<=", moment().format("YYYY-MM-DD"))
       .andWhere("ditutup", ">=", moment().format("YYYY-MM-DD"))
       .andWhere({ m_sekolah_id: sekolah.id })
+      .whereIn("id", gelombangIds)
       .andWhere({ m_ta_id: ta.id })
       .andWhere({ dihapus: 0 })
       .ids();
@@ -579,15 +623,38 @@ class PPDBController {
       if (user) {
         gelombangAktif = await MPendaftarPpdb.query()
           .with("gelombang", (builder) => {
-            builder.with("jalur");
+            builder
+              .with("jalur")
+              .with("pendaftar", (builder) => {
+                builder
+                  .select("id", "m_gelombang_ppdb_id")
+                  .where({ dihapus: 0 });
+              })
+              .with("informasi", (builder) => {
+                builder
+                  .where({ tipe: "ujian" })
+                  .where(
+                    "dibuka",
+                    "<",
+                    moment().endOf("day").format("YYYY-MM-DD HH:mm:ss")
+                  )
+                  .where(
+                    "ditutup",
+                    ">",
+                    moment().startOf("day").format("YYYY-MM-DD HH:mm:ss")
+                  )
+                  .with("ujian");
+              });
           })
           .where({ dihapus: 0 })
+          .whereIn("m_gelombang_ppdb_id", gelombangIds)
           .andWhere({ m_user_id: user.id })
           .whereIn("m_gelombang_ppdb_id", checkIds)
           .first();
 
         pendaftarIds = await MPendaftarPpdb.query()
           .where({ dihapus: 0 })
+          .whereIn("m_gelombang_ppdb_id", gelombangIds)
           .andWhere({ m_user_id: user.id })
           .pluck("m_gelombang_ppdb_id");
 
@@ -603,6 +670,7 @@ class PPDBController {
       .with("jalur")
       .withCount("pendaftar as jumlahPendaftar")
       .where({ m_sekolah_id: sekolah.id })
+      .whereIn("id", gelombangIds)
       .andWhere({ m_ta_id: ta.id })
       .andWhere({ dihapus: 0 })
       .fetch();
@@ -626,12 +694,18 @@ class PPDBController {
       .with("pendaftar", (builder) => {
         builder.with("user").where({ dihapus: 0 });
       })
+      .with("jalur")
       .where({ id: gelombang_ppdb_id })
       .andWhere({ dihapus: 0 })
       .first();
+    const gelombangs = await MGelombangPpdb.query()
+      .where({ m_jalur_ppdb_id: gelombang.m_jalur_ppdb_id })
+      .where({ dihapus: 0 })
+      .fetch();
 
     return response.ok({
       gelombang: gelombang,
+      gelombangs,
     });
   }
 
@@ -664,6 +738,9 @@ class PPDBController {
       biaya_pendaftaran,
       m_jalur_ppdb_id,
       diterima,
+      nama_akun,
+      norek,
+      bank,
     } = request.post();
 
     await MGelombangPpdb.create({
@@ -675,6 +752,9 @@ class PPDBController {
       biaya_pendaftaran,
       diterima,
       m_jalur_ppdb_id,
+      nama_akun,
+      norek,
+      bank,
       m_sekolah_id: sekolah.id,
       m_ta_id: ta.id,
     });
@@ -716,6 +796,9 @@ class PPDBController {
       biaya_pendaftaran,
       m_jalur_ppdb_id,
       diterima,
+      nama_akun,
+      norek,
+      bank,
     } = request.post();
 
     const gelombang = await MGelombangPpdb.query()
@@ -728,6 +811,9 @@ class PPDBController {
         biaya_pendaftaran,
         m_jalur_ppdb_id,
         diterima,
+        nama_akun,
+        norek,
+        bank,
       });
 
     if (!gelombang) {
@@ -1105,7 +1191,13 @@ class PPDBController {
     const jadwalPpdb = await MJadwalPpdb.query()
       .with("soal")
       .with("info", (builder) => {
-        builder.with("gelombang");
+        builder.with("gelombang", (builder) => {
+          builder
+            .with("pendaftar", (builder) => {
+              builder.with("user");
+            })
+            .with("jalur");
+        });
       })
       .where({ id: jadwal_ppdb_id })
       .first();
@@ -1121,6 +1213,342 @@ class PPDBController {
       jadwalPpdb,
       pesertaUjianPpdb: peserta,
     });
+  }
+
+  async downloadNilaiUjianPPDB({
+    request,
+    response,
+    auth,
+    params: { jadwal_ppdb_id },
+  }) {
+    const user = await auth.getUser();
+
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
+    const jadwalPpdb = await MJadwalPpdb.query()
+      .with("soal")
+      .with("info", (builder) => {
+        builder.with("gelombang", (builder) => {
+          builder
+            .with("pendaftar", (builder) => {
+              builder.with("user", (builder) => {
+                builder.select("id", "nama");
+              });
+            })
+            .with("jalur");
+        });
+      })
+      .where({ id: jadwal_ppdb_id })
+      .first();
+
+    const peserta = await TkPesertaUjianPpdb.query()
+      .where({ m_jadwal_ppdb_id: jadwal_ppdb_id })
+      .fetch();
+    const pesertaData = peserta.toJSON();
+
+    const data = jadwalPpdb.toJSON().info.gelombang.pendaftar.map((d) => {
+      const nilai = pesertaData.find((e) => e.id == d.id);
+      return {
+        id: d.id,
+        nama: d.user.nama,
+        whatsapp: d.user.whatsapp,
+        nilai: nilai ? nilai.nilai : 0,
+      };
+    });
+    // return data;
+    let workbook = new Excel.Workbook();
+    let worksheet = workbook.addWorksheet(`Daftar Rekap`);
+
+    worksheet.mergeCells("A1:D1");
+    worksheet.mergeCells("A2:D2");
+    worksheet.mergeCells("A3:D3");
+
+    worksheet.getCell(
+      "A4"
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
+
+    worksheet.addConditionalFormatting({
+      ref: "A1:D3",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 16,
+              bold: true,
+            },
+            // fill: {
+            //   type: "pattern",
+            //   pattern: "solid",
+            //   bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            // },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            // border: {
+            //   top: { style: "thin" },
+            //   left: { style: "thin" },
+            //   bottom: { style: "thin" },
+            //   right: { style: "thin" },
+            // },
+          },
+        },
+      ],
+    });
+
+    worksheet.addConditionalFormatting({
+      ref: "A5:D5",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+
+    worksheet.getCell("A1").value = "Rekapan Nilai Ujian PPDB";
+
+    worksheet.getCell("A2").value = jadwalPpdb.nama;
+    worksheet.getCell("A3").value = jadwalPpdb.tipe;
+
+    await Promise.all(
+      data
+        .sort((a, b) => ("" + a.nama).localeCompare("" + b.nama))
+        .map(async (d, idx) => {
+          worksheet.addConditionalFormatting({
+            ref: `B${(idx + 1) * 1 + 5}:C${(idx + 1) * 1 + 5}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 11,
+                    // bold: true,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "left",
+                  },
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
+                },
+              },
+            ],
+          });
+          worksheet.addConditionalFormatting({
+            ref: `A${(idx + 1) * 1 + 5}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 11,
+                    // bold: true,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
+                },
+              },
+            ],
+          });
+          worksheet.addConditionalFormatting({
+            ref: `D${(idx + 1) * 1 + 5}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 11,
+                    // bold: true,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
+                },
+              },
+            ],
+          });
+          // add column headers
+          worksheet.getRow(5).values = ["No", "Nama", "Id", "Nilai"];
+          worksheet.columns = [
+            { key: "no" },
+            { key: "nama" },
+            { key: "id" },
+            { key: "nilai" },
+          ];
+
+          // Add row using key mapping to columns
+          let row = worksheet.addRow({
+            no: `${idx + 1}`,
+            nama: d ? d.nama : "-",
+            id: d ? d.id : "-",
+            nilai: d ? d.nilai : "-",
+          });
+        })
+    );
+    worksheet.getColumn("A").width = 6;
+    worksheet.getColumn("B").width = 20;
+    worksheet.getColumn("C").width = 0;
+    worksheet.getColumn("D").width = 6;
+    worksheet.autoFilter = {
+      from: "A5",
+      to: "D5",
+    };
+
+    let namaFile = `/uploads/rekapan-nilai-ujian-ppdb-siswa-${keluarantanggalseconds}.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
+
+  async importNilaiUjianPPDBServices(filelocation, sekolah, jadwalPPDB) {
+    var workbook = new Excel.Workbook();
+
+    workbook = await workbook.xlsx.readFile(filelocation);
+
+    let explanation = workbook.getWorksheet("daftar rekap");
+
+    let colComment = explanation.getColumn("A");
+
+    let data = [];
+
+    colComment.eachCell(async (cell, rowNumber) => {
+      if (rowNumber > 5) {
+        data.push({
+          nama: explanation.getCell("B" + rowNumber).value,
+          id: explanation.getCell("C" + rowNumber).value,
+          nilai: explanation.getCell("D" + rowNumber).value,
+        });
+      }
+    });
+
+    const result = await Promise.all(
+      data.map(async (d) => {
+        const check = await TkPesertaUjianPpdb.query()
+          .where({ dihapus: 0 })
+          .where({ m_pendaftar_ppdb_id: d.id })
+          .where({ m_jadwal_ppdb_id: jadwalPPDB.id })
+          .first();
+        if (check) {
+          await TkPesertaUjianPpdb.query().where({ id: check.id }).update({
+            nilai: d.nilai,
+          });
+        } else {
+          await TkPesertaUjianPpdb.create({
+            dihapus: 0,
+            m_pendaftar_ppdb_id: d.id,
+            nilai: d.nilai,
+            m_jadwal_ppdb_id: jadwalPPDB.id,
+          });
+        }
+      })
+    );
+
+    return result;
+  }
+
+  async importNilaiUjianPPDB({
+    request,
+    response,
+    auth,
+    params: { jadwal_ppdb_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let file = request.file("file");
+    let fname = `import-excel-nilai-ppdb.xlsx`;
+
+    //move uploaded file into custom folder
+    await file.move(Helpers.tmpPath("/uploads"), {
+      name: fname,
+      overwrite: true,
+    });
+
+    if (!file.moved()) {
+      return fileUpload.error();
+    }
+
+    const jadwalPPDB = await MJadwalPpdb.query()
+      .where({ id: jadwal_ppdb_id })
+      .first();
+
+    return await this.importNilaiUjianPPDBServices(
+      `tmp/uploads/${fname}`,
+      sekolah,
+      jadwalPPDB
+    );
   }
 
   async postPesertaUjianPpdb({ response, request, auth }) {
@@ -1311,8 +1739,7 @@ class PPDBController {
             .orderBy("m_user_id", "asc");
         })
         .where({
-          m_jadwal_ppdb_id:
-            pesertaUjian.m_jadwal_ppdb_id,
+          m_jadwal_ppdb_id: pesertaUjian.m_jadwal_ppdb_id,
         })
         .fetch();
 
@@ -1389,7 +1816,7 @@ class PPDBController {
     } else {
       pesertaUjian = await TkPesertaUjianPpdb.query()
         .with("jadwalPpdb", (builder) => {
-            builder.with("soal");
+          builder.with("soal");
         })
         .with("tugas")
         .withCount("jawabanSiswa as totalSoal")
@@ -1445,6 +1872,480 @@ class PPDBController {
         soal_siswa: soal_siswa,
       });
     }
+  }
+  async downloadGelombangPpdb({
+    request,
+    response,
+    auth,
+    params: { gelombang_ppdb_id },
+  }) {
+    const user = await auth.getUser();
+
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
+    const gelombang = await MGelombangPpdb.query()
+      .with("pendaftar", (builder) => {
+        builder
+          .with("user", (builder) => {
+            builder.select("id", "nama").with("profil");
+          })
+          .where({ dihapus: 0 });
+      })
+      .where({ id: gelombang_ppdb_id })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    // return gelombang;
+    const awal = moment(`${gelombang.dibuka}`).format("DD-MM-YYYY ");
+    const akhir = moment(`${gelombang.ditutup}`).format("DD-MM-YYYY ");
+    // return data;
+    let workbook = new Excel.Workbook();
+    let worksheet = workbook.addWorksheet(`Daftar Pendaftar`);
+
+    worksheet.mergeCells("A1:G1");
+    worksheet.mergeCells("A2:G2");
+    worksheet.mergeCells("A3:G3");
+
+    worksheet.getCell(
+      "A4"
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
+
+    worksheet.addConditionalFormatting({
+      ref: "A1:G3",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 16,
+              bold: true,
+            },
+            // fill: {
+            //   type: "pattern",
+            //   pattern: "solid",
+            //   bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            // },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            // border: {
+            //   top: { style: "thin" },
+            //   left: { style: "thin" },
+            //   bottom: { style: "thin" },
+            //   right: { style: "thin" },
+            // },
+          },
+        },
+      ],
+    });
+
+    worksheet.addConditionalFormatting({
+      ref: "A5:AT6",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+
+    worksheet.getCell("A1").value = "Rekapan Gelombang PPDB";
+    worksheet.getCell("A2").value = gelombang.nama;
+    worksheet.getCell("A3").value = `${awal} - ${akhir}`;
+
+    await Promise.all(
+      gelombang
+        .toJSON()
+        .pendaftar.sort((a, b) =>
+          ("" + a.user.nama).localeCompare("" + b.user.nama)
+        )
+        .map(async (d, idx) => {
+          worksheet.addConditionalFormatting({
+            ref: `A${(idx + 1) * 1 + 5}:A${(idx + 1) * 1 + 6}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 11,
+                    // bold: true,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
+                },
+              },
+            ],
+          });
+
+          worksheet.addConditionalFormatting({
+            ref: `B${(idx + 1) * 1 + 5}:AT${(idx + 1) * 1 + 6}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 11,
+                    // bold: true,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "left",
+                  },
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
+                },
+              },
+            ],
+          });
+
+          // add column headers
+          worksheet.getRow(5).values = [
+            "No",
+            "Nama",
+            "Tanggal Mendaftar",
+            "Status",
+            "Semester 1",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "Semester 2",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "Semester 3",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "Semester 4",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "Semester 5",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "Semester 6",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+          ];
+          worksheet.getRow(6).values = [
+            "No",
+            "Nama",
+            "Tanggal Mendaftar",
+            "Status",
+            "Alpa",
+            "Izin",
+            "sakit",
+            "Fisika",
+            "Matematika",
+            "B.Indo",
+            "B.Ing",
+            "Alpa",
+            "Izin",
+            "sakit",
+            "Fisika",
+            "Matematika",
+            "B.Indo",
+            "B.Ing",
+            "Alpa",
+            "Izin",
+            "sakit",
+            "Fisika",
+            "Matematika",
+            "B.Indo",
+            "B.Ing",
+            "Alpa",
+            "Izin",
+            "sakit",
+            "Fisika",
+            "Matematika",
+            "B.Indo",
+            "B.Ing",
+            "Alpa",
+            "Izin",
+            "sakit",
+            "Fisika",
+            "Matematika",
+            "B.Indo",
+            "B.Ing",
+            "Alpa",
+            "Izin",
+            "sakit",
+            "Fisika",
+            "Matematika",
+            "B.Indo",
+            "B.Ing",
+          ];
+          worksheet.columns = [
+            { key: "no" },
+            { key: "nama" },
+            { key: "tanggal" },
+            { key: "status" },
+            { key: "alpa1" },
+            { key: "izin1" },
+            { key: "sakit1" },
+            { key: "fisika1" },
+            { key: "matematika1" },
+            { key: "bindo1" },
+            { key: "bing1" },
+            { key: "alpa2" },
+            { key: "izin2" },
+            { key: "sakit2" },
+            { key: "fisika2" },
+            { key: "matematika2" },
+            { key: "bindo2" },
+            { key: "bing2" },
+            { key: "alpa3" },
+            { key: "izin3" },
+            { key: "sakit3" },
+            { key: "fisika3" },
+            { key: "matematika3" },
+            { key: "bindo3" },
+            { key: "bing3" },
+            { key: "alpa4" },
+            { key: "izin4" },
+            { key: "sakit4" },
+            { key: "fisika4" },
+            { key: "matematika4" },
+            { key: "bindo4" },
+            { key: "bing4" },
+            { key: "alpa5" },
+            { key: "izin5" },
+            { key: "sakit5" },
+            { key: "fisika5" },
+            { key: "matematika5" },
+            { key: "bindo5" },
+            { key: "bing5" },
+            { key: "alpa6" },
+            { key: "izin6" },
+            { key: "sakit6" },
+            { key: "fisika6" },
+            { key: "matematika6" },
+            { key: "bindo6" },
+            { key: "bing6" },
+          ];
+
+          // Add row using key mapping to columns
+          let row = worksheet.addRow({
+            no: `${idx + 1}`,
+            nama: d.user ? d.user.nama : "-",
+            tanggal: d ? d.created_at : "-",
+            status: d ? d.status : "-",
+            alpa1: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.alpa1
+                : "0"
+              : "0",
+            izin1: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.izin1
+                : "0"
+              : "0",
+            sakit1: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.sakit1
+                : "0"
+              : "0",
+            fisika1: d.user.profil ? d.user.profil.fisika1 : "-",
+            matematika1: d.user.profil ? d.user.profil.matematika1 : "-",
+            bindo1: d.user.profil ? d.user.profil.bindo1 : "-",
+            bing1: d.user.profil ? d.user.profil.bing1 : "-",
+            alpa2: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.alpa2
+                : "0"
+              : "0",
+            izin2: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.izin2
+                : "0"
+              : "0",
+            sakit2: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.sakit2
+                : "0"
+              : "0",
+            fisika2: d.user.profil ? d.user.profil.fisika2 : "-",
+            matematika2: d.user.profil ? d.user.profil.matematika2 : "-",
+            bindo2: d.user.profil ? d.user.profil.bindo2 : "-",
+            bing2: d.user.profil ? d.user.profil.bing2 : "-",
+            alpa3: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.alpa3
+                : "0"
+              : "0",
+            izin3: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.izin3
+                : "0"
+              : "0",
+            sakit3: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.sakit3
+                : "0"
+              : "0",
+            fisika3: d.user.profil ? d.user.profil.fisika3 : "-",
+            matematika3: d.user.profil ? d.user.profil.matematika3 : "-",
+            bindo3: d.user.profil ? d.user.profil.bindo3 : "-",
+            bing3: d.user.profil ? d.user.profil.bing3 : "-",
+            alpa4: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.alpa4
+                : "0"
+              : "0",
+            izin4: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.izin4
+                : "0"
+              : "0",
+            sakit4: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.sakit4
+                : "0"
+              : "0",
+            fisika4: d.user.profil ? d.user.profil.fisika4 : "-",
+            matematika4: d.user.profil ? d.user.profil.matematika4 : "-",
+            bindo4: d.user.profil ? d.user.profil.bindo4 : "-",
+            bing4: d.user.profil ? d.user.profil.bing4 : "-",
+            alpa5: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.alpa5
+                : "0"
+              : "0",
+            izin5: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.izin5
+                : "0"
+              : "0",
+            sakit5: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.sakit5
+                : "0"
+              : "0",
+            fisika5: d.user.profil ? d.user.profil.fisika5 : "-",
+            matematika5: d.user.profil ? d.user.profil.matematika5 : "-",
+            bindo5: d.user.profil ? d.user.profil.bindo5 : "-",
+            bing5: d.user.profil ? d.user.profil.bing5 : "-",
+            alpa6: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.alpa6
+                : "0"
+              : "0",
+            izin6: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.izin6
+                : "0"
+              : "0",
+            sakit6: d.user.profil
+              ? d.user.profil.data_absensi
+                ? d.user.profil.data_absensi.sakit6
+                : "0"
+              : "0",
+            fisika6: d.user.profil ? d.user.profil.fisika6 : "-",
+            matematika6: d.user.profil ? d.user.profil.matematika6 : "-",
+            bindo6: d.user.profil ? d.user.profil.bindo6 : "-",
+            bing6: d.user.profil ? d.user.profil.bing6 : "-",
+          });
+        })
+    );
+    worksheet.mergeCells(`A5:A6`);
+    worksheet.mergeCells(`B5:B6`);
+    worksheet.mergeCells(`C5:C6`);
+    worksheet.mergeCells(`D5:D6`);
+    worksheet.mergeCells(`E5:K5`);
+    worksheet.mergeCells(`L5:R5`);
+    worksheet.mergeCells(`S5:Y5`);
+    worksheet.mergeCells(`Z5:AF5`);
+    worksheet.mergeCells(`AG5:AM5`);
+    worksheet.mergeCells(`AN5:AT5`);
+    worksheet.getColumn("A").width = 6;
+    worksheet.getColumn("B").width = 20;
+    worksheet.getColumn("C").width = 0;
+    worksheet.getColumn("D").width = 6;
+    worksheet.autoFilter = {
+      from: "A6",
+      to: "AT6",
+    };
+
+    let namaFile = `/uploads/rekapan-pendaftar-ppdb-${keluarantanggalseconds}.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
   }
 }
 

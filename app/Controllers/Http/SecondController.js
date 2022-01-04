@@ -133,7 +133,6 @@ const MRumusLabaRugi = use("App/Models/MRumusLabaRugi");
 const MSuratKeputusan = use("App/Models/MSuratKeputusan");
 const TkSuratKeputusanUser = use("App/Models/TkSuratKeputusanUser");
 
-
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
 const MPraktikKerja = use("App/Models/MPraktikKerja");
@@ -1327,11 +1326,16 @@ class SecondController {
             terjadwal.push(data);
           } else {
             if (d.tipe == "tugas") {
-              if (d.__meta__.total_respon >= d.__meta__.total_siswa) {
+              if (
+                d.__meta__.total_respon >= d.__meta__.total_siswa &&
+                !tanggalBerlangsung.includes(
+                  moment(dibagikan).format("YYYY-MM-DD")
+                )
+              ) {
                 selesai.push(data);
               } else {
                 if (
-                  tanggalBerlangsung.includes(
+                  !tanggalBerlangsung.includes(
                     moment(dibagikan).format("YYYY-MM-DD")
                   )
                 ) {
@@ -1342,11 +1346,16 @@ class SecondController {
                 berlangsung.push(data);
               }
             } else if (d.tipe == "absen") {
-              if (moment(d.tanggal_akhir).toDate() < moment().toDate()) {
+              if (
+                moment(d.tanggal_akhir).toDate() < moment().toDate() &&
+                !tanggalBerlangsung.includes(
+                  moment(dibagikan).format("YYYY-MM-DD")
+                )
+              ) {
                 selesai.push(data);
               } else {
                 if (
-                  tanggalBerlangsung.includes(
+                  !tanggalBerlangsung.includes(
                     moment(dibagikan).format("YYYY-MM-DD")
                   )
                 ) {
@@ -1358,12 +1367,16 @@ class SecondController {
               }
             } else if (d.tipe == "materi") {
               if (
-                d.materi[0].__meta__.totalKesimpulan >= d.__meta__.total_siswa
+                d.materi[0].__meta__.totalKesimpulan >=
+                  d.__meta__.total_siswa &&
+                !tanggalBerlangsung.includes(
+                  moment(dibagikan).format("YYYY-MM-DD")
+                )
               ) {
                 selesai.push(data);
               } else {
                 if (
-                  tanggalBerlangsung.includes(
+                  !tanggalBerlangsung.includes(
                     moment(dibagikan).format("YYYY-MM-DD")
                   )
                 ) {
@@ -1381,23 +1394,25 @@ class SecondController {
     }
 
     return response.ok({
-      berlangsung: timeline.filter((d) => {
-        let dibagikan = d.tanggal_pembagian;
-        if (d.tipe == "tugas") {
-          dibagikan = d.tugas.tanggal_pembagian;
-        }
-        dibagikan = moment(dibagikan).format("YYYY-MM-DD");
-        return tanggalBerlangsung.includes(dibagikan);
-      }),
+      berlangsung,
       terjadwal,
-      selesai: timeline.filter((d) => {
-        let dibagikan = d.tanggal_pembagian;
-        if (d.tipe == "tugas") {
-          dibagikan = d.tugas.tanggal_pembagian;
-        }
-        dibagikan = moment(dibagikan).format("YYYY-MM-DD");
-        return !tanggalBerlangsung.includes(dibagikan);
-      }),
+      selesai,
+      // berlangsung: timeline.filter((d) => {
+      //   let dibagikan = d.tanggal_pembagian;
+      //   if (d.tipe == "tugas") {
+      //     dibagikan = d.tugas.tanggal_pembagian;
+      //   }
+      //   dibagikan = moment(dibagikan).format("YYYY-MM-DD");
+      //   return tanggalBerlangsung.includes(dibagikan);
+      // }),
+      // selesai: timeline.filter((d) => {
+      //   let dibagikan = d.tanggal_pembagian;
+      //   if (d.tipe == "tugas") {
+      //     dibagikan = d.tugas.tanggal_pembagian;
+      //   }
+      //   dibagikan = moment(dibagikan).format("YYYY-MM-DD");
+      //   return !tanggalBerlangsung.includes(dibagikan);
+      // }),
     });
   }
 
@@ -2112,7 +2127,7 @@ class SecondController {
 
     let kategori;
 
-    kategori = await MKeuKategoriNeraca.query()
+    kategori = MKeuKategoriNeraca.query()
       .with("akunNeraca", (builder) => {
         builder
           .with("akun", (builder) => {
@@ -2137,7 +2152,7 @@ class SecondController {
       kategori.andWhere("nama", "like", `%${search}%`);
     }
 
-    kategori = kategori.fetch();
+    kategori = await kategori.fetch();
 
     return response.ok({
       kategori,
@@ -2155,7 +2170,7 @@ class SecondController {
 
     const user = await auth.getUser();
 
-    let { tipe, nama } = request.post();
+    let { tipe, nama, warna } = request.post();
 
     const rules = {
       tipe: "required",
@@ -2173,6 +2188,7 @@ class SecondController {
     const kategori = await MKeuKategoriNeraca.create({
       tipe,
       nama,
+      warna,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
     });
@@ -2829,33 +2845,49 @@ class SecondController {
 
     if (user_id.length) {
       await Promise.all(
-        surat1.toJSON().suratUser.map(async (d) => {
+        user_id.map(async (d) => {
+          const suratUser = await TkSuratKeputusanUser.query()
+            .where({ m_user_id: d })
+            .andWhere({ m_surat_keputusan_id: surat1.id })
+            .first();
+
+          if (!suratUser) {
+            await TkSuratKeputusanUser.create({
+              m_user_id: d,
+              dihapus: 0,
+              m_surat_keputusan_id: surat.id,
+            });
+          } else {
+            await TkSuratKeputusanUser.query()
+              .where({ id: suratUser.id })
+              .update({
+                dihapus: 0,
+              });
+          }
+        })
+      );
+      await Promise.all(
+        surat1.toJSON().suratUser.map(async (e) => {
           await Promise.all(
-            user_id.map(async (e) => {
+            user_id.map(async (d) => {
               const suratUser = await TkSuratKeputusanUser.query()
-                .where({ m_user_id: d.m_user_Id })
+                .where({ m_user_id: e.m_user_id })
                 .andWhere({ m_surat_keputusan_id: surat1.id })
                 .first();
 
               const suratUser1 = await TkSuratKeputusanUser.query()
-                .where({ m_user_id: e })
+                .where({ m_user_id: d })
                 .andWhere({ m_surat_keputusan_id: surat1.id })
                 .first();
 
               if (suratUser == suratUser1) {
-                if (!suratUser) {
-                  await TkSuratKeputusanUser.create({
-                    m_user_id: d,
-                    dihapus: 0,
-                    m_surat_keputusan_id: surat.id,
+                return;
+              } else if (suratUser != null && suratUser1 == null) {
+                await TkSuratKeputusanUser.query()
+                  .where({ id: suratUser.id })
+                  .update({
+                    dihapus: 1,
                   });
-                } else {
-                  await TkSuratKeputusanUser.query()
-                    .where({ id: suratUser.id })
-                    .update({
-                      dihapus: 0,
-                    });
-                }
               }
             })
           );
