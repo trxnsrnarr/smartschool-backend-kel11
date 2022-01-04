@@ -4293,7 +4293,7 @@ class MainController {
 
     const { rombel_id, kode_hari } = request.get();
 
-    let materi = {id: 0};
+    let materi;
     let jadwalMengajar;
     let analisisMateri;
     let analisisNilai;
@@ -4513,6 +4513,8 @@ class MainController {
         checkAbsensi = [];
       }
 
+      // return jadwalMengajar.toJSON().rombel
+
       materi = await MMateri.query()
         .where({ tingkat: jadwalMengajar.toJSON().rombel.tingkat })
         .andWhere({ m_jurusan_id: jadwalMengajar.toJSON().rombel.m_jurusan_id })
@@ -4616,7 +4618,7 @@ class MainController {
       jadwalMengajar: jadwalMengajar,
       analisisMateri: analisisMateri,
       analisisNilai: analisisNilai,
-      m_materi_id: materi.id,
+      m_materi_id: materi ? materi.id :'0',  
       integrasi: sekolah.integrasi,
       checkAbsensi: checkAbsensi.length,
       judulTugas: judulTugas,

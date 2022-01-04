@@ -2941,6 +2941,744 @@ class SecondController {
     });
   }
 
+  async getArusKas({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let { search, tanggal_awal, tanggal_akhir } = request.get();
+
+    let kategori;
+
+    kategori = await MKeuKategoriArusKas.query()
+      .with("tipeAkun", (builder) => {
+        builder
+          .with("akunArusKas", (builder) => {
+            builder
+              .with("akun", (builder) => {
+                builder.with("jurnal", (builder) => {
+                  builder.where({ dihapus: 0 });
+                  if (tanggal_awal && tanggal_akhir) {
+                    builder.whereBetween("update_at", [
+                      `${tanggal_awal}`,
+                      `${tanggal_akhir}`,
+                    ]);
+                  }
+                });
+              })
+              .where({ dihapus: 0 });
+          })
+          .where({ dihapus: 0 });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id });
+
+    if (search) {
+      kategori.andWhere("nama", "like", `%${search}%`);
+    }
+
+    kategori = kategori.fetch();
+
+    const rumus = await MRumusArusKas.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    return response.ok({
+      kategori,
+      rumus,
+    });
+  }
+
+  async postKategoriArusKas({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { nama } = request.post();
+
+    const rules = {
+      nama: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const kategori = await MKeuKategoriArusKas.create({
+      nama,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putKategoriArusKas({
+    response,
+    request,
+    auth,
+    params: { kategori_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { nama } = request.post();
+
+    const rules = {
+      nama: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const kategori = await MKeuKategoriArusKas.query()
+      .where({ id: kategori_id })
+      .update({
+        nama,
+      });
+
+    if (!kategori) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteKategoriArusKas({
+    response,
+    request,
+    auth,
+    params: { kategori_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const kategori = await MKeuKategoriArusKas.query()
+      .where({ id: kategori_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!kategori) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async postArusKas({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { m_keu_kategori_labarugi_id, m_keu_akun_id, urutan } = request.post();
+
+    const rules = {
+      m_keu_akun_id: "required",
+    };
+    const message = {
+      "m_keu_akun_id.required": "Akun harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const kategori = await TkKategoriAkunArusKas.create({
+      m_keu_akun_id,
+      m_keu_kategori_labarugi_id,
+      urutan,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putArusKas({ response, request, auth, params: { labarugi_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { m_keu_akun_id } = request.post();
+
+    const rules = {
+      m_keu_akun_id: "required",
+    };
+    const message = {
+      "m_keu_akun_id.required": "Akun harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const labarugi = await TkKategoriAkunArusKas.query()
+      .where({ id: labarugi_id })
+      .update({
+        m_keu_akun_id,
+      });
+
+    if (!labarugi) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteArusKas({ response, request, auth, params: { labarugi_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const labarugi = await TkKategoriAkunArusKas.query()
+      .where({ id: labarugi_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!labarugi) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async postKategoriTipeAkun({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { nama, m_keu_akun_id } = request.post();
+
+    m_keu_akun_id = m_keu_akun_id.length ? m_keu_akun_id : [];
+
+    const rules = {
+      nama: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const kategori = await MKeuKategoriTipeAkun.create({
+      nama,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+
+    if (m_keu_akun_id) {
+      await Promise.all(
+        m_keu_akun_id.map(async (d) => {
+          await TkKategoriAkunArusKas.create({
+            m_keu_akun_id: d,
+            m_keu_kategori_tipe_akun_id: kategori.id,
+          });
+        })
+      );
+    }
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putKategoriTipeAkun({
+    response,
+    request,
+    auth,
+    params: { kategori_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { nama, m_keu_akun_id } = request.post();
+
+    m_keu_akun_id = m_keu_akun_id.length ? m_keu_akun_id : [];
+
+    const rules = {
+      nama: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const kategori = await MKeuKategoriTipeAkun.query()
+      .where({ id: kategori_id })
+      .update({
+        nama,
+      });
+
+    const kategori1 = await MKeuKategoriTipeAkun.query()
+      .with("akunArus")
+      .where({ id: kategori_id })
+      .first();
+
+    if (m_keu_akun_id) {
+      await Promise.all(
+        m_keu_akun_id.map(async (d) => {
+          const kategoriAkun = await TkKategoriAkunArusKas.query()
+            .where(m_keu_kategori_tipe_akun_id)
+            .andWhere({ m_keu_akun_id: d })
+            .first();
+
+          if (!kategoriAkun) {
+            await TkKategoriAkunArusKas.create({
+              m_keu_akun_id: d,
+              m_keu_kategori_tipe_akun_id: kategori.id,
+            });
+          } else {
+            await TkKategoriAkunArusKas.query()
+              .where(m_keu_kategori_tipe_akun_id)
+              .andWhere({ m_keu_akun_id: d })
+              .update({
+                dihapus: 0,
+              });
+          }
+        })
+      );
+
+      await Promise.all(
+        kategori1.toJSON().akunArus.map(async (e) => {
+          await Promise.all(
+            m_keu_akun_id.map(async (d) => {
+              const suratUser = await TkSuratKeputusanUser.query()
+                .where({ m_user_id: e.m_user_id })
+                .andWhere({ m_surat_keputusan_id: surat1.id })
+                .first();
+
+              const suratUser1 = await TkSuratKeputusanUser.query()
+                .where({ m_user_id: d })
+                .andWhere({ m_surat_keputusan_id: surat1.id })
+                .first();
+
+              if (suratUser == suratUser1) {
+                return;
+              } else if (suratUser != null && suratUser1 == null) {
+                await TkSuratKeputusanUser.query()
+                  .where({ id: suratUser.id })
+                  .update({
+                    dihapus: 1,
+                  });
+              }
+            })
+          );
+        })
+      );
+    }
+
+    if (!kategori) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteKategoriTipeAkun({
+    response,
+    request,
+    auth,
+    params: { kategori_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const kategori = await MKeuKategoriTipeAkun.query()
+      .where({ id: kategori_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!kategori) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async downloadAnalisisNilai({
+    response,
+    request,
+    auth,
+    params: { jadwal_mengajar_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    const user = await auth.getUser();
+
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
+    const jadwalUjian = await MJadwalUjian.query()
+      .with("rombelUjian", (builder) => {
+        builder
+          .with("peserta", (builder) => {
+            builder.with("user"),
+              (builder) => {
+                builder.select("id", "nama");
+              };
+          })
+          .with("rombel")
+          .with("jadwalUjian", (builder) => {
+            builder.with("ujian");
+          });
+      })
+      .with("ujian")
+      .where({ id: jadwal_ujian_id })
+      .first();
+
+    let workbook = new Excel.Workbook();
+    await Promise.all(
+      jadwalUjian.toJSON().rombelUjian.map(async (d, idx) => {
+        let worksheet = workbook.addWorksheet(`${d.rombel.nama}`);
+        worksheet.getCell("A1").value = sekolah.nama;
+        worksheet.getCell("A2").value = jadwalMengajar.toJSON().rombel.nama;
+        worksheet.getCell("A3").value =
+          jadwalMengajar.toJSON().mataPelajaran.nama;
+        worksheet.getCell("A4").value = ta.tahun;
+
+        worksheet.getCell(
+          "A6"
+        ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
+        worksheet.mergeCells(`A1:J1`);
+        worksheet.mergeCells(`A2:J2`);
+        worksheet.mergeCells(`A3:J3`);
+        worksheet.mergeCells(`A4:J4`);
+        worksheet.mergeCells(`A6:J6`);
+        worksheet.getColumn("A").width = 28;
+        worksheet.getColumn("B").width = 14;
+        worksheet.getColumn("C").width = 8;
+        worksheet.getColumn("D").width = 8.5;
+        worksheet.getColumn("E").width = 9;
+        worksheet.getColumn("F").width = 14;
+        worksheet.getColumn("G").width = 10;
+        worksheet.getColumn("H").width = 8;
+        worksheet.getColumn("I").width = 11;
+        worksheet.addConditionalFormatting({
+          ref: "A1:I3",
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 16,
+                  bold: true,
+                },
+                // fill: {
+                //   type: "pattern",
+                //   pattern: "solid",
+                //   bgColor: { argb: "0000FF", fgColor: { argb: "0000FF" } },
+                // },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+              },
+            },
+          ],
+        });
+
+        // add column headers
+        await Promise.all(
+          analisisNilai.toJSON().map(async (d, idx) => {
+            const ratarata2 = await TkTimeline.query()
+              .where({ m_user_id: `${d.id}` })
+              .whereIn("m_timeline_id", timelineIds)
+              .getSum("nilai");
+
+            worksheet.getRow(7).values = [
+              "No",
+              "Nama",
+              "Rata-Rata",
+              "Dibawah KKM",
+            ];
+            worksheet.columns = [
+              { key: "no" },
+              { key: "user" },
+              { key: "ratarata" },
+              { key: "dibawahkkm" },
+            ];
+            let row = worksheet.addRow({
+              no: `${idx + 1}`,
+              user: d ? d.nama : "-",
+              ratarata: `${
+                ratarata2 ? (ratarata2 / d.tugas.length).toFixed(2) : "-"
+              }`,
+              dibawahkkm: `${d.__meta__.kkm} Tugas`,
+            });
+
+            // const row = worksheet.getRow(8);
+            await Promise.all(
+              d.tugas.map(async (e, nox) => {
+                worksheet.getColumn([`${(nox + 1) * 1 + 4}`]).values = [
+                  ``,
+                  ``,
+                  ``,
+                  ``,
+                  ``,
+                  ``,
+                  `Tugas${nox + 1}`,
+                  ,
+                ];
+                row.getCell([`${(nox + 1) * 1 + 4}`]).value = `${
+                  e.nilai ? e.nilai : "-"
+                }`;
+                row.getCell([`${(nox + 1) * 1 + 4}`]).border = {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                };
+                worksheet.getColumn([`${(nox + 1) * 1 + 4}`]).fill = {
+                  type: "pattern",
+                  pattern: "solid",
+                  bgColor: {
+                    argb: "C0C0C0",
+                    fgColor: { argb: "C0C0C0" },
+                  },
+                };
+                // worksheet.getCell(`E${(nox + 1) * 1 + 8}`).value = e.nilai;
+                // worksheet.columns = [
+                //   { key: `tugas${nox+1}` },
+                // ];
+
+                worksheet.addConditionalFormatting({
+                  ref: `${(nox + 1) * 1 + 7}`,
+                  rules: [
+                    {
+                      type: "expression",
+                      formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                      style: {
+                        border: {
+                          top: { style: "thin" },
+                          left: { style: "thin" },
+                          bottom: { style: "thin" },
+                          right: { style: "thin" },
+                        },
+                        font: {
+                          name: "Times New Roman",
+                          family: 4,
+                          size: 11,
+                          // bold: true,
+                        },
+                        alignment: {
+                          vertical: "middle",
+                          horizontal: "left",
+                        },
+                      },
+                    },
+                  ],
+                });
+
+                // // Add row using key mapping to columns
+                // let row = worksheet.addRow ({
+                //   tugas1: e ? e.nilai : "-",
+                //   tugas2: e ? e.nilai : "-",
+                //   tugas3: e ? e.nilai : "-",
+                //   tugas4: e ? e.nilai : "-",
+                //   tugas5: e ? e.nilai : "-",
+                // });
+              })
+            );
+
+            worksheet.addConditionalFormatting({
+              ref: `A7:J7`,
+              rules: [
+                {
+                  type: "expression",
+                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                  style: {
+                    border: {
+                      top: { style: "thin" },
+                      left: { style: "thin" },
+                      bottom: { style: "thin" },
+                      right: { style: "thin" },
+                    },
+                    font: {
+                      name: "Times New Roman",
+                      family: 4,
+                      size: 14,
+                      bold: true,
+                    },
+                    fill: {
+                      type: "pattern",
+                      pattern: "solid",
+                      bgColor: {
+                        argb: "C0C0C0",
+                        fgColor: { argb: "C0C0C0" },
+                      },
+                    },
+                    alignment: {
+                      vertical: "middle",
+                      horizontal: "center",
+                    },
+                  },
+                },
+              ],
+            });
+
+            worksheet.addConditionalFormatting({
+              ref: `A${(idx + 1) * 1 + 7}:D${(idx + 1) * 1 + 7}`,
+              rules: [
+                {
+                  type: "expression",
+                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                  style: {
+                    border: {
+                      top: { style: "thin" },
+                      left: { style: "thin" },
+                      bottom: { style: "thin" },
+                      right: { style: "thin" },
+                    },
+                    font: {
+                      name: "Times New Roman",
+                      family: 4,
+                      size: 11,
+                      // bold: true,
+                    },
+                    alignment: {
+                      vertical: "middle",
+                      horizontal: "left",
+                    },
+                  },
+                },
+              ],
+            });
+          })
+        );
+        worksheet.getCell("A1").value = sekolah.nama;
+        worksheet.getCell("A2").value = d.rombel.nama;
+        worksheet.getCell("A3").value =
+          jadwalMengajar.toJSON().mataPelajaran.nama;
+        worksheet.getCell("A4").value = ta.tahun;
+
+        worksheet.getCell(
+          "A6"
+        ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
+      })
+    );
+    let namaFile = `/uploads/rekap-ujian-siswa-${keluarantanggalseconds}.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
+
   async postRaporSikapUAS({ response, request, auth, params: { rombel_id } }) {
     const domain = request.headers().origin;
 
