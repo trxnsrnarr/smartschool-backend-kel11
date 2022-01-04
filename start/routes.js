@@ -1250,6 +1250,10 @@ Route.get(
   "PPDBController.detailGelombangPPDB"
 );
 Route.post("/gelombang-ppdb", "PPDBController.postGelombangPPDB");
+Route.post(
+  "/download-gelombang-ppdb/:gelombang_ppdb_id",
+  "PPDBController.downloadGelombangPpdb"
+);
 Route.put(
   "/gelombang-ppdb/:gelombang_ppdb_id",
   "PPDBController.putGelombangPPDB"
