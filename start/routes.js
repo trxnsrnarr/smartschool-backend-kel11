@@ -1255,8 +1255,8 @@ Route.get(
 );
 Route.post("/gelombang-ppdb", "PPDBController.postGelombangPPDB");
 Route.post(
-  "/download-gelombang-ppdb/:gelombang_ppdb_id",
-  "PPDBController.downloadGelombangPpdb"
+  "/download-hasil-ujian/:jadwal_ujian_id",
+  "SecondController.downloadHasilUjian"
 );
 Route.put(
   "/gelombang-ppdb/:gelombang_ppdb_id",
