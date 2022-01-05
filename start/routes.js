@@ -69,6 +69,7 @@ Route.get("/profil/guru/:user_id", "MainController.getProfilGuru");
 Route.get("/user", "MainController.getUser");
 Route.get("/user/:user_id", "MainController.detailUser");
 Route.post("/reset-password", "MainController.resetPassword");
+Route.post("/reset-password-role", "UserController.updatePasswordRole");
 Route.post("/reset-password-request", "MainController.requestResetPassword");
 
 // sekolah
