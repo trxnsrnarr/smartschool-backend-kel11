@@ -45997,9 +45997,25 @@ class MainController {
       .andWhere({ jadwal_sinkron: 0 })
       .first();
 
+    const check2 = await Mta.query()
+    .where({ tahun: "2021 / 2022" })
+    .andWhere({ semester: "Genap" })
+    .andWhere({ nama_kepsek: taa.nama_kepsek })
+    .andWhere({ nip_kepsek: taa.nip_kepsek })
+    .andWhere({ aktif: taa.aktif })
+    .andWhere({ dihapus: taa.dihapus })
+    .andWhere({ m_sekolah_id: taa.m_sekolah_id })
+    .andWhere({ jam_sinkron: 1 })
+    .andWhere({ mapel_sinkron: 0 })
+    .andWhere({ rombel_sinkron: 0 })
+    .andWhere({ jadwal_sinkron: 0 })
+    .first();
+
     if (!check) {
-      await Mta.create({
-        tahun: "2021 / 2022",
+      if(!check2){
+
+        await Mta.create({
+          tahun: "2021 / 2022",
         semester: "Genap",
         nama_kepsek: taa.nama_kepsek,
         nip_kepsek: taa.nip_kepsek,
@@ -46012,6 +46028,7 @@ class MainController {
         jadwal_sinkron: 0,
       });
     }
+  }
 
     const jam = await MJamMengajar.query()
       .where({ m_sekolah_id: sekolah.id })
@@ -46025,15 +46042,8 @@ class MainController {
       .orderBy("id", "desc")
       .first();
 
-    await Mta.query()
-      .where({ aktif: 1 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ dihapus: 0 })
-      .orderBy("id", "desc")
-      .update({ dihapus: 1 });
-
-    const all = await Promise.all(
-      jam.toJSON().map(async (d) => {
+  const all = await Promise.all(
+    jam.toJSON().map(async (d) => {
         await MJamMengajar.create({
           kode_hari: d.kode_hari,
           hari: d.hari,
@@ -46045,7 +46055,8 @@ class MainController {
           m_ta_id: taBaru.id,
         });
       })
-    );
+      );
+    
 
     await Mta.query().where({ id: taBaru.id }).update({
       dihapus: 0,
@@ -46083,12 +46094,7 @@ class MainController {
       .orderBy("id", "desc")
       .first();
 
-    await Mta.query()
-      .where({ aktif: 1 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ dihapus: 0 })
-      .orderBy("id", "desc")
-      .update({ dihapus: 1 });
+   
 
     const all = await Promise.all(
       mapel.toJSON().map(async (d, nox) => {
@@ -46140,12 +46146,7 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .orderBy("id", "desc")
       .first();
-      await Mta.query()
-      .where({ aktif: 1 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ dihapus: 0 })
-      .orderBy("id", "desc")
-      .update({ dihapus: 1 });
+     
 
     const all = await Promise.all(
       rombel.toJSON().map(async (d) => {
@@ -46253,12 +46254,7 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .orderBy("id", "desc")
       .first();
-      await Mta.query()
-      .where({ aktif: 1 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ dihapus: 0 })
-      .orderBy("id", "desc")
-      .update({ dihapus: 1 });
+     
 
     // const jam = await MJamMengajar.query()
     //   .where({ m_ta_id: taBaru.id })
