@@ -46025,12 +46025,7 @@ class MainController {
       .orderBy("id", "desc")
       .first();
 
-    await Mta.query()
-      .where({ aktif: 1 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ dihapus: 0 })
-      .andWhere({ semester:"genap"})
-      .update({ dihapus: 1 });
+   
 
     const all = await Promise.all(
       jam.toJSON().map(async (d) => {
@@ -46083,12 +46078,7 @@ class MainController {
       .orderBy("id", "desc")
       .first();
 
-    await Mta.query()
-      .where({ aktif: 1 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ dihapus: 0 })
-      .andWhere({ semester:"genap"})
-      .update({ dihapus: 1 });
+   
 
     const all = await Promise.all(
       mapel.toJSON().map(async (d, nox) => {
@@ -46140,12 +46130,7 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .orderBy("id", "desc")
       .first();
-      await Mta.query()
-      .where({ aktif: 1 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ dihapus: 0 })
-      .andWhere({ semester:"genap"})
-      .update({ dihapus: 1 });
+     
 
     const all = await Promise.all(
       rombel.toJSON().map(async (d) => {
@@ -46253,12 +46238,7 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .orderBy("id", "desc")
       .first();
-      await Mta.query()
-      .where({ aktif: 1 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ dihapus: 0 })
-      .andWhere({ semester:"genap"})
-      .update({ dihapus: 1 });
+     
 
     // const jam = await MJamMengajar.query()
     //   .where({ m_ta_id: taBaru.id })
