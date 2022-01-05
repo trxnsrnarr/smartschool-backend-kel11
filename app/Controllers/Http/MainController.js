@@ -46029,7 +46029,7 @@ class MainController {
       .where({ aktif: 1 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
-      .orderBy("id", "desc")
+      .andWhere({ semester:"genap"})
       .update({ dihapus: 1 });
 
     const all = await Promise.all(
@@ -46087,7 +46087,7 @@ class MainController {
       .where({ aktif: 1 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
-      .orderBy("id", "desc")
+      .andWhere({ semester:"genap"})
       .update({ dihapus: 1 });
 
     const all = await Promise.all(
@@ -46144,7 +46144,7 @@ class MainController {
       .where({ aktif: 1 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
-      .orderBy("id", "desc")
+      .andWhere({ semester:"genap"})
       .update({ dihapus: 1 });
 
     const all = await Promise.all(
@@ -46257,7 +46257,7 @@ class MainController {
       .where({ aktif: 1 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
-      .orderBy("id", "desc")
+      .andWhere({ semester:"genap"})
       .update({ dihapus: 1 });
 
     // const jam = await MJamMengajar.query()
