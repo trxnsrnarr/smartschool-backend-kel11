@@ -2215,7 +2215,7 @@ class SecondController {
 
     const user = await auth.getUser();
 
-    let { nama } = request.post();
+    let { nama, warna } = request.post();
 
     const rules = {
       nama: "required",
@@ -2232,6 +2232,7 @@ class SecondController {
       .where({ id: kategori_id })
       .update({
         nama,
+        warna,
       });
 
     if (!kategori) {
@@ -2396,7 +2397,7 @@ class SecondController {
 
     let kategori;
 
-    kategori = await MKeuKategoriLabaRugi.query()
+    kategori = MKeuKategoriLabaRugi.query()
       .with("akunLabaRugi", (builder) => {
         builder
           .with("akun", (builder) => {
@@ -2421,7 +2422,7 @@ class SecondController {
       kategori.andWhere("nama", "like", `%${search}%`);
     }
 
-    kategori = kategori.fetch();
+    kategori = await kategori.fetch();
 
     const rumus = await MRumusLabaRugi.query()
       .where({ m_sekolah_id: sekolah.id })
@@ -2445,7 +2446,7 @@ class SecondController {
 
     const user = await auth.getUser();
 
-    let { nama } = request.post();
+    let { nama, warna } = request.post();
 
     const rules = {
       nama: "required",
@@ -2460,6 +2461,7 @@ class SecondController {
 
     const kategori = await MKeuKategoriLabaRugi.create({
       nama,
+      warna,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
     });
@@ -2485,7 +2487,7 @@ class SecondController {
 
     const user = await auth.getUser();
 
-    let { nama } = request.post();
+    let { nama, warna } = request.post();
 
     const rules = {
       nama: "required",
@@ -2502,6 +2504,7 @@ class SecondController {
       .where({ id: kategori_id })
       .update({
         nama,
+        warna,
       });
 
     if (!kategori) {
@@ -2559,7 +2562,7 @@ class SecondController {
 
     const user = await auth.getUser();
 
-    let { m_keu_kategori_labarugi_id, m_keu_akun_id, urutan } = request.post();
+    let { m_keu_kategori_laba_rugi_id, m_keu_akun_id, urutan } = request.post();
 
     const rules = {
       m_keu_akun_id: "required",
@@ -2574,7 +2577,7 @@ class SecondController {
 
     const kategori = await TkKategoriAkunLabaRugi.create({
       m_keu_akun_id,
-      m_keu_kategori_labarugi_id,
+      m_keu_kategori_laba_rugi_id,
       urutan,
     });
 
@@ -2594,7 +2597,7 @@ class SecondController {
 
     const user = await auth.getUser();
 
-    let { m_keu_akun_id } = request.post();
+    let { m_keu_akun_id, urutan } = request.post();
 
     const rules = {
       m_keu_akun_id: "required",
@@ -2611,6 +2614,7 @@ class SecondController {
       .where({ id: labarugi_id })
       .update({
         m_keu_akun_id,
+        urutan,
       });
 
     if (!labarugi) {
@@ -3121,7 +3125,7 @@ class SecondController {
 
     const user = await auth.getUser();
 
-    let { m_keu_kategori_labarugi_id, m_keu_akun_id, urutan } = request.post();
+    let { m_keu_kategori_laba_rugi_id, m_keu_akun_id, urutan } = request.post();
 
     const rules = {
       m_keu_akun_id: "required",
@@ -3136,7 +3140,7 @@ class SecondController {
 
     const kategori = await TkKategoriAkunArusKas.create({
       m_keu_akun_id,
-      m_keu_kategori_labarugi_id,
+      m_keu_kategori_laba_rugi_id,
       urutan,
     });
 
