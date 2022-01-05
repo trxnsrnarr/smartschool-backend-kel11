@@ -305,6 +305,9 @@ Route.delete(
 // Neraca
 Route.get("/neraca-keuangan", "SecondController.getNeraca");
 Route.post("/kategori-neraca", "SecondController.postKategoriNeraca");
+Route.post("/akun-neraca", "SecondController.postNeraca");
+Route.put("/akun-neraca/:neraca_id", "SecondController.putNeraca");
+Route.delete("/akun-neraca/:neraca_id", "SecondController.deleteNeraca");
 
 // materi kesimpulan
 Route.post("/materi-kesimpulan", "MainController.postMateriKesimpulan");
