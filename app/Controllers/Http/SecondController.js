@@ -2135,7 +2135,7 @@ class SecondController {
               .with("jurnal", (builder) => {
                 builder.where({ dihapus: 0 });
                 if (tanggal_awal && tanggal_akhir) {
-                  builder.whereBetween("update_at", [
+                  builder.whereBetween("updated_at", [
                     `${tanggal_awal}`,
                     `${tanggal_akhir}`,
                   ]);
@@ -2143,7 +2143,8 @@ class SecondController {
               })
               .where({ dihapus: 0 });
           })
-          .where({ dihapus: 0 });
+          .where({ dihapus: 0 })
+          .orderBy("urutan", "asc");
       })
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id });
@@ -2323,7 +2324,7 @@ class SecondController {
 
     const user = await auth.getUser();
 
-    let { m_keu_akun_id } = request.post();
+    let { m_keu_akun_id, urutan } = request.post();
 
     const rules = {
       m_keu_akun_id: "required",
@@ -2340,6 +2341,7 @@ class SecondController {
       .where({ id: neraca_id })
       .update({
         m_keu_akun_id,
+        urutan,
       });
 
     if (!neraca) {

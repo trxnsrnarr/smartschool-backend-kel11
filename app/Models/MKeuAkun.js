@@ -13,7 +13,7 @@ class MKeuAkun extends Model {
   }
 
   jurnal() {
-    return this.hasMany("App/Models/MKeuJurnal", "id", "m_keu_jurnal_id");
+    return this.hasMany("App/Models/MKeuJurnal");
   }
 }
 
