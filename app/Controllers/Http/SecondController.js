@@ -2144,6 +2144,14 @@ class SecondController {
 
     let { search, tanggal_awal, tanggal_akhir } = request.get();
 
+    let transaksiIds;
+    if (tanggal_awal && tanggal_akhir) {
+      transaksiIds = await MKeuTransaksi.query()
+        .whereBetween("tanggal", [tanggal_awal, tanggal_akhir])
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ dihapus: 0 })
+        .ids();
+    }
     let kategori;
 
     kategori = MKeuKategoriNeraca.query()
@@ -2153,11 +2161,8 @@ class SecondController {
             builder
               .with("jurnal", (builder) => {
                 builder.where({ dihapus: 0 });
-                if (tanggal_awal && tanggal_akhir) {
-                  builder.whereBetween("updated_at", [
-                    `${tanggal_awal}`,
-                    `${tanggal_akhir}`,
-                  ]);
+                if (transaksiIds) {
+                  builder.whereIn("m_keu_transaksi_id", transaksiIds);
                 }
               })
               .where({ dihapus: 0 });
@@ -2414,6 +2419,15 @@ class SecondController {
 
     let { search, tanggal_awal, tanggal_akhir } = request.get();
 
+    let transaksiIds;
+    if (tanggal_awal && tanggal_akhir) {
+      transaksiIds = await MKeuTransaksi.query()
+        .whereBetween("tanggal", [tanggal_awal, tanggal_akhir])
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ dihapus: 0 })
+        .ids();
+    }
+
     let kategori;
 
     kategori = MKeuKategoriLabaRugi.query()
@@ -2423,11 +2437,8 @@ class SecondController {
             builder
               .with("jurnal", (builder) => {
                 builder.where({ dihapus: 0 });
-                if (tanggal_awal && tanggal_akhir) {
-                  builder.whereBetween("updated_at", [
-                    `${tanggal_awal}`,
-                    `${tanggal_akhir}`,
-                  ]);
+                if (transaksiIds) {
+                  builder.whereIn("m_keu_transaksi_id", transaksiIds);
                 }
               })
               .where({ dihapus: 0 });
