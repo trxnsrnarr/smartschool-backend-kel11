@@ -2712,7 +2712,7 @@ class SecondController {
     }
 
     const rumus1 = await MRumusLabaRugi.query().where({ id: rumus_id }).update({
-      nama,
+      rumus,
     });
 
     if (!rumus1) {
@@ -3121,23 +3121,34 @@ class SecondController {
 
     const user = await auth.getUser();
 
-    let { m_keu_aktivitas_transaksi_id, m_keu_kategori_tipe_akun_id, urutan } = request.post();
+    let {
+      judul,
+      m_keu_kategori_arus_kas_id,
+      m_keu_kategori_tipe_akun_id,
+      urutan,
+    } = request.post();
 
     const rules = {
-      m_keu_akun_id: "required",
+      m_keu_kategori_tipe_akun_id: "required",
+      m_keu_kategori_arus_kas_id: "required",
+      judul: "required",
     };
     const message = {
-      "m_keu_akun_id.required": "Akun harus diisi",
+      "m_keu_kategori_tipe_akun_id.required": "Tipe Akun harus diisi",
+      "m_keu_kategori_arus_kas_id.required": "Kategori Arus Kas harus diisi",
+      "judul.required": "Judul harus diisi",
     };
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const kategori = await TkKategoriAkunArusKas.create({
-      m_keu_akun_id,
-      m_keu_kategori_labarugi_id,
+    const kategori = await MKeuAktivitasTransaksi.create({
+      judul,
+      m_keu_kategori_tipe_akun_id,
+      m_keu_kategori_arus_kas_id,
       urutan,
+      dihapus: 0,
     });
 
     return response.ok({
@@ -3145,7 +3156,7 @@ class SecondController {
     });
   }
 
-  async putArusKas({ response, request, auth, params: { labarugi_id } }) {
+  async putArusKas({ response, request, auth, params: { aktivitas_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -3156,26 +3167,39 @@ class SecondController {
 
     const user = await auth.getUser();
 
-    let { m_keu_akun_id } = request.post();
+    let {
+      judul,
+      m_keu_kategori_arus_kas_id,
+      m_keu_kategori_tipe_akun_id,
+      urutan,
+    } = request.post();
 
     const rules = {
-      m_keu_akun_id: "required",
+      m_keu_kategori_tipe_akun_id: "required",
+      m_keu_kategori_arus_kas_id: "required",
+      judul: "required",
     };
     const message = {
-      "m_keu_akun_id.required": "Akun harus diisi",
+      "m_keu_kategori_tipe_akun_id.required": "Tipe Akun harus diisi",
+      "m_keu_kategori_arus_kas_id.required": "Kategori Arus Kas harus diisi",
+      "judul.required": "Judul harus diisi",
     };
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const labarugi = await TkKategoriAkunArusKas.query()
-      .where({ id: labarugi_id })
+    const aktivitas = await MKeuAktivitasTransaksi.query()
+      .where({ id: aktivitas_id })
       .update({
-        m_keu_akun_id,
+        judul,
+        m_keu_kategori_tipe_akun_id,
+        m_keu_kategori_arus_kas_id,
+        urutan,
+        dihapus: 0,
       });
 
-    if (!labarugi) {
+    if (!aktivitas) {
       return response.notFound({
         message: messageNotFound,
       });
@@ -3186,7 +3210,7 @@ class SecondController {
     });
   }
 
-  async deleteArusKas({ response, request, auth, params: { labarugi_id } }) {
+  async deleteArusKas({ response, request, auth, params: { aktivitas_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -3197,13 +3221,13 @@ class SecondController {
 
     const user = await auth.getUser();
 
-    const labarugi = await TkKategoriAkunArusKas.query()
-      .where({ id: labarugi_id })
+    const akttivitas = await MKeuAktivitasTransaksi.query()
+      .where({ id: aktivitas_id })
       .update({
         dihapus: 1,
       });
 
-    if (!labarugi) {
+    if (!akttivitas) {
       return response.notFound({
         message: messageNotFound,
       });
@@ -3401,6 +3425,226 @@ class SecondController {
     });
   }
 
+  async postRumusArusKas({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { rumus } = request.post();
+
+    const rules = {
+      rumus: "required",
+    };
+    const message = {
+      "rumus.required": "Rumus harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const rumus1 = await MKeuRumusArusKas.create({
+      rumus,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putRumusArusKas({ response, request, auth, params: { rumus_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { rumus } = request.post();
+
+    const rules = {
+      rumus: "required",
+    };
+    const message = {
+      "rumus.required": "Rumus harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const rumus1 = await MKeuRumusArusKas.query().where({ id: rumus_id }).update({
+      rumus,
+    });
+
+    if (!rumus1) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async postRumusSaldoKasAwal({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { rumus } = request.post();
+
+    const rules = {
+      rumus: "required",
+    };
+    const message = {
+      "rumus.required": "Rumus harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const rumus1 = await MKeuRumusSaldoKasAwal.create({
+      rumus,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putRumusSaldoKasAwal({ response, request, auth, params: { rumus_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { rumus } = request.post();
+
+    const rules = {
+      rumus: "required",
+    };
+    const message = {
+      "rumus.required": "Rumus harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const rumus1 = await MKeuRumusSaldoKasAwal.query().where({ id: rumus_id }).update({
+      rumus,
+    });
+
+    if (!rumus1) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+  async postRumusSaldoKasAkhir({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { rumus } = request.post();
+
+    const rules = {
+      rumus: "required",
+    };
+    const message = {
+      "rumus.required": "Rumus harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const rumus1 = await MKeuRumusSaldoKasAkhir.create({
+      rumus,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putRumusSaldoKasAkhir({ response, request, auth, params: { rumus_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { rumus } = request.post();
+
+    const rules = {
+      rumus: "required",
+    };
+    const message = {
+      "rumus.required": "Rumus harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const rumus1 = await MKeuRumusSaldoKasAkhir.query().where({ id: rumus_id }).update({
+      rumus,
+    });
+
+    if (!rumus1) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+    
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
 
   async downloadHasilUjian({
     response,
