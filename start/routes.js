@@ -680,6 +680,10 @@ Route.post(
   "MainController.downloadRekapAbsenSiswa"
 );
 Route.post(
+  "/absen-siswa-tanggal/rekapdownload",
+  "MainController.downloadRekapAbsenSiswa11"
+);
+Route.post(
   "/absen-siswa2/rekapdownload",
   "MainController.downloadRekapAbsenSiswa2"
 );
