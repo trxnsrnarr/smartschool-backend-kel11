@@ -2405,7 +2405,7 @@ class SecondController {
               .with("jurnal", (builder) => {
                 builder.where({ dihapus: 0 });
                 if (tanggal_awal && tanggal_akhir) {
-                  builder.whereBetween("update_at", [
+                  builder.whereBetween("updated_at", [
                     `${tanggal_awal}`,
                     `${tanggal_akhir}`,
                   ]);
@@ -2413,7 +2413,8 @@ class SecondController {
               })
               .where({ dihapus: 0 });
           })
-          .where({ dihapus: 0 });
+          .where({ dihapus: 0 })
+          .orderBy("urutan", "asc");
       })
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id });
@@ -3488,9 +3489,11 @@ class SecondController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const rumus1 = await MKeuRumusArusKas.query().where({ id: rumus_id }).update({
-      rumus,
-    });
+    const rumus1 = await MKeuRumusArusKas.query()
+      .where({ id: rumus_id })
+      .update({
+        rumus,
+      });
 
     if (!rumus1) {
       return response.notFound({
@@ -3538,7 +3541,12 @@ class SecondController {
     });
   }
 
-  async putRumusSaldoKasAwal({ response, request, auth, params: { rumus_id } }) {
+  async putRumusSaldoKasAwal({
+    response,
+    request,
+    auth,
+    params: { rumus_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -3562,9 +3570,11 @@ class SecondController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const rumus1 = await MKeuRumusSaldoKasAwal.query().where({ id: rumus_id }).update({
-      rumus,
-    });
+    const rumus1 = await MKeuRumusSaldoKasAwal.query()
+      .where({ id: rumus_id })
+      .update({
+        rumus,
+      });
 
     if (!rumus1) {
       return response.notFound({
@@ -3611,7 +3621,12 @@ class SecondController {
     });
   }
 
-  async putRumusSaldoKasAkhir({ response, request, auth, params: { rumus_id } }) {
+  async putRumusSaldoKasAkhir({
+    response,
+    request,
+    auth,
+    params: { rumus_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -3635,16 +3650,18 @@ class SecondController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const rumus1 = await MKeuRumusSaldoKasAkhir.query().where({ id: rumus_id }).update({
-      rumus,
-    });
+    const rumus1 = await MKeuRumusSaldoKasAkhir.query()
+      .where({ id: rumus_id })
+      .update({
+        rumus,
+      });
 
     if (!rumus1) {
       return response.notFound({
         message: messageNotFound,
       });
     }
-    
+
     return response.ok({
       message: messagePutSuccess,
     });
