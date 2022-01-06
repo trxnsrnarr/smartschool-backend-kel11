@@ -319,6 +319,7 @@ Route.put("/kategori-laba/:kategori_id", "SecondController.putKategoriLabaRugi")
 Route.delete("/kategori-laba/:kategori_id", "SecondController.deleteKategoriLabaRugi");
 Route.post("/rumus-laba", "SecondController.postRumusLabaRugi");
 Route.put("/rumus-laba/:rumus_id", "SecondController.putRumusLabaRugi");
+Route.delete("/rumus-laba/:rumus_id", "SecondController.deleteRumusLabaRugi");
 Route.post("/akun-laba", "SecondController.postLabaRugi");
 Route.put("/akun-laba/:labarugi_id", "SecondController.putLabaRugi");
 Route.delete("/akun-laba/:labarugi_id", "SecondController.deleteLabaRugi");

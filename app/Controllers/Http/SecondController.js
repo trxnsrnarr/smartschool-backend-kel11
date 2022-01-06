@@ -1426,17 +1426,36 @@ class SecondController {
     }
     const user = await auth.getUser();
 
-    const { page } = request.get();
+    const { page, search, dari_tanggal, sampai_tanggal, tipe_akun } =
+      request.get();
 
-    const transaksi = await MKeuTransaksi.query()
+    let transaksiIds;
+    if (tipe_akun) {
+      transaksiIds = await MKeuJurnal.query()
+        .where({ m_keu_akun_id: tipe_akun })
+        .pluck("m_keu_transaksi_id");
+    }
+
+    let transaksi = MKeuTransaksi.query()
       .with("jurnal", (builder) => {
         builder.where({ dihapus: 0 }).with("akun", (builder) => {
           builder.select("nama", "id");
         });
       })
       .where({ m_sekolah_id: sekolah.id })
-      .where({ dihapus: 0 })
-      .paginate(page, 25);
+      .where({ dihapus: 0 });
+
+    if (transaksiIds) {
+      transaksi.whereIn("id", transaksiIds);
+    }
+    if (search) {
+      transaksi.where("nama", "like", `%${search}%`);
+    }
+    if (dari_tanggal && sampai_tanggal) {
+      transaksi.whereBetween("tanggal", [dari_tanggal, sampai_tanggal]);
+    }
+
+    transaksi = await transaksi.paginate(page, 25);
 
     const akun = await MKeuAkun.query()
       .with("rek")
@@ -2428,6 +2447,7 @@ class SecondController {
     const rumus = await MRumusLabaRugi.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
+      .limit(1)
       .fetch();
 
     return response.ok({
