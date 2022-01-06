@@ -1227,15 +1227,13 @@ class MainController {
       profil: profil,
     });
   }
-  
+
   async postDetailProfilUser({ auth, response, request, params: { user_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
 
-    const user = await User.query()
-      .where({ id: user_id })
-      .first();
+    const user = await User.query().where({ id: user_id }).first();
 
     let {
       bio,
@@ -45998,37 +45996,36 @@ class MainController {
       .first();
 
     const check2 = await Mta.query()
-    .where({ tahun: "2021 / 2022" })
-    .andWhere({ semester: "Genap" })
-    .andWhere({ nama_kepsek: taa.nama_kepsek })
-    .andWhere({ nip_kepsek: taa.nip_kepsek })
-    .andWhere({ aktif: taa.aktif })
-    .andWhere({ dihapus: taa.dihapus })
-    .andWhere({ m_sekolah_id: taa.m_sekolah_id })
-    .andWhere({ jam_sinkron: 1 })
-    .andWhere({ mapel_sinkron: 0 })
-    .andWhere({ rombel_sinkron: 0 })
-    .andWhere({ jadwal_sinkron: 0 })
-    .first();
+      .where({ tahun: "2021 / 2022" })
+      .andWhere({ semester: "Genap" })
+      .andWhere({ nama_kepsek: taa.nama_kepsek })
+      .andWhere({ nip_kepsek: taa.nip_kepsek })
+      .andWhere({ aktif: taa.aktif })
+      .andWhere({ dihapus: taa.dihapus })
+      .andWhere({ m_sekolah_id: taa.m_sekolah_id })
+      .andWhere({ jam_sinkron: 1 })
+      .andWhere({ mapel_sinkron: 0 })
+      .andWhere({ rombel_sinkron: 0 })
+      .andWhere({ jadwal_sinkron: 0 })
+      .first();
 
     if (!check) {
-      if(!check2){
-
+      if (!check2) {
         await Mta.create({
           tahun: "2021 / 2022",
-        semester: "Genap",
-        nama_kepsek: taa.nama_kepsek,
-        nip_kepsek: taa.nip_kepsek,
-        aktif: taa.aktif,
-        dihapus: taa.dihapus,
-        m_sekolah_id: taa.m_sekolah_id,
-        jam_sinkron: 0,
-        mapel_sinkron: 0,
-        rombel_sinkron: 0,
-        jadwal_sinkron: 0,
-      });
+          semester: "Genap",
+          nama_kepsek: taa.nama_kepsek,
+          nip_kepsek: taa.nip_kepsek,
+          aktif: taa.aktif,
+          dihapus: taa.dihapus,
+          m_sekolah_id: taa.m_sekolah_id,
+          jam_sinkron: 0,
+          mapel_sinkron: 0,
+          rombel_sinkron: 0,
+          jadwal_sinkron: 0,
+        });
+      }
     }
-  }
 
     const jam = await MJamMengajar.query()
       .where({ m_sekolah_id: sekolah.id })
@@ -46042,21 +46039,22 @@ class MainController {
       .orderBy("id", "desc")
       .first();
 
-  const all = await Promise.all(
-    jam.toJSON().map(async (d) => {
-        await MJamMengajar.create({
-          kode_hari: d.kode_hari,
-          hari: d.hari,
-          jam_ke: d.jam_ke,
-          jam_mulai: d.jam_mulai,
-          jam_selesai: d.jam_selesai,
-          istirahat: d.istirahat,
-          m_sekolah_id: d.m_sekolah_id,
-          m_ta_id: taBaru.id,
-        });
-      })
+    if (taBaru.jam_sinkron == 0) {
+      const all = await Promise.all(
+        jam.toJSON().map(async (d) => {
+          await MJamMengajar.create({
+            kode_hari: d.kode_hari,
+            hari: d.hari,
+            jam_ke: d.jam_ke,
+            jam_mulai: d.jam_mulai,
+            jam_selesai: d.jam_selesai,
+            istirahat: d.istirahat,
+            m_sekolah_id: d.m_sekolah_id,
+            m_ta_id: taBaru.id,
+          });
+        })
       );
-    
+    }
 
     await Mta.query().where({ id: taBaru.id }).update({
       dihapus: 0,
@@ -46094,22 +46092,22 @@ class MainController {
       .orderBy("id", "desc")
       .first();
 
-   
-
-    const all = await Promise.all(
-      mapel.toJSON().map(async (d, nox) => {
-        await MMataPelajaran.create({
-          nama: d.nama,
-          kode: d.kode,
-          kelompok: d.kelompok,
-          kkm: d.kkm,
-          dihapus: 0,
-          m_user_id: d.m_user_id,
-          m_sekolah_id: d.m_sekolah_id,
-          m_ta_id: taBaru.id,
-        });
-      })
-    );
+    if (taBaru.mapel_sinkron == 0) {
+      const all = await Promise.all(
+        mapel.toJSON().map(async (d, nox) => {
+          await MMataPelajaran.create({
+            nama: d.nama,
+            kode: d.kode,
+            kelompok: d.kelompok,
+            kkm: d.kkm,
+            dihapus: 0,
+            m_user_id: d.m_user_id,
+            m_sekolah_id: d.m_sekolah_id,
+            m_ta_id: taBaru.id,
+          });
+        })
+      );
+    }
 
     await Mta.query().where({ id: taBaru.id }).update({
       dihapus: 0,
@@ -46146,81 +46144,81 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .orderBy("id", "desc")
       .first();
-     
 
-    const all = await Promise.all(
-      rombel.toJSON().map(async (d) => {
-        const rombelBaru = await MRombel.create({
-          tingkat: d.tingkat,
-          nama: d.nama,
-          kelompok: d.kelompok,
-          dihapus: 0,
-          m_user_id: d.m_user_id,
-          m_jurusan_id: d.m_jurusan_id,
-          m_sekolah_id: d.m_sekolah_id,
-          m_ta_id: taBaru.id,
-        });
-
-        const checkKategoriMapel = await MKategoriMapel.query()
-          .where({ m_rombel_id: rombelBaru.id })
-          .first();
-
-        if (!checkKategoriMapel) {
-          await MKategoriMapel.create({
-            nama: "Muatan Nasional",
+    if (taBaru.rombel_sinkron == 0) {
+      const all = await Promise.all(
+        rombel.toJSON().map(async (d) => {
+          const rombelBaru = await MRombel.create({
+            tingkat: d.tingkat,
+            nama: d.nama,
+            kelompok: d.kelompok,
             dihapus: 0,
-            m_rombel_id: rombelBaru.id,
+            m_user_id: d.m_user_id,
+            m_jurusan_id: d.m_jurusan_id,
+            m_sekolah_id: d.m_sekolah_id,
+            m_ta_id: taBaru.id,
           });
-          await MKategoriMapel.create({
-            nama: "Muatan Kewilayahan",
-            dihapus: 0,
-            m_rombel_id: rombelBaru.id,
-          });
-          await MKategoriMapel.create({
-            nama: "Muatan Peminatan Kejurusan",
-            dihapus: 0,
-            m_rombel_id: rombelBaru.id,
-          });
-        }
 
-        const jamMengajar = await MJamMengajar.query()
-          .select("id")
-          .where({ m_sekolah_id: sekolah.id })
-          .andWhere({ m_ta_id: taBaru.id })
-          .fetch();
+          const checkKategoriMapel = await MKategoriMapel.query()
+            .where({ m_rombel_id: rombelBaru.id })
+            .first();
 
-        const jadwalMengajarData = await Promise.all(
-          jamMengajar.toJSON().map(async (data) => {
-            data.m_mata_pelajaran_id = null;
-            data.m_rombel_id = rombelBaru.id;
-            data.m_jam_mengajar_id = data.id;
-            data.m_sekolah_id = sekolah.id;
-            data.m_ta_id = taBaru.id;
-            delete data.id;
-            delete data.jamFormat;
-
-            return data;
-          })
-        );
-
-        await MJadwalMengajar.createMany(jadwalMengajarData);
-        const data = await Promise.all(
-          d.anggotaRombel.map(async (e, nox) => {
-            await MAnggotaRombel.create({
-              role: e.role,
+          if (!checkKategoriMapel) {
+            await MKategoriMapel.create({
+              nama: "Muatan Nasional",
               dihapus: 0,
-              m_user_id: e.m_user_id,
               m_rombel_id: rombelBaru.id,
             });
-          })
-        );
-        // return data;
-      })
-    );
+            await MKategoriMapel.create({
+              nama: "Muatan Kewilayahan",
+              dihapus: 0,
+              m_rombel_id: rombelBaru.id,
+            });
+            await MKategoriMapel.create({
+              nama: "Muatan Peminatan Kejurusan",
+              dihapus: 0,
+              m_rombel_id: rombelBaru.id,
+            });
+          }
 
+          const jamMengajar = await MJamMengajar.query()
+            .select("id")
+            .where({ m_sekolah_id: sekolah.id })
+            .andWhere({ m_ta_id: taBaru.id })
+            .fetch();
+
+          const jadwalMengajarData = await Promise.all(
+            jamMengajar.toJSON().map(async (data) => {
+              data.m_mata_pelajaran_id = null;
+              data.m_rombel_id = rombelBaru.id;
+              data.m_jam_mengajar_id = data.id;
+              data.m_sekolah_id = sekolah.id;
+              data.m_ta_id = taBaru.id;
+              delete data.id;
+              delete data.jamFormat;
+
+              return data;
+            })
+          );
+
+          await MJadwalMengajar.createMany(jadwalMengajarData);
+          const data = await Promise.all(
+            d.anggotaRombel.map(async (e, nox) => {
+              await MAnggotaRombel.create({
+                role: e.role,
+                dihapus: 0,
+                m_user_id: e.m_user_id,
+                m_rombel_id: rombelBaru.id,
+              });
+            })
+          );
+          // return data;
+        })
+      );
+    }
     await Mta.query().where({ id: taBaru.id }).update({
       rombel_sinkron: 1,
-      dihapus:0
+      dihapus: 0,
     });
 
     return response.ok({
@@ -46254,7 +46252,6 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .orderBy("id", "desc")
       .first();
-     
 
     // const jam = await MJamMengajar.query()
     //   .where({ m_ta_id: taBaru.id })
@@ -46268,134 +46265,135 @@ class MainController {
       .andWhere({ m_sekolah_id: sekolah.id })
       .fetch();
 
-    const all = await Promise.all(
-      jadwal.toJSON().map(async (d) => {
-        const jam = await MJamMengajar.query()
-          .where({ id: d.m_jam_mengajar_id })
-          .first();
-
-        const jamBaru = await MJamMengajar.query()
-          .where({ kode_hari: jam.kode_hari })
-          .andWhere({ hari: jam.hari })
-          .andWhere({ jam_mulai: jam.jam_mulai })
-          .andWhere({ istirahat: jam.istirahat })
-          .andWhere({ m_ta_id: taBaru.id })
-          .andWhere({ m_sekolah_id: sekolah.id })
-          .first();
-
-        const mapel = await MMataPelajaran.query()
-          .where({ id: d.m_mata_pelajaran_id })
-          .first();
-
-        // return Promise.resolve(mapel.nama);
-
-        const mapelBaru = await MMataPelajaran.query()
-          .where({ nama: mapel.nama })
-          .andWhere({ kode: mapel.kode })
-          .andWhere({ kelompok: mapel.kelompok })
-          .andWhere({ kkm: mapel.kkm })
-          .andWhere({ dihapus: mapel.dihapus })
-          .andWhere({ m_user_id: mapel.m_user_id })
-          .andWhere({ m_ta_id: taBaru.id })
-          .andWhere({ m_sekolah_id: sekolah.id })
-          .first();
-
-        const rombel = await MRombel.query()
-          .where({ id: d.m_rombel_id })
-          .first();
-
-        const rombelBaru = await MRombel.query()
-          .where({ tingkat: rombel.tingkat })
-          .andWhere({ nama: rombel.nama })
-          .andWhere({ kelompok: rombel.kelompok })
-          .andWhere({ dihapus: rombel.dihapus })
-          .andWhere({ m_user_id: rombel.m_user_id })
-          .andWhere({ m_jurusan_id: rombel.m_jurusan_id })
-          .andWhere({ m_ta_id: taBaru.id })
-          .andWhere({ m_sekolah_id: sekolah.id })
-          .first();
-
-        const jadwalBaruNih = await MJadwalMengajar.query()
-          .where({ m_rombel_id: rombelBaru.id })
-          .andWhere({ m_ta_id: taBaru.id })
-          .andWhere({ m_jam_mengajar_id: jamBaru.id })
-          .andWhere({ m_sekolah_id: sekolah.id })
-          .update({
-            m_mata_pelajaran_id: mapelBaru.id,
-            diubah: 1,
-          });
-
-        const mataPelajaran = await MMataPelajaran.query()
-          .where({ id: mapelBaru.id })
-          .first();
-
-        if (mataPelajaran.kelompok == "C") {
-          const check = await MMateri.query()
-            .where({ m_mata_pelajaran_id: mapelBaru.id })
-            .andWhere({ tingkat: rombelBaru.tingkat })
-            .andWhere({ m_jurusan_id: rombelBaru.m_jurusan_id })
+    if (taBaru.jadwal_sinkron == 0) {
+      const all = await Promise.all(
+        jadwal.toJSON().map(async (d) => {
+          const jam = await MJamMengajar.query()
+            .where({ id: d.m_jam_mengajar_id })
             .first();
 
-          if (!check) {
-            const materi = await MMateri.create({
-              tingkat: rombelBaru.tingkat,
-              m_jurusan_id: rombelBaru.m_jurusan_id,
-              m_mata_pelajaran_id: mapelBaru.id,
-            });
-
-            await TkMateriRombel.create({
-              m_materi_id: materi.id,
-              m_rombel_id: rombelBaru.id,
-            });
-          } else {
-            const checkTk = await TkMateriRombel.query()
-              .where({ m_materi_id: check.id })
-              .andWhere({ m_rombel_id: rombelBaru.id })
-              .first();
-            await TkMateriRombel.create({
-              m_materi_id: check.id,
-              m_rombel_id: rombelBaru.id,
-            });
-          }
-        } else {
-          const check = await MMateri.query()
-            .where({ m_mata_pelajaran_id: mapelBaru.id })
-            .andWhere({ tingkat: rombelBaru.tingkat })
+          const jamBaru = await MJamMengajar.query()
+            .where({ kode_hari: jam.kode_hari })
+            .andWhere({ hari: jam.hari })
+            .andWhere({ jam_mulai: jam.jam_mulai })
+            .andWhere({ istirahat: jam.istirahat })
+            .andWhere({ m_ta_id: taBaru.id })
+            .andWhere({ m_sekolah_id: sekolah.id })
             .first();
 
-          if (!check) {
-            const materi = await MMateri.create({
-              tingkat: rombelBaru.tingkat,
+          const mapel = await MMataPelajaran.query()
+            .where({ id: d.m_mata_pelajaran_id })
+            .first();
+
+          // return Promise.resolve(mapel.nama);
+
+          const mapelBaru = await MMataPelajaran.query()
+            .where({ nama: mapel.nama })
+            .andWhere({ kode: mapel.kode })
+            .andWhere({ kelompok: mapel.kelompok })
+            .andWhere({ kkm: mapel.kkm })
+            .andWhere({ dihapus: mapel.dihapus })
+            .andWhere({ m_user_id: mapel.m_user_id })
+            .andWhere({ m_ta_id: taBaru.id })
+            .andWhere({ m_sekolah_id: sekolah.id })
+            .first();
+
+          const rombel = await MRombel.query()
+            .where({ id: d.m_rombel_id })
+            .first();
+
+          const rombelBaru = await MRombel.query()
+            .where({ tingkat: rombel.tingkat })
+            .andWhere({ nama: rombel.nama })
+            .andWhere({ kelompok: rombel.kelompok })
+            .andWhere({ dihapus: rombel.dihapus })
+            .andWhere({ m_user_id: rombel.m_user_id })
+            .andWhere({ m_jurusan_id: rombel.m_jurusan_id })
+            .andWhere({ m_ta_id: taBaru.id })
+            .andWhere({ m_sekolah_id: sekolah.id })
+            .first();
+
+          const jadwalBaruNih = await MJadwalMengajar.query()
+            .where({ m_rombel_id: rombelBaru.id })
+            .andWhere({ m_ta_id: taBaru.id })
+            .andWhere({ m_jam_mengajar_id: jamBaru.id })
+            .andWhere({ m_sekolah_id: sekolah.id })
+            .update({
               m_mata_pelajaran_id: mapelBaru.id,
+              diubah: 1,
             });
 
-            await TkMateriRombel.create({
-              m_materi_id: materi.id,
-              m_rombel_id: rombelBaru.id,
-            });
-          } else {
-            const checkTk = await TkMateriRombel.query()
-              .where({ m_materi_id: check.id })
-              .andWhere({ m_rombel_id: rombelBaru.id })
+          const mataPelajaran = await MMataPelajaran.query()
+            .where({ id: mapelBaru.id })
+            .first();
+
+          if (mataPelajaran.kelompok == "C") {
+            const check = await MMateri.query()
+              .where({ m_mata_pelajaran_id: mapelBaru.id })
+              .andWhere({ tingkat: rombelBaru.tingkat })
+              .andWhere({ m_jurusan_id: rombelBaru.m_jurusan_id })
               .first();
-            if (!checkTk) {
+
+            if (!check) {
+              const materi = await MMateri.create({
+                tingkat: rombelBaru.tingkat,
+                m_jurusan_id: rombelBaru.m_jurusan_id,
+                m_mata_pelajaran_id: mapelBaru.id,
+              });
+
+              await TkMateriRombel.create({
+                m_materi_id: materi.id,
+                m_rombel_id: rombelBaru.id,
+              });
+            } else {
+              const checkTk = await TkMateriRombel.query()
+                .where({ m_materi_id: check.id })
+                .andWhere({ m_rombel_id: rombelBaru.id })
+                .first();
               await TkMateriRombel.create({
                 m_materi_id: check.id,
                 m_rombel_id: rombelBaru.id,
               });
             }
+          } else {
+            const check = await MMateri.query()
+              .where({ m_mata_pelajaran_id: mapelBaru.id })
+              .andWhere({ tingkat: rombelBaru.tingkat })
+              .first();
+
+            if (!check) {
+              const materi = await MMateri.create({
+                tingkat: rombelBaru.tingkat,
+                m_mata_pelajaran_id: mapelBaru.id,
+              });
+
+              await TkMateriRombel.create({
+                m_materi_id: materi.id,
+                m_rombel_id: rombelBaru.id,
+              });
+            } else {
+              const checkTk = await TkMateriRombel.query()
+                .where({ m_materi_id: check.id })
+                .andWhere({ m_rombel_id: rombelBaru.id })
+                .first();
+              if (!checkTk) {
+                await TkMateriRombel.create({
+                  m_materi_id: check.id,
+                  m_rombel_id: rombelBaru.id,
+                });
+              }
+            }
           }
-        }
 
-        // await MJadwalMengajar.create({});
+          // await MJadwalMengajar.create({});
 
-        // return data;
-      })
-    );
-
+          // return data;
+        })
+      );
+    }
     await Mta.query().where({ id: taBaru.id }).update({
       jadwal_sinkron: 1,
-      dihapus:0
+      dihapus: 0,
     });
     await Mta.query().where({ id: ta.id }).update({
       aktif: 0,
@@ -48529,6 +48527,329 @@ class MainController {
     ];
 
     let namaFile = `/uploads/rekap-absen-siswa ${keluarantanggalseconds}.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
+
+  async downloadRekapAbsenSiswa11({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+    const user = await auth.getUser();
+    const { role, tanggal_awal, tanggal_akhir, rombel_id } = request.post();
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
+    const tanggalDistinct = await Database.raw(
+      "SELECT DISTINCT DATE_FORMAT(created_at, '%Y-%m-%d') as tanggalDistinct from m_absen WHERE created_at BETWEEN ? AND  ?",
+      [tanggal_awal, tanggal_akhir]
+    );
+
+    const rombel = await MRombel.query().where({ id: rombel_id }).first();
+
+    const anggotaRombel = await MAnggotaRombel.query()
+      .select("m_user_id")
+      .where({ m_rombel_id: rombel_id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    const absenSiswa = await User.query()
+      .select("id", "nama", "whatsapp")
+      .with("absen", (builder) => {
+        builder
+          .select("id", "m_user_id", "created_at", "absen")
+          .whereBetween("created_at", [`${tanggal_awal}`, `${tanggal_akhir}`]);
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ role: "siswa" })
+      .whereIn(
+        "id",
+        anggotaRombel.toJSON().map((item) => item.m_user_id)
+      )
+      .fetch();
+
+    // loop pertama untuk nge looping data kepsek
+
+    // loop pertama untuk nge looping data Siswa
+   
+    const range = moment(tanggal_akhir).diff(moment(tanggal_awal), "day");
+
+    let listHari = [];
+    for (let i = 0; i < range + 1; i++) {
+      const hari = moment(tanggal_awal).add(i, "days").format("YYYY-MM-DD");
+      listHari.push(hari);
+    }
+
+    let workbook = new Excel.Workbook();
+
+    let worksheet = workbook.addWorksheet(`RekapAbsenSiswa`);
+    const awal = moment(`${tanggal_awal}`).format("DD-MM-YYYY");
+    const akhir = moment(`${tanggal_akhir}`).format("DD-MM-YYYY");
+    worksheet.getCell(
+      "A5"
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
+    worksheet.addConditionalFormatting({
+      ref: `A1:G4`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 16,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: `A4:G4`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+    worksheet.mergeCells(`A1:G1`);
+    worksheet.mergeCells(`A2:G2`);
+    worksheet.mergeCells(`A3:G3`);
+    worksheet.mergeCells(`A4:G4`);
+    worksheet.addConditionalFormatting({
+      ref: `A6:${colName(range + 2)}6`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+
+    await Promise.all(
+      absenSiswa.toJSON().map(async (d, idx) => {
+        worksheet.addConditionalFormatting({
+          ref: `B${(idx + 1) * 1 + 6}:G${(idx + 1) * 1 + 6}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet.addConditionalFormatting({
+          ref: `A${(idx + 1) * 1 + 6}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet.getRow(6).values = ["No", "Nama"];
+
+        worksheet.columns = [{ key: "no" }, { key: "user" }];
+
+        let row = worksheet.addRow({
+          no: `${idx + 1}`,
+          user: d ? d.nama : "-",
+        });
+        await Promise.all(
+          listHari.map(async (e, nox) => {
+            worksheet.getColumn([`${(nox + 1) * 1 + 2}`]).values = [
+              ``,
+              ``,
+              ``,
+              ``,
+              ``,
+              `${e}`,
+              ,
+            ];
+            const absen = await MAbsen.query()
+              .where({ m_user_id: d.id })
+              .whereBetween("created_at", [`${e} 00:00:00`, `${e} 23:59:59`])
+              .first();
+
+            
+
+            if(absen){
+              if (moment(absen.created_at).format("HH:mm:ss") > "06.30") {
+                row.getCell([`${(nox + 1) * 1 + 2}`]).value = `Telat`;
+              }
+              row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
+                absen ? absen.absen : "-"
+              }`;
+            }else{
+              row.getCell([`${(nox + 1) * 1 + 2}`]).value = `Alpa`;
+            }
+
+            row.getCell([`${(nox + 1) * 1 + 2}`]).border = {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            };
+            worksheet.getColumn([`${(nox + 1) * 1 + 2}`]).fill = {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: {
+                argb: "C0C0C0",
+                fgColor: { argb: "C0C0C0" },
+              },
+            };
+            // worksheet.getCell(`E${(nox + 1) * 1 + 8}`).value = e.nilai;
+            // worksheet.columns = [
+            //   { key: `tugas${nox+1}` },
+            // ];
+
+            worksheet.addConditionalFormatting({
+              ref: `${(nox + 1) * 1 + 7}`,
+              rules: [
+                {
+                  type: "expression",
+                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                  style: {
+                    border: {
+                      top: { style: "thin" },
+                      left: { style: "thin" },
+                      bottom: { style: "thin" },
+                      right: { style: "thin" },
+                    },
+                    font: {
+                      name: "Times New Roman",
+                      family: 4,
+                      size: 11,
+                      // bold: true,
+                    },
+                    alignment: {
+                      vertical: "middle",
+                      horizontal: "left",
+                    },
+                  },
+                },
+              ],
+            });
+
+            // // Add row using key mapping to columns
+            // let row = worksheet.addRow ({
+            //   tugas1: e ? e.nilai : "-",
+            //   tugas2: e ? e.nilai : "-",
+            //   tugas3: e ? e.nilai : "-",
+            //   tugas4: e ? e.nilai : "-",
+            //   tugas5: e ? e.nilai : "-",
+            // });
+          })
+        );
+      })
+    );
+
+    worksheet.getCell("A1").value = "Rekap Absen";
+    worksheet.getCell("A2").value = sekolah.nama;
+    worksheet.getCell("A3").value = rombel.nama;
+    worksheet.getCell("A4").value = `${awal} sampai ${akhir}`;
+
+    worksheet.views = [
+      {
+        state: "frozen",
+        xSplit: 2,
+        ySplit: 6,
+        topLeftCell: "A6",
+        activeCell: "A6",
+      },
+    ];
+
+    let namaFile = `/uploads/rekap-absen-siswa-tanggal ${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
