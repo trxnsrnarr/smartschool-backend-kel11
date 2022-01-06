@@ -69,6 +69,7 @@ Route.get("/profil/guru/:user_id", "MainController.getProfilGuru");
 Route.get("/user", "MainController.getUser");
 Route.get("/user/:user_id", "MainController.detailUser");
 Route.post("/reset-password", "MainController.resetPassword");
+Route.post("/reset-password-role", "UserController.updatePasswordRole");
 Route.post("/reset-password-request", "MainController.requestResetPassword");
 
 // sekolah
@@ -305,9 +306,20 @@ Route.delete(
 // Neraca
 Route.get("/neraca-keuangan", "SecondController.getNeraca");
 Route.post("/kategori-neraca", "SecondController.postKategoriNeraca");
+Route.put("/kategori-neraca/:kategori_id", "SecondController.putKategoriNeraca");
+Route.delete("/kategori-neraca/:kategori_id", "SecondController.deleteKategoriNeraca");
 Route.post("/akun-neraca", "SecondController.postNeraca");
 Route.put("/akun-neraca/:neraca_id", "SecondController.putNeraca");
 Route.delete("/akun-neraca/:neraca_id", "SecondController.deleteNeraca");
+
+// Laba Rugi 
+Route.get("/laba-rugi", "SecondController.getLabaRugi");
+Route.post("/kategori-laba", "SecondController.postKategoriLabaRugi");
+Route.put("/kategori-laba/:kategori_id", "SecondController.putKategoriLabaRugi");
+Route.delete("/kategori-laba/:kategori_id", "SecondController.deleteKategoriLabaRugi");
+Route.post("/akun-laba", "SecondController.postLabaRugi");
+Route.put("/akun-laba/:labarugi_id", "SecondController.putLabaRugi");
+Route.delete("/akun-laba/:labarugi_id", "SecondController.deleteLabaRugi");
 
 // materi kesimpulan
 Route.post("/materi-kesimpulan", "MainController.postMateriKesimpulan");
