@@ -601,8 +601,8 @@ class PPDBController {
     is_public = is_public ? is_public : false;
 
     const checkIds = await MGelombangPpdb.query()
-      .where("dibuka", "<=", moment().format("YYYY-MM-DD"))
-      .andWhere("ditutup", ">=", moment().format("YYYY-MM-DD"))
+      .where("dibuka", "<=", moment().endOf("day").format("YYYY-MM-DD HH:mm:ss"))
+      .andWhere("ditutup", ">=", moment().startOf("day").format("YYYY-MM-DD HH:mm:ss"))
       .andWhere({ m_sekolah_id: sekolah.id })
       .whereIn("id", gelombangIds)
       .andWhere({ m_ta_id: ta.id })

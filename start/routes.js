@@ -198,6 +198,7 @@ Route.get("/jam-mengajar", "MainController.getJamMengajar");
 Route.put("/jam-mengajar/:jam_mengajar_id", "MainController.putJamMengajar");
 
 // jadwal mengajar
+Route.get("/jadwal-mengajar-all", "SecondController.getJadwalMengajarAll");
 Route.get("/jadwal-mengajar", "MainController.getJadwalMengajar");
 Route.get(
   "/jadwal-mengajar/pertemuan",

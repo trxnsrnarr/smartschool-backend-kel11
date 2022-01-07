@@ -140,7 +140,6 @@ const MKeuRumusSaldoKasAkhir = use("App/Models/MKeuRumusSaldoKasAkhir");
 const MKeuRumusSaldoKasAwal = use("App/Models/MKeuRumusSaldoKasAwal");
 const MKeuAktivitasTransaksi = use("App/Models/MKeuAktivitasTransaksi");
 
-
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
 const MPraktikKerja = use("App/Models/MPraktikKerja");
@@ -327,6 +326,72 @@ class SecondController {
     }
 
     return ta;
+  }
+  async getJadwalMengajarAll({ response, request, auth }) {
+    const user = await auth.getUser();
+
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const { tingkat, hari = 1 } = request.get();
+
+    const mataPelajaran = await MMataPelajaran.query()
+      .with("user", (builder) => {
+        builder.select("id", "nama").where({ dihapus: 0 });
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .ids();
+
+    const rombelIds = await MRombel.query()
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .ids();
+
+    const jamMengajar = await MJamMengajar.query()
+      .with("jadwalMengajar", (builder) => {
+        builder
+          .with("rombel")
+          .whereIn("m_rombel_id", rombelIds)
+          .whereIn("m_mata_pelajaran_id", mataPelajaran);
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      // .andWhere({ kode_hari: hari })
+      .andWhere({ m_ta_id: ta.id })
+      .fetch();
+
+    let rombel = {};
+    let totalTingkat = {};
+    jamMengajar.toJSON().map((jam) => {
+      jam.jadwalMengajar.map((d) => {
+        if (totalTingkat[d.rombel.tingkat]) {
+          totalTingkat[d.rombel.tingkat] += 1;
+        } else {
+          totalTingkat[d.rombel.tingkat] = 1;
+        }
+
+        if (rombel[d.m_rombel_id]) {
+          rombel[d.m_rombel_id] = [...rombel[d.m_rombel_id], d];
+        } else {
+          rombel[d.m_rombel_id] = [d];
+        }
+      });
+    });
+
+    return { rombel, totalTingkat };
   }
 
   async getTunggakan({ response, request, auth }) {
