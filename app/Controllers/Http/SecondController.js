@@ -1434,17 +1434,36 @@ class SecondController {
     }
     const user = await auth.getUser();
 
-    const { page } = request.get();
+    const { page, search, dari_tanggal, sampai_tanggal, tipe_akun } =
+      request.get();
 
-    const transaksi = await MKeuTransaksi.query()
+    let transaksiIds;
+    if (tipe_akun) {
+      transaksiIds = await MKeuJurnal.query()
+        .where({ m_keu_akun_id: tipe_akun })
+        .pluck("m_keu_transaksi_id");
+    }
+
+    let transaksi = MKeuTransaksi.query()
       .with("jurnal", (builder) => {
         builder.where({ dihapus: 0 }).with("akun", (builder) => {
           builder.select("nama", "id");
         });
       })
       .where({ m_sekolah_id: sekolah.id })
-      .where({ dihapus: 0 })
-      .paginate(page, 25);
+      .where({ dihapus: 0 });
+
+    if (transaksiIds) {
+      transaksi.whereIn("id", transaksiIds);
+    }
+    if (search) {
+      transaksi.where("nama", "like", `%${search}%`);
+    }
+    if (dari_tanggal && sampai_tanggal) {
+      transaksi.whereBetween("tanggal", [dari_tanggal, sampai_tanggal]);
+    }
+
+    transaksi = await transaksi.paginate(page, 25);
 
     const akun = await MKeuAkun.query()
       .with("rek")
@@ -2444,6 +2463,14 @@ class SecondController {
 
     let { search, tanggal_awal, tanggal_akhir } = request.get();
 
+    let transaksiIds;
+    if (tanggal_awal && tanggal_akhir) {
+      transaksiIds = await MKeuTransaksi.query()
+        .whereBetween("tanggal", [tanggal_awal, tanggal_akhir])
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ dihapus: 0 })
+        .ids();
+    }
     let kategori;
 
     kategori = MKeuKategoriNeraca.query()
@@ -2453,11 +2480,8 @@ class SecondController {
             builder
               .with("jurnal", (builder) => {
                 builder.where({ dihapus: 0 });
-                if (tanggal_awal && tanggal_akhir) {
-                  builder.whereBetween("updated_at", [
-                    `${tanggal_awal}`,
-                    `${tanggal_akhir}`,
-                  ]);
+                if (transaksiIds) {
+                  builder.whereIn("m_keu_transaksi_id", transaksiIds);
                 }
               })
               .where({ dihapus: 0 });
@@ -2714,6 +2738,15 @@ class SecondController {
 
     let { search, tanggal_awal, tanggal_akhir } = request.get();
 
+    let transaksiIds;
+    if (tanggal_awal && tanggal_akhir) {
+      transaksiIds = await MKeuTransaksi.query()
+        .whereBetween("tanggal", [tanggal_awal, tanggal_akhir])
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ dihapus: 0 })
+        .ids();
+    }
+
     let kategori;
 
     kategori = MKeuKategoriLabaRugi.query()
@@ -2723,16 +2756,14 @@ class SecondController {
             builder
               .with("jurnal", (builder) => {
                 builder.where({ dihapus: 0 });
-                if (tanggal_awal && tanggal_akhir) {
-                  builder.whereBetween("update_at", [
-                    `${tanggal_awal}`,
-                    `${tanggal_akhir}`,
-                  ]);
+                if (transaksiIds) {
+                  builder.whereIn("m_keu_transaksi_id", transaksiIds);
                 }
               })
               .where({ dihapus: 0 });
           })
-          .where({ dihapus: 0 });
+          .where({ dihapus: 0 })
+          .orderBy("urutan", "asc");
       })
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id });
@@ -2746,6 +2777,7 @@ class SecondController {
     const rumus = await MRumusLabaRugi.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
+      .limit(1)
       .fetch();
 
     return response.ok({
@@ -3807,9 +3839,11 @@ class SecondController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const rumus1 = await MKeuRumusArusKas.query().where({ id: rumus_id }).update({
-      rumus,
-    });
+    const rumus1 = await MKeuRumusArusKas.query()
+      .where({ id: rumus_id })
+      .update({
+        rumus,
+      });
 
     if (!rumus1) {
       return response.notFound({
@@ -3857,7 +3891,12 @@ class SecondController {
     });
   }
 
-  async putRumusSaldoKasAwal({ response, request, auth, params: { rumus_id } }) {
+  async putRumusSaldoKasAwal({
+    response,
+    request,
+    auth,
+    params: { rumus_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -3881,9 +3920,11 @@ class SecondController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const rumus1 = await MKeuRumusSaldoKasAwal.query().where({ id: rumus_id }).update({
-      rumus,
-    });
+    const rumus1 = await MKeuRumusSaldoKasAwal.query()
+      .where({ id: rumus_id })
+      .update({
+        rumus,
+      });
 
     if (!rumus1) {
       return response.notFound({
@@ -3930,7 +3971,12 @@ class SecondController {
     });
   }
 
-  async putRumusSaldoKasAkhir({ response, request, auth, params: { rumus_id } }) {
+  async putRumusSaldoKasAkhir({
+    response,
+    request,
+    auth,
+    params: { rumus_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -3954,16 +4000,18 @@ class SecondController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const rumus1 = await MKeuRumusSaldoKasAkhir.query().where({ id: rumus_id }).update({
-      rumus,
-    });
+    const rumus1 = await MKeuRumusSaldoKasAkhir.query()
+      .where({ id: rumus_id })
+      .update({
+        rumus,
+      });
 
     if (!rumus1) {
       return response.notFound({
         message: messageNotFound,
       });
     }
-    
+
     return response.ok({
       message: messagePutSuccess,
     });
