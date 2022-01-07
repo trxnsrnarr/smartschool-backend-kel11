@@ -140,7 +140,6 @@ const MKeuRumusSaldoKasAkhir = use("App/Models/MKeuRumusSaldoKasAkhir");
 const MKeuRumusSaldoKasAwal = use("App/Models/MKeuRumusSaldoKasAwal");
 const MKeuAktivitasTransaksi = use("App/Models/MKeuAktivitasTransaksi");
 
-
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
 const MPraktikKerja = use("App/Models/MPraktikKerja");
@@ -2162,22 +2161,38 @@ class SecondController {
     const awal1 = moment(tanggal_awal).locale("id").format("DD MMMM YYYY ");
     const akhir1 = moment(tanggal_akhir).locale("id").format("DD MMMM YYYY ");
 
-    const transaksi = await MKeuTransaksi.query()
-      .with("jurnal", (builder) => {
-        builder.with("akun").where({ dihapus: 0 });
-      })
-      .withCount("jurnal as total", (builder) => {
-        builder.where({ dihapus: 0 });
+    let transaksiIds;
+    if (tanggal_awal && tanggal_akhir) {
+      transaksiIds = await MKeuTransaksi.query()
+        .whereBetween("tanggal", [tanggal_awal, tanggal_akhir])
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ dihapus: 0 })
+        .ids();
+    }
+
+    const kategori = await MKeuKategoriLabaRugi.query()
+      .with("akunLabaRugi", (builder) => {
+        builder
+          .with("akun", (builder) => {
+            builder
+              .with("jurnal", (builder) => {
+                builder.where({ dihapus: 0 });
+                if (transaksiIds) {
+                  builder.whereIn("m_keu_transaksi_id", transaksiIds);
+                }
+              })
+              .where({ dihapus: 0 });
+          })
+          .where({ dihapus: 0 })
+          .orderBy("urutan", "asc");
       })
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
-      .whereBetween("tanggal", [`${tanggal_awal}`, `${tanggal_akhir}`])
       .fetch();
-
-    // return transaksi;
+    // return kategori;
 
     let workbook = new Excel.Workbook();
-    let worksheet = workbook.addWorksheet(`Jurnal Umum`);
+    let worksheet = workbook.addWorksheet(`Laba Rugi`);
     worksheet.mergeCells("A1:D1");
     worksheet.mergeCells("A2:D2");
     worksheet.mergeCells("A3:D3");
@@ -3104,6 +3119,41 @@ class SecondController {
 
     return response.ok({
       message: messageDeleteSuccess,
+    });
+  }
+
+  async getSuratKeputusan({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let { search } = request.get();
+
+    
+    let surat;
+
+    surat = MSuratKeputusan.query()
+      .with("suratUser", (builder) => {
+        builder
+          .with("user", (builder) => {
+            builder.select("id","nama");
+          })
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id });
+
+    if (search) {
+      surat.andWhere("nama", "like", `%${search}%`);
+    }
+
+    surat = await surat.fetch();
+
+    return response.ok({
+      surat
     });
   }
 
