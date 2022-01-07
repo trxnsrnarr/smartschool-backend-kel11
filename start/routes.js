@@ -357,6 +357,7 @@ Route.put("/v2/mutasi/:transaksi_id", "SecondController.putTransaksi");
 Route.delete("/v2/mutasi/:transaksi_id", "SecondController.deleteTransaksi");
 Route.post("/download/neraca", "SecondController.downloadNeraca");
 Route.post("/download/jurnal", "SecondController.downloadJurnal");
+Route.post("/download/laba-rugi", "SecondController.downloadLabaRugi");
 
 // topik
 Route.get("/topik/:topik_id", "MainController.detailTopik");
@@ -1290,6 +1291,12 @@ Route.delete(
   "/gelombang-ppdb/:gelombang_ppdb_id",
   "PPDBController.deleteGelombangPPDB"
 );
+
+// Surat Keputusan
+Route.get("/surat-keputusan", "SecondController.getSuratKeputusan");
+Route.post("/surat-keputusan", "SecondController.postSuratKeputusan");
+Route.put("/surat-keputusan/:surat_id", "SecondController.putSuratKeputusan");
+Route.delete("/surat-keputusan/:surat_id", "SecondController.deleteSuratKeputusan");
 
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
