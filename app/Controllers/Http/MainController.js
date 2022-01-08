@@ -47675,7 +47675,7 @@ class MainController {
     await Promise.all(
       rekapAbsenSiswa.map(async (d, idx) => {
         worksheet.addConditionalFormatting({
-          ref: `B${(idx + 1) * 1 + 6}:G${(idx + 1) * 1 + 6}`,
+          ref: `B${(idx + 1) * 1 + 6}:H${(idx + 1) * 1 + 6}`,
           rules: [
             {
               type: "expression",
