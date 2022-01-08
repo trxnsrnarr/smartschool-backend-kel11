@@ -61,12 +61,15 @@ Route.put("/profil", "MainController.putProfil");
 Route.put("/ubah-password", "MainController.putUbahPassword");
 Route.post("/profil-user", "MainController.postProfilUser");
 Route.get("/profil-user", "MainController.getProfilUser");
+Route.get("/profil-user/:user_id", "MainController.detailProfilUser");
+Route.post("/profil-user/:user_id", "MainController.postDetailProfilUser");
 Route.get("/profil/guru/:user_id", "MainController.getProfilGuru");
 
 // user
 Route.get("/user", "MainController.getUser");
 Route.get("/user/:user_id", "MainController.detailUser");
 Route.post("/reset-password", "MainController.resetPassword");
+Route.post("/reset-password-role", "UserController.updatePasswordRole");
 Route.post("/reset-password-request", "MainController.requestResetPassword");
 
 // sekolah
@@ -195,6 +198,7 @@ Route.get("/jam-mengajar", "MainController.getJamMengajar");
 Route.put("/jam-mengajar/:jam_mengajar_id", "MainController.putJamMengajar");
 
 // jadwal mengajar
+Route.get("/jadwal-mengajar-all", "SecondController.getJadwalMengajarAll");
 Route.get("/jadwal-mengajar", "MainController.getJadwalMengajar");
 Route.get(
   "/jadwal-mengajar/pertemuan",
@@ -303,6 +307,23 @@ Route.delete(
 // Neraca
 Route.get("/neraca-keuangan", "SecondController.getNeraca");
 Route.post("/kategori-neraca", "SecondController.postKategoriNeraca");
+Route.put("/kategori-neraca/:kategori_id", "SecondController.putKategoriNeraca");
+Route.delete("/kategori-neraca/:kategori_id", "SecondController.deleteKategoriNeraca");
+Route.post("/akun-neraca", "SecondController.postNeraca");
+Route.put("/akun-neraca/:neraca_id", "SecondController.putNeraca");
+Route.delete("/akun-neraca/:neraca_id", "SecondController.deleteNeraca");
+
+// Laba Rugi 
+Route.get("/laba-rugi", "SecondController.getLabaRugi");
+Route.post("/kategori-laba", "SecondController.postKategoriLabaRugi");
+Route.put("/kategori-laba/:kategori_id", "SecondController.putKategoriLabaRugi");
+Route.delete("/kategori-laba/:kategori_id", "SecondController.deleteKategoriLabaRugi");
+Route.post("/rumus-laba", "SecondController.postRumusLabaRugi");
+Route.put("/rumus-laba/:rumus_id", "SecondController.putRumusLabaRugi");
+Route.delete("/rumus-laba/:rumus_id", "SecondController.deleteRumusLabaRugi");
+Route.post("/akun-laba", "SecondController.postLabaRugi");
+Route.put("/akun-laba/:labarugi_id", "SecondController.putLabaRugi");
+Route.delete("/akun-laba/:labarugi_id", "SecondController.deleteLabaRugi");
 
 // materi kesimpulan
 Route.post("/materi-kesimpulan", "MainController.postMateriKesimpulan");
@@ -337,6 +358,7 @@ Route.put("/v2/mutasi/:transaksi_id", "SecondController.putTransaksi");
 Route.delete("/v2/mutasi/:transaksi_id", "SecondController.deleteTransaksi");
 Route.post("/download/neraca", "SecondController.downloadNeraca");
 Route.post("/download/jurnal", "SecondController.downloadJurnal");
+Route.post("/download/laba-rugi", "SecondController.downloadLabaRugi");
 
 // topik
 Route.get("/topik/:topik_id", "MainController.detailTopik");
@@ -673,6 +695,10 @@ Route.post("/absen/rekapdownload", "MainController.downloadRekapAbsen");
 Route.post(
   "/absen-siswa/rekapdownload",
   "MainController.downloadRekapAbsenSiswa"
+);
+Route.post(
+  "/absen-siswa-tanggal/rekapdownload",
+  "MainController.downloadRekapAbsenSiswa11"
 );
 Route.post(
   "/absen-siswa2/rekapdownload",
@@ -1254,6 +1280,10 @@ Route.get(
   "PPDBController.detailGelombangPPDB"
 );
 Route.post("/gelombang-ppdb", "PPDBController.postGelombangPPDB");
+Route.post(
+  "/download-hasil-ujian/:jadwal_ujian_id",
+  "SecondController.downloadHasilUjian"
+);
 Route.put(
   "/gelombang-ppdb/:gelombang_ppdb_id",
   "PPDBController.putGelombangPPDB"
@@ -1262,6 +1292,12 @@ Route.delete(
   "/gelombang-ppdb/:gelombang_ppdb_id",
   "PPDBController.deleteGelombangPPDB"
 );
+
+// Surat Keputusan
+Route.get("/surat-keputusan", "SecondController.getSuratKeputusan");
+Route.post("/surat-keputusan", "SecondController.postSuratKeputusan");
+Route.put("/surat-keputusan/:surat_id", "SecondController.putSuratKeputusan");
+Route.delete("/surat-keputusan/:surat_id", "SecondController.deleteSuratKeputusan");
 
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)

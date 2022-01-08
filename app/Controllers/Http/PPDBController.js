@@ -601,8 +601,8 @@ class PPDBController {
     is_public = is_public ? is_public : false;
 
     const checkIds = await MGelombangPpdb.query()
-      .where("dibuka", "<=", moment().format("YYYY-MM-DD"))
-      .andWhere("ditutup", ">=", moment().format("YYYY-MM-DD"))
+      .where("dibuka", "<=", moment().endOf("day").format("YYYY-MM-DD HH:mm:ss"))
+      .andWhere("ditutup", ">=", moment().startOf("day").format("YYYY-MM-DD HH:mm:ss"))
       .andWhere({ m_sekolah_id: sekolah.id })
       .whereIn("id", gelombangIds)
       .andWhere({ m_ta_id: ta.id })
@@ -1996,6 +1996,9 @@ class PPDBController {
           ("" + a.user.nama).localeCompare("" + b.user.nama)
         )
         .map(async (d, idx) => {
+          const dataAbsensi = d.user.profil
+            ? JSON.parse(d.user.profil.data_absensi || "{}")
+            : {};
           worksheet.addConditionalFormatting({
             ref: `A${(idx + 1) * 1 + 5}:A${(idx + 1) * 1 + 6}`,
             rules: [
@@ -2205,18 +2208,18 @@ class PPDBController {
             tanggal: d ? d.created_at : "-",
             status: d ? d.status : "-",
             alpa1: d.user.profil
-              ? d.user.profil.data_absensi
-                ? d.user.profil.data_absensi.alpa1
+              ? dataAbsensi.alpa1
+                ? dataAbsensi.alpa1
                 : "0"
               : "0",
             izin1: d.user.profil
-              ? d.user.profil.data_absensi
-                ? d.user.profil.data_absensi.izin1
+              ? dataAbsensi.izin1
+                ? dataAbsensi.izin1
                 : "0"
               : "0",
             sakit1: d.user.profil
-              ? d.user.profil.data_absensi
-                ? d.user.profil.data_absensi.sakit1
+              ? dataAbsensi.sakit1
+                ? dataAbsensi.sakit1
                 : "0"
               : "0",
             fisika1: d.user.profil ? d.user.profil.fisika1 : "-",
@@ -2224,18 +2227,18 @@ class PPDBController {
             bindo1: d.user.profil ? d.user.profil.bindo1 : "-",
             bing1: d.user.profil ? d.user.profil.bing1 : "-",
             alpa2: d.user.profil
-              ? d.user.profil.data_absensi
-                ? d.user.profil.data_absensi.alpa2
+              ? dataAbsensi.alpa2
+                ? dataAbsensi.alpa2
                 : "0"
               : "0",
             izin2: d.user.profil
-              ? d.user.profil.data_absensi
-                ? d.user.profil.data_absensi.izin2
+              ? dataAbsensi.izin2
+                ? dataAbsensi.izin2
                 : "0"
               : "0",
             sakit2: d.user.profil
-              ? d.user.profil.data_absensi
-                ? d.user.profil.data_absensi.sakit2
+              ? dataAbsensi.sakit2
+                ? dataAbsensi.sakit2
                 : "0"
               : "0",
             fisika2: d.user.profil ? d.user.profil.fisika2 : "-",
@@ -2243,18 +2246,18 @@ class PPDBController {
             bindo2: d.user.profil ? d.user.profil.bindo2 : "-",
             bing2: d.user.profil ? d.user.profil.bing2 : "-",
             alpa3: d.user.profil
-              ? d.user.profil.data_absensi
-                ? d.user.profil.data_absensi.alpa3
+              ? dataAbsensi.alpa3
+                ? dataAbsensi.alpa3
                 : "0"
               : "0",
             izin3: d.user.profil
-              ? d.user.profil.data_absensi
-                ? d.user.profil.data_absensi.izin3
+              ? dataAbsensi.izin3
+                ? dataAbsensi.izin3
                 : "0"
               : "0",
             sakit3: d.user.profil
-              ? d.user.profil.data_absensi
-                ? d.user.profil.data_absensi.sakit3
+              ? dataAbsensi.sakit3
+                ? dataAbsensi.sakit3
                 : "0"
               : "0",
             fisika3: d.user.profil ? d.user.profil.fisika3 : "-",
@@ -2262,18 +2265,18 @@ class PPDBController {
             bindo3: d.user.profil ? d.user.profil.bindo3 : "-",
             bing3: d.user.profil ? d.user.profil.bing3 : "-",
             alpa4: d.user.profil
-              ? d.user.profil.data_absensi
-                ? d.user.profil.data_absensi.alpa4
+              ? dataAbsensi.alpa4
+                ? dataAbsensi.alpa4
                 : "0"
               : "0",
             izin4: d.user.profil
-              ? d.user.profil.data_absensi
-                ? d.user.profil.data_absensi.izin4
+              ? dataAbsensi.izin4
+                ? dataAbsensi.izin4
                 : "0"
               : "0",
             sakit4: d.user.profil
-              ? d.user.profil.data_absensi
-                ? d.user.profil.data_absensi.sakit4
+              ? dataAbsensi.sakit4
+                ? dataAbsensi.sakit4
                 : "0"
               : "0",
             fisika4: d.user.profil ? d.user.profil.fisika4 : "-",
@@ -2281,18 +2284,18 @@ class PPDBController {
             bindo4: d.user.profil ? d.user.profil.bindo4 : "-",
             bing4: d.user.profil ? d.user.profil.bing4 : "-",
             alpa5: d.user.profil
-              ? d.user.profil.data_absensi
-                ? d.user.profil.data_absensi.alpa5
+              ? dataAbsensi.alpa5
+                ? dataAbsensi.alpa5
                 : "0"
               : "0",
             izin5: d.user.profil
-              ? d.user.profil.data_absensi
-                ? d.user.profil.data_absensi.izin5
+              ? dataAbsensi.izin5
+                ? dataAbsensi.izin5
                 : "0"
               : "0",
             sakit5: d.user.profil
-              ? d.user.profil.data_absensi
-                ? d.user.profil.data_absensi.sakit5
+              ? dataAbsensi.sakit5
+                ? dataAbsensi.sakit5
                 : "0"
               : "0",
             fisika5: d.user.profil ? d.user.profil.fisika5 : "-",
@@ -2300,18 +2303,18 @@ class PPDBController {
             bindo5: d.user.profil ? d.user.profil.bindo5 : "-",
             bing5: d.user.profil ? d.user.profil.bing5 : "-",
             alpa6: d.user.profil
-              ? d.user.profil.data_absensi
-                ? d.user.profil.data_absensi.alpa6
+              ? dataAbsensi.alpa6
+                ? dataAbsensi.alpa6
                 : "0"
               : "0",
             izin6: d.user.profil
-              ? d.user.profil.data_absensi
-                ? d.user.profil.data_absensi.izin6
+              ? dataAbsensi.izin6
+                ? dataAbsensi.izin6
                 : "0"
               : "0",
             sakit6: d.user.profil
-              ? d.user.profil.data_absensi
-                ? d.user.profil.data_absensi.sakit6
+              ? dataAbsensi.sakit6
+                ? dataAbsensi.sakit6
                 : "0"
               : "0",
             fisika6: d.user.profil ? d.user.profil.fisika6 : "-",
