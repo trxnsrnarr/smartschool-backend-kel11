@@ -327,6 +327,72 @@ class SecondController {
 
     return ta;
   }
+  async getJadwalMengajarAll({ response, request, auth }) {
+    const user = await auth.getUser();
+
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const { tingkat, hari = 1 } = request.get();
+
+    const mataPelajaran = await MMataPelajaran.query()
+      .with("user", (builder) => {
+        builder.select("id", "nama").where({ dihapus: 0 });
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .ids();
+
+    const rombelIds = await MRombel.query()
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .ids();
+
+    const jamMengajar = await MJamMengajar.query()
+      .with("jadwalMengajar", (builder) => {
+        builder
+          .with("rombel")
+          .whereIn("m_rombel_id", rombelIds)
+          .whereIn("m_mata_pelajaran_id", mataPelajaran);
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      // .andWhere({ kode_hari: hari })
+      .andWhere({ m_ta_id: ta.id })
+      .fetch();
+
+    let rombel = {};
+    let totalTingkat = {};
+    jamMengajar.toJSON().map((jam) => {
+      jam.jadwalMengajar.map((d) => {
+        if (totalTingkat[d.rombel.tingkat]) {
+          totalTingkat[d.rombel.tingkat] += 1;
+        } else {
+          totalTingkat[d.rombel.tingkat] = 1;
+        }
+
+        if (rombel[d.m_rombel_id]) {
+          rombel[d.m_rombel_id] = [...rombel[d.m_rombel_id], d];
+        } else {
+          rombel[d.m_rombel_id] = [d];
+        }
+      });
+    });
+
+    return { rombel, totalTingkat };
+  }
 
   async getTunggakan({ response, request, auth }) {
     const domain = request.headers().origin;
@@ -3728,25 +3794,28 @@ class SecondController {
 
     let kategori;
 
-    kategori = await MKeuKategoriArusKas.query()
+    kategori = MKeuKategoriArusKas.query()
       .with("tipeAkun", (builder) => {
         builder
           .with("akunArusKas", (builder) => {
             builder
               .with("akun", (builder) => {
-                builder.with("jurnal", (builder) => {
-                  builder.where({ dihapus: 0 });
-                  if (tanggal_awal && tanggal_akhir) {
-                    builder.whereBetween("update_at", [
-                      `${tanggal_awal}`,
-                      `${tanggal_akhir}`,
-                    ]);
-                  }
+                builder.with("akun", (builder) => {
+                  builder.with("jurnal", (builder) => {
+                    builder.where({ dihapus: 0 });
+                    if (tanggal_awal && tanggal_akhir) {
+                      builder.whereBetween("update_at", [
+                        `${tanggal_awal}`,
+                        `${tanggal_akhir}`,
+                      ]);
+                    }
+                  });
                 });
               })
               .where({ dihapus: 0 });
           })
-          .where({ dihapus: 0 });
+          .where({ dihapus: 0 })
+          .orderBy("urutan", "asc");
       })
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id });
@@ -3755,9 +3824,17 @@ class SecondController {
       kategori.andWhere("nama", "like", `%${search}%`);
     }
 
-    kategori = kategori.fetch();
+    kategori = await kategori.fetch();
 
-    const rumus = await MRumusArusKas.query()
+    const rumus = await MKeuRumusArusKas.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    const tipeAkun = await MKeuKategoriTipeAkun.query()
+      .with("akun", (builder) => {
+        builder.with("akun").where({ dihapus: 0 });
+      })
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .fetch();
@@ -3765,6 +3842,7 @@ class SecondController {
     return response.ok({
       kategori,
       rumus,
+      tipeAkun,
     });
   }
 
@@ -3779,7 +3857,7 @@ class SecondController {
 
     const user = await auth.getUser();
 
-    let { nama } = request.post();
+    let { nama, warna } = request.post();
 
     const rules = {
       nama: "required",
@@ -3794,6 +3872,7 @@ class SecondController {
 
     const kategori = await MKeuKategoriArusKas.create({
       nama,
+      warna,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
     });
@@ -3819,7 +3898,7 @@ class SecondController {
 
     const user = await auth.getUser();
 
-    let { nama } = request.post();
+    let { nama, warna, } = request.post();
 
     const rules = {
       nama: "required",
@@ -3836,6 +3915,7 @@ class SecondController {
       .where({ id: kategori_id })
       .update({
         nama,
+        warna,
       });
 
     if (!kategori) {
@@ -3916,6 +3996,7 @@ class SecondController {
     }
 
     const kategori = await MKeuAktivitasTransaksi.create({
+      m_sekolah_id: sekolah.id,
       judul,
       m_keu_kategori_tipe_akun_id,
       m_keu_kategori_arus_kas_id,
@@ -4045,8 +4126,8 @@ class SecondController {
     if (m_keu_akun_id) {
       await Promise.all(
         m_keu_akun_id.map(async (d) => {
-          await TkKategoriAkunArusKas.create({
-            m_keu_akun_id: d,
+          await TkKategoriTipeAkun.create({
+            m_keu_akun_id: d.m_keu_akun_id,
             m_keu_kategori_tipe_akun_id: kategori.id,
           });
         })
@@ -4096,59 +4177,34 @@ class SecondController {
       });
 
     const kategori1 = await MKeuKategoriTipeAkun.query()
-      .with("akunArus")
+      .with("akun")
       .where({ id: kategori_id })
       .first();
 
-    if (m_keu_akun_id) {
+    if (m_keu_akun_id.length) {
       await Promise.all(
         m_keu_akun_id.map(async (d) => {
-          const kategoriAkun = await TkKategoriAkunArusKas.query()
-            .where(m_keu_kategori_tipe_akun_id)
-            .andWhere({ m_keu_akun_id: d })
-            .first();
-
-          if (!kategoriAkun) {
-            await TkKategoriAkunArusKas.create({
-              m_keu_akun_id: d,
-              m_keu_kategori_tipe_akun_id: kategori.id,
+          if (d.id) {
+            await TkKategoriTipeAkun.query().where({ id: d.id }).update({
+              m_keu_akun_id: d.m_keu_akun_id,
             });
+            return;
           } else {
-            await TkKategoriAkunArusKas.query()
-              .where(m_keu_kategori_tipe_akun_id)
-              .andWhere({ m_keu_akun_id: d })
-              .update({
-                dihapus: 0,
-              });
+            await TkKategoriTipeAkun.create({
+              m_keu_akun_id: d.m_keu_akun_id,
+              m_keu_kategori_tipe_akun_id: kategori_id,
+            });
           }
         })
       );
 
       await Promise.all(
-        kategori1.toJSON().akunArus.map(async (e) => {
-          await Promise.all(
-            m_keu_akun_id.map(async (d) => {
-              const akunArus = await TkKategoriAkunArusKas.query()
-                .where({ m_keu_kategori_tipe_akun_id: kategori.id })
-                .andWhere({ m_keu_akun_id: d })
-                .first();
-
-              const akunArus1 = await TkKategoriAkunArusKas.query()
-                .where({ m_keu_kategori_tipe_akun_id: kategori.id })
-                .andWhere({ m_keu_akun_id: e.id })
-                .first();
-
-              if (akunArus == akunArus1) {
-                return;
-              } else if (akunArus != null && akunArus1 == null) {
-                await TkKategoriAkunArusKas.query()
-                  .where({ id: akunArus1.id })
-                  .update({
-                    dihapus: 1,
-                  });
-              }
-            })
-          );
+        kategori1.toJSON().akun.map(async (e) => {
+          if (!m_keu_akun_id.filter((d) => d.id).find((d) => d.id == e.id)) {
+            await TkKategoriTipeAkun.query()
+              .where({ id: e.id })
+              .update({ dihapus: 1 });
+          }
         })
       );
     }

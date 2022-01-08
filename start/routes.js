@@ -198,6 +198,7 @@ Route.get("/jam-mengajar", "MainController.getJamMengajar");
 Route.put("/jam-mengajar/:jam_mengajar_id", "MainController.putJamMengajar");
 
 // jadwal mengajar
+Route.get("/jadwal-mengajar-all", "SecondController.getJadwalMengajarAll");
 Route.get("/jadwal-mengajar", "MainController.getJadwalMengajar");
 Route.get(
   "/jadwal-mengajar/pertemuan",
@@ -323,6 +324,20 @@ Route.delete("/rumus-laba/:rumus_id", "SecondController.deleteRumusLabaRugi");
 Route.post("/akun-laba", "SecondController.postLabaRugi");
 Route.put("/akun-laba/:labarugi_id", "SecondController.putLabaRugi");
 Route.delete("/akun-laba/:labarugi_id", "SecondController.deleteLabaRugi");
+
+// Arus Kas
+Route.get("/arus-keuangan", "SecondController.getArusKas");
+Route.post("/kategori-arus", "SecondController.postKategoriArusKas");
+Route.put("/kategori-arus/:kategori_id", "SecondController.putKategoriArusKas");
+Route.delete("/kategori-arus/:kategori_id", "SecondController.deleteKategoriArusKas");
+Route.post("/aktivitas-arus", "SecondController.postArusKas");
+Route.put("/aktivitas-arus/:aktivitas_id", "SecondController.putArusKas");
+Route.delete("/aktivitas-arus/:aktivitas_id", "SecondController.deleteArusKas");
+
+// Tipe Akun keuangan
+Route.post("/tipe-akun", "SecondController.postKategoriTipeAkun");
+Route.put("/tipe-akun/:kategori_id", "SecondController.putKategoriTipeAkun");
+Route.delete("/tipe-akun/:kategori_id", "SecondController.deleteKategoriTipeAkun");
 
 // materi kesimpulan
 Route.post("/materi-kesimpulan", "MainController.postMateriKesimpulan");
