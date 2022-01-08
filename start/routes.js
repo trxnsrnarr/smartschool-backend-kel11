@@ -1293,6 +1293,7 @@ Route.delete(
 );
 
 // Surat Keputusan
+Route.get("/guru-surat-keputusan", "SecondController.getGuru");
 Route.get("/surat-keputusan", "SecondController.getSuratKeputusan");
 Route.post("/surat-keputusan", "SecondController.postSuratKeputusan");
 Route.put("/surat-keputusan/:surat_id", "SecondController.putSuratKeputusan");
