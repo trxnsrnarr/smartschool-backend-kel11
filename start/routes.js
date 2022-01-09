@@ -541,6 +541,7 @@ Route.delete(
 // absen
 Route.get("/absen", "MainController.getAbsen");
 Route.get("/absen/me", "MainController.meAbsen");
+Route.post("/absen-fr", "MainController.postAbsenFr");
 Route.post("/absen", "MainController.postAbsen");
 Route.put("/absen/:absen_id", "MainController.putAbsen");
 Route.post("/absen/download-absen", "MainController.downloadAbsen");

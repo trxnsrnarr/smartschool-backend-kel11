@@ -10334,6 +10334,68 @@ class MainController {
       absen: absen,
     });
   }
+  
+  async postAbsenFr({ response, request }) {
+
+    let { 
+      photo,
+      mask,
+      temp,
+      whatsapp,
+      ipCamera,
+      domain
+     } = request.post();
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await User.query().select('id', 'whatsapp', 'role', 'm_sekolah_id').with('profil', (builder) => {
+      builder.select('id', 'm_user_id', 'telp_ayah', 'telp_ibu')
+    }).where({whatsapp}).andWhere({m_sekolah_id: sekolah.id}).andWhere({dihapus: 0}).first()
+
+    if(!user) {
+      return repsonse.notFound({
+        message: 'Data tidak ditemukan'
+      })
+    }
+
+    const fileName = new Date().getTime();
+    await Drive.put(`fr/${fileName}.jpeg`, Buffer.from(photo, "base64"));
+
+    const absen = await MAbsen.query()
+        .where("created_at", "like", `%${moment().format('YYYY-MM-DD')}%`)
+        .andWhere({ m_user_id: user.id })
+        .first();
+
+    if (!absen) {
+      await MAbsen.create({
+        m_sekolah_id: sekolah.id,
+        m_user_id: user.id,
+        role: user.role,
+        absen: 'hadir',
+        foto_masuk_local: fileName,
+        masker: mask,
+        suhu: temp
+      });
+    } else {
+        await MAbsen.query().where({ id: absen.id }).update({
+          m_sekolah_id: sekolah.id,
+          m_user_id: user.id,
+          role: user.role,
+          absen: 'hadir',
+          foto_pulang_local: fileName,
+          masker: mask,
+          suhu: temp
+        });
+    }
+
+    return response.ok({
+      user
+    })
+  }
 
   // Belum Validasi
   async postAbsen({ response, request, auth }) {
