@@ -633,16 +633,6 @@ class PPDBController {
               .with("informasi", (builder) => {
                 builder
                   .where({ tipe: "ujian" })
-                  .where(
-                    "dibuka",
-                    "<",
-                    moment().endOf("day").format("YYYY-MM-DD HH:mm:ss")
-                  )
-                  .where(
-                    "ditutup",
-                    ">",
-                    moment().startOf("day").format("YYYY-MM-DD HH:mm:ss")
-                  )
                   .with("ujian");
               });
           })
