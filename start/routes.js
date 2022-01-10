@@ -327,12 +327,19 @@ Route.delete("/akun-laba/:labarugi_id", "SecondController.deleteLabaRugi");
 
 // Arus Kas
 Route.get("/arus-keuangan", "SecondController.getArusKas");
+Route.get("/arus-keuangan-laporan", "SecondController.getArusKasLaporan");
 Route.post("/kategori-arus", "SecondController.postKategoriArusKas");
 Route.put("/kategori-arus/:kategori_id", "SecondController.putKategoriArusKas");
 Route.delete("/kategori-arus/:kategori_id", "SecondController.deleteKategoriArusKas");
 Route.post("/aktivitas-arus", "SecondController.postArusKas");
 Route.put("/aktivitas-arus/:aktivitas_id", "SecondController.putArusKas");
 Route.delete("/aktivitas-arus/:aktivitas_id", "SecondController.deleteArusKas");
+Route.post("/rumus-kenaikan", "SecondController.postRumusArusKas");
+Route.post("/rumus-kas-awal", "SecondController.postRumusSaldoKasAwal");
+Route.post("/rumus-kas-akhir", "SecondController.postRumusSaldoKasAkhir");
+Route.put("/rumus-kenaikan/:rumus_id", "SecondController.putRumusArusKas");
+Route.put("/rumus-kas-awal/:rumus_id", "SecondController.putRumusSaldoKasAwal");
+Route.put("/rumus-kas-akhir/:rumus_id", "SecondController.putRumusSaldoKasAkhir");
 
 // Tipe Akun keuangan
 Route.post("/tipe-akun", "SecondController.postKategoriTipeAkun");
