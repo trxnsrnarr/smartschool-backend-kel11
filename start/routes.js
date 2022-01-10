@@ -1302,6 +1302,10 @@ Route.put(
   "/gelombang-ppdb/:gelombang_ppdb_id",
   "PPDBController.putGelombangPPDB"
 );
+Route.post(
+  "/download-gelombang-ppdb/:gelombang_ppdb_id",
+  "PPDBController.downloadGelombangPpdb"
+);
 Route.delete(
   "/gelombang-ppdb/:gelombang_ppdb_id",
   "PPDBController.deleteGelombangPPDB"
