@@ -46369,7 +46369,7 @@ class MainController {
       const result = [];
       const trx = await Database.beginTransaction();
       for (let i = 0; i < data.length; i++) {
-        const d = data[i];
+        const d = jadwal[i];
         const jam = await MJamMengajar.query()
           .where({ id: d.m_jam_mengajar_id })
           .first();
