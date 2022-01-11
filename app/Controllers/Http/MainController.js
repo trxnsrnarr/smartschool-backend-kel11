@@ -3685,9 +3685,9 @@ class MainController {
       return response.notFound({ message: "Akun tidak ditemukan" });
     }
 
-    // if (!(await Hash.verify(password, res.password))) {
-    //   return response.notFound({ message: "Password yang anda masukan salah" });
-    // }
+    if (!(await Hash.verify(password, res.password))) {
+      return response.notFound({ message: "Password yang anda masukan salah" });
+    }
 
     const { token } = await auth.generate(res);
 

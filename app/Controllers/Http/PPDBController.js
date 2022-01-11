@@ -125,6 +125,50 @@ const monthNames = [
   "November",
   "December",
 ];
+
+const dataStatus = {
+  menungguSeleksiBerkas: {
+    text: "Menunggu Seleksi Berkas",
+    color: "color-warning",
+    icon: "menunggu-seleksi-berkas",
+  },
+  menungguKonfirmasiPembayaran: {
+    text: "Menunggu Konfirmasi Pembayaran",
+    color: "color-warning",
+    icon: "menunggu-konfirmasi-pembayaran",
+  },
+  menungguSeleksiUjian: {
+    text: "Menunggu Seleksi Ujian",
+    color: "color-warning",
+    icon: "menunggu-seleksi-ujian",
+  },
+  menungguHasilPengumuman: {
+    text: "Menunggu Hasil Pengumuman",
+    color: "color-warning",
+    icon: "menunggu-hasil-pengumuman",
+  },
+  berkasTerkonfirmasi: {
+    text: "Berkas Terkonfirmasi",
+    color: "color-success",
+    icon: "berkas-terkonfirmasi",
+  },
+  pembayaranTerkonfirmasi: {
+    text: "Pembayaran Terkonfirmasi",
+    color: "color-success",
+    icon: "pembayaran-terkonfirmasi",
+  },
+  lulusSeleksi: {
+    text: "Lulus Seleksi",
+    color: "color-success",
+    icon: "lulus-seleksi",
+  },
+  tidakLulusSeleksi: {
+    text: "Tidak Lulus Seleksi",
+    color: "color-danger",
+    icon: "tidak-lulus-seleksi",
+  },
+};
+
 const dateObj = new Date();
 const month = monthNames[dateObj.getMonth()];
 const day = String(dateObj.getDate()).padStart(2, "0");
@@ -601,8 +645,16 @@ class PPDBController {
     is_public = is_public ? is_public : false;
 
     const checkIds = await MGelombangPpdb.query()
-      .where("dibuka", "<=", moment().endOf("day").format("YYYY-MM-DD HH:mm:ss"))
-      .andWhere("ditutup", ">=", moment().startOf("day").format("YYYY-MM-DD HH:mm:ss"))
+      .where(
+        "dibuka",
+        "<=",
+        moment().endOf("day").format("YYYY-MM-DD HH:mm:ss")
+      )
+      .andWhere(
+        "ditutup",
+        ">=",
+        moment().startOf("day").format("YYYY-MM-DD HH:mm:ss")
+      )
       .andWhere({ m_sekolah_id: sekolah.id })
       .whereIn("id", gelombangIds)
       .andWhere({ m_ta_id: ta.id })
@@ -631,9 +683,7 @@ class PPDBController {
                   .where({ dihapus: 0 });
               })
               .with("informasi", (builder) => {
-                builder
-                  .where({ tipe: "ujian" })
-                  .with("ujian");
+                builder.where({ tipe: "ujian" }).with("ujian");
               });
           })
           .where({ dihapus: 0 })
@@ -2191,12 +2241,24 @@ class PPDBController {
             { key: "bing6" },
           ];
 
+          const checkBayar =
+            JSON.parse(d?.pembayaran || "[]")?.reduce((a, b) => {
+              if (b?.diverifikasi) {
+                return a + b?.nominal;
+              } else {
+                return a + 0;
+              }
+            }, 0) < (gelombang?.jalur?.biaya || 0)
+              ? "menungguKonfirmasiPembayaran"
+              : d?.status;
+          const status = dataStatus[checkBayar];
+
           // Add row using key mapping to columns
           let row = worksheet.addRow({
             no: `${idx + 1}`,
             nama: d.user ? d.user.nama : "-",
             tanggal: d ? d.created_at : "-",
-            status: d ? d.status : "-",
+            status: d ? status.text : "-",
             alpa1: d.user.profil
               ? dataAbsensi.alpa1
                 ? dataAbsensi.alpa1
