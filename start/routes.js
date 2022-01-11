@@ -164,7 +164,8 @@ Route.get(
 );
 // Route.get("/rombel/rapor/:user_id", "MainController.getRombelRapor");
 // anggota rombel
-Route.get("/anggota-rombel", "MainController.getAnggotaRombel");
+Route.get("/anggota-rombel", "RombelController.getAnggotaRombel");
+// Route.get("/anggota-rombel", "MainController.getAnggotaRombel");
 Route.post("/anggota-rombel", "MainController.postAnggotaRombel");
 Route.post("/anggota-rombel/import", "MainController.importAnggotaRombel");
 Route.post(

@@ -61,7 +61,7 @@ class UserController {
 
     const user = await auth.getUser();
 
-    const { role, password, m_rombel_id } = request.post();
+    const { role, password, m_rombel_id, user_id } = request.post();
 
     if (user.role != "admin") {
       return response.forbidden({ message: messageForbidden });
@@ -73,7 +73,9 @@ class UserController {
     }
 
     let userIds;
-    if (m_rombel_id) {
+    if (user_id) {
+      userIds = user_id;
+    } else if (m_rombel_id) {
       userIds = await MAnggotaRombel.query()
         .where({ m_rombel_id: m_rombel_id })
         .pluck("m_user_id");
