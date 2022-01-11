@@ -139,6 +139,7 @@ const MKeuRumusArusKas = use("App/Models/MKeuRumusArusKas");
 const MKeuRumusSaldoKasAkhir = use("App/Models/MKeuRumusSaldoKasAkhir");
 const MKeuRumusSaldoKasAwal = use("App/Models/MKeuRumusSaldoKasAwal");
 const MKeuAktivitasTransaksi = use("App/Models/MKeuAktivitasTransaksi");
+const MFiturSekolah = use("App/Models/MFiturSekolah");
 
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
@@ -4989,6 +4990,52 @@ class SecondController {
     await workbook.xlsx.writeFile(`public${namaFile}`);
 
     return namaFile;
+  }
+
+  async putFiturSekolah({
+    response,
+    request,
+    auth,
+    params: { fitur_sekolah_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { nota_barang } = request.post();
+
+    // const rules = {
+    //   nota_barang: "required",
+    // };
+    // const message = {
+    //   "nota_barang.required": "Rumus harus diisi",
+    // };
+    // const validation = await validate(request.all(), rules, message);
+    // if (validation.fails()) {
+    //   return response.unprocessableEntity(validation.messages());
+    // }
+
+    const fitur = await MFiturSekolah.query()
+      .where({ id: fitur_sekolah_id })
+      .update({
+        nota_barang,
+      });
+
+    if (!fitur) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
   }
 
   async postRaporSikapUAS({ response, request, auth, params: { rombel_id } }) {
