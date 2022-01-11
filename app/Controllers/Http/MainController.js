@@ -4767,7 +4767,8 @@ class MainController {
                   });
               }
             });
-          });
+          })
+          .with("user");
         })
         .where({ m_rombel_id: rombel_id })
         .first();
