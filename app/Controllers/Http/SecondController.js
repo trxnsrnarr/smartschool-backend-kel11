@@ -139,6 +139,7 @@ const MKeuRumusArusKas = use("App/Models/MKeuRumusArusKas");
 const MKeuRumusSaldoKasAkhir = use("App/Models/MKeuRumusSaldoKasAkhir");
 const MKeuRumusSaldoKasAwal = use("App/Models/MKeuRumusSaldoKasAwal");
 const MKeuAktivitasTransaksi = use("App/Models/MKeuAktivitasTransaksi");
+const MFiturSekolah = use("App/Models/MFiturSekolah");
 
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
@@ -2020,7 +2021,7 @@ class SecondController {
 
     const user = await auth.getUser();
 
-    const { tanggal_awal, tanggal_akhir } = request.post();
+    const { tanggal_awal, tanggal_akhir,data } = request.post();
 
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
@@ -2034,7 +2035,7 @@ class SecondController {
 
     const isi = JSON.parse(template.template);
 
-    return isi;
+    return data;
 
     let workbook = new Excel.Workbook();
     let worksheet = workbook.addWorksheet(`Neraca`);
@@ -2529,7 +2530,9 @@ class SecondController {
 
     const user = await auth.getUser();
 
-    const { tanggal_awal, tanggal_akhir } = request.post();
+    const { tanggal_awal, tanggal_akhir, data } = request.post();
+
+    // return data;
 
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
@@ -2684,6 +2687,7 @@ class SecondController {
       kategori.toJSON().map(async (d, idx) => {
         // add column headers
         worksheet.getRow(5).values = ["NO AKUN", "NAMA AKUN", "(Rp)", "(Rp)"];
+        let totalKategori = 0;
         if (idx == 0) {
           worksheet.getCell(`B${(idx + 1) * 1 + 5}`).value = `${d.nama}`;
           await Promise.all(
@@ -2701,14 +2705,30 @@ class SecondController {
                 e.akun.jurnal.map(async (f) => {
                   if (f.jenis == "kredit") {
                     nilaiAkun = nilaiAkun - f.saldo;
+                    totalKategori = totalKategori - f.saldo;
                   } else if (f.jenis == "debit") {
+                    totalKategori = totalKategori + f.saldo;
                     nilaiAkun = nilaiAkun + f.saldo;
                   }
                 })
               );
-              worksheet.getCell(`C${(nox + 1) * 1 + 6}`).value = `${nilaiAkun}`;
+              worksheet.getCell(`C${(nox + 1) * 1 + 6}`).value = `${nilaiAkun.toLocaleString(
+                    "id-ID",
+                    {
+                      style: "currency",
+                      currency: "IDR",
+                    }
+                  )}`;
             })
           );
+          worksheet.getCell(`B${(idx + 1) * 1 + 5 + awal}`).value = `TOTAL ${d.nama}`;
+          worksheet.getCell(`D${(idx + 1) * 1 + 5 + awal}`).value = `${totalKategori.toLocaleString(
+            "id-ID",
+            {
+              style: "currency",
+              currency: "IDR",
+            }
+          )}`;
         } else if (idx >= 0) {
           worksheet.getCell(`B${idx + 7 + awal}`).value = `${d.nama}`;
           await Promise.all(
@@ -2726,14 +2746,41 @@ class SecondController {
                 e.akun.jurnal.map(async (f) => {
                   if (f.jenis == "kredit") {
                     nilaiAkun = nilaiAkun - f.saldo;
+                    totalKategori = totalKategori - f.saldo;
                   } else if (f.jenis == "debit") {
+                    totalKategori = totalKategori + f.saldo;
                     nilaiAkun = nilaiAkun + f.saldo;
                   }
                 })
               );
-              worksheet.getCell(`C${nox + 8 + awal}`).value = `${nilaiAkun}`;
+              worksheet.getCell(`C${nox + 8 + awal}`).value = `${nilaiAkun.toLocaleString(
+                "id-ID",
+                {
+                  style: "currency",
+                  currency: "IDR",
+                }
+              )}`;
             })
           );
+          worksheet.getCell(`B${idx + 8 + awal}`).value = `TOTAL ${d.nama}`;
+          worksheet.getCell(`D${idx + 8 + awal}`).value = `${totalKategori.toLocaleString(
+            "id-ID",
+            {
+              style: "currency",
+              currency: "IDR",
+            }
+          )}`;
+        }
+
+        if(idx){
+          worksheet.getCell(`B${idx + 9 + awal}`).value = `LABA PAJAK SEBELUM (LABA)`;
+          worksheet.getCell(`D${idx + 9 + awal}`).value = `${totalKategori.toLocaleString(
+            "id-ID",
+            {
+              style: "currency",
+              currency: "IDR",
+            }
+          )}`;
         }
 
         // awal = awal + d.__meta__.total;
@@ -2742,62 +2789,62 @@ class SecondController {
     );
 
     // return result;
-
-    // worksheet.addConditionalFormatting({
-    //   ref: `B6:D${6 + awal}`,
-    //   rules: [
-    //     {
-    //       type: "expression",
-    //       formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-    //       style: {
-    //         font: {
-    //           name: "Times New Roman",
-    //           family: 4,
-    //           size: 11,
-    //           // bold: true,
-    //         },
-    //         alignment: {
-    //           vertical: "middle",
-    //           horizontal: "left",
-    //         },
-    //         border: {
-    //           top: { style: "thin" },
-    //           left: { style: "thin" },
-    //           bottom: { style: "thin" },
-    //           right: { style: "thin" },
-    //         },
-    //       },
-    //     },
-    //   ],
-    // });
-    // worksheet.addConditionalFormatting({
-    //   ref: `A6:A${6 + awal}`,
-    //   rules: [
-    //     {
-    //       type: "expression",
-    //       formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-    //       style: {
-    //         font: {
-    //           name: "Times New Roman",
-    //           family: 4,
-    //           size: 11,
-    //           // bold: true,
-    //         },
-    //         alignment: {
-    //           vertical: "middle",
-    //           horizontal: "center",
-    //           wrapText: true,
-    //         },
-    //         border: {
-    //           top: { style: "thin" },
-    //           left: { style: "thin" },
-    //           bottom: { style: "thin" },
-    //           right: { style: "thin" },
-    //         },
-    //       },
-    //     },
-    //   ],
-    // });
+    worksheet.addConditionalFormatting({
+      ref: `B6:B${10 + awal}`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 11,
+              // bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "left",
+              // wrapText: true,
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: `A6:D${10 + awal}`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 11,
+              // bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+   
 
     // worksheet.getCell(
     //   `A${8 + awal}`
@@ -2823,8 +2870,8 @@ class SecondController {
     worksheet.getCell("A2").value = "LAPORAN LABA RUGI";
     worksheet.getCell("A3").value = `Tanggal : ${awal1} - ${akhir1}`;
 
-    worksheet.getColumn("A").width = 20;
-    worksheet.getColumn("B").width = 23;
+    worksheet.getColumn("A").width = 12;
+    worksheet.getColumn("B").width = 48;
     worksheet.getColumn("C").width = 28;
     worksheet.getColumn("D").width = 28;
 
@@ -3513,7 +3560,7 @@ class SecondController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { search} = request.get();
+    let { search } = request.get();
 
     let guru;
 
@@ -3781,6 +3828,117 @@ class SecondController {
     });
   }
 
+  async getArusKasLaporan({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let { tanggal_awal1, tanggal_awal2, tanggal_akhir1, tanggal_akhir2, search } =
+      request.get();
+
+    let transaksiIds1, transaksiIds2;
+    if (tanggal_awal1 && tanggal_awal2 && tanggal_akhir1 && tanggal_akhir2) {
+      transaksiIds1 = await MKeuTransaksi.query()
+        .whereBetween("tanggal", [tanggal_awal1, tanggal_akhir1])
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ dihapus: 0 })
+        .ids();
+      transaksiIds2 = await MKeuTransaksi.query()
+        .whereBetween("tanggal", [tanggal_awal2, tanggal_akhir2])
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ dihapus: 0 })
+        .ids();
+    } else {
+      return response.notFound({
+        message: "harap memasukan tanggal periode 1 dan 2",
+      });
+    }
+    let kategori;
+
+    kategori = MKeuKategoriArusKas.query()
+      .with("tipeAkun", (builder) => {
+        builder
+          .with("akunArusKas", (builder) => {
+            builder
+              .with("akun", (builder) => {
+                builder.with("akun", (builder) => {
+                  builder
+                    .with("jurnal1", (builder) => {
+                      builder
+                        .whereIn("m_keu_transaksi_id", transaksiIds1)
+                        .where({ dihapus: 0 });
+                    })
+                    .with("jurnal2", (builder) => {
+                      builder
+                        .whereIn("m_keu_transaksi_id", transaksiIds2)
+                        .where({ dihapus: 0 });
+                    });
+                });
+              })
+              .where({ dihapus: 0 });
+          })
+          .where({ dihapus: 0 })
+          .orderBy("urutan", "asc");
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id });
+
+    if (search) {
+      kategori.andWhere("nama", "like", `%${search}%`);
+    }
+
+    kategori = await kategori.fetch();
+
+    const rumusKenaikan = await MKeuRumusArusKas.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .first();
+    const rumusAwal = await MKeuRumusSaldoKasAwal.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .first();
+    const rumusAkhir = await MKeuRumusSaldoKasAkhir.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    const tipeAkun = await MKeuKategoriTipeAkun.query()
+      .with("akun", (builder) => {
+        builder
+          .with("akun", (builder) => {
+            builder
+              .with("jurnal1", (builder) => {
+                builder
+                  .whereIn("m_keu_transaksi_id", transaksiIds1)
+                  .where({ dihapus: 0 });
+              })
+              .with("jurnal2", (builder) => {
+                builder
+                  .whereIn("m_keu_transaksi_id", transaksiIds2)
+                  .where({ dihapus: 0 });
+              });
+          })
+          .where({ dihapus: 0 });
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    return response.ok({
+      kategori,
+      rumus: {
+        rumusKenaikan,
+        rumusAwal,
+        rumusAkhir,
+      },
+      tipeAkun,
+    });
+  }
+
   async getArusKas({ response, request, auth }) {
     const domain = request.headers().origin;
 
@@ -3826,14 +3984,34 @@ class SecondController {
 
     kategori = await kategori.fetch();
 
-    const rumus = await MKeuRumusArusKas.query()
+    const rumusKenaikan = await MKeuRumusArusKas.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
-      .fetch();
+      .first();
+    const rumusAwal = await MKeuRumusSaldoKasAwal.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .first();
+    const rumusAkhir = await MKeuRumusSaldoKasAkhir.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .first();
 
     const tipeAkun = await MKeuKategoriTipeAkun.query()
       .with("akun", (builder) => {
-        builder.with("akun").where({ dihapus: 0 });
+        builder
+          .with("akun", (builder) => {
+            builder.with("jurnal", (builder) => {
+              builder.where({ dihapus: 0 });
+              if (tanggal_awal && tanggal_akhir) {
+                builder.whereBetween("update_at", [
+                  `${tanggal_awal}`,
+                  `${tanggal_akhir}`,
+                ]);
+              }
+            });
+          })
+          .where({ dihapus: 0 });
       })
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
@@ -3841,7 +4019,11 @@ class SecondController {
 
     return response.ok({
       kategori,
-      rumus,
+      rumus: {
+        rumusKenaikan,
+        rumusAwal,
+        rumusAkhir,
+      },
       tipeAkun,
     });
   }
@@ -3898,7 +4080,7 @@ class SecondController {
 
     const user = await auth.getUser();
 
-    let { nama, warna, } = request.post();
+    let { nama, warna } = request.post();
 
     const rules = {
       nama: "required",
@@ -4808,6 +4990,52 @@ class SecondController {
     await workbook.xlsx.writeFile(`public${namaFile}`);
 
     return namaFile;
+  }
+
+  async putFiturSekolah({
+    response,
+    request,
+    auth,
+    params: { fitur_sekolah_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { nota_barang } = request.post();
+
+    // const rules = {
+    //   nota_barang: "required",
+    // };
+    // const message = {
+    //   "nota_barang.required": "Rumus harus diisi",
+    // };
+    // const validation = await validate(request.all(), rules, message);
+    // if (validation.fails()) {
+    //   return response.unprocessableEntity(validation.messages());
+    // }
+
+    const fitur = await MFiturSekolah.query()
+      .where({ id: fitur_sekolah_id })
+      .update({
+        nota_barang,
+      });
+
+    if (!fitur) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
   }
 
   async postRaporSikapUAS({ response, request, auth, params: { rombel_id } }) {
