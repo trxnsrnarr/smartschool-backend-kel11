@@ -193,6 +193,11 @@ function colName(n) {
   }
   return s.toUpperCase();
 }
+function padNumber(num, size) {
+  num = num.toString();
+  while (num.length < size) num = "0" + num;
+  return num;
+}
 
 class PPDBController {
   async getSekolahByDomain(domain) {
@@ -1993,7 +1998,7 @@ class PPDBController {
     });
 
     worksheet.addConditionalFormatting({
-      ref: "A5:AT6",
+      ref: "A5:AU6",
       rules: [
         {
           type: "expression",
@@ -2029,6 +2034,7 @@ class PPDBController {
     worksheet.getCell("A2").value = gelombang.nama;
     worksheet.getCell("A3").value = `${awal} - ${akhir}`;
 
+    const namaGelombang = gelombang.nama;
     await Promise.all(
       gelombang
         .toJSON()
@@ -2039,6 +2045,15 @@ class PPDBController {
           const dataAbsensi = d.user.profil
             ? JSON.parse(d.user.profil.data_absensi || "{}")
             : {};
+          const nomorPeserta = `${moment().format("YYYY")} - ${
+            namaGelombang.includes("khusus")
+              ? "00"
+              : namaGelombang.includes("reguler 1")
+              ? "01"
+              : namaGelombang.includes("reguler 3")
+              ? "02"
+              : "03"
+          } - ${padNumber(idx + 1, `${gelombang.diterima}`.length)}`;
           worksheet.addConditionalFormatting({
             ref: `A${(idx + 1) * 1 + 5}:A${(idx + 1) * 1 + 6}`,
             rules: [
@@ -2068,7 +2083,7 @@ class PPDBController {
           });
 
           worksheet.addConditionalFormatting({
-            ref: `B${(idx + 1) * 1 + 5}:AT${(idx + 1) * 1 + 6}`,
+            ref: `B${(idx + 1) * 1 + 5}:AU${(idx + 1) * 1 + 6}`,
             rules: [
               {
                 type: "expression",
@@ -2099,6 +2114,7 @@ class PPDBController {
           worksheet.getRow(5).values = [
             "No",
             "Nama",
+            "Nomor Peserta",
             "Tanggal Mendaftar",
             "Status",
             "Semester 1",
@@ -2147,6 +2163,7 @@ class PPDBController {
           worksheet.getRow(6).values = [
             "No",
             "Nama",
+            "Nomor Peserta",
             "Tanggal Mendaftar",
             "Status",
             "Alpa",
@@ -2195,6 +2212,7 @@ class PPDBController {
           worksheet.columns = [
             { key: "no" },
             { key: "nama" },
+            { key: "nomorPeserta" },
             { key: "tanggal" },
             { key: "status" },
             { key: "alpa1" },
@@ -2257,6 +2275,7 @@ class PPDBController {
           let row = worksheet.addRow({
             no: `${idx + 1}`,
             nama: d.user ? d.user.nama : "-",
+            nomorPeserta: nomorPeserta ? nomorPeserta : "-",
             tanggal: d ? d.created_at : "-",
             status: d ? status.text : "-",
             alpa1: d.user.profil
@@ -2380,16 +2399,18 @@ class PPDBController {
     worksheet.mergeCells(`B5:B6`);
     worksheet.mergeCells(`C5:C6`);
     worksheet.mergeCells(`D5:D6`);
-    worksheet.mergeCells(`E5:K5`);
-    worksheet.mergeCells(`L5:R5`);
-    worksheet.mergeCells(`S5:Y5`);
-    worksheet.mergeCells(`Z5:AF5`);
-    worksheet.mergeCells(`AG5:AM5`);
-    worksheet.mergeCells(`AN5:AT5`);
+    worksheet.mergeCells(`E5:E6`);
+    worksheet.mergeCells(`F5:L5`);
+    worksheet.mergeCells(`M5:S5`);
+    worksheet.mergeCells(`T5:Z5`);
+    worksheet.mergeCells(`AA5:AG5`);
+    worksheet.mergeCells(`AH5:AN5`);
+    worksheet.mergeCells(`AO5:AU5`);
     worksheet.getColumn("A").width = 6;
     worksheet.getColumn("B").width = 20;
-    worksheet.getColumn("C").width = 0;
-    worksheet.getColumn("D").width = 6;
+    worksheet.getColumn("C").width = 20;
+    worksheet.getColumn("D").width = 20;
+    worksheet.getColumn("E").width = 20;
     worksheet.autoFilter = {
       from: "A6",
       to: "AT6",
