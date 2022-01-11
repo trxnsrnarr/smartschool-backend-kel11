@@ -522,6 +522,22 @@ class MainController {
     return response.ok(res);
   }
 
+
+
+  async getMasterSekolahSSSummary({ response, request }) {
+    const totalSekolah = await Sekolah.query().whereNotNull('m_sekolah_id').getCount()
+    const totalGpds = await MSekolah.query().where({gpds: 1}).getCount()
+    const totalPro = await MSekolah.query().where({trial: 0}).getCount()
+    const totalTrial = await MSekolah.query().where({trial: 1}).getCount()
+
+      return response.ok({
+        totalSekolah,
+        totalGpds,
+        totalPro,
+        totalTrial
+      })
+  }
+
   async getMasterSekolahSS({ response, request }) {
     let { page } = request.get();
 
@@ -10357,7 +10373,7 @@ class MainController {
     }).where({whatsapp}).andWhere({m_sekolah_id: sekolah.id}).andWhere({dihapus: 0}).first()
 
     if(!user) {
-      return repsonse.notFound({
+      return response.notFound({
         message: 'Data tidak ditemukan'
       })
     }
@@ -11971,6 +11987,33 @@ class MainController {
     return response.notFound({
       message: messageNotFound,
     });
+  }
+
+  async getJadwalUjianSS({ response, request }) {
+    let {page} = request.get()
+
+    page = page ? page : 1
+
+    const jadwalUjian = await MJadwalUjian.query()
+    .select('id')
+          .with('rombelUjian', (builder) => {
+            builder.select('id', 'm_rombel_id', 'm_jadwal_ujian_id').with('rombel', (builder) => {
+              builder
+                .select("id", "m_ta_id", "m_sekolah_id")
+                .withCount("anggotaRombel as total", (builder) => {
+                  builder.where("dihapus", 0);
+                })
+                .where("dihapus", 0);
+            })
+          })
+          .andWhere({ dihapus: 0 })
+          .andWhere("waktu_dibuka", ">", moment().format('YYYY-MM-DD HH:mm:ss'))
+          .orderBy("waktu_dibuka", "asc")
+          .paginate(page, 30);
+
+          return response.ok({
+            jadwalUjian
+          })
   }
 
   async getJadwalUjian({ response, request, auth }) {
