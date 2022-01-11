@@ -4892,7 +4892,8 @@ class MainController {
                 }
               })
               .where({ dihapus: 0 });
-          });
+          })
+          .with("user");
         })
         .where({ id: jadwal_mengajar_id })
         .first();
