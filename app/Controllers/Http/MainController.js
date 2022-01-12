@@ -46362,6 +46362,19 @@ class MainController {
       .where({ m_ta_id: ta.id })
       .andWhere({ m_sekolah_id: sekolah.id })
       .fetch();
+  
+    const jamData = await MJamMengajar.query()
+      .whereIn("id", jadwal.map(d => d.m_jam_mengajar_id))
+      .fetch();
+
+    const jamBaruData = await MJamMengajar.query()
+      .andWhere({ m_ta_id: taBaru.id })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+    
+    const mapelData = await MMataPelajaran.query()
+      .whereIn("id", jadwal.map(d => d.m_mata_pelajaran_id))
+      .fetch();
 
     if (taBaru.jadwal_sinkron == 0) {
       // const all = await Promise.all(
@@ -46370,22 +46383,25 @@ class MainController {
       const trx = await Database.beginTransaction();
       for (let i = 0; i < jadwal.length; i++) {
         const d = jadwal[i];
-        const jam = await MJamMengajar.query()
-          .where({ id: d.m_jam_mengajar_id })
-          .first();
+        const jam = jamData.toJSON().find(e => e.id == d.m_jam_mengajar_id);
 
-        const jamBaru = await MJamMengajar.query()
-          .where({ kode_hari: jam.kode_hari })
-          .andWhere({ hari: jam.hari })
-          .andWhere({ jam_mulai: jam.jam_mulai })
-          .andWhere({ istirahat: jam.istirahat })
-          .andWhere({ m_ta_id: taBaru.id })
-          .andWhere({ m_sekolah_id: sekolah.id })
-          .first();
+        const jamBaru = jamBaruData.toJSON().find(e => {
+          return 
+            d.kode_hari == jam.kode_hari && 
+            d.hari == jam.hari && 
+            d.jam_mulai == jam.jam_mulai && 
+            d.istirahat == jam.istirahat 
+        })
+        // const jamBaru = await MJamMengajar.query()
+        //   .where({ kode_hari: jam.kode_hari })
+        //   .andWhere({ hari: jam.hari })
+        //   .andWhere({ jam_mulai: jam.jam_mulai })
+        //   .andWhere({ istirahat: jam.istirahat })
+        //   .andWhere({ m_ta_id: taBaru.id })
+        //   .andWhere({ m_sekolah_id: sekolah.id })
+        //   .first();
 
-        const mapel = await MMataPelajaran.query()
-          .where({ id: d.m_mata_pelajaran_id })
-          .first();
+        const mapel = mapelData.toJSON().find(e => e.id == d.m_mata_pelajaran_id);
 
         // return Promise.resolve(mapel.nama);
 
