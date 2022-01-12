@@ -1537,7 +1537,7 @@ class SecondController {
       transaksi.whereBetween("tanggal", [dari_tanggal, sampai_tanggal]);
     }
 
-    transaksi = await transaksi.paginate(page, 25);
+    transaksi = await transaksi.orderBy("tanggal", "desc").paginate(page, 25);
 
     const akun = await MKeuAkun.query()
       .with("rek")
@@ -2955,8 +2955,27 @@ class SecondController {
 
     kategori = await kategori.fetch();
 
+    const akun = await MKeuAkun.query()
+      .with("jurnal", (builder) => {
+        builder.where({ dihapus: 0 });
+        if (transaksiIds) {
+          builder.whereIn("m_keu_transaksi_id", transaksiIds);
+        }
+      })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
+    const keuangan = await MKeuTemplateAkun.query()
+      .andWhere({
+        m_sekolah_id: sekolah.id,
+      })
+      .first();
+
     return response.ok({
       kategori,
+      akun,
+      keuangan,
     });
   }
 
