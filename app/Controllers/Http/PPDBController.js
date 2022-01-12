@@ -2034,7 +2034,7 @@ class PPDBController {
     worksheet.getCell("A2").value = gelombang.nama;
     worksheet.getCell("A3").value = `${awal} - ${akhir}`;
 
-    const namaGelombang = gelombang.nama;
+    const namaGelombang = gelombang.nama.toLowerCase();
     await Promise.all(
       gelombang
         .toJSON()
