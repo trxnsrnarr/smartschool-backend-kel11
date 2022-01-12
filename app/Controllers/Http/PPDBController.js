@@ -1239,7 +1239,7 @@ class PPDBController {
         builder.with("gelombang", (builder) => {
           builder
             .with("pendaftar", (builder) => {
-              builder.with("user");
+              builder.where({ dihapus: 0 }).with("user");
             })
             .with("jalur");
         });
