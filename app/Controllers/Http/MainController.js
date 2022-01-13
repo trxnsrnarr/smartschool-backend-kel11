@@ -868,12 +868,12 @@ class MainController {
       link,
     } = request.post();
 
-    if (link) {
-      const sekolah = await Sekolah.query()
-        .with("sekolahSS")
-        .where({ id: id })
-        .first();
+    const sekolah = await Sekolah.query()
+      .with("sekolahSS")
+      .where({ id: id })
+      .first();
 
+    if (link) {
       const domain = slugify(sekolah.sekolah, {
         replacement: "", // replace spaces with replacement character, defaults to `-`
         remove: /[*+~.()'"!:@]/g,
@@ -926,6 +926,8 @@ class MainController {
         npsn,
         provinsi: propinsi,
         kabupaten: kabupaten,
+        status: sekolah.status || "N",
+        tingkat: sekolah.bentuk || "SMK",
         kecamatan,
         alamat,
         telp,
@@ -947,7 +949,7 @@ class MainController {
       user = await User.create({
         m_sekolah_id: sekolahSS.id,
         nama,
-        role: jabatan,
+        role: "admin",
         whatsapp,
         password: password,
         dihapus: 0,
