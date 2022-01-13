@@ -3256,9 +3256,28 @@ class SecondController {
       .limit(1)
       .fetch();
 
+    const akun = await MKeuAkun.query()
+      .with("jurnal", (builder) => {
+        builder.where({ dihapus: 0 });
+        if (transaksiIds) {
+          builder.whereIn("m_keu_transaksi_id", transaksiIds);
+        }
+      })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
+    const keuangan = await MKeuTemplateAkun.query()
+      .andWhere({
+        m_sekolah_id: sekolah.id,
+      })
+      .first();
+
     return response.ok({
       kategori,
       rumus,
+      akun,
+      keuangan,
     });
   }
 
@@ -3902,19 +3921,7 @@ class SecondController {
           .with("akunArusKas", (builder) => {
             builder
               .with("akun", (builder) => {
-                builder.with("akun", (builder) => {
-                  builder
-                    .with("jurnal1", (builder) => {
-                      builder
-                        .whereIn("m_keu_transaksi_id", transaksiIds1)
-                        .where({ dihapus: 0 });
-                    })
-                    .with("jurnal2", (builder) => {
-                      builder
-                        .whereIn("m_keu_transaksi_id", transaksiIds2)
-                        .where({ dihapus: 0 });
-                    });
-                });
+                builder.with("akun");
               })
               .where({ dihapus: 0 });
           })
@@ -3945,21 +3952,7 @@ class SecondController {
 
     const tipeAkun = await MKeuKategoriTipeAkun.query()
       .with("akun", (builder) => {
-        builder
-          .with("akun", (builder) => {
-            builder
-              .with("jurnal1", (builder) => {
-                builder
-                  .whereIn("m_keu_transaksi_id", transaksiIds1)
-                  .where({ dihapus: 0 });
-              })
-              .with("jurnal2", (builder) => {
-                builder
-                  .whereIn("m_keu_transaksi_id", transaksiIds2)
-                  .where({ dihapus: 0 });
-              });
-          })
-          .where({ dihapus: 0 });
+        builder.with("akun").where({ dihapus: 0 });
       })
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
@@ -4001,6 +3994,27 @@ class SecondController {
       .limit(1)
       .fetch();
 
+    const akun = await MKeuAkun.query()
+      .with("jurnal1", (builder) => {
+        builder
+          .whereIn("m_keu_transaksi_id", transaksiIds1)
+          .where({ dihapus: 0 });
+      })
+      .with("jurnal2", (builder) => {
+        builder
+          .whereIn("m_keu_transaksi_id", transaksiIds2)
+          .where({ dihapus: 0 });
+      })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
+    const keuangan = await MKeuTemplateAkun.query()
+      .andWhere({
+        m_sekolah_id: sekolah.id,
+      })
+      .first();
+
     return response.ok({
       kategori,
       rumus: {
@@ -4011,6 +4025,8 @@ class SecondController {
       },
       tipeAkun,
       labaRugi,
+      akun,
+      keuangan,
     });
   }
 
