@@ -3921,7 +3921,7 @@ class SecondController {
           .with("akunArusKas", (builder) => {
             builder
               .with("akun", (builder) => {
-                builder.with("akun");
+                builder.with("akun").where({ dihapus: 0 });
               })
               .where({ dihapus: 0 });
           })
@@ -3952,7 +3952,11 @@ class SecondController {
 
     const tipeAkun = await MKeuKategoriTipeAkun.query()
       .with("akun", (builder) => {
-        builder.with("akun").where({ dihapus: 0 });
+        builder
+          .with("akun", (builder) => {
+            builder.where({ dihapus: 0 });
+          })
+          .where({ dihapus: 0 });
       })
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })

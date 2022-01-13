@@ -8107,6 +8107,11 @@ class MainController {
       .with("rombel")
       .where({ id: m_jadwal_mengajar_id })
       .first();
+    if (!jadwalMengajar) {
+      return response.ok({
+        role: "admin"
+      })
+    }
 
     const rombelIds = await MJadwalMengajar.query()
       .where({ m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id })
@@ -8872,6 +8877,11 @@ class MainController {
       .with("mataPelajaran")
       .where({ id: m_jadwal_mengajar_id })
       .first();
+    if (!jadwalMengajar) {
+      return response.ok({
+        role: "admin"
+      })
+    }
 
     const userIds = await MAnggotaRombel.query()
       .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
