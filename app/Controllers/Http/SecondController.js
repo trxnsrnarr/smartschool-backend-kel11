@@ -3969,15 +3969,15 @@ class SecondController {
         builder
           .with("akun", (builder) => {
             builder
-              .with("jurnal", (builder) => {
-                builder.where({ dihapus: 0 });
-                if (transaksiIds1) {
-                  builder.whereIn("m_keu_transaksi_id", [
-                    ...transaksiIds1,
-                    ...transaksiIds2,
-                  ]);
-                }
-              })
+              // .with("jurnal", (builder) => {
+              //   builder.where({ dihapus: 0 });
+              //   if (transaksiIds1) {
+              //     builder.whereIn("m_keu_transaksi_id", [
+              //       ...transaksiIds1,
+              //       ...transaksiIds2,
+              //     ]);
+              //   }
+              // })
               .where({ dihapus: 0 });
           })
           .where({ dihapus: 0 })
