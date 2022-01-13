@@ -523,6 +523,22 @@ class MainController {
     return response.ok(res);
   }
 
+
+
+  async getMasterSekolahSSSummary({ response, request }) {
+    const totalSekolah = await Sekolah.query().whereNotNull('m_sekolah_id').getCount()
+    const totalGpds = await MSekolah.query().where({gpds: 1}).getCount()
+    const totalPro = await MSekolah.query().where({trial: 0}).getCount()
+    const totalTrial = await MSekolah.query().where({trial: 1}).getCount()
+
+      return response.ok({
+        totalSekolah,
+        totalGpds,
+        totalPro,
+        totalTrial
+      })
+  }
+
   async getMasterSekolahSS({ response, request }) {
     let { page } = request.get();
 
@@ -852,12 +868,12 @@ class MainController {
       link,
     } = request.post();
 
+    
     if (link) {
       const sekolah = await Sekolah.query()
         .with("sekolahSS")
         .where({ id: id })
         .first();
-
       const domain = slugify(sekolah.sekolah, {
         replacement: "", // replace spaces with replacement character, defaults to `-`
         remove: /[*+~.()'"!:@]/g,
@@ -893,6 +909,11 @@ class MainController {
       }
     }
 
+    const dataSekolah = await Sekolah.query()
+      .with("sekolahSS")
+      .where({ id: id })
+      .first();
+
     const domain = slugify(sekolah, {
       replacement: "", // replace spaces with replacement character, defaults to `-`
       remove: /[*+~.()'"!:@]/g,
@@ -910,6 +931,8 @@ class MainController {
         npsn,
         provinsi: propinsi,
         kabupaten: kabupaten,
+        status: dataSekolah.status || "N",
+        tingkat: dataSekolah.bentuk || "SMK",
         kecamatan,
         alamat,
         telp,
@@ -931,7 +954,7 @@ class MainController {
       user = await User.create({
         m_sekolah_id: sekolahSS.id,
         nama,
-        role: jabatan,
+        role: "admin",
         whatsapp,
         password: password,
         dihapus: 0,
@@ -7724,7 +7747,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { analisis, m_jadwal_mengajar_id } = request.get();
+    const { analisis, m_jadwal_mengajar_id, status } = request.get();
 
     if (analisis) {
       const jadwalMengajar = await MJadwalMengajar.query()
@@ -7735,12 +7758,27 @@ class MainController {
         .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
         .andWhere({ dihapus: 0 })
         .pluck("m_user_id");
+      
+      let checkUserBaca = userIds;
+      if (status == "sudah") {
+        checkUserBaca = await TkMateriKesimpulan.query()
+          .where({ m_topik_id: topik_id })
+          .whereIn("m_user_id", checkUserBaca)
+          .whereNotNull("waktu_selesai")
+          .pluck("m_user_id");
+      } else if (status == "belum") {
+        checkUserBaca = await TkMateriKesimpulan.query()
+          .where({ m_topik_id: topik_id })
+          .whereIn("m_user_id", checkUserBaca)
+          .whereNull("waktu_selesai")
+          .pluck("m_user_id");
+      }
 
       const user = await User.query()
         .with("kesimpulan", (builder) => {
           builder.where({ m_topik_id: topik_id });
         })
-        .whereIn("id", userIds)
+        .whereIn("id", checkUserBaca)
         .fetch();
 
       const topik = await MTopik.query()
@@ -8085,6 +8123,11 @@ class MainController {
       .with("rombel")
       .where({ id: m_jadwal_mengajar_id })
       .first();
+    if (!jadwalMengajar) {
+      return response.ok({
+        role: "admin"
+      })
+    }
 
     const rombelIds = await MJadwalMengajar.query()
       .where({ m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id })
@@ -8850,6 +8893,11 @@ class MainController {
       .with("mataPelajaran")
       .where({ id: m_jadwal_mengajar_id })
       .first();
+    if (!jadwalMengajar) {
+      return response.ok({
+        role: "admin"
+      })
+    }
 
     const userIds = await MAnggotaRombel.query()
       .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
@@ -10357,10 +10405,10 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .first();
 
-    if (!user) {
-      return repsonse.notFound({
-        message: "Data tidak ditemukan",
-      });
+    if(!user) {
+      return response.notFound({
+        message: 'Data tidak ditemukan'
+      })
     }
 
     const fileName = new Date().getTime();
@@ -11972,6 +12020,33 @@ class MainController {
     return response.notFound({
       message: messageNotFound,
     });
+  }
+
+  async getJadwalUjianSS({ response, request }) {
+    let {page} = request.get()
+
+    page = page ? page : 1
+
+    const jadwalUjian = await MJadwalUjian.query()
+    .select('id')
+          .with('rombelUjian', (builder) => {
+            builder.select('id', 'm_rombel_id', 'm_jadwal_ujian_id').with('rombel', (builder) => {
+              builder
+                .select("id", "m_ta_id", "m_sekolah_id")
+                .withCount("anggotaRombel as total", (builder) => {
+                  builder.where("dihapus", 0);
+                })
+                .where("dihapus", 0);
+            })
+          })
+          .andWhere({ dihapus: 0 })
+          .andWhere("waktu_dibuka", ">", moment().format('YYYY-MM-DD HH:mm:ss'))
+          .orderBy("waktu_dibuka", "asc")
+          .paginate(page, 30);
+
+          return response.ok({
+            jadwalUjian
+          })
   }
 
   async getJadwalUjian({ response, request, auth }) {
