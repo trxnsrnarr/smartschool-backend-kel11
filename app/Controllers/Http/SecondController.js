@@ -816,6 +816,14 @@ class SecondController {
     const keuangan = await query.first();
     const akun = await MKeuAkun.query()
       .with("rek")
+      .with("jurnal", (builder) => {
+        builder
+          .select("id", "m_keu_transaksi_id", "m_keu_akun_id")
+          .with("transaksi", (builder) => {
+            builder.select("id", "nama");
+          })
+          .where({ dihapus: 0 });
+      })
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .fetch();
@@ -1529,7 +1537,7 @@ class SecondController {
       transaksi.whereBetween("tanggal", [dari_tanggal, sampai_tanggal]);
     }
 
-    transaksi = await transaksi.paginate(page, 25);
+    transaksi = await transaksi.orderBy("tanggal", "desc").paginate(page, 25);
 
     const akun = await MKeuAkun.query()
       .with("rek")
@@ -1537,9 +1545,16 @@ class SecondController {
       .andWhere({ m_sekolah_id: sekolah.id })
       .fetch();
 
+    const keuangan = await MKeuTemplateAkun.query()
+      .andWhere({
+        m_sekolah_id: sekolah.id,
+      })
+      .first();
+
     return response.ok({
       transaksi,
       akun,
+      keuangan,
     });
   }
 
@@ -3144,8 +3159,27 @@ class SecondController {
 
     kategori = await kategori.fetch();
 
+    const akun = await MKeuAkun.query()
+      .with("jurnal", (builder) => {
+        builder.where({ dihapus: 0 });
+        if (transaksiIds) {
+          builder.whereIn("m_keu_transaksi_id", transaksiIds);
+        }
+      })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
+    const keuangan = await MKeuTemplateAkun.query()
+      .andWhere({
+        m_sekolah_id: sekolah.id,
+      })
+      .first();
+
     return response.ok({
       kategori,
+      akun,
+      keuangan,
     });
   }
 
@@ -4135,14 +4169,52 @@ class SecondController {
       .andWhere({ dihapus: 0 })
       .fetch();
 
+    let labaRugi;
+
+    labaRugi = MKeuKategoriLabaRugi.query()
+      .with("akunLabaRugi", (builder) => {
+        builder
+          .with("akun", (builder) => {
+            builder
+              .with("jurnal", (builder) => {
+                builder.where({ dihapus: 0 });
+                if (transaksiIds1) {
+                  builder.whereIn("m_keu_transaksi_id", [
+                    ...transaksiIds1,
+                    ...transaksiIds2,
+                  ]);
+                }
+              })
+              .where({ dihapus: 0 });
+          })
+          .where({ dihapus: 0 })
+          .orderBy("urutan", "asc");
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id });
+
+    if (search) {
+      labaRugi.andWhere("nama", "like", `%${search}%`);
+    }
+
+    labaRugi = await labaRugi.fetch();
+
+    const rumuslabaRugi = await MRumusLabaRugi.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .limit(1)
+      .fetch();
+
     return response.ok({
       kategori,
       rumus: {
         rumusKenaikan,
         rumusAwal,
         rumusAkhir,
+        rumuslabaRugi,
       },
       tipeAkun,
+      labaRugi,
     });
   }
 

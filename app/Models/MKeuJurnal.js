@@ -8,8 +8,12 @@ class MKeuJurnal extends Model {
     return "m_keu_jurnal";
   }
 
-  akun () {
-    return this.belongsTo("App/Models/MKeuAkun")
+  akun() {
+    return this.belongsTo("App/Models/MKeuAkun");
+  }
+
+  transaksi() {
+    return this.belongsTo("App/Models/MKeuTransaksi");
   }
 }
 
