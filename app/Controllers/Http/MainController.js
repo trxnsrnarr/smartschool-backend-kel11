@@ -852,12 +852,12 @@ class MainController {
       link,
     } = request.post();
 
-    const sekolah = await Sekolah.query()
-      .with("sekolahSS")
-      .where({ id: id })
-      .first();
-
+    
     if (link) {
+      const sekolah = await Sekolah.query()
+        .with("sekolahSS")
+        .where({ id: id })
+        .first();
       const domain = slugify(sekolah.sekolah, {
         replacement: "", // replace spaces with replacement character, defaults to `-`
         remove: /[*+~.()'"!:@]/g,
@@ -893,6 +893,11 @@ class MainController {
       }
     }
 
+    const dataSekolah = await Sekolah.query()
+      .with("sekolahSS")
+      .where({ id: id })
+      .first();
+
     const domain = slugify(sekolah, {
       replacement: "", // replace spaces with replacement character, defaults to `-`
       remove: /[*+~.()'"!:@]/g,
@@ -910,8 +915,8 @@ class MainController {
         npsn,
         provinsi: propinsi,
         kabupaten: kabupaten,
-        status: sekolah.status || "N",
-        tingkat: sekolah.bentuk || "SMK",
+        status: dataSekolah.status || "N",
+        tingkat: dataSekolah.bentuk || "SMK",
         kecamatan,
         alamat,
         telp,
