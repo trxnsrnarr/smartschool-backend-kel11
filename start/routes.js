@@ -18,6 +18,7 @@ const { route, RouteGroup } = require("@adonisjs/framework/src/Route/Manager");
 /** @type {typeof import('@adonisjs/framework/src/Route/Manager')} */
 const Route = use("Route");
 
+Route.get("/master/sekolah-ss-summary", "MainController.getMasterSekolahSSSummary");
 Route.get("/master/sekolah-ss", "MainController.getMasterSekolahSS");
 Route.get("/master/sekolah", "MainController.getMasterSekolah");
 Route.get("/master/sekolah/npsn", "MainController.getMasterSekolahNpsn");
@@ -421,6 +422,7 @@ Route.put(
 );
 
 // jadwal ujian
+Route.get("/jadwal-ujian-ss", "MainController.getJadwalUjianSS");
 Route.get("/jadwal-ujian", "MainController.getJadwalUjian");
 Route.get("/jadwal-ujian/:jadwal_ujian_id", "MainController.detailJadwalUjian");
 Route.post(
