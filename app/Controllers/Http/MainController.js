@@ -7740,7 +7740,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { analisis, m_jadwal_mengajar_id } = request.get();
+    const { analisis, m_jadwal_mengajar_id, status } = request.get();
 
     if (analisis) {
       const jadwalMengajar = await MJadwalMengajar.query()
@@ -7751,12 +7751,27 @@ class MainController {
         .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
         .andWhere({ dihapus: 0 })
         .pluck("m_user_id");
+      
+      let checkUserBaca = userIds;
+      if (status == "sudah") {
+        checkUserBaca = await TkMateriKesimpulan.query()
+          .where({ m_topik_id: topik_id })
+          .whereIn("m_user_id", checkUserBaca)
+          .whereNotNull("waktu_selesai")
+          .pluck("m_user_id");
+      } else if (status == "belum") {
+        checkUserBaca = await TkMateriKesimpulan.query()
+          .where({ m_topik_id: topik_id })
+          .whereIn("m_user_id", checkUserBaca)
+          .whereNull("waktu_selesai")
+          .pluck("m_user_id");
+      }
 
       const user = await User.query()
         .with("kesimpulan", (builder) => {
           builder.where({ m_topik_id: topik_id });
         })
-        .whereIn("id", userIds)
+        .whereIn("id", checkUserBaca)
         .fetch();
 
       const topik = await MTopik.query()
