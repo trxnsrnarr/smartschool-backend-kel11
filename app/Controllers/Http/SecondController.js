@@ -3995,8 +3995,8 @@ class SecondController {
     const rumuslabaRugi = await MRumusLabaRugi.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
-      .limit(1)
-      .fetch();
+      // .limit(1)
+      .first();
 
     const akun = await MKeuAkun.query()
       .with("jurnal1", (builder) => {
@@ -4078,6 +4078,23 @@ class SecondController {
     }
 
     kategori = await kategori.fetch();
+
+    if (!kategori.toJSON().length) {
+      const defaultKategori = await MKeuKategoriArusKas.create({
+        nama: "Operasi",
+        dihapus: 0,
+        m_sekolah_id: sekolah.id,
+      });
+
+      const labaRugi = await MKeuAktivitasTransaksi.create({
+        m_sekolah_id: sekolah.id,
+        judul: "Laba & Rugi",
+        urutan: 1,
+        dihapus: 0,
+        laba: 1,
+        m_keu_kategori_arus_kas_id: defaultKategori.id,
+      });
+    }
 
     const rumusKenaikan = await MKeuRumusArusKas.query()
       .where({ m_sekolah_id: sekolah.id })
