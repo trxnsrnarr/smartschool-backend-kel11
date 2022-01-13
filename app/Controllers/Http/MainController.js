@@ -46364,7 +46364,7 @@ class MainController {
       .fetch();
   
     const jamData = await MJamMengajar.query()
-      .whereIn("id", jadwal.map(d => d.m_jam_mengajar_id))
+      .whereIn("id", jadwal.toJSON().map(d => d.m_jam_mengajar_id))
       .fetch();
 
     const jamBaruData = await MJamMengajar.query()
@@ -46373,7 +46373,7 @@ class MainController {
       .fetch();
     
     const mapelData = await MMataPelajaran.query()
-      .whereIn("id", jadwal.map(d => d.m_mata_pelajaran_id))
+      .whereIn("id", jadwal.toJSON().map(d => d.m_mata_pelajaran_id))
       .fetch();
 
     if (taBaru.jadwal_sinkron == 0) {
