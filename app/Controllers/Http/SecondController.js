@@ -2134,60 +2134,6 @@ class SecondController {
     let namaTotal;
     await Promise.all(
       data1.map(async (d, idx) => {
-        worksheet.addConditionalFormatting({
-          ref: `B${(idx + 1) * 1 + 5}:D${(idx + 1) * 1 + 5}`,
-          rules: [
-            {
-              type: "expression",
-              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-              style: {
-                font: {
-                  name: "Times New Roman",
-                  family: 4,
-                  size: 11,
-                  // bold: true,
-                },
-                alignment: {
-                  vertical: "middle",
-                  horizontal: "left",
-                },
-                border: {
-                  top: { style: "thin" },
-                  left: { style: "thin" },
-                  bottom: { style: "thin" },
-                  right: { style: "thin" },
-                },
-              },
-            },
-          ],
-        });
-        worksheet.addConditionalFormatting({
-          ref: `A${(idx + 1) * 1 + 5}`,
-          rules: [
-            {
-              type: "expression",
-              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-              style: {
-                font: {
-                  name: "Times New Roman",
-                  family: 4,
-                  size: 11,
-                  // bold: true,
-                },
-                alignment: {
-                  vertical: "middle",
-                  horizontal: "center",
-                },
-                border: {
-                  top: { style: "thin" },
-                  left: { style: "thin" },
-                  bottom: { style: "thin" },
-                  right: { style: "thin" },
-                },
-              },
-            },
-          ],
-        });
         // add column headers
         worksheet.getRow(4).values = ["No Akun", "Nama Akun", "(Rp)", "(Rp)"];
         if (idx == 0) {
@@ -2203,7 +2149,6 @@ class SecondController {
             worksheet.getCell(`A${(idx + 1) * 1 + 5 + a}`).value = "";
             worksheet.getCell(`B${(idx + 1) * 1 + 5 + a}`).value = `${d.nama}`;
             worksheet.getCell(`C${(idx + 1) * 1 + 5 + a}`).value = `${d.total}`;
-
           } else if (d.level == 1) {
             worksheet.getCell(
               `B${(idx + 1) * 1 + 5 + a}`
@@ -2217,7 +2162,9 @@ class SecondController {
           worksheet.getCell(`B${(idx + 1) * 1 + 5 + a}`).value = `${d.nama}`;
           worksheet.getCell(`C${(idx + 1) * 1 + 5 + a}`).value = `${d.total}`;
         } else if (d.level == 1) {
-          worksheet.getCell(`B${(idx + 1) * 1 + 5}`).value = `TOTAL ${namaTotal}`;
+          worksheet.getCell(
+            `B${(idx + 1) * 1 + 5}`
+          ).value = `TOTAL ${namaTotal}`;
           worksheet.getCell(`D${(idx + 1) * 1 + 5}`).value = nilaiTotal;
           worksheet.getCell(`B${(idx + 1) * 1 + 6}`).value = `${d.nama}`;
           nilaiAktiva = nilaiAktiva + d.total;
@@ -2229,7 +2176,32 @@ class SecondController {
     worksheet.getCell("A1").value = sekolah.nama;
     worksheet.getCell("A2").value = "NERACA";
     worksheet.getCell("A3").value = `Tanggal : ${awal1} - ${akhir1}`;
-
+    worksheet.addConditionalFormatting({
+      ref: `A5:D${ids+5}`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
     worksheet.getColumn("B").width = 20;
     worksheet.getColumn("C").width = 23;
     worksheet.getColumn("D").width = 28;
@@ -2347,15 +2319,55 @@ class SecondController {
     // return data1;
     let nilaiTotal = 0;
     let nilaiAktiva;
-    let a = 0;
+    let ids = 0;
+    let nos = 0;
+    let nod = 0;
     let namaTotal;
+    let totalAktiv;
+    let namaAktiv;
     await Promise.all(
       data1.map(async (d, idx) => {
+        // looping aktiva pasiva
         worksheet.getRow(4).values = ["No Akun", "Nama Akun", "(Rp)", "(Rp)"];
-        worksheet.getCell(`B${(idx + 1) * 1 + 5}`).value = `TOTAL ${namaTotal}`;
-          worksheet.getCell(`D${(idx + 1) * 1 + 5}`).value = nilaiTotal;
+        worksheet.getCell(`B${(ids + 1) * 1 + 4}`).value = d.nama;
+        ids = ids + 1;
+        totalAktiv = d.a.length;
+        namaAktiv;
+        await Promise.all(
+          d.a.map(async (c, idd) => {
+            //looping aset lancar,aset tetap, hutang
+            worksheet.getCell(`B${(ids + 1) * 1 + 4}`).value = c.nama;
+            ids = ids + 1;
+            nos = nos + c.b.length;
+            nod = c.b.length;
+            namaTotal = c.nama;
+            await Promise.all(
+              c.b.map(async (e, nox) => {
+                //looping kas, dana
+                worksheet.getCell(`B${(ids + 1) * 1 + 4}`).value = e.nama;
+                worksheet.getCell(`C${(ids + 1) * 1 + 4}`).value = e.total;
+                ids = ids + 1;
+                if (nox == nod - 1) {
+                  worksheet.getCell(
+                    `B${(ids + 1) * 1 + 4}`
+                  ).value = `TOTAL ${namaTotal}`;
+                  worksheet.getCell(`D${(ids + 1) * 1 + 4}`).value = e.total;
+                  ids = ids + 1;
+                  if (idd == totalAktiv - 1) {
+                    worksheet.getCell(
+                      `B${(ids + 1) * 1 + 4}`
+                    ).value = `TOTAL ${namaAktiv}`;
+                    worksheet.getCell(`D${(ids + 1) * 1 + 4}`).value = e.total;
+                    ids = ids + 1;
+                  }
+                }
+              })
+            );
+            //akhir promise
+          })
+        );
         // add column headers
-      
+
         worksheet.addConditionalFormatting({
           ref: `B${(idx + 1) * 1 + 5}:D${(idx + 1) * 1 + 5}`,
           rules: [
@@ -2383,6 +2395,7 @@ class SecondController {
             },
           ],
         });
+
         worksheet.addConditionalFormatting({
           ref: `A${(idx + 1) * 1 + 5}`,
           rules: [
@@ -2427,6 +2440,8 @@ class SecondController {
 
     return namaFile;
   }
+
+ 
 
   // async downloadLabaRugi123({ response, request, auth }) {
   //   const domain = request.headers().origin;
@@ -3113,6 +3128,233 @@ class SecondController {
 
     return namaFile;
   }
+  async downloadArusKas({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { tanggal_awal, tanggal_akhir, data1 } = request.post();
+
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
+    const awal1 = moment(tanggal_awal).locale("id").format("DD MMMM YYYY ");
+    const akhir1 = moment(tanggal_akhir).locale("id").format("DD MMMM YYYY ");
+
+    const template = await MKeuTemplateAkun.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .first();
+
+    const isi = JSON.parse(template.template);
+    // return data1;
+
+    let workbook = new Excel.Workbook();
+    let worksheet = workbook.addWorksheet(`Neraca`);
+    worksheet.mergeCells("A1:D1");
+    worksheet.mergeCells("A2:D2");
+    worksheet.mergeCells("A3:D3");
+    // worksheet.getCell(
+    //   "A4"
+    // ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
+    worksheet.addConditionalFormatting({
+      ref: "A1:D3",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 16,
+              bold: true,
+            },
+            // fill: {
+            //   type: "pattern",
+            //   pattern: "solid",
+            //   bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            // },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            // border: {
+            //   top: { style: "thin" },
+            //   left: { style: "thin" },
+            //   bottom: { style: "thin" },
+            //   right: { style: "thin" },
+            // },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: "A4:D4",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+
+    const dateObj = new Date();
+    const tahun = dateObj.getYear();
+    const bulan = monthNames[dateObj.getMonth()];
+    // return data1;
+    let nilaiTotal = 0;
+    let nilaiAktiva;
+    let ids = 0;
+    let nos = 0;
+    let nod = 0;
+    let namaTotal;
+    let totalAktiv;
+    let namaAktiv;
+    await Promise.all(
+      data1.map(async (d, idx) => {
+        // looping aktiva pasiva
+        worksheet.getRow(4).values = ["No Akun", "Nama Akun", "(Rp)", "(Rp)"];
+        worksheet.getCell(`B${(ids + 1) * 1 + 4}`).value = d.nama;
+        ids = ids + 1;
+        totalAktiv = d.a.length;
+        namaAktiv;
+        await Promise.all(
+          d.a.map(async (c, idd) => {
+            //looping aset lancar,aset tetap, hutang
+            worksheet.getCell(`B${(ids + 1) * 1 + 4}`).value = c.nama;
+            ids = ids + 1;
+            nos = nos + c.b.length;
+            nod = c.b.length;
+            namaTotal = c.nama;
+            await Promise.all(
+              c.b.map(async (e, nox) => {
+                //looping kas, dana
+                worksheet.getCell(`B${(ids + 1) * 1 + 4}`).value = e.nama;
+                worksheet.getCell(`C${(ids + 1) * 1 + 4}`).value = e.total;
+                ids = ids + 1;
+                if (nox == nod - 1) {
+                  worksheet.getCell(
+                    `B${(ids + 1) * 1 + 4}`
+                  ).value = `TOTAL ${namaTotal}`;
+                  worksheet.getCell(`D${(ids + 1) * 1 + 4}`).value = e.total;
+                  ids = ids + 1;
+                  if (idd == totalAktiv - 1) {
+                    worksheet.getCell(
+                      `B${(ids + 1) * 1 + 4}`
+                    ).value = `TOTAL ${namaAktiv}`;
+                    worksheet.getCell(`D${(ids + 1) * 1 + 4}`).value = e.total;
+                    ids = ids + 1;
+                  }
+                }
+              })
+            );
+            //akhir promise
+          })
+        );
+        // add column headers
+
+        worksheet.addConditionalFormatting({
+          ref: `B${(idx + 1) * 1 + 5}:D${(idx + 1) * 1 + 5}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+
+        worksheet.addConditionalFormatting({
+          ref: `A${(idx + 1) * 1 + 5}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+      })
+    );
+    worksheet.getCell("A1").value = sekolah.nama;
+    worksheet.getCell("A2").value = "NERACA";
+    worksheet.getCell("A3").value = `Tanggal : ${awal1} - ${akhir1}`;
+
+    worksheet.getColumn("B").width = 20;
+    worksheet.getColumn("C").width = 23;
+    worksheet.getColumn("D").width = 28;
+    worksheet.getColumn("E").width = 28;
+    let namaFile = `/uploads/Neraca-${bulan}-${keluarantanggalseconds}.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
+
   async getNeraca({ response, request, auth }) {
     const domain = request.headers().origin;
 
@@ -5314,6 +5556,469 @@ class SecondController {
 
     return response.ok({
       message: messagePutSuccess,
+    });
+  }
+
+  async getPerencanaan({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const user = await auth.getUser();
+
+    const { search } = request.get();
+
+    let perencanaan = MPerencanaanKeuangan.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 });
+
+    if (search) {
+      perencanaan.where("nama", "like", `%${search}%`);
+    }
+
+    perencanaan = await perencanaan.orderBy("tanggal_awal", "asc").fetch();
+
+    // const transaksi = await MKeuTransaksi.query()
+    //   .with("jurnal", (builder) => {
+    //     builder.where({ jenis: "debit" }).andWhere({ dihapus: 0 });
+    //   })
+    //   .where({ m_sekolah_id: sekolah.id })
+    //   .andWhere({ dihapus: 0 })
+    //   .fetch();
+
+    return response.ok({
+      perencanaan,
+    });
+  }
+
+  async postPerencanaan({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const user = await auth.getUser();
+
+    let { nama, tanggal_awal, tanggal_akhir } = request.post();
+
+    const rules = {
+      nama: "required",
+      tanggal_awal: "required",
+      tanggal_akhir: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+      "tanggal_awal.required": "Tanggal Awal harus diisi",
+      "tanggal_akhir.required": "Tanggal Akhir harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const perencanaan = await MPerencanaanKeuangan.create({
+      nama,
+      tanggal_awal,
+      tanggal_akhir,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+  async putPerencanaan({
+    response,
+    request,
+    auth,
+    params: { perencanaan_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { nama, tanggal_awal, tanggal_akhir } = request.post();
+
+    const rules = {
+      nama: "required",
+      tanggal_awal: "required",
+      tanggal_akhir: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+      "tanggal_awal.required": "Tanggal Awal harus diisi",
+      "tanggal_akhir.required": "Tanggal Akhir harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    let update = await MPerencanaanKeuangan.query()
+      .where({ id: perencanaan_id })
+      .update({
+        nama,
+        tanggal_awal,
+        tanggal_akhir,
+      });
+    if (!update) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deletePerencanaan({
+    response,
+    request,
+    auth,
+    params: { perencanaan_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const update = await MKeuPerencanaan.query()
+      .where({ id: perencanaan_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!update) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async otomatisAkun({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await MSekolah.query().where({ id: 578 }).first();
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    await MKeuAkun.create({
+      nama: "HARTA",
+      kode: 10000,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "AKTIVA LANCAR",
+      kode: 11000,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "KAS & bank",
+      kode: 11100,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "KAS",
+      kode: 11110,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "DANA BOS",
+      kode: 11120,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "DANA BOP",
+      kode: 11130,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "DANA BPMU",
+      kode: 11140,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "DANA YAYASAN",
+      kode: 11150,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "PIUTANG",
+      kode: 11200,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "PIUTANG PENDAPATAN JASA",
+      kode: 11210,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "PIUTANG KARYAWAN",
+      kode: 11220,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "PERLENGKAPAN KANTOR",
+      kode: 11300,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "PEMBAYARAN DIMUKA",
+      kode: 11400,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "PENDAPATAN DITERIMA DIMUKA",
+      kode: 11500,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "AKTIVA TETAP",
+      kode: 12000,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "PERALATAN",
+      kode: 12100,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "PERALATAN KANTOR",
+      kode: 12110,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "KENDARAAN",
+      kode: 12200,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "GEDUNG",
+      kode: 12300,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    //HUTANG
+    await MKeuAkun.create({
+      nama: "HUTANG",
+      kode: 20000,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "HUTANG LANCAR",
+      kode: 21000,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "HUTANG USAHA",
+      kode: 21100,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "HUTANG PAJAK",
+      kode: 21200,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "HUTANG BANK JATUH TEMPO",
+      kode: 21300,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "HUTANG JANGKA PENDEK LAINNYA",
+      kode: 21400,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "HUTANG JANGKA PANJANG",
+      kode: 22000,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "HUTANG BANK",
+      kode: 22100,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "MODAL SAHAM & LABA DITAHAN",
+      kode: 30000,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "MODAL SAHAM",
+      kode: 31000,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "LABA DITAHAN",
+      kode: 32000,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "PENDAPATAN",
+      kode: 40000,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "PENDAPATAN JASA",
+      kode: 41000,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "PENDAPATAN LAINNYA",
+      kode: 42000,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "BIAYA",
+      kode: 50000,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "BIAYA GAJI",
+      kode: 51000,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "BIAYA LISTRIK, AIT, TILP",
+      kode: 52000,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "BIAYA PERLENGKAPAN KANTOR",
+      kode: 53000,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "BIAYA SEWA",
+      kode: 54000,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "BIAYA PERAWATAN PERALATAN",
+      kode: 55000,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "BIAYA ASURANSI",
+      kode: 56000,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "BIAYA LAINNYA",
+      kode: 57000,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "BIAYA PENYUSUTAN PELARATAN KANTOR",
+      kode: 57100,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "BIAYA PENYUSUTAN PERALATAN BENGKEL",
+      kode: 57200,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "BIAYA PENYUSUTAN KENDARAAN",
+      kode: 57300,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "BIAYA PENYUSUTAN GEDUNG",
+      kode: 57400,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "LABA BERSIH",
+      kode: 58000,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+    await MKeuAkun.create({
+      nama: "PAJAK",
+      kode: 80000,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+    });
+
+
+
+    return response.ok({
+      message: messagePostSuccess,
     });
   }
 
