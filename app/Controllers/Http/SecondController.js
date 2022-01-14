@@ -816,6 +816,14 @@ class SecondController {
     const keuangan = await query.first();
     const akun = await MKeuAkun.query()
       .with("rek")
+      .with("jurnal", (builder) => {
+        builder
+          .select("id", "m_keu_transaksi_id", "m_keu_akun_id")
+          .with("transaksi", (builder) => {
+            builder.select("id", "nama");
+          })
+          .where({ dihapus: 0 });
+      })
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .fetch();
@@ -1529,7 +1537,7 @@ class SecondController {
       transaksi.whereBetween("tanggal", [dari_tanggal, sampai_tanggal]);
     }
 
-    transaksi = await transaksi.paginate(page, 25);
+    transaksi = await transaksi.orderBy("tanggal", "desc").paginate(page, 25);
 
     const akun = await MKeuAkun.query()
       .with("rek")
@@ -1537,9 +1545,16 @@ class SecondController {
       .andWhere({ m_sekolah_id: sekolah.id })
       .fetch();
 
+    const keuangan = await MKeuTemplateAkun.query()
+      .andWhere({
+        m_sekolah_id: sekolah.id,
+      })
+      .first();
+
     return response.ok({
       transaksi,
       akun,
+      keuangan,
     });
   }
 
@@ -2021,7 +2036,7 @@ class SecondController {
 
     const user = await auth.getUser();
 
-    const { tanggal_awal, tanggal_akhir,data } = request.post();
+    const { tanggal_awal, tanggal_akhir, data } = request.post();
 
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
@@ -2712,23 +2727,23 @@ class SecondController {
                   }
                 })
               );
-              worksheet.getCell(`C${(nox + 1) * 1 + 6}`).value = `${nilaiAkun.toLocaleString(
-                    "id-ID",
-                    {
-                      style: "currency",
-                      currency: "IDR",
-                    }
-                  )}`;
+              worksheet.getCell(
+                `C${(nox + 1) * 1 + 6}`
+              ).value = `${nilaiAkun.toLocaleString("id-ID", {
+                style: "currency",
+                currency: "IDR",
+              })}`;
             })
           );
-          worksheet.getCell(`B${(idx + 1) * 1 + 5 + awal}`).value = `TOTAL ${d.nama}`;
-          worksheet.getCell(`D${(idx + 1) * 1 + 5 + awal}`).value = `${totalKategori.toLocaleString(
-            "id-ID",
-            {
-              style: "currency",
-              currency: "IDR",
-            }
-          )}`;
+          worksheet.getCell(
+            `B${(idx + 1) * 1 + 5 + awal}`
+          ).value = `TOTAL ${d.nama}`;
+          worksheet.getCell(
+            `D${(idx + 1) * 1 + 5 + awal}`
+          ).value = `${totalKategori.toLocaleString("id-ID", {
+            style: "currency",
+            currency: "IDR",
+          })}`;
         } else if (idx >= 0) {
           worksheet.getCell(`B${idx + 7 + awal}`).value = `${d.nama}`;
           await Promise.all(
@@ -2753,34 +2768,33 @@ class SecondController {
                   }
                 })
               );
-              worksheet.getCell(`C${nox + 8 + awal}`).value = `${nilaiAkun.toLocaleString(
-                "id-ID",
-                {
-                  style: "currency",
-                  currency: "IDR",
-                }
-              )}`;
+              worksheet.getCell(
+                `C${nox + 8 + awal}`
+              ).value = `${nilaiAkun.toLocaleString("id-ID", {
+                style: "currency",
+                currency: "IDR",
+              })}`;
             })
           );
           worksheet.getCell(`B${idx + 8 + awal}`).value = `TOTAL ${d.nama}`;
-          worksheet.getCell(`D${idx + 8 + awal}`).value = `${totalKategori.toLocaleString(
-            "id-ID",
-            {
-              style: "currency",
-              currency: "IDR",
-            }
-          )}`;
+          worksheet.getCell(
+            `D${idx + 8 + awal}`
+          ).value = `${totalKategori.toLocaleString("id-ID", {
+            style: "currency",
+            currency: "IDR",
+          })}`;
         }
 
-        if(idx){
-          worksheet.getCell(`B${idx + 9 + awal}`).value = `LABA PAJAK SEBELUM (LABA)`;
-          worksheet.getCell(`D${idx + 9 + awal}`).value = `${totalKategori.toLocaleString(
-            "id-ID",
-            {
-              style: "currency",
-              currency: "IDR",
-            }
-          )}`;
+        if (idx) {
+          worksheet.getCell(
+            `B${idx + 9 + awal}`
+          ).value = `LABA PAJAK SEBELUM (LABA)`;
+          worksheet.getCell(
+            `D${idx + 9 + awal}`
+          ).value = `${totalKategori.toLocaleString("id-ID", {
+            style: "currency",
+            currency: "IDR",
+          })}`;
         }
 
         // awal = awal + d.__meta__.total;
@@ -2844,7 +2858,6 @@ class SecondController {
         },
       ],
     });
-   
 
     // worksheet.getCell(
     //   `A${8 + awal}`
@@ -2942,8 +2955,27 @@ class SecondController {
 
     kategori = await kategori.fetch();
 
+    const akun = await MKeuAkun.query()
+      .with("jurnal", (builder) => {
+        builder.where({ dihapus: 0 });
+        if (transaksiIds) {
+          builder.whereIn("m_keu_transaksi_id", transaksiIds);
+        }
+      })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
+    const keuangan = await MKeuTemplateAkun.query()
+      .andWhere({
+        m_sekolah_id: sekolah.id,
+      })
+      .first();
+
     return response.ok({
       kategori,
+      akun,
+      keuangan,
     });
   }
 
@@ -3224,9 +3256,28 @@ class SecondController {
       .limit(1)
       .fetch();
 
+    const akun = await MKeuAkun.query()
+      .with("jurnal", (builder) => {
+        builder.where({ dihapus: 0 });
+        if (transaksiIds) {
+          builder.whereIn("m_keu_transaksi_id", transaksiIds);
+        }
+      })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
+    const keuangan = await MKeuTemplateAkun.query()
+      .andWhere({
+        m_sekolah_id: sekolah.id,
+      })
+      .first();
+
     return response.ok({
       kategori,
       rumus,
+      akun,
+      keuangan,
     });
   }
 
@@ -3837,8 +3888,13 @@ class SecondController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { tanggal_awal1, tanggal_awal2, tanggal_akhir1, tanggal_akhir2, search } =
-      request.get();
+    let {
+      tanggal_awal1,
+      tanggal_awal2,
+      tanggal_akhir1,
+      tanggal_akhir2,
+      search,
+    } = request.get();
 
     let transaksiIds1, transaksiIds2;
     if (tanggal_awal1 && tanggal_awal2 && tanggal_akhir1 && tanggal_akhir2) {
@@ -3865,19 +3921,7 @@ class SecondController {
           .with("akunArusKas", (builder) => {
             builder
               .with("akun", (builder) => {
-                builder.with("akun", (builder) => {
-                  builder
-                    .with("jurnal1", (builder) => {
-                      builder
-                        .whereIn("m_keu_transaksi_id", transaksiIds1)
-                        .where({ dihapus: 0 });
-                    })
-                    .with("jurnal2", (builder) => {
-                      builder
-                        .whereIn("m_keu_transaksi_id", transaksiIds2)
-                        .where({ dihapus: 0 });
-                    });
-                });
+                builder.with("akun").where({ dihapus: 0 });
               })
               .where({ dihapus: 0 });
           })
@@ -3910,17 +3954,7 @@ class SecondController {
       .with("akun", (builder) => {
         builder
           .with("akun", (builder) => {
-            builder
-              .with("jurnal1", (builder) => {
-                builder
-                  .whereIn("m_keu_transaksi_id", transaksiIds1)
-                  .where({ dihapus: 0 });
-              })
-              .with("jurnal2", (builder) => {
-                builder
-                  .whereIn("m_keu_transaksi_id", transaksiIds2)
-                  .where({ dihapus: 0 });
-              });
+            builder.where({ dihapus: 0 });
           })
           .where({ dihapus: 0 });
       })
@@ -3928,14 +3962,75 @@ class SecondController {
       .andWhere({ dihapus: 0 })
       .fetch();
 
+    let labaRugi;
+
+    labaRugi = MKeuKategoriLabaRugi.query()
+      .with("akunLabaRugi", (builder) => {
+        builder
+          .with("akun", (builder) => {
+            builder
+              // .with("jurnal", (builder) => {
+              //   builder.where({ dihapus: 0 });
+              //   if (transaksiIds1) {
+              //     builder.whereIn("m_keu_transaksi_id", [
+              //       ...transaksiIds1,
+              //       ...transaksiIds2,
+              //     ]);
+              //   }
+              // })
+              .where({ dihapus: 0 });
+          })
+          .where({ dihapus: 0 })
+          .orderBy("urutan", "asc");
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id });
+
+    if (search) {
+      labaRugi.andWhere("nama", "like", `%${search}%`);
+    }
+
+    labaRugi = await labaRugi.fetch();
+
+    const rumuslabaRugi = await MRumusLabaRugi.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      // .limit(1)
+      .first();
+
+    const akun = await MKeuAkun.query()
+      .with("jurnal1", (builder) => {
+        builder
+          .whereIn("m_keu_transaksi_id", transaksiIds1)
+          .where({ dihapus: 0 });
+      })
+      .with("jurnal2", (builder) => {
+        builder
+          .whereIn("m_keu_transaksi_id", transaksiIds2)
+          .where({ dihapus: 0 });
+      })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
+    const keuangan = await MKeuTemplateAkun.query()
+      .andWhere({
+        m_sekolah_id: sekolah.id,
+      })
+      .first();
+
     return response.ok({
       kategori,
       rumus: {
         rumusKenaikan,
         rumusAwal,
         rumusAkhir,
+        rumuslabaRugi,
       },
       tipeAkun,
+      labaRugi,
+      akun,
+      keuangan,
     });
   }
 
@@ -3983,6 +4078,23 @@ class SecondController {
     }
 
     kategori = await kategori.fetch();
+
+    if (!kategori.toJSON().length) {
+      const defaultKategori = await MKeuKategoriArusKas.create({
+        nama: "Operasi",
+        dihapus: 0,
+        m_sekolah_id: sekolah.id,
+      });
+
+      const labaRugi = await MKeuAktivitasTransaksi.create({
+        m_sekolah_id: sekolah.id,
+        judul: "Laba & Rugi",
+        urutan: 1,
+        dihapus: 0,
+        laba: 1,
+        m_keu_kategori_arus_kas_id: defaultKategori.id,
+      });
+    }
 
     const rumusKenaikan = await MKeuRumusArusKas.query()
       .where({ m_sekolah_id: sekolah.id })

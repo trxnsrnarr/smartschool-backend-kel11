@@ -1239,7 +1239,7 @@ class PPDBController {
         builder.with("gelombang", (builder) => {
           builder
             .with("pendaftar", (builder) => {
-              builder.with("user");
+              builder.where({ dihapus: 0 }).with("user");
             })
             .with("jalur");
         });
@@ -1285,7 +1285,7 @@ class PPDBController {
         builder.with("gelombang", (builder) => {
           builder
             .with("pendaftar", (builder) => {
-              builder.with("user", (builder) => {
+              builder.where({ dihapus: 0 }).with("user", (builder) => {
                 builder.select("id", "nama");
               });
             })
@@ -2034,7 +2034,7 @@ class PPDBController {
     worksheet.getCell("A2").value = gelombang.nama;
     worksheet.getCell("A3").value = `${awal} - ${akhir}`;
 
-    const namaGelombang = gelombang.nama;
+    const namaGelombang = gelombang.nama.toLowerCase();
     await Promise.all(
       gelombang
         .toJSON()
