@@ -7764,7 +7764,8 @@ class MainController {
 
       const sudah = [];
       const belum = [];
-      checkUserBaca.map((d) => {
+
+      await Promise.all(checkUserBaca.map(async (d) => {
         const check = await TkMateriKesimpulan.query()
           .where({ m_topik_id: topik_id })
           .whereIn("m_user_id", [d])
@@ -7775,7 +7776,7 @@ class MainController {
         } else {
           belum.push(d);
         }
-      });
+      }))
 
       const user = await User.query()
         .with("kesimpulan", (builder) => {
