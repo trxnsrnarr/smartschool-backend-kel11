@@ -7776,8 +7776,7 @@ class MainController {
           } else {
             belum.push(d);
           }
-        })
-      );
+        }))
 
       const user = await User.query()
         .with("kesimpulan", (builder) => {
@@ -28823,7 +28822,7 @@ class MainController {
         worksheet.mergeCells(`AE10:AE11`);
         worksheet.mergeCells(`AF10:AF11`);
         worksheet.mergeCells(`AG10:AG11`);
-        worksheet.mergeCells(`AH10:AH11`);
+        worksheet.mergeCells(`AH10:H11`);
         worksheet.mergeCells(`AI10:AI11`);
         worksheet.addConditionalFormatting({
           ref: "A1:I3",
@@ -48465,7 +48464,7 @@ class MainController {
       "A5"
     ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
     worksheet.addConditionalFormatting({
-      ref: `A1:G4`,
+      ref: `A1:H4`,
       rules: [
         {
           type: "expression",
@@ -48486,7 +48485,7 @@ class MainController {
       ],
     });
     worksheet.addConditionalFormatting({
-      ref: `A4:G4`,
+      ref: `A4:H4`,
       rules: [
         {
           type: "expression",
@@ -48506,12 +48505,12 @@ class MainController {
         },
       ],
     });
-    worksheet.mergeCells(`A1:G1`);
-    worksheet.mergeCells(`A2:G2`);
-    worksheet.mergeCells(`A3:G3`);
-    worksheet.mergeCells(`A4:G4`);
+    worksheet.mergeCells(`A1:H1`);
+    worksheet.mergeCells(`A2:H2`);
+    worksheet.mergeCells(`A3:H3`);
+    worksheet.mergeCells(`A4:H4`);
     worksheet.addConditionalFormatting({
-      ref: `A6:G6`,
+      ref: `A6:H6`,
       rules: [
         {
           type: "expression",
