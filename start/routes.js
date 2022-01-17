@@ -242,6 +242,12 @@ Route.post("rencana-keuangan", "KeuanganController.postPerencanaan");
 Route.put("rencana-keuangan/:perencanaan_id", "KeuanganController.putPerencanaan");
 Route.delete("rencana-keuangan/:perencanaan_id", "KeuanganController.deletePerencanaan");
 
+// Rencana transaksi
+Route.get("rencana-transaksi/:rencana_id", "KeuanganController.getRencanaTransaksi");
+Route.post("rencana-transaksi/:rencana_id", "KeuanganController.postRencanaTransaksi");
+Route.put("rencana-transaksi/:transaksi_id", "KeuanganController.putRencanaTransaksi");
+Route.delete("rencana-transaksi/:transaksi_id", "KeuanganController.deleteRencanaTransaksi");
+
 // keuangan sekolah
 Route.get("/keuangan-sekolah", "SecondController.getAkunKeuangan");
 Route.put("/keuangan-sekolah", "SecondController.putAkunKeuangan");

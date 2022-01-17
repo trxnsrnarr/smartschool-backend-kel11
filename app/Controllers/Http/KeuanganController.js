@@ -6,6 +6,10 @@ const MSekolah = use("App/Models/MSekolah");
 const Mta = use("App/Models/Mta");
 const User = use("App/Models/User");
 const MRencanaKeuangan = use("App/Models/MRencanaKeuangan");
+const MRencanaTransaksi = use("App/Models/MRencanaTransaksi");
+const MKeuRencanaJurnal = use("App/Models/MKeuRencanaJurnal");
+const MKeuTemplateAkun = use("App/Models/MKeuTemplateAkun");
+const MKeuAkun = use("App/Models/MKeuAkun");
 
 const messagePostSuccess = "Data berhasil ditambahkan";
 const messageSaveSuccess = "Data berhasil disimpan";
@@ -264,7 +268,7 @@ class KeuanganController {
       message: messageDeleteSuccess,
     });
   }
-  async getRencanaTransaksi({ response, request, auth }) {
+  async getRencanaTransaksi({ response, request, auth, params: {rencana_id} }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -279,7 +283,7 @@ class KeuanganController {
 
     let transaksiIds;
     if (tipe_akun) {
-      transaksiIds = await MRencanaJurnal.query()
+      transaksiIds = await MKeuRencanaJurnal.query()
         .where({ m_keu_akun_id: tipe_akun })
         .pluck("m_rencana_transaksi_id");
     }
@@ -324,7 +328,12 @@ class KeuanganController {
       keuangan,
     });
   }
-  async postRencanaTransaksi({ response, request, auth }) {
+  async postRencanaTransaksi({
+    response,
+    request,
+    auth,
+    params: { rencana_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -364,9 +373,9 @@ class KeuanganController {
 
     await Promise.all(
       jurnal.map(async (d) => {
-        await MRencanaJurnal.create({
+        await MKeuRencanaJurnal.create({
           jenis: d.jenis,
-          m_keu_transaksi_id: transaksi.id,
+          m_rencana_transaksi_id: transaksi.id,
           m_keu_akun_id: d.m_keu_akun_id,
           saldo: d.saldo,
           dihapus: 0,
@@ -412,7 +421,7 @@ class KeuanganController {
       .where({ id: transaksi_id })
       .first();
 
-    const jurnalIds = await MRencanaJurnal.query()
+    const jurnalIds = await MKeuRencanaJurnal.query()
       .where({ m_rencana_transaksi_id: transaksi_id })
       .where({ dihapus: 0 })
       .ids();
@@ -424,12 +433,12 @@ class KeuanganController {
       jurnalIds
         .filter((d) => !editJurnalId.includes(d))
         .map(async (d) => {
-          await MRencanaJurnal.query().where({ id: d }).update({
+          await MKeuRencanaJurnal.query().where({ id: d }).update({
             dihapus: 1,
           });
         }),
       editJurnal.map(async (d) => {
-        await MRencanaJurnal.query().where({ id: d.id }).update({
+        await MKeuRencanaJurnal.query().where({ id: d.id }).update({
           jenis: d.jenis,
           m_keu_akun_id: d.m_keu_akun_id,
           saldo: d.saldo,
@@ -437,7 +446,7 @@ class KeuanganController {
         });
       }),
       newJurnal.map(async (d) => {
-        await MRencanaJurnal.create({
+        await MKeuRencanaJurnal.create({
           jenis: d.jenis,
           m_rencana_transaksi_id: transaksi.id,
           m_keu_akun_id: d.m_keu_akun_id,
