@@ -1,5 +1,7 @@
 "use strict";
 
+const { validate } = use("Validator");
+
 const MSekolah = use("App/Models/MSekolah");
 const Mta = use("App/Models/Mta");
 const User = use("App/Models/User");
@@ -13,6 +15,7 @@ const messageNotFound = "Data tidak ditemukan";
 const messageForbidden = "Dilarang, anda bukan seorang admin";
 const messageEmailSuccess = "Data berhasil dikirim ke email";
 const pesanSudahDitambahkan = "Data sudah ditambahkan";
+
 class KeuanganController {
   async getSekolahByDomain(domain) {
     const sekolah = await MSekolah.query()
@@ -116,6 +119,30 @@ class KeuanganController {
       return response.unprocessableEntity(validation.messages());
     }
 
+    const checkTanggalawal = await MRencanaKeuangan.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
+      .where("tanggal_awal", "<=", tanggal_awal)
+      .where("tanggal_akhir", ">=", tanggal_awal)
+      .first();
+
+    const checkTanggalakhir = await MRencanaKeuangan.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
+      .where("tanggal_awal", "<=", tanggal_akhir)
+      .where("tanggal_akhir", ">=", tanggal_akhir)
+      .first();
+    if (checkTanggalawal) {
+      return response.expectationFailed({
+        message: `Tanggal awal berada dalam jangkauan rencana ${checkTanggalawal.nama}`,
+      });
+    }
+    if (checkTanggalakhir) {
+      return response.expectationFailed({
+        message: `Tanggal akhir berada dalam jangkauan rencana ${checkTanggalakhir.nama}`,
+      });
+    }
+
     const perencanaan = await MRencanaKeuangan.create({
       nama,
       tanggal_awal,
@@ -159,6 +186,32 @@ class KeuanganController {
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
       return response.unprocessableEntity(validation.messages());
+    }
+
+    const checkTanggalawal = await MRencanaKeuangan.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
+      .where("tanggal_awal", "<=", tanggal_awal)
+      .where("tanggal_akhir", ">=", tanggal_awal)
+      .whereNot("id", perencanaan_id)
+      .first();
+
+    const checkTanggalakhir = await MRencanaKeuangan.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
+      .where("tanggal_awal", "<=", tanggal_akhir)
+      .where("tanggal_akhir", ">=", tanggal_akhir)
+      .whereNot("id", perencanaan_id)
+      .first();
+    if (checkTanggalawal) {
+      return response.expectationFailed({
+        message: `Tanggal awal berada dalam jangkauan rencana ${checkTanggalawal.nama}`,
+      });
+    }
+    if (checkTanggalakhir) {
+      return response.expectationFailed({
+        message: `Tanggal akhir berada dalam jangkauan rencana ${checkTanggalakhir.nama}`,
+      });
     }
 
     let update = await MRencanaKeuangan.query()
@@ -239,7 +292,7 @@ class KeuanganController {
       })
       .where({ m_sekolah_id: sekolah.id })
       .where({ dihapus: 0 })
-      .andWhere({m_rencana_keuangan_id:rencana_id});
+      .andWhere({ m_rencana_keuangan_id: rencana_id });
 
     if (transaksiIds) {
       transaksi.whereIn("id", transaksiIds);
@@ -297,8 +350,8 @@ class KeuanganController {
     }
 
     const rencana = await MRencanaKeuangan.query()
-    .where({id:rencana_id})
-    .first()
+      .where({ id: rencana_id })
+      .first();
 
     const transaksi = await MRencanaTransaksi.create({
       nama,
@@ -306,7 +359,7 @@ class KeuanganController {
       tanggal,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
-      m_rencana_keuangan_id: rencana.id
+      m_rencana_keuangan_id: rencana.id,
     });
 
     await Promise.all(
@@ -325,7 +378,12 @@ class KeuanganController {
       message: messagePostSuccess,
     });
   }
-  async putRencanaTransaksi({ response, request, auth, params: { transaksi_id } }) {
+  async putRencanaTransaksi({
+    response,
+    request,
+    auth,
+    params: { transaksi_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -407,7 +465,12 @@ class KeuanganController {
     });
   }
 
-  async deleteRencanaTransaksi({ response, request, auth, params: { transaksi_id } }) {
+  async deleteRencanaTransaksi({
+    response,
+    request,
+    auth,
+    params: { transaksi_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);

@@ -2,17 +2,18 @@
 
 /** @type {typeof import('@adonisjs/lucid/src/Lucid/Model')} */
 const Model = use("Model");
+const moment = require("moment");
 
 class MRencanaKeuangan extends Model {
   static get table() {
     return "m_rencana_keuangan";
   }
+  static get computed() {
+    return ["aktif"];
+  }
 
-  setAktif({ tanggal_akhir, tanggal_awal }) {
-    return (
-      tanggal_akhir >= moment().format("YYYY-MM-DD") &&
-      tanggal_awal <= moment().format("YYYY-MM-DD")
-    );
+  getAktif({ tanggal_akhir, tanggal_awal }) {
+    return tanggal_akhir >= moment() && tanggal_awal <= moment();
   }
 }
 
