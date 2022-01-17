@@ -211,6 +211,299 @@ class KeuanganController {
       message: messageDeleteSuccess,
     });
   }
+  async getRencanaTransaksi({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const user = await auth.getUser();
+
+    const { page, search, dari_tanggal, sampai_tanggal, tipe_akun } =
+      request.get();
+
+    let transaksiIds;
+    if (tipe_akun) {
+      transaksiIds = await MRencanaJurnal.query()
+        .where({ m_keu_akun_id: tipe_akun })
+        .pluck("m_rencana_transaksi_id");
+    }
+
+    let transaksi = MRencanaTransaksi.query()
+      .with("jurnal", (builder) => {
+        builder.where({ dihapus: 0 }).with("akun", (builder) => {
+          builder.select("nama", "id");
+        });
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
+      .andWhere({m_rencana_keuangan_id:rencana_id});
+
+    if (transaksiIds) {
+      transaksi.whereIn("id", transaksiIds);
+    }
+    if (search) {
+      transaksi.where("nama", "like", `%${search}%`);
+    }
+    if (dari_tanggal && sampai_tanggal) {
+      transaksi.whereBetween("tanggal", [dari_tanggal, sampai_tanggal]);
+    }
+
+    transaksi = await transaksi.orderBy("tanggal", "desc").paginate(page, 25);
+
+    const akun = await MKeuAkun.query()
+      .with("rek")
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
+    const keuangan = await MKeuTemplateAkun.query()
+      .andWhere({
+        m_sekolah_id: sekolah.id,
+      })
+      .first();
+
+    return response.ok({
+      transaksi,
+      akun,
+      keuangan,
+    });
+  }
+  async postRencanaTransaksi({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const user = await auth.getUser();
+
+    let { nama, nomor, tanggal, jurnal = [] } = request.post();
+
+    const rules = {
+      nama: "required",
+      tanggal: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+      "tanggal.required": "Tanggal harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const rencana = await MRencanaKeuangan.query()
+    .where({id:rencana_id})
+    .first()
+
+    const transaksi = await MRencanaTransaksi.create({
+      nama,
+      nomor,
+      tanggal,
+      dihapus: 0,
+      m_sekolah_id: sekolah.id,
+      m_rencana_keuangan_id: rencana.id
+    });
+
+    await Promise.all(
+      jurnal.map(async (d) => {
+        await MRencanaJurnal.create({
+          jenis: d.jenis,
+          m_keu_transaksi_id: transaksi.id,
+          m_keu_akun_id: d.m_keu_akun_id,
+          saldo: d.saldo,
+          dihapus: 0,
+        });
+      })
+    );
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+  async putRencanaTransaksi({ response, request, auth, params: { transaksi_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { nama, nomor, tanggal, jurnal = [] } = request.post();
+
+    const rules = {
+      nama: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const transaksi = await MRencanaTransaksi.query()
+      .with("jurnal")
+      .where({ id: transaksi_id })
+      .first();
+
+    const jurnalIds = await MRencanaJurnal.query()
+      .where({ m_rencana_transaksi_id: transaksi_id })
+      .where({ dihapus: 0 })
+      .ids();
+    const editJurnal = jurnal.filter((d) => d.id);
+    const editJurnalId = editJurnal.map((d) => d.id);
+    const newJurnal = jurnal.filter((d) => !d.id);
+
+    await Promise.all(
+      jurnalIds
+        .filter((d) => !editJurnalId.includes(d))
+        .map(async (d) => {
+          await MRencanaJurnal.query().where({ id: d }).update({
+            dihapus: 1,
+          });
+        }),
+      editJurnal.map(async (d) => {
+        await MRencanaJurnal.query().where({ id: d.id }).update({
+          jenis: d.jenis,
+          m_keu_akun_id: d.m_keu_akun_id,
+          saldo: d.saldo,
+          dihapus: 0,
+        });
+      }),
+      newJurnal.map(async (d) => {
+        await MRencanaJurnal.create({
+          jenis: d.jenis,
+          m_rencana_transaksi_id: transaksi.id,
+          m_keu_akun_id: d.m_keu_akun_id,
+          saldo: d.saldo,
+          dihapus: 0,
+        });
+      })
+    );
+
+    let update = await MRencanaTransaksi.query()
+      .where({ id: transaksi_id })
+      .update({
+        nama,
+        nomor,
+        tanggal,
+      });
+    if (!update) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteRencanaTransaksi({ response, request, auth, params: { transaksi_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const update = await MRencanaTransaksi.query()
+      .where({ id: transaksi_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!update) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async getRencanaNeraca({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let { search, tanggal_awal, tanggal_akhir } = request.get();
+
+    let transaksiIds;
+    if (tanggal_awal && tanggal_akhir) {
+      transaksiIds = await MKeuTransaksi.query()
+        .whereBetween("tanggal", [tanggal_awal, tanggal_akhir])
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ dihapus: 0 })
+        .ids();
+    }
+    let kategori;
+
+    kategori = MKeuKategoriNeraca.query()
+      .with("akunNeraca", (builder) => {
+        builder
+          .with("akun", (builder) => {
+            builder
+              .with("jurnal", (builder) => {
+                builder.where({ dihapus: 0 });
+                if (transaksiIds) {
+                  builder.whereIn("m_keu_transaksi_id", transaksiIds);
+                }
+              })
+              .where({ dihapus: 0 });
+          })
+          .where({ dihapus: 0 })
+          .orderBy("urutan", "asc");
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id });
+
+    if (search) {
+      kategori.andWhere("nama", "like", `%${search}%`);
+    }
+
+    kategori = await kategori.fetch();
+
+    const akun = await MKeuAkun.query()
+      .with("jurnal", (builder) => {
+        builder.where({ dihapus: 0 });
+        if (transaksiIds) {
+          builder.whereIn("m_keu_transaksi_id", transaksiIds);
+        }
+      })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
+    const keuangan = await MKeuTemplateAkun.query()
+      .andWhere({
+        m_sekolah_id: sekolah.id,
+      })
+      .first();
+
+    return response.ok({
+      kategori,
+      akun,
+      keuangan,
+    });
+  }
 }
 
 module.exports = KeuanganController;
