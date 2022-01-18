@@ -5,7 +5,7 @@ const Model = use('Model')
 
 class MKeuRencanaJurnal extends Model {
     static get table() {
-        return "m_keu_rencana_jurnal";
+        return "m_rencana_jurnal";
       }
     
       akun() {
