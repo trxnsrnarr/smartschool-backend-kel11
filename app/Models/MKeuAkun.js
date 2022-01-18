@@ -15,6 +15,15 @@ class MKeuAkun extends Model {
   jurnal() {
     return this.hasMany("App/Models/MKeuJurnal");
   }
+  rencanaJurnal() {
+    return this.hasMany("App/Models/MRencanaJurnal");
+  }
+  rencanaJurnal1() {
+    return this.hasMany("App/Models/MRencanaJurnal");
+  }
+  rencanaJurnal2() {
+    return this.hasMany("App/Models/MRencanaJurnal");
+  }
   jurnal1() {
     return this.hasMany("App/Models/MKeuJurnal");
   }

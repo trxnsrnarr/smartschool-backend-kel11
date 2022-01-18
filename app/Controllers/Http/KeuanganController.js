@@ -4,6 +4,10 @@ const MSekolah = use("App/Models/MSekolah");
 const Mta = use("App/Models/Mta");
 const User = use("App/Models/User");
 const MRencanaKeuangan = use("App/Models/MRencanaKeuangan");
+const MRencanaTransaksi = use("App/Models/MRencanaTransaksi");
+const MRencanaKategoriNeraca = use("App/Models/MRencanaKategoriNeraca");
+const MRencanaJurnal = use("App/Models/MRencanaJurnal");
+const MRencanaKategoriLabaRugi = use("App/Models/MRencanaKategoriLabaRugi");
 
 const messagePostSuccess = "Data berhasil ditambahkan";
 const messageSaveSuccess = "Data berhasil disimpan";
@@ -448,7 +452,7 @@ class KeuanganController {
 
     let transaksiIds;
     if (tanggal_awal && tanggal_akhir) {
-      transaksiIds = await MKeuTransaksi.query()
+      transaksiIds = await MRencanaTransaksi.query()
         .whereBetween("tanggal", [tanggal_awal, tanggal_akhir])
         .where({ m_sekolah_id: sekolah.id })
         .where({ dihapus: 0 })
@@ -456,15 +460,15 @@ class KeuanganController {
     }
     let kategori;
 
-    kategori = MKeuKategoriNeraca.query()
+    kategori = MRencanaKategoriNeraca.query()
       .with("akunNeraca", (builder) => {
         builder
           .with("akun", (builder) => {
             builder
-              .with("jurnal", (builder) => {
+              .with("rencanaJurnal", (builder) => {
                 builder.where({ dihapus: 0 });
                 if (transaksiIds) {
-                  builder.whereIn("m_keu_transaksi_id", transaksiIds);
+                  builder.whereIn("m_rencana_transaksi_id", transaksiIds);
                 }
               })
               .where({ dihapus: 0 });
@@ -482,10 +486,10 @@ class KeuanganController {
     kategori = await kategori.fetch();
 
     const akun = await MKeuAkun.query()
-      .with("jurnal", (builder) => {
+      .with("rencanaJurnal", (builder) => {
         builder.where({ dihapus: 0 });
         if (transaksiIds) {
-          builder.whereIn("m_keu_transaksi_id", transaksiIds);
+          builder.whereIn("m_rencana_transaksi_id", transaksiIds);
         }
       })
       .andWhere({ dihapus: 0 })
@@ -500,6 +504,240 @@ class KeuanganController {
 
     return response.ok({
       kategori,
+      akun,
+      keuangan,
+    });
+  }
+  async getRencanaLabaRugi({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let { search, tanggal_awal, tanggal_akhir } = request.get();
+
+    let transaksiIds;
+    if (tanggal_awal && tanggal_akhir) {
+      transaksiIds = await MRencanaTransaksi.query()
+        .whereBetween("tanggal", [tanggal_awal, tanggal_akhir])
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ dihapus: 0 })
+        .andWhere({m_rencana_keuangan_id: rencana_id})
+        .ids();
+    }
+
+    let kategori;
+
+    kategori = MRencanaKategoriLabaRugi.query()
+      .with("akunLabaRugi", (builder) => {
+        builder
+          .with("akun", (builder) => {
+            builder
+              .with("rencanaJurnal", (builder) => {
+                builder.where({ dihapus: 0 });
+                if (transaksiIds) {
+                  builder.whereIn("m_rencana_transaksi_id", transaksiIds);
+                }
+              })
+              .where({ dihapus: 0 });
+          })
+          .where({ dihapus: 0 })
+          .orderBy("urutan", "asc");
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id });
+
+    if (search) {
+      kategori.andWhere("nama", "like", `%${search}%`);
+    }
+
+    kategori = await kategori.fetch();
+
+    const rumus = await MRumusLabaRugi.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .limit(1)
+      .fetch();
+
+    const akun = await MKeuAkun.query()
+      .with("rencanaJurnal", (builder) => {
+        builder.where({ dihapus: 0 });
+        if (transaksiIds) {
+          builder.whereIn("m_rencana_transaksi_id", transaksiIds);
+        }
+      })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
+    const keuangan = await MKeuTemplateAkun.query()
+      .andWhere({
+        m_sekolah_id: sekolah.id,
+      })
+      .first();
+
+    return response.ok({
+      kategori,
+      rumus,
+      akun,
+      keuangan,
+    });
+  }
+  async getArusKasLaporan({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let {
+      tanggal_awal1,
+      tanggal_awal2,
+      tanggal_akhir1,
+      tanggal_akhir2,
+      search,
+    } = request.get();
+
+    let transaksiIds1, transaksiIds2;
+    if (tanggal_awal1 && tanggal_awal2 && tanggal_akhir1 && tanggal_akhir2) {
+      transaksiIds1 = await MRencanaTransaksi.query()
+        .whereBetween("tanggal", [tanggal_awal1, tanggal_akhir1])
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ dihapus: 0 })
+        .andWhere({ m_rencana_transaksi_id:rencana_id})
+        .ids();
+      transaksiIds2 = await MRencanaTransaksi.query()
+        .whereBetween("tanggal", [tanggal_awal2, tanggal_akhir2])
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ dihapus: 0 })
+        .andWhere({ m_rencana_transaksi_id :rencana_id })
+        .ids();
+    } else {
+      return response.notFound({
+        message: "harap memasukan tanggal periode 1 dan 2",
+      });
+    }
+    let kategori;
+
+    kategori = MKeuKategoriArusKas.query()
+      .with("tipeAkun", (builder) => {
+        builder
+          .with("akunArusKas", (builder) => {
+            builder
+              .with("akun", (builder) => {
+                builder.with("akun").where({ dihapus: 0 });
+              })
+              .where({ dihapus: 0 });
+          })
+          .where({ dihapus: 0 })
+          .orderBy("urutan", "asc");
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id });
+
+    if (search) {
+      kategori.andWhere("nama", "like", `%${search}%`);
+    }
+
+    kategori = await kategori.fetch();
+
+    const rumusKenaikan = await MKeuRumusArusKas.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .first();
+    const rumusAwal = await MKeuRumusSaldoKasAwal.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .first();
+    const rumusAkhir = await MKeuRumusSaldoKasAkhir.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    const tipeAkun = await MKeuKategoriTipeAkun.query()
+      .with("akun", (builder) => {
+        builder
+          .with("akun", (builder) => {
+            builder.where({ dihapus: 0 });
+          })
+          .where({ dihapus: 0 });
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    let labaRugi;
+
+    labaRugi = MKeuKategoriLabaRugi.query()
+      .with("akunLabaRugi", (builder) => {
+        builder
+          .with("akun", (builder) => {
+            builder
+              // .with("jurnal", (builder) => {
+              //   builder.where({ dihapus: 0 });
+              //   if (transaksiIds1) {
+              //     builder.whereIn("m_keu_transaksi_id", [
+              //       ...transaksiIds1,
+              //       ...transaksiIds2,
+              //     ]);
+              //   }
+              // })
+              .where({ dihapus: 0 });
+          })
+          .where({ dihapus: 0 })
+          .orderBy("urutan", "asc");
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id });
+
+    if (search) {
+      labaRugi.andWhere("nama", "like", `%${search}%`);
+    }
+
+    labaRugi = await labaRugi.fetch();
+
+    const rumuslabaRugi = await MRumusLabaRugi.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      // .limit(1)
+      .first();
+
+    const akun = await MKeuAkun.query()
+      .with("rencanaJurnal1", (builder) => {
+        builder
+          .whereIn("m_rencana_transaksi_id", transaksiIds1)
+          .where({ dihapus: 0 });
+      })
+      .with("rencanaJurnal2", (builder) => {
+        builder
+          .whereIn("m_rencana_transaksi_id", transaksiIds2)
+          .where({ dihapus: 0 });
+      })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
+    const keuangan = await MKeuTemplateAkun.query()
+      .andWhere({
+        m_sekolah_id: sekolah.id,
+      })
+      .first();
+
+    return response.ok({
+      kategori,
+      rumus: {
+        rumusKenaikan,
+        rumusAwal,
+        rumusAkhir,
+        rumuslabaRugi,
+      },
+      tipeAkun,
+      labaRugi,
       akun,
       keuangan,
     });
