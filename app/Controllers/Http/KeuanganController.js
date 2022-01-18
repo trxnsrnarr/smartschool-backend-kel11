@@ -12,6 +12,7 @@ const MRencanaKategoriLabaRugi = use("App/Models/MRencanaKategoriLabaRugi");
 const MKeuRencanaJurnal = use("App/Models/MKeuRencanaJurnal");
 const MKeuTemplateAkun = use("App/Models/MKeuTemplateAkun");
 const MKeuAkun = use("App/Models/MKeuAkun");
+const MRencanaRumusLabaRugi = use("App/Models/MRencanaRumusLabaRugi");
 
 const messagePostSuccess = "Data berhasil ditambahkan";
 const messageSaveSuccess = "Data berhasil disimpan";
@@ -626,9 +627,10 @@ class KeuanganController {
 
     kategori = await kategori.fetch();
 
-    const rumus = await MRumusLabaRugi.query()
+    const rumus = await MRencanaRumusLabaRugi.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
+      .andWhere({ m_rencana_keuangan_id:rencana_id})
       .limit(1)
       .fetch();
 
