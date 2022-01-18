@@ -13,6 +13,12 @@ const MKeuRencanaJurnal = use("App/Models/MKeuRencanaJurnal");
 const MKeuTemplateAkun = use("App/Models/MKeuTemplateAkun");
 const MKeuAkun = use("App/Models/MKeuAkun");
 const MRencanaRumusLabaRugi = use("App/Models/MRencanaRumusLabaRugi");
+const MRencanaRumusArusKas = use("App/Models/MRencanaRumusArusKas");
+const MRencanaRumusSaldoKasAwal = use("App/Models/MRencanaRumusSaldoKasAwal");
+const MRencanaRumusSaldoKasAkhir = use("App/Models/MRencanaRumusSaldoKasAkhir");
+const MRencanaKategoriTipeAkun = use("App/Models/MRencanaKategoriTipeAkun");
+const MRencanaKategoriArusKas = use("App/Models/MRencanaKategoriArusKas");
+
 
 const messagePostSuccess = "Data berhasil ditambahkan";
 const messageSaveSuccess = "Data berhasil disimpan";
@@ -658,7 +664,8 @@ class KeuanganController {
       keuangan,
     });
   }
-  async getArusKasLaporan({ response, request, auth }) {
+
+  async getRencanaArusKasLaporan({ response, request, auth }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -696,7 +703,7 @@ class KeuanganController {
     }
     let kategori;
 
-    kategori = MKeuKategoriArusKas.query()
+    kategori = MRencanaKategoriArusKas.query()
       .with("tipeAkun", (builder) => {
         builder
           .with("akunArusKas", (builder) => {
@@ -710,7 +717,8 @@ class KeuanganController {
           .orderBy("urutan", "asc");
       })
       .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id });
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_rencana_keuangan_id:rencana_id});
 
     if (search) {
       kategori.andWhere("nama", "like", `%${search}%`);
@@ -718,20 +726,20 @@ class KeuanganController {
 
     kategori = await kategori.fetch();
 
-    const rumusKenaikan = await MKeuRumusArusKas.query()
+    const rumusKenaikan = await MRencanaRumusArusKas.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .first();
-    const rumusAwal = await MKeuRumusSaldoKasAwal.query()
+    const rumusAwal = await MRencanaRumusSaldoKasAwal.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .first();
-    const rumusAkhir = await MKeuRumusSaldoKasAkhir.query()
+    const rumusAkhir = await MRencanaRumusSaldoKasAkhir.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .first();
 
-    const tipeAkun = await MKeuKategoriTipeAkun.query()
+    const tipeAkun = await MRencanaKategoriTipeAkun.query()
       .with("akun", (builder) => {
         builder
           .with("akun", (builder) => {
@@ -745,7 +753,7 @@ class KeuanganController {
 
     let labaRugi;
 
-    labaRugi = MKeuKategoriLabaRugi.query()
+    labaRugi = MRencanaKategoriLabaRugi.query()
       .with("akunLabaRugi", (builder) => {
         builder
           .with("akun", (builder) => {
@@ -765,7 +773,8 @@ class KeuanganController {
           .orderBy("urutan", "asc");
       })
       .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id });
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_rencana_keuangan_id: rencana_id});
 
     if (search) {
       labaRugi.andWhere("nama", "like", `%${search}%`);
@@ -773,7 +782,7 @@ class KeuanganController {
 
     labaRugi = await labaRugi.fetch();
 
-    const rumuslabaRugi = await MRumusLabaRugi.query()
+    const rumuslabaRugi = await MRencanaRumusLabaRugi.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       // .limit(1)
