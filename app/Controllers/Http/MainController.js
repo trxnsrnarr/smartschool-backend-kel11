@@ -9332,7 +9332,7 @@ class MainController {
       return response.ok({
         timeline,
         sudah_lewat,
-        timelines,
+        timelines: timelines.toJSON().sort((a, b) => a.timeline.id - b.timeline.id),
       });
     }
 

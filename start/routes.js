@@ -234,6 +234,18 @@ Route.post("/materi", "MainController.postMateri");
 Route.put("/materi/:materi_id", "MainController.putMateri");
 Route.delete("/materi/:materi_id", "MainController.deleteMateri");
 
+// rencana Keuangan
+Route.get("rencana-keuangan", "KeuanganController.getPerencanaan");
+Route.post("rencana-keuangan", "KeuanganController.postPerencanaan");
+Route.put("rencana-keuangan/:perencanaan_id", "KeuanganController.putPerencanaan");
+Route.delete("rencana-keuangan/:perencanaan_id", "KeuanganController.deletePerencanaan");
+
+// Rencana transaksi
+Route.get("rencana-transaksi/:rencana_id", "KeuanganController.getRencanaTransaksi");
+Route.post("rencana-transaksi/:rencana_id", "KeuanganController.postRencanaTransaksi");
+Route.put("rencana-transaksi/:transaksi_id", "KeuanganController.putRencanaTransaksi");
+Route.delete("rencana-transaksi/:transaksi_id", "KeuanganController.deleteRencanaTransaksi");
+
 // keuangan sekolah
 Route.get("/keuangan-sekolah", "SecondController.getAkunKeuangan");
 Route.put("/keuangan-sekolah", "SecondController.putAkunKeuangan");
@@ -310,17 +322,29 @@ Route.delete(
 // Neraca
 Route.get("/neraca-keuangan", "SecondController.getNeraca");
 Route.post("/kategori-neraca", "SecondController.postKategoriNeraca");
-Route.put("/kategori-neraca/:kategori_id", "SecondController.putKategoriNeraca");
-Route.delete("/kategori-neraca/:kategori_id", "SecondController.deleteKategoriNeraca");
+Route.put(
+  "/kategori-neraca/:kategori_id",
+  "SecondController.putKategoriNeraca"
+);
+Route.delete(
+  "/kategori-neraca/:kategori_id",
+  "SecondController.deleteKategoriNeraca"
+);
 Route.post("/akun-neraca", "SecondController.postNeraca");
 Route.put("/akun-neraca/:neraca_id", "SecondController.putNeraca");
 Route.delete("/akun-neraca/:neraca_id", "SecondController.deleteNeraca");
 
-// Laba Rugi 
+// Laba Rugi
 Route.get("/laba-rugi", "SecondController.getLabaRugi");
 Route.post("/kategori-laba", "SecondController.postKategoriLabaRugi");
-Route.put("/kategori-laba/:kategori_id", "SecondController.putKategoriLabaRugi");
-Route.delete("/kategori-laba/:kategori_id", "SecondController.deleteKategoriLabaRugi");
+Route.put(
+  "/kategori-laba/:kategori_id",
+  "SecondController.putKategoriLabaRugi"
+);
+Route.delete(
+  "/kategori-laba/:kategori_id",
+  "SecondController.deleteKategoriLabaRugi"
+);
 Route.post("/rumus-laba", "SecondController.postRumusLabaRugi");
 Route.put("/rumus-laba/:rumus_id", "SecondController.putRumusLabaRugi");
 Route.delete("/rumus-laba/:rumus_id", "SecondController.deleteRumusLabaRugi");
@@ -333,7 +357,10 @@ Route.get("/arus-keuangan", "SecondController.getArusKas");
 Route.get("/arus-keuangan-laporan", "SecondController.getArusKasLaporan");
 Route.post("/kategori-arus", "SecondController.postKategoriArusKas");
 Route.put("/kategori-arus/:kategori_id", "SecondController.putKategoriArusKas");
-Route.delete("/kategori-arus/:kategori_id", "SecondController.deleteKategoriArusKas");
+Route.delete(
+  "/kategori-arus/:kategori_id",
+  "SecondController.deleteKategoriArusKas"
+);
 Route.post("/aktivitas-arus", "SecondController.postArusKas");
 Route.put("/aktivitas-arus/:aktivitas_id", "SecondController.putArusKas");
 Route.delete("/aktivitas-arus/:aktivitas_id", "SecondController.deleteArusKas");
@@ -342,12 +369,18 @@ Route.post("/rumus-kas-awal", "SecondController.postRumusSaldoKasAwal");
 Route.post("/rumus-kas-akhir", "SecondController.postRumusSaldoKasAkhir");
 Route.put("/rumus-kenaikan/:rumus_id", "SecondController.putRumusArusKas");
 Route.put("/rumus-kas-awal/:rumus_id", "SecondController.putRumusSaldoKasAwal");
-Route.put("/rumus-kas-akhir/:rumus_id", "SecondController.putRumusSaldoKasAkhir");
+Route.put(
+  "/rumus-kas-akhir/:rumus_id",
+  "SecondController.putRumusSaldoKasAkhir"
+);
 
 // Tipe Akun keuangan
 Route.post("/tipe-akun", "SecondController.postKategoriTipeAkun");
 Route.put("/tipe-akun/:kategori_id", "SecondController.putKategoriTipeAkun");
-Route.delete("/tipe-akun/:kategori_id", "SecondController.deleteKategoriTipeAkun");
+Route.delete(
+  "/tipe-akun/:kategori_id",
+  "SecondController.deleteKategoriTipeAkun"
+);
 
 // materi kesimpulan
 Route.post("/materi-kesimpulan", "MainController.postMateriKesimpulan");
@@ -383,6 +416,7 @@ Route.delete("/v2/mutasi/:transaksi_id", "SecondController.deleteTransaksi");
 Route.post("/download/neraca", "SecondController.downloadNeraca");
 Route.post("/download/jurnal", "SecondController.downloadJurnal");
 Route.post("/download/laba-rugi", "SecondController.downloadLabaRugi");
+Route.post("/download/arus-kas", "SecondController.downloadArusKas");
 
 // topik
 Route.get("/topik/:topik_id", "MainController.detailTopik");
@@ -1328,7 +1362,10 @@ Route.get("/guru-surat-keputusan", "SecondController.getGuru");
 Route.get("/surat-keputusan", "SecondController.getSuratKeputusan");
 Route.post("/surat-keputusan", "SecondController.postSuratKeputusan");
 Route.put("/surat-keputusan/:surat_id", "SecondController.putSuratKeputusan");
-Route.delete("/surat-keputusan/:surat_id", "SecondController.deleteSuratKeputusan");
+Route.delete(
+  "/surat-keputusan/:surat_id",
+  "SecondController.deleteSuratKeputusan"
+);
 
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
