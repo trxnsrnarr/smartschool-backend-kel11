@@ -523,6 +523,37 @@ class MainController {
     return response.ok(res);
   }
 
+  async getMasterSekolahDinasSummary({ response, request }) {
+    const totalSD = await Sekolah.query()
+      .where("kode_prop", '020000')
+      .andWhere('bentuk', 'SD')
+      .getCount();
+    const totalSMP = await Sekolah.query()
+      .where("kode_prop", '020000')
+      .andWhere('bentuk', 'SMP')
+      .getCount();
+    const totalSMA = await Sekolah.query()
+      .where("kode_prop", '020000')
+      .andWhere('bentuk', 'SMA')
+      .getCount();
+    const totalSMK = await Sekolah.query()
+      .where("kode_prop", '020000')
+      .andWhere('bentuk', 'SMK')
+      .getCount();
+    const totalSLB = await Sekolah.query()
+      .where("kode_prop", '020000')
+      .andWhere('bentuk', 'SLB')
+      .getCount();
+
+    return response.ok({
+      totalSD,
+      totalSMP,
+      totalSMA,
+      totalSMK,
+      totalSLB,
+    });
+  }
+
   async getMasterSekolahSSSummary({ response, request }) {
     const totalSekolah = await Sekolah.query()
       .whereNotNull("m_sekolah_id")
