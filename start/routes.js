@@ -18,6 +18,7 @@ const { route, RouteGroup } = require("@adonisjs/framework/src/Route/Manager");
 /** @type {typeof import('@adonisjs/framework/src/Route/Manager')} */
 const Route = use("Route");
 
+Route.get("/master/sekolah-dinas-summary", "MainController.getMasterSekolahDinasSummary");
 Route.get("/master/sekolah-ss-summary", "MainController.getMasterSekolahSSSummary");
 Route.get("/master/sekolah-ss", "MainController.getMasterSekolahSS");
 Route.get("/master/sekolah", "MainController.getMasterSekolah");
