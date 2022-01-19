@@ -5,7 +5,7 @@ const Model = use('Model')
 
 class MRencanaAktivitasTransaksi extends Model {
     static get table() {
-        return "m_rencana_aktivitas_transaksi";
+        return "m_rencana_aktivitas_trx";
       }
     
       akunArusKas() {
