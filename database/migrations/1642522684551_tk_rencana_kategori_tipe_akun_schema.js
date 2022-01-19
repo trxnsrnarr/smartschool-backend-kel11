@@ -5,14 +5,14 @@ const Schema = use("Schema");
 
 class TkRencanaKategoriTipeAkunSchema extends Schema {
   up() {
-    this.create("tk_rencana_kategori_tipe_akun", (table) => {
+    this.create("tk_rencana_kategori_tipe", (table) => {
       table.increments();
       table
         .integer("m_rencana_kategori_tipe_akun_id")
         .unsigned()
         .index("m_rencana_kategori_tipe_akun_id");
       table
-        .foreign("kategori_id")
+        .foreign("m_rencana_kategori_tipe_akun_id")
         .references("m_rencana_kategori_tipe_akun.id")
         .onDelete("cascade")
         .onUpdate("cascade");
@@ -29,7 +29,7 @@ class TkRencanaKategoriTipeAkunSchema extends Schema {
   }
 
   down() {
-    this.drop("tk_rencana_kategori_tipe_akun");
+    this.drop("tk_rencana_kategori_tipe");
   }
 }
 
