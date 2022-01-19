@@ -9352,6 +9352,11 @@ class MainController {
       .with("listSiswaDinilai", (builder) => {
         builder
           .with("user")
+          .with("peserta", (builder) => {
+            builder.where({ dihapus: 0 }).with("jawabanSiswa", (builder) => {
+              builder.with("soal");
+            });
+          })
           .whereNotNull("nilai")
           .with("komen", (builder) => {
             builder.with("user").where({ dihapus: 0 });

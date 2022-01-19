@@ -1045,6 +1045,52 @@ class SecondController {
 
     const user = await auth.getUser();
 
+    const keuangan = await MKeuTemplateAkun.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .first();
+    const template = JSON.parse(keuangan.template || "[]");
+    const temp = [];
+
+    function diveTree(data, level, path = []) {
+      data.map((d, idx) => {
+        temp.push({ id: d?.id, level, path });
+        if (d?.children?.length) {
+          diveTree(d?.children, level + 1, [...path, d?.id]);
+        }
+      });
+    }
+    diveTree(template, 0);
+
+    const cariAkun = temp.find((d) => d.id == keu_akun_id);
+    const anak = temp
+      .filter((d) => {
+        const path = d.path;
+        if (path[cariAkun.level] == cariAkun.id) {
+          return true;
+        } else {
+          return false;
+        }
+      })
+      .map((d) => d.id);
+    const rekAnak = await MRekSekolah.query()
+      .select("id", "m_keu_akun_id")
+      .whereIn("m_keu_akun_id", anak)
+      .fetch();
+
+    await Promise.all(
+      anak.map(async (d) => {
+        const rek = rekAnak.toJSON().find((e) => e.m_keu_akun_id == d);
+        if (rek) {
+          await MRekSekolah.query().where({ id: rek.id }).update({
+            dihapus: 1,
+          });
+        }
+        await MKeuAkun.query().where({ id: d }).update({
+          dihapus: 1,
+        });
+      })
+    );
+
     const akun = await MKeuAkun.query().where({ id: keu_akun_id }).first();
     const rek = await MRekSekolah.query()
       .where({ m_keu_akun_id: akun.id })
@@ -1359,7 +1405,8 @@ class SecondController {
           builder.with("user").where({ dihapus: 0 });
         })
         .withCount("tkTimeline as total_respon", (builder) => {
-          builder.whereNotNull("waktu_pengumpulan");
+          builder.where({ dikumpulkan: 1 });
+          // .whereNotNull("waktu_pengumpulan");
         })
         .withCount("tkTimeline as total_absen", (builder) => {
           builder.whereNotNull("waktu_absen");
@@ -3734,7 +3781,7 @@ class SecondController {
           let row = worksheet.addRow({
             no: d ? d.kode : "",
             nama: d ? d.nama : "-",
-            rp:`${d ? d.total : ""},00`,
+            rp: `${d ? d.total : ""},00`,
           });
         }
         worksheet.addConditionalFormatting({
@@ -3957,11 +4004,7 @@ class SecondController {
       data.map(async (d, idx) => {
         // add column headers
         worksheet.getRow(4).values = ["Nama Akun", "(Rp)", "(Rp)"];
-        worksheet.columns = [
-          { key: "nama" },
-          { key: "rp" },
-          { key: "rp1" },
-        ];
+        worksheet.columns = [{ key: "nama" }, { key: "rp" }, { key: "rp1" }];
 
         // Add row using key mapping to columns
         if (d.level == 1) {
@@ -3983,7 +4026,7 @@ class SecondController {
         } else if (d.level == 2) {
           let row = worksheet.addRow({
             nama: d ? d.nama : "-",
-            rp:`${d ? d.total : ""},00`,
+            rp: `${d ? d.total : ""},00`,
           });
         }
         worksheet.addConditionalFormatting({
@@ -4308,32 +4351,6 @@ class SecondController {
         .where({ dihapus: 0 })
         .ids();
     }
-    let kategori;
-
-    kategori = MKeuKategoriNeraca.query()
-      .with("akunNeraca", (builder) => {
-        builder
-          .with("akun", (builder) => {
-            builder
-              .with("jurnal", (builder) => {
-                builder.where({ dihapus: 0 });
-                if (transaksiIds) {
-                  builder.whereIn("m_keu_transaksi_id", transaksiIds);
-                }
-              })
-              .where({ dihapus: 0 });
-          })
-          .where({ dihapus: 0 })
-          .orderBy("urutan", "asc");
-      })
-      .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id });
-
-    if (search) {
-      kategori.andWhere("nama", "like", `%${search}%`);
-    }
-
-    kategori = await kategori.fetch();
 
     const akun = await MKeuAkun.query()
       .with("jurnal", (builder) => {
@@ -4345,6 +4362,28 @@ class SecondController {
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .fetch();
+
+    let kategori;
+
+    kategori = MKeuKategoriNeraca.query()
+      .with("akunNeraca", (builder) => {
+        builder
+          .with("akun")
+          .whereIn(
+            "m_keu_akun_id",
+            akun.toJSON().map((d) => d.id)
+          )
+          .where({ dihapus: 0 })
+          .orderBy("urutan", "asc");
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id });
+
+    if (search) {
+      kategori.andWhere("nama", "like", `%${search}%`);
+    }
+
+    kategori = await kategori.fetch();
 
     const keuangan = await MKeuTemplateAkun.query()
       .andWhere({
@@ -4603,21 +4642,27 @@ class SecondController {
         .ids();
     }
 
+    const akun = await MKeuAkun.query()
+      .with("jurnal", (builder) => {
+        builder.where({ dihapus: 0 });
+        if (transaksiIds) {
+          builder.whereIn("m_keu_transaksi_id", transaksiIds);
+        }
+      })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
     let kategori;
 
     kategori = MKeuKategoriLabaRugi.query()
       .with("akunLabaRugi", (builder) => {
         builder
-          .with("akun", (builder) => {
-            builder
-              .with("jurnal", (builder) => {
-                builder.where({ dihapus: 0 });
-                if (transaksiIds) {
-                  builder.whereIn("m_keu_transaksi_id", transaksiIds);
-                }
-              })
-              .where({ dihapus: 0 });
-          })
+          .with("akun")
+          .whereIn(
+            "m_keu_akun_id",
+            akun.toJSON().map((d) => d.id)
+          )
           .where({ dihapus: 0 })
           .orderBy("urutan", "asc");
       })
@@ -4634,17 +4679,6 @@ class SecondController {
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .limit(1)
-      .fetch();
-
-    const akun = await MKeuAkun.query()
-      .with("jurnal", (builder) => {
-        builder.where({ dihapus: 0 });
-        if (transaksiIds) {
-          builder.whereIn("m_keu_transaksi_id", transaksiIds);
-        }
-      })
-      .andWhere({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id })
       .fetch();
 
     const keuangan = await MKeuTemplateAkun.query()
@@ -5293,6 +5327,22 @@ class SecondController {
         message: "harap memasukan tanggal periode 1 dan 2",
       });
     }
+
+    const akun = await MKeuAkun.query()
+      .with("jurnal1", (builder) => {
+        builder
+          .whereIn("m_keu_transaksi_id", transaksiIds1)
+          .where({ dihapus: 0 });
+      })
+      .with("jurnal2", (builder) => {
+        builder
+          .whereIn("m_keu_transaksi_id", transaksiIds2)
+          .where({ dihapus: 0 });
+      })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
     let kategori;
 
     kategori = MKeuKategoriArusKas.query()
@@ -5300,9 +5350,11 @@ class SecondController {
         builder
           .with("akunArusKas", (builder) => {
             builder
-              .with("akun", (builder) => {
-                builder.with("akun").where({ dihapus: 0 });
-              })
+              .with("akun")
+              .whereIn(
+                "m_keu_akun_id",
+                akun.toJSON().map((d) => d.id)
+              )
               .where({ dihapus: 0 });
           })
           .where({ dihapus: 0 })
@@ -5377,21 +5429,6 @@ class SecondController {
       .andWhere({ dihapus: 0 })
       // .limit(1)
       .first();
-
-    const akun = await MKeuAkun.query()
-      .with("jurnal1", (builder) => {
-        builder
-          .whereIn("m_keu_transaksi_id", transaksiIds1)
-          .where({ dihapus: 0 });
-      })
-      .with("jurnal2", (builder) => {
-        builder
-          .whereIn("m_keu_transaksi_id", transaksiIds2)
-          .where({ dihapus: 0 });
-      })
-      .andWhere({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .fetch();
 
     const keuangan = await MKeuTemplateAkun.query()
       .andWhere({

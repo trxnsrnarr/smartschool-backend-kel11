@@ -8,6 +8,7 @@ const User = use("App/Models/User");
 const MRencanaKeuangan = use("App/Models/MRencanaKeuangan");
 const MRencanaTransaksi = use("App/Models/MRencanaTransaksi");
 const MRencanaKategoriNeraca = use("App/Models/MRencanaKategoriNeraca");
+const TkRencanaKategoriNeraca = use("App/Models/TkRencanaKategoriNeraca");
 const MRencanaKategoriLabaRugi = use("App/Models/MRencanaKategoriLabaRugi");
 const MKeuRencanaJurnal = use("App/Models/MKeuRencanaJurnal");
 const MKeuTemplateAkun = use("App/Models/MKeuTemplateAkun");
@@ -18,7 +19,6 @@ const MRencanaRumusSaldoKasAwal = use("App/Models/MRencanaRumusSaldoKasAwal");
 const MRencanaRumusSaldoKasAkhir = use("App/Models/MRencanaRumusSaldoKasAkhir");
 const MRencanaKategoriTipeAkun = use("App/Models/MRencanaKategoriTipeAkun");
 const MRencanaKategoriArusKas = use("App/Models/MRencanaKategoriArusKas");
-
 
 const messagePostSuccess = "Data berhasil ditambahkan";
 const messageSaveSuccess = "Data berhasil disimpan";
@@ -99,6 +99,32 @@ class KeuanganController {
     //   .where({ m_sekolah_id: sekolah.id })
     //   .andWhere({ dihapus: 0 })
     //   .fetch();
+
+    return response.ok({
+      perencanaan,
+    });
+  }
+
+  async detailPerencanaan({
+    response,
+    request,
+    auth,
+    params: { perencanaan_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const user = await auth.getUser();
+
+    let perencanaan = await MRencanaKeuangan.query()
+      .where({ id: perencanaan_id })
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
+      .first();
 
     return response.ok({
       perencanaan,
@@ -277,7 +303,12 @@ class KeuanganController {
       message: messageDeleteSuccess,
     });
   }
-  async getRencanaTransaksi({ response, request, auth, params: {rencana_id} }) {
+  async getRencanaTransaksi({
+    response,
+    request,
+    auth,
+    params: { rencana_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -535,32 +566,6 @@ class KeuanganController {
         .where({ dihapus: 0 })
         .ids();
     }
-    let kategori;
-
-    kategori = MRencanaKategoriNeraca.query()
-      .with("akunNeraca", (builder) => {
-        builder
-          .with("akun", (builder) => {
-            builder
-              .with("rencanaJurnal", (builder) => {
-                builder.where({ dihapus: 0 });
-                if (transaksiIds) {
-                  builder.whereIn("m_rencana_transaksi_id", transaksiIds);
-                }
-              })
-              .where({ dihapus: 0 });
-          })
-          .where({ dihapus: 0 })
-          .orderBy("urutan", "asc");
-      })
-      .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id });
-
-    if (search) {
-      kategori.andWhere("nama", "like", `%${search}%`);
-    }
-
-    kategori = await kategori.fetch();
 
     const akun = await MKeuAkun.query()
       .with("rencanaJurnal", (builder) => {
@@ -572,6 +577,25 @@ class KeuanganController {
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .fetch();
+
+    let kategori;
+
+    kategori = MRencanaKategoriNeraca.query()
+      .with("akunNeraca", (builder) => {
+        builder
+          .with("akun")
+          .whereIn("m_keu_akun_id", akun.toJSON().map(d => d.id))
+          .where({ dihapus: 0 })
+          .orderBy("urutan", "asc");
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id });
+
+    if (search) {
+      kategori.andWhere("nama", "like", `%${search}%`);
+    }
+
+    kategori = await kategori.fetch();
 
     const keuangan = await MKeuTemplateAkun.query()
       .andWhere({
@@ -602,7 +626,7 @@ class KeuanganController {
         .whereBetween("tanggal", [tanggal_awal, tanggal_akhir])
         .where({ m_sekolah_id: sekolah.id })
         .where({ dihapus: 0 })
-        .andWhere({m_rencana_keuangan_id: rencana_id})
+        .andWhere({ m_rencana_keuangan_id: rencana_id })
         .ids();
     }
 
@@ -636,7 +660,7 @@ class KeuanganController {
     const rumus = await MRencanaRumusLabaRugi.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
-      .andWhere({ m_rencana_keuangan_id:rencana_id})
+      .andWhere({ m_rencana_keuangan_id: rencana_id })
       .limit(1)
       .fetch();
 
@@ -688,13 +712,13 @@ class KeuanganController {
         .whereBetween("tanggal", [tanggal_awal1, tanggal_akhir1])
         .where({ m_sekolah_id: sekolah.id })
         .where({ dihapus: 0 })
-        .andWhere({ m_rencana_transaksi_id:rencana_id})
+        .andWhere({ m_rencana_transaksi_id: rencana_id })
         .ids();
       transaksiIds2 = await MRencanaTransaksi.query()
         .whereBetween("tanggal", [tanggal_awal2, tanggal_akhir2])
         .where({ m_sekolah_id: sekolah.id })
         .where({ dihapus: 0 })
-        .andWhere({ m_rencana_transaksi_id :rencana_id })
+        .andWhere({ m_rencana_transaksi_id: rencana_id })
         .ids();
     } else {
       return response.notFound({
@@ -718,7 +742,7 @@ class KeuanganController {
       })
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_rencana_keuangan_id:rencana_id});
+      .andWhere({ m_rencana_keuangan_id: rencana_id });
 
     if (search) {
       kategori.andWhere("nama", "like", `%${search}%`);
@@ -774,7 +798,7 @@ class KeuanganController {
       })
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_rencana_keuangan_id: rencana_id});
+      .andWhere({ m_rencana_keuangan_id: rencana_id });
 
     if (search) {
       labaRugi.andWhere("nama", "like", `%${search}%`);
@@ -821,6 +845,166 @@ class KeuanganController {
       labaRugi,
       akun,
       keuangan,
+    });
+  }
+
+  async postKategoriNeraca({
+    response,
+    request,
+    auth,
+    params: { perencanaan_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { tipe, nama, warna } = request.post();
+
+    const rules = {
+      tipe: "required",
+      nama: "required",
+    };
+    const message = {
+      "tipe.required": "Tipe harus diisi",
+      "nama.required": "Nama harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const kategori = await MRencanaKategoriNeraca.create({
+      tipe,
+      nama,
+      warna,
+      dihapus: 0,
+      m_rencana_keuangan_id: perencanaan_id,
+      m_sekolah_id: sekolah.id,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putKategoriNeraca({
+    response,
+    request,
+    auth,
+    params: { kategori_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { nama, warna } = request.post();
+
+    const rules = {
+      nama: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const kategori = await MRencanaKategoriNeraca.query()
+      .where({ id: kategori_id })
+      .update({
+        nama,
+        warna,
+      });
+
+    if (!kategori) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteKategoriNeraca({
+    response,
+    request,
+    auth,
+    params: { kategori_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const kategori = await MRencanaKategoriNeraca.query()
+      .where({ id: kategori_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!kategori) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async postNeraca({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { m_keu_kategori_neraca_id, m_keu_akun_id, urutan } = request.post();
+
+    const rules = {
+      m_keu_akun_id: "required",
+    };
+    const message = {
+      "m_keu_akun_id.required": "Akun harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const kategori = await TkRencanaKategoriNeraca.create({
+      m_keu_akun_id,
+      m_rencana_kategori_neraca_id: m_keu_kategori_neraca_id,
+      urutan,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
     });
   }
 }
