@@ -19,6 +19,8 @@ const MRencanaRumusSaldoKasAwal = use("App/Models/MRencanaRumusSaldoKasAwal");
 const MRencanaRumusSaldoKasAkhir = use("App/Models/MRencanaRumusSaldoKasAkhir");
 const MRencanaKategoriTipeAkun = use("App/Models/MRencanaKategoriTipeAkun");
 const MRencanaKategoriArusKas = use("App/Models/MRencanaKategoriArusKas");
+const MKeuTemplateAnalisis = use("App/Models/MKeuTemplateAnalisis");
+const MKeuTransaksi = use("App/Models/MKeuTransaksi");
 
 const messagePostSuccess = "Data berhasil ditambahkan";
 const messageSaveSuccess = "Data berhasil disimpan";
@@ -564,6 +566,7 @@ class KeuanganController {
         .whereBetween("tanggal", [tanggal_awal, tanggal_akhir])
         .where({ m_sekolah_id: sekolah.id })
         .where({ dihapus: 0 })
+        .andWhere({m_rencana_keuangan_id:rencana_id})
         .ids();
     }
 
@@ -584,7 +587,10 @@ class KeuanganController {
       .with("akunNeraca", (builder) => {
         builder
           .with("akun")
-          .whereIn("m_keu_akun_id", akun.toJSON().map(d => d.id))
+          .whereIn(
+            "m_keu_akun_id",
+            akun.toJSON().map((d) => d.id)
+          )
           .where({ dihapus: 0 })
           .orderBy("urutan", "asc");
       })
@@ -1005,6 +1011,69 @@ class KeuanganController {
 
     return response.ok({
       message: messagePostSuccess,
+    });
+  }
+
+  async getAnalisisKeuangan({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let { rencana_id, tanggal_awal, tanggal_akhir } = request.get();
+
+    let transaksiIds;
+    if (tanggal_awal && tanggal_akhir) {
+      transaksiIds = await MKeuTransaksi.query()
+        .whereBetween("tanggal", [tanggal_awal, tanggal_akhir])
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ dihapus: 0 })
+        .ids();
+    }
+    let transaksi2Ids;
+    if (rencana_id) {
+      transaksi2Ids = await MRencanaTransaksi.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ dihapus: 0 })
+        .andWhere({m_rencana_keuangan_id:rencana_id})
+        .ids();
+    }
+
+    const akun = await MKeuAkun.query()
+      .with("jurnal", (builder) => {
+        builder.where({ dihapus: 0 });
+        if (transaksiIds) {
+          builder.whereIn("m_keu_transaksi_id", transaksiIds);
+        }
+      })
+      .with("rencanaJurnal", (builder) => {
+        builder.where({ dihapus: 0 });
+        if (transaksi2Ids) {
+          builder.whereIn("m_rencana_transaksi_id", transaksi2Ids);
+        }
+      })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
+    const analisis = await MKeuTemplateAnalisis.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .fetch();
+
+    const keuangan = await MKeuTemplateAkun.query()
+      .andWhere({
+        m_sekolah_id: sekolah.id,
+      })
+      .first();
+
+    return response.ok({
+      kategori,
+      akun,
+      analisis,
+      keuangan,
     });
   }
 }
