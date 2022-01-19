@@ -525,24 +525,24 @@ class MainController {
 
   async getMasterSekolahDinasSummary({ response, request }) {
     const totalSD = await Sekolah.query()
-      .where("kode_prop", '020000')
-      .andWhere('bentuk', 'SD')
+      .where("kode_prop", "020000")
+      .andWhere("bentuk", "SD")
       .getCount();
     const totalSMP = await Sekolah.query()
-      .where("kode_prop", '020000')
-      .andWhere('bentuk', 'SMP')
+      .where("kode_prop", "020000")
+      .andWhere("bentuk", "SMP")
       .getCount();
     const totalSMA = await Sekolah.query()
-      .where("kode_prop", '020000')
-      .andWhere('bentuk', 'SMA')
+      .where("kode_prop", "020000")
+      .andWhere("bentuk", "SMA")
       .getCount();
     const totalSMK = await Sekolah.query()
-      .where("kode_prop", '020000')
-      .andWhere('bentuk', 'SMK')
+      .where("kode_prop", "020000")
+      .andWhere("bentuk", "SMK")
       .getCount();
     const totalSLB = await Sekolah.query()
-      .where("kode_prop", '020000')
-      .andWhere('bentuk', 'SLB')
+      .where("kode_prop", "020000")
+      .andWhere("bentuk", "SLB")
       .getCount();
 
     return response.ok({
@@ -7807,7 +7807,8 @@ class MainController {
           } else {
             belum.push(d);
           }
-        }))
+        })
+      );
 
       const user = await User.query()
         .with("kesimpulan", (builder) => {
@@ -9332,7 +9333,9 @@ class MainController {
       return response.ok({
         timeline,
         sudah_lewat,
-        timelines: timelines.toJSON().sort((a, b) => a.timeline.id - b.timeline.id),
+        timelines: timelines
+          .toJSON()
+          .sort((a, b) => a.timeline.id - b.timeline.id),
       });
     }
 
@@ -14492,6 +14495,14 @@ class MainController {
             jawaban_foto,
           });
       } else if (jawaban_pg) {
+        const nilaiSiswa = await TkJawabanUjianSiswa.query()
+          .with("soal")
+          .where({ id: jawaban_ujian_siswa_id })
+          .first();
+
+        const nilai = await TkPesertaUjian.query()
+          .where({ id: nilaiSiswa.tk_peserta_ujian_id })
+          .first();
         jawabanUjianSiswa = await TkJawabanUjianSiswa.query()
           .where({ id: jawaban_ujian_siswa_id })
           .update({
@@ -14500,23 +14511,25 @@ class MainController {
             ragu,
             dijawab: 1,
           });
-
-        // const nilaiSiswa = await TkJawabanUjianSiswa.query()
-        //   .with("soal")
-        //   .where({ id: jawaban_ujian_siswa_id })
-        //   .first();
-
-        // if (jawaban_pg == nilaiSiswa.toJSON().soal.kj_pg) {
-        //   const nilai = await TkPesertaUjian.query()
-        //     .where({ id: nilaiSiswa.tk_peserta_ujian_id })
-        //     .first();
-
-        //   await TkPesertaUjian.query()
-        //     .where({ id: nilaiSiswa.tk_peserta_ujian_id })
-        //     .update({
-        //       nilai: nilai ? nilai.nilai : 0 + nilaiSiswa.toJSON().soal.poin,
-        //     });
-        // }
+        if (
+          nilaiSiswa.toJSON().jawaban_pg != nilaiSiswa.toJSON().soal.kj_pg &&
+          jawaban_pg == nilaiSiswa.toJSON().soal.kj_pg
+        ) {
+          await TkPesertaUjian.query()
+            .where({ id: nilaiSiswa.tk_peserta_ujian_id })
+            .update({
+              nilai: (nilai ? nilai.nilai : 0) + nilaiSiswa.toJSON().soal.poin,
+            });
+        } else if (
+          nilaiSiswa.toJSON().jawaban_pg == nilaiSiswa.toJSON().soal.kj_pg &&
+          jawaban_pg != nilaiSiswa.toJSON().soal.kj_pg
+        ) {
+          await TkPesertaUjian.query()
+            .where({ id: nilaiSiswa.tk_peserta_ujian_id })
+            .update({
+              nilai: (nilai ? nilai.nilai : 0) - nilaiSiswa.toJSON().soal.poin,
+            });
+        }
       } else {
         jawabanUjianSiswa = await TkJawabanUjianSiswa.query()
           .where({ id: jawaban_ujian_siswa_id })
@@ -46481,7 +46494,10 @@ class MainController {
       .fetch();
 
     const jamData = await MJamMengajar.query()
-      .whereIn("id", jadwal.toJSON().map(d => d.m_jam_mengajar_id))
+      .whereIn(
+        "id",
+        jadwal.toJSON().map((d) => d.m_jam_mengajar_id)
+      )
       .fetch();
 
     const jamBaruData = await MJamMengajar.query()
@@ -46490,7 +46506,10 @@ class MainController {
       .fetch();
 
     const mapelData = await MMataPelajaran.query()
-      .whereIn("id", jadwal.toJSON().map(d => d.m_mata_pelajaran_id))
+      .whereIn(
+        "id",
+        jadwal.toJSON().map((d) => d.m_mata_pelajaran_id)
+      )
       .fetch();
 
     if (taBaru.jadwal_sinkron == 0) {
