@@ -5350,11 +5350,9 @@ class SecondController {
         builder
           .with("akunArusKas", (builder) => {
             builder
-              .with("akun")
-              .whereIn(
-                "m_keu_akun_id",
-                akun.toJSON().map((d) => d.id)
-              )
+              .with("akun", (builder) => {
+                builder.with("akun").where({ dihapus: 0 });
+              })
               .where({ dihapus: 0 });
           })
           .where({ dihapus: 0 })
