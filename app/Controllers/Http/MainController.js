@@ -4527,10 +4527,16 @@ class MainController {
         .orderBy("m_jam_mengajar_id", "asc")
         .fetch();
 
+      const rombelIds = await MRombel.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ dihapus: 0 })
+        .ids();
+
       const rombelMengajar = await MJadwalMengajar.query()
         .with("rombel", (builder) => {
           builder.where({ dihapus: 0 });
         })
+        .whereIn("m_rombel_id", rombelIds)
         .with("mataPelajaran")
         .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
         .fetch();
@@ -11125,6 +11131,7 @@ class MainController {
       { value: "pas1", label: "Penilaian Akhir Semester 1" },
       { value: "pas2", label: "Penilaian Akhir Semester 2" },
       { value: "us", label: "Ujian Sekolah" },
+      { value: "to", label: "Try out" },
       { value: "literasi", label: "AKM - Literasi" },
       { value: "numerasi", label: "AKM - Numerasi" },
     ];
@@ -11542,6 +11549,7 @@ class MainController {
       { value: "pas1", label: "Penilaian Akhir Semester 1" },
       { value: "pas2", label: "Penilaian Akhir Semester 2" },
       { value: "us", label: "Ujian Sekolah" },
+      { value: "to", label: "Try out" },
       { value: "literasi", label: "AKM - Literasi" },
       { value: "numerasi", label: "AKM - Numerasi" },
     ];
