@@ -1476,6 +1476,21 @@ class KeuanganController {
       .fetch();
 
     const analisis = await MKeuTemplateAnalisis.query()
+      .with("akun", (builder) => {
+        builder
+          .with("jurnal", (builder) => {
+            builder.where({ dihapus: 0 });
+            if (transaksiIds) {
+              builder.whereIn("m_keu_transaksi_id", transaksiIds);
+            }
+          })
+          .with("rencanaJurnal", (builder) => {
+            builder.where({ dihapus: 0 });
+            if (transaksi2Ids) {
+              builder.whereIn("m_rencana_transaksi_id", transaksi2Ids);
+            }
+          });
+      })
       .where({ m_sekolah_id: sekolah.id })
       .fetch();
 
@@ -1531,7 +1546,7 @@ class KeuanganController {
     response,
     request,
     auth,
-    
+
     params: { analisis_id },
   }) {
     const domain = request.headers().origin;
@@ -1560,7 +1575,7 @@ class KeuanganController {
     const kategori = await MKeuTemplateAnalisis.query()
       .where({ id: analisis_id })
       .update({
-        m_keu_akun_id
+        m_keu_akun_id,
       });
 
     if (!kategori) {
@@ -1747,7 +1762,8 @@ class KeuanganController {
     };
     const message = {
       "m_Rencana_kategori_tipe_akun_id.required": "Tipe Akun harus diisi",
-      "m_Rencana_kategori_arus_kas_id.required": "Kategori Arus Kas harus diisi",
+      "m_Rencana_kategori_arus_kas_id.required":
+        "Kategori Arus Kas harus diisi",
       "judul.required": "Judul harus diisi",
     };
     const validation = await validate(request.all(), rules, message);
@@ -1794,7 +1810,8 @@ class KeuanganController {
     };
     const message = {
       "m_Rencana_kategori_tipe_akun_id.required": "Tipe Akun harus diisi",
-      "m_Rencana_kategori_arus_kas_id.required": "Kategori Arus Kas harus diisi",
+      "m_Rencana_kategori_arus_kas_id.required":
+        "Kategori Arus Kas harus diisi",
       "judul.required": "Judul harus diisi",
     };
     const validation = await validate(request.all(), rules, message);
@@ -2249,7 +2266,6 @@ class KeuanganController {
       message: messagePutSuccess,
     });
   }
-
 }
 
 module.exports = KeuanganController;
