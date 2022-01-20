@@ -1041,7 +1041,12 @@ class KeuanganController {
     });
   }
 
-  async getRencanaArusKasLaporan({ response, request, auth }) {
+  async getRencanaArusKasLaporan({
+    response,
+    request,
+    auth,
+    params: { perencanaan_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -1064,13 +1069,13 @@ class KeuanganController {
         .whereBetween("tanggal", [tanggal_awal1, tanggal_akhir1])
         .where({ m_sekolah_id: sekolah.id })
         .where({ dihapus: 0 })
-        .andWhere({ m_rencana_transaksi_id: rencana_id })
+        .andWhere({ m_rencana_keuangan_id: perencanaan_id })
         .ids();
       transaksiIds2 = await MRencanaTransaksi.query()
         .whereBetween("tanggal", [tanggal_awal2, tanggal_akhir2])
         .where({ m_sekolah_id: sekolah.id })
         .where({ dihapus: 0 })
-        .andWhere({ m_rencana_transaksi_id: rencana_id })
+        .andWhere({ m_rencana_keuangan_id: perencanaan_id })
         .ids();
     } else {
       return response.notFound({
@@ -1094,7 +1099,7 @@ class KeuanganController {
       })
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_rencana_keuangan_id: rencana_id });
+      .andWhere({ m_rencana_keuangan_id: perencanaan_id });
 
     if (search) {
       kategori.andWhere("nama", "like", `%${search}%`);
@@ -1104,14 +1109,17 @@ class KeuanganController {
 
     const rumusKenaikan = await MRencanaRumusArusKas.query()
       .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_rencana_keuangan_id: perencanaan_id })
       .andWhere({ dihapus: 0 })
       .first();
     const rumusAwal = await MRencanaRumusSaldoKasAwal.query()
       .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_rencana_keuangan_id: perencanaan_id })
       .andWhere({ dihapus: 0 })
       .first();
     const rumusAkhir = await MRencanaRumusSaldoKasAkhir.query()
       .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_rencana_keuangan_id: perencanaan_id })
       .andWhere({ dihapus: 0 })
       .first();
 
@@ -1150,7 +1158,7 @@ class KeuanganController {
       })
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_rencana_keuangan_id: rencana_id });
+      .andWhere({ m_rencana_keuangan_id: perencanaan_id });
 
     if (search) {
       labaRugi.andWhere("nama", "like", `%${search}%`);
@@ -1733,7 +1741,12 @@ class KeuanganController {
       message: messageDeleteSuccess,
     });
   }
-  async postKategoriArusKas({ response, request, auth }) {
+  async postKategoriArusKas({
+    response,
+    request,
+    auth,
+    params: { perencanaan_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -1762,6 +1775,7 @@ class KeuanganController {
       warna,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
+      m_rencana_keuangan_id: perencanaan_id,
     });
 
     return response.ok({
@@ -2148,7 +2162,12 @@ class KeuanganController {
     });
   }
 
-  async postRumusArusKas({ response, request, auth }) {
+  async postRumusArusKas({
+    response,
+    request,
+    auth,
+    params: { perencanaan_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -2175,6 +2194,7 @@ class KeuanganController {
     const rumus1 = await MRencanaRumusArusKas.create({
       rumus,
       dihapus: 0,
+      m_rencana_keuangan_id: perencanaan_id,
       m_sekolah_id: sekolah.id,
     });
 
@@ -2224,7 +2244,12 @@ class KeuanganController {
     });
   }
 
-  async postRumusSaldoKasAwal({ response, request, auth }) {
+  async postRumusSaldoKasAwal({
+    response,
+    request,
+    auth,
+    params: { perencanaan_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -2251,6 +2276,7 @@ class KeuanganController {
     const rumus1 = await MRencanaRumusSaldoKasAwal.create({
       rumus,
       dihapus: 0,
+      m_rencana_keuangan_id: perencanaan_id,
       m_sekolah_id: sekolah.id,
     });
 
@@ -2304,7 +2330,12 @@ class KeuanganController {
       message: messagePutSuccess,
     });
   }
-  async postRumusSaldoKasAkhir({ response, request, auth }) {
+  async postRumusSaldoKasAkhir({
+    response,
+    request,
+    auth,
+    params: { perencanaan_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -2331,6 +2362,7 @@ class KeuanganController {
     const rumus1 = await MRencanaRumusSaldoKasAkhir.create({
       rumus,
       dihapus: 0,
+      m_rencana_keuangan_id: perencanaan_id,
       m_sekolah_id: sekolah.id,
     });
 
