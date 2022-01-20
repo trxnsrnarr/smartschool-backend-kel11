@@ -4509,6 +4509,11 @@ class MainController {
         .andWhere({ dihapus: 0 })
         .first();
 
+      const rombelIds = await MRombel.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ dihapus: 0 })
+        .ids();
+
       let jamMengajarIds = await MJamMengajar.query()
         .where({ kode_hari: kode_hari })
         .andWhere({ m_sekolah_id: sekolah.id })
@@ -4521,16 +4526,12 @@ class MainController {
         })
         .with("jamMengajar")
         .with("mataPelajaran")
+        .whereIn("m_rombel_id", rombelIds)
         .where({ m_ta_id: ta.id })
         .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
         .whereIn("m_jam_mengajar_id", jamMengajarIds)
         .orderBy("m_jam_mengajar_id", "asc")
         .fetch();
-
-      const rombelIds = await MRombel.query()
-        .where({ m_sekolah_id: sekolah.id })
-        .where({ dihapus: 0 })
-        .ids();
 
       const rombelMengajar = await MJadwalMengajar.query()
         .with("rombel", (builder) => {
