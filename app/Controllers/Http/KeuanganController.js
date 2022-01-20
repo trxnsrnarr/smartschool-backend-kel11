@@ -88,6 +88,16 @@ class KeuanganController {
     const { search } = request.get();
 
     let perencanaan = MRencanaKeuangan.query()
+      .with("transaksi", (builder) => {
+        builder
+          .select("m_rencana_keuangan_id", "id")
+          .where({ dihapus: 0 })
+          .with("jurnal", (builder) => {
+            builder
+              .select("id", "m_rencana_transaksi_id", "jenis", "saldo")
+              .where({ dihapus: 0 });
+          });
+      })
       .where({ m_sekolah_id: sekolah.id })
       .where({ dihapus: 0 });
 
