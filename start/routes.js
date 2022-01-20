@@ -247,12 +247,26 @@ Route.post("rencana-transaksi/:rencana_id", "KeuanganController.postRencanaTrans
 Route.put("rencana-transaksi/:transaksi_id", "KeuanganController.putRencanaTransaksi");
 Route.delete("rencana-transaksi/:transaksi_id", "KeuanganController.deleteRencanaTransaksi");
 
-// Laporan 
+// Laporan neraca
 Route.get("rencana-neraca/:perencanaan_id", "KeuanganController.getRencanaNeraca");
 Route.post("rencana-neraca", "KeuanganController.postNeraca");
+Route.put("rencana-neraca/:neraca_id", "KeuanganController.putNeraca");
+Route.delete("rencana-neraca/:neraca_id", "KeuanganController.deleteNeraca");
 Route.post("kategori-rencana-neraca/:perencanaan_id", "KeuanganController.postKategoriNeraca");
 Route.put("kategori-rencana-neraca/:kategori_id", "KeuanganController.putKategoriNeraca");
 Route.delete("kategori-rencana-neraca/:kategori_id", "KeuanganController.deleteKategoriNeraca");
+
+// Laporan neraca
+Route.get("rencana-laba/:perencanaan_id", "KeuanganController.getRencanaLabaRugi");
+Route.post("rencana-laba", "KeuanganController.postLabaRugi");
+Route.put("rencana-laba/:labarugi_id", "KeuanganController.putLabaRugi");
+Route.delete("rencana-laba/:labarugi_id", "KeuanganController.deleteLabaRugi");
+Route.post("kategori-rencana-laba/:perencanaan_id", "KeuanganController.postKategoriLabaRugi");
+Route.put("kategori-rencana-laba/:kategori_id", "KeuanganController.putKategoriLabaRugi");
+Route.delete("kategori-rencana-laba/:kategori_id", "KeuanganController.deleteKategoriLabaRugi");
+Route.post("rumus-rencana-laba/:perencanaan_id", "KeuanganController.postRumusLabaRugi");
+Route.put("rumus-rencana-laba/:rumus_id", "KeuanganController.putRumusLabaRugi");
+Route.delete("rumus-rencana-laba/:rumus_id", "KeuanganController.deleteRumusLabaRugi");
 
 
 // keuangan sekolah
