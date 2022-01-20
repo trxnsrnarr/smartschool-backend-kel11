@@ -3247,6 +3247,7 @@ class MainController {
     const check = await User.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ whatsapp: whatsapp })
+      .where({ dihapus: 0 })
       .first();
     if (!check) {
       const guru = await User.create({
@@ -3508,6 +3509,7 @@ class MainController {
     const check = await User.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ whatsapp: whatsapp })
+      .where({ dihapus: 0 })
       .first();
     if (!check) {
       const siswa = await User.create({
@@ -41178,6 +41180,7 @@ class MainController {
     const check = await User.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ whatsapp: whatsapp })
+      .where({ dihapus: 0 })
       .first();
     if (!check) {
       const user = await User.create({
@@ -41259,6 +41262,7 @@ class MainController {
     const check = await User.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ whatsapp: whatsapp })
+      .where({ dihapus: 0 })
       .first();
     if (!check) {
       const user = await User.create({
@@ -49709,6 +49713,7 @@ class MainController {
     const check = await User.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ whatsapp: whatsapp })
+      .where({ dihapus: 0 })
       .first();
 
     if (!check) {
