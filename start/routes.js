@@ -302,6 +302,7 @@ Route.put(
 // keuangan sekolah
 Route.get("/keuangan-sekolah", "SecondController.getAkunKeuangan");
 Route.put("/keuangan-sekolah", "SecondController.putAkunKeuangan");
+Route.get("/rencana-keuangan-sekolah1/:perencanaan_id", "SecondController.getRencanaKeuangan");
 
 // Akun Keuangan sekolah
 Route.post("/akun-sekolah", "SecondController.postKeuAkun");
