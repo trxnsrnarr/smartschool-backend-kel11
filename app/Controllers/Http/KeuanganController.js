@@ -1622,6 +1622,7 @@ class KeuanganController {
           });
       })
       .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
       .fetch();
 
     const keuangan = await MKeuTemplateAkun.query()
@@ -1631,7 +1632,7 @@ class KeuanganController {
       .first();
 
     return response.ok({
-      kategori,
+      // kategori,
       akun,
       analisis,
       keuangan,

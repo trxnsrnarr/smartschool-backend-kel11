@@ -309,6 +309,12 @@ Route.post("/akun-sekolah", "SecondController.postKeuAkun");
 Route.put("/akun-sekolah/:keu_akun_id", "SecondController.putKeuAkun");
 Route.delete("/akun-sekolah/:keu_akun_id", "SecondController.deleteKeuAkun");
 
+// analisis keuangan
+Route.get("/analisis-keuangan", "KeuanganController.getAnalisisKeuangan")
+Route.post("/analisis-keuangan", "KeuanganController.postKategoriAnalisis")
+Route.put("/analisis-keuangan/:analisis_id", "KeuanganController.putKategoriAnalisis")
+Route.delete("/analisis-keuangan/:analisis_id", "KeuanganController.deleteKategoriAnalisis")
+
 // no rekening
 Route.get("/rek-sekolah", "MainController.getRekSekolah");
 Route.post("/rek-sekolah", "MainController.postRekSekolah");
