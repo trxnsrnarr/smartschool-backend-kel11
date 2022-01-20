@@ -6016,6 +6016,11 @@ class MainController {
         .andWhere({ tingkat })
         .andWhere({ m_jurusan_id })
         .first();
+      if(check.dihapus) {
+        await MMateri.query()
+          .where({ id: check.id })
+          .update({ dihapus: 0 })
+      }
 
       if (!check) {
         const materi = await MMateri.create({
@@ -6043,6 +6048,11 @@ class MainController {
         .where({ m_mata_pelajaran_id })
         .andWhere({ tingkat })
         .first();
+      if(check.dihapus) {
+        await MMateri.query()
+          .where({ id: check.id })
+          .update({ dihapus: 0 })
+      }
 
       if (!check) {
         const materi = await MMateri.create({
