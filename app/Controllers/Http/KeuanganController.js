@@ -1503,22 +1503,21 @@ class KeuanganController {
 
     const user = await auth.getUser();
 
-    let { nama, warna } = request.post();
+    let { m_keu_akun_id } = request.post();
 
     const rules = {
-      nama: "required",
+      m_keu_akun_id: "required",
     };
     const message = {
-      "nama.required": "Nama harus diisi",
+      "m_keu_akun_id.required": "Akun harus diisi",
     };
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const kategori = await MKategoriAnalisis.create({
-      nama,
-      warna,
+    const kategori = await MKeuTemplateAnalisis.create({
+      m_keu_akun_id,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
     });
@@ -1532,7 +1531,8 @@ class KeuanganController {
     response,
     request,
     auth,
-    params: { kategori_id },
+    
+    params: { analisis_id },
   }) {
     const domain = request.headers().origin;
 
@@ -1544,24 +1544,23 @@ class KeuanganController {
 
     const user = await auth.getUser();
 
-    let { nama, warna } = request.post();
+    let { m_keu_akun_id } = request.post();
 
     const rules = {
-      nama: "required",
+      m_keu_akun_id: "required",
     };
     const message = {
-      "nama.required": "Nama harus diisi",
+      "m_keu_akun_id.required": "Akun harus diisi",
     };
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const kategori = await MKategoriAnalisis.query()
-      .where({ id: kategori_id })
+    const kategori = await MKeuTemplateAnalisis.query()
+      .where({ id: analisis_id })
       .update({
-        nama,
-        warna,
+        m_keu_akun_id
       });
 
     if (!kategori) {
@@ -1579,7 +1578,7 @@ class KeuanganController {
     response,
     request,
     auth,
-    params: { kategori_id },
+    params: { analisis_id },
   }) {
     const domain = request.headers().origin;
 
@@ -1591,8 +1590,8 @@ class KeuanganController {
 
     const user = await auth.getUser();
 
-    const kategori = await MKategoriAnalisis.query()
-      .where({ id: kategori_id })
+    const kategori = await MKeuTemplateAnalisis.query()
+      .where({ id: analisis_id })
       .update({
         dihapus: 1,
       });
