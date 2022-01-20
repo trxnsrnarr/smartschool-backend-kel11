@@ -1941,12 +1941,12 @@ class KeuanganController {
     } = request.post();
 
     const rules = {
-      m_rencana_kategori_tipe_akun_id: "required",
+      // m_rencana_kategori_tipe_akun_id: "required",
       m_rencana_kategori_arus_kas_id: "required",
       judul: "required",
     };
     const message = {
-      "m_Rencana_kategori_tipe_akun_id.required": "Tipe Akun harus diisi",
+      // "m_Rencana_kategori_tipe_akun_id.required": "Tipe Akun harus diisi",
       "m_Rencana_kategori_arus_kas_id.required":
         "Kategori Arus Kas harus diisi",
       "judul.required": "Judul harus diisi",
