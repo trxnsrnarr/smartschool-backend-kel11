@@ -72,6 +72,8 @@ const TkSoalUjian = use("App/Models/TkSoalUjian");
 const MJadwalUjian = use("App/Models/MJadwalUjian");
 const TkJadwalUjian = use("App/Models/TkJadwalUjian");
 const TkPesertaUjian = use("App/Models/TkPesertaUjian");
+const TkPesertaUjianPpdb = use("App/Models/TkPesertaUjianPpdb");
+const MJadwalPpdb = use("App/Models/MJadwalPpdb");
 const MUjian = use("App/Models/MUjian");
 const MUjianSiswa = use("App/Models/MUjianSiswa");
 const MMateri = use("App/Models/MMateri");
@@ -146,6 +148,7 @@ const DownloadRumusan = use("App/Services/DownloadRumusan");
 const DownloadTemplate = use("App/Services/DownloadTemplate");
 const { HitungNilaiAkhir } = use("App/Services/NilaiServices");
 const WhatsAppService = use("App/Services/WhatsAppService");
+const { shuffle } = require("../../../Utils/Global");
 
 const moment = require("moment");
 require("moment/locale/id");
@@ -13606,7 +13609,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { jawaban_siswa_id, siswa } = request.get();
+    const { jawaban_siswa_id, siswa, ppdb } = request.get();
 
     let pesertaUjian;
 
@@ -13720,6 +13723,11 @@ class MainController {
             builder.with("ujian");
           });
         })
+        .with("pesertaPPDB", builder => {
+          builder.with("jadwalPpdb", builder => {
+            builder.with("soal")
+          });
+        })
         .with("tugas")
         .withCount("jawabanSiswa as totalSoal")
         .withCount("jawabanSiswa as totalDijawab", (builder) => {
@@ -13787,7 +13795,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { tk_jadwal_ujian_id, ujian_id, tk_timeline_id } = request.post();
+    const { tk_jadwal_ujian_id, ujian_id, tk_timeline_id, jadwal_ppdb, pendaftar_id } = request.post();
     const waktu_mulai = moment().format("YYYY-MM-DD HH:mm:ss");
 
     if (tk_timeline_id) {
@@ -13858,6 +13866,86 @@ class MainController {
       return response.ok({
         peserta_ujian: pesertaUjian,
       });
+    }
+
+    if (jadwal_ppdb) {
+      const check = await TkPesertaUjianPpdb.query()
+        .with("peserta")
+        .where({m_jadwal_ppdb_id : jadwal_ppdb})
+        .where({ dihapus: 0})
+        .where({ m_pendaftar_ppdb_id: pendaftar_id })
+        .first();
+      if(check) {
+        return response.ok({
+          peserta_ujian: check
+        })
+      }
+      const pesertaUjian = await TkPesertaUjian.create({
+        waktu_mulai,
+        dinilai: 0,
+        selesai: 0,
+        dihapus: 0,
+        m_user_id: user.id,
+      });
+      await TkPesertaUjianPpdb.create({
+        dihapus: 0,
+        m_pendaftar_ppdb_id: pendaftar_id,
+        m_jadwal_ppdb_id: jadwal_ppdb,
+        tk_peserta_ujian_id: pesertaUjian.id,
+      })
+      const jadwal = await MJadwalPpdb.query()
+        .with("soal", builder => {
+          builder.with("soalUjian", builder => {
+            builder.with("soal").where({dihapus: 0})
+          }).where({dihapus: 0})
+        })
+        .with("info", (builder) => {
+          builder.with("gelombang", (builder) => {
+            builder.with("jalur");
+          });
+        })
+        .where({ id: jadwal_ppdb })
+        .first();
+      const jadwalData = jadwal.toJSON() 
+      let soal = jadwalData.soal.soalUjian.map(d => {
+        if (d.soal.bentuk == "pg") {
+          return {
+            durasi: 0,
+            ragu: 0,
+            dijawab: 0,
+            dinilai: 1,
+            m_soal_ujian_id: d.soal.id,
+            tk_peserta_ujian_id: pesertaUjian.id,
+          };
+        } else if (d.soal.bentuk == "esai") {
+          return {
+            durasi: 0,
+            ragu: 0,
+            dijawab: 0,
+            m_soal_ujian_id: d.soal.id,
+            jawaban_rubrik_esai: d.soal.rubrik_kj,
+            tk_peserta_ujian_id: pesertaUjian.id,
+          };
+        }
+      })
+      if(jadwalData.diacak) {
+        soal = shuffle(soal);
+      }
+      const trx = await Database.beginTransaction();
+      await TkJawabanUjianSiswa.createMany(soal, trx);
+      await trx.commit();
+      
+      const res = await jadwalUjianReference.add({
+        tk_peserta_ujian_id: pesertaUjian.id,
+        user_id: pesertaUjian.m_user_id,
+        progress: 0,
+        waktu_mulai: waktu_mulai,
+      });
+
+      await TkPesertaUjian.query().where({ id: pesertaUjian.id }).update({
+        doc_id: res.id,
+      });
+      return pesertaUjian;
     }
 
     const ujian = await MUjian.query().where({ id: ujian_id }).first();
@@ -14472,7 +14560,7 @@ class MainController {
       return response.ok({
         message: messagePutSuccess,
       });
-    } else if (user.role == "siswa") {
+    } else if (user.role == "siswa" || user.role == "ppdb") {
       let jawabanUjianSiswa;
 
       if (jawaban_opsi_uraian) {
@@ -14516,14 +14604,14 @@ class MainController {
             jawaban_foto,
           });
       } else if (jawaban_pg) {
-        const nilaiSiswa = await TkJawabanUjianSiswa.query()
-          .with("soal")
-          .where({ id: jawaban_ujian_siswa_id })
-          .first();
+        // const nilaiSiswa = await TkJawabanUjianSiswa.query()
+        //   .with("soal")
+        //   .where({ id: jawaban_ujian_siswa_id })
+        //   .first();
 
-        const nilai = await TkPesertaUjian.query()
-          .where({ id: nilaiSiswa.tk_peserta_ujian_id })
-          .first();
+        // const nilai = await TkPesertaUjian.query()
+        //   .where({ id: nilaiSiswa.tk_peserta_ujian_id })
+        //   .first();
         jawabanUjianSiswa = await TkJawabanUjianSiswa.query()
           .where({ id: jawaban_ujian_siswa_id })
           .update({
@@ -14532,25 +14620,25 @@ class MainController {
             ragu,
             dijawab: 1,
           });
-        if (
-          nilaiSiswa.toJSON().jawaban_pg != nilaiSiswa.toJSON().soal.kj_pg &&
-          jawaban_pg == nilaiSiswa.toJSON().soal.kj_pg
-        ) {
-          await TkPesertaUjian.query()
-            .where({ id: nilaiSiswa.tk_peserta_ujian_id })
-            .update({
-              nilai: (nilai ? nilai.nilai : 0) + nilaiSiswa.toJSON().soal.poin,
-            });
-        } else if (
-          nilaiSiswa.toJSON().jawaban_pg == nilaiSiswa.toJSON().soal.kj_pg &&
-          jawaban_pg != nilaiSiswa.toJSON().soal.kj_pg
-        ) {
-          await TkPesertaUjian.query()
-            .where({ id: nilaiSiswa.tk_peserta_ujian_id })
-            .update({
-              nilai: (nilai ? nilai.nilai : 0) - nilaiSiswa.toJSON().soal.poin,
-            });
-        }
+        // if (
+        //   nilaiSiswa.toJSON().jawaban_pg != nilaiSiswa.toJSON().soal.kj_pg &&
+        //   jawaban_pg == nilaiSiswa.toJSON().soal.kj_pg
+        // ) {
+        //   await TkPesertaUjian.query()
+        //     .where({ id: nilaiSiswa.tk_peserta_ujian_id })
+        //     .update({
+        //       nilai: (nilai ? nilai.nilai : 0) + nilaiSiswa.toJSON().soal.poin,
+        //     });
+        // } else if (
+        //   nilaiSiswa.toJSON().jawaban_pg == nilaiSiswa.toJSON().soal.kj_pg &&
+        //   jawaban_pg != nilaiSiswa.toJSON().soal.kj_pg
+        // ) {
+        //   await TkPesertaUjian.query()
+        //     .where({ id: nilaiSiswa.tk_peserta_ujian_id })
+        //     .update({
+        //       nilai: (nilai ? nilai.nilai : 0) - nilaiSiswa.toJSON().soal.poin,
+        //     });
+        // }
       } else {
         jawabanUjianSiswa = await TkJawabanUjianSiswa.query()
           .where({ id: jawaban_ujian_siswa_id })
