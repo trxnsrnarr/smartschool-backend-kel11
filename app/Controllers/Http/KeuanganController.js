@@ -89,6 +89,16 @@ class KeuanganController {
     const { search } = request.get();
 
     let perencanaan = MRencanaKeuangan.query()
+      .with("transaksi", (builder) => {
+        builder
+          .select("m_rencana_keuangan_id", "id")
+          .where({ dihapus: 0 })
+          .with("jurnal", (builder) => {
+            builder
+              .select("id", "m_rencana_transaksi_id", "jenis", "saldo")
+              .where({ dihapus: 0 });
+          });
+      })
       .where({ m_sekolah_id: sekolah.id })
       .where({ dihapus: 0 });
 
@@ -1051,7 +1061,12 @@ class KeuanganController {
     });
   }
 
-  async getRencanaArusKasLaporan({ response, request, auth }) {
+  async getRencanaArusKasLaporan({
+    response,
+    request,
+    auth,
+    params: { perencanaan_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -1074,13 +1089,13 @@ class KeuanganController {
         .whereBetween("tanggal", [tanggal_awal1, tanggal_akhir1])
         .where({ m_sekolah_id: sekolah.id })
         .where({ dihapus: 0 })
-        .andWhere({ m_rencana_transaksi_id: rencana_id })
+        .andWhere({ m_rencana_keuangan_id: perencanaan_id })
         .ids();
       transaksiIds2 = await MRencanaTransaksi.query()
         .whereBetween("tanggal", [tanggal_awal2, tanggal_akhir2])
         .where({ m_sekolah_id: sekolah.id })
         .where({ dihapus: 0 })
-        .andWhere({ m_rencana_transaksi_id: rencana_id })
+        .andWhere({ m_rencana_keuangan_id: perencanaan_id })
         .ids();
     } else {
       return response.notFound({
@@ -1104,7 +1119,7 @@ class KeuanganController {
       })
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_rencana_keuangan_id: rencana_id });
+      .andWhere({ m_rencana_keuangan_id: perencanaan_id });
 
     if (search) {
       kategori.andWhere("nama", "like", `%${search}%`);
@@ -1114,14 +1129,17 @@ class KeuanganController {
 
     const rumusKenaikan = await MRencanaRumusArusKas.query()
       .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_rencana_keuangan_id: perencanaan_id })
       .andWhere({ dihapus: 0 })
       .first();
     const rumusAwal = await MRencanaRumusSaldoKasAwal.query()
       .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_rencana_keuangan_id: perencanaan_id })
       .andWhere({ dihapus: 0 })
       .first();
     const rumusAkhir = await MRencanaRumusSaldoKasAkhir.query()
       .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_rencana_keuangan_id: perencanaan_id })
       .andWhere({ dihapus: 0 })
       .first();
 
@@ -1160,7 +1178,7 @@ class KeuanganController {
       })
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_rencana_keuangan_id: rencana_id });
+      .andWhere({ m_rencana_keuangan_id: perencanaan_id });
 
     if (search) {
       labaRugi.andWhere("nama", "like", `%${search}%`);
@@ -1207,6 +1225,118 @@ class KeuanganController {
       labaRugi,
       akun,
       keuangan,
+    });
+  }
+
+  async getArusKas({ response, request, auth, params: { perencanaan_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let { search, tanggal_awal, tanggal_akhir } = request.get();
+
+    let kategori;
+
+    kategori = MRencanaKategoriArusKas.query()
+      .with("tipeAkun", (builder) => {
+        builder
+          .with("akunArusKas", (builder) => {
+            builder
+              .with("akun", (builder) => {
+                builder.with("akun", (builder) => {
+                  builder.with("jurnal", (builder) => {
+                    builder.where({ dihapus: 0 });
+                    if (tanggal_awal && tanggal_akhir) {
+                      builder.whereBetween("update_at", [
+                        `${tanggal_awal}`,
+                        `${tanggal_akhir}`,
+                      ]);
+                    }
+                  });
+                });
+              })
+              .where({ dihapus: 0 });
+          })
+          .where({ dihapus: 0 })
+          .orderBy("urutan", "asc");
+      })
+      .where({ dihapus: 0 })
+      .where({ m_rencana_keuangan_id: perencanaan_id })
+      .andWhere({ m_sekolah_id: sekolah.id });
+
+    if (search) {
+      kategori.andWhere("nama", "like", `%${search}%`);
+    }
+
+    kategori = await kategori.fetch();
+
+    if (!kategori.toJSON().length) {
+      const defaultKategori = await MRencanaKategoriArusKas.create({
+        nama: "Operasi",
+        dihapus: 0,
+        m_rencana_keuangan_id: perencanaan_id,
+        m_sekolah_id: sekolah.id,
+      });
+
+      const labaRugi = await MRencanaAktivitasTransaksi.create({
+        m_sekolah_id: sekolah.id,
+        judul: "Laba & Rugi",
+        urutan: 1,
+        dihapus: 0,
+        laba: 1,
+        m_rencana_kategori_arus_kas_id: defaultKategori.id,
+      });
+    }
+
+    const rumusKenaikan = await MRencanaRumusArusKas.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .where({ m_rencana_keuangan_id: perencanaan_id })
+      .first();
+    const rumusAwal = await MRencanaRumusSaldoKasAwal.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .where({ m_rencana_keuangan_id: perencanaan_id })
+      .first();
+    const rumusAkhir = await MRencanaRumusSaldoKasAkhir.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .where({ m_rencana_keuangan_id: perencanaan_id })
+      .first();
+
+    const tipeAkun = await MRencanaKategoriTipeAkun.query()
+      .with("akun", (builder) => {
+        builder
+          .with("akun", (builder) => {
+            builder.with("jurnal", (builder) => {
+              builder.where({ dihapus: 0 });
+              if (tanggal_awal && tanggal_akhir) {
+                builder.whereBetween("update_at", [
+                  `${tanggal_awal}`,
+                  `${tanggal_akhir}`,
+                ]);
+              }
+            });
+          })
+          .where({ dihapus: 0 });
+      })
+      .where({ m_rencana_keuangan_id: perencanaan_id })
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    return response.ok({
+      kategori,
+      rumus: {
+        rumusKenaikan,
+        rumusAwal,
+        rumusAkhir,
+      },
+      tipeAkun,
     });
   }
 
@@ -1502,6 +1632,7 @@ class KeuanganController {
           });
       })
       .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
       .fetch();
 
     const keuangan = await MKeuTemplateAkun.query()
@@ -1511,7 +1642,7 @@ class KeuanganController {
       .first();
 
     return response.ok({
-      kategori,
+      // kategori,
       akun,
       analisis,
       keuangan,
@@ -1631,7 +1762,12 @@ class KeuanganController {
       message: messageDeleteSuccess,
     });
   }
-  async postKategoriArusKas({ response, request, auth }) {
+  async postKategoriArusKas({
+    response,
+    request,
+    auth,
+    params: { perencanaan_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -1660,6 +1796,7 @@ class KeuanganController {
       warna,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
+      m_rencana_keuangan_id: perencanaan_id,
     });
 
     return response.ok({
@@ -1760,19 +1897,19 @@ class KeuanganController {
 
     let {
       judul,
-      m_Rencana_kategori_arus_kas_id,
-      m_Rencana_kategori_tipe_akun_id,
+      m_rencana_kategori_arus_kas_id,
+      m_rencana_kategori_tipe_akun_id,
       urutan,
     } = request.post();
 
     const rules = {
-      m_Rencana_kategori_tipe_akun_id: "required",
-      m_Rencana_kategori_arus_kas_id: "required",
+      m_rencana_kategori_tipe_akun_id: "required",
+      m_rencana_kategori_arus_kas_id: "required",
       judul: "required",
     };
     const message = {
-      "m_Rencana_kategori_tipe_akun_id.required": "Tipe Akun harus diisi",
-      "m_Rencana_kategori_arus_kas_id.required":
+      "m_rencana_kategori_tipe_akun_id.required": "Tipe Akun harus diisi",
+      "m_rencana_kategori_arus_kas_id.required":
         "Kategori Arus Kas harus diisi",
       "judul.required": "Judul harus diisi",
     };
@@ -1784,8 +1921,8 @@ class KeuanganController {
     const kategori = await MRencanaAktivitasTransaksi.create({
       m_sekolah_id: sekolah.id,
       judul,
-      m_Rencana_kategori_tipe_akun_id,
-      m_Rencana_kategori_arus_kas_id,
+      m_rencana_kategori_tipe_akun_id,
+      m_rencana_kategori_arus_kas_id,
       urutan,
       dihapus: 0,
     });
@@ -1808,18 +1945,18 @@ class KeuanganController {
 
     let {
       judul,
-      m_Rencana_kategori_arus_kas_id,
-      m_Rencana_kategori_tipe_akun_id,
+      m_rencana_kategori_arus_kas_id,
+      m_rencana_kategori_tipe_akun_id,
       urutan,
     } = request.post();
 
     const rules = {
-      m_Rencana_kategori_tipe_akun_id: "required",
-      m_Rencana_kategori_arus_kas_id: "required",
+      // m_rencana_kategori_tipe_akun_id: "required",
+      m_rencana_kategori_arus_kas_id: "required",
       judul: "required",
     };
     const message = {
-      "m_Rencana_kategori_tipe_akun_id.required": "Tipe Akun harus diisi",
+      // "m_Rencana_kategori_tipe_akun_id.required": "Tipe Akun harus diisi",
       "m_Rencana_kategori_arus_kas_id.required":
         "Kategori Arus Kas harus diisi",
       "judul.required": "Judul harus diisi",
@@ -1833,8 +1970,8 @@ class KeuanganController {
       .where({ id: aktivitas_id })
       .update({
         judul,
-        m_Rencana_kategori_tipe_akun_id,
-        m_Rencana_kategori_arus_kas_id,
+        m_rencana_kategori_tipe_akun_id,
+        m_rencana_kategori_arus_kas_id,
         urutan,
         dihapus: 0,
       });
@@ -1878,7 +2015,12 @@ class KeuanganController {
     });
   }
 
-  async postKategoriTipeAkun({ response, request, auth }) {
+  async postKategoriTipeAkun({
+    response,
+    request,
+    auth,
+    params: { perencanaan_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -1908,6 +2050,7 @@ class KeuanganController {
       nama,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
+      m_rencana_keuangan_id: perencanaan_id,
     });
 
     if (m_keu_akun_id) {
@@ -1915,7 +2058,7 @@ class KeuanganController {
         m_keu_akun_id.map(async (d) => {
           await TkRencanaKategoriTipeAkun.create({
             m_keu_akun_id: d.m_keu_akun_id,
-            m_keu_kategori_tipe_akun_id: kategori.id,
+            m_rencana_kategori_tipe_akun_id: kategori.id,
           });
         })
       );
@@ -1979,7 +2122,7 @@ class KeuanganController {
           } else {
             await TkRencanaKategoriTipeAkun.create({
               m_keu_akun_id: d.m_keu_akun_id,
-              m_keu_kategori_tipe_akun_id: kategori_id,
+              m_rencana_kategori_tipe_akun_id: kategori_id,
             });
           }
         })
@@ -2040,7 +2183,12 @@ class KeuanganController {
     });
   }
 
-  async postRumusArusKas({ response, request, auth }) {
+  async postRumusArusKas({
+    response,
+    request,
+    auth,
+    params: { perencanaan_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -2067,6 +2215,7 @@ class KeuanganController {
     const rumus1 = await MRencanaRumusArusKas.create({
       rumus,
       dihapus: 0,
+      m_rencana_keuangan_id: perencanaan_id,
       m_sekolah_id: sekolah.id,
     });
 
@@ -2116,7 +2265,12 @@ class KeuanganController {
     });
   }
 
-  async postRumusSaldoKasAwal({ response, request, auth }) {
+  async postRumusSaldoKasAwal({
+    response,
+    request,
+    auth,
+    params: { perencanaan_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -2143,6 +2297,7 @@ class KeuanganController {
     const rumus1 = await MRencanaRumusSaldoKasAwal.create({
       rumus,
       dihapus: 0,
+      m_rencana_keuangan_id: perencanaan_id,
       m_sekolah_id: sekolah.id,
     });
 
@@ -2196,7 +2351,12 @@ class KeuanganController {
       message: messagePutSuccess,
     });
   }
-  async postRumusSaldoKasAkhir({ response, request, auth }) {
+  async postRumusSaldoKasAkhir({
+    response,
+    request,
+    auth,
+    params: { perencanaan_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -2223,6 +2383,7 @@ class KeuanganController {
     const rumus1 = await MRencanaRumusSaldoKasAkhir.create({
       rumus,
       dihapus: 0,
+      m_rencana_keuangan_id: perencanaan_id,
       m_sekolah_id: sekolah.id,
     });
 

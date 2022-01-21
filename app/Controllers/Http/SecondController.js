@@ -28,6 +28,8 @@ const MGelombangPpdb = use("App/Models/MGelombangPpdb");
 const MPendaftarPpdb = use("App/Models/MPendaftarPpdb");
 const MAnggotaProyek = use("App/Models/MAnggotaProyek");
 const MAnggotaProyekRole = use("App/Models/MAnggotaProyekRole");
+const MKeuRencanaJurnal = use("App/Models/MKeuRencanaJurnal");
+const MRencanaTransaksi = use("App/Models/MRencanaTransaksi");
 const MKategoriPekerjaan = use("App/Models/MKategoriPekerjaan");
 const MPekerjaanProyek = use("App/Models/MPekerjaanProyek");
 const MDitugaskanPekerjaan = use("App/Models/MDitugaskanPekerjaan");
@@ -824,6 +826,63 @@ class SecondController {
             builder.select("id", "nama");
           })
           .where({ dihapus: 0 });
+      })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+    const rekening = await MRekSekolah.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
+    return response.ok({
+      keuangan,
+      rekening,
+      akun,
+    });
+  }
+
+  async getRencanaKeuangan({
+    response,
+    request,
+    auth,
+    params: { perencanaan_id },
+  }) {
+    const user = await auth.getUser();
+
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { search } = request.get();
+
+    const query = MKeuTemplateAkun.query().andWhere({
+      m_sekolah_id: sekolah.id,
+    });
+
+    if (search) {
+      query.where("template", "like", `%${search}%`);
+    }
+
+    const transaksiIds = await MRencanaTransaksi.query()
+      .where({ m_rencana_keuangan_id: perencanaan_id })
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
+      .ids();
+    const jurnalIds = await MKeuRencanaJurnal.query()
+      .where({ dihapus: 0 })
+      .whereIn("m_rencana_transaksi_id", transaksiIds)
+      .ids();
+
+    const keuangan = await query.first();
+    const akun = await MKeuAkun.query()
+      .with("rek")
+      .with("rencanaJurnal", (builder) => {
+        builder.whereIn("id", jurnalIds);
       })
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
