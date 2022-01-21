@@ -2114,6 +2114,10 @@ class PPDBController {
           worksheet.getRow(5).values = [
             "No",
             "Nama",
+            "Gender",
+            "Agama",
+            "Tanggal lahir",
+            "Asal Sekolah",
             "Nomor Peserta",
             "Tanggal Mendaftar",
             "Status",
@@ -2163,6 +2167,10 @@ class PPDBController {
           worksheet.getRow(6).values = [
             "No",
             "Nama",
+            "Gender",
+            "Agama",
+            "Tanggal lahir",
+            "Asal Sekolah",
             "Nomor Peserta",
             "Tanggal Mendaftar",
             "Status",
@@ -2212,6 +2220,10 @@ class PPDBController {
           worksheet.columns = [
             { key: "no" },
             { key: "nama" },
+            { key: "gender" },
+            { key: "agama" },
+            { key: "tgllahir" },
+            { key: "asalsklh" },
             { key: "nomorPeserta" },
             { key: "tanggal" },
             { key: "status" },
@@ -2275,6 +2287,10 @@ class PPDBController {
           let row = worksheet.addRow({
             no: `${idx + 1}`,
             nama: d.user ? d.user.nama : "-",
+            gender: d.user ? d.user.gender : "-",
+            agama: d.user ? d.user.agama : "-",
+            tgllahir: d.user ? d.user.tanggal_lahir : "-",
+            asalsklh: d.user.profil ? d.user.profil.asal_sekolah : "-",
             nomorPeserta: nomorPeserta ? nomorPeserta : "-",
             tanggal: d ? d.created_at : "-",
             status: d ? status.text : "-",
@@ -2400,17 +2416,21 @@ class PPDBController {
     worksheet.mergeCells(`C5:C6`);
     worksheet.mergeCells(`D5:D6`);
     worksheet.mergeCells(`E5:E6`);
-    worksheet.mergeCells(`F5:L5`);
-    worksheet.mergeCells(`M5:S5`);
-    worksheet.mergeCells(`T5:Z5`);
-    worksheet.mergeCells(`AA5:AG5`);
-    worksheet.mergeCells(`AH5:AN5`);
-    worksheet.mergeCells(`AO5:AU5`);
+    worksheet.mergeCells(`J5:P5`);
+    worksheet.mergeCells(`Q5:W5`);
+    worksheet.mergeCells(`X5:AD5`);
+    worksheet.mergeCells(`AE5:AK5`);
+    worksheet.mergeCells(`AL5:AR5`);
+    worksheet.mergeCells(`AS5:AY5`);
     worksheet.getColumn("A").width = 6;
     worksheet.getColumn("B").width = 20;
     worksheet.getColumn("C").width = 20;
     worksheet.getColumn("D").width = 20;
     worksheet.getColumn("E").width = 20;
+    worksheet.getColumn("F").width = 20;
+    worksheet.getColumn("G").width = 20;
+    worksheet.getColumn("H").width = 20;
+    worksheet.getColumn("I").width = 20;
     worksheet.autoFilter = {
       from: "A6",
       to: "AT6",
