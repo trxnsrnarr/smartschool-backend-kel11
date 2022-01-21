@@ -445,6 +445,7 @@ class PPDBController {
       filter_mapel,
       filter_tipe,
       filter_tingkat,
+      status = "berlangsung",
     } = request.get();
 
     const userIds = await User.query()
@@ -475,7 +476,7 @@ class PPDBController {
 
     ujian = await ujian.ids();
 
-    const jadwal = await MJadwalPpdb.query()
+    let jadwal = MJadwalPpdb.query()
       .with("soal")
       .with("info", (builder) => {
         builder.with("gelombang", (builder) => {
@@ -483,8 +484,23 @@ class PPDBController {
         });
       })
       .whereIn("m_informasi_gelombang_id", infoIds)
-      .where({ dihapus: 0 })
-      .paginate(page, 20);
+      .where({ dihapus: 0 });
+
+    if (status == "berlangsung") {
+      jadwal
+        .where("waktu_dibuka", "<=", moment().format("YYYY-MM-DD HH:mm:ss"))
+        .where("waktu_ditutup", ">", moment().format("YYYY-MM-DD HH:mm:ss"));
+    } else if (status == "akan-datang") {
+      jadwal.where("waktu_dibuka", ">", moment().format("YYYY-MM-DD HH:mm:ss"));
+    } else if (status == "sudah-selesai") {
+      jadwal.where(
+        "waktu_ditutup",
+        "<=",
+        moment().format("YYYY-MM-DD HH:mm:ss")
+      );
+    }
+
+    jadwal = await jadwal.paginate(page, 20);
 
     return response.ok({
       jadwal,
@@ -1941,7 +1957,7 @@ class PPDBController {
       .with("pendaftar", (builder) => {
         builder
           .with("user", (builder) => {
-            builder.select("id", "nama").with("profil");
+            builder.with("profil");
           })
           .where({ dihapus: 0 });
       })
