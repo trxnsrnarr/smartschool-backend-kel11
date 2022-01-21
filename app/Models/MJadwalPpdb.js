@@ -12,6 +12,10 @@ class MJadwalPpdb extends Model {
     return this.belongsTo("App/Models/MUjian");
   }
 
+  ujian() {
+    return this.belongsTo("App/Models/MUjian");
+  }
+
   info() {
     return this.belongsTo("App/Models/MInformasiGelombang");
   }

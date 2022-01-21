@@ -1363,6 +1363,14 @@ Route.get(
   "/jadwal-ppdb/:jadwal_ppdb_id",
   "PPDBController.detailJadwalUjianPPDB"
 );
+Route.get(
+  "/jadwal-ppdb-ss/:id",
+  "PPDBController.detailJadwalPPDBSS"
+);
+Route.post(
+  "/download-nilai-jadwal-ppdb-ss/:id",
+  "PPDBController.downloadJadwalPPDBSS"
+);
 Route.post(
   "/download-nilai-jadwal-ppdb/:jadwal_ppdb_id",
   "PPDBController.downloadNilaiUjianPPDB"

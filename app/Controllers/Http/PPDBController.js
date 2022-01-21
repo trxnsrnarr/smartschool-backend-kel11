@@ -9,6 +9,7 @@ const MJalurPpdb = use("App/Models/MJalurPpdb");
 const MInformasiJalurPpdb = use("App/Models/MInformasiJalurPpdb");
 const MInformasiGelombang = use("App/Models/MInformasiGelombang");
 const MJadwalPpdb = use("App/Models/MJadwalPpdb");
+const TkPesertaUjian = use("App/Models/TkPesertaUjian");
 const TkPesertaUjianPpdb = use("App/Models/TkPesertaUjianPpdb");
 const User = use("App/Models/User");
 
@@ -367,7 +368,9 @@ class PPDBController {
       .with("gelombang", (builder) => {
         builder
           .where({ dihapus: 0 })
-          .withCount("pendaftar as jumlahPendaftar")
+          .withCount("pendaftar as jumlahPendaftar", (builder) => {
+            builder.where({ dihapus: 0 });
+          })
           .with("informasi", (builder) => {
             builder
               .with("ujian", (builder) => {
@@ -520,7 +523,9 @@ class PPDBController {
       .with("gelombang", (builder) => {
         builder
           .where({ dihapus: 0 })
-          .withCount("pendaftar as jumlahPendaftar")
+          .withCount("pendaftar as jumlahPendaftar", (builder) => {
+            builder.where({ dihapus: 0 });
+          })
           .with("informasi", (builder) => {
             builder
               .with("ujian", (builder) => {
@@ -543,6 +548,392 @@ class PPDBController {
     return response.ok({
       jalur,
     });
+  }
+
+  async detailJadwalPPDBSS({ response, request, auth, params: { id } }) {
+    const user = await auth.getUser();
+
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { search } = request.get();
+
+    const jadwalUjian = await MJadwalPpdb.query()
+      // .with("rombelUjian", (builder) => {
+      //   builder.where({ dihapus: 0 }).with("rombel");
+      // })
+      .with("ujian")
+      .with("info", (builder) => {
+        builder.with("gelombang", (builder) => {
+          builder.with("jalur").with("pendaftar", (builder) => {
+            builder.where({ dihapus: 0 });
+          });
+        });
+      })
+      .where({ id })
+      .first();
+
+    let pesertaUjianData = [];
+    let detailRombel;
+
+    const pesertaIds = await TkPesertaUjianPpdb.query()
+      .where({ m_jadwal_ppdb_id: id })
+      .where({ dihapus: 0 })
+      .whereNotNull("tk_peserta_ujian_id")
+      .pluck("tk_peserta_ujian_id");
+
+    const pendaftarIds = await TkPesertaUjianPpdb.query()
+      .where({ m_jadwal_ppdb_id: id })
+      .where({ dihapus: 0 })
+      .whereNotNull("m_pendaftar_ppdb_id")
+      .pluck("m_pendaftar_ppdb_id");
+
+    const userIds = await TkPesertaUjian.query()
+      .whereIn("id", pesertaIds)
+      .where({ dihapus: 0 })
+      .pluck("m_user_id");
+
+    const users = await User.query()
+      .with("profil")
+      .whereIn("id", userIds)
+      .where("nama", "like", `%${search}%`)
+      .where({ dihapus: 0 })
+      .fetch();
+
+    pesertaUjianData = await Promise.all(
+      users.toJSON().map(async (d) => {
+        const pesertaUjian = await TkPesertaUjian.query()
+          .where({ m_user_id: d.id })
+          .where({ dihapus: 0 })
+          .whereIn("id", pesertaIds)
+          .fetch();
+        const pendaftar = await MPendaftarPpdb.query()
+          .whereIn("id", pendaftarIds)
+          .where({ m_user_id: d.id })
+          .first();
+        return { ...d, pesertaUjian, pendaftar };
+      })
+    );
+
+    return response.ok({
+      jadwalUjian,
+      pesertaUjian: pesertaUjianData,
+      rombel: detailRombel,
+    });
+  }
+
+  async downloadJadwalPPDBSS({ response, request, auth, params: { id } }) {
+    const user = await auth.getUser();
+
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { search } = request.get();
+
+    const jadwalUjianData = await MJadwalPpdb.query()
+      // .with("rombelUjian", (builder) => {
+      //   builder.where({ dihapus: 0 }).with("rombel");
+      // })
+      .with("ujian")
+      .with("info", (builder) => {
+        builder.with("gelombang", (builder) => {
+          builder.with("jalur").with("pendaftar", (builder) => {
+            builder.where({ dihapus: 0 });
+          });
+        });
+      })
+      .where({ id })
+      .first();
+    const jadwalUjian = jadwalUjianData.toJSON();
+
+    let pesertaUjianData = [];
+    let detailRombel;
+
+    const pesertaIds = await TkPesertaUjianPpdb.query()
+      .where({ m_jadwal_ppdb_id: id })
+      .where({ dihapus: 0 })
+      .whereNotNull("tk_peserta_ujian_id")
+      .pluck("tk_peserta_ujian_id");
+
+    const pendaftarIds = await TkPesertaUjianPpdb.query()
+      .where({ m_jadwal_ppdb_id: id })
+      .where({ dihapus: 0 })
+      .whereNotNull("m_pendaftar_ppdb_id")
+      .pluck("m_pendaftar_ppdb_id");
+
+    const userIds = await TkPesertaUjian.query()
+      .whereIn("id", pesertaIds)
+      .where({ dihapus: 0 })
+      .pluck("m_user_id");
+
+    const users = await User.query()
+      .with("profil")
+      .whereIn("id", userIds)
+      .where({ dihapus: 0 })
+      .fetch();
+
+    pesertaUjianData = await Promise.all(
+      users.toJSON().map(async (d) => {
+        const pesertaUjian = await TkPesertaUjian.query()
+          .where({ m_user_id: d.id })
+          .where({ dihapus: 0 })
+          .whereIn("id", pesertaIds)
+          .first();
+        const pendaftar = await MPendaftarPpdb.query()
+          .whereIn("id", pendaftarIds)
+          .where({ m_user_id: d.id })
+          .first();
+        return { ...d, pesertaUjian, pendaftar };
+      })
+    );
+
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
+    // return gelombang;
+    const awal = moment(`${jadwalUjian.waktu_dibuka}`).format("DD-MM-YYYY ");
+    const akhir = moment(`${jadwalUjian.waktu_ditutup}`).format("DD-MM-YYYY ");
+    // return data;
+    let workbook = new Excel.Workbook();
+    let worksheet = workbook.addWorksheet(`Daftar Pendaftar`);
+
+    worksheet.mergeCells("A1:G1");
+    worksheet.mergeCells("A2:G2");
+    worksheet.mergeCells("A3:G3");
+
+    worksheet.getCell(
+      "A4"
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
+
+    worksheet.addConditionalFormatting({
+      ref: "A1:J3",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 16,
+              bold: true,
+            },
+            // fill: {
+            //   type: "pattern",
+            //   pattern: "solid",
+            //   bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            // },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            // border: {
+            //   top: { style: "thin" },
+            //   left: { style: "thin" },
+            //   bottom: { style: "thin" },
+            //   right: { style: "thin" },
+            // },
+          },
+        },
+      ],
+    });
+
+    worksheet.addConditionalFormatting({
+      ref: "A5:J5",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+
+    worksheet.getCell("A1").value = `${jadwalUjian.ujian.nama}`;
+    worksheet.getCell("A2").value = jadwalUjian.info.gelombang.nama;
+    worksheet.getCell("A3").value = `${awal} - ${akhir}`;
+
+    const namaGelombang = jadwalUjian.info.gelombang.nama.toLowerCase();
+    const gelombang = jadwalUjian.info.gelombang;
+    await Promise.all(
+      pesertaUjianData
+        .sort((a, b) => ("" + a.nama).localeCompare("" + b.nama))
+        .map(async (d, idx) => {
+          const nomorPeserta = `${moment().format("YYYY")} - ${
+            namaGelombang.includes("khusus")
+              ? "00"
+              : namaGelombang.includes("reguler 1")
+              ? "01"
+              : namaGelombang.includes("reguler 3")
+              ? "02"
+              : "03"
+          } - ${padNumber(
+            gelombang.pendaftar.findIndex((e) => {
+              return e.id == d.pendaftar.id;
+            }) + 1,
+            `${gelombang.diterima}`.length
+          )}`;
+          worksheet.addConditionalFormatting({
+            ref: `A${(idx + 1) * 1 + 5}:A${(idx + 1) * 1 + 5}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 11,
+                    // bold: true,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
+                },
+              },
+            ],
+          });
+
+          worksheet.addConditionalFormatting({
+            ref: `B${(idx + 1) * 1 + 5}:J${(idx + 1) * 1 + 6}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 11,
+                    // bold: true,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "left",
+                  },
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
+                },
+              },
+            ],
+          });
+
+          // add column headers
+          worksheet.getRow(5).values = [
+            "No",
+            "Nama",
+            "Gender",
+            "Agama",
+            "Tanggal lahir",
+            "Asal Sekolah",
+            "Nomor Peserta",
+            "Tanggal Mendaftar",
+            "Status",
+            "Nilai",
+          ];
+          worksheet.columns = [
+            { key: "no" },
+            { key: "nama" },
+            { key: "gender" },
+            { key: "agama" },
+            { key: "tgllahir" },
+            { key: "asalsklh" },
+            { key: "nomorPeserta" },
+            { key: "tanggal" },
+            { key: "status" },
+            { key: "nilai" },
+          ];
+
+          const checkBayar =
+            JSON.parse(d.pendaftar.pembayaran || "[]").reduce((a, b) => {
+              if (b.diverifikasi) {
+                return a + b.nominal;
+              } else {
+                return a + 0;
+              }
+            }, 0) < (gelombang.jalur.biaya || 0)
+              ? "menungguKonfirmasiPembayaran"
+              : d.pendaftar.status;
+          const status = dataStatus[checkBayar];
+
+          // Add row using key mapping to columns
+          let row = worksheet.addRow({
+            no: `${idx + 1}`,
+            nama: d ? d.nama : "-",
+            gender: d ? d.gender : "-",
+            agama: d ? d.agama : "-",
+            tgllahir: d ? d.tanggal_lahir : "-",
+            asalsklh: d.profil ? d.profil.asal_sekolah : "-",
+            nomorPeserta: nomorPeserta ? nomorPeserta : "-",
+            tanggal: d ? d.pendaftar.created_at : "-",
+            status: status ? status.text : "-",
+            nilai: d.pesertaUjian.nilai,
+          });
+        })
+    );
+    worksheet.getColumn("A").width = 6;
+    worksheet.getColumn("B").width = 20;
+    worksheet.getColumn("C").width = 20;
+    worksheet.getColumn("D").width = 20;
+    worksheet.getColumn("E").width = 20;
+    worksheet.getColumn("F").width = 20;
+    worksheet.getColumn("G").width = 20;
+    worksheet.getColumn("H").width = 20;
+    worksheet.getColumn("I").width = 20;
+    worksheet.autoFilter = {
+      from: "A6",
+      to: "AT6",
+    };
+
+    let namaFile = `/uploads/rekapan-ujian-ppdb-${keluarantanggalseconds}.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
   }
 
   async postInformasiJalur({ request, response }) {
@@ -729,7 +1120,9 @@ class PPDBController {
 
     const gelombang = await MGelombangPpdb.query()
       .with("jalur")
-      .withCount("pendaftar as jumlahPendaftar")
+      .withCount("pendaftar as jumlahPendaftar", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
       .where({ m_sekolah_id: sekolah.id })
       .whereIn("id", gelombangIds)
       .andWhere({ m_ta_id: ta.id })
@@ -2014,7 +2407,7 @@ class PPDBController {
     });
 
     worksheet.addConditionalFormatting({
-      ref: "A5:AU6",
+      ref: "A5:AY6",
       rules: [
         {
           type: "expression",
@@ -2099,7 +2492,7 @@ class PPDBController {
           });
 
           worksheet.addConditionalFormatting({
-            ref: `B${(idx + 1) * 1 + 5}:AU${(idx + 1) * 1 + 6}`,
+            ref: `B${(idx + 1) * 1 + 5}:AY${(idx + 1) * 1 + 6}`,
             rules: [
               {
                 type: "expression",
@@ -2432,6 +2825,10 @@ class PPDBController {
     worksheet.mergeCells(`C5:C6`);
     worksheet.mergeCells(`D5:D6`);
     worksheet.mergeCells(`E5:E6`);
+    worksheet.mergeCells(`F5:F6`);
+    worksheet.mergeCells(`G5:G6`);
+    worksheet.mergeCells(`H5:H6`);
+    worksheet.mergeCells(`I5:I6`);
     worksheet.mergeCells(`J5:P5`);
     worksheet.mergeCells(`Q5:W5`);
     worksheet.mergeCells(`X5:AD5`);
