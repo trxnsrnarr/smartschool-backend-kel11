@@ -24,6 +24,7 @@ const MKeuTemplateAnalisis = use("App/Models/MKeuTemplateAnalisis");
 const MKeuTransaksi = use("App/Models/MKeuTransaksi");
 const MRencanaAktivitasTransaksi = use("App/Models/MRencanaAktivitasTransaksi");
 const TkRencanaKategoriTipeAkun = use("App/Models/TkRencanaKategoriTipeAkun");
+const MHistoriAktivitas = use("App/Models/MHistoriAktivitas");
 
 const messagePostSuccess = "Data berhasil ditambahkan";
 const messageSaveSuccess = "Data berhasil disimpan";
@@ -204,6 +205,15 @@ class KeuanganController {
       dihapus: 0,
       m_sekolah_id: sekolah.id,
     });
+    
+    await MHistoriAktivitas.create({
+      jenis: "Tambah Perencanaan",
+      m_user_id: user.id,
+      akhir: `"${nama}"`,
+      m_sekolah_id: sekolah.id,
+      tipe: "perencanaan"
+    });
+  
 
     return response.ok({
       message: messagePostSuccess,
