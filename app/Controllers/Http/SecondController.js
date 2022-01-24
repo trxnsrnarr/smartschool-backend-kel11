@@ -8018,6 +8018,46 @@ class SecondController {
       message: messagePostSuccess,
     });
   }
+
+  async updateFitur({ request, response, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { fitur } = request.post();
+
+    const user = await auth.getUser();
+
+    if (!(user.m_sekolah_id == sekolah.id && user.role == "admin")) {
+      return response.unauthorized({
+        message: messageForbidden,
+      });
+    }
+
+    const check = await MFiturSekolah.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .first();
+
+    let success;
+    if (check) {
+      success = await MFiturSekolah.query().where({ id: check.id }).update({
+        fitur,
+      });
+    } else {
+      success = await MFiturSekolah.create({
+        fitur,
+        m_sekolah_id: sekolah.id,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
 }
 
 module.exports = SecondController;
