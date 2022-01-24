@@ -5,7 +5,7 @@ const Schema = use("Schema");
 
 class MRencanaAktivitasTransaksiSchema extends Schema {
   up() {
-    this.create("m_rencana_aktivitas_transaksi", (table) => {
+    this.create("m_rencana_aktivitas_trx", (table) => {
       table.increments();
       table.string("judul");
       table.boolean("dihapus").defaultTo(0);
@@ -40,7 +40,7 @@ class MRencanaAktivitasTransaksiSchema extends Schema {
   }
 
   down() {
-    this.drop("m_rencana_aktivitas_transaksi");
+    this.drop("m_rencana_aktivitas_trx");
   }
 }
 

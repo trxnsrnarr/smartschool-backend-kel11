@@ -15,6 +15,10 @@ class MRencanaKeuangan extends Model {
   getAktif({ tanggal_akhir, tanggal_awal }) {
     return tanggal_akhir >= moment() && tanggal_awal <= moment();
   }
+
+  transaksi() {
+    return this.hasMany("App/Models/MRencanaTransaksi");
+  }
 }
 
 module.exports = MRencanaKeuangan;

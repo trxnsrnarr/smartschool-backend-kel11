@@ -42,6 +42,9 @@ class TkJadwalUjianSiswa extends Model {
   user() {
     return this.belongsTo("App/Models/User", "m_user_id");
   }
+  pesertaPPDB() {
+    return this.hasOne("App/Models/TkPesertaUjianPpdb", "id", "tk_peserta_ujian_id");
+  }
 }
 
 module.exports = TkJadwalUjianSiswa;

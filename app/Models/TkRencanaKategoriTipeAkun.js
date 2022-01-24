@@ -5,7 +5,7 @@ const Model = use("Model");
 
 class TkRencanaKategoriTipeAkun extends Model {
   static get table() {
-    return "tk_rencana_kategori_tipe_akun";
+    return "tk_rencana_kategori_tipe";
   }
 
   akun() {

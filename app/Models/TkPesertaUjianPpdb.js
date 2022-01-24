@@ -24,6 +24,10 @@ class TkPesertaUjianPpdb extends Model {
       jadwalPpdb() {
         return this.belongsTo("App/Models/MJadwalPpdb");
       }
+
+      peserta() {
+        return this.belongsTo("App/Models/TkPesertaUjian", "tk_peserta_ujian_id");
+      }
     
       // getJamMulai({ waktu_mulai }) {
       //   return moment(waktu_mulai).format("HH:mm");
