@@ -32022,9 +32022,10 @@ class MainController {
 
     let foto1 = foto ? foto.toString() : null;
 
-    const fitur = await MFiturSekolah.qeury()
+    const fiturSekolah = await MFiturSekolah.query()
       .where({ m_sekolah_id: sekolah.id })
       .first();
+    const fitur = JSON.parse(fiturSekolah.fitur || "{}")
 
     const rules = {
       kode_barang: "required",
@@ -32061,10 +32062,10 @@ class MainController {
 
     if (fitur.nota_barang == 1) {
       const rules = {
-        nota_barang: "required",
+        nota: "required",
       };
       const message = {
-        "nota_barang.required": "Nota harus diisi",
+        "nota.required": "Nota harus diisi",
       };
       const validation = await validate(request.all(), rules, message);
       if (validation.fails()) {
@@ -32089,7 +32090,7 @@ class MainController {
       baik: baik || jumlah,
       rusak: rusak || 0,
       m_sekolah_id: sekolah.id,
-      nota_barang,
+      nota,
     });
 
     return response.ok({
@@ -32123,14 +32124,14 @@ class MainController {
       m_lokasi_id,
       baik,
       rusak,
-      nota_barang,
+      nota,
     } = request.post();
 
     const foto1 = foto ? foto.toString() : null;
-    const fitur = await MFiturSekolah.qeury()
+    const fiturSekolah = await MFiturSekolah.query()
       .where({ m_sekolah_id: sekolah.id })
       .first();
-
+    const fitur = JSON.parse(fiturSekolah.fitur || "{}")
     const rules = {
       kode_barang: "required",
       nama: "required",
@@ -32165,10 +32166,10 @@ class MainController {
     }
     if (fitur.nota_barang == 1) {
       const rules = {
-        nota_barang: "required",
+        nota: "required",
       };
       const message = {
-        "nota_barang.required": "Nota harus diisi",
+        "nota.required": "Nota harus diisi",
       };
       const validation = await validate(request.all(), rules, message);
       if (validation.fails()) {
@@ -32190,7 +32191,7 @@ class MainController {
       m_lokasi_id,
       baik,
       rusak,
-      nota_barang,
+      nota,
     });
 
     if (!barang) {
