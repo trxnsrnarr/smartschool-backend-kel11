@@ -3519,6 +3519,10 @@ class KeuanganController {
       m_sekolah_id: sekolah.id,
     });
 
+    const rencana = await MRencanaKeuangan.query()
+    .where({ id: perencanaan_id })
+    .first();
+
     const rumus12 = JSON.parse(rumus || "[]");
     let kategoriAkun;
 
@@ -3527,7 +3531,7 @@ class KeuanganController {
     for (let i = 0; i < rumus12.length; i++) {
       const d = rumus12[i];
       if (d.id) {
-        kategoriAkun = await MKeuKategoriArusKas.query()
+        kategoriAkun = await MRencanaKategoriArusKas.query()
           .where({ id: d.id })
           .first();
         rumusFix = rumusFix + kategoriAkun.nama;
@@ -3585,18 +3589,72 @@ class KeuanganController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const rumus1 = await MRencanaRumusSaldoKasAkhir.query()
-      .where({ id: rumus_id })
-      .update({
-        rumus,
-      });
+    const rumus12 = JSON.parse(rumus || "[]");
 
-    if (!rumus1) {
-      return response.notFound({
-        message: messageNotFound,
+    // return rumus12;
+    const rumusSebelum = await MRencanaRumusSaldoKasAkhir.query()
+      .where({ id: rumus_id })
+      .first();
+
+    if (rumusSebelum.rumus != rumus) {
+      const rumus1 = await MRencanaRumusSaldoKasAkhir.query()
+        .where({ id: rumus_id })
+        .update({
+          rumus,
+        });
+
+      if (!rumus1) {
+        return response.notFound({
+          message: messageNotFound,
+        });
+      }
+
+      let kategoriAkun;
+      let rumusSebelum2 = ``;
+      for (let i = 0; i < rumusSebelum.rumus.length; i++) {
+        const d = rumusSebelum.rumus[i];
+        if (d.id) {
+          kategoriAkun = await MRencanaKategoriArusKas.query()
+            .where({ id: d.id })
+            .first();
+          rumusSebelum2 = rumusSebelum2 + kategoriAkun.nama;
+        } else {
+          if (d.operator == "minus") {
+            rumusSebelum2 = `${rumusSebelum2} - `;
+          } else if (d.operator == "plus") {
+            rumusSebelum2 = `${rumusSebelum2} + `;
+          }
+        }
+      }
+      let rumusFix = ``;
+
+      for (let i = 0; i < rumus12.length; i++) {
+        const d = rumus12[i];
+        if (d.id) {
+          kategoriAkun = await MRencanaKategoriArusKas.query()
+            .where({ id: d.id })
+            .first();
+          rumusFix = rumusFix + kategoriAkun.nama;
+        } else {
+          if (d.operator == "minus") {
+            rumusFix = `${rumusFix} - `;
+          } else if (d.operator == "plus") {
+            rumusFix = `${rumusFix} + `;
+          }
+        }
+      }
+
+      await MHistoriAktivitas.create({
+        jenis: "Ubah Template Laporan",
+        tipe: "Perencanaan",
+        m_user_id: user.id,
+        awal: `Rumus Arus Kas - Saldo Kas Akhir : ${rumusSebelum2} menjadi `,
+        akhir: `"${rumusFix}"`,
+        bawah: `${rencana.nama} - Laporan Arus Kas`,
+        m_sekolah_id: sekolah.id,
+        alamat_id: rencana.id
       });
     }
-
     return response.ok({
       message: messagePutSuccess,
     });
