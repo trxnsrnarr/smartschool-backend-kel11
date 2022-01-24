@@ -187,6 +187,19 @@ class KeuanganController {
       .where("tanggal_awal", "<=", tanggal_akhir)
       .where("tanggal_akhir", ">=", tanggal_akhir)
       .first();
+
+    const checkRange1 = await MRencanaKeuangan.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
+      .where("tanggal_awal", "<=", tanggal_akhir)
+      .where("tanggal_awal", ">=", tanggal_awal)
+      .first();
+    const checkRange2 = await MRencanaKeuangan.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
+      .where("tanggal_akhir", "<=", tanggal_akhir)
+      .where("tanggal_akhir", ">=", tanggal_awal)
+      .first();
     if (checkTanggalawal) {
       return response.expectationFailed({
         message: `Tanggal awal berada dalam jangkauan rencana ${checkTanggalawal.nama}`,
@@ -197,6 +210,13 @@ class KeuanganController {
         message: `Tanggal akhir berada dalam jangkauan rencana ${checkTanggalakhir.nama}`,
       });
     }
+    if (checkRange1 || checkRange2) {
+      return response.expectationFailed({
+        message: `Tanggal Rencana bergesekan dengan rencana ${
+          (checkRange1 || checkRange2).nama
+        }`,
+      });
+    }
 
     const perencanaan = await MRencanaKeuangan.create({
       nama,
@@ -205,15 +225,14 @@ class KeuanganController {
       dihapus: 0,
       m_sekolah_id: sekolah.id,
     });
-    
+
     await MHistoriAktivitas.create({
       jenis: "Tambah Perencanaan",
       m_user_id: user.id,
       akhir: `"${nama}"`,
       m_sekolah_id: sekolah.id,
-      tipe: "perencanaan"
+      tipe: "perencanaan",
     });
-  
 
     return response.ok({
       message: messagePostSuccess,
