@@ -3520,8 +3520,9 @@ class KeuanganController {
       m_user_id: user.id,
       awal: `Rumus Arus Kas - Saldo Kas Akhir : `,
       akhir: `${rumusFix}`,
-      bawah: `Laporan Arus Kas`,
+      bawah: `${rencana.nama} - Laporan Arus Kas`,
       m_sekolah_id: sekolah.id,
+      alamat_id: rencana.id
     });
 
     return response.ok({
