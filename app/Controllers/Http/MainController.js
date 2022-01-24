@@ -579,7 +579,7 @@ class MainController {
     page = page ? page : 1;
 
     const res = MSekolah.query()
-      .select("id", "nama", "gpds", "trial")
+      .select("id", "nama", "gpds", "trial", 'jumlah_ujian', 'jumlah_topik')
       .with("ta", (builder) => {
         builder
           .select("id", "m_sekolah_id")
@@ -592,7 +592,7 @@ class MainController {
               .where("dihapus", 0);
           })
           .where("aktif", 1);
-      });
+      }).where('gpds_event', 'jawatimur').orderBy('topik_materi', 'desc');
 
     return response.ok({
       sekolah: await res.paginate(page, 10),
