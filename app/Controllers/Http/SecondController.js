@@ -1147,7 +1147,7 @@ class SecondController {
         tipe: "Realisasi",
       });
     }
-    if (kode!= akun.kode) {
+    if (kode != akun.kode) {
       await MHistoriAktivitas.create({
         jenis: "Ubah Akun",
         m_user_id: user.id,
@@ -1793,7 +1793,7 @@ class SecondController {
     );
 
     await MHistoriAktivitas.create({
-      jenis: "Tambah Transaksi",
+      jenis: "Buat Transaksi",
       m_user_id: user.id,
       akhir: nama,
       m_sekolah_id: sekolah.id,
@@ -1886,8 +1886,7 @@ class SecondController {
           saldo: d.saldo,
           dihapus: 0,
         });
-        if(akunLama.id != akunBaru.id){
-
+        if (akunLama.id != akunBaru.id) {
           await MHistoriAktivitas.create({
             jenis: "Ubah Transaksi",
             m_user_id: user.id,
@@ -1897,7 +1896,7 @@ class SecondController {
             tipe: "Realisasi",
           });
         }
-          if (d.saldo != jurnalLama.saldo || d.jenis != jurnalLama.jenis) {
+        if (d.saldo != jurnalLama.saldo || d.jenis != jurnalLama.jenis) {
           await MHistoriAktivitas.create({
             jenis: "Ubah Transaksi",
             m_user_id: user.id,
@@ -1945,7 +1944,7 @@ class SecondController {
         jenis: "Ubah Transaksi",
         m_user_id: user.id,
         awal: `nomor: ${transaksi.nomor} menjadi`,
-        akhir: nomor,
+        akhir: `"${nomor}"`,
         m_sekolah_id: sekolah.id,
         tipe: "Realisasi",
       });
@@ -1955,7 +1954,7 @@ class SecondController {
         jenis: "Ubah Transaksi",
         m_user_id: user.id,
         awal: `Tanggal: ${transaksi.tanggal} menjadi`,
-        akhir: tanggal,
+        akhir: `"${tanggal}"`,
         m_sekolah_id: sekolah.id,
         tipe: "Realisasi",
       });
@@ -1965,7 +1964,7 @@ class SecondController {
         jenis: "Ubah Transaksi",
         m_user_id: user.id,
         awal: `Judul: ${transaksi.nama} menjadi`,
-        akhir: nama,
+        akhir: `"${nama}"`,
         m_sekolah_id: sekolah.id,
         tipe: "Realisasi",
       });
@@ -4736,12 +4735,12 @@ class SecondController {
     const kategoriNeraca = await MKeuKategoriNeraca.query()
       .where({ id: kategori_id })
       .first();
-      
-          if (!kategori) {
-            return response.notFound({
-              message: messageNotFound,
-            });
-          }
+
+    if (!kategori) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
 
     if (warna != kategoriNeraca.warna) {
       await MHistoriAktivitas.create({
@@ -4917,7 +4916,7 @@ class SecondController {
       const akun = await MKeuAkun.query().where({ id: m_keu_akun_id }).first();
 
       const kategoriNeraca = await MKeuKategoriNeraca.query()
-        .where({ id: m_keu_kategori_neraca_id })
+        .where({ id: neracaSebelum.m_keu_kategori_neraca_id })
         .first();
 
       await MHistoriAktivitas.create({
@@ -5206,12 +5205,16 @@ class SecondController {
       });
     }
 
+    const kategoriSebelum = await MKeuKategoriLabaRugi.query()
+      .where({ id: kategori_id })
+      .first();
+
     await MHistoriAktivitas.create({
       jenis: "Hapus Template Laporan",
       tipe: "Realisasi",
       m_user_id: user.id,
       awal: `Kategori : `,
-      akhir: `${nama}`,
+      akhir: `${kategoriSebelum.nama}`,
       bawah: `Laporan Laba/Rugi`,
       m_sekolah_id: sekolah.id,
     });
@@ -6245,7 +6248,7 @@ class SecondController {
         jenis: "Ubah Template Laporan",
         tipe: "Realisasi",
         m_user_id: user.id,
-        awal: `${kategoriArusKas.tipe} - Warna : ${kategoriArusKas.warna} menjadi `,
+        awal: `Kategori - Warna : ${kategoriArusKas.warna} menjadi `,
         akhir: `"${warna}"`,
         bawah: `Laporan Arus Kas`,
         m_sekolah_id: sekolah.id,
@@ -6256,7 +6259,7 @@ class SecondController {
         jenis: "Ubah Template Laporan",
         tipe: "Realisasi",
         m_user_id: user.id,
-        awal: `${kategoriArusKas.tipe} - Nama : ${kategoriArusKas.nama} menjadi `,
+        awal: `Kategori - Nama : ${kategoriArusKas.nama} menjadi `,
         akhir: `"${nama}"`,
         bawah: `Laporan Arus Kas`,
         m_sekolah_id: sekolah.id,
@@ -6295,6 +6298,20 @@ class SecondController {
         message: messageNotFound,
       });
     }
+
+    const kategoriArus = await MKeuKategoriArusKas.query()
+      .where({ id: kategori_id })
+      .first();
+
+    await MHistoriAktivitas.create({
+      jenis: "Hapus Template Laporan",
+      tipe: "Realisasi",
+      m_user_id: user.id,
+      awal: `Kategori : `,
+      akhir: `${nama}`,
+      bawah: `Laporan Arus Kas`,
+      m_sekolah_id: sekolah.id,
+    });
 
     return response.ok({
       message: messageDeleteSuccess,
@@ -6343,6 +6360,20 @@ class SecondController {
       dihapus: 0,
     });
 
+    const kategoriArus = await MKeuKategoriArusKas.query()
+      .where({ id: m_keu_kategori_arus_kas_id })
+      .first();
+
+    await MHistoriAktivitas.create({
+      jenis: "Buat Template Laporan",
+      tipe: "Realisasi",
+      m_user_id: user.id,
+      awal: `${kategoriArus.nama} : `,
+      akhir: `${judul}`,
+      bawah: `Laporan Arus Kas`,
+      m_sekolah_id: sekolah.id,
+    });
+
     return response.ok({
       message: messagePostSuccess,
     });
@@ -6380,7 +6411,9 @@ class SecondController {
     if (validation.fails()) {
       return response.unprocessableEntity(validation.messages());
     }
-
+    const aktivitasSebelum = await MKeuAktivitasTransaksi.query()
+      .where({ id: aktivitas_id })
+      .first();
     const aktivitas = await MKeuAktivitasTransaksi.query()
       .where({ id: aktivitas_id })
       .update({
@@ -6394,6 +6427,48 @@ class SecondController {
     if (!aktivitas) {
       return response.notFound({
         message: messageNotFound,
+      });
+    }
+    const aktivitasUpdate = await MKeuAktivitasTransaksi.query()
+      .where({ id: aktivitas_id })
+      .first();
+
+    const kategori = await MKeuKategoriArusKas.query()
+      .where({ id: m_keu_kategori_arus_kas_id })
+      .first();
+
+    const kategoriTipeSebelum = await MKeuKategoriTipeAkun.query()
+      .where({ id: aktivitasSebelum.m_keu_kategori_tipe_akun_id })
+      .first();
+
+    const kategoriTipeUpdate = await MKeuKategoriTipeAkun.query()
+      .where({ id: m_keu_kategori_tipe_akun_id })
+      .first();
+
+    if (
+      m_keu_kategori_tipe_akun_id !=
+      aktivitasSebelum.m_keu_kategori_tipe_akun_id
+    ) {
+      await MHistoriAktivitas.create({
+        jenis: "Ubah Template Laporan",
+        tipe: "Realisasi",
+        m_user_id: user.id,
+        awal: `${kategori.nama} - ${aktivitasSebelum.judul} - Tipe Akun : ${kategoriTipeSebelum.nama} menjadi `,
+        akhir: `"${kategoriTipeUpdate.nama}"`,
+        bawah: `Laporan Arus Kas`,
+        m_sekolah_id: sekolah.id,
+      });
+    }
+
+    if (judul != aktivitasSebelum.judul) {
+      await MHistoriAktivitas.create({
+        jenis: "Ubah Template Laporan",
+        tipe: "Realisasi",
+        m_user_id: user.id,
+        awal: `${kategori.nama} - Judul : ${aktivitasSebelum.judul} menjadi `,
+        akhir: `"${aktivitasUpdate.judul}"`,
+        bawah: `Laporan Arus Kas`,
+        m_sekolah_id: sekolah.id,
       });
     }
 
@@ -6424,6 +6499,24 @@ class SecondController {
         message: messageNotFound,
       });
     }
+
+    const aktivitas = await MKeuAktivitasTransaksi.query()
+      .where({ id: aktivitas_id })
+      .first();
+
+    const kategoriArus = await MKeuKategoriArusKas.query()
+      .where({ id: aktivitas.m_keu_kategori_arus_kas_id })
+      .first();
+
+    await MHistoriAktivitas.create({
+      jenis: "Hapus Template Laporan",
+      tipe: "Realisasi",
+      m_user_id: user.id,
+      awal: `${kategoriArus.nama} : `,
+      akhir: `${aktivitas.judul}`,
+      bawah: `Laporan Arus Kas`,
+      m_sekolah_id: sekolah.id,
+    });
 
     return response.ok({
       message: messageDeleteSuccess,
@@ -6473,6 +6566,16 @@ class SecondController {
       );
     }
 
+    await MHistoriAktivitas.create({
+      jenis: "Buat Template Laporan",
+      tipe: "Realisasi",
+      m_user_id: user.id,
+      awal: `Tipe Akun : `,
+      akhir: `${nama}`,
+      bawah: `Laporan Arus Kas`,
+      m_sekolah_id: sekolah.id,
+    });
+
     return response.ok({
       message: messagePostSuccess,
     });
@@ -6509,6 +6612,10 @@ class SecondController {
       return response.unprocessableEntity(validation.messages());
     }
 
+    const kategoriSebelum = await MKeuKategoriTipeAkun.query()
+      .where({ id: kategori_id })
+      .first();
+
     const kategori = await MKeuKategoriTipeAkun.query()
       .where({ id: kategori_id })
       .update({
@@ -6524,14 +6631,48 @@ class SecondController {
       await Promise.all(
         m_keu_akun_id.map(async (d) => {
           if (d.id) {
+            const TkSebelum = await TkKategoriTipeAkun.query()
+              .where({ id: d.id })
+              .first();
             await TkKategoriTipeAkun.query().where({ id: d.id }).update({
               m_keu_akun_id: d.m_keu_akun_id,
+            });
+
+            const akunSebelum = await MKeuAkun.query()
+              .where({ id: TkSebelum.m_keu_akun_id })
+              .first();
+            const akunTk = await MKeuAkun.query()
+              .where({ id: d.m_keu_akun_id })
+              .first();
+
+            await MHistoriAktivitas.create({
+              jenis: "Ubah Template Laporan",
+              tipe: "Realisasi",
+              m_user_id: user.id,
+              awal: `Tipe Akun - ${nama} : ${akunSebelum.nama} menjadi `,
+              akhir: `"${akunTk.nama}"`,
+              bawah: `Laporan Arus Kas`,
+              m_sekolah_id: sekolah.id,
             });
             return;
           } else {
             await TkKategoriTipeAkun.create({
               m_keu_akun_id: d.m_keu_akun_id,
               m_keu_kategori_tipe_akun_id: kategori_id,
+            });
+
+            const akunTk = await MKeuAkun.query()
+              .where({ id: d.m_keu_akun_id })
+              .first();
+
+            await MHistoriAktivitas.create({
+              jenis: "Ubah Template Laporan",
+              tipe: "Realisasi",
+              m_user_id: user.id,
+              awal: `Tipe Akun - ${nama} : ditambahkan akun `,
+              akhir: `${akunTk.nama}`,
+              bawah: `Laporan Arus Kas`,
+              m_sekolah_id: sekolah.id,
             });
           }
         })
@@ -6543,6 +6684,24 @@ class SecondController {
             await TkKategoriTipeAkun.query()
               .where({ id: e.id })
               .update({ dihapus: 1 });
+
+            const kategoriTk = await TkKategoriTipeAkun.query()
+              .where({ id: e.id })
+              .first();
+
+            const akunTk = await MKeuAkun.query()
+              .where({ id: kategoriTk.m_keu_akun_id })
+              .first();
+
+            await MHistoriAktivitas.create({
+              jenis: "Ubah Template Laporan",
+              tipe: "Realisasi",
+              m_user_id: user.id,
+              awal: `Tipe Akun - ${nama} : dihapus akun `,
+              akhir: `${akunTk.nama}`,
+              bawah: `Laporan Arus Kas`,
+              m_sekolah_id: sekolah.id,
+            });
           }
         })
       );
@@ -6551,6 +6710,18 @@ class SecondController {
     if (!kategori) {
       return response.notFound({
         message: messageNotFound,
+      });
+    }
+
+    if (nama != kategoriSebelum.nama) {
+      await MHistoriAktivitas.create({
+        jenis: "Ubah Template Laporan",
+        tipe: "Realisasi",
+        m_user_id: user.id,
+        awal: `Tipe Akun - Nama : ${kategoriSebelum.nama} menjadi `,
+        akhir: `"${nama}"`,
+        bawah: `Laporan Arus Kas`,
+        m_sekolah_id: sekolah.id,
       });
     }
 
@@ -6587,6 +6758,20 @@ class SecondController {
       });
     }
 
+    const kategoriTipe = await MKeuKategoriTipeAkun.query()
+      .where({ id: kategori_id })
+      .first();
+
+    await MHistoriAktivitas.create({
+      jenis: "Hapus Template Laporan",
+      tipe: "Realisasi",
+      m_user_id: user.id,
+      awal: `Tipe Akun : `,
+      akhir: `${kategoriTipe.nama}`,
+      bawah: `Laporan Arus Kas`,
+      m_sekolah_id: sekolah.id,
+    });
+
     return response.ok({
       message: messageDeleteSuccess,
     });
@@ -6622,6 +6807,37 @@ class SecondController {
       m_sekolah_id: sekolah.id,
     });
 
+    const rumus12 = JSON.parse(rumus || "[]");
+    let kategoriAkun;
+
+    let rumusFix = ``;
+
+    for (let i = 0; i < rumus12.length; i++) {
+      const d = rumus12[i];
+      if (d.id) {
+        kategoriAkun = await MKeuKategoriArusKas.query()
+          .where({ id: d.id })
+          .first();
+        rumusFix = rumusFix + kategoriAkun.nama;
+      } else {
+        if (d.operator == "minus") {
+          rumusFix = `${rumusFix} - `;
+        } else if (d.operator == "plus") {
+          rumusFix = `${rumusFix} + `;
+        }
+      }
+    }
+
+    await MHistoriAktivitas.create({
+      jenis: "Buat Template Laporan",
+      tipe: "Realisasi",
+      m_user_id: user.id,
+      awal: `Rumus Arus Kas - Kenaikan(Penurunan) Kas : `,
+      akhir: `${rumusFix}`,
+      bawah: `Laporan Arus Kas`,
+      m_sekolah_id: sekolah.id,
+    });
+
     return response.ok({
       message: messagePostSuccess,
     });
@@ -6650,16 +6866,69 @@ class SecondController {
     if (validation.fails()) {
       return response.unprocessableEntity(validation.messages());
     }
+    const rumus12 = JSON.parse(rumus || "[]");
 
-    const rumus1 = await MKeuRumusArusKas.query()
+    // return rumus12;
+    const rumusSebelum = await MKeuRumusArusKas.query()
       .where({ id: rumus_id })
-      .update({
-        rumus,
-      });
+      .first();
 
-    if (!rumus1) {
-      return response.notFound({
-        message: messageNotFound,
+    if (rumusSebelum.rumus != rumus) {
+      const rumus1 = await MKeuRumusArusKas.query()
+        .where({ id: rumus_id })
+        .update({
+          rumus,
+        });
+
+      if (!rumus1) {
+        return response.notFound({
+          message: messageNotFound,
+        });
+      }
+
+      let kategoriAkun;
+      let rumusSebelum2 = ``;
+      for (let i = 0; i < rumusSebelum.rumus.length; i++) {
+        const d = rumusSebelum.rumus[i];
+        if (d.id) {
+          kategoriAkun = await MKeuKategoriArusKas.query()
+            .where({ id: d.id })
+            .first();
+          rumusSebelum2 = rumusSebelum2 + kategoriAkun.nama;
+        } else {
+          if (d.operator == "minus") {
+            rumusSebelum2 = `${rumusSebelum2} - `;
+          } else if (d.operator == "plus") {
+            rumusSebelum2 = `${rumusSebelum2} + `;
+          }
+        }
+      }
+      let rumusFix = ``;
+
+      for (let i = 0; i < rumus12.length; i++) {
+        const d = rumus12[i];
+        if (d.id) {
+          kategoriAkun = await MKeuKategoriArusKas.query()
+            .where({ id: d.id })
+            .first();
+          rumusFix = rumusFix + kategoriAkun.nama;
+        } else {
+          if (d.operator == "minus") {
+            rumusFix = `${rumusFix} - `;
+          } else if (d.operator == "plus") {
+            rumusFix = `${rumusFix} + `;
+          }
+        }
+      }
+
+      await MHistoriAktivitas.create({
+        jenis: "Ubah Template Laporan",
+        tipe: "Realisasi",
+        m_user_id: user.id,
+        awal: `Rumus Arus Kas - Kenaikan(Penurunan) Kas : ${rumusSebelum2} menjadi `,
+        akhir: `"${rumusFix}"`,
+        bawah: `Laporan Arus Kas`,
+        m_sekolah_id: sekolah.id,
       });
     }
 
@@ -6698,6 +6967,37 @@ class SecondController {
       m_sekolah_id: sekolah.id,
     });
 
+    const rumus12 = JSON.parse(rumus || "[]");
+    let kategoriAkun;
+
+    let rumusFix = ``;
+
+    for (let i = 0; i < rumus12.length; i++) {
+      const d = rumus12[i];
+      if (d.id) {
+        kategoriAkun = await MKeuKategoriArusKas.query()
+          .where({ id: d.id })
+          .first();
+        rumusFix = rumusFix + kategoriAkun.nama;
+      } else {
+        if (d.operator == "minus") {
+          rumusFix = `${rumusFix} - `;
+        } else if (d.operator == "plus") {
+          rumusFix = `${rumusFix} + `;
+        }
+      }
+    }
+
+    await MHistoriAktivitas.create({
+      jenis: "Buat Template Laporan",
+      tipe: "Realisasi",
+      m_user_id: user.id,
+      awal: `Rumus Arus Kas - Saldo Kas Awal: `,
+      akhir: `${rumusFix}`,
+      bawah: `Laporan Arus Kas`,
+      m_sekolah_id: sekolah.id,
+    });
+
     return response.ok({
       message: messagePostSuccess,
     });
@@ -6732,15 +7032,69 @@ class SecondController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const rumus1 = await MKeuRumusSaldoKasAwal.query()
-      .where({ id: rumus_id })
-      .update({
-        rumus,
-      });
+    const rumus12 = JSON.parse(rumus || "[]");
 
-    if (!rumus1) {
-      return response.notFound({
-        message: messageNotFound,
+    // return rumus12;
+    const rumusSebelum = await MKeuRumusSaldoKasAwal.query()
+      .where({ id: rumus_id })
+      .first();
+
+    if (rumusSebelum.rumus != rumus) {
+      const rumus1 = await MKeuRumusSaldoKasAwal.query()
+        .where({ id: rumus_id })
+        .update({
+          rumus,
+        });
+
+      if (!rumus1) {
+        return response.notFound({
+          message: messageNotFound,
+        });
+      }
+
+      let kategoriAkun;
+      let rumusSebelum2 = ``;
+      for (let i = 0; i < rumusSebelum.rumus.length; i++) {
+        const d = rumusSebelum.rumus[i];
+        if (d.id) {
+          kategoriAkun = await MKeuKategoriArusKas.query()
+            .where({ id: d.id })
+            .first();
+          rumusSebelum2 = rumusSebelum2 + kategoriAkun.nama;
+        } else {
+          if (d.operator == "minus") {
+            rumusSebelum2 = `${rumusSebelum2} - `;
+          } else if (d.operator == "plus") {
+            rumusSebelum2 = `${rumusSebelum2} + `;
+          }
+        }
+      }
+      let rumusFix = ``;
+
+      for (let i = 0; i < rumus12.length; i++) {
+        const d = rumus12[i];
+        if (d.id) {
+          kategoriAkun = await MKeuKategoriArusKas.query()
+            .where({ id: d.id })
+            .first();
+          rumusFix = rumusFix + kategoriAkun.nama;
+        } else {
+          if (d.operator == "minus") {
+            rumusFix = `${rumusFix} - `;
+          } else if (d.operator == "plus") {
+            rumusFix = `${rumusFix} + `;
+          }
+        }
+      }
+
+      await MHistoriAktivitas.create({
+        jenis: "Ubah Template Laporan",
+        tipe: "Realisasi",
+        m_user_id: user.id,
+        awal: `Rumus Arus Kas - Saldo Kas Awal : ${rumusSebelum2} menjadi `,
+        akhir: `"${rumusFix}"`,
+        bawah: `Laporan Arus Kas`,
+        m_sekolah_id: sekolah.id,
       });
     }
 
@@ -6778,6 +7132,37 @@ class SecondController {
       m_sekolah_id: sekolah.id,
     });
 
+    const rumus12 = JSON.parse(rumus || "[]");
+    let kategoriAkun;
+
+    let rumusFix = ``;
+
+    for (let i = 0; i < rumus12.length; i++) {
+      const d = rumus12[i];
+      if (d.id) {
+        kategoriAkun = await MKeuKategoriArusKas.query()
+          .where({ id: d.id })
+          .first();
+        rumusFix = rumusFix + kategoriAkun.nama;
+      } else {
+        if (d.operator == "minus") {
+          rumusFix = `${rumusFix} - `;
+        } else if (d.operator == "plus") {
+          rumusFix = `${rumusFix} + `;
+        }
+      }
+    }
+
+    await MHistoriAktivitas.create({
+      jenis: "Buat Template Laporan",
+      tipe: "Realisasi",
+      m_user_id: user.id,
+      awal: `Rumus Arus Kas - Saldo Kas Akhir : `,
+      akhir: `${rumusFix}`,
+      bawah: `Laporan Arus Kas`,
+      m_sekolah_id: sekolah.id,
+    });
+
     return response.ok({
       message: messagePostSuccess,
     });
@@ -6812,15 +7197,69 @@ class SecondController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const rumus1 = await MKeuRumusSaldoKasAkhir.query()
-      .where({ id: rumus_id })
-      .update({
-        rumus,
-      });
+    const rumus12 = JSON.parse(rumus || "[]");
 
-    if (!rumus1) {
-      return response.notFound({
-        message: messageNotFound,
+    // return rumus12;
+    const rumusSebelum = await MKeuRumusSaldoKasAkhir.query()
+      .where({ id: rumus_id })
+      .first();
+
+    if (rumusSebelum.rumus != rumus) {
+      const rumus1 = await MKeuRumusSaldoKasAkhir.query()
+        .where({ id: rumus_id })
+        .update({
+          rumus,
+        });
+
+      if (!rumus1) {
+        return response.notFound({
+          message: messageNotFound,
+        });
+      }
+
+      let kategoriAkun;
+      let rumusSebelum2 = ``;
+      for (let i = 0; i < rumusSebelum.rumus.length; i++) {
+        const d = rumusSebelum.rumus[i];
+        if (d.id) {
+          kategoriAkun = await MKeuKategoriArusKas.query()
+            .where({ id: d.id })
+            .first();
+          rumusSebelum2 = rumusSebelum2 + kategoriAkun.nama;
+        } else {
+          if (d.operator == "minus") {
+            rumusSebelum2 = `${rumusSebelum2} - `;
+          } else if (d.operator == "plus") {
+            rumusSebelum2 = `${rumusSebelum2} + `;
+          }
+        }
+      }
+      let rumusFix = ``;
+
+      for (let i = 0; i < rumus12.length; i++) {
+        const d = rumus12[i];
+        if (d.id) {
+          kategoriAkun = await MKeuKategoriArusKas.query()
+            .where({ id: d.id })
+            .first();
+          rumusFix = rumusFix + kategoriAkun.nama;
+        } else {
+          if (d.operator == "minus") {
+            rumusFix = `${rumusFix} - `;
+          } else if (d.operator == "plus") {
+            rumusFix = `${rumusFix} + `;
+          }
+        }
+      }
+
+      await MHistoriAktivitas.create({
+        jenis: "Ubah Template Laporan",
+        tipe: "Realisasi",
+        m_user_id: user.id,
+        awal: `Rumus Arus Kas - Saldo Kas Akhir : ${rumusSebelum2} menjadi `,
+        akhir: `"${rumusFix}"`,
+        bawah: `Laporan Arus Kas`,
+        m_sekolah_id: sekolah.id,
       });
     }
 
