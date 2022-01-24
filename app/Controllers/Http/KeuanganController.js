@@ -2456,6 +2456,45 @@ class KeuanganController {
       message: messagePutSuccess,
     });
   }
+  async getHistori({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let { search, tanggal_awal, tanggal_akhir, jenis, tipe } = request.get();
+
+    let histori;
+
+    histori = MHistoriAktivitas.query()
+      .with("user", (builder) => {
+        builder
+          .select("id","nama")
+      })
+      .andWhere({ m_sekolah_id: sekolah.id });
+
+    if (search) {
+      histori.andWhere("awal", "like", `%${search}%`);
+    }
+    if(tanggal_awal){
+      histori.whereBetween("created_at", [tanggal_awal, tanggal_akhir]);
+    }
+    if(tipe){
+      histori.andWhere("tipe", "like", `%${tipe}%`)
+    }
+    if(jenis){
+      histori.andWhere("jenis", "like", `%${jenis}%`)
+    }
+
+    histori = await histori.fetch();
+
+    return response.ok({
+     histori
+    });
+  }
 }
 
 module.exports = KeuanganController;
