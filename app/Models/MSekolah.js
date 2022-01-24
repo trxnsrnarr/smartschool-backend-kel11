@@ -29,7 +29,7 @@ class MSekolah extends Model {
   }
 
   fitur() {
-    return this.hasOne("App/Models/MFiturSekolah", "m_sekolah_id");
+    return this.hasOne("App/Models/MFiturSekolah", "id", "m_sekolah_id");
   }
 
   static get computed() {
