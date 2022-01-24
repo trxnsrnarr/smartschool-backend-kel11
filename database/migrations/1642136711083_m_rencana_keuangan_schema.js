@@ -10,7 +10,6 @@ class MRencanaKeuanganSchema extends Schema {
       table.string("nama");
       table.date("tanggal_awal");
       table.date("tanggal_akhir");
-      table.boolean("aktif").defaultTo(0);
       table.boolean("dihapus").defaultTo(0);
       table.integer("m_sekolah_id").unsigned().index("m_sekolah_id");
       table

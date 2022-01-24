@@ -1600,7 +1600,7 @@ class KeuanganController {
 
     let { rencana_id, tanggal_awal, tanggal_akhir } = request.get();
 
-    let transaksiIds;
+    let transaksiIds = [];
     if (tanggal_awal && tanggal_akhir) {
       transaksiIds = await MKeuTransaksi.query()
         .whereBetween("tanggal", [tanggal_awal, tanggal_akhir])
@@ -1608,7 +1608,7 @@ class KeuanganController {
         .where({ dihapus: 0 })
         .ids();
     }
-    let transaksi2Ids;
+    let transaksi2Ids = [];
     if (rencana_id) {
       transaksi2Ids = await MRencanaTransaksi.query()
         .where({ m_sekolah_id: sekolah.id })
@@ -1636,22 +1636,27 @@ class KeuanganController {
 
     const analisis = await MKeuTemplateAnalisis.query()
       .with("akun", (builder) => {
-        builder
-          .with("jurnal", (builder) => {
-            builder.where({ dihapus: 0 });
-            if (transaksiIds) {
-              builder.whereIn("m_keu_transaksi_id", transaksiIds);
-            }
-          })
-          .with("rencanaJurnal", (builder) => {
-            builder.where({ dihapus: 0 });
-            if (transaksi2Ids) {
-              builder.whereIn("m_rencana_transaksi_id", transaksi2Ids);
-            }
-          });
+        // builder
+          // .with("jurnal", (builder) => {
+          //   builder.where({ dihapus: 0 });
+          //   if (transaksiIds) {
+          //     builder.whereIn("m_keu_transaksi_id", transaksiIds);
+          //   }
+          // })
+          // .with("rencanaJurnal", (builder) => {
+          //   builder.where({ dihapus: 0 });
+          //   if (transaksi2Ids) {
+          //     builder.whereIn("m_rencana_transaksi_id", transaksi2Ids);
+          //   }
+          // });
       })
       .where({ m_sekolah_id: sekolah.id })
       .where({ dihapus: 0 })
+      .fetch();
+
+    const rencana = await MRencanaKeuangan.query()
+      .where({ dihapus: 0 })
+      .where({ m_sekolah_id: sekolah.id })
       .fetch();
 
     const keuangan = await MKeuTemplateAkun.query()
@@ -1665,6 +1670,7 @@ class KeuanganController {
       akun,
       analisis,
       keuangan,
+      rencana,
     });
   }
   async postKategoriAnalisis({ response, request, auth }) {
