@@ -187,6 +187,19 @@ class KeuanganController {
       .where("tanggal_awal", "<=", tanggal_akhir)
       .where("tanggal_akhir", ">=", tanggal_akhir)
       .first();
+
+    const checkRange1 = await MRencanaKeuangan.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
+      .where("tanggal_awal", "<=", tanggal_akhir)
+      .where("tanggal_awal", ">=", tanggal_awal)
+      .first();
+    const checkRange2 = await MRencanaKeuangan.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
+      .where("tanggal_akhir", "<=", tanggal_akhir)
+      .where("tanggal_akhir", ">=", tanggal_awal)
+      .first();
     if (checkTanggalawal) {
       return response.expectationFailed({
         message: `Tanggal awal berada dalam jangkauan rencana ${checkTanggalawal.nama}`,
@@ -197,6 +210,13 @@ class KeuanganController {
         message: `Tanggal akhir berada dalam jangkauan rencana ${checkTanggalakhir.nama}`,
       });
     }
+    if (checkRange1 || checkRange2) {
+      return response.expectationFailed({
+        message: `Tanggal Rencana bergesekan dengan rencana ${
+          (checkRange1 || checkRange2).nama
+        }`,
+      });
+    }
 
     const perencanaan = await MRencanaKeuangan.create({
       nama,
@@ -205,15 +225,14 @@ class KeuanganController {
       dihapus: 0,
       m_sekolah_id: sekolah.id,
     });
-    
+
     await MHistoriAktivitas.create({
       jenis: "Tambah Perencanaan",
       m_user_id: user.id,
       akhir: `"${nama}"`,
       m_sekolah_id: sekolah.id,
-      tipe: "perencanaan"
+      tipe: "perencanaan",
     });
-  
 
     return response.ok({
       message: messagePostSuccess,
@@ -1581,7 +1600,7 @@ class KeuanganController {
 
     let { rencana_id, tanggal_awal, tanggal_akhir } = request.get();
 
-    let transaksiIds;
+    let transaksiIds = [];
     if (tanggal_awal && tanggal_akhir) {
       transaksiIds = await MKeuTransaksi.query()
         .whereBetween("tanggal", [tanggal_awal, tanggal_akhir])
@@ -1589,7 +1608,7 @@ class KeuanganController {
         .where({ dihapus: 0 })
         .ids();
     }
-    let transaksi2Ids;
+    let transaksi2Ids = [];
     if (rencana_id) {
       transaksi2Ids = await MRencanaTransaksi.query()
         .where({ m_sekolah_id: sekolah.id })
@@ -1617,22 +1636,27 @@ class KeuanganController {
 
     const analisis = await MKeuTemplateAnalisis.query()
       .with("akun", (builder) => {
-        builder
-          .with("jurnal", (builder) => {
-            builder.where({ dihapus: 0 });
-            if (transaksiIds) {
-              builder.whereIn("m_keu_transaksi_id", transaksiIds);
-            }
-          })
-          .with("rencanaJurnal", (builder) => {
-            builder.where({ dihapus: 0 });
-            if (transaksi2Ids) {
-              builder.whereIn("m_rencana_transaksi_id", transaksi2Ids);
-            }
-          });
+        // builder
+          // .with("jurnal", (builder) => {
+          //   builder.where({ dihapus: 0 });
+          //   if (transaksiIds) {
+          //     builder.whereIn("m_keu_transaksi_id", transaksiIds);
+          //   }
+          // })
+          // .with("rencanaJurnal", (builder) => {
+          //   builder.where({ dihapus: 0 });
+          //   if (transaksi2Ids) {
+          //     builder.whereIn("m_rencana_transaksi_id", transaksi2Ids);
+          //   }
+          // });
       })
       .where({ m_sekolah_id: sekolah.id })
       .where({ dihapus: 0 })
+      .fetch();
+
+    const rencana = await MRencanaKeuangan.query()
+      .where({ dihapus: 0 })
+      .where({ m_sekolah_id: sekolah.id })
       .fetch();
 
     const keuangan = await MKeuTemplateAkun.query()
@@ -1646,6 +1670,7 @@ class KeuanganController {
       akun,
       analisis,
       keuangan,
+      rencana,
     });
   }
   async postKategoriAnalisis({ response, request, auth }) {
@@ -2435,6 +2460,45 @@ class KeuanganController {
 
     return response.ok({
       message: messagePutSuccess,
+    });
+  }
+  async getHistori({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let { search, tanggal_awal, tanggal_akhir, jenis, tipe } = request.get();
+
+    let histori;
+
+    histori = MHistoriAktivitas.query()
+      .with("user", (builder) => {
+        builder
+          .select("id","nama")
+      })
+      .andWhere({ m_sekolah_id: sekolah.id });
+
+    if (search) {
+      histori.andWhere("awal", "like", `%${search}%`);
+    }
+    if(tanggal_awal){
+      histori.whereBetween("created_at", [tanggal_awal, tanggal_akhir]);
+    }
+    if(tipe){
+      histori.andWhere("tipe", "like", `%${tipe}%`)
+    }
+    if(jenis){
+      histori.andWhere("jenis", "like", `%${jenis}%`)
+    }
+
+    histori = await histori.fetch();
+
+    return response.ok({
+     histori
     });
   }
 }
