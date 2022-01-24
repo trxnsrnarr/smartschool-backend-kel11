@@ -925,6 +925,7 @@ class MainController {
         });
       } else {
         const sekolahSS = await MSekolah.create({
+          gpds_event: 'jawatimur',
           nama: sekolah.sekolah,
           domain: `https://${domain}.smarteschool.id`,
           status: sekolah.status || "N",
@@ -960,6 +961,7 @@ class MainController {
     let sekolahSS = check;
     if (!check) {
       sekolahSS = await MSekolah.create({
+        gpds_event: 'jawatimur',
         nama: sekolah,
         npsn,
         provinsi: propinsi,
@@ -8360,9 +8362,9 @@ class MainController {
       .where({ id: m_jadwal_mengajar_id })
       .first();
 
-    const mapel = await MMataPelajaran.query()
-      .where({ id: jadwalMengajar.m_mata_pelajaran_id })
-      .first();
+    // const mapel = await MMataPelajaran.query()
+    //   .where({ id: jadwalMengajar.m_mata_pelajaran_id })
+    //   .first();
 
     const tugas = await MTugas.create({
       judul,
@@ -8432,6 +8434,15 @@ class MainController {
           tipe: "tugas",
           dihapus: 0,
         });
+
+        const idsGuru = await User.query().where({m_sekolah_id: sekolah.id}).andWhere({role: 'guru'}).andWhere({dihapus: 0}).ids()
+
+      const jumlahTopik = await MTimeline.query().whereIn('m_user_id', idsGuru).andWhere({dihapus: 0}).getCount()
+
+      await MSekolah.query().where({id: sekolah.id}).update({
+        jumlah_topik: jumlahTopik
+      })
+      
         await Promise.all(
           materi.map((d) => {
             TkTimelineTopik.create({
@@ -9627,9 +9638,9 @@ class MainController {
       .where({ id: m_jadwal_mengajar_id })
       .first();
 
-    const mapel = await MMataPelajaran.query()
-      .where({ id: jadwalMengajar.m_mata_pelajaran_id })
-      .first();
+    // const mapel = await MMataPelajaran.query()
+    //   .where({ id: jadwalMengajar.m_mata_pelajaran_id })
+    //   .first();
 
     let timeline;
 
@@ -9650,6 +9661,14 @@ class MainController {
         tanggal_pembagian,
         tanggal_akhir,
       });
+
+      const idsGuru = await User.query().where({m_sekolah_id: sekolah.id}).andWhere({role: 'guru'}).andWhere({dihapus: 0}).ids()
+
+      const jumlahTopik = await MTimeline.query().whereIn('m_user_id', idsGuru).andWhere({dihapus: 0}).getCount()
+
+      await MSekolah.query().where({id: sekolah.id}).update({
+        jumlah_topik: jumlahTopik
+      })
 
       const anggotaRombel = await MAnggotaRombel.query()
         .with("user", (builder) => {
@@ -9702,6 +9721,14 @@ class MainController {
         dihapus: 0,
       });
 
+      const idsGuru = await User.query().where({m_sekolah_id: sekolah.id}).andWhere({role: 'guru'}).andWhere({dihapus: 0}).ids()
+
+      const jumlahTopik = await MTimeline.query().whereIn('m_user_id', idsGuru).andWhere({dihapus: 0}).getCount()
+
+      await MSekolah.query().where({id: sekolah.id}).update({
+        jumlah_topik: jumlahTopik
+      })
+
       const anggotaRombel = await MAnggotaRombel.query()
         .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
         .andWhere({ dihapus: 0 })
@@ -9732,6 +9759,14 @@ class MainController {
             dihapus: 0,
             tanggal_pembagian,
           });
+
+          const idsGuru = await User.query().where({m_sekolah_id: sekolah.id}).andWhere({role: 'guru'}).andWhere({dihapus: 0}).ids()
+
+      const jumlahTopik = await MTimeline.query().whereIn('m_user_id', idsGuru).andWhere({dihapus: 0}).getCount()
+
+      await MSekolah.query().where({id: sekolah.id}).update({
+        jumlah_topik: jumlahTopik
+      })
 
           await TkTimelineTopik.create({
             m_timeline_id: timeline.id,
@@ -11386,6 +11421,14 @@ class MainController {
         m_user_id: user.id,
         dihapus: 0,
       });
+
+      const idsGuru = await User.query().where({m_sekolah_id: sekolah.id}).andWhere({role: 'guru'}).andWhere({dihapus: 0}).ids()
+
+      const jumlahUjian = await MUjian.query().whereIn('m_user_id', idsGuru).andWhere({dihapus: 0}).getCount()
+
+      await MSekolah.query().where({id: sekolah.id}).update({
+        jumlah_ujian: jumlahUjian
+      })
 
       if (ujian_id) {
         const soalIds = await TkSoalUjian.query()

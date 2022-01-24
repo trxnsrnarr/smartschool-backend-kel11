@@ -35,6 +35,9 @@ class MSekolahSchema extends Schema {
         .references("sekolah.id")
         .onDelete("cascade")
         .onUpdate("cascade");
+        table.string('gpds_event')
+        table.integer('jumlah_ujian')
+        table.integer('jumlah_topik')
       table.timestamps();
     });
   }
