@@ -45,6 +45,7 @@ Route.get("/lokasi-saat-ini", "MainController.getLokasiSaatIni");
 Route.post("/single-upload", "MainController.singleUpload");
 Route.post("/rich-editor-upload", "MainController.richEditorUpload");
 Route.get("/sekolah/me", "MainController.meSekolah");
+Route.post("/fitur-sekolah", "SecondController.updateFitur")
 
 // data
 Route.get("/province", "MainController.getProvince");
