@@ -315,6 +315,12 @@ Route.post("/analisis-keuangan", "KeuanganController.postKategoriAnalisis")
 Route.put("/analisis-keuangan/:analisis_id", "KeuanganController.putKategoriAnalisis")
 Route.delete("/analisis-keuangan/:analisis_id", "KeuanganController.deleteKategoriAnalisis")
 
+// Histori keuangan
+Route.get("/histori-keuangan", "KeuanganController.getHistori")
+// Route.post("/histori-keuangan", "KeuanganController.postKategoriAnalisis")
+// Route.put("/histori-keuangan/:analisis_id", "KeuanganController.putKategoriAnalisis")
+// Route.delete("/histori-keuangan/:analisis_id", "KeuanganController.deleteKategoriAnalisis")
+
 // no rekening
 Route.get("/rek-sekolah", "MainController.getRekSekolah");
 Route.post("/rek-sekolah", "MainController.postRekSekolah");
