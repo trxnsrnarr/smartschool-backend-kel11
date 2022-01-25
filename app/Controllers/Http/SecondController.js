@@ -1954,8 +1954,8 @@ class SecondController {
       await MHistoriAktivitas.create({
         jenis: "Ubah Transaksi",
         m_user_id: user.id,
-        awal: `Tanggal: ${transaksi.tanggal} menjadi`,
-        akhir: `"${tanggal}"`,
+        awal: `Tanggal: ${moment(transaksi.tanggal).format("dddd, DD MMM YYYY")} menjadi`,
+        akhir: `"${moment(tanggal).format("dddd, DD MMM YYYY")}"`,
         m_sekolah_id: sekolah.id,
         tipe: "Realisasi",
       });
