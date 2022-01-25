@@ -396,7 +396,32 @@ class SecondController {
       });
     });
 
-    return { rombel, totalTingkat };
+    let tingkat = [];
+
+    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA") {
+      tingkat = ["X", "XI", "XII", "XIII"];
+    } else if (sekolah.tingkat == "SMP") {
+      tingkat = ["VII", "VIII", "IX"];
+    } else if (sekolah.tingkat == "SD") {
+      tingkat = ["I", "II", "III", "IV", "V", "VI"];
+    } else if (sekolah.tingkat == "SLB") {
+      tingkat = [
+        "I",
+        "II",
+        "III",
+        "IV",
+        "V",
+        "VI",
+        "VII",
+        "VIII",
+        "IX",
+        "X",
+        "XI",
+        "XII",
+      ];
+    }
+
+    return { rombel, totalTingkat, tingkat };
   }
 
   async getTunggakan({ response, request, auth }) {
@@ -1954,7 +1979,9 @@ class SecondController {
       await MHistoriAktivitas.create({
         jenis: "Ubah Transaksi",
         m_user_id: user.id,
-        awal: `Tanggal: ${moment(transaksi.tanggal).format("dddd, DD MMM YYYY")} menjadi`,
+        awal: `Tanggal: ${moment(transaksi.tanggal).format(
+          "dddd, DD MMM YYYY"
+        )} menjadi`,
         akhir: `"${moment(tanggal).format("dddd, DD MMM YYYY")}"`,
         m_sekolah_id: sekolah.id,
         tipe: "Realisasi",
