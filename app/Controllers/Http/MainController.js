@@ -87,6 +87,7 @@ const TkTimelineTopik = use("App/Models/TkTimelineTopik");
 const TkMateriKesimpulan = use("App/Models/TkMateriKesimpulan");
 const MTimelineKomen = use("App/Models/MTimelineKomen");
 const MPerusahaan = use("App/Models/MPerusahaan");
+const MPenerimaanPerusahaan = use("App/Models/MPenerimaanPerusahaan");
 const TkPerusahaanSekolah = use("App/Models/TkPerusahaanSekolah");
 const MPekerjaan = use("App/Models/MPekerjaan");
 const MInformasiPekerjaan = use("App/Models/MInformasiPekerjaan");
@@ -925,7 +926,7 @@ class MainController {
         });
       } else {
         const sekolahSS = await MSekolah.create({
-          gpds_event: 'jawatimur',
+          gpds_event: "jawatimur",
           nama: sekolah.sekolah,
           domain: `https://${domain}.smarteschool.id`,
           status: sekolah.status || "N",
@@ -961,7 +962,7 @@ class MainController {
     let sekolahSS = check;
     if (!check) {
       sekolahSS = await MSekolah.create({
-        gpds_event: 'jawatimur',
+        gpds_event: "jawatimur",
         nama: sekolah,
         npsn,
         provinsi: propinsi,
@@ -4509,16 +4510,19 @@ class MainController {
     if (user.role == "guru") {
       const mataPelajaranIds = await MMataPelajaran.query()
         .where({ m_user_id: user.id })
+        .where({ m_ta_id: ta.id })
         .ids();
 
       const rombel = await MRombel.query()
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
+        .where({ m_ta_id: ta.id })
         .first();
 
       const rombelIds = await MRombel.query()
         .where({ m_sekolah_id: sekolah.id })
         .where({ dihapus: 0 })
+        .where({ m_ta_id: ta.id })
         .ids();
 
       let jamMengajarIds = await MJamMengajar.query()
@@ -4545,6 +4549,7 @@ class MainController {
           builder.where({ dihapus: 0 });
         })
         .whereIn("m_rombel_id", rombelIds)
+        .where({ m_ta_id: ta.id })
         .with("mataPelajaran")
         .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
         .fetch();
@@ -4606,6 +4611,7 @@ class MainController {
         })
         .whereNotNull("m_mata_pelajaran_id")
         .whereIn("m_rombel_id", rombel)
+        .where({ m_ta_id: ta.id })
         .fetch();
 
       const jadwalMengajarData = [];
@@ -6023,10 +6029,8 @@ class MainController {
         .andWhere({ tingkat })
         .andWhere({ m_jurusan_id })
         .first();
-      if(check.dihapus) {
-        await MMateri.query()
-          .where({ id: check.id })
-          .update({ dihapus: 0 })
+      if (check.dihapus) {
+        await MMateri.query().where({ id: check.id }).update({ dihapus: 0 });
       }
 
       if (!check) {
@@ -6055,10 +6059,8 @@ class MainController {
         .where({ m_mata_pelajaran_id })
         .andWhere({ tingkat })
         .first();
-      if(check.dihapus) {
-        await MMateri.query()
-          .where({ id: check.id })
-          .update({ dihapus: 0 })
+      if (check.dihapus) {
+        await MMateri.query().where({ id: check.id }).update({ dihapus: 0 });
       }
 
       if (!check) {
@@ -8435,14 +8437,21 @@ class MainController {
           dihapus: 0,
         });
 
-        const idsGuru = await User.query().where({m_sekolah_id: sekolah.id}).andWhere({role: 'guru'}).andWhere({dihapus: 0}).ids()
+        const idsGuru = await User.query()
+          .where({ m_sekolah_id: sekolah.id })
+          .andWhere({ role: "guru" })
+          .andWhere({ dihapus: 0 })
+          .ids();
 
-      const jumlahTopik = await MTimeline.query().whereIn('m_user_id', idsGuru).andWhere({dihapus: 0}).getCount()
+        const jumlahTopik = await MTimeline.query()
+          .whereIn("m_user_id", idsGuru)
+          .andWhere({ dihapus: 0 })
+          .getCount();
 
-      await MSekolah.query().where({id: sekolah.id}).update({
-        jumlah_topik: jumlahTopik
-      })
-      
+        await MSekolah.query().where({ id: sekolah.id }).update({
+          jumlah_topik: jumlahTopik,
+        });
+
         await Promise.all(
           materi.map((d) => {
             TkTimelineTopik.create({
@@ -9662,13 +9671,20 @@ class MainController {
         tanggal_akhir,
       });
 
-      const idsGuru = await User.query().where({m_sekolah_id: sekolah.id}).andWhere({role: 'guru'}).andWhere({dihapus: 0}).ids()
+      const idsGuru = await User.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ role: "guru" })
+        .andWhere({ dihapus: 0 })
+        .ids();
 
-      const jumlahTopik = await MTimeline.query().whereIn('m_user_id', idsGuru).andWhere({dihapus: 0}).getCount()
+      const jumlahTopik = await MTimeline.query()
+        .whereIn("m_user_id", idsGuru)
+        .andWhere({ dihapus: 0 })
+        .getCount();
 
-      await MSekolah.query().where({id: sekolah.id}).update({
-        jumlah_topik: jumlahTopik
-      })
+      await MSekolah.query().where({ id: sekolah.id }).update({
+        jumlah_topik: jumlahTopik,
+      });
 
       const anggotaRombel = await MAnggotaRombel.query()
         .with("user", (builder) => {
@@ -9721,13 +9737,20 @@ class MainController {
         dihapus: 0,
       });
 
-      const idsGuru = await User.query().where({m_sekolah_id: sekolah.id}).andWhere({role: 'guru'}).andWhere({dihapus: 0}).ids()
+      const idsGuru = await User.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ role: "guru" })
+        .andWhere({ dihapus: 0 })
+        .ids();
 
-      const jumlahTopik = await MTimeline.query().whereIn('m_user_id', idsGuru).andWhere({dihapus: 0}).getCount()
+      const jumlahTopik = await MTimeline.query()
+        .whereIn("m_user_id", idsGuru)
+        .andWhere({ dihapus: 0 })
+        .getCount();
 
-      await MSekolah.query().where({id: sekolah.id}).update({
-        jumlah_topik: jumlahTopik
-      })
+      await MSekolah.query().where({ id: sekolah.id }).update({
+        jumlah_topik: jumlahTopik,
+      });
 
       const anggotaRombel = await MAnggotaRombel.query()
         .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
@@ -9760,13 +9783,20 @@ class MainController {
             tanggal_pembagian,
           });
 
-          const idsGuru = await User.query().where({m_sekolah_id: sekolah.id}).andWhere({role: 'guru'}).andWhere({dihapus: 0}).ids()
+          const idsGuru = await User.query()
+            .where({ m_sekolah_id: sekolah.id })
+            .andWhere({ role: "guru" })
+            .andWhere({ dihapus: 0 })
+            .ids();
 
-      const jumlahTopik = await MTimeline.query().whereIn('m_user_id', idsGuru).andWhere({dihapus: 0}).getCount()
+          const jumlahTopik = await MTimeline.query()
+            .whereIn("m_user_id", idsGuru)
+            .andWhere({ dihapus: 0 })
+            .getCount();
 
-      await MSekolah.query().where({id: sekolah.id}).update({
-        jumlah_topik: jumlahTopik
-      })
+          await MSekolah.query().where({ id: sekolah.id }).update({
+            jumlah_topik: jumlahTopik,
+          });
 
           await TkTimelineTopik.create({
             m_timeline_id: timeline.id,
@@ -11422,13 +11452,20 @@ class MainController {
         dihapus: 0,
       });
 
-      const idsGuru = await User.query().where({m_sekolah_id: sekolah.id}).andWhere({role: 'guru'}).andWhere({dihapus: 0}).ids()
+      const idsGuru = await User.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ role: "guru" })
+        .andWhere({ dihapus: 0 })
+        .ids();
 
-      const jumlahUjian = await MUjian.query().whereIn('m_user_id', idsGuru).andWhere({dihapus: 0}).getCount()
+      const jumlahUjian = await MUjian.query()
+        .whereIn("m_user_id", idsGuru)
+        .andWhere({ dihapus: 0 })
+        .getCount();
 
-      await MSekolah.query().where({id: sekolah.id}).update({
-        jumlah_ujian: jumlahUjian
-      })
+      await MSekolah.query().where({ id: sekolah.id }).update({
+        jumlah_ujian: jumlahUjian,
+      });
 
       if (ujian_id) {
         const soalIds = await TkSoalUjian.query()
@@ -13766,9 +13803,9 @@ class MainController {
             builder.with("ujian");
           });
         })
-        .with("pesertaPPDB", builder => {
-          builder.with("jadwalPpdb", builder => {
-            builder.with("soal")
+        .with("pesertaPPDB", (builder) => {
+          builder.with("jadwalPpdb", (builder) => {
+            builder.with("soal");
           });
         })
         .with("tugas")
@@ -13838,7 +13875,13 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { tk_jadwal_ujian_id, ujian_id, tk_timeline_id, jadwal_ppdb, pendaftar_id } = request.post();
+    const {
+      tk_jadwal_ujian_id,
+      ujian_id,
+      tk_timeline_id,
+      jadwal_ppdb,
+      pendaftar_id,
+    } = request.post();
     const waktu_mulai = moment().format("YYYY-MM-DD HH:mm:ss");
 
     if (tk_timeline_id) {
@@ -13914,14 +13957,14 @@ class MainController {
     if (jadwal_ppdb) {
       const check = await TkPesertaUjianPpdb.query()
         .with("peserta")
-        .where({m_jadwal_ppdb_id : jadwal_ppdb})
-        .where({ dihapus: 0})
+        .where({ m_jadwal_ppdb_id: jadwal_ppdb })
+        .where({ dihapus: 0 })
         .where({ m_pendaftar_ppdb_id: pendaftar_id })
         .first();
-      if(check) {
+      if (check) {
         return response.ok({
-          peserta_ujian: check
-        })
+          peserta_ujian: check,
+        });
       }
       const pesertaUjian = await TkPesertaUjian.create({
         waktu_mulai,
@@ -13935,12 +13978,14 @@ class MainController {
         m_pendaftar_ppdb_id: pendaftar_id,
         m_jadwal_ppdb_id: jadwal_ppdb,
         tk_peserta_ujian_id: pesertaUjian.id,
-      })
+      });
       const jadwal = await MJadwalPpdb.query()
-        .with("soal", builder => {
-          builder.with("soalUjian", builder => {
-            builder.with("soal").where({dihapus: 0})
-          }).where({dihapus: 0})
+        .with("soal", (builder) => {
+          builder
+            .with("soalUjian", (builder) => {
+              builder.with("soal").where({ dihapus: 0 });
+            })
+            .where({ dihapus: 0 });
         })
         .with("info", (builder) => {
           builder.with("gelombang", (builder) => {
@@ -13949,8 +13994,8 @@ class MainController {
         })
         .where({ id: jadwal_ppdb })
         .first();
-      const jadwalData = jadwal.toJSON() 
-      let soal = jadwalData.soal.soalUjian.map(d => {
+      const jadwalData = jadwal.toJSON();
+      let soal = jadwalData.soal.soalUjian.map((d) => {
         if (d.soal.bentuk == "pg") {
           return {
             durasi: 0,
@@ -13970,14 +14015,14 @@ class MainController {
             tk_peserta_ujian_id: pesertaUjian.id,
           };
         }
-      })
-      if(jadwalData.diacak) {
+      });
+      if (jadwalData.diacak) {
         soal = shuffle(soal);
       }
       const trx = await Database.beginTransaction();
       await TkJawabanUjianSiswa.createMany(soal, trx);
       await trx.commit();
-      
+
       const res = await jadwalUjianReference.add({
         tk_peserta_ujian_id: pesertaUjian.id,
         user_id: pesertaUjian.m_user_id,
@@ -29606,1207 +29651,7 @@ class MainController {
     return namaFile;
   }
 
-  //================= CDC SERVICE ===============
-
-  async getPekerjaanSaya({ response, request, auth }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-
-    const pekerjaan = await TkStatusPekerjaan.query()
-      .with("perusahaan")
-      .where({ m_user_id: user.id })
-      .first();
-
-    return response.ok({
-      pekerjaan,
-    });
-  }
-
-  async getCariPekerjaan({ response, request, auth }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-    const { search } = request.get();
-
-    let pekerjaan;
-
-    if (search) {
-      // ===== service cari Pekerjaan ====
-      pekerjaan = await MPekerjaan.query()
-        .with("perusahaan", (builder) => {
-          builder.where({ dihapus: 0 });
-        })
-        .where({ dihapus: 0 })
-        .andWhere("nama", "like", `%${search}%`)
-        .paginate();
-    } else {
-      // ===== service Pekerjaan saya ====
-      pekerjaan = await MPekerjaan.query()
-        .with("perusahaan", (builder) => {
-          builder.where({ dihapus: 0 });
-        })
-        .where({ dihapus: 0 })
-        .paginate();
-    }
-
-    return response.ok({
-      pekerjaan,
-    });
-  }
-
-  async getCariPerusahaan({ response, request, auth }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-    const { search } = request.get();
-
-    let perusahaan;
-
-    if (search) {
-      // ===== service cari Perusahaan ====
-      perusahaan = await MPerusahaan.query()
-        .where({ dihapus: 0 })
-        .andWhere("nama", "like", `%${search}%`)
-        .paginate();
-    } else {
-      // ===== service Perusahaan saya ====
-      perusahaan = await MPerusahaan.query().where({ dihapus: 0 }).paginate();
-    }
-
-    return response.ok({
-      perusahaan,
-    });
-  }
-
-  async getAcaraPerusahaan({ response, request, auth }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-    const { search } = request.get();
-
-    let acara;
-
-    if (search) {
-      // ===== service cari Perusahaan ====
-      acara = await MAcaraPerusahaan.query()
-        .where({ dihapus: 0 })
-        .andWhere("nama", "like", `%${search}%`)
-        .paginate();
-    } else {
-      // ===== service Perusahaan saya ====
-      acara = await MAcaraPerusahaan.query().where({ dihapus: 0 }).paginate();
-    }
-
-    return response.ok({
-      acara,
-    });
-  }
-  // ============ Detail Pekerjaan ============
-
-  async detailPekerjaanSaya({
-    response,
-    request,
-    auth,
-    params: { pekerjaan_id },
-  }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-    // const { rombel_id } = request.post();
-    const pekerjaan = await MPekerjaan.query()
-      .with("perusahaan")
-      .with("pengumuman", (builder) => {
-        builder.where({ dihapus: 0 });
-      })
-      .where({ id: pekerjaan_id })
-      .first();
-
-    return response.ok({
-      pekerjaan,
-    });
-  }
-
-  async detailPekerjaan({ response, request, auth, params: { pekerjaan_id } }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-    // const { rombel_id } = request.post();
-    const pekerjaan = await MPekerjaan.query()
-      .with("perusahaan")
-      .with("pengumuman", (builder) => {
-        builder.where({ dihapus: 0 });
-      })
-      .with("informasi")
-      .where({ id: pekerjaan_id })
-      .first();
-
-    return response.ok({
-      pekerjaan,
-    });
-  }
-  async detailPerusahaan({
-    response,
-    request,
-    auth,
-    params: { perusahaan_id },
-  }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-    // const { rombel_id } = request.post();
-    const perusahaan = await MPerusahaan.query()
-      .with("acara", (builder) => {
-        builder.where({ dihapus: 0 });
-      })
-      .with("pekerjaan", (builder) => {
-        builder.where({ dihapus: 0 });
-      })
-      .with("informasi", (builder) => {
-        builder.where({ dihapus: 0 });
-      })
-      .where({ id: perusahaan_id })
-      .first();
-
-    return response.ok({
-      perusahaan,
-    });
-  }
-
-  async detailAcaraPerusahaan({
-    response,
-    request,
-    auth,
-    params: { acara_id },
-  }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-    // const { rombel_id } = request.post();
-    const acara = await MAcaraPerusahaan.query()
-      .with("perusahaan")
-      .where({ id: acara_id })
-      .first();
-
-    return response.ok({
-      perusahaan,
-    });
-  }
-
-  async postAcaraPerusahaan({ response, request, auth }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-
-    const {
-      judul,
-      foto,
-      lokasi,
-      deskripsi,
-      waktu_awal,
-      waktu_akhir,
-      link,
-      peserta,
-    } = request.post();
-
-    const acara = await MAcaraPerusahaan.create({
-      judul,
-      foto,
-      lokasi,
-      deskripsi,
-      waktu_awal,
-      waktu_akhir,
-      link,
-      peserta,
-      m_perusahaan_id: perusahaan_id,
-      dihapus: 0,
-    });
-
-    return response.ok({
-      message: messagePostSuccess,
-    });
-  }
-
-  async putAcaraPerusahaan({ response, request, auth, params: { acara_id } }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-
-    const {
-      judul,
-      foto,
-      lokasi,
-      deskripsi,
-      waktu_awal,
-      waktu_akhir,
-      link,
-      peserta,
-    } = request.post();
-
-    const acara = await MAcaraPerusahaaan.query()
-      .where({ id: acara_id })
-      .update({
-        judul,
-        foto,
-        lokasi,
-        deskripsi,
-        waktu_awal,
-        waktu_akhir,
-        link,
-        peserta,
-        dihapus: 0,
-      });
-
-    if (!acara) {
-      return response.notFound({
-        message: messageNotFound,
-      });
-    }
-
-    return response.ok({
-      message: messagePutSuccess,
-    });
-  }
-
-  async deleteAcaraPerusahaan({
-    response,
-    request,
-    auth,
-    params: { acara_id },
-  }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    // mengambil data user
-    const user = await auth.getUser();
-
-    const acara = await MAcaraPerusahaan.query()
-      .where({ id: acara_id })
-      .update({
-        dihapus: 1,
-      });
-
-    if (!acara) {
-      return response.notFound({
-        message: messageNotFound,
-      });
-    }
-
-    return response.ok({
-      message: messageDeleteSuccess,
-    });
-  }
-
-  async postPerusahaan({ response, request, auth }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-
-    const {
-      nama,
-      logo,
-      bidang,
-      province_id,
-      regency_id,
-      district_id,
-      village_id,
-      didirikan,
-      alamat,
-      telepon,
-      motto,
-      visi,
-      misi,
-      email,
-      situs,
-      jumlah_pekerja,
-      tentang,
-      budaya,
-      benefit_karyawan,
-      lingkungan_kerja,
-      busana,
-      budaya_kerja,
-      jam_kerja,
-      nama_pj,
-      telepon_pj,
-      email_pj,
-      registrasi_pj,
-      youtube,
-      twitter,
-      instagram,
-      facebook,
-      github,
-      linkedin,
-      behace,
-      dribble,
-      kodepos,
-      sampul,
-    } = request.post();
-
-    const perusahaan = await MPerusahaan.create({
-      nama,
-      logo,
-      bidang,
-      province_id,
-      regency_id,
-      district_id,
-      village_id,
-      dihapus: 0,
-    });
-
-    const informasi = await MInformasiPerusahaan.create({
-      m_perusahaan_id: perusahaan.id,
-      sampul,
-      email,
-      didirikan,
-      alamat,
-      telepon,
-      motto,
-      visi,
-      misi,
-      situs,
-      jumlah_pekerja,
-      tentang,
-      budaya,
-      benefit_karyawan,
-      lingkungan_kerja,
-      busana,
-      budaya_kerja,
-      jam_kerja,
-      nama_pj,
-      telepon_pj,
-      email_pj,
-      registrasi_pj,
-      youtube,
-      twitter,
-      instagram,
-      facebook,
-      github,
-      linkedin,
-      behace,
-      dribble,
-      kodepos,
-    });
-
-    return response.ok({
-      message: messagePostSuccess,
-    });
-  }
-
-  async putPerusahaan({ response, request, auth, params: { perusahaan_id } }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-
-    const {
-      nama,
-      logo,
-      bidang,
-      province_id,
-      regency_id,
-      district_id,
-      village_id,
-      didirikan,
-      alamat,
-      telepon,
-      situs,
-      jumlah_pekerja,
-      tentang,
-      budaya,
-      benefit_karyawan,
-      lingkungan_kerja,
-      busana,
-      budaya_kerja,
-      jam_kerja,
-      nama_pj,
-      telepon_pj,
-      email_pj,
-      registrasi_pj,
-      youtube,
-      twitter,
-      instagram,
-      facebook,
-      github,
-      linkedin,
-      behace,
-      dribble,
-      kodepos,
-      sampul,
-    } = request.post();
-
-    const perusahaan = await MPerusahaaan.query()
-      .where({ id: perusahaan_id })
-      .update({
-        nama,
-        logo,
-        bidang,
-        province_id,
-        regency_id,
-        district_id,
-        village_id,
-        dihapus: 0,
-      });
-
-    const informasi = await MInformasiPerusahaaan.query()
-      .where({ m_perusahaan_id: perusahaan_id })
-      .update({
-        didirikan,
-        alamat,
-        telepon,
-        situs,
-        jumlah_pekerja,
-        tentang,
-        budaya,
-        benefit_karyawan,
-        lingkungan_kerja,
-        busana,
-        budaya_kerja,
-        jam_kerja,
-        nama_pj,
-        telepon_pj,
-        email_pj,
-        registrasi_pj,
-        youtube,
-        twitter,
-        instagram,
-        facebook,
-        github,
-        linkedin,
-        behace,
-        dribble,
-        kodepos,
-        sampul,
-      });
-
-    if (!perusahaan) {
-      return response.notFound({
-        message: messageNotFound,
-      });
-    }
-
-    return response.ok({
-      message: messagePutSuccess,
-    });
-  }
-
-  async putProfilPerusahaan({
-    response,
-    request,
-    auth,
-    params: { perusahaan_id },
-  }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-
-    const { motto, visi, misi, tentang } = request.post();
-
-    const informasi = await MInformasiPerusahaaan.query()
-      .where({ m_perusahaan_id: perusahaan_id })
-      .update({
-        tentang,
-        visi,
-        misi,
-        motto,
-      });
-
-    if (!informasi) {
-      return response.notFound({
-        message: messageNotFound,
-      });
-    }
-
-    return response.ok({
-      message: messagePutSuccess,
-    });
-  }
-
-  async putBudayaPerusahaan({
-    response,
-    request,
-    auth,
-    params: { perusahaan_id },
-  }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-
-    const {
-      lingkungan_kerja,
-      busana,
-      budaya,
-      budaya_kerja,
-      jam_kerja,
-      benefit_karyawan,
-    } = request.post();
-
-    const informasi = await MInformasiPerusahaaan.query()
-      .where({ m_perusahaan_id: perusahaan_id })
-      .update({
-        lingkungan_kerja,
-        busana,
-        budaya,
-        budaya_kerja,
-        jam_kerja,
-        benefit_karyawan,
-      });
-
-    if (!informasi) {
-      return response.notFound({
-        message: messageNotFound,
-      });
-    }
-
-    return response.ok({
-      message: messagePutSuccess,
-    });
-  }
-
-  async putInformasiPerusahaan({
-    response,
-    request,
-    auth,
-    params: { perusahaan_id },
-  }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-
-    const {
-      nama,
-      bidang,
-      email,
-      jumlah_karyawan,
-      province_id,
-      regency_id,
-      kode_pos,
-      alamat,
-      didirikan,
-      situs,
-      telepon,
-    } = request.post();
-
-    const perusahaan = await MPerusahaaan.query()
-      .where({ id: perusahaan_id })
-      .update({
-        nama,
-        bidang,
-        province_id,
-        regency_id,
-        dihapus: 0,
-      });
-
-    const informasi = await MInformasiPerusahaaan.query()
-      .where({ m_perusahaan_id: perusahaan_id })
-      .update({
-        email,
-        jumlah_karyawan,
-        kode_pos,
-        alamat,
-        didirikan,
-        situs,
-        telepon,
-      });
-
-    if (!informasi) {
-      return response.notFound({
-        message: messageNotFound,
-      });
-    }
-
-    return response.ok({
-      message: messagePutSuccess,
-    });
-  }
-
-  async putTautanPerusahaan({
-    response,
-    request,
-    auth,
-    params: { perusahaan_id },
-  }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-
-    const {
-      youtube,
-      twitter,
-      instagram,
-      facebook,
-      github,
-      linkedin,
-      behace,
-      dribble,
-    } = request.post();
-
-    const informasi = await MInformasiPerusahaaan.query()
-      .where({ m_perusahaan_id: perusahaan_id })
-      .update({
-        youtube,
-        twitter,
-        instagram,
-        facebook,
-        github,
-        linkedin,
-        behace,
-        dribble,
-      });
-
-    if (!informasi) {
-      return response.notFound({
-        message: messageNotFound,
-      });
-    }
-
-    return response.ok({
-      message: messagePutSuccess,
-    });
-  }
-
-  async deletePerusahaan({
-    response,
-    request,
-    auth,
-    params: { perusahaan_id },
-  }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    // mengambil data user
-    const user = await auth.getUser();
-
-    const perusahaan = await MPerusahaan.query()
-      .where({ id: perusahaan_id })
-      .update({
-        dihapus: 1,
-      });
-
-    if (!perusahaan) {
-      return response.notFound({
-        message: messageNotFound,
-      });
-    }
-
-    return response.ok({
-      message: messageDeleteSuccess,
-    });
-  }
-
-  async postPekerjaan({ response, request, auth }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-
-    const {
-      m_perusahaan_id,
-      judul,
-      jenis,
-      province_id,
-      regency_id,
-      district_id,
-      village_id,
-      alamat_penempatan,
-      kodepos,
-      jumlah_lowongan,
-      bidang,
-      mulai_kerja,
-      akhir_kerja,
-      pengalaman,
-      batas_pengiriman,
-      pendidikan,
-      detail_pendidikan,
-      keahlian,
-      deskripsi,
-      persyaratan_khusus,
-      gaji_minimal,
-      gaji_maksimal,
-      status_jurusan,
-      jurusan,
-      gender,
-      tb,
-      usia_minimal,
-      usia_maksimal,
-      khusus_alumni,
-      khusus_difabel,
-      buta_warna,
-      kacamata,
-      tes_psikotes,
-      tes_masuk,
-      tes_wawancara,
-      tes_kesehatan,
-      lokasi_tes,
-      kelengkapan_data,
-      data_nilai,
-      waktu_mulai_psikotes,
-      waktu_akhir_psikotes,
-      media_tes_psikotes,
-      keterangan_psikotes,
-      lokasi_psikotes,
-      link_psikotes,
-
-      waktu_mulai_masuk,
-      waktu_akhir_masuk,
-      media_tes_masuk,
-      keterangan_masuk,
-      lokasi_masuk,
-      link_masuk,
-
-      waktu_mulai_wawancara,
-      waktu_akhir_wawancara,
-      media_tes_wawancara,
-      keterangan_wawancara,
-      lokasi_wawancara,
-      link_wawancara,
-
-      waktu_mulai_kesehatan,
-      waktu_akhir_kesehatan,
-      media_tes_kesehatan,
-      keterangan_kesehatan,
-      lokasi_kesehatan,
-      link_kesehatan,
-    } = request.post();
-    const date1 = moment(`${mulai_kerja}`);
-    const date2 = moment(`${akhir_kerja}`);
-    const diff = date2.diff(date1);
-
-    const lama = moment(diff).format(`MM`);
-
-    const pekerjaan = await MPekerjaan.create({
-      judul,
-      m_perusahaan_id,
-      jenis,
-      bidang,
-      kontrak_kerja: lama,
-      mulai_kerja,
-      akhir_kerja,
-      jumlah_lowongan,
-      province_id,
-      regency_id,
-      district_id,
-      village_id,
-      dihapus: 0,
-    });
-
-    const informasi = await MInformasiPekerjaan.create({
-      m_pekerjaan_id: pekerjaan.id,
-      pengalaman,
-      batas_pengiriman,
-      pendidikan,
-      detail_pendidikan,
-      keahlian,
-      deskripsi,
-      persyaratan_khusus,
-      gaji_minimal,
-      gaji_maksimal,
-      status_jurusan,
-      jurusan,
-      gender,
-      tb,
-      usia_minimal,
-      usia_maksimal,
-      alamat_penempatan,
-      kodepos,
-      khusus_alumni,
-      khusus_difabel,
-      buta_warna,
-      kacamata,
-      tes_psikotes,
-      tes_masuk,
-      tes_wawancara,
-      tes_kesehatan,
-      lokasi_tes,
-      kelengkapan_data,
-      data_nilai,
-    });
-
-    if (tes_psikotes == 1) {
-      await MTesPekerjaan.create({
-        tipe: "psikotes",
-        waktu_mulai: waktu_mulai_psikotes,
-        waktu_akhir: waktu_akhir_psikotes,
-        m_pekerjaan_id: pekerjaan.id,
-        lokasi: lokasi_psikotes,
-        link: link_psikotes,
-        keterangan: keterangan_psikotes,
-        dihapus: 0,
-      });
-    }
-    if (tes_masuk == 1) {
-      await MTesPekerjaan.create({
-        tipe: "masuk",
-        waktu_mulai: waktu_mulai_masuk,
-        waktu_akhir: waktu_akhir_masuk,
-        m_pekerjaan_id: pekerjaan.id,
-        lokasi: lokasi_masuk,
-        link: link_masuk,
-        keterangan: keterangan_masuk,
-        dihapus: 0,
-      });
-    }
-    if (tes_wawancara == 1) {
-      await MTesPekerjaan.create({
-        tipe: "wawancara",
-        waktu_mulai: waktu_mulai_wawancara,
-        waktu_akhir: waktu_akhir_wawancara,
-        m_pekerjaan_id: pekerjaan.id,
-        lokasi: lokasi_wawancara,
-        link: link_wawancara,
-        keterangan: keterangan_wawancara,
-        dihapus: 0,
-      });
-    }
-    if (tes_kesehatan == 1) {
-      await MTesPekerjaan.create({
-        tipe: "kesetes_kesehatan",
-        waktu_mulai: waktu_mulai_kesehatan,
-        waktu_akhir: waktu_akhir_kesehatan,
-        m_pekerjaan_id: pekerjaan.id,
-        lokasi: lokasi_kesehatan,
-        link: link_kesehatan,
-        keterangan: keterangan_kesehatan,
-        dihapus: 0,
-      });
-    }
-
-    return response.ok({
-      message: messagePostSuccess,
-    });
-  }
-
-  // ============ POST Rekap Tugas =================
-
-  async putPekerjaan({ response, request, auth, params: { pekerjaan_id } }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-
-    const {
-      judul,
-      province_id,
-      regency_id,
-      district_id,
-      village_id,
-      jenis,
-      bidang,
-      mulai_kerja,
-      akhir_kerja,
-      jumlah_lowongan,
-      pengalaman,
-      batas_pengiriman,
-      pendidikan,
-      detail_pendidikan,
-      keahlian,
-      deskripsi,
-      persyaratan_khusus,
-      range_gaji,
-      status_jurusan,
-      gender,
-      tb,
-      usia_minimal,
-      usia_maksimal,
-      alamat,
-      kodepos,
-      khusus_alumni,
-      khusus_difabel,
-      buta_warna,
-      kacamata,
-      tes,
-      lokasi_tes,
-      kelengkapan_data,
-      data_nilai,
-    } = request.post();
-
-    const date1 = moment(`${mulai_kerja}`);
-    const date2 = moment(`${akhir_kerja}`);
-    const diff = date2.diff(date1);
-
-    const lama = moment(diff).format(`MM`);
-
-    const pekerjaan = await MPekerjaan.query()
-      .where({ id: pekerjaan_id })
-      .update({
-        judul,
-        jenis,
-        bidang,
-        kontrak_kerja: lama,
-        mulai_kerja,
-        akhir_kerja,
-        jumlah_lowongan,
-        province_id,
-        regency_id,
-        district_id,
-        village_id,
-        dihapus: 0,
-      });
-
-    const informasi = await MInformasiPekerjaan.query()
-      .where({ m_pekerjaan_id: pekerjaan_id })
-      .update({
-        pengalaman,
-        batas_pengiriman,
-        pendidikan,
-        detail_pendidikan,
-        keahlian,
-        deskripsi,
-        persyaratan_khusus,
-        range_gaji,
-        status_jurusan,
-        gender,
-        tb,
-        usia_minimal,
-        usia_maksimal,
-        alamat,
-        kodepos,
-        khusus_alumni,
-        khusus_difabel,
-        buta_warna,
-        kacamata,
-        tes,
-        lokasi_tes,
-        kelengkapan_data,
-        data_nilai,
-      });
-
-    if (!pekerjaan) {
-      return response.notFound({
-        message: messageNotFound,
-      });
-    }
-
-    return response.ok({
-      message: messagePutSuccess,
-    });
-  }
-
-  async deletePekerjaan({ response, request, auth, params: { pekerjaan_id } }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    // mengambil data user
-    const user = await auth.getUser();
-
-    const pekerjaan = await MPekerjaan.query()
-      .where({ id: pekerjaan_id })
-      .update({
-        dihapus: 1,
-      });
-
-    if (!pekerjaan) {
-      return response.notFound({
-        message: messageNotFound,
-      });
-    }
-
-    return response.ok({
-      message: messageDeleteSuccess,
-    });
-  }
-
-  async postLaporanPrakerin({ response, request, auth }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-
-    const {
-      judul,
-      foto,
-      lokasi,
-      deskripsi,
-      waktu_mulai,
-      waktu_akhir,
-      lampiran,
-    } = request.post();
-
-    const laporan = await MLaporanPrakerin.create({
-      judul,
-      foto,
-      lokasi,
-      deskripsi,
-      waktu_mulai,
-      waktu_akhir,
-      lampiran,
-      m_perusahaan_id: perusahaan_id,
-      dihapus: 0,
-    });
-
-    return response.ok({
-      message: messagePostSuccess,
-    });
-  }
-
-  // ============ POST Rekap Tugas =================
-
-  async putLaporanPrakerin({
-    response,
-    request,
-    auth,
-    params: { laporan_id },
-  }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-
-    const { judul, foto, lokasi, deskripsi, waktu_awal, waktu_akhir } =
-      request.post();
-
-    const acara = await MAcaraPerusahaaan.query()
-      .where({ id: acara_id })
-      .update({
-        judul,
-        foto,
-        lokasi,
-        deskripsi,
-        waktu_awal,
-        waktu_akhir,
-        dihapus: 0,
-      });
-
-    if (!acara) {
-      return response.notFound({
-        message: messageNotFound,
-      });
-    }
-
-    return response.ok({
-      message: messagePutSuccess,
-    });
-  }
-
+ 
   // ====================================== Surel Service ==========================================
 
   async getSurel({ response, request, auth }) {
