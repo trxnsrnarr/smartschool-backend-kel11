@@ -127,6 +127,8 @@ const MBobotNilai = use("App/Models/MBobotNilai");
 const MRegistrasiAkun = use("App/Models/MRegistrasiAkun");
 const MAnggotaEkskul = use("App/Models/MAnggotaEkskul");
 const MFiturSekolah = use("App/Models/MFiturSekolah");
+const MSuratKeputusan = use("App/Models/MSuratKeputusan");
+const TkSuratKeputusanUser = use("App/Models/TkSuratKeputusanUser");
 
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
@@ -38614,16 +38616,21 @@ class MainController {
       .where({ tipe: "cp" })
       .fetch();
 
-    // const surat = TkSuratKeputusan.query()
-    //   .with("surat")
-    //   .where({ m_sekolah_id: sekolah.id })
-    //   .fetch();
+    // const surat = await TkSuratKeputusanUser
+
+    const surat = await TkSuratKeputusanUser.query()
+      .with("surat",(builder)=>{
+        builder.with("tahun")
+      })
+      .where({m_user_id :userAuthor.id})
+      .where({dihapus:0})
+      .fetch();
 
     return response.ok({
       userAuthor,
       bukuKerja: { rpp, silabus, perangkat, modul, atp, cp },
       sekolah,
-      // surat
+      surat
     });
   }
 
