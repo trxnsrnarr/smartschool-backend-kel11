@@ -349,7 +349,7 @@ class SecondController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    const { tingkat, hari = 1 } = request.get();
+    // const { tingkat, hari = 1 } = request.get();
 
     const mataPelajaran = await MMataPelajaran.query()
       .with("user", (builder) => {
