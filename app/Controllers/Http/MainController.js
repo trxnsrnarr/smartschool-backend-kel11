@@ -580,7 +580,7 @@ class MainController {
     page = page ? page : 1;
 
     const res = MSekolah.query()
-      .select("id", "nama", "gpds", "trial", "jumlah_ujian", "jumlah_topik")
+      .select("id", "nama", "gpds", "trial", "jumlah_ujian", "jumlah_topik", 'domain')
       .with("ta", (builder) => {
         builder
           .select("id", "m_sekolah_id")
