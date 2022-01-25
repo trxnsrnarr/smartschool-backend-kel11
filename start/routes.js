@@ -45,6 +45,7 @@ Route.get("/lokasi-saat-ini", "MainController.getLokasiSaatIni");
 Route.post("/single-upload", "MainController.singleUpload");
 Route.post("/rich-editor-upload", "MainController.richEditorUpload");
 Route.get("/sekolah/me", "MainController.meSekolah");
+Route.post("/fitur-sekolah", "SecondController.updateFitur")
 
 // data
 Route.get("/province", "MainController.getProvince");
@@ -314,6 +315,12 @@ Route.get("/analisis-keuangan", "KeuanganController.getAnalisisKeuangan")
 Route.post("/analisis-keuangan", "KeuanganController.postKategoriAnalisis")
 Route.put("/analisis-keuangan/:analisis_id", "KeuanganController.putKategoriAnalisis")
 Route.delete("/analisis-keuangan/:analisis_id", "KeuanganController.deleteKategoriAnalisis")
+
+// Histori keuangan
+Route.get("/histori-keuangan", "KeuanganController.getHistori")
+// Route.post("/histori-keuangan", "KeuanganController.postKategoriAnalisis")
+// Route.put("/histori-keuangan/:analisis_id", "KeuanganController.putKategoriAnalisis")
+// Route.delete("/histori-keuangan/:analisis_id", "KeuanganController.deleteKategoriAnalisis")
 
 // no rekening
 Route.get("/rek-sekolah", "MainController.getRekSekolah");

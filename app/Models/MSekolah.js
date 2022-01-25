@@ -13,7 +13,7 @@ class MSekolah extends Model {
   }
 
   ta() {
-    return this.hasMany("App/Models/Mta", 'id', "m_sekolah_id");
+    return this.hasMany("App/Models/Mta", "id", "m_sekolah_id");
   }
 
   jurusan() {
@@ -21,13 +21,16 @@ class MSekolah extends Model {
   }
 
   rombel() {
-    return this.hasMany("App/Models/MRombel", 'id', "m_sekolah_id");
+    return this.hasMany("App/Models/MRombel", "id", "m_sekolah_id");
   }
 
   siswa() {
     return this.hasMany("App/Models/User", "m_sekolah_id");
   }
 
+  fitur() {
+    return this.hasOne("App/Models/MFiturSekolah", "id", "m_sekolah_id");
+  }
 
   static get computed() {
     return ["tingkat_format"];

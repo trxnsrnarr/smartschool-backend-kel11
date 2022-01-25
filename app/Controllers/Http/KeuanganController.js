@@ -39,6 +39,7 @@ class KeuanganController {
   async getSekolahByDomain(domain) {
     const sekolah = await MSekolah.query()
       .with("informasi")
+      .with("fitur")
       .where("domain", "like", `%${domain}%`)
       .first();
 
@@ -2238,18 +2239,18 @@ class KeuanganController {
     const analisis = await MKeuTemplateAnalisis.query()
       .with("akun", (builder) => {
         // builder
-          // .with("jurnal", (builder) => {
-          //   builder.where({ dihapus: 0 });
-          //   if (transaksiIds) {
-          //     builder.whereIn("m_keu_transaksi_id", transaksiIds);
-          //   }
-          // })
-          // .with("rencanaJurnal", (builder) => {
-          //   builder.where({ dihapus: 0 });
-          //   if (transaksi2Ids) {
-          //     builder.whereIn("m_rencana_transaksi_id", transaksi2Ids);
-          //   }
-          // });
+        // .with("jurnal", (builder) => {
+        //   builder.where({ dihapus: 0 });
+        //   if (transaksiIds) {
+        //     builder.whereIn("m_keu_transaksi_id", transaksiIds);
+        //   }
+        // })
+        // .with("rencanaJurnal", (builder) => {
+        //   builder.where({ dihapus: 0 });
+        //   if (transaksi2Ids) {
+        //     builder.whereIn("m_rencana_transaksi_id", transaksi2Ids);
+        //   }
+        // });
       })
       .where({ m_sekolah_id: sekolah.id })
       .where({ dihapus: 0 })
@@ -3520,8 +3521,8 @@ class KeuanganController {
     });
 
     const rencana = await MRencanaKeuangan.query()
-    .where({ id: perencanaan_id })
-    .first();
+      .where({ id: perencanaan_id })
+      .first();
 
     const rumus12 = JSON.parse(rumus || "[]");
     let kategoriAkun;
@@ -3552,7 +3553,7 @@ class KeuanganController {
       akhir: `${rumusFix}`,
       bawah: `${rencana.nama} - Laporan Arus Kas`,
       m_sekolah_id: sekolah.id,
-      alamat_id: rencana.id
+      alamat_id: rencana.id,
     });
 
     return response.ok({
@@ -3652,7 +3653,7 @@ class KeuanganController {
         akhir: `"${rumusFix}"`,
         bawah: `${rencana.nama} - Laporan Arus Kas`,
         m_sekolah_id: sekolah.id,
-        alamat_id: rencana.id
+        alamat_id: rencana.id,
       });
     }
     return response.ok({
@@ -3679,7 +3680,10 @@ class KeuanganController {
       .andWhere({ m_sekolah_id: sekolah.id });
 
     if (search) {
-      histori.andWhere("awal", "like", `%${search}%`);
+      histori.whereRaw(
+        `CONCAT(REPLACE(COALESCE(akhir, ''),'\"',''), REPLACE(COALESCE(bawah, ''),'\"',''), REPLACE(COALESCE(awal, ''),'\"','')) like ?`,
+        [`%${search}%`]
+      );
     }
     if (tanggal_awal) {
       histori.whereBetween("created_at", [tanggal_awal, tanggal_akhir]);
@@ -3693,8 +3697,13 @@ class KeuanganController {
 
     histori = await histori.fetch();
 
+    const jenisData = await MHistoriAktivitas.query()
+      .distinct("jenis")
+      .pluck("jenis");
+
     return response.ok({
       histori,
+      jenis: jenisData,
     });
   }
   async downloadJurnal({ response, request, auth,params:{perencanaan_id} }) {

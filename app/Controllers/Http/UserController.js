@@ -19,6 +19,7 @@ class UserController {
   async getSekolahByDomain(domain) {
     const sekolah = await MSekolah.query()
       .with("informasi")
+      .with("fitur")
       .where("domain", "like", `%${domain}%`)
       .first();
 
