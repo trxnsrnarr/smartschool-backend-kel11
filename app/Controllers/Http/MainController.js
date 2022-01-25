@@ -38616,6 +38616,16 @@ class MainController {
       .where({ tipe: "cp" })
       .fetch();
 
+    const lbg = await MRpp.query()
+      .where({ m_user_id: userAuthor.id })
+      .andWhere({ dihapus: 0 })
+      .where({ tipe: "lbg" })
+      .fetch();
+
+    // const surat = TkSuratKeputusan.query()
+    //   .with("surat")
+    //   .where({ m_sekolah_id: sekolah.id })
+    //   .fetch();
     // const surat = await TkSuratKeputusanUser
 
     const surat = await TkSuratKeputusanUser.query()
@@ -38628,7 +38638,7 @@ class MainController {
 
     return response.ok({
       userAuthor,
-      bukuKerja: { rpp, silabus, perangkat, modul, atp, cp },
+      bukuKerja: { rpp, silabus, perangkat, modul, atp, cp, lbg },
       sekolah,
       surat
     });
