@@ -595,7 +595,7 @@ class MainController {
           .where("aktif", 1);
       })
       .where("gpds_event", "jawatimur")
-      .orderBy("topik_materi", "desc");
+      .orderBy("jumlah_topik", "desc");
 
     return response.ok({
       sekolah: await res.paginate(page, 10),
