@@ -46911,89 +46911,89 @@ class MainController {
       );
     }
 
-    const data = all.filter((d) => d != null);
+    // const data = all.filter((d) => d != null);
 
-    // return data
+    // // return data
 
-    const result = [];
-    for (let i = 0; i < data.length; i++) {
-      const d = data[i];
+    // const result = [];
+    // for (let i = 0; i < data.length; i++) {
+    //   const d = data[i];
 
-      // return d.mapelBaru.nama;
-      let jadwalBaruNih;
-      try {
-        jadwalBaruNih = await MJadwalMengajar.query()
-          .where({ m_rombel_id: d.rombelBaru.id })
-          .andWhere({ m_ta_id: taBaru.id })
-          .andWhere({ m_jam_mengajar_id: d.jamBaru.id })
-          .andWhere({ m_sekolah_id: sekolah.id })
-          .update({
-            m_mata_pelajaran_id: d.mapelBaru.id,
-            diubah: 1,
-          });
-      } catch (err) {
-        result.push(err);
-      }
+    //   // return d.mapelBaru.nama;
+    //   let jadwalBaruNih;
+    //   try {
+    //     jadwalBaruNih = await MJadwalMengajar.query()
+    //       .where({ m_rombel_id: d.rombelBaru.id })
+    //       .andWhere({ m_ta_id: taBaru.id })
+    //       .andWhere({ m_jam_mengajar_id: d.jamBaru.id })
+    //       .andWhere({ m_sekolah_id: sekolah.id })
+    //       .update({
+    //         m_mata_pelajaran_id: d.mapelBaru.id,
+    //         diubah: 1,
+    //       });
+    //   } catch (err) {
+    //     result.push(err);
+    //   }
 
-      if (d.mapelBaru.kelompok == "C") {
-        const check = await MMateri.query()
-          .where({ m_mata_pelajaran_id: d.mapelBaru.id })
-          .andWhere({ tingkat: d.rombelBaru.tingkat })
-          .andWhere({ m_jurusan_id: d.rombelBaru.m_jurusan_id })
-          .first();
+    //   if (d.mapelBaru.kelompok == "C") {
+    //     const check = await MMateri.query()
+    //       .where({ m_mata_pelajaran_id: d.mapelBaru.id })
+    //       .andWhere({ tingkat: d.rombelBaru.tingkat })
+    //       .andWhere({ m_jurusan_id: d.rombelBaru.m_jurusan_id })
+    //       .first();
 
-        if (!check) {
-          const materi = await MMateri.create({
-            tingkat: d.rombelBaru.tingkat,
-            m_jurusan_id: d.rombelBaru.m_jurusan_id,
-            m_mata_pelajaran_id: d.mapelBaru.id,
-          });
+    //     if (!check) {
+    //       const materi = await MMateri.create({
+    //         tingkat: d.rombelBaru.tingkat,
+    //         m_jurusan_id: d.rombelBaru.m_jurusan_id,
+    //         m_mata_pelajaran_id: d.mapelBaru.id,
+    //       });
 
-          await TkMateriRombel.create({
-            m_materi_id: materi.id,
-            m_rombel_id: d.rombelBaru.id,
-          });
-        } else {
-          const checkTk = await TkMateriRombel.query()
-            .where({ m_materi_id: check.id })
-            .andWhere({ m_rombel_id: d.rombelBaru.id })
-            .first();
-          await TkMateriRombel.create({
-            m_materi_id: check.id,
-            m_rombel_id: d.rombelBaru.id,
-          });
-        }
-      } else {
-        const check = await MMateri.query()
-          .where({ m_mata_pelajaran_id: d.mapelBaru.id })
-          .andWhere({ tingkat: d.rombelBaru.tingkat })
-          .first();
+    //       await TkMateriRombel.create({
+    //         m_materi_id: materi.id,
+    //         m_rombel_id: d.rombelBaru.id,
+    //       });
+    //     } else {
+    //       const checkTk = await TkMateriRombel.query()
+    //         .where({ m_materi_id: check.id })
+    //         .andWhere({ m_rombel_id: d.rombelBaru.id })
+    //         .first();
+    //       await TkMateriRombel.create({
+    //         m_materi_id: check.id,
+    //         m_rombel_id: d.rombelBaru.id,
+    //       });
+    //     }
+    //   } else {
+    //     const check = await MMateri.query()
+    //       .where({ m_mata_pelajaran_id: d.mapelBaru.id })
+    //       .andWhere({ tingkat: d.rombelBaru.tingkat })
+    //       .first();
 
-        if (!check) {
-          const materi = await MMateri.create({
-            tingkat: d.rombelBaru.tingkat,
-            m_mata_pelajaran_id: d.mapelBaru.id,
-          });
+    //     if (!check) {
+    //       const materi = await MMateri.create({
+    //         tingkat: d.rombelBaru.tingkat,
+    //         m_mata_pelajaran_id: d.mapelBaru.id,
+    //       });
 
-          await TkMateriRombel.create({
-            m_materi_id: materi.id,
-            m_rombel_id: d.rombelBaru.id,
-          });
-        } else {
-          const checkTk = await TkMateriRombel.query()
-            .where({ m_materi_id: check.id })
-            .andWhere({ m_rombel_id: d.rombelBaru.id })
-            .first();
-          if (!checkTk) {
-            await TkMateriRombel.create({
-              m_materi_id: check.id,
-              m_rombel_id: d.rombelBaru.id,
-            });
-          }
-        }
-      }
-      result.push(1);
-    }
+    //       await TkMateriRombel.create({
+    //         m_materi_id: materi.id,
+    //         m_rombel_id: d.rombelBaru.id,
+    //       });
+    //     } else {
+    //       const checkTk = await TkMateriRombel.query()
+    //         .where({ m_materi_id: check.id })
+    //         .andWhere({ m_rombel_id: d.rombelBaru.id })
+    //         .first();
+    //       if (!checkTk) {
+    //         await TkMateriRombel.create({
+    //           m_materi_id: check.id,
+    //           m_rombel_id: d.rombelBaru.id,
+    //         });
+    //       }
+    //     }
+    //   }
+    //   result.push(1);
+    // }
 
     await Mta.query().where({ id: taBaru.id }).update({
       jadwal_sinkron: 1,
