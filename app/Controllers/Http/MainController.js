@@ -34712,8 +34712,8 @@ class MainController {
               foto_masuk: anggota.user
                 ? anggota.user.absen
                   ? anggota.user.absen.length
-                    ? `https://server1.smarteschool.net/fr/${anggota.user.absen[0].foto_masuk_local}.jpeg` ||
-                      anggota.user.absen[0].foto_masuk
+                    ? anggota.user.absen[0].foto_masuk || 
+                      `https://server1.smarteschool.net/fr/${anggota.user.absen[0].foto_masuk_local}.jpeg`
                     : "-"
                   : "-"
                 : "-",
@@ -34727,8 +34727,8 @@ class MainController {
               foto_pulang: anggota.user
                 ? anggota.user.absen
                   ? anggota.user.absen.length
-                    ? `https://server1.smarteschool.net/fr/${anggota.user.absen[0].foto_pulang_local}.jpeg` ||
-                      anggota.user.absen[0].foto_pulang
+                    ? anggota.user.absen[0].foto_pulang || 
+                      `https://server1.smarteschool.net/fr/${anggota.user.absen[0].foto_pulang_local}.jpeg`
                     : "-"
                   : "-"
                 : "-",
