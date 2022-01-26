@@ -1168,7 +1168,7 @@ class SecondController {
         jenis: "Ubah Akun",
         m_user_id: user.id,
         awal: `Nama : ${akun.nama} menjadi`,
-        akhir: nama,
+        akhir: `"${nama}"`,
         m_sekolah_id: sekolah.id,
         tipe: "Realisasi",
       });
@@ -1178,7 +1178,7 @@ class SecondController {
         jenis: "Ubah Akun",
         m_user_id: user.id,
         awal: `Kode : ${akun.kode} menjadi`,
-        akhir: kode,
+        akhir: `"${kode}"`,
         m_sekolah_id: sekolah.id,
         tipe: "Realisasi",
       });
@@ -1969,7 +1969,7 @@ class SecondController {
       await MHistoriAktivitas.create({
         jenis: "Ubah Transaksi",
         m_user_id: user.id,
-        awal: `nomor: ${transaksi.nomor} menjadi`,
+        awal: `Nomor: ${transaksi.nomor} menjadi`,
         akhir: `"${nomor}"`,
         m_sekolah_id: sekolah.id,
         tipe: "Realisasi",
