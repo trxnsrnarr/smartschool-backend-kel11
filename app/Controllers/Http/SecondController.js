@@ -1117,11 +1117,11 @@ class SecondController {
           await MHistoriAktivitas.create({
             jenis: "Ubah Akun",
             m_user_id: user.id,
-            awal: `Saldo : ${(check.saldo).toLocaleString("id-ID", {
+            awal: `Saldo : ${check.saldo.toLocaleString("id-ID", {
               style: "currency",
               currency: "IDR",
             })} menjadi `,
-            akhir: `"${(saldo).toLocaleString("id-ID", {
+            akhir: `"${saldo.toLocaleString("id-ID", {
               style: "currency",
               currency: "IDR",
             })}"`,
@@ -1922,7 +1922,7 @@ class SecondController {
           await MHistoriAktivitas.create({
             jenis: "Ubah Transaksi",
             m_user_id: user.id,
-            awal: `Jurnal Umum - Nama Akun: ${akunLama.nama} menjadi`,
+            awal: `Jurnal Umum - Nama Akun: ${akunLama.nama} menjadi `,
             akhir: `"${akunBaru.nama}"`,
             m_sekolah_id: sekolah.id,
             tipe: "Realisasi",
@@ -1932,8 +1932,16 @@ class SecondController {
           await MHistoriAktivitas.create({
             jenis: "Ubah Transaksi",
             m_user_id: user.id,
-            awal: `Jurnal Umum - Nama Akun - ${akunBaru.nama} : ${jurnalLama.jenis} ${akunLama.nama} menjadi`,
-            akhir: `"${d.jenis}${akunBaru.nama}"`,
+            awal: `Jurnal Umum - Nama Akun - ${akunBaru.nama} : ${
+              jurnalLama.jenis
+            } ${jurnalLama.saldo.toLocaleString("id-ID", {
+              style: "currency",
+              currency: "IDR",
+            })} menjadi `,
+            akhir: `"${d.jenis} ${d.saldo.toLocaleString("id-ID", {
+              style: "currency",
+              currency: "IDR",
+            })}"`,
             m_sekolah_id: sekolah.id,
             tipe: "Realisasi",
           });
