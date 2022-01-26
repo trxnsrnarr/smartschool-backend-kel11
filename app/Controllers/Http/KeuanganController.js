@@ -26,6 +26,10 @@ const MRencanaAktivitasTransaksi = use("App/Models/MRencanaAktivitasTransaksi");
 const TkRencanaKategoriTipeAkun = use("App/Models/TkRencanaKategoriTipeAkun");
 const MHistoriAktivitas = use("App/Models/MHistoriAktivitas");
 
+const moment = require("moment");
+require("moment/locale/id");
+moment.locale("id");
+
 const messagePostSuccess = "Data berhasil ditambahkan";
 const messageSaveSuccess = "Data berhasil disimpan";
 const messagePutSuccess = "Data berhasil diubah";
