@@ -399,26 +399,26 @@ class SecondController {
     let tingkat = [];
 
     if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA") {
-      tingkat = ["X", "XI", "XII", "XIII"];
+      tingkat = {X, XI, XII, XIII};
     } else if (sekolah.tingkat == "SMP") {
-      tingkat = ["VII", "VIII", "IX"];
+      tingkat = {VII, VIII, IX};
     } else if (sekolah.tingkat == "SD") {
-      tingkat = ["I", "II", "III", "IV", "V", "VI"];
+      tingkat = {I, II, III, IV, V, VI};
     } else if (sekolah.tingkat == "SLB") {
-      tingkat = [
-        "I",
-        "II",
-        "III",
-        "IV",
-        "V",
-        "VI",
-        "VII",
-        "VIII",
-        "IX",
-        "X",
-        "XI",
-        "XII",
-      ];
+      tingkat = {
+        I,
+        II,
+        III,
+        IV,
+        V,
+        VI,
+        VII,
+        VIII,
+        IX,
+        X,
+        XI,
+        XII,
+      };
     }
 
     return { rombel, totalTingkat, tingkat };
