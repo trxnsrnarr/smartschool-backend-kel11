@@ -698,7 +698,9 @@ class KeuanganController {
       await MHistoriAktivitas.create({
         jenis: "Ubah Rencana Anggaran",
         m_user_id: user.id,
-        awal: `Tanggal: ${moment(transaksi.tanggal).format("dddd, DD MMM YYYY")} menjadi`,
+        awal: `Tanggal: ${moment(transaksi.tanggal).format(
+          "dddd, DD MMM YYYY"
+        )} menjadi`,
         akhir: `"${moment(tanggal).format("dddd, DD MMM YYYY")}"`,
         m_sekolah_id: sekolah.id,
         tipe: "Perencanaan",
@@ -773,7 +775,12 @@ class KeuanganController {
     });
   }
 
-  async getRencanaNeraca({ response, request, auth }) {
+  async getRencanaNeraca({
+    response,
+    request,
+    auth,
+    params: { perencanaan_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -790,7 +797,13 @@ class KeuanganController {
         .whereBetween("tanggal", [tanggal_awal, tanggal_akhir])
         .where({ m_sekolah_id: sekolah.id })
         .where({ dihapus: 0 })
-        .andWhere({ m_rencana_keuangan_id: rencana_id })
+        .andWhere({ m_rencana_keuangan_id: perencanaan_id })
+        .ids();
+    } else {
+      transaksiIds = await MRencanaTransaksi.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ dihapus: 0 })
+        .andWhere({ m_rencana_keuangan_id: perencanaan_id })
         .ids();
     }
 
@@ -819,6 +832,7 @@ class KeuanganController {
           .orderBy("urutan", "asc");
       })
       .where({ dihapus: 0 })
+      .andWhere({ m_rencana_keuangan_id: perencanaan_id })
       .andWhere({ m_sekolah_id: sekolah.id });
 
     if (search) {
@@ -3706,7 +3720,12 @@ class KeuanganController {
       jenis: jenisData,
     });
   }
-  async downloadJurnal({ response, request, auth,params:{perencanaan_id} }) {
+  async downloadJurnal({
+    response,
+    request,
+    auth,
+    params: { perencanaan_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -3735,7 +3754,7 @@ class KeuanganController {
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .whereBetween("tanggal", [`${tanggal_awal}`, `${tanggal_akhir}`])
-      .andWhere({m_rencana_keuangan_id:perencanaan_id})
+      .andWhere({ m_rencana_keuangan_id: perencanaan_id })
       .fetch();
 
     // return transaksi;
@@ -4015,7 +4034,6 @@ class KeuanganController {
 
     return namaFile;
   }
-
 }
 
 module.exports = KeuanganController;
