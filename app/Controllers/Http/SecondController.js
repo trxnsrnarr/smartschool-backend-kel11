@@ -1438,7 +1438,7 @@ class SecondController {
                 berlangsung.push(data);
               }
             } else if (tipe == "absen") {
-              if (d.waktu_absen) {
+              if (d.waktu_absen != "-") {
                 selesai.push(data);
               } else {
                 // if (
@@ -1452,7 +1452,7 @@ class SecondController {
                 // }
                 // berlangsung.push(data);
                 if (
-                  moment(d.timeline.tanggal_akhir).toDate() < moment().toDate() &&
+                  moment(d.tanggal_akhir).toDate() < moment().toDate() &&
                   !tanggalBerlangsung.includes(
                     moment(dibagikan).format("YYYY-MM-DD")
                   )
