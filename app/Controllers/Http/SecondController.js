@@ -1117,8 +1117,14 @@ class SecondController {
           await MHistoriAktivitas.create({
             jenis: "Ubah Akun",
             m_user_id: user.id,
-            awal: `Saldo : ${check.saldo} menjadi `,
-            akhir: `"${saldo}"`,
+            awal: `Saldo : ${(check.saldo).toLocaleString("id-ID", {
+              style: "currency",
+              currency: "IDR",
+            })} menjadi `,
+            akhir: `"${(saldo).toLocaleString("id-ID", {
+              style: "currency",
+              currency: "IDR",
+            })}"`,
             m_sekolah_id: sekolah.id,
             tipe: "Realisasi",
           });
