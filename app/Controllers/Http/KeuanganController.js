@@ -3695,7 +3695,7 @@ class KeuanganController {
       histori.andWhere("jenis", "like", `%${jenis}%`);
     }
 
-    histori = await histori.fetch();
+    histori = await histori.orderBy("tanggal_awal", "desc").fetch();
 
     const jenisData = await MHistoriAktivitas.query()
       .distinct("jenis")
