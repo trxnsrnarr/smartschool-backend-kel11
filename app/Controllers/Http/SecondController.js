@@ -1882,6 +1882,8 @@ class SecondController {
     const editJurnalId = editJurnal.map((d) => d.id);
     const newJurnal = jurnal.filter((d) => !d.id);
 
+    // return editJurnal;
+
     await Promise.all(
       jurnalIds
         .filter((d) => !editJurnalId.includes(d))
@@ -1905,7 +1907,7 @@ class SecondController {
           });
         }),
       editJurnal.map(async (d) => {
-        const jurnalLama = semuaJurnal.toJSON().find((e) => e.id == d);
+        const jurnalLama = semuaJurnal.toJSON().find((e) => e.id == d.id);
         const akunLama = semuaAkun
           .toJSON()
           .find((e) => e.id == jurnalLama.m_keu_akun_id);
