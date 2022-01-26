@@ -26,6 +26,10 @@ const MRencanaAktivitasTransaksi = use("App/Models/MRencanaAktivitasTransaksi");
 const TkRencanaKategoriTipeAkun = use("App/Models/TkRencanaKategoriTipeAkun");
 const MHistoriAktivitas = use("App/Models/MHistoriAktivitas");
 
+const moment = require("moment");
+require("moment/locale/id");
+moment.locale("id");
+
 const messagePostSuccess = "Data berhasil ditambahkan";
 const messageSaveSuccess = "Data berhasil disimpan";
 const messagePutSuccess = "Data berhasil diubah";
@@ -319,8 +323,12 @@ class KeuanganController {
       await MHistoriAktivitas.create({
         jenis: "Ubah Perencanaan",
         m_user_id: user.id,
-        awal: `Tanggal Akhir : ${rencanaSebelum.tanggal_akhir}`,
-        akhir: `"${tanggal_akhir}"`,
+        awal: `Tanggal Akhir : ${moment(rencanaSebelum.tanggal_akhir).format(
+          "dddd, DD MMM YYYY"
+        )} menjadi `,
+        akhir: `"${moment(tanggal_akhir).format(
+          "dddd, DD MMM YYYY"
+        )}"`,
         m_sekolah_id: sekolah.id,
         tipe: "perencanaan",
       });
@@ -330,8 +338,12 @@ class KeuanganController {
       await MHistoriAktivitas.create({
         jenis: "Ubah Perencanaan",
         m_user_id: user.id,
-        awal: `Tanggal Awal : ${rencanaSebelum.tanggal_awal}`,
-        akhir: `"${tanggal_awal}"`,
+        awal: `Tanggal Awal : ${moment(rencanaSebelum.tanggal_awal).format(
+          "dddd, DD MMM YYYY"
+        )} menjadi `,
+        akhir: `"${moment(tanggal_awal).format(
+          "dddd, DD MMM YYYY"
+        )}"`,
         m_sekolah_id: sekolah.id,
         tipe: "perencanaan",
       });
@@ -686,7 +698,7 @@ class KeuanganController {
       await MHistoriAktivitas.create({
         jenis: "Ubah Rencana Anggaran",
         m_user_id: user.id,
-        awal: `nomor: ${transaksi.nomor} menjadi`,
+        awal: `Nomor: ${transaksi.nomor} menjadi`,
         akhir: `"${nomor}"`,
         m_sekolah_id: sekolah.id,
         tipe: "Perencanaan",
@@ -1921,6 +1933,9 @@ class KeuanganController {
       return response.unprocessableEntity(validation.messages());
     }
 
+    const kategoriNeraca = await MRencanaKategoriNeraca.query()
+      .where({ id: kategori_id })
+      .first();
     const kategori = await MRencanaKategoriNeraca.query()
       .where({ id: kategori_id })
       .update({
@@ -1934,9 +1949,6 @@ class KeuanganController {
       });
     }
 
-    const kategoriNeraca = await MRencanaKategoriNeraca.query()
-      .where({ id: kategori_id })
-      .first();
 
     const rencana = await MRencanaKeuangan.query()
       .where({ id: kategoriNeraca.m_rencana_keuangan_id })

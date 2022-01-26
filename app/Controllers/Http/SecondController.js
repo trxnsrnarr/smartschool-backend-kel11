@@ -1117,8 +1117,14 @@ class SecondController {
           await MHistoriAktivitas.create({
             jenis: "Ubah Akun",
             m_user_id: user.id,
-            awal: `Saldo : ${check.saldo} menjadi `,
-            akhir: `"${saldo}"`,
+            awal: `Saldo : ${check.saldo.toLocaleString("id-ID", {
+              style: "currency",
+              currency: "IDR",
+            })} menjadi `,
+            akhir: `"${saldo.toLocaleString("id-ID", {
+              style: "currency",
+              currency: "IDR",
+            })}"`,
             m_sekolah_id: sekolah.id,
             tipe: "Realisasi",
           });
@@ -1168,7 +1174,7 @@ class SecondController {
         jenis: "Ubah Akun",
         m_user_id: user.id,
         awal: `Nama : ${akun.nama} menjadi`,
-        akhir: nama,
+        akhir: `"${nama}"`,
         m_sekolah_id: sekolah.id,
         tipe: "Realisasi",
       });
@@ -1178,7 +1184,7 @@ class SecondController {
         jenis: "Ubah Akun",
         m_user_id: user.id,
         awal: `Kode : ${akun.kode} menjadi`,
-        akhir: kode,
+        akhir: `"${kode}"`,
         m_sekolah_id: sekolah.id,
         tipe: "Realisasi",
       });
@@ -1876,6 +1882,8 @@ class SecondController {
     const editJurnalId = editJurnal.map((d) => d.id);
     const newJurnal = jurnal.filter((d) => !d.id);
 
+    // return editJurnal;
+
     await Promise.all(
       jurnalIds
         .filter((d) => !editJurnalId.includes(d))
@@ -1899,7 +1907,7 @@ class SecondController {
           });
         }),
       editJurnal.map(async (d) => {
-        const jurnalLama = semuaJurnal.toJSON().find((e) => e.id == d);
+        const jurnalLama = semuaJurnal.toJSON().find((e) => e.id == d.id);
         const akunLama = semuaAkun
           .toJSON()
           .find((e) => e.id == jurnalLama.m_keu_akun_id);
@@ -1916,7 +1924,7 @@ class SecondController {
           await MHistoriAktivitas.create({
             jenis: "Ubah Transaksi",
             m_user_id: user.id,
-            awal: `Jurnal Umum - Nama Akun: ${akunLama.nama} menjadi`,
+            awal: `Jurnal Umum - Nama Akun: ${akunLama.nama} menjadi `,
             akhir: `"${akunBaru.nama}"`,
             m_sekolah_id: sekolah.id,
             tipe: "Realisasi",
@@ -1926,8 +1934,16 @@ class SecondController {
           await MHistoriAktivitas.create({
             jenis: "Ubah Transaksi",
             m_user_id: user.id,
-            awal: `Jurnal Umum - Nama Akun - ${akunBaru.nama} : ${jurnalLama.jenis} ${akunLama.nama} menjadi`,
-            akhir: `"${d.jenis}${akunBaru.nama}"`,
+            awal: `Jurnal Umum - Nama Akun - ${akunBaru.nama} : ${
+              jurnalLama.jenis
+            } ${jurnalLama.saldo.toLocaleString("id-ID", {
+              style: "currency",
+              currency: "IDR",
+            })} menjadi `,
+            akhir: `"${d.jenis} ${d.saldo.toLocaleString("id-ID", {
+              style: "currency",
+              currency: "IDR",
+            })}"`,
             m_sekolah_id: sekolah.id,
             tipe: "Realisasi",
           });
@@ -1969,7 +1985,7 @@ class SecondController {
       await MHistoriAktivitas.create({
         jenis: "Ubah Transaksi",
         m_user_id: user.id,
-        awal: `nomor: ${transaksi.nomor} menjadi`,
+        awal: `Nomor: ${transaksi.nomor} menjadi`,
         akhir: `"${nomor}"`,
         m_sekolah_id: sekolah.id,
         tipe: "Realisasi",
