@@ -583,7 +583,15 @@ class MainController {
     page = page ? page : 1;
 
     const res = MSekolah.query()
-      .select("id", "nama", "gpds", "trial", "jumlah_ujian", "jumlah_topik", 'domain')
+      .select(
+        "id",
+        "nama",
+        "gpds",
+        "trial",
+        "jumlah_ujian",
+        "jumlah_topik",
+        "domain"
+      )
       .with("ta", (builder) => {
         builder
           .select("id", "m_sekolah_id")
@@ -29660,7 +29668,6 @@ class MainController {
     return namaFile;
   }
 
- 
   // ====================================== Surel Service ==========================================
 
   async getSurel({ response, request, auth }) {
@@ -30833,7 +30840,7 @@ class MainController {
     const fiturSekolah = await MFiturSekolah.query()
       .where({ m_sekolah_id: sekolah.id })
       .first();
-    const fitur = JSON.parse(fiturSekolah.fitur || "{}")
+    const fitur = JSON.parse(fiturSekolah.fitur || "{}");
 
     const rules = {
       kode_barang: "required",
@@ -30939,7 +30946,7 @@ class MainController {
     const fiturSekolah = await MFiturSekolah.query()
       .where({ m_sekolah_id: sekolah.id })
       .first();
-    const fitur = JSON.parse(fiturSekolah.fitur || "{}")
+    const fitur = JSON.parse(fiturSekolah.fitur || "{}");
     const rules = {
       kode_barang: "required",
       nama: "required",
@@ -34705,7 +34712,8 @@ class MainController {
               foto_masuk: anggota.user
                 ? anggota.user.absen
                   ? anggota.user.absen.length
-                    ? anggota.user.absen[0].foto_masuk
+                    ? `https://server1.smarteschool.net/fr/${anggota.user.absen[0].foto_masuk_local}.jpeg` ||
+                      anggota.user.absen[0].foto_masuk
                     : "-"
                   : "-"
                 : "-",
@@ -34719,7 +34727,8 @@ class MainController {
               foto_pulang: anggota.user
                 ? anggota.user.absen
                   ? anggota.user.absen.length
-                    ? anggota.user.absen[0].foto_pulang
+                    ? `https://server1.smarteschool.net/fr/${anggota.user.absen[0].foto_pulang_local}.jpeg` ||
+                      anggota.user.absen[0].foto_pulang
                     : "-"
                   : "-"
                 : "-",
@@ -38629,18 +38638,18 @@ class MainController {
     // const surat = await TkSuratKeputusanUser
 
     const surat = await TkSuratKeputusanUser.query()
-      .with("surat",(builder)=>{
-        builder.with("tahun")
+      .with("surat", (builder) => {
+        builder.with("tahun");
       })
-      .where({m_user_id :userAuthor.id})
-      .where({dihapus:0})
+      .where({ m_user_id: userAuthor.id })
+      .where({ dihapus: 0 })
       .fetch();
 
     return response.ok({
       userAuthor,
       bukuKerja: { rpp, silabus, perangkat, modul, atp, cp, lbg },
       sekolah,
-      surat
+      surat,
     });
   }
 
