@@ -325,7 +325,7 @@ class KeuanganController {
         m_user_id: user.id,
         awal: `Tanggal Akhir : ${moment(rencanaSebelum.tanggal_akhir).format(
           "dddd, DD MMM YYYY"
-        )}`,
+        )} menjadi `,
         akhir: `"${moment(tanggal_akhir).format(
           "dddd, DD MMM YYYY"
         )}"`,
@@ -340,7 +340,7 @@ class KeuanganController {
         m_user_id: user.id,
         awal: `Tanggal Awal : ${moment(rencanaSebelum.tanggal_awal).format(
           "dddd, DD MMM YYYY"
-        )}`,
+        )} menjadi `,
         akhir: `"${moment(tanggal_awal).format(
           "dddd, DD MMM YYYY"
         )}"`,
