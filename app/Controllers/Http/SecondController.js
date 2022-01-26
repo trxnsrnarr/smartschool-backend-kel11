@@ -1438,38 +1438,19 @@ class SecondController {
                 berlangsung.push(data);
               }
             } else if (tipe == "absen") {
-              if (d.waktu_absen != "-") {
+              if (d.waktu_absen) {
                 selesai.push(data);
               } else {
-                // if (
-                //   tanggalBerlangsung.includes(
-                //     moment(dibagikan).format("YYYY-MM-DD")
-                //   )
-                // ) {
-                //   tanggalBerlangsung.push(
-                //     moment(dibagikan).format("YYYY-MM-DD")
-                //   );
-                // }
-                // berlangsung.push(data);
                 if (
-                  moment(d.tanggal_akhir).toDate() < moment().toDate() &&
-                  !tanggalBerlangsung.includes(
+                  tanggalBerlangsung.includes(
                     moment(dibagikan).format("YYYY-MM-DD")
                   )
                 ) {
-                  selesai.push(data);
-                } else {
-                  if (
-                    !tanggalBerlangsung.includes(
-                      moment(dibagikan).format("YYYY-MM-DD")
-                    )
-                  ) {
-                    tanggalBerlangsung.push(
-                      moment(dibagikan).format("YYYY-MM-DD")
-                    );
-                  }
-                  berlangsung.push(data);
+                  tanggalBerlangsung.push(
+                    moment(dibagikan).format("YYYY-MM-DD")
+                  );
                 }
+                berlangsung.push(data);
               }
             } else if (tipe == "materi") {
               if (d.timeline.materi[0].__meta__.totalKesimpulan > 0) {
@@ -5754,7 +5735,6 @@ class SecondController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const ta = await this.getTAAktif(sekolah);
     const user = await auth.getUser();
 
     let { nama, file, user_id } = request.post();
@@ -5781,7 +5761,6 @@ class SecondController {
       file,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
-      m_ta_id:ta.id
     });
 
     if (user_id.length) {
