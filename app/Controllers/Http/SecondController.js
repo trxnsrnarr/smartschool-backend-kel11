@@ -1039,7 +1039,7 @@ class SecondController {
         });
     }
     await MHistoriAktivitas.create({
-      jenis: "Tambah Akun",
+      jenis: "Buat Akun",
       m_user_id: user.id,
       akhir: nama,
       m_sekolah_id: sekolah.id,
