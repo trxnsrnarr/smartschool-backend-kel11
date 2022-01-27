@@ -329,7 +329,9 @@ class KeuanganController {
       });
     }
 
-    if (rencanaSebelum.tanggal_akhir != tanggal_akhir) {
+    if (moment(rencanaSebelum.tanggal_akhir).format(
+      "dddd, DD MMM YYYY"
+    ) != moment(tanggal_akhir).format("dddd, DD MMM YYYY")) {
       await MHistoriAktivitas.create({
         jenis: "Ubah Perencanaan",
         m_user_id: user.id,
@@ -342,7 +344,9 @@ class KeuanganController {
       });
     }
 
-    if (rencanaSebelum.tanggal_awal != tanggal_awal) {
+    if (moment(rencanaSebelum.tanggal_awal).format(
+      "dddd, DD MMM YYYY"
+    ) != moment(tanggal_awal).format("dddd, DD MMM YYYY")) {
       await MHistoriAktivitas.create({
         jenis: "Ubah Perencanaan",
         m_user_id: user.id,
@@ -3742,7 +3746,7 @@ class KeuanganController {
       histori.andWhere("jenis", "like", `%${jenis}%`);
     }
 
-    histori = await histori.orderBy("created_at", "desc").fetch();
+    histori = await histori.orderBy("id", "desc").fetch();
 
     const jenisData = await MHistoriAktivitas.query()
       .distinct("jenis")
