@@ -1935,7 +1935,7 @@ class SecondController {
           await MHistoriAktivitas.create({
             jenis: "Ubah Transaksi",
             m_user_id: user.id,
-            awal: `Jurnal Umum - Nama Akun: ${akunLama.nama} menjadi `,
+            awal: `Jurnal Umum - Nama Akun : ${akunLama.nama} menjadi `,
             akhir: `"${akunBaru.nama}"`,
             m_sekolah_id: sekolah.id,
             tipe: "Realisasi",
@@ -1999,7 +1999,7 @@ class SecondController {
       await MHistoriAktivitas.create({
         jenis: "Ubah Transaksi",
         m_user_id: user.id,
-        awal: `Nomor: ${transaksi.nomor} menjadi`,
+        awal: `Nomor : ${transaksi.nomor} menjadi`,
         akhir: `"${nomor}"`,
         m_sekolah_id: sekolah.id,
         tipe: "Realisasi",
@@ -2012,7 +2012,7 @@ class SecondController {
       await MHistoriAktivitas.create({
         jenis: "Ubah Transaksi",
         m_user_id: user.id,
-        awal: `Tanggal: ${moment(transaksi.tanggal).format(
+        awal: `Tanggal : ${moment(transaksi.tanggal).format(
           "dddd, DD MMM YYYY"
         )} menjadi`,
         akhir: `"${moment(tanggal).format("dddd, DD MMM YYYY")}"`,
@@ -2024,7 +2024,7 @@ class SecondController {
       await MHistoriAktivitas.create({
         jenis: "Ubah Transaksi",
         m_user_id: user.id,
-        awal: `Judul: ${transaksi.nama} menjadi`,
+        awal: `Judul : ${transaksi.nama} menjadi`,
         akhir: `"${nama}"`,
         m_sekolah_id: sekolah.id,
         tipe: "Realisasi",
@@ -7053,7 +7053,7 @@ class SecondController {
       jenis: "Buat Template Laporan",
       tipe: "Realisasi",
       m_user_id: user.id,
-      awal: `Rumus Arus Kas - Saldo Kas Awal: `,
+      awal: `Rumus Arus Kas - Saldo Kas Awal : `,
       akhir: `${rumusFix}`,
       bawah: `Laporan Arus Kas`,
       m_sekolah_id: sekolah.id,

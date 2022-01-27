@@ -39,14 +39,15 @@ const messageForbidden = "Dilarang, anda bukan seorang admin";
 const messageEmailSuccess = "Data berhasil dikirim ke email";
 const pesanSudahDitambahkan = "Data sudah ditambahkan";
 function titleCase(str) {
-  var splitStr = str.toLowerCase().split(' ');
+  var splitStr = str.toLowerCase().split(" ");
   for (var i = 0; i < splitStr.length; i++) {
-      // You do not need to check if i is larger than splitStr length, as your for does that for you
-      // Assign it back to the array
-      splitStr[i] = splitStr[i].charAt(0).toUpperCase() + splitStr[i].substring(1);     
+    // You do not need to check if i is larger than splitStr length, as your for does that for you
+    // Assign it back to the array
+    splitStr[i] =
+      splitStr[i].charAt(0).toUpperCase() + splitStr[i].substring(1);
   }
   // Directly return the joined string
-  return splitStr.join(' '); 
+  return splitStr.join(" ");
 }
 class KeuanganController {
   async getSekolahByDomain(domain) {
@@ -335,9 +336,7 @@ class KeuanganController {
         awal: `Tanggal Akhir : ${moment(rencanaSebelum.tanggal_akhir).format(
           "dddd, DD MMM YYYY"
         )} menjadi `,
-        akhir: `"${moment(tanggal_akhir).format(
-          "dddd, DD MMM YYYY"
-        )}"`,
+        akhir: `"${moment(tanggal_akhir).format("dddd, DD MMM YYYY")}"`,
         m_sekolah_id: sekolah.id,
         tipe: "perencanaan",
       });
@@ -350,9 +349,7 @@ class KeuanganController {
         awal: `Tanggal Awal : ${moment(rencanaSebelum.tanggal_awal).format(
           "dddd, DD MMM YYYY"
         )} menjadi `,
-        akhir: `"${moment(tanggal_awal).format(
-          "dddd, DD MMM YYYY"
-        )}"`,
+        akhir: `"${moment(tanggal_awal).format("dddd, DD MMM YYYY")}"`,
         m_sekolah_id: sekolah.id,
         tipe: "perencanaan",
       });
@@ -649,7 +646,7 @@ class KeuanganController {
           await MHistoriAktivitas.create({
             jenis: "Ubah Rencana Anggaran",
             m_user_id: user.id,
-            awal: `Jurnal Umum - Nama Akun: ${akunLama.nama} menjadi`,
+            awal: `Jurnal Umum - Nama Akun : ${akunLama.nama} menjadi`,
             akhir: `"${akunBaru.nama}"`,
             bawah: `${rencana.nama}`,
             m_sekolah_id: sekolah.id,
@@ -658,19 +655,17 @@ class KeuanganController {
           });
         }
         if (d.saldo != jurnalLama.saldo || d.jenis != jurnalLama.jenis) {
-        
           const saldoLama = `${jurnalLama.saldo}`.replace(
             /\B(?=(\d{3})+(?!\d))/g,
             "."
-          )
-          const saldoBaru = `${d.saldo}`.replace(
-            /\B(?=(\d{3})+(?!\d))/g,
-            "."
-          )
+          );
+          const saldoBaru = `${d.saldo}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
           await MHistoriAktivitas.create({
             jenis: "Ubah Rencana Anggaran",
             m_user_id: user.id,
-            awal: `Jurnal Umum - Nama Akun - ${akunBaru.nama} : ${titleCase(jurnalLama.jenis)} Rp${saldoLama} menjadi`,
+            awal: `Jurnal Umum - Nama Akun - ${akunBaru.nama} : ${titleCase(
+              jurnalLama.jenis
+            )} Rp${saldoLama} menjadi`,
             akhir: `"${titleCas(d.jenis)} Rp${saldoBaru}"`,
             bawah: `${rencana.nama}`,
             m_sekolah_id: sekolah.id,
@@ -716,7 +711,7 @@ class KeuanganController {
       await MHistoriAktivitas.create({
         jenis: "Ubah Rencana Anggaran",
         m_user_id: user.id,
-        awal: `Nomor: ${transaksi.nomor} menjadi`,
+        awal: `Nomor : ${transaksi.nomor} menjadi`,
         akhir: `"${nomor}"`,
         m_sekolah_id: sekolah.id,
         tipe: "Perencanaan",
@@ -724,14 +719,17 @@ class KeuanganController {
         alamat_id: transaksi.m_rencana_keuangan_id,
       });
     }
-    if (tanggal != transaksi.tanggal) {
+    if (
+      moment(tanggal).format("MMMM YYYY") !=
+      moment(transaksi.tanggal).format("MMMM YYYY")
+    ) {
       await MHistoriAktivitas.create({
         jenis: "Ubah Rencana Anggaran",
         m_user_id: user.id,
-        awal: `Tanggal: ${moment(transaksi.tanggal).format(
-          "dddd, DD MMM YYYY"
+        awal: `Tanggal : ${moment(transaksi.tanggal).format(
+          "MMMM YYYY"
         )} menjadi`,
-        akhir: `"${moment(tanggal).format("dddd, DD MMM YYYY")}"`,
+        akhir: `"${moment(tanggal).format("MMMM YYYY")}"`,
         m_sekolah_id: sekolah.id,
         tipe: "Perencanaan",
         bawah: `${rencana.nama}`,
@@ -742,7 +740,7 @@ class KeuanganController {
       await MHistoriAktivitas.create({
         jenis: "Ubah Rencana Anggaran",
         m_user_id: user.id,
-        awal: `Judul: ${transaksi.nama} menjadi`,
+        awal: `Judul : ${transaksi.nama} menjadi`,
         akhir: `"${nama}"`,
         m_sekolah_id: sekolah.id,
         tipe: "Perencanaan",
@@ -1967,7 +1965,6 @@ class KeuanganController {
       });
     }
 
-
     const rencana = await MRencanaKeuangan.query()
       .where({ id: kategoriNeraca.m_rencana_keuangan_id })
       .first();
@@ -1977,7 +1974,9 @@ class KeuanganController {
         jenis: "Ubah Template Laporan",
         tipe: "Perencanaan",
         m_user_id: user.id,
-        awal: `${titleCase(kategoriNeraca.tipe)} - Warna : ${kategoriNeraca.warna} menjadi `,
+        awal: `${titleCase(kategoriNeraca.tipe)} - Warna : ${
+          kategoriNeraca.warna
+        } menjadi `,
         akhir: `"${warna}"`,
         bawah: `${rencana.nama} - Laporan Neraca`,
         m_sekolah_id: sekolah.id,
@@ -1989,7 +1988,9 @@ class KeuanganController {
         jenis: "Ubah Template Laporan",
         tipe: "Perencanaan",
         m_user_id: user.id,
-        awal: `${titleCase(kategoriNeraca.tipe)} - Nama : ${kategoriNeraca.nama} menjadi `,
+        awal: `${titleCase(kategoriNeraca.tipe)} - Nama : ${
+          kategoriNeraca.nama
+        } menjadi `,
         akhir: `"${nama}"`,
         bawah: `${rencana.nama} - Laporan Neraca`,
         m_sekolah_id: sekolah.id,
@@ -2168,7 +2169,9 @@ class KeuanganController {
         jenis: "Ubah Template Laporan",
         tipe: "Perencanaan",
         m_user_id: user.id,
-        awal: `${titleCase(kategoriNeraca.tipe)} - ${kategoriNeraca.nama} : ${akunSebelum.nama} menjadi `,
+        awal: `${titleCase(kategoriNeraca.tipe)} - ${kategoriNeraca.nama} : ${
+          akunSebelum.nama
+        } menjadi `,
         akhir: `"${akun.nama}"`,
         bawah: `${rencana.nama} - Laporan Neraca`,
         m_sekolah_id: sekolah.id,
@@ -3412,7 +3415,7 @@ class KeuanganController {
       jenis: "Buat Template Laporan",
       tipe: "Perencanaan",
       m_user_id: user.id,
-      awal: `Rumus Arus Kas - Saldo Kas Awal: `,
+      awal: `Rumus Arus Kas - Saldo Kas Awal : `,
       akhir: `${rumusFix}`,
       bawah: `${rencana.nama} - Laporan Arus Kas`,
       m_sekolah_id: sekolah.id,
