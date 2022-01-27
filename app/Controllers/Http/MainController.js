@@ -8359,6 +8359,7 @@ class MainController {
       waktu_pembagian,
       tanggal_pengumpulan,
       waktu_pengumpulan,
+      show_nilai,
       kkm,
       lampiran,
       link,
@@ -8395,6 +8396,7 @@ class MainController {
         : tanggal_pengumpulan,
       waktu_pengumpulan,
       kkm,
+      show_nilai,
       lampiran: lampiran.toString(),
       link: link.toString(),
       draft,
@@ -8632,6 +8634,7 @@ class MainController {
       tanggal_pengumpulan,
       waktu_pengumpulan,
       kkm,
+      show_nilai,
       lampiran,
       link,
       draft,
@@ -8657,6 +8660,7 @@ class MainController {
         tanggal_pengumpulan: tanggal_pengumpulan
           ? moment(tanggal_pengumpulan).add(7, "hours").format("YYYY-MM-DD")
           : tanggal_pengumpulan,
+        show_nilai,
         waktu_pengumpulan,
         kkm,
         lampiran: lampiran.toString(),
