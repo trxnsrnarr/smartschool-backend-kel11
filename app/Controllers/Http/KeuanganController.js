@@ -363,7 +363,7 @@ class KeuanganController {
       await MHistoriAktivitas.create({
         jenis: "Ubah Perencanaan",
         m_user_id: user.id,
-        awal: `Judul : ${rencanaSebelum.nama}`,
+        awal: `Judul : ${rencanaSebelum.nama} menjadi `,
         akhir: `"${nama}"`,
         m_sekolah_id: sekolah.id,
         tipe: "perencanaan",
