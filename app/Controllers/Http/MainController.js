@@ -3886,6 +3886,8 @@ class MainController {
       sertifikasi_keahlian,
       purnakarya,
       pengalaman,
+      alamat,
+      alamat_perusahaan,
       deskripsi,
     } = request.post();
     const rules = {
@@ -3909,35 +3911,106 @@ class MainController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const user = await User.create({
-      nama,
-      whatsapp,
-      email,
-      gender,
-      role: "alumni",
-      m_sekolah_id: sekolah.id,
-      tanggal_lahir,
-      dihapus: 0,
-    });
+    const check = await User.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ whatsapp })
+      .where({ role: "alumni" })
+      .where({ dihapus: 0 })
+      .first();
+
+    let user;
+    if(check) {
+      await User.query()
+        .where({ id: check.id })
+        .update({
+          nama,
+          whatsapp,
+          email,
+          gender,
+          role: "alumni",
+          m_sekolah_id: sekolah.id,
+          tanggal_lahir,
+          dihapus: 0,
+        })
+      user = check;
+    } else {
+      user = await User.create({
+        nama,
+        whatsapp,
+        email,
+        gender,
+        role: "alumni",
+        m_sekolah_id: sekolah.id,
+        tanggal_lahir,
+        dihapus: 0,
+      });
+    }
     // ini sudah buffer
-    const alumni = await MAlumni.create({
-      jurusan,
-      tahun_masuk,
-      pekerjaan,
-      kantor,
-      sektor_industri,
-      sekolah_lanjutan: sekolah_lanjutan.length
-        ? sekolah_lanjutan.toString()
-        : null,
-      sertifikasi_keahlian: sertifikasi_keahlian.length
-        ? sertifikasi_keahlian.toString()
-        : null,
-      pengalaman: pengalaman.length ? pengalaman.toString() : null,
-      purnakarya,
-      deskripsi: htmlEscaper.escape(deskripsi),
-      dihapus: 0,
-      m_user_id: user.id,
-    });
+    const checkAlumni = await MAlumni.query()
+      .where({ m_user_id: user.id })
+      .where({ dihapus: 0 })
+      .first();
+    if (checkAlumni) {
+      await MAlumni.query()
+        .where({ id : checkAlumni.id })
+        .update({
+          jurusan,
+          tahun_masuk,
+          pekerjaan,
+          kantor,
+          sektor_industri,
+          sekolah_lanjutan: sekolah_lanjutan.length
+            ? sekolah_lanjutan.toString()
+            : null,
+          sertifikasi_keahlian: sertifikasi_keahlian.length
+            ? sertifikasi_keahlian.toString()
+            : null,
+          pengalaman: pengalaman.length ? pengalaman.toString() : null,
+          purnakarya,
+          deskripsi: htmlEscaper.escape(deskripsi),
+          alamat_perusahaan,
+          dihapus: 0,
+          m_user_id: user.id,
+        })
+    } else {
+      const alumni = await MAlumni.create({
+        jurusan,
+        tahun_masuk,
+        pekerjaan,
+        kantor,
+        sektor_industri,
+        sekolah_lanjutan: sekolah_lanjutan.length
+          ? sekolah_lanjutan.toString()
+          : null,
+        sertifikasi_keahlian: sertifikasi_keahlian.length
+          ? sertifikasi_keahlian.toString()
+          : null,
+        pengalaman: pengalaman.length ? pengalaman.toString() : null,
+        purnakarya,
+        deskripsi: htmlEscaper.escape(deskripsi),
+        alamat_perusahaan,
+        dihapus: 0,
+        m_user_id: user.id,
+      });
+    }
+
+    const checkProfil = await MProfilUser.query()
+      .where({ m_user_id: user.id })
+      .where({ dihapus: 0 })
+      .first();
+    if (checkProfil) {
+      await MProfilUser.query()
+        .where({ id: checkProfil.id })
+        .update({
+          alamat
+        })
+    } else {
+      await MProfilUser.create({
+        alamat,
+        dihapus: 0,
+        m_user_id: user.id,
+      })
+    }
 
     return response.ok({
       message: messagePostSuccess,
