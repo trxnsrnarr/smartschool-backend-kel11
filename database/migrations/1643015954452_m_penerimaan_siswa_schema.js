@@ -38,7 +38,7 @@ class MPenerimaanSiswaSchema extends Schema {
         .onDelete("cascade")
         .onUpdate("cascade");
       table.boolean("dihapus").defaultTo(0);
-      table.table.timestamps();
+      table.timestamps();
     });
   }
 
