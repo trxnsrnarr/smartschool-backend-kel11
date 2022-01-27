@@ -132,6 +132,9 @@ class User extends Model {
   anggotaRombel() {
     return this.belongsTo("App/Models/MAnggotaRombel", "id", "m_user_id");
   }
+  semuaAnggotaRombel() {
+    return this.hasMany("App/Models/MAnggotaRombel", "id", "m_user_id");
+  }
   anggotaEkskul() {
     return this.hasMany("App/Models/MAnggotaEkskul", "id", "m_user_id");
   }
