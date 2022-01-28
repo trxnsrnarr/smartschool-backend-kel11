@@ -4786,6 +4786,9 @@ class SecondController {
       return response.unprocessableEntity(validation.messages());
     }
 
+    const kategoriNeraca = await MKeuKategoriNeraca.query()
+      .where({ id: kategori_id })
+      .first();
     const kategori = await MKeuKategoriNeraca.query()
       .where({ id: kategori_id })
       .update({
@@ -4793,9 +4796,6 @@ class SecondController {
         warna,
       });
 
-    const kategoriNeraca = await MKeuKategoriNeraca.query()
-      .where({ id: kategori_id })
-      .first();
 
     if (!kategori) {
       return response.notFound({
@@ -5194,6 +5194,9 @@ class SecondController {
       return response.unprocessableEntity(validation.messages());
     }
 
+    const kategoriLaba = await MKeuKategoriLabaRugi.query()
+      .where({ id: kategori_id })
+      .first();
     const kategori = await MKeuKategoriLabaRugi.query()
       .where({ id: kategori_id })
       .update({
@@ -5206,9 +5209,6 @@ class SecondController {
         message: messageNotFound,
       });
     }
-    const kategoriLaba = await MKeuKategoriLabaRugi.query()
-      .where({ id: kategori_id })
-      .first();
 
     if (warna != kategoriLaba.warna) {
       await MHistoriAktivitas.create({
@@ -6287,6 +6287,9 @@ class SecondController {
       return response.unprocessableEntity(validation.messages());
     }
 
+    const kategoriArusKas = await MKeuKategoriArusKas.query()
+      .where({ id: kategori_id })
+      .first();
     const kategori = await MKeuKategoriArusKas.query()
       .where({ id: kategori_id })
       .update({
@@ -6300,9 +6303,6 @@ class SecondController {
       });
     }
 
-    const kategoriArusKas = await MKeuKategoriArusKas.query()
-      .where({ id: kategori_id })
-      .first();
 
     if (warna != kategoriArusKas.warna) {
       await MHistoriAktivitas.create({
