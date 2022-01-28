@@ -5319,7 +5319,7 @@ class SecondController {
       .where({ id: m_keu_kategori_laba_rugi_id })
       .first();
 
-    const akun = await MKeuAkun.qeury().where({ id: m_keu_akun_id }).first();
+    const akun = await MKeuAkun.query().where({ id: m_keu_akun_id }).first();
 
     await MHistoriAktivitas.create({
       jenis: "Buat Template Laporan",
@@ -5385,7 +5385,7 @@ class SecondController {
         .where({ id: labaSebelum.m_keu_akun_id })
         .first();
 
-      const akun = await MKeuAkun.qeury().where({ id: m_keu_akun_id }).first();
+      const akun = await MKeuAkun.query().where({ id: m_keu_akun_id }).first();
 
       await MHistoriAktivitas.create({
         jenis: "Ubah Template Laporan",
@@ -5433,7 +5433,7 @@ class SecondController {
       .where({ id: laba.m_keu_kategori_laba_rugi_id })
       .first();
 
-    const akun = await MKeuAkun.qeury()
+    const akun = await MKeuAkun.query()
       .where({ id: laba.m_keu_akun_id })
       .first();
 
