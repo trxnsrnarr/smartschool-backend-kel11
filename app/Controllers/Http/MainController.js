@@ -3919,19 +3919,17 @@ class MainController {
       .first();
 
     let user;
-    if(check) {
-      await User.query()
-        .where({ id: check.id })
-        .update({
-          nama,
-          whatsapp,
-          email,
-          gender,
-          role: "alumni",
-          m_sekolah_id: sekolah.id,
-          tanggal_lahir,
-          dihapus: 0,
-        })
+    if (check) {
+      await User.query().where({ id: check.id }).update({
+        nama,
+        whatsapp,
+        email,
+        gender,
+        role: "alumni",
+        m_sekolah_id: sekolah.id,
+        tanggal_lahir,
+        dihapus: 0,
+      });
       user = check;
     } else {
       user = await User.create({
@@ -3952,7 +3950,7 @@ class MainController {
       .first();
     if (checkAlumni) {
       await MAlumni.query()
-        .where({ id : checkAlumni.id })
+        .where({ id: checkAlumni.id })
         .update({
           jurusan,
           tahun_masuk,
@@ -3971,7 +3969,7 @@ class MainController {
           alamat_perusahaan,
           dihapus: 0,
           m_user_id: user.id,
-        })
+        });
     } else {
       const alumni = await MAlumni.create({
         jurusan,
@@ -3999,17 +3997,15 @@ class MainController {
       .where({ dihapus: 0 })
       .first();
     if (checkProfil) {
-      await MProfilUser.query()
-        .where({ id: checkProfil.id })
-        .update({
-          alamat
-        })
+      await MProfilUser.query().where({ id: checkProfil.id }).update({
+        alamat,
+      });
     } else {
       await MProfilUser.create({
         alamat,
         dihapus: 0,
         m_user_id: user.id,
-      })
+      });
     }
 
     return response.ok({
@@ -7696,6 +7692,9 @@ class MainController {
     }
 
     const tingkatData = await MPenghargaan.query()
+      .withCount("prestasi as total", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .fetch();
@@ -7723,6 +7722,43 @@ class MainController {
       prestasi,
       tingkat: tingkatData,
       user: user,
+    });
+  }
+
+  async detailPrestasi({ response, request, auth, params: { prestasi_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let prestasi;
+
+    prestasi = await MPrestasi.query()
+      .with("user", (builder) => {
+        builder.select("id", "nama");
+      })
+      .with("tingkatPrestasi")
+      .with("tahun")
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .where({ id: prestasi_id })
+      .first();
+
+    const tingkatData = await MPenghargaan.query()
+      .withCount("prestasi as total", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+
+    return response.ok({
+      prestasi,
+      tingkat: tingkatData,
     });
   }
 

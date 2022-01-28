@@ -465,6 +465,7 @@ Route.delete("/bab/:bab_id", "MainController.deleteBab");
 // prestasi
 Route.get("/prestasi", "MainController.getPrestasi");
 Route.get("/prestasi1", "MainController.getPrestasi1");
+Route.get("/prestasi1/:prestasi_id", "MainController.detailPrestasi");
 Route.post("/prestasi", "MainController.postPrestasi");
 Route.put("/prestasi/:prestasi_id", "MainController.putPrestasi");
 Route.delete("/prestasi/:prestasi_id", "MainController.deletePrestasi");
@@ -1441,6 +1442,9 @@ Route.delete(
   "/surat-keputusan/:surat_id",
   "SecondController.deleteSuratKeputusan"
 );
+
+// Dinas
+Route.get("/dashboard/dinas", "DinasController.getDashboard");
 
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
