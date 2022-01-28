@@ -5381,9 +5381,10 @@ class SecondController {
         .where({ id: labaSebelum.m_keu_kategori_laba_rugi_id })
         .first();
 
-      const akunSebelum = await MKeuAkun.qeury()
+      const akunSebelum = await MKeuAkun.query()
         .where({ id: labaSebelum.m_keu_akun_id })
         .first();
+
       const akun = await MKeuAkun.qeury().where({ id: m_keu_akun_id }).first();
 
       await MHistoriAktivitas.create({
