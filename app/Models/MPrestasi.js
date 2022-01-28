@@ -14,6 +14,9 @@ class MPrestasi extends Model {
   tingkatPrestasi() {
     return this.belongsTo("App/Models/MPenghargaan", "tingkat", "id");
   }
+  tahun() {
+    return this.belongsTo("App/Models/Mta");
+  }
   getLampiran(lampiran) {
     return lampiran ? lampiran.split(",") : [];
   }
