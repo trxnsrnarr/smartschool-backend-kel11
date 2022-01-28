@@ -4746,7 +4746,7 @@ class SecondController {
       jenis: "Buat Template Laporan",
       tipe: "Realisasi",
       m_user_id: user.id,
-      awal: `${tipe} : `,
+      awal: `${titleCase(tipe)} : `,
       akhir: `${nama}`,
       bawah: `Laporan Neraca`,
       m_sekolah_id: sekolah.id,
