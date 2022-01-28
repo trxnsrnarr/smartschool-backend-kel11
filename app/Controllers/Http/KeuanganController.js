@@ -1056,6 +1056,10 @@ class KeuanganController {
       return response.unprocessableEntity(validation.messages());
     }
 
+    const kategoriLaba = await MRencanaKategoriLabaRugi.query()
+      .where({ id: kategori_id })
+      .first();
+      
     const kategori = await MRencanaKategoriLabaRugi.query()
       .where({ id: kategori_id })
       .update({
@@ -1069,9 +1073,6 @@ class KeuanganController {
       });
     }
 
-    const kategoriLaba = await MRencanaKategoriLabaRugi.query()
-      .where({ id: kategori_id })
-      .first();
 
     const rencana = await MRencanaKeuangan.query()
       .where({ id: kategoriLaba.m_rencana_keuangan_id })
@@ -1257,7 +1258,7 @@ class KeuanganController {
     }
     if (m_keu_akun_id != labaSebelum.m_keu_akun_id) {
       const kategoriLaba = await MRencanaKategoriLabaRugi.query()
-        .where({ id: kategori_id })
+        .where({ id: labaSebelum.m_rencana_kategori_laba_rugi_id })
         .first();
 
       const rencana = await MRencanaKeuangan.query()
@@ -2575,6 +2576,9 @@ class KeuanganController {
       return response.unprocessableEntity(validation.messages());
     }
 
+    const kategoriArusKas = await MRencanaKategoriArusKas.query()
+      .where({ id: kategori_id })
+      .first();
     const kategori = await MRencanaKategoriArusKas.query()
       .where({ id: kategori_id })
       .update({
@@ -2588,9 +2592,6 @@ class KeuanganController {
       });
     }
 
-    const kategoriArusKas = await MRencanaKategoriArusKas.query()
-      .where({ id: kategori_id })
-      .first();
 
     const rencana = await MRencanaKeuangan.query()
       .where({ id: kategoriArusKas.m_rencana_keuangan_id })
@@ -3737,7 +3738,7 @@ class KeuanganController {
       );
     }
     if (tanggal_awal) {
-      histori.whereBetween("created_at", [tanggal_awal, tanggal_akhir]);
+      histori.whereBetween("created_at", [`${tanggal_awal} 00:00:00`, `${tanggal_akhir} 23:59:59`]);
     }
     if (tipe) {
       histori.andWhere("tipe", "like", `%${tipe}%`);
