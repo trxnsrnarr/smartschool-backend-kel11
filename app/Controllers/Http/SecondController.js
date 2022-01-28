@@ -5378,7 +5378,7 @@ class SecondController {
 
     if (m_keu_akun_id != labaSebelum.m_keu_akun_id) {
       const kategoriLaba = await MKeuKategoriLabaRugi.query()
-        .where({ id: labaSebelum.m_keu_kategori_neraca_id })
+        .where({ id: labaSebelum.m_keu_kategori_laba_rugi_id })
         .first();
 
       const akunSebelum = await MKeuAkun.qeury()
