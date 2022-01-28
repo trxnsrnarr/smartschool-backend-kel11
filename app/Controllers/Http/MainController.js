@@ -30919,7 +30919,7 @@ class MainController {
     const fiturSekolah = await MFiturSekolah.query()
       .where({ m_sekolah_id: sekolah.id })
       .first();
-    const fitur = JSON.parse(fiturSekolah.fitur || "{}");
+    const fitur = JSON.parse(fiturSekolah ? fiturSekolah.fitur : "{}");
 
     const rules = {
       kode_barang: "required",
@@ -30954,16 +30954,18 @@ class MainController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    if (fitur.nota_barang == 1) {
-      const rules = {
-        nota: "required",
-      };
-      const message = {
-        "nota.required": "Nota harus diisi",
-      };
-      const validation = await validate(request.all(), rules, message);
-      if (validation.fails()) {
-        return response.unprocessableEntity(validation.messages());
+    if(fitur) {
+      if (fitur.nota_barang == 1) {
+        const rules = {
+          nota: "required",
+        };
+        const message = {
+          "nota.required": "Nota harus diisi",
+        };
+        const validation = await validate(request.all(), rules, message);
+        if (validation.fails()) {
+          return response.unprocessableEntity(validation.messages());
+        }
       }
     }
 
