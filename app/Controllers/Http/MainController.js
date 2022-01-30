@@ -5440,7 +5440,7 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    const { jam_mulai, jam_selesai, istirahat } = request.post();
+    const { jam_mulai, jam_selesai, istirahat, jam_ke } = request.post();
     const rules = {
       jam_mulai: "required",
       jam_selesai: "required",
@@ -5457,6 +5457,7 @@ class MainController {
     const jamMengajar = await MJamMengajar.query()
       .where({ id: jam_mengajar_id })
       .update({
+        jam_ke: jam_ke,
         jam_mulai: jam_mulai,
         jam_selesai: jam_selesai,
         istirahat: istirahat,
