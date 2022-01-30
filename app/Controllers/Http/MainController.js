@@ -127,6 +127,8 @@ const MBobotNilai = use("App/Models/MBobotNilai");
 const MRegistrasiAkun = use("App/Models/MRegistrasiAkun");
 const MAnggotaEkskul = use("App/Models/MAnggotaEkskul");
 const MFiturSekolah = use("App/Models/MFiturSekolah");
+const MSuratKeputusan = use("App/Models/MSuratKeputusan");
+const TkSuratKeputusanUser = use("App/Models/TkSuratKeputusanUser");
 
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
@@ -581,7 +583,15 @@ class MainController {
     page = page ? page : 1;
 
     const res = MSekolah.query()
-      .select("id", "nama", "gpds", "trial", "jumlah_ujian", "jumlah_topik", 'domain')
+      .select(
+        "id",
+        "nama",
+        "gpds",
+        "trial",
+        "jumlah_ujian",
+        "jumlah_topik",
+        "domain"
+      )
       .with("ta", (builder) => {
         builder
           .select("id", "m_sekolah_id")
@@ -3876,6 +3886,8 @@ class MainController {
       sertifikasi_keahlian,
       purnakarya,
       pengalaman,
+      alamat,
+      alamat_perusahaan,
       deskripsi,
     } = request.post();
     const rules = {
@@ -3899,35 +3911,106 @@ class MainController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const user = await User.create({
-      nama,
-      whatsapp,
-      email,
-      gender,
-      role: "alumni",
-      m_sekolah_id: sekolah.id,
-      tanggal_lahir,
-      dihapus: 0,
-    });
+    const check = await User.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ whatsapp })
+      .where({ role: "alumni" })
+      .where({ dihapus: 0 })
+      .first();
+
+    let user;
+    if(check) {
+      await User.query()
+        .where({ id: check.id })
+        .update({
+          nama,
+          whatsapp,
+          email,
+          gender,
+          role: "alumni",
+          m_sekolah_id: sekolah.id,
+          tanggal_lahir,
+          dihapus: 0,
+        })
+      user = check;
+    } else {
+      user = await User.create({
+        nama,
+        whatsapp,
+        email,
+        gender,
+        role: "alumni",
+        m_sekolah_id: sekolah.id,
+        tanggal_lahir,
+        dihapus: 0,
+      });
+    }
     // ini sudah buffer
-    const alumni = await MAlumni.create({
-      jurusan,
-      tahun_masuk,
-      pekerjaan,
-      kantor,
-      sektor_industri,
-      sekolah_lanjutan: sekolah_lanjutan.length
-        ? sekolah_lanjutan.toString()
-        : null,
-      sertifikasi_keahlian: sertifikasi_keahlian.length
-        ? sertifikasi_keahlian.toString()
-        : null,
-      pengalaman: pengalaman.length ? pengalaman.toString() : null,
-      purnakarya,
-      deskripsi: htmlEscaper.escape(deskripsi),
-      dihapus: 0,
-      m_user_id: user.id,
-    });
+    const checkAlumni = await MAlumni.query()
+      .where({ m_user_id: user.id })
+      .where({ dihapus: 0 })
+      .first();
+    if (checkAlumni) {
+      await MAlumni.query()
+        .where({ id : checkAlumni.id })
+        .update({
+          jurusan,
+          tahun_masuk,
+          pekerjaan,
+          kantor,
+          sektor_industri,
+          sekolah_lanjutan: sekolah_lanjutan.length
+            ? sekolah_lanjutan.toString()
+            : null,
+          sertifikasi_keahlian: sertifikasi_keahlian.length
+            ? sertifikasi_keahlian.toString()
+            : null,
+          pengalaman: pengalaman.length ? pengalaman.toString() : null,
+          purnakarya,
+          deskripsi: htmlEscaper.escape(deskripsi),
+          alamat_perusahaan,
+          dihapus: 0,
+          m_user_id: user.id,
+        })
+    } else {
+      const alumni = await MAlumni.create({
+        jurusan,
+        tahun_masuk,
+        pekerjaan,
+        kantor,
+        sektor_industri,
+        sekolah_lanjutan: sekolah_lanjutan.length
+          ? sekolah_lanjutan.toString()
+          : null,
+        sertifikasi_keahlian: sertifikasi_keahlian.length
+          ? sertifikasi_keahlian.toString()
+          : null,
+        pengalaman: pengalaman.length ? pengalaman.toString() : null,
+        purnakarya,
+        deskripsi: htmlEscaper.escape(deskripsi),
+        alamat_perusahaan,
+        dihapus: 0,
+        m_user_id: user.id,
+      });
+    }
+
+    const checkProfil = await MProfilUser.query()
+      .where({ m_user_id: user.id })
+      .where({ dihapus: 0 })
+      .first();
+    if (checkProfil) {
+      await MProfilUser.query()
+        .where({ id: checkProfil.id })
+        .update({
+          alamat
+        })
+    } else {
+      await MProfilUser.create({
+        alamat,
+        dihapus: 0,
+        m_user_id: user.id,
+      })
+    }
 
     return response.ok({
       message: messagePostSuccess,
@@ -6063,8 +6146,10 @@ class MainController {
         .where({ m_mata_pelajaran_id })
         .andWhere({ tingkat })
         .first();
-      if (check.dihapus) {
-        await MMateri.query().where({ id: check.id }).update({ dihapus: 0 });
+      if (check) {
+        if (check.dihapus) {
+          await MMateri.query().where({ id: check.id }).update({ dihapus: 0 });
+        }
       }
 
       if (!check) {
@@ -8348,6 +8433,7 @@ class MainController {
       waktu_pembagian,
       tanggal_pengumpulan,
       waktu_pengumpulan,
+      show_nilai,
       kkm,
       lampiran,
       link,
@@ -8384,6 +8470,7 @@ class MainController {
         : tanggal_pengumpulan,
       waktu_pengumpulan,
       kkm,
+      show_nilai,
       lampiran: lampiran.toString(),
       link: link.toString(),
       draft,
@@ -8621,6 +8708,7 @@ class MainController {
       tanggal_pengumpulan,
       waktu_pengumpulan,
       kkm,
+      show_nilai,
       lampiran,
       link,
       draft,
@@ -8646,6 +8734,7 @@ class MainController {
         tanggal_pengumpulan: tanggal_pengumpulan
           ? moment(tanggal_pengumpulan).add(7, "hours").format("YYYY-MM-DD")
           : tanggal_pengumpulan,
+        show_nilai,
         waktu_pengumpulan,
         kkm,
         lampiran: lampiran.toString(),
@@ -29659,7 +29748,6 @@ class MainController {
     return namaFile;
   }
 
- 
   // ====================================== Surel Service ==========================================
 
   async getSurel({ response, request, auth }) {
@@ -30832,7 +30920,7 @@ class MainController {
     const fiturSekolah = await MFiturSekolah.query()
       .where({ m_sekolah_id: sekolah.id })
       .first();
-    const fitur = JSON.parse(fiturSekolah.fitur || "{}")
+    const fitur = JSON.parse(fiturSekolah ? fiturSekolah.fitur : "{}");
 
     const rules = {
       kode_barang: "required",
@@ -30867,16 +30955,18 @@ class MainController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    if (fitur.nota_barang == 1) {
-      const rules = {
-        nota: "required",
-      };
-      const message = {
-        "nota.required": "Nota harus diisi",
-      };
-      const validation = await validate(request.all(), rules, message);
-      if (validation.fails()) {
-        return response.unprocessableEntity(validation.messages());
+    if(fitur) {
+      if (fitur.nota_barang == 1) {
+        const rules = {
+          nota: "required",
+        };
+        const message = {
+          "nota.required": "Nota harus diisi",
+        };
+        const validation = await validate(request.all(), rules, message);
+        if (validation.fails()) {
+          return response.unprocessableEntity(validation.messages());
+        }
       }
     }
 
@@ -30938,7 +31028,7 @@ class MainController {
     const fiturSekolah = await MFiturSekolah.query()
       .where({ m_sekolah_id: sekolah.id })
       .first();
-    const fitur = JSON.parse(fiturSekolah.fitur || "{}")
+    const fitur = JSON.parse(fiturSekolah.fitur || "{}");
     const rules = {
       kode_barang: "required",
       nama: "required",
@@ -34704,7 +34794,8 @@ class MainController {
               foto_masuk: anggota.user
                 ? anggota.user.absen
                   ? anggota.user.absen.length
-                    ? anggota.user.absen[0].foto_masuk
+                    ? anggota.user.absen[0].foto_masuk ||
+                      `https://server1.smarteschool.net/fr/${anggota.user.absen[0].foto_masuk_local}.jpeg`
                     : "-"
                   : "-"
                 : "-",
@@ -34718,7 +34809,8 @@ class MainController {
               foto_pulang: anggota.user
                 ? anggota.user.absen
                   ? anggota.user.absen.length
-                    ? anggota.user.absen[0].foto_pulang
+                    ? anggota.user.absen[0].foto_pulang ||
+                      `https://server1.smarteschool.net/fr/${anggota.user.absen[0].foto_pulang_local}.jpeg`
                     : "-"
                   : "-"
                 : "-",
@@ -38615,16 +38707,31 @@ class MainController {
       .where({ tipe: "cp" })
       .fetch();
 
+    const lbg = await MRpp.query()
+      .where({ m_user_id: userAuthor.id })
+      .andWhere({ dihapus: 0 })
+      .where({ tipe: "lbg" })
+      .fetch();
+
     // const surat = TkSuratKeputusan.query()
     //   .with("surat")
     //   .where({ m_sekolah_id: sekolah.id })
     //   .fetch();
+    // const surat = await TkSuratKeputusanUser
+
+    const surat = await TkSuratKeputusanUser.query()
+      .with("surat", (builder) => {
+        builder.with("tahun");
+      })
+      .where({ m_user_id: userAuthor.id })
+      .where({ dihapus: 0 })
+      .fetch();
 
     return response.ok({
       userAuthor,
-      bukuKerja: { rpp, silabus, perangkat, modul, atp, cp },
+      bukuKerja: { rpp, silabus, perangkat, modul, atp, cp, lbg },
       sekolah,
-      // surat
+      surat,
     });
   }
 

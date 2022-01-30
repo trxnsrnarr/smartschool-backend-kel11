@@ -2,6 +2,7 @@
 
 const MSekolah = use("App/Models/MSekolah");
 const MGelombangPpdb = use("App/Models/MGelombangPpdb");
+const MJurusan = use("App/Models/MJurusan");
 const MPendaftarPpdb = use("App/Models/MPendaftarPpdb");
 const Mta = use("App/Models/Mta");
 const MUjian = use("App/Models/MUjian");
@@ -2359,6 +2360,11 @@ class PPDBController {
       .andWhere({ dihapus: 0 })
       .first();
 
+    const jurusan = await MJurusan.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
+      .fetch();
+
     // return gelombang;
     const awal = moment(`${gelombang.dibuka}`).format("DD-MM-YYYY ");
     const akhir = moment(`${gelombang.ditutup}`).format("DD-MM-YYYY ");
@@ -2408,7 +2414,7 @@ class PPDBController {
     });
 
     worksheet.addConditionalFormatting({
-      ref: "A5:AY6",
+      ref: "A5:BD6",
       rules: [
         {
           type: "expression",
@@ -2452,6 +2458,9 @@ class PPDBController {
           ("" + a.user.nama).localeCompare("" + b.user.nama)
         )
         .map(async (d, idx) => {
+          const urutan = gelombang
+            .toJSON()
+            .pendaftar.findIndex((e) => e.id == d.id);
           const dataAbsensi = d.user.profil
             ? JSON.parse(d.user.profil.data_absensi || "{}")
             : {};
@@ -2463,7 +2472,7 @@ class PPDBController {
               : namaGelombang.includes("reguler 3")
               ? "02"
               : "03"
-          } - ${padNumber(idx + 1, `${gelombang.diterima}`.length)}`;
+          } - ${padNumber(urutan + 1, `${gelombang.diterima}`.length)}`;
           worksheet.addConditionalFormatting({
             ref: `A${(idx + 1) * 1 + 5}:A${(idx + 1) * 1 + 6}`,
             rules: [
@@ -2493,7 +2502,7 @@ class PPDBController {
           });
 
           worksheet.addConditionalFormatting({
-            ref: `B${(idx + 1) * 1 + 5}:AY${(idx + 1) * 1 + 6}`,
+            ref: `B${(idx + 1) * 1 + 5}:BD${(idx + 1) * 1 + 6}`,
             rules: [
               {
                 type: "expression",
@@ -2531,6 +2540,11 @@ class PPDBController {
             "Nomor Peserta",
             "Tanggal Mendaftar",
             "Status",
+            "Jurusan 1",
+            "Jurusan 2",
+            "Jurusan 3",
+            "Jurusan 4",
+            "Jurusan 5",
             "Semester 1",
             "",
             "",
@@ -2584,6 +2598,11 @@ class PPDBController {
             "Nomor Peserta",
             "Tanggal Mendaftar",
             "Status",
+            "Jurusan 1",
+            "Jurusan 2",
+            "Jurusan 3",
+            "Jurusan 4",
+            "Jurusan 5",
             "Alpa",
             "Izin",
             "sakit",
@@ -2637,6 +2656,11 @@ class PPDBController {
             { key: "nomorPeserta" },
             { key: "tanggal" },
             { key: "status" },
+            { key: "jurusan1" },
+            { key: "jurusan2" },
+            { key: "jurusan3" },
+            { key: "jurusan4" },
+            { key: "jurusan5" },
             { key: "alpa1" },
             { key: "izin1" },
             { key: "sakit1" },
@@ -2692,6 +2716,7 @@ class PPDBController {
               ? "menungguKonfirmasiPembayaran"
               : d?.status;
           const status = dataStatus[checkBayar];
+          const jurusanData = jurusan.toJSON();
 
           // Add row using key mapping to columns
           let row = worksheet.addRow({
@@ -2704,6 +2729,11 @@ class PPDBController {
             nomorPeserta: nomorPeserta ? nomorPeserta : "-",
             tanggal: d ? d.created_at : "-",
             status: d ? status.text : "-",
+            jurusan1: jurusanData.find(e => e.id == d.m_jurusan_1_id) ? jurusanData.find(e => e.id == d.m_jurusan_1_id).nama : "-",
+            jurusan2: jurusanData.find(e => e.id == d.m_jurusan_2_id) ? jurusanData.find(e => e.id == d.m_jurusan_2_id).nama : "-",
+            jurusan3: jurusanData.find(e => e.id == d.m_jurusan_3_id) ? jurusanData.find(e => e.id == d.m_jurusan_3_id).nama : "-",
+            jurusan4: jurusanData.find(e => e.id == d.m_jurusan_4_id) ? jurusanData.find(e => e.id == d.m_jurusan_4_id).nama : "-",
+            jurusan5: jurusanData.find(e => e.id == d.m_jurusan_5_id) ? jurusanData.find(e => e.id == d.m_jurusan_5_id).nama : "-",
             alpa1: d.user.profil
               ? dataAbsensi.alpa1
                 ? dataAbsensi.alpa1
@@ -2830,12 +2860,17 @@ class PPDBController {
     worksheet.mergeCells(`G5:G6`);
     worksheet.mergeCells(`H5:H6`);
     worksheet.mergeCells(`I5:I6`);
-    worksheet.mergeCells(`J5:P5`);
-    worksheet.mergeCells(`Q5:W5`);
-    worksheet.mergeCells(`X5:AD5`);
-    worksheet.mergeCells(`AE5:AK5`);
-    worksheet.mergeCells(`AL5:AR5`);
-    worksheet.mergeCells(`AS5:AY5`);
+    worksheet.mergeCells(`J5:J6`);
+    worksheet.mergeCells(`K5:K6`);
+    worksheet.mergeCells(`L5:L6`);
+    worksheet.mergeCells(`M5:M6`);
+    worksheet.mergeCells(`N5:N6`);
+    worksheet.mergeCells(`O5:U5`);
+    worksheet.mergeCells(`V5:AB5`);
+    worksheet.mergeCells(`AC5:AI5`);
+    worksheet.mergeCells(`AJ5:AP5`);
+    worksheet.mergeCells(`AQ5:AW5`);
+    worksheet.mergeCells(`AX5:BD5`);
     worksheet.getColumn("A").width = 6;
     worksheet.getColumn("B").width = 20;
     worksheet.getColumn("C").width = 20;
@@ -2845,9 +2880,14 @@ class PPDBController {
     worksheet.getColumn("G").width = 20;
     worksheet.getColumn("H").width = 20;
     worksheet.getColumn("I").width = 20;
+    worksheet.getColumn("J").width = 20;
+    worksheet.getColumn("K").width = 20;
+    worksheet.getColumn("L").width = 20;
+    worksheet.getColumn("M").width = 20;
+    worksheet.getColumn("N").width = 20;
     worksheet.autoFilter = {
       from: "A6",
-      to: "AT6",
+      to: "BD6",
     };
 
     let namaFile = `/uploads/rekapan-pendaftar-ppdb-${keluarantanggalseconds}.xlsx`;

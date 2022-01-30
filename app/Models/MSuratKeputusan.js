@@ -11,6 +11,10 @@ class MSuratKeputusan extends Model {
         return this.hasMany("App/Models/TkSuratKeputusanUser","id" ,"m_surat_keputusan_id");
       }
 
+      tahun() {
+        return this.belongsTo("App/Models/Mta");
+      }
+
 }
 
 module.exports = MSuratKeputusan

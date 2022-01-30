@@ -35,6 +35,9 @@ class MRombel extends Model {
   sekolah() {
     return this.belongsTo("App/Models/MSekolah");
   }
+  penerimaanSiswa() {
+    return this.hasMany("App/Models/MPenerimaanSiswa", "m_rombel_id");
+  }
 }
 
 module.exports = MRombel;

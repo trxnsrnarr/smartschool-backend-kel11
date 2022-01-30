@@ -26,6 +26,10 @@ const MRencanaAktivitasTransaksi = use("App/Models/MRencanaAktivitasTransaksi");
 const TkRencanaKategoriTipeAkun = use("App/Models/TkRencanaKategoriTipeAkun");
 const MHistoriAktivitas = use("App/Models/MHistoriAktivitas");
 
+const moment = require("moment");
+require("moment/locale/id");
+moment.locale("id");
+
 const messagePostSuccess = "Data berhasil ditambahkan";
 const messageSaveSuccess = "Data berhasil disimpan";
 const messagePutSuccess = "Data berhasil diubah";
@@ -34,7 +38,17 @@ const messageNotFound = "Data tidak ditemukan";
 const messageForbidden = "Dilarang, anda bukan seorang admin";
 const messageEmailSuccess = "Data berhasil dikirim ke email";
 const pesanSudahDitambahkan = "Data sudah ditambahkan";
-
+function titleCase(str) {
+  var splitStr = str.toLowerCase().split(" ");
+  for (var i = 0; i < splitStr.length; i++) {
+    // You do not need to check if i is larger than splitStr length, as your for does that for you
+    // Assign it back to the array
+    splitStr[i] =
+      splitStr[i].charAt(0).toUpperCase() + splitStr[i].substring(1);
+  }
+  // Directly return the joined string
+  return splitStr.join(" ");
+}
 class KeuanganController {
   async getSekolahByDomain(domain) {
     const sekolah = await MSekolah.query()
@@ -315,23 +329,31 @@ class KeuanganController {
       });
     }
 
-    if (rencanaSebelum.tanggal_akhir != tanggal_akhir) {
+    if (moment(rencanaSebelum.tanggal_akhir).format(
+      "dddd, DD MMM YYYY"
+    ) != moment(tanggal_akhir).format("dddd, DD MMM YYYY")) {
       await MHistoriAktivitas.create({
         jenis: "Ubah Perencanaan",
         m_user_id: user.id,
-        awal: `Tanggal Akhir : ${rencanaSebelum.tanggal_akhir}`,
-        akhir: `"${tanggal_akhir}"`,
+        awal: `Tanggal Akhir : ${moment(rencanaSebelum.tanggal_akhir).format(
+          "dddd, DD MMM YYYY"
+        )} menjadi `,
+        akhir: `"${moment(tanggal_akhir).format("dddd, DD MMM YYYY")}"`,
         m_sekolah_id: sekolah.id,
         tipe: "perencanaan",
       });
     }
 
-    if (rencanaSebelum.tanggal_awal != tanggal_awal) {
+    if (moment(rencanaSebelum.tanggal_awal).format(
+      "dddd, DD MMM YYYY"
+    ) != moment(tanggal_awal).format("dddd, DD MMM YYYY")) {
       await MHistoriAktivitas.create({
         jenis: "Ubah Perencanaan",
         m_user_id: user.id,
-        awal: `Tanggal Awal : ${rencanaSebelum.tanggal_awal}`,
-        akhir: `"${tanggal_awal}"`,
+        awal: `Tanggal Awal : ${moment(rencanaSebelum.tanggal_awal).format(
+          "dddd, DD MMM YYYY"
+        )} menjadi `,
+        akhir: `"${moment(tanggal_awal).format("dddd, DD MMM YYYY")}"`,
         m_sekolah_id: sekolah.id,
         tipe: "perencanaan",
       });
@@ -341,7 +363,7 @@ class KeuanganController {
       await MHistoriAktivitas.create({
         jenis: "Ubah Perencanaan",
         m_user_id: user.id,
-        awal: `Judul : ${rencanaSebelum.nama}`,
+        awal: `Judul : ${rencanaSebelum.nama} menjadi `,
         akhir: `"${nama}"`,
         m_sekolah_id: sekolah.id,
         tipe: "perencanaan",
@@ -628,7 +650,7 @@ class KeuanganController {
           await MHistoriAktivitas.create({
             jenis: "Ubah Rencana Anggaran",
             m_user_id: user.id,
-            awal: `Jurnal Umum - Nama Akun: ${akunLama.nama} menjadi`,
+            awal: `Jurnal Umum - Nama Akun : ${akunLama.nama} menjadi`,
             akhir: `"${akunBaru.nama}"`,
             bawah: `${rencana.nama}`,
             m_sekolah_id: sekolah.id,
@@ -637,11 +659,18 @@ class KeuanganController {
           });
         }
         if (d.saldo != jurnalLama.saldo || d.jenis != jurnalLama.jenis) {
+          const saldoLama = `${jurnalLama.saldo}`.replace(
+            /\B(?=(\d{3})+(?!\d))/g,
+            "."
+          );
+          const saldoBaru = `${d.saldo}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
           await MHistoriAktivitas.create({
             jenis: "Ubah Rencana Anggaran",
             m_user_id: user.id,
-            awal: `Jurnal Umum - Nama Akun - ${akunBaru.nama} : ${jurnalLama.jenis} ${akunLama.nama} menjadi`,
-            akhir: `"${d.jenis}${akunBaru.nama}"`,
+            awal: `Jurnal Umum - Nama Akun - ${akunBaru.nama} : ${titleCase(
+              jurnalLama.jenis
+            )} Rp${saldoLama} menjadi`,
+            akhir: `"${titleCas(d.jenis)} Rp${saldoBaru}"`,
             bawah: `${rencana.nama}`,
             m_sekolah_id: sekolah.id,
             tipe: "Perencanaan",
@@ -686,7 +715,7 @@ class KeuanganController {
       await MHistoriAktivitas.create({
         jenis: "Ubah Rencana Anggaran",
         m_user_id: user.id,
-        awal: `nomor: ${transaksi.nomor} menjadi`,
+        awal: `Nomor : ${transaksi.nomor} menjadi`,
         akhir: `"${nomor}"`,
         m_sekolah_id: sekolah.id,
         tipe: "Perencanaan",
@@ -694,12 +723,17 @@ class KeuanganController {
         alamat_id: transaksi.m_rencana_keuangan_id,
       });
     }
-    if (tanggal != transaksi.tanggal) {
+    if (
+      moment(tanggal).format("MMMM YYYY") !=
+      moment(transaksi.tanggal).format("MMMM YYYY")
+    ) {
       await MHistoriAktivitas.create({
         jenis: "Ubah Rencana Anggaran",
         m_user_id: user.id,
-        awal: `Tanggal: ${moment(transaksi.tanggal).format("dddd, DD MMM YYYY")} menjadi`,
-        akhir: `"${moment(tanggal).format("dddd, DD MMM YYYY")}"`,
+        awal: `Tanggal : ${moment(transaksi.tanggal).format(
+          "MMMM YYYY"
+        )} menjadi`,
+        akhir: `"${moment(tanggal).format("MMMM YYYY")}"`,
         m_sekolah_id: sekolah.id,
         tipe: "Perencanaan",
         bawah: `${rencana.nama}`,
@@ -710,7 +744,7 @@ class KeuanganController {
       await MHistoriAktivitas.create({
         jenis: "Ubah Rencana Anggaran",
         m_user_id: user.id,
-        awal: `Judul: ${transaksi.nama} menjadi`,
+        awal: `Judul : ${transaksi.nama} menjadi`,
         akhir: `"${nama}"`,
         m_sekolah_id: sekolah.id,
         tipe: "Perencanaan",
@@ -773,7 +807,12 @@ class KeuanganController {
     });
   }
 
-  async getRencanaNeraca({ response, request, auth }) {
+  async getRencanaNeraca({
+    response,
+    request,
+    auth,
+    params: { perencanaan_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -790,7 +829,13 @@ class KeuanganController {
         .whereBetween("tanggal", [tanggal_awal, tanggal_akhir])
         .where({ m_sekolah_id: sekolah.id })
         .where({ dihapus: 0 })
-        .andWhere({ m_rencana_keuangan_id: rencana_id })
+        .andWhere({ m_rencana_keuangan_id: perencanaan_id })
+        .ids();
+    } else {
+      transaksiIds = await MRencanaTransaksi.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ dihapus: 0 })
+        .andWhere({ m_rencana_keuangan_id: perencanaan_id })
         .ids();
     }
 
@@ -819,6 +864,7 @@ class KeuanganController {
           .orderBy("urutan", "asc");
       })
       .where({ dihapus: 0 })
+      .andWhere({ m_rencana_keuangan_id: perencanaan_id })
       .andWhere({ m_sekolah_id: sekolah.id });
 
     if (search) {
@@ -1907,6 +1953,9 @@ class KeuanganController {
       return response.unprocessableEntity(validation.messages());
     }
 
+    const kategoriNeraca = await MRencanaKategoriNeraca.query()
+      .where({ id: kategori_id })
+      .first();
     const kategori = await MRencanaKategoriNeraca.query()
       .where({ id: kategori_id })
       .update({
@@ -1920,10 +1969,6 @@ class KeuanganController {
       });
     }
 
-    const kategoriNeraca = await MRencanaKategoriNeraca.query()
-      .where({ id: kategori_id })
-      .first();
-
     const rencana = await MRencanaKeuangan.query()
       .where({ id: kategoriNeraca.m_rencana_keuangan_id })
       .first();
@@ -1933,7 +1978,9 @@ class KeuanganController {
         jenis: "Ubah Template Laporan",
         tipe: "Perencanaan",
         m_user_id: user.id,
-        awal: `${kategoriNeraca.tipe} - Warna : ${kategoriNeraca.warna} menjadi `,
+        awal: `${titleCase(kategoriNeraca.tipe)} - Warna : ${
+          kategoriNeraca.warna
+        } menjadi `,
         akhir: `"${warna}"`,
         bawah: `${rencana.nama} - Laporan Neraca`,
         m_sekolah_id: sekolah.id,
@@ -1945,7 +1992,9 @@ class KeuanganController {
         jenis: "Ubah Template Laporan",
         tipe: "Perencanaan",
         m_user_id: user.id,
-        awal: `${kategoriNeraca.tipe} - Nama : ${kategoriNeraca.nama} menjadi `,
+        awal: `${titleCase(kategoriNeraca.tipe)} - Nama : ${
+          kategoriNeraca.nama
+        } menjadi `,
         akhir: `"${nama}"`,
         bawah: `${rencana.nama} - Laporan Neraca`,
         m_sekolah_id: sekolah.id,
@@ -1997,7 +2046,7 @@ class KeuanganController {
       jenis: "Hapus Template Laporan",
       tipe: "Perencanaan",
       m_user_id: user.id,
-      awal: `${kategoriNeraca.tipe} : `,
+      awal: `${titleCase(kategoriNeraca.tipe)} : `,
       akhir: `${kategoriNeraca.nama}`,
       bawah: `${rencana.nama} - Laporan Neraca`,
       m_sekolah_id: sekolah.id,
@@ -2053,7 +2102,7 @@ class KeuanganController {
       jenis: "Buat Template Laporan",
       tipe: "Perencanaan",
       m_user_id: user.id,
-      awal: `${kategoriNeraca.tipe} - ${kategoriNeraca.nama} : `,
+      awal: `${titleCase(kategoriNeraca.tipe)} - ${kategoriNeraca.nama} : `,
       akhir: `${akun.nama}`,
       bawah: `${rencana.nama} - Laporan Neraca`,
       m_sekolah_id: sekolah.id,
@@ -2124,7 +2173,9 @@ class KeuanganController {
         jenis: "Ubah Template Laporan",
         tipe: "Perencanaan",
         m_user_id: user.id,
-        awal: `${kategoriNeraca.tipe} - ${kategoriNeraca.nama} : ${akunSebelum.nama} menjadi `,
+        awal: `${titleCase(kategoriNeraca.tipe)} - ${kategoriNeraca.nama} : ${
+          akunSebelum.nama
+        } menjadi `,
         akhir: `"${akun.nama}"`,
         bawah: `${rencana.nama} - Laporan Neraca`,
         m_sekolah_id: sekolah.id,
@@ -2179,7 +2230,7 @@ class KeuanganController {
       jenis: "Hapus Template Laporan",
       tipe: "Perencanaan",
       m_user_id: user.id,
-      awal: `${kategoriNeraca.tipe} - ${kategoriNeraca.nama} : `,
+      awal: `${titleCase(kategoriNeraca.tipe)} - ${kategoriNeraca.nama} : `,
       akhir: `"${akun.nama}"`,
       bawah: `${rencana.nama} - Laporan Neraca`,
       m_sekolah_id: sekolah.id,
@@ -3368,7 +3419,7 @@ class KeuanganController {
       jenis: "Buat Template Laporan",
       tipe: "Perencanaan",
       m_user_id: user.id,
-      awal: `Rumus Arus Kas - Saldo Kas Awal: `,
+      awal: `Rumus Arus Kas - Saldo Kas Awal : `,
       akhir: `${rumusFix}`,
       bawah: `${rencana.nama} - Laporan Arus Kas`,
       m_sekolah_id: sekolah.id,
@@ -3695,7 +3746,7 @@ class KeuanganController {
       histori.andWhere("jenis", "like", `%${jenis}%`);
     }
 
-    histori = await histori.fetch();
+    histori = await histori.orderBy("id", "desc").fetch();
 
     const jenisData = await MHistoriAktivitas.query()
       .distinct("jenis")
@@ -3706,7 +3757,12 @@ class KeuanganController {
       jenis: jenisData,
     });
   }
-  async downloadJurnal({ response, request, auth,params:{perencanaan_id} }) {
+  async downloadJurnal({
+    response,
+    request,
+    auth,
+    params: { perencanaan_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -3735,7 +3791,7 @@ class KeuanganController {
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .whereBetween("tanggal", [`${tanggal_awal}`, `${tanggal_akhir}`])
-      .andWhere({m_rencana_keuangan_id:perencanaan_id})
+      .andWhere({ m_rencana_keuangan_id: perencanaan_id })
       .fetch();
 
     // return transaksi;
@@ -4015,7 +4071,6 @@ class KeuanganController {
 
     return namaFile;
   }
-
 }
 
 module.exports = KeuanganController;

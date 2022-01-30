@@ -302,7 +302,16 @@ function colName(n) {
   }
   return s.toUpperCase();
 }
-
+function titleCase(str) {
+  var splitStr = str.toLowerCase().split(' ');
+  for (var i = 0; i < splitStr.length; i++) {
+      // You do not need to check if i is larger than splitStr length, as your for does that for you
+      // Assign it back to the array
+      splitStr[i] = splitStr[i].charAt(0).toUpperCase() + splitStr[i].substring(1);     
+  }
+  // Directly return the joined string
+  return splitStr.join(' '); 
+}
 class SecondController {
   async getSekolahByDomain(domain) {
     const sekolah = await MSekolah.query()
@@ -349,7 +358,7 @@ class SecondController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    const { tingkat, hari = 1 } = request.get();
+    // const { tingkat, hari = 1 } = request.get();
 
     const mataPelajaran = await MMataPelajaran.query()
       .with("user", (builder) => {
@@ -396,7 +405,32 @@ class SecondController {
       });
     });
 
-    return { rombel, totalTingkat };
+    let tingkat = [];
+
+    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA") {
+      tingkat = ["X", "XI", "XII", "XIII"];
+    } else if (sekolah.tingkat == "SMP") {
+      tingkat = ["VII", "VIII", "IX"];
+    } else if (sekolah.tingkat == "SD") {
+      tingkat = ["I", "II", "III", "IV", "V", "VI"];
+    } else if (sekolah.tingkat == "SLB") {
+      tingkat = [
+        "I",
+        "II",
+        "III",
+        "IV",
+        "V",
+        "VI",
+        "VII",
+        "VIII",
+        "IX",
+        "X",
+        "XI",
+        "XII",
+      ];
+    }
+
+    return { rombel, totalTingkat, tingkat };
   }
 
   async getTunggakan({ response, request, auth }) {
@@ -1005,7 +1039,7 @@ class SecondController {
         });
     }
     await MHistoriAktivitas.create({
-      jenis: "Tambah Akun",
+      jenis: "Buat Akun",
       m_user_id: user.id,
       akhir: nama,
       m_sekolah_id: sekolah.id,
@@ -1089,11 +1123,19 @@ class SecondController {
           });
         }
         if (saldo != check.saldo) {
+          const saldoLama = `${check.saldo}`.replace(
+            /\B(?=(\d{3})+(?!\d))/g,
+            "."
+          )
+          const saldoBaru = `${saldo}`.replace(
+            /\B(?=(\d{3})+(?!\d))/g,
+            "."
+          )
           await MHistoriAktivitas.create({
             jenis: "Ubah Akun",
             m_user_id: user.id,
-            awal: `Saldo : ${check.saldo} menjadi `,
-            akhir: `"${saldo}"`,
+            awal: `Saldo : Rp${saldoLama} menjadi `,
+            akhir: `"Rp${saldoBaru}"`,
             m_sekolah_id: sekolah.id,
             tipe: "Realisasi",
           });
@@ -1143,7 +1185,7 @@ class SecondController {
         jenis: "Ubah Akun",
         m_user_id: user.id,
         awal: `Nama : ${akun.nama} menjadi`,
-        akhir: nama,
+        akhir: `"${nama}"`,
         m_sekolah_id: sekolah.id,
         tipe: "Realisasi",
       });
@@ -1153,7 +1195,7 @@ class SecondController {
         jenis: "Ubah Akun",
         m_user_id: user.id,
         awal: `Kode : ${akun.kode} menjadi`,
-        akhir: kode,
+        akhir: `"${kode}"`,
         m_sekolah_id: sekolah.id,
         tipe: "Realisasi",
       });
@@ -1851,6 +1893,8 @@ class SecondController {
     const editJurnalId = editJurnal.map((d) => d.id);
     const newJurnal = jurnal.filter((d) => !d.id);
 
+    // return editJurnal;
+
     await Promise.all(
       jurnalIds
         .filter((d) => !editJurnalId.includes(d))
@@ -1874,7 +1918,7 @@ class SecondController {
           });
         }),
       editJurnal.map(async (d) => {
-        const jurnalLama = semuaJurnal.toJSON().find((e) => e.id == d);
+        const jurnalLama = semuaJurnal.toJSON().find((e) => e.id == d.id);
         const akunLama = semuaAkun
           .toJSON()
           .find((e) => e.id == jurnalLama.m_keu_akun_id);
@@ -1891,18 +1935,29 @@ class SecondController {
           await MHistoriAktivitas.create({
             jenis: "Ubah Transaksi",
             m_user_id: user.id,
-            awal: `Jurnal Umum - Nama Akun: ${akunLama.nama} menjadi`,
+            awal: `Jurnal Umum - Nama Akun : ${akunLama.nama} menjadi `,
             akhir: `"${akunBaru.nama}"`,
             m_sekolah_id: sekolah.id,
             tipe: "Realisasi",
           });
         }
         if (d.saldo != jurnalLama.saldo || d.jenis != jurnalLama.jenis) {
+         
+          const saldoLama = `${jurnalLama.saldo}`.replace(
+            /\B(?=(\d{3})+(?!\d))/g,
+            "."
+          )
+          const saldoBaru = `${d.saldo}`.replace(
+            /\B(?=(\d{3})+(?!\d))/g,
+            "."
+          )
           await MHistoriAktivitas.create({
             jenis: "Ubah Transaksi",
             m_user_id: user.id,
-            awal: `Jurnal Umum - Nama Akun - ${akunBaru.nama} : ${jurnalLama.jenis} ${akunLama.nama} menjadi`,
-            akhir: `"${d.jenis}${akunBaru.nama}"`,
+            awal: `Jurnal Umum - Nama Akun - ${akunBaru.nama} : ${
+              titleCase(jurnalLama.jenis)
+            } Rp${saldoLama} menjadi `,
+            akhir: `"${titleCase(d.jenis)} Rp${saldoBaru}"`,
             m_sekolah_id: sekolah.id,
             tipe: "Realisasi",
           });
@@ -1944,17 +1999,22 @@ class SecondController {
       await MHistoriAktivitas.create({
         jenis: "Ubah Transaksi",
         m_user_id: user.id,
-        awal: `nomor: ${transaksi.nomor} menjadi`,
+        awal: `Nomor : ${transaksi.nomor} menjadi`,
         akhir: `"${nomor}"`,
         m_sekolah_id: sekolah.id,
         tipe: "Realisasi",
       });
     }
-    if (tanggal != transaksi.tanggal) {
+    if (
+      moment(tanggal).format("dddd, DD MMM YYYY") !=
+      moment(transaksi.tanggal).format("dddd, DD MMM YYYY")
+    ) {
       await MHistoriAktivitas.create({
         jenis: "Ubah Transaksi",
         m_user_id: user.id,
-        awal: `Tanggal: ${moment(transaksi.tanggal).format("dddd, DD MMM YYYY")} menjadi`,
+        awal: `Tanggal : ${moment(transaksi.tanggal).format(
+          "dddd, DD MMM YYYY"
+        )} menjadi`,
         akhir: `"${moment(tanggal).format("dddd, DD MMM YYYY")}"`,
         m_sekolah_id: sekolah.id,
         tipe: "Realisasi",
@@ -1964,7 +2024,7 @@ class SecondController {
       await MHistoriAktivitas.create({
         jenis: "Ubah Transaksi",
         m_user_id: user.id,
-        awal: `Judul: ${transaksi.nama} menjadi`,
+        awal: `Judul : ${transaksi.nama} menjadi`,
         akhir: `"${nama}"`,
         m_sekolah_id: sekolah.id,
         tipe: "Realisasi",
@@ -4748,7 +4808,7 @@ class SecondController {
         jenis: "Ubah Template Laporan",
         tipe: "Realisasi",
         m_user_id: user.id,
-        awal: `${kategoriNeraca.tipe} - Warna : ${kategoriNeraca.warna} menjadi `,
+        awal: `${titleCase(kategoriNeraca.tipe)} - Warna : ${kategoriNeraca.warna} menjadi `,
         akhir: `"${warna}"`,
         bawah: `Laporan Neraca`,
         m_sekolah_id: sekolah.id,
@@ -4759,7 +4819,7 @@ class SecondController {
         jenis: "Ubah Template Laporan",
         tipe: "Realisasi",
         m_user_id: user.id,
-        awal: `${kategoriNeraca.tipe} - Nama : ${kategoriNeraca.nama} menjadi `,
+        awal: `${titleCase(kategoriNeraca.tipe)} - Nama : ${kategoriNeraca.nama} menjadi `,
         akhir: `"${nama}"`,
         bawah: `Laporan Neraca`,
         m_sekolah_id: sekolah.id,
@@ -4801,7 +4861,7 @@ class SecondController {
       jenis: "Hapus Template Laporan",
       tipe: "Realisasi",
       m_user_id: user.id,
-      awal: `${kategoriNeraca.tipe} : `,
+      awal: `${titleCase(kategoriNeraca.tipe)} : `,
       akhir: `${kategoriNeraca.nama}`,
       bawah: `Laporan Neraca`,
       m_sekolah_id: sekolah.id,
@@ -4858,7 +4918,7 @@ class SecondController {
       jenis: "Buat Template Laporan",
       tipe: "Realisasi",
       m_user_id: user.id,
-      awal: `${kategoriNeraca.tipe} - ${kategoriNeraca.nama} : `,
+      awal: `${titleCase(kategoriNeraca.tipe)} - ${kategoriNeraca.nama} : `,
       akhir: `${akun.nama}`,
       bawah: `Laporan Neraca`,
       m_sekolah_id: sekolah.id,
@@ -4924,7 +4984,7 @@ class SecondController {
         jenis: "Ubah Template Laporan",
         tipe: "Realisasi",
         m_user_id: user.id,
-        awal: `${kategoriNeraca.tipe} - ${kategoriNeraca.nama} : ${akunSebelum.nama} menjadi `,
+        awal: `${titleCase(kategoriNeraca.tipe)} - ${kategoriNeraca.nama} : ${akunSebelum.nama} menjadi `,
         akhir: `"${akun.nama}"`,
         bawah: `Laporan Neraca`,
         m_sekolah_id: sekolah.id,
@@ -4975,7 +5035,7 @@ class SecondController {
       jenis: "Hapus Template Laporan",
       tipe: "Realisasi",
       m_user_id: user.id,
-      awal: `${kategoriNeraca.tipe} - ${kategoriNeraca.nama} : `,
+      awal: `${titleCase(kategoriNeraca.tipe)} - ${kategoriNeraca.nama} : `,
       akhir: `"${akun.nama}"`,
       bawah: `Laporan Neraca`,
       m_sekolah_id: sekolah.id,
@@ -6993,7 +7053,7 @@ class SecondController {
       jenis: "Buat Template Laporan",
       tipe: "Realisasi",
       m_user_id: user.id,
-      awal: `Rumus Arus Kas - Saldo Kas Awal: `,
+      awal: `Rumus Arus Kas - Saldo Kas Awal : `,
       akhir: `${rumusFix}`,
       bawah: `Laporan Arus Kas`,
       m_sekolah_id: sekolah.id,

@@ -22,6 +22,7 @@ class TkPerusahaanSekolahSchema extends Schema {
             .onDelete("cascade")
             .onUpdate("cascade");
           table.string("status");
+          table.boolean("dihapus").defaultTo(0);
           table.timestamps();
         });
     });
