@@ -7104,6 +7104,7 @@ class MainController {
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ m_user_id: user.id })
       .andWhere({ dihapus: 0 })
+      .andWhere({ m_ta_id: ta.id })
       .ids();
 
     const materi = await MMateri.query()
@@ -7754,7 +7755,6 @@ class MainController {
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .fetch();
-
 
     return response.ok({
       prestasi,
@@ -30990,7 +30990,7 @@ class MainController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    if(fitur) {
+    if (fitur) {
       if (fitur.nota_barang == 1) {
         const rules = {
           nota: "required",
