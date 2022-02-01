@@ -715,6 +715,7 @@ Route.delete(
 // KOLABORASI SERVICE START
 // ==== proyek
 Route.get("/proyek", "MainController.getProyek");
+Route.get("/search-proyek", "MainController.searchProyek");
 Route.get("/proyek/:proyek_id", "MainController.detailProyek");
 Route.get(
   "/proyek/:proyek_id/kategori-pekerjaan",
@@ -878,6 +879,7 @@ Route.post(
 );
 
 Route.get("/daftar-sekolah", "MainController.daftarsekolah");
+Route.get("/daftar-sekolah-kolaborasi", "MainController.searchSekolahKolaborasi");
 
 //ubah tipe data
 Route.get("/ubahtipedata", "MainController.ubahtipedata");

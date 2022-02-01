@@ -19643,6 +19643,51 @@ class MainController {
     });
   }
 
+  async searchProyek({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+    const { search, sekolah_id, page, bentuk } = request.get();
+
+    let sekolahIds = MSekolah.query()
+
+    if (sekolah_id) {
+      sekolahIds.where({ id: sekolah_id })
+    }
+    if (bentuk) {
+      sekolahIds.where({ tingkat: bentuk })
+    }
+    sekolahIds = await sekolahIds.ids();
+
+    let proyekAll =  MProyek.query()
+    .withCount("anggota", (builder) => {
+      builder.where({ status: "menerima" });
+    })
+    .with("anggota", (builder) => {
+      builder
+        .with("user", (builder) => {
+          builder.select("id", "m_sekolah_id").with("sekolah", (builder) => {
+            builder.select("id", "nama", "logo_ss");
+          });
+        })
+        .where({ status: "menerima" });
+    })
+      .whereIn("m_sekolah_id", sekolahIds)
+
+    if (search) {
+      proyekAll.where("nama", "like", `%${search}%`)
+    }
+    proyekAll = await proyekAll.paginate(page, 20);
+
+    return {proyekAll}
+  }
+
   async detailProyek({ response, request, auth, params: { proyek_id } }) {
     const domain = request.headers().origin;
 
@@ -26568,6 +26613,33 @@ class MainController {
     }
 
     return sekolah;
+  }
+
+  async searchSekolahKolaborasi({ response, request, auth }) {
+    const { search, page, limit, bentuk } = request.get();
+
+    let sekolah = MSekolah.query().select("id", "nama", "favicon", "domain");
+
+    if (search) {
+      sekolah.where("nama", "like", `%${search}%`);
+    }
+
+    if (bentuk) {
+      sekolah.where({ tingkat: bentuk })
+    }
+
+    if ((page, limit)) {
+      sekolah = await sekolah.forPage(page, limit).fetch();
+    } else {
+      sekolah = await sekolah.limit(50).fetch();
+    }
+
+    const bentukData = await MSekolah.query()
+      .select("tingkat")
+      .whereNotNull("tingkat")
+      .distinct("tingkat").fetch();
+
+    return {sekolah, bentuk: bentukData};
   }
 
   async getBukuInduk({ response, request, auth }) {
