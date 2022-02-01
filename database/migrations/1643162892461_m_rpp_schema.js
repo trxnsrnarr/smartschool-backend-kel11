@@ -17,7 +17,6 @@ class MRppSchema extends Schema {
       table.integer("soal");
       table.integer("waktu");
       table.integer("kkm");
-      table.string("tingkat");
       table.string("penyusun"); 
       table.integer("m_ujian_id").unsigned().index("m_ujian_id");
       table
