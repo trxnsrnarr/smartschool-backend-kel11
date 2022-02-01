@@ -1443,6 +1443,9 @@ Route.delete(
   "SecondController.deleteSuratKeputusan"
 );
 
+//Buku Kerja  Service
+Route.get("/buku-kerja-guru", "DinasController.getBukuKerjaGuru");
+
 // Dinas
 Route.get("/dashboard/dinas", "DinasController.getDashboard");
 
