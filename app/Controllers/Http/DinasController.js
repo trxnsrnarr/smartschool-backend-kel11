@@ -984,12 +984,12 @@ class DinasController {
       .first();
     if (kodeEtik) {
       bukuKerja2 = bukuKerja2 + 1;
-      const ikrar = await MRpp.query()
-        .where({ m_user_id: user.id })
-        .andWhere({ dihapus: 0 })
-        .where({ tipe: "ikrar" })
-        .first();
     }
+    const ikrar = await MRpp.query()
+      .where({ m_user_id: user.id })
+      .andWhere({ dihapus: 0 })
+      .where({ tipe: "ikrar" })
+      .first();
     if (ikrar) {
       bukuKerja2 = bukuKerja2 + 1;
     }
