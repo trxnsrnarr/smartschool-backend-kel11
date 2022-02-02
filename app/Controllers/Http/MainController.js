@@ -3489,14 +3489,14 @@ class MainController {
         .paginate(page, 25);
     } else {
       siswa = await User.query()
-      .with("anggotaRombel", (builder) => {
-        builder
-          .with("rombel", (builder) => {
-            builder.select("id", "nama");
-          })
-          .whereIn("m_rombel_id", rombelIds)
-          .andWhere({ dihapus: 0 });
-      })
+        .with("anggotaRombel", (builder) => {
+          builder
+            .with("rombel", (builder) => {
+              builder.select("id", "nama");
+            })
+            .whereIn("m_rombel_id", rombelIds)
+            .andWhere({ dihapus: 0 });
+        })
         .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ dihapus: 0 })
@@ -8704,7 +8704,9 @@ class MainController {
           m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id,
           tipe: "tugas",
           dihapus: 0,
-          tanggal_pembagian: `${tanggal_pembagian} ${waktu_pembagian ? waktu_pembagian : `00:00:00`}`,
+          tanggal_pembagian: `${tanggal_pembagian} ${
+            waktu_pembagian ? waktu_pembagian : `00:00:00`
+          }`,
         });
 
         const idsGuru = await User.query()
@@ -8742,7 +8744,9 @@ class MainController {
               m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id,
               tipe: "tugas",
               dihapus: 0,
-              tanggal_pembagian: `${tanggal_pembagian} ${waktu_pembagian ? waktu_pembagian : `00:00:00`}`,
+              tanggal_pembagian: `${tanggal_pembagian} ${
+                waktu_pembagian ? waktu_pembagian : `00:00:00`
+              }`,
             });
           })
         );
@@ -10642,7 +10646,31 @@ class MainController {
         .andWhere({ role: role })
         .fetch();
 
+      let total;
+      total = await User.query()
+        .where({ dihapus: 0 })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .whereIn("role", ["guru", "admin", "kepsek"])
+        .getCount();
+      const hadir = absen.toJSON().filter((d) => d.absen == "hadir").length;
+
+      const sakit = absen.toJSON().filter((d) => d.absen == "sakit").length;
+
+      const izin = absen.toJSON().filter((d) => d.absen == "izin").length;
+
+      const alpa =
+        total -
+        absen
+          .toJSON()
+          .filter(
+            (d) => d.absen == "hadir" || d.absen == "sakit" || d.absen == "izin"
+          ).length;
+
       return response.ok({
+        hadir,
+        izin,
+        sakit,
+        alpa,
         absen: absen,
       });
     } else if (role == "siswa") {
@@ -12575,7 +12603,7 @@ class MainController {
       const rombel = await MRombel.query()
         .whereIn("id", [...rombelIds, ...rombelWalas])
         .andWhere({ dihapus: 0 })
-        .andWhere({m_ta_id:ta.id})
+        .andWhere({ m_ta_id: ta.id })
         .fetch();
 
       const jadwalIds = await TkJadwalUjian.query()
@@ -19940,14 +19968,12 @@ class MainController {
       notRole = [],
       sekolah_id,
       bentuk,
-      m_sekolah_id
+      m_sekolah_id,
     } = request.get();
 
     let sekolahIds = [];
     if (bentuk) {
-      sekolahIds = await MSekolah.query()
-        .where({ tingkat: bentuk })
-        .ids();
+      sekolahIds = await MSekolah.query().where({ tingkat: bentuk }).ids();
     }
 
     let user = User.query()
@@ -19981,11 +20007,11 @@ class MainController {
     }
     if (sekolah_id) {
       user.where({ m_sekolah_id: sekolah_id });
-    } 
+    }
     if (m_sekolah_id) {
       user.where({ m_sekolah_id: m_sekolah_id });
     } else if (sekolahIds.length) {
-      user.whereIn("m_sekolah_id", sekolahIds)
+      user.whereIn("m_sekolah_id", sekolahIds);
     }
 
     if (user_id) {
