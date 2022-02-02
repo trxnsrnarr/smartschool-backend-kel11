@@ -1141,6 +1141,15 @@ class SecondController {
             tipe: "Realisasi",
           });
         }
+        await MHistoriAktivitas.create({
+          jenis: "Ubah Akun",
+          m_user_id: user.id,
+          awal: `Terhubung dengan Akun Rekening? : Tidak menjadi `,
+          akhir: `"Ya"`,
+          bawah: `${akun.nama}`,
+          m_sekolah_id: sekolah.id,
+          tipe: "Realisasi",
+        });
       } else {
         await MRekSekolah.create({
           bank,
@@ -1163,9 +1172,11 @@ class SecondController {
         });
       }
     } else if (!rek) {
-      await MRekSekolah.query().where({ id: check.id }).update({
-        dihapus: 1,
-      });
+      if (check) {
+        await MRekSekolah.query().where({ id: check.id }).update({
+          dihapus: 1,
+        });
+      }
       await MHistoriAktivitas.create({
         jenis: "Ubah Akun",
         m_user_id: user.id,
