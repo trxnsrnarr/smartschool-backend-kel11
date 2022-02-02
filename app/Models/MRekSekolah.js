@@ -9,7 +9,7 @@ class MRekSekolah extends Model {
   }
   
   akun() {
-    return this.belongsTo("App/Models/MKeuAkun", "id", "m_rek_sekolah_id");
+    return this.belongsTo("App/Models/MKeuAkun");
   }
 }
 
