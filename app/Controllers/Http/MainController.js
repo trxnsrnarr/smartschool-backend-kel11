@@ -12161,7 +12161,7 @@ class MainController {
       opsi_a_uraian,
       opsi_b_uraian,
       rubrik_kj: JSON.stringify(rubrik_kj),
-      pembahasan: htmlEscaper.escape(pembahasan),
+      pembahasan: htmlEscaper.escape(pembahasan ? pembahasan.trim() ? pembahasan : "-"  : "-"),
       nilai_soal,
       m_user_id: user.id,
       dihapus: 0,
