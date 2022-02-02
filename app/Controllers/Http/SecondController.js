@@ -1162,7 +1162,7 @@ class SecondController {
           tipe: "Realisasi",
         });
       }
-    } else if (check) {
+    } else if (!rek) {
       await MRekSekolah.query().where({ id: check.id }).update({
         dihapus: 1,
       });

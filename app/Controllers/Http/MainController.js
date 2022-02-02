@@ -10671,6 +10671,7 @@ class MainController {
         izin,
         sakit,
         alpa,
+        total,
         absen: absen,
       });
     } else if (role == "siswa") {
