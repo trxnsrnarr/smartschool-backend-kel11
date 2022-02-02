@@ -19818,12 +19818,12 @@ class MainController {
     }
 
     const user = await auth.getUser();
-    const { search, sekolah_id, page, bentuk } = request.get();
+    const { search, m_sekolah_id, page, bentuk } = request.get();
 
     let sekolahIds = MSekolah.query();
 
-    if (sekolah_id) {
-      sekolahIds.where({ id: sekolah_id });
+    if (m_sekolah_id) {
+      sekolahIds.where({ id: m_sekolah_id });
     }
     if (bentuk) {
       sekolahIds.where({ tingkat: bentuk });
@@ -19902,7 +19902,16 @@ class MainController {
       role = [],
       notRole = [],
       sekolah_id,
+      bentuk,
+      m_sekolah_id
     } = request.get();
+
+    let sekolahIds = [];
+    if (bentuk) {
+      sekolahIds = await MSekolah.query()
+        .where({ tingkat: bentuk })
+        .ids();
+    }
 
     let user = User.query()
       .with("sekolah")
@@ -19935,6 +19944,11 @@ class MainController {
     }
     if (sekolah_id) {
       user.where({ m_sekolah_id: sekolah_id });
+    } 
+    if (m_sekolah_id) {
+      user.where({ m_sekolah_id: m_sekolah_id });
+    } else if (sekolahIds.length) {
+      user.whereIn("m_sekolah_id", sekolahIds)
     }
 
     if (user_id) {
