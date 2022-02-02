@@ -5928,6 +5928,9 @@ class MainController {
         .withCount("komen as total_komen", (builder) => {
           builder.where({ dihapus: 0 });
         })
+        .withCount("tkTimeline as total_respon", (builder) => {
+          builder.whereNotNull("waktu_pengumpulan");
+        })
         .with("tugas")
         .whereIn("tipe", ["absen", "tugas"])
         .andWhere(
