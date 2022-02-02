@@ -5892,58 +5892,55 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .ids();
 
-      let pertemuan;
-    if(sekolah.id == 11){
+    let pertemuan;
+    if (sekolah.id == 11) {
+      pertemuan = await MTimeline.query()
+        .with("user")
+        .with("komen", (builder) => {
+          builder.with("user").where({ dihapus: 0 });
+        })
+        .with("rombel")
+        .withCount("tkTimeline as total_absen", (builder) => {
+          builder.whereNotNull("waktu_absen");
+        })
+        .withCount("tkTimeline as total_siswa")
+        .withCount("komen as total_komen", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .whereIn("tipe", ["absen", "tugas"])
+        .andWhere(
+          "tanggal_pembagian",
+          "like",
+          `${moment().format("YYYY-MM-DD")}%`
+        )
+        .whereIn("m_user_id", guruIds)
+        .orderBy("id", "desc")
+        .fetch();
+    } else {
+      pertemuan = await MTimeline.query()
+        .with("user")
+        .with("komen", (builder) => {
+          builder.with("user").where({ dihapus: 0 });
+        })
+        .with("rombel")
+        .withCount("tkTimeline as total_absen", (builder) => {
+          builder.whereNotNull("waktu_absen");
+        })
+        .withCount("tkTimeline as total_siswa")
+        .withCount("komen as total_komen", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .where("tipe", "absen")
+        .andWhere(
+          "tanggal_pembagian",
+          "like",
+          `${moment().format("YYYY-MM-DD")}%`
+        )
+        .whereIn("m_user_id", guruIds)
+        .orderBy("id", "desc")
+        .fetch();
+    }
 
-    pertemuan = await MTimeline.query()
-      .with("user")
-      .with("komen", (builder) => {
-        builder.with("user").where({ dihapus: 0 });
-      })
-      .with("rombel")
-      .withCount("tkTimeline as total_absen", (builder) => {
-        builder.whereNotNull("waktu_absen");
-      })
-      .withCount("tkTimeline as total_siswa")
-      .withCount("komen as total_komen", (builder) => {
-        builder.where({ dihapus: 0 });
-      })
-      .whereIn("tipe", ["absen", "tugas"])
-      .andWhere(
-        "tanggal_pembagian",
-        "like",
-        `${moment().format("YYYY-MM-DD")}%`
-      )
-      .whereIn("m_user_id", guruIds)
-      .orderBy("id", "desc")
-      .fetch();
-    }else{
-      
-     pertemuan = await MTimeline.query()
-    .with("user")
-    .with("komen", (builder) => {
-      builder.with("user").where({ dihapus: 0 });
-    })
-    .with("rombel")
-    .withCount("tkTimeline as total_absen", (builder) => {
-      builder.whereNotNull("waktu_absen");
-    })
-    .withCount("tkTimeline as total_siswa")
-    .withCount("komen as total_komen", (builder) => {
-      builder.where({ dihapus: 0 });
-    })
-    .where("tipe", "absen")
-    .andWhere(
-      "tanggal_pembagian",
-      "like",
-      `${moment().format("YYYY-MM-DD")}%`
-    )
-    .whereIn("m_user_id", guruIds)
-    .orderBy("id", "desc")
-    .fetch();
-  }
-    
-    
     return response.ok({ pertemuan });
   }
 
@@ -6141,10 +6138,10 @@ class MainController {
         .andWhere({ tingkat })
         .andWhere({ m_jurusan_id })
         .first();
-        if(check){
-          if (check.dihapus) {
-        await MMateri.query().where({ id: check.id }).update({ dihapus: 0 });
-      }
+      if (check) {
+        if (check.dihapus) {
+          await MMateri.query().where({ id: check.id }).update({ dihapus: 0 });
+        }
       }
 
       if (!check) {
@@ -7089,6 +7086,86 @@ class MainController {
 
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    if (sekolah.id == 40) {
+      if (user.role == "siswa") {
+        const rombelIds = await MRombel.query()
+          .where({ m_sekolah_id: sekolah.id })
+          .andWhere({ dihapus: 0 })
+          .ids();
+
+        const rombelIdsAnggota = await MAnggotaRombel.query()
+          .whereIn("m_rombel_id", rombelIds)
+          .andWhere({ m_user_id: user.id })
+          .andWhere({ dihapus: 0 })
+          .pluck("m_rombel_id");
+
+        const materiIds = await TkMateriRombel.query()
+          .whereIn("m_rombel_id", rombelIdsAnggota)
+          .pluck("m_materi_id");
+
+        const materi = await MMateri.query()
+          .with("jurusan")
+          .with("mataPelajaran", (builder) => {
+            builder.with("user");
+          })
+          .withCount("bab", (builder) => {
+            builder.where({ dihapus: 0 });
+          })
+          .whereIn("id", materiIds)
+          .andWhere({ dihapus: 0 })
+          .fetch();
+
+        // const materiLainnya = await MMateri.query()
+        //   .with("user")
+        //   .with("sekolah")
+        //   .withCount("bab", (builder) => {
+        //     builder.where({ dihapus: 0 });
+        //   })
+        //   .where({ m_sekolah_id: sekolah.id })
+        //   .andWhere({ dihapus: 0 })
+        //   .fetch();
+
+        return response.ok({
+          materi,
+          // materiLainnya,
+        });
+      }
+
+      const mataPelajaranIds = await MMataPelajaran.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ m_user_id: user.id })
+        .andWhere({ dihapus: 0 })
+        .ids();
+
+      const materi = await MMateri.query()
+        .with("jurusan")
+        .with("mataPelajaran")
+        .withCount("bab", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .withCount("rekap as total", (builder) => {
+          builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id });
+        })
+        .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
+        .where({ dihapus: 0 })
+        .fetch();
+
+      // const materiLainnya = await MMateri.query()
+      //   .with("user")
+      //   .with("sekolah")
+      //   .withCount("bab", (builder) => {
+      //     builder.where({ dihapus: 0 });
+      //   })
+      //   .where({ m_sekolah_id: sekolah.id })
+      //   .andWhere({ dihapus: 0 })
+      //   .fetch();
+
+      return response.ok({
+        materi,
+        // materiLainnya,
+      });
     }
 
     if (user.role == "siswa") {
@@ -19743,37 +19820,37 @@ class MainController {
     const user = await auth.getUser();
     const { search, sekolah_id, page, bentuk } = request.get();
 
-    let sekolahIds = MSekolah.query()
+    let sekolahIds = MSekolah.query();
 
     if (sekolah_id) {
-      sekolahIds.where({ id: sekolah_id })
+      sekolahIds.where({ id: sekolah_id });
     }
     if (bentuk) {
-      sekolahIds.where({ tingkat: bentuk })
+      sekolahIds.where({ tingkat: bentuk });
     }
     sekolahIds = await sekolahIds.ids();
 
-    let proyekAll =  MProyek.query()
-    .withCount("anggota", (builder) => {
-      builder.where({ status: "menerima" });
-    })
-    .with("anggota", (builder) => {
-      builder
-        .with("user", (builder) => {
-          builder.select("id", "m_sekolah_id").with("sekolah", (builder) => {
-            builder.select("id", "nama", "logo_ss");
-          });
-        })
-        .where({ status: "menerima" });
-    })
-      .whereIn("m_sekolah_id", sekolahIds)
+    let proyekAll = MProyek.query()
+      .withCount("anggota", (builder) => {
+        builder.where({ status: "menerima" });
+      })
+      .with("anggota", (builder) => {
+        builder
+          .with("user", (builder) => {
+            builder.select("id", "m_sekolah_id").with("sekolah", (builder) => {
+              builder.select("id", "nama", "logo_ss");
+            });
+          })
+          .where({ status: "menerima" });
+      })
+      .whereIn("m_sekolah_id", sekolahIds);
 
     if (search) {
-      proyekAll.where("nama", "like", `%${search}%`)
+      proyekAll.where("nama", "like", `%${search}%`);
     }
     proyekAll = await proyekAll.paginate(page, 20);
 
-    return {proyekAll}
+    return { proyekAll };
   }
 
   async detailProyek({ response, request, auth, params: { proyek_id } }) {
@@ -26713,7 +26790,7 @@ class MainController {
     }
 
     if (bentuk) {
-      sekolah.where({ tingkat: bentuk })
+      sekolah.where({ tingkat: bentuk });
     }
 
     if ((page, limit)) {
@@ -26725,9 +26802,10 @@ class MainController {
     const bentukData = await MSekolah.query()
       .select("tingkat")
       .whereNotNull("tingkat")
-      .distinct("tingkat").fetch();
+      .distinct("tingkat")
+      .fetch();
 
-    return {sekolah, bentuk: bentukData};
+    return { sekolah, bentuk: bentukData };
   }
 
   async getBukuInduk({ response, request, auth }) {
