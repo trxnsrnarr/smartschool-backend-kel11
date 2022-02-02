@@ -237,6 +237,7 @@ Route.delete("/materi/:materi_id", "MainController.deleteMateri");
 
 // rencana Keuangan
 Route.get("rencana-keuangan", "KeuanganController.getPerencanaan");
+Route.get("rencana-rekening-keuangan/:perencanaan_id", "KeuanganController.detailRekeningPerencanaan");
 Route.get("rencana-keuangan/:perencanaan_id", "KeuanganController.detailPerencanaan");
 Route.post("rencana-keuangan", "KeuanganController.postPerencanaan");
 Route.put("rencana-keuangan/:perencanaan_id", "KeuanganController.putPerencanaan");
