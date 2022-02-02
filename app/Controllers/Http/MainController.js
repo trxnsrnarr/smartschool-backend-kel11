@@ -3465,9 +3465,22 @@ class MainController {
 
     page = page ? parseInt(page) : 1;
     let siswa;
+    const rombelIds = await MRombel.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .ids();
 
     if (search) {
       siswa = await User.query()
+        .with("anggotaRombel", (builder) => {
+          builder
+            .with("rombel", (builder) => {
+              builder.select("id", "nama");
+            })
+            .whereIn("m_rombel_id", rombelIds)
+            .andWhere({ dihapus: 0 });
+        })
         .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ dihapus: 0 })
@@ -3476,6 +3489,14 @@ class MainController {
         .paginate(page, 25);
     } else {
       siswa = await User.query()
+      .with("anggotaRombel", (builder) => {
+        builder
+          .with("rombel", (builder) => {
+            builder.select("id", "nama");
+          })
+          .whereIn("m_rombel_id", rombelIds)
+          .andWhere({ dihapus: 0 });
+      })
         .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ dihapus: 0 })
@@ -5907,6 +5928,7 @@ class MainController {
         .withCount("komen as total_komen", (builder) => {
           builder.where({ dihapus: 0 });
         })
+        .with("tugas")
         .whereIn("tipe", ["absen", "tugas"])
         .andWhere(
           "tanggal_pembagian",
@@ -8670,6 +8692,7 @@ class MainController {
           m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id,
           tipe: "tugas",
           dihapus: 0,
+          tanggal_pembagian: `${tanggal_pembagian} ${waktu_pembagian}`,
         });
 
         const idsGuru = await User.query()
@@ -8707,6 +8730,7 @@ class MainController {
               m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id,
               tipe: "tugas",
               dihapus: 0,
+              tanggal_pembagian: `${tanggal_pembagian} ${waktu_pembagian}`,
             });
           })
         );
