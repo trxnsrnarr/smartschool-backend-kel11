@@ -13,11 +13,11 @@ class MJurusan extends Model {
   }
 
   rombel() {
-    return this.hasMany("App/Models/MRombel", "m_jurusan_id");
+    return this.hasMany("App/Models/MRombel");
   }
 
   penerimaanSiswa() {
-    return this.hasMany("App/Models/MPenerimaanSiswa", "m_jurusan_id");
+    return this.hasMany("App/Models/MPenerimaanSiswa");
   }
 }
 
