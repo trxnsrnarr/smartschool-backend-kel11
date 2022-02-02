@@ -6112,8 +6112,10 @@ class MainController {
         .andWhere({ tingkat })
         .andWhere({ m_jurusan_id })
         .first();
-      if (check.dihapus) {
+        if(check){
+          if (check.dihapus) {
         await MMateri.query().where({ id: check.id }).update({ dihapus: 0 });
+      }
       }
 
       if (!check) {
@@ -11897,6 +11899,8 @@ class MainController {
       daftar_soal_ujian_id,
     } = request.post();
 
+    let totalSoalTambah = 0;
+
     if (daftar_soal_ujian_id) {
       let soalUjianData = [];
       if (daftar_soal_ujian_id.length) {
@@ -11909,12 +11913,14 @@ class MainController {
             .toJSON()
             .find((tk) => tk.m_soal_ujian_id == d);
           if (!checkLagi) {
+            totalSoalTambah = totalSoalTambah + 1;
             soalUjianData.push({
               m_ujian_id: m_ujian_id,
               m_soal_ujian_id: d,
               dihapus: 0,
             });
           } else if (checkLagi.dihapus) {
+            totalSoalTambah = totalSoalTambah + 1;
             await TkSoalUjian.query()
               .where({ id: checkLagi.id })
               .update({ dihapus: 0 });
@@ -11923,6 +11929,18 @@ class MainController {
       }
 
       await TkSoalUjian.createMany(soalUjianData);
+
+      const checkTotal = await MRpp.query()
+        .where({ m_ujian_id: m_ujian_id })
+        .first();
+
+      if (checkTotal) {
+        await MRpp.query()
+          .where({ m_ujian_id: m_ujian_id })
+          .update({
+            soal: checkTotal.soal + totalSoalTambah,
+          });
+      }
 
       return response.ok({
         message: messagePostSuccess,
@@ -11974,12 +11992,26 @@ class MainController {
       .first();
     if (check) {
       await TkSoalUjian.query().where({ id: check.id }).update({ dihapus: 0 });
+      totalSoalTambah = totalSoalTambah + 1;
     } else {
       const tkSoalUjian = await TkSoalUjian.create({
         dihapus: 0,
         m_ujian_id: m_ujian_id,
         m_soal_ujian_id: soalUjian.id,
       });
+      totalSoalTambah = totalSoalTambah + 1;
+    }
+
+    const checkTotal = await MRpp.query()
+      .where({ m_ujian_id: m_ujian_id })
+      .first();
+
+    if (checkTotal) {
+      await MRpp.query()
+        .where({ m_ujian_id: m_ujian_id })
+        .update({
+          soal: checkTotal.soal + totalSoalTambah,
+        });
     }
 
     return response.ok({
@@ -12095,6 +12127,8 @@ class MainController {
       }
     });
 
+    let totalSoalTambah = 0;
+
     const result = await Promise.all(
       data.map(async (d) => {
         const soalUjian = await MSoalUjian.create({
@@ -12124,8 +12158,21 @@ class MainController {
           m_ujian_id: m_ujian_id,
           m_soal_ujian_id: soalUjian.id,
         });
+        totalSoalTambah = totalSoalTambah + 1;
       })
     );
+
+    const checkTotal = await MRpp.query()
+      .where({ m_ujian_id: m_ujian_id })
+      .first();
+
+    if (checkTotal) {
+      await MRpp.query()
+        .where({ m_ujian_id: m_ujian_id })
+        .update({
+          soal: checkTotal.soal + totalSoalTambah,
+        });
+    }
 
     return result;
   }
@@ -12285,6 +12332,18 @@ class MainController {
         .update({
           dihapus: 1,
         });
+
+      const checkTotal = await MRpp.query()
+        .where({ m_ujian_id: m_ujian_id })
+        .first();
+
+      if (checkTotal) {
+        await MRpp.query()
+          .where({ m_ujian_id: m_ujian_id })
+          .update({
+            soal: checkTotal.soal - 1,
+          });
+      }
     }
 
     if (soalUjian > 0 || tkSoalUjian > 0) {
