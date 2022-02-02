@@ -25,6 +25,7 @@ const MKeuTransaksi = use("App/Models/MKeuTransaksi");
 const MRencanaAktivitasTransaksi = use("App/Models/MRencanaAktivitasTransaksi");
 const TkRencanaKategoriTipeAkun = use("App/Models/TkRencanaKategoriTipeAkun");
 const MHistoriAktivitas = use("App/Models/MHistoriAktivitas");
+const MRekSekolah = use("App/Models/MRekSekolah");
 
 const moment = require("moment");
 require("moment/locale/id");
@@ -151,6 +152,64 @@ class KeuanganController {
 
     return response.ok({
       perencanaan,
+    });
+  }
+
+  async detailRekeningPerencanaan({
+    response,
+    request,
+    auth,
+    params: { perencanaan_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const user = await auth.getUser();
+
+    let rekSekolah = await MRekSekolah.query()
+      // .with("akun", (builder) => {
+      //   builder.where({ dihapus: 0 }).with("rencanaJurnal", (builder) => {
+      //     builder
+      //       .where({ dihapus: 0 })
+      //       .whereIn("m_rencana_transaksi_id", transaksiIds);
+      //   });
+      // })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
+    const transaksiIds = await MRencanaTransaksi.query()
+      .where({ m_rencana_keuangan_id: perencanaan_id })
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
+      .ids();
+    const jurnalIds = await MKeuRencanaJurnal.query()
+      .where({ dihapus: 0 })
+      .whereIn("m_rencana_transaksi_id", transaksiIds)
+      .ids();
+
+    const keuangan = await MKeuTemplateAkun.query()
+      .andWhere({
+        m_sekolah_id: sekolah.id,
+      })
+      .first();
+    const akun = await MKeuAkun.query()
+      .with("rek")
+      .with("rencanaJurnal", (builder) => {
+        builder.whereIn("id", jurnalIds);
+      })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
+    return response.ok({
+      rekSekolah,
+      keuangan,
+      akun,
     });
   }
 
@@ -347,9 +406,10 @@ class KeuanganController {
       });
     }
 
-    if (moment(rencanaSebelum.tanggal_akhir).format(
-      "dddd, DD MMM YYYY"
-    ) != moment(tanggal_akhir).format("dddd, DD MMM YYYY")) {
+    if (
+      moment(rencanaSebelum.tanggal_akhir).format("dddd, DD MMM YYYY") !=
+      moment(tanggal_akhir).format("dddd, DD MMM YYYY")
+    ) {
       await MHistoriAktivitas.create({
         jenis: "Ubah Perencanaan",
         m_user_id: user.id,
@@ -362,9 +422,10 @@ class KeuanganController {
       });
     }
 
-    if (moment(rencanaSebelum.tanggal_awal).format(
-      "dddd, DD MMM YYYY"
-    ) != moment(tanggal_awal).format("dddd, DD MMM YYYY")) {
+    if (
+      moment(rencanaSebelum.tanggal_awal).format("dddd, DD MMM YYYY") !=
+      moment(tanggal_awal).format("dddd, DD MMM YYYY")
+    ) {
       await MHistoriAktivitas.create({
         jenis: "Ubah Perencanaan",
         m_user_id: user.id,
@@ -1077,7 +1138,7 @@ class KeuanganController {
     const kategoriLaba = await MRencanaKategoriLabaRugi.query()
       .where({ id: kategori_id })
       .first();
-      
+
     const kategori = await MRencanaKategoriLabaRugi.query()
       .where({ id: kategori_id })
       .update({
@@ -1090,7 +1151,6 @@ class KeuanganController {
         message: messageNotFound,
       });
     }
-
 
     const rencana = await MRencanaKeuangan.query()
       .where({ id: kategoriLaba.m_rencana_keuangan_id })
@@ -2610,7 +2670,6 @@ class KeuanganController {
       });
     }
 
-
     const rencana = await MRencanaKeuangan.query()
       .where({ id: kategoriArusKas.m_rencana_keuangan_id })
       .first();
@@ -3756,7 +3815,10 @@ class KeuanganController {
       );
     }
     if (tanggal_awal) {
-      histori.whereBetween("created_at", [`${tanggal_awal} 00:00:00`, `${tanggal_akhir} 23:59:59`]);
+      histori.whereBetween("created_at", [
+        `${tanggal_awal} 00:00:00`,
+        `${tanggal_akhir} 23:59:59`,
+      ]);
     }
     if (tipe) {
       histori.andWhere("tipe", "like", `%${tipe}%`);
