@@ -1448,6 +1448,7 @@ Route.delete(
 //Buku Kerja  Service
 Route.get("/buku-kerja-guru", "DinasController.getBukuKerjaGuru");
 Route.get("/buku-kerja-detail", "DinasController.getBukuKerja");
+Route.post("/buku-kerja", "DinasController.postBukuKerja");
 
 // Dinas
 Route.get("/dashboard/dinas", "DinasController.getDashboard");
