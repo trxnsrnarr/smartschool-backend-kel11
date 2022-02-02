@@ -79,6 +79,24 @@ class KeuanganController {
     return ta;
   }
 
+  async getRencanaAktif(sekolah, withTransaksi) {
+    let rencana = MRencanaKeuangan.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where("tanggal_akhir", ">=", moment().format("YYYY-MM-DD"))
+      .where("tanggal_awal", "<=", moment().format("YYYY-MM-DD"));
+
+    if (withTransaksi) {
+      rencana.with("transaksi", (builder) => {
+        builder.where({ dihapus: 0 }).with("jurnal", (builder) => {
+          builder.where({ dihapus: 0 });
+        });
+      });
+    }
+
+    rencana = await rencana.first();
+    return rencana;
+  }
+
   async getRencanaKeuangan({ request, response, auth }) {
     const domain = request.headers().origin;
 

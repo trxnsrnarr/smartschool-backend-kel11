@@ -353,7 +353,9 @@ class SecondController {
     if (withTransaksi) {
       rencana.with("transaksi", (builder) => {
         builder.where({ dihapus: 0 }).with("jurnal", (builder) => {
-          builder.where({ dihapus: 0 });
+          builder.where({ dihapus: 0 }).with("akun", (builder) => {
+            builder.select("id", "nama");
+          });
         });
       });
     }
@@ -1839,7 +1841,13 @@ class SecondController {
     }
     const user = await auth.getUser();
 
-    let { nama, nomor, tanggal, jurnal = [] } = request.post();
+    let {
+      nama,
+      nomor,
+      tanggal,
+      jurnal = [],
+      m_rencana_transaksi_id,
+    } = request.post();
 
     const rules = {
       nama: "required",
@@ -1858,6 +1866,7 @@ class SecondController {
       nama,
       nomor,
       tanggal,
+      m_rencana_transaksi_id,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
     });
@@ -1897,7 +1906,13 @@ class SecondController {
 
     const user = await auth.getUser();
 
-    let { nama, nomor, tanggal, jurnal = [] } = request.post();
+    let {
+      nama,
+      nomor,
+      tanggal,
+      jurnal = [],
+      m_rencana_transaksi_id,
+    } = request.post();
 
     const rules = {
       nama: "required",
@@ -2027,6 +2042,7 @@ class SecondController {
         nama,
         nomor,
         tanggal,
+        m_rencana_transaksi_id,
       });
     if (!update) {
       return response.notFound({
