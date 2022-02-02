@@ -22,6 +22,7 @@ const MCamera = use("App/Models/MCamera");
 const MAbsenBelumTerdaftar = use("App/Models/MAbsenBelumTerdaftar");
 const MKeteranganPkl = use("App/Models/MKeteranganPkl");
 const MRaporEkskul = use("App/Models/MRaporEkskul");
+const MRencanaKeuangan = use("App/Models/MRencanaKeuangan");
 const MRekapRombel = use("App/Models/MRekapRombel");
 const TkRekapNilai = use("App/Models/TkRekapNilai");
 const MGelombangPpdb = use("App/Models/MGelombangPpdb");
@@ -342,6 +343,25 @@ class SecondController {
 
     return ta;
   }
+
+  async getRencanaAktif(sekolah, withTransaksi) {
+    let rencana = MRencanaKeuangan.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where("tanggal_akhir", ">=", moment().format("YYYY-MM-DD"))
+      .where("tanggal_awal", "<=", moment().format("YYYY-MM-DD"));
+
+    if (withTransaksi) {
+      rencana.with("transaksi", (builder) => {
+        builder.where({ dihapus: 0 }).with("jurnal", (builder) => {
+          builder.where({ dihapus: 0 });
+        });
+      });
+    }
+
+    rencana = await rencana.first();
+    return rencana;
+  }
+
   async getJadwalMengajarAll({ response, request, auth }) {
     const user = await auth.getUser();
 
@@ -1745,6 +1765,8 @@ class SecondController {
     }
     const user = await auth.getUser();
 
+    const rencana = await this.getRencanaAktif(sekolah, 1);
+
     const { page, search, dari_tanggal, sampai_tanggal, tipe_akun } =
       request.get();
 
@@ -1792,6 +1814,7 @@ class SecondController {
       transaksi,
       akun,
       keuangan,
+      rencana,
     });
   }
 
