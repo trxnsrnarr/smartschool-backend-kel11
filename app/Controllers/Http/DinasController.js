@@ -585,7 +585,7 @@ class DinasController {
 
     const ta = await this.getTAAktif(sekolah);
 
-    let { search, jenis, role, tanggal, page, jurusan_id, rombel_id,tingkat } =
+    let { search, jenis, role, tanggal, page, jurusan_id, rombel_id, tingkat } =
       request.get();
 
     page = page ? parseInt(page) : 1;
@@ -671,7 +671,7 @@ class DinasController {
       if (rombel_id) {
         rombelIds.andWhere({ m_rombel_id: rombel_id });
       }
-      if(tingkat){
+      if (tingkat) {
         rombelIds.andWhere({ tingkat: tingkat });
       }
       rombelIds = await rombelIds.ids();
@@ -733,7 +733,57 @@ class DinasController {
     }
 
     let { search, tipe } = request.get();
+    const mataPelajaranIds = await MMataPelajaran.query()
+      .where({ m_user_id: user.id })
+      .ids();
 
+    const jamMengajarIds = await MJamMengajar.query()
+      .where({ kode_hari: kode_hari })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .ids();
+
+    const rombel = await MJadwalMengajar.query()
+      .with("rombel", (builder) => {
+        builder.select("id", "nama").where({ dihapus: 0 });
+      })
+      .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
+      .whereIn("m_jam_mengajar_id", jamMengajarIds)
+      .fetch();
+
+    const mataPelajaran = await MMataPelajaran.query()
+      .select("id", "nama")
+      .where({ m_user_id: user.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    let tingkatRombel = [];
+    const semuaTA = await Mta.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA") {
+      tingkatRombel = ["X", "XI", "XII"];
+    } else if (sekolah.tingkat == "SMP") {
+      tingkatRombel = ["VII", "VIII", "IX"];
+    } else if (sekolah.tingkat == "SD") {
+      tingkatRombel = ["I", "II", "III", "IV", "V", "VI"];
+    } else if (sekolah.tingkat == "SLB") {
+      tingkatRombel = [
+        "I",
+        "II",
+        "III",
+        "IV",
+        "V",
+        "VI",
+        "VII",
+        "VIII",
+        "IX",
+        "X",
+        "XI",
+        "XII",
+      ];
+    }
     const user = await auth.getUser();
     let data;
     if (tipe == "skl") {
@@ -926,6 +976,10 @@ class DinasController {
 
     return response.ok({
       data,
+      rombel,
+      mataPelajaran,
+      semuaTA,
+      tingkatRombel,
     });
   }
 
@@ -1586,7 +1640,7 @@ class DinasController {
             waktu,
             kkm,
             soal,
-            penyusun:m_user_id,
+            penyusun: m_user_id,
             m_sekolah_id: sekolah.id,
           });
         })
@@ -1939,7 +1993,6 @@ class DinasController {
       dihapus: 0,
     });
 
-
     await TkBankSoalGuru.create({
       m_ujian_id: ujian.id,
       m_user_id: user.id,
@@ -1960,7 +2013,6 @@ class DinasController {
     await MSekolah.query().where({ id: sekolah.id }).update({
       jumlah_ujian: jumlahUjian,
     });
-  
 
     let soal = 0;
     if (ujian_id) {
@@ -1974,10 +2026,10 @@ class DinasController {
           m_soal_ujian_id: item,
           dihapus: 0,
         });
-        soal = soal + 1
+        soal = soal + 1;
       });
     }
-    
+
     await MRpp.create({
       m_mata_pelajaran_id,
       judul: nama,
@@ -1992,7 +2044,7 @@ class DinasController {
       m_user_id: user.id,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
-      m_ta_id:ta.id,
+      m_ta_id: ta.id,
     });
     await MRpp.create({
       m_mata_pelajaran_id,
@@ -2007,7 +2059,7 @@ class DinasController {
       m_user_id: user.id,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
-      m_ta_id:ta.id,
+      m_ta_id: ta.id,
     });
     // if (m_user_id.length) {
     //   await Promise.all(
