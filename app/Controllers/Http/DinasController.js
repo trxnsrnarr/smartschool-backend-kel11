@@ -732,7 +732,10 @@ class DinasController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
+    const user = await auth.getUser();
     let { search, tipe } = request.get();
+    
+    const ta = await this.getTAAktif(sekolah);
     const mataPelajaranIds = await MMataPelajaran.query()
       .where({ m_user_id: user.id })
       .ids();
@@ -784,7 +787,6 @@ class DinasController {
         "XII",
       ];
     }
-    const user = await auth.getUser();
     let data;
     if (tipe == "skl") {
       data = await MRpp.query()
