@@ -5908,6 +5908,8 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
+    let { tanggal } = request.get();
+
     const guruIds = await User.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
@@ -5915,7 +5917,7 @@ class MainController {
 
     let pertemuan;
     if (sekolah.id == 11 || sekolah.id == 13) {
-      pertemuan = await MTimeline.query()
+      pertemuan = MTimeline.query()
         .with("user")
         .with("komen", (builder) => {
           builder.with("user").where({ dihapus: 0 });
@@ -5939,10 +5941,9 @@ class MainController {
           `${moment().format("YYYY-MM-DD")}%`
         )
         .whereIn("m_user_id", guruIds)
-        .orderBy("id", "desc")
-        .fetch();
+        .orderBy("id", "desc");
     } else {
-      pertemuan = await MTimeline.query()
+      pertemuan = MTimeline.query()
         .with("user")
         .with("komen", (builder) => {
           builder.with("user").where({ dihapus: 0 });
@@ -5971,9 +5972,18 @@ class MainController {
           `${moment().format("YYYY-MM-DD")}%`
         )
         .whereIn("m_user_id", guruIds)
-        .orderBy("id", "desc")
-        .fetch();
+        .orderBy("id", "desc");
     }
+
+    if (tanggal) {
+      pertemuan = pertemuan.where(
+        "tanggal_pembagian",
+        "like",
+        `${moment(tanggal).format("YYYY-MM-DD")}`
+      );
+    }
+
+    pertemuan = await pertemuan.fetch();
 
     return response.ok({ pertemuan });
   }
