@@ -12563,6 +12563,7 @@ class MainController {
       const rombel = await MRombel.query()
         .whereIn("id", [...rombelIds, ...rombelWalas])
         .andWhere({ dihapus: 0 })
+        .andWhere({m_ta_id:ta.id})
         .fetch();
 
       const jadwalIds = await TkJadwalUjian.query()
