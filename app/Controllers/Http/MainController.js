@@ -5914,7 +5914,7 @@ class MainController {
       .ids();
 
     let pertemuan;
-    if (sekolah.id == 11) {
+    if (sekolah.id == 11 || sekolah.id == 13) {
       pertemuan = await MTimeline.query()
         .with("user")
         .with("komen", (builder) => {
@@ -8701,7 +8701,7 @@ class MainController {
           m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id,
           tipe: "tugas",
           dihapus: 0,
-          tanggal_pembagian: `${tanggal_pembagian} ${waktu_pembagian}`,
+          tanggal_pembagian: `${tanggal_pembagian} ${waktu_pembagian ? waktu_pembagian : `00:00:00`}`,
         });
 
         const idsGuru = await User.query()
@@ -8739,7 +8739,7 @@ class MainController {
               m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id,
               tipe: "tugas",
               dihapus: 0,
-              tanggal_pembagian: `${tanggal_pembagian} ${waktu_pembagian}`,
+              tanggal_pembagian: `${tanggal_pembagian} ${waktu_pembagian ? waktu_pembagian : `00:00:00`}`,
             });
           })
         );
