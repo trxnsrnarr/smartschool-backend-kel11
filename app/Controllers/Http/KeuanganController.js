@@ -624,7 +624,7 @@ class KeuanganController {
             m_user_id: user.id,
             awal: `Jurnal Umum - Nama Akun : dihapus akun `,
             akhir: `${akunLama.nama}`,
-            bawah: `${rencana.nama}`,
+            bawah: `${rencana.nama} - ${transaksi.nama}`,
             m_sekolah_id: sekolah.id,
             tipe: "Perencanaan",
             alamat_id: transaksi.m_rencana_keuangan_id,
@@ -652,7 +652,7 @@ class KeuanganController {
             m_user_id: user.id,
             awal: `Jurnal Umum - Nama Akun : ${akunLama.nama} menjadi`,
             akhir: `"${akunBaru.nama}"`,
-            bawah: `${rencana.nama}`,
+            bawah: `${rencana.nama} - ${transaksi.nama}`,
             m_sekolah_id: sekolah.id,
             tipe: "Perencanaan",
             alamat_id: transaksi.m_rencana_keuangan_id,
@@ -671,7 +671,7 @@ class KeuanganController {
               jurnalLama.jenis
             )} Rp${saldoLama} menjadi`,
             akhir: `"${titleCas(d.jenis)} Rp${saldoBaru}"`,
-            bawah: `${rencana.nama}`,
+            bawah: `${rencana.nama} - ${transaksi.nama}`,
             m_sekolah_id: sekolah.id,
             tipe: "Perencanaan",
             alamat_id: transaksi.m_rencana_keuangan_id,
@@ -691,7 +691,7 @@ class KeuanganController {
           m_user_id: user.id,
           awal: `Jurnal Umum - Nama Akun : dibuat akun `,
           akhir: `${akunBaru.nama}`,
-          bawah: `${rencana.nama}`,
+          bawah: `${rencana.nama} - ${transaksi.nama}`,
           m_sekolah_id: sekolah.id,
           tipe: "Perencanaan",
           alamat_id: transaksi.m_rencana_keuangan_id,
@@ -719,7 +719,7 @@ class KeuanganController {
         akhir: `"${nomor}"`,
         m_sekolah_id: sekolah.id,
         tipe: "Perencanaan",
-        bawah: `${rencana.nama}`,
+        bawah: `${rencana.nama} - ${transaksi.nama}`,
         alamat_id: transaksi.m_rencana_keuangan_id,
       });
     }
@@ -736,7 +736,7 @@ class KeuanganController {
         akhir: `"${moment(tanggal).format("MMMM YYYY")}"`,
         m_sekolah_id: sekolah.id,
         tipe: "Perencanaan",
-        bawah: `${rencana.nama}`,
+        bawah: `${rencana.nama} - ${transaksi.nama}`,
         alamat_id: transaksi.m_rencana_keuangan_id,
       });
     }
@@ -748,7 +748,7 @@ class KeuanganController {
         akhir: `"${nama}"`,
         m_sekolah_id: sekolah.id,
         tipe: "Perencanaan",
-        bawah: `${rencana.nama}`,
+        bawah: `${rencana.nama} - ${transaksi.nama}`,
         alamat_id: transaksi.m_rencana_keuangan_id,
       });
     }

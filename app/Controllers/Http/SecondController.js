@@ -303,14 +303,15 @@ function colName(n) {
   return s.toUpperCase();
 }
 function titleCase(str) {
-  var splitStr = str.toLowerCase().split(' ');
+  var splitStr = str.toLowerCase().split(" ");
   for (var i = 0; i < splitStr.length; i++) {
-      // You do not need to check if i is larger than splitStr length, as your for does that for you
-      // Assign it back to the array
-      splitStr[i] = splitStr[i].charAt(0).toUpperCase() + splitStr[i].substring(1);     
+    // You do not need to check if i is larger than splitStr length, as your for does that for you
+    // Assign it back to the array
+    splitStr[i] =
+      splitStr[i].charAt(0).toUpperCase() + splitStr[i].substring(1);
   }
   // Directly return the joined string
-  return splitStr.join(' '); 
+  return splitStr.join(" ");
 }
 class SecondController {
   async getSekolahByDomain(domain) {
@@ -1108,6 +1109,7 @@ class SecondController {
             m_user_id: user.id,
             awal: `Pilih Bank : ${check.bank} menjadi `,
             akhir: `"${bank}"`,
+            bawah: `${akun.nama}`,
             m_sekolah_id: sekolah.id,
             tipe: "Realisasi",
           });
@@ -1118,6 +1120,7 @@ class SecondController {
             m_user_id: user.id,
             awal: `Nomor Rekening : ${check.norek} menjadi `,
             akhir: `"${norek}"`,
+            bawah: `${akun.nama}`,
             m_sekolah_id: sekolah.id,
             tipe: "Realisasi",
           });
@@ -1126,16 +1129,14 @@ class SecondController {
           const saldoLama = `${check.saldo}`.replace(
             /\B(?=(\d{3})+(?!\d))/g,
             "."
-          )
-          const saldoBaru = `${saldo}`.replace(
-            /\B(?=(\d{3})+(?!\d))/g,
-            "."
-          )
+          );
+          const saldoBaru = `${saldo}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
           await MHistoriAktivitas.create({
             jenis: "Ubah Akun",
             m_user_id: user.id,
             awal: `Saldo : Rp${saldoLama} menjadi `,
             akhir: `"Rp${saldoBaru}"`,
+            bawah: `${akun.nama}`,
             m_sekolah_id: sekolah.id,
             tipe: "Realisasi",
           });
@@ -1156,6 +1157,7 @@ class SecondController {
           m_user_id: user.id,
           awal: `Terhubung dengan Akun Rekening? : Tidak menjadi `,
           akhir: `"Ya"`,
+          bawah: `${akun.nama}`,
           m_sekolah_id: sekolah.id,
           tipe: "Realisasi",
         });
@@ -1169,6 +1171,7 @@ class SecondController {
         m_user_id: user.id,
         awal: `Terhubung dengan Akun Rekening? : Ya menjadi `,
         akhir: `"Tidak"`,
+        bawah: `${akun.nama}`,
         m_sekolah_id: sekolah.id,
         tipe: "Realisasi",
       });
@@ -1186,6 +1189,7 @@ class SecondController {
         m_user_id: user.id,
         awal: `Nama : ${akun.nama} menjadi`,
         akhir: `"${nama}"`,
+        bawah: `${akun.nama}`,
         m_sekolah_id: sekolah.id,
         tipe: "Realisasi",
       });
@@ -1196,6 +1200,7 @@ class SecondController {
         m_user_id: user.id,
         awal: `Kode : ${akun.kode} menjadi`,
         akhir: `"${kode}"`,
+        bawah: `${akun.nama}`,
         m_sekolah_id: sekolah.id,
         tipe: "Realisasi",
       });
@@ -1913,6 +1918,7 @@ class SecondController {
             m_user_id: user.id,
             awal: `Jurnal Umum - Nama Akun : dihapus akun `,
             akhir: `${akunLama.nama}`,
+            bawah: `${transaksi.nama}`,
             m_sekolah_id: sekolah.id,
             tipe: "Realisasi",
           });
@@ -1937,27 +1943,25 @@ class SecondController {
             m_user_id: user.id,
             awal: `Jurnal Umum - Nama Akun : ${akunLama.nama} menjadi `,
             akhir: `"${akunBaru.nama}"`,
+            bawah: `${transaksi.nama}`,
             m_sekolah_id: sekolah.id,
             tipe: "Realisasi",
           });
         }
         if (d.saldo != jurnalLama.saldo || d.jenis != jurnalLama.jenis) {
-         
           const saldoLama = `${jurnalLama.saldo}`.replace(
             /\B(?=(\d{3})+(?!\d))/g,
             "."
-          )
-          const saldoBaru = `${d.saldo}`.replace(
-            /\B(?=(\d{3})+(?!\d))/g,
-            "."
-          )
+          );
+          const saldoBaru = `${d.saldo}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
           await MHistoriAktivitas.create({
             jenis: "Ubah Transaksi",
             m_user_id: user.id,
-            awal: `Jurnal Umum - Nama Akun - ${akunBaru.nama} : ${
-              titleCase(jurnalLama.jenis)
-            } Rp${saldoLama} menjadi `,
+            awal: `Jurnal Umum - Nama Akun - ${akunBaru.nama} : ${titleCase(
+              jurnalLama.jenis
+            )} Rp${saldoLama} menjadi `,
             akhir: `"${titleCase(d.jenis)} Rp${saldoBaru}"`,
+            bawah: `${transaksi.nama}`,
             m_sekolah_id: sekolah.id,
             tipe: "Realisasi",
           });
@@ -1976,6 +1980,7 @@ class SecondController {
           m_user_id: user.id,
           awal: `Jurnal Umum - Nama Akun : dibuat akun `,
           akhir: `${akunBaru.nama}`,
+          bawah: `${transaksi.nama}`,
           m_sekolah_id: sekolah.id,
           tipe: "Realisasi",
         });
@@ -2001,6 +2006,7 @@ class SecondController {
         m_user_id: user.id,
         awal: `Nomor : ${transaksi.nomor} menjadi`,
         akhir: `"${nomor}"`,
+        bawah: `${transaksi.nama}`,
         m_sekolah_id: sekolah.id,
         tipe: "Realisasi",
       });
@@ -2016,6 +2022,7 @@ class SecondController {
           "dddd, DD MMM YYYY"
         )} menjadi`,
         akhir: `"${moment(tanggal).format("dddd, DD MMM YYYY")}"`,
+        bawah: `${transaksi.nama}`,
         m_sekolah_id: sekolah.id,
         tipe: "Realisasi",
       });
@@ -2026,6 +2033,7 @@ class SecondController {
         m_user_id: user.id,
         awal: `Judul : ${transaksi.nama} menjadi`,
         akhir: `"${nama}"`,
+        bawah: `${transaksi.nama}`,
         m_sekolah_id: sekolah.id,
         tipe: "Realisasi",
       });
@@ -4796,7 +4804,6 @@ class SecondController {
         warna,
       });
 
-
     if (!kategori) {
       return response.notFound({
         message: messageNotFound,
@@ -4808,7 +4815,9 @@ class SecondController {
         jenis: "Ubah Template Laporan",
         tipe: "Realisasi",
         m_user_id: user.id,
-        awal: `${titleCase(kategoriNeraca.tipe)} - Warna : ${kategoriNeraca.warna} menjadi `,
+        awal: `${titleCase(kategoriNeraca.tipe)} - Warna : ${
+          kategoriNeraca.warna
+        } menjadi `,
         akhir: `"${warna}"`,
         bawah: `Laporan Neraca`,
         m_sekolah_id: sekolah.id,
@@ -4819,7 +4828,9 @@ class SecondController {
         jenis: "Ubah Template Laporan",
         tipe: "Realisasi",
         m_user_id: user.id,
-        awal: `${titleCase(kategoriNeraca.tipe)} - Nama : ${kategoriNeraca.nama} menjadi `,
+        awal: `${titleCase(kategoriNeraca.tipe)} - Nama : ${
+          kategoriNeraca.nama
+        } menjadi `,
         akhir: `"${nama}"`,
         bawah: `Laporan Neraca`,
         m_sekolah_id: sekolah.id,
@@ -4984,7 +4995,9 @@ class SecondController {
         jenis: "Ubah Template Laporan",
         tipe: "Realisasi",
         m_user_id: user.id,
-        awal: `${titleCase(kategoriNeraca.tipe)} - ${kategoriNeraca.nama} : ${akunSebelum.nama} menjadi `,
+        awal: `${titleCase(kategoriNeraca.tipe)} - ${kategoriNeraca.nama} : ${
+          akunSebelum.nama
+        } menjadi `,
         akhir: `"${akun.nama}"`,
         bawah: `Laporan Neraca`,
         m_sekolah_id: sekolah.id,
@@ -6304,7 +6317,6 @@ class SecondController {
       });
     }
 
-
     if (warna != kategoriArusKas.warna) {
       await MHistoriAktivitas.create({
         jenis: "Ubah Template Laporan",
@@ -7037,9 +7049,7 @@ class SecondController {
     for (let i = 0; i < rumus12.length; i++) {
       const d = rumus12[i];
       if (d.id) {
-        kategoriAkun = await MKeuKategoriArusKas.query()
-          .where({ id: d.id })
-          .first();
+        kategoriAkun = await MKeuAkun.query().where({ id: d.id }).first();
         rumusFix = rumusFix + kategoriAkun.nama;
       } else {
         if (d.operator == "minus") {
@@ -7139,6 +7149,7 @@ class SecondController {
           kategoriAkun = await MKeuKategoriArusKas.query()
             .where({ id: d.id })
             .first();
+          // return kategoriAkun;
           rumusFix = rumusFix + kategoriAkun.nama;
         } else {
           if (d.operator == "minus") {
@@ -8117,6 +8128,71 @@ class SecondController {
 
     return response.ok({
       message: messagePutSuccess,
+    });
+  }
+
+  async hackPostRombel({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
+      return response.forbidden({ message: messageForbidden });
+    }
+
+    const { rombel_id } = request.post();
+
+    const jamMengajar = await MJamMengajar.query()
+      .select("id")
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .fetch();
+
+    const jadwalMengajarData = await Promise.all(
+      jamMengajar.toJSON().map(async (data) => {
+        const check = await MJadwalMengajar.query()
+          .where({ m_ta_id: ta.id })
+          .andWhere({ m_jam_mengajar_id: data.id })
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .andWhere({ m_rombel_id: rombel_id })
+          .first();
+        if (!check) {
+          data.m_mata_pelajaran_id = null;
+          data.m_rombel_id = rombel_id;
+          data.m_jam_mengajar_id = data.id;
+          data.m_sekolah_id = sekolah.id;
+          data.m_ta_id = ta.id;
+          delete data.id;
+          delete data.jamFormat;
+
+          return data;
+        }
+      })
+    );
+
+    const dataJadwalMengajarData = jadwalMengajarData.filter((d) => d != null);
+    // return dataJadwalMengajarData;
+
+    await MJadwalMengajar.createMany(dataJadwalMengajarData);
+
+    return response.ok({
+      message: messagePostSuccess,
     });
   }
 }
