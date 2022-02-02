@@ -1452,6 +1452,7 @@ Route.post("/buku-kerja", "DinasController.postBukuKerja");
 
 // Dinas
 Route.get("/dashboard/dinas", "DinasController.getDashboard");
+Route.get("/data-warga-sekolah", "DinasController.getData");
 
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
