@@ -5892,7 +5892,10 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .ids();
 
-    const pertemuan = await MTimeline.query()
+      let pertemuan;
+    if(sekolah.id == 11){
+
+    pertemuan = await MTimeline.query()
       .with("user")
       .with("komen", (builder) => {
         builder.with("user").where({ dihapus: 0 });
@@ -5905,7 +5908,7 @@ class MainController {
       .withCount("komen as total_komen", (builder) => {
         builder.where({ dihapus: 0 });
       })
-      .where("tipe", "absen")
+      .whereIn("tipe", ["absen", "tugas"])
       .andWhere(
         "tanggal_pembagian",
         "like",
@@ -5914,7 +5917,33 @@ class MainController {
       .whereIn("m_user_id", guruIds)
       .orderBy("id", "desc")
       .fetch();
-
+    }else{
+      
+     pertemuan = await MTimeline.query()
+    .with("user")
+    .with("komen", (builder) => {
+      builder.with("user").where({ dihapus: 0 });
+    })
+    .with("rombel")
+    .withCount("tkTimeline as total_absen", (builder) => {
+      builder.whereNotNull("waktu_absen");
+    })
+    .withCount("tkTimeline as total_siswa")
+    .withCount("komen as total_komen", (builder) => {
+      builder.where({ dihapus: 0 });
+    })
+    .where("tipe", "absen")
+    .andWhere(
+      "tanggal_pembagian",
+      "like",
+      `${moment().format("YYYY-MM-DD")}%`
+    )
+    .whereIn("m_user_id", guruIds)
+    .orderBy("id", "desc")
+    .fetch();
+  }
+    
+    
     return response.ok({ pertemuan });
   }
 
