@@ -5979,7 +5979,7 @@ class MainController {
       pertemuan = pertemuan.where(
         "tanggal_pembagian",
         "like",
-        `${moment(tanggal).format("YYYY-MM-DD")}`
+        `%${moment(tanggal).format("YYYY-MM-DD")}%`
       );
     }
 
