@@ -6097,7 +6097,10 @@ class SecondController {
       search,
     } = request.get();
 
-    let transaksiIds1, transaksiIds2, rencanaTransaksiIds1, rencanaTransaksiIds2;
+    let transaksiIds1,
+      transaksiIds2,
+      rencanaTransaksiIds1,
+      rencanaTransaksiIds2;
     if (tanggal_awal1 && tanggal_awal2 && tanggal_akhir1 && tanggal_akhir2) {
       transaksiIds1 = await MKeuTransaksi.query()
         .whereBetween("tanggal", [tanggal_awal1, tanggal_akhir1])
@@ -6401,6 +6404,46 @@ class SecondController {
       m_sekolah_id: sekolah.id,
     });
 
+    const rumusNaik = await MKeuRumusArusKas.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
+      .first();
+    if (rumusNaik) {
+      let rumus = JSON.parse(rumusNaik.rumus);
+      rumus.push({ operator: "plus" }, { id: kategori.id });
+      await MKeuRumusArusKas.query()
+        .where({ id: rumusNaik.id })
+        .update({
+          rumus: JSON.stringify(rumus),
+        });
+    } else {
+      await MKeuRumusArusKas.create({
+        dihapus: 0,
+        m_sekolah_id: sekolah.id,
+        rumus: JSON.stringify([{ id: kategori.id }]),
+      });
+    }
+
+    const rumusAkhir = await MKeuRumusSaldoKasAkhir.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
+      .first();
+    if (rumusAkhir) {
+      let rumus = JSON.parse(rumusAkhir.rumus);
+      rumus.push({ operator: "plus" }, { id: kategori.id });
+      await MKeuRumusSaldoKasAkhir.query()
+        .where({ id: rumusAkhir.id })
+        .update({
+          rumus: JSON.stringify(rumus),
+        });
+    } else {
+      await MKeuRumusSaldoKasAkhir.create({
+        dihapus: 0,
+        m_sekolah_id: sekolah.id,
+        rumus: JSON.stringify([{ id: kategori.id }]),
+      });
+    }
+
     await MHistoriAktivitas.create({
       jenis: "Buat Template Laporan",
       tipe: "Realisasi",
@@ -6504,6 +6547,10 @@ class SecondController {
     }
 
     const user = await auth.getUser();
+    
+    const sebelumHapus = await MKeuKategoriArusKas.query()
+      .where({ id: kategori_id }) 
+      .first();
 
     const kategori = await MKeuKategoriArusKas.query()
       .where({ id: kategori_id })
@@ -6521,12 +6568,69 @@ class SecondController {
       .where({ id: kategori_id })
       .first();
 
+    const rumusNaik = await MKeuRumusArusKas.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
+      .first();
+
+    const rumusAkhir = await MKeuRumusSaldoKasAkhir.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
+      .first();
+
+    if (rumusAkhir) {
+      let rumusAkhirParsed = JSON.parse(rumusAkhir.rumus);
+      if (rumusAkhirParsed.length == 1) {
+        await MKeuRumusSaldoKasAkhir.query()
+          .where({ id: rumusAkhir.id })
+          .delete();
+      } else {
+        let temp = rumusAkhirParsed;
+        rumusAkhirParsed.map((d, idx) => {
+          if (d?.id == kategori_id) {
+            if (idx == 0) {
+              temp.splice(0, 2);
+            } else {
+              temp.splice(idx - 1, 2);
+            }
+          }
+        });
+        await MKeuRumusSaldoKasAkhir.query()
+          .where({ id: rumusAkhir.id })
+          .update({
+            rumus: JSON.stringify(temp),
+          });
+      }
+    }
+    if (rumusNaik) {
+      let rumusNaikParsed = JSON.parse(rumusNaik.rumus);
+      if (rumusNaikParsed.length == 1) {
+        await MKeuRumusArusKas.query().where({ id: rumusNaik.id }).delete();
+      } else {
+        let temp = rumusNaikParsed;
+        rumusNaikParsed.map((d, idx) => {
+          if (d?.id == kategori_id) {
+            if (idx == 0) {
+              temp.splice(0, 2);
+            } else {
+              temp.splice(idx - 1, 2);
+            }
+          }
+        });
+        await MKeuRumusArusKas.query()
+          .where({ id: rumusNaik.id })
+          .update({
+            rumus: JSON.stringify(temp),
+          });
+      }
+    }
+
     await MHistoriAktivitas.create({
       jenis: "Hapus Template Laporan",
       tipe: "Realisasi",
       m_user_id: user.id,
       awal: `Kategori : `,
-      akhir: `${nama}`,
+      akhir: `${sebelumHapus.nama}`,
       bawah: `Laporan Arus Kas`,
       m_sekolah_id: sekolah.id,
     });
@@ -7273,9 +7377,7 @@ class SecondController {
       for (let i = 0; i < rumusSebelum.rumus.length; i++) {
         const d = rumusSebelum.rumus[i];
         if (d.id) {
-          kategoriAkun = await MKeuKategoriArusKas.query()
-            .where({ id: d.id })
-            .first();
+          kategoriAkun = await MKeuAkun.query().where({ id: d.id }).first();
           rumusSebelum2 = rumusSebelum2 + kategoriAkun.nama;
         } else {
           if (d.operator == "minus") {
@@ -7290,9 +7392,7 @@ class SecondController {
       for (let i = 0; i < rumus12.length; i++) {
         const d = rumus12[i];
         if (d.id) {
-          kategoriAkun = await MKeuKategoriArusKas.query()
-            .where({ id: d.id })
-            .first();
+          kategoriAkun = await MKeuAkun.query().where({ id: d.id }).first();
           // return kategoriAkun;
           rumusFix = rumusFix + kategoriAkun.nama;
         } else {
