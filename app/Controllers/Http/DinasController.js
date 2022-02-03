@@ -732,23 +732,28 @@ class DinasController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
+    const user = await auth.getUser();
     let { search, tipe } = request.get();
+
+    const ta = await this.getTAAktif(sekolah);
     const mataPelajaranIds = await MMataPelajaran.query()
       .where({ m_user_id: user.id })
       .ids();
 
-    const jamMengajarIds = await MJamMengajar.query()
-      .where({ kode_hari: kode_hari })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta.id })
+    const rombelIds = await MRombel.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
+      .where({ m_ta_id: ta.id })
       .ids();
 
     const rombel = await MJadwalMengajar.query()
       .with("rombel", (builder) => {
-        builder.select("id", "nama").where({ dihapus: 0 });
+        builder.where({ dihapus: 0 });
       })
+      .whereIn("m_rombel_id", rombelIds)
+      .where({ m_ta_id: ta.id })
+      .with("mataPelajaran")
       .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
-      .whereIn("m_jam_mengajar_id", jamMengajarIds)
       .fetch();
 
     const mataPelajaran = await MMataPelajaran.query()
@@ -784,7 +789,6 @@ class DinasController {
         "XII",
       ];
     }
-    const user = await auth.getUser();
     let data;
     if (tipe == "skl") {
       data = await MRpp.query()

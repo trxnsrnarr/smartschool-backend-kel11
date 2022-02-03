@@ -2056,13 +2056,30 @@ class SecondController {
         message: messageNotFound,
       });
     }
+    if (m_rencana_transaksi_id != transaksi.m_rencana_transaksi_id) {
+      const rencanaAwal = await MRencanaTransaksi.query()
+        .where({ id: transaksi.m_rencana_transaksi_id })
+        .first();
 
+      const rencanaAkhir = await MRencanaTransaksi.query()
+        .where({ id: m_rencana_transaksi_id })
+        .first();
+      await MHistoriAktivitas.create({
+        jenis: "Ubah Transaksi",
+        m_user_id: user.id,
+        awal: `Pilih Perencanaan : ${rencanaAwal.nama} menjadi`,
+        akhir: `"${rencanaAkhir.nama}"`,
+        bawah: `${transaksi.nama}`,
+        m_sekolah_id: sekolah.id,
+        tipe: "Realisasi",
+      });
+    }
     if (nomor != transaksi.nomor) {
       await MHistoriAktivitas.create({
         jenis: "Ubah Transaksi",
         m_user_id: user.id,
-        awal: `Nomor : ${transaksi.nomor} menjadi`,
-        akhir: `"${nomor}"`,
+        awal: `Nomor : ${transaksi ? transaksi.nomor : ""} menjadi`,
+        akhir: `"${nomor ? nomor : ""}"`,
         bawah: `${transaksi.nama}`,
         m_sekolah_id: sekolah.id,
         tipe: "Realisasi",
