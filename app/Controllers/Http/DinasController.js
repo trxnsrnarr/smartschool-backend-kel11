@@ -817,12 +817,14 @@ class DinasController {
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .andWhere({ tipe: "skl" })
+        .orderBy("created_at", "desc")
         .fetch();
     } else if (tipe == "rpp") {
       data = await MRpp.query()
         .with("mataPelajaran")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
+        .orderBy("created_at", "desc")
         .where({ tipe: "rpp" })
         .fetch();
     } else if (tipe == "silabus") {
@@ -831,6 +833,7 @@ class DinasController {
         .wiht("ta")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
+        .orderBy("created_at", "desc")
         .where({ tipe: "silabus" })
         .fetch();
     } else if (tipe == "kkm") {
@@ -839,30 +842,35 @@ class DinasController {
         .with("ta")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
+        .orderBy("created_at", "desc")
         .where({ tipe: "kkm" })
         .fetch();
     } else if (tipe == "kode etik") {
       data = await MRpp.query()
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
+        .orderBy("created_at", "desc")
         .where({ tipe: "kode etik" })
         .fetch();
     } else if (tipe == "ikrar") {
       data = await MRpp.query()
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
+        .orderBy("created_at", "desc")
         .where({ tipe: "ikrar" })
         .fetch();
     } else if (tipe == "tata tertib") {
       data = await MRpp.query()
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
+        .orderBy("created_at", "desc")
         .where({ tipe: "tata tertib" })
         .fetch();
     } else if (tipe == "pembiasaan") {
       data = await MRpp.query()
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
+        .orderBy("created_at", "desc")
         .where({ tipe: "pembiasaan" })
         .fetch();
     } else if (tipe == "kalender") {
@@ -870,6 +878,7 @@ class DinasController {
         .with("ta")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
+        .orderBy("created_at", "desc")
         .where({ tipe: "kalender" })
         .fetch();
     } else if (tipe == "alokasi") {
@@ -877,6 +886,7 @@ class DinasController {
         .with("ta")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
+        .orderBy("created_at", "desc")
         .where({ tipe: "alokasi" })
         .fetch();
     } else if (tipe == "ptahunan") {
@@ -884,6 +894,7 @@ class DinasController {
         .with("ta")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
+        .orderBy("created_at", "desc")
         .where({ tipe: "ptahunan" })
         .fetch();
     } else if (tipe == "psemester") {
@@ -891,6 +902,7 @@ class DinasController {
         .with("ta")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
+        .orderBy("created_at", "desc")
         .where({ tipe: "psemester" })
         .fetch();
     } else if (tipe == "jurnal") {
@@ -899,6 +911,7 @@ class DinasController {
         .with("rombel")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
+        .orderBy("created_at", "desc")
         .where({ tipe: "jurnal" })
         .fetch();
     } else if (tipe == "daftar evaluasi") {
@@ -906,6 +919,7 @@ class DinasController {
         .with("ta")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
+        .orderBy("created_at", "desc")
         .where({ tipe: "daftar evaluasi" })
         .fetch();
     } else if (tipe == "tindak lanjut") {
@@ -913,6 +927,7 @@ class DinasController {
         .with("ta")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
+        .orderBy("created_at", "desc")
         .where({ tipe: "tindak lanjut" })
         .fetch();
     } else if (tipe == "akhlak") {
@@ -922,6 +937,7 @@ class DinasController {
         .with("mataPelajaran")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
+        .orderBy("created_at", "desc")
         .where({ tipe: "akhlak" })
         .fetch();
     } else if (tipe == "hasil ulangan") {
@@ -931,6 +947,7 @@ class DinasController {
         .with("mataPelajaran")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
+        .orderBy("created_at", "desc")
         .where({ tipe: "hasil ulangan" })
         .fetch();
     } else if (tipe == "program perbaikan") {
@@ -940,6 +957,7 @@ class DinasController {
         .with("mataPelajaran")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
+        .orderBy("created_at", "desc")
         .where({ tipe: "program perbaikan" })
         .fetch();
     } else if (tipe == "buku pegangan") {
@@ -949,6 +967,7 @@ class DinasController {
         .with("mataPelajaran")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
+        .orderBy("created_at", "desc")
         .where({ tipe: "buku pegangan" })
         .fetch();
     } else if (tipe == "daya serap") {
@@ -958,6 +977,7 @@ class DinasController {
         .with("mataPelajaran")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
+        .orderBy("created_at", "desc")
         .where({ tipe: "daya serap" })
         .fetch();
     } else if (tipe == "kisi soal") {
@@ -967,6 +987,7 @@ class DinasController {
         .with("mataPelajaran")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
+        .orderBy("created_at", "desc")
         .where({ tipe: "kisi soal" })
         .fetch();
     } else if (tipe == "soal") {
@@ -976,6 +997,7 @@ class DinasController {
         .with("mataPelajaran")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
+        .orderBy("created_at", "desc")
         .where({ tipe: "soal" })
         .fetch();
     } else if (tipe == "butir soal") {
@@ -985,6 +1007,7 @@ class DinasController {
         .with("mataPelajaran")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
+        .orderBy("created_at", "desc")
         .where({ tipe: "butir soal" })
         .fetch();
     } else if (tipe == "perbaikan soal") {
@@ -994,6 +1017,7 @@ class DinasController {
         .with("mataPelajaran")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
+        .orderBy("created_at", "desc")
         .where({ tipe: "perbaikan soal" })
         .fetch();
     }
