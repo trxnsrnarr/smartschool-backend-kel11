@@ -11,6 +11,10 @@ class MKeuTransaksi extends Model {
   jurnal() {
     return this.hasMany("App/Models/MKeuJurnal");
   }
+
+  rencana() {
+    return this.belongsTo("App/Models/MRencanaTransaksi")
+  }
 }
 
 module.exports = MKeuTransaksi;

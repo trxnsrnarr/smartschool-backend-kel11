@@ -1796,6 +1796,13 @@ class SecondController {
           builder.select("nama", "id");
         });
       })
+      .with("rencana", (builder) => {
+        builder.with("jurnal", (builder) => {
+          builder.where({ dihapus: 0 }).with("akun", (builder) => {
+            builder.select("id", "nama");
+          });
+        });
+      })
       .where({ m_sekolah_id: sekolah.id })
       .where({ dihapus: 0 });
 
@@ -5307,7 +5314,49 @@ class SecondController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
+    const rencana = await this.getRencanaAktif(sekolah);
+
+    let { search, tanggal_awal, tanggal_akhir } = request.get();
+
+    let transaksiIds, rencanaTransaksiIds;
+
+    rencanaTransaksiIds = MRencanaTransaksi.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ m_rencana_keuangan_id: rencana.id })
+      .where({ dihapus: 0 });
+
+    if (tanggal_awal && tanggal_akhir) {
+      transaksiIds = await MKeuTransaksi.query()
+        .whereBetween("tanggal", [tanggal_awal, tanggal_akhir])
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ dihapus: 0 })
+        .ids();
+      rencanaTransaksiIds.whereBetween("tanggal", [
+        moment(tanggal_awal).startOf("month").format("YYYY-MM-DD HH:mm:ss"),
+        moment(tanggal_akhir).endOf("month").format("YYYY-MM-DD HH:mm:ss"),
+      ]);
+    }
+
+    rencanaTransaksiIds = await rencanaTransaksiIds.ids();
+
+    const akun = await MKeuAkun.query()
+      .with("jurnal", (builder) => {
+        builder.where({ dihapus: 0 });
+        if (transaksiIds) {
+          builder.whereIn("m_keu_transaksi_id", transaksiIds);
+        }
+      })
+      .with("rencanaJurnal", (builder) => {
+        builder.where({ dihapus: 0 });
+        if (rencanaTransaksiIds) {
+          builder.whereIn("m_rencana_transaksi_id", rencanaTransaksiIds);
+        }
+      })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
+    let kategori;
 
     const { tanggal_awal, tanggal_akhir, data, rencana_id } = request.post();
     // return data;
@@ -6172,22 +6221,42 @@ class SecondController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
+    const rencana = await this.getRencanaAktif(sekolah);
+
     let { search, tanggal_awal, tanggal_akhir } = request.get();
 
-    let transaksiIds;
+    let transaksiIds, rencanaTransaksiIds;
+
+    rencanaTransaksiIds = MRencanaTransaksi.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ m_rencana_keuangan_id: rencana.id })
+      .where({ dihapus: 0 });
+
     if (tanggal_awal && tanggal_akhir) {
       transaksiIds = await MKeuTransaksi.query()
         .whereBetween("tanggal", [tanggal_awal, tanggal_akhir])
         .where({ m_sekolah_id: sekolah.id })
         .where({ dihapus: 0 })
         .ids();
+      rencanaTransaksiIds.whereBetween("tanggal", [
+        moment(tanggal_awal).startOf("month").format("YYYY-MM-DD HH:mm:ss"),
+        moment(tanggal_akhir).endOf("month").format("YYYY-MM-DD HH:mm:ss"),
+      ]);
     }
+
+    rencanaTransaksiIds = await rencanaTransaksiIds.ids();
 
     const akun = await MKeuAkun.query()
       .with("jurnal", (builder) => {
         builder.where({ dihapus: 0 });
         if (transaksiIds) {
           builder.whereIn("m_keu_transaksi_id", transaksiIds);
+        }
+      })
+      .with("rencanaJurnal", (builder) => {
+        builder.where({ dihapus: 0 });
+        if (rencanaTransaksiIds) {
+          builder.whereIn("m_rencana_transaksi_id", rencanaTransaksiIds);
         }
       })
       .andWhere({ dihapus: 0 })
@@ -7077,6 +7146,8 @@ class SecondController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
+    const rencana = await this.getRencanaAktif(sekolah);
+
     let {
       tanggal_awal1,
       tanggal_awal2,
@@ -7085,7 +7156,10 @@ class SecondController {
       search,
     } = request.get();
 
-    let transaksiIds1, transaksiIds2;
+    let transaksiIds1,
+      transaksiIds2,
+      rencanaTransaksiIds1,
+      rencanaTransaksiIds2;
     if (tanggal_awal1 && tanggal_awal2 && tanggal_akhir1 && tanggal_akhir2) {
       transaksiIds1 = await MKeuTransaksi.query()
         .whereBetween("tanggal", [tanggal_awal1, tanggal_akhir1])
@@ -7095,6 +7169,24 @@ class SecondController {
       transaksiIds2 = await MKeuTransaksi.query()
         .whereBetween("tanggal", [tanggal_awal2, tanggal_akhir2])
         .where({ m_sekolah_id: sekolah.id })
+        .where({ dihapus: 0 })
+        .ids();
+      rencanaTransaksiIds1 = await MRencanaTransaksi.query()
+        .whereBetween("tanggal", [
+          moment(tanggal_awal1).startOf("month").format("YYYY-MM-DD HH:mm:ss"),
+          moment(tanggal_akhir1).endOf("month").format("YYYY-MM-DD HH:mm:ss"),
+        ])
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ m_rencana_keuangan_id: rencana.id })
+        .where({ dihapus: 0 })
+        .ids();
+      rencanaTransaksiIds2 = await MRencanaTransaksi.query()
+        .whereBetween("tanggal", [
+          moment(tanggal_awal2).startOf("month").format("YYYY-MM-DD HH:mm:ss"),
+          moment(tanggal_akhir2).endOf("month").format("YYYY-MM-DD HH:mm:ss"),
+        ])
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ m_rencana_keuangan_id: rencana.id })
         .where({ dihapus: 0 })
         .ids();
     } else {
@@ -7112,6 +7204,16 @@ class SecondController {
       .with("jurnal2", (builder) => {
         builder
           .whereIn("m_keu_transaksi_id", transaksiIds2)
+          .where({ dihapus: 0 });
+      })
+      .with("rencanaJurnal1", (builder) => {
+        builder
+          .whereIn("m_rencana_transaksi_id", rencanaTransaksiIds1)
+          .where({ dihapus: 0 });
+      })
+      .with("rencanaJurnal2", (builder) => {
+        builder
+          .whereIn("m_rencana_transaksi_id", rencanaTransaksiIds2)
           .where({ dihapus: 0 });
       })
       .andWhere({ dihapus: 0 })
@@ -7361,6 +7463,46 @@ class SecondController {
       m_sekolah_id: sekolah.id,
     });
 
+    const rumusNaik = await MKeuRumusArusKas.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
+      .first();
+    if (rumusNaik) {
+      let rumus = JSON.parse(rumusNaik.rumus);
+      rumus.push({ operator: "plus" }, { id: kategori.id });
+      await MKeuRumusArusKas.query()
+        .where({ id: rumusNaik.id })
+        .update({
+          rumus: JSON.stringify(rumus),
+        });
+    } else {
+      await MKeuRumusArusKas.create({
+        dihapus: 0,
+        m_sekolah_id: sekolah.id,
+        rumus: JSON.stringify([{ id: kategori.id }]),
+      });
+    }
+
+    const rumusAkhir = await MKeuRumusSaldoKasAkhir.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
+      .first();
+    if (rumusAkhir) {
+      let rumus = JSON.parse(rumusAkhir.rumus);
+      rumus.push({ operator: "plus" }, { id: kategori.id });
+      await MKeuRumusSaldoKasAkhir.query()
+        .where({ id: rumusAkhir.id })
+        .update({
+          rumus: JSON.stringify(rumus),
+        });
+    } else {
+      await MKeuRumusSaldoKasAkhir.create({
+        dihapus: 0,
+        m_sekolah_id: sekolah.id,
+        rumus: JSON.stringify([{ id: kategori.id }]),
+      });
+    }
+
     await MHistoriAktivitas.create({
       jenis: "Buat Template Laporan",
       tipe: "Realisasi",
@@ -7464,6 +7606,10 @@ class SecondController {
     }
 
     const user = await auth.getUser();
+    
+    const sebelumHapus = await MKeuKategoriArusKas.query()
+      .where({ id: kategori_id }) 
+      .first();
 
     const kategori = await MKeuKategoriArusKas.query()
       .where({ id: kategori_id })
@@ -7481,12 +7627,69 @@ class SecondController {
       .where({ id: kategori_id })
       .first();
 
+    const rumusNaik = await MKeuRumusArusKas.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
+      .first();
+
+    const rumusAkhir = await MKeuRumusSaldoKasAkhir.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
+      .first();
+
+    if (rumusAkhir) {
+      let rumusAkhirParsed = JSON.parse(rumusAkhir.rumus);
+      if (rumusAkhirParsed.length == 1) {
+        await MKeuRumusSaldoKasAkhir.query()
+          .where({ id: rumusAkhir.id })
+          .delete();
+      } else {
+        let temp = rumusAkhirParsed;
+        rumusAkhirParsed.map((d, idx) => {
+          if (d?.id == kategori_id) {
+            if (idx == 0) {
+              temp.splice(0, 2);
+            } else {
+              temp.splice(idx - 1, 2);
+            }
+          }
+        });
+        await MKeuRumusSaldoKasAkhir.query()
+          .where({ id: rumusAkhir.id })
+          .update({
+            rumus: JSON.stringify(temp),
+          });
+      }
+    }
+    if (rumusNaik) {
+      let rumusNaikParsed = JSON.parse(rumusNaik.rumus);
+      if (rumusNaikParsed.length == 1) {
+        await MKeuRumusArusKas.query().where({ id: rumusNaik.id }).delete();
+      } else {
+        let temp = rumusNaikParsed;
+        rumusNaikParsed.map((d, idx) => {
+          if (d?.id == kategori_id) {
+            if (idx == 0) {
+              temp.splice(0, 2);
+            } else {
+              temp.splice(idx - 1, 2);
+            }
+          }
+        });
+        await MKeuRumusArusKas.query()
+          .where({ id: rumusNaik.id })
+          .update({
+            rumus: JSON.stringify(temp),
+          });
+      }
+    }
+
     await MHistoriAktivitas.create({
       jenis: "Hapus Template Laporan",
       tipe: "Realisasi",
       m_user_id: user.id,
       awal: `Kategori : `,
-      akhir: `${nama}`,
+      akhir: `${sebelumHapus.nama}`,
       bawah: `Laporan Arus Kas`,
       m_sekolah_id: sekolah.id,
     });
@@ -8233,9 +8436,7 @@ class SecondController {
       for (let i = 0; i < rumusSebelum.rumus.length; i++) {
         const d = rumusSebelum.rumus[i];
         if (d.id) {
-          kategoriAkun = await MKeuKategoriArusKas.query()
-            .where({ id: d.id })
-            .first();
+          kategoriAkun = await MKeuAkun.query().where({ id: d.id }).first();
           rumusSebelum2 = rumusSebelum2 + kategoriAkun.nama;
         } else {
           if (d.operator == "minus") {
@@ -8250,9 +8451,7 @@ class SecondController {
       for (let i = 0; i < rumus12.length; i++) {
         const d = rumus12[i];
         if (d.id) {
-          kategoriAkun = await MKeuKategoriArusKas.query()
-            .where({ id: d.id })
-            .first();
+          kategoriAkun = await MKeuAkun.query().where({ id: d.id }).first();
           // return kategoriAkun;
           rumusFix = rumusFix + kategoriAkun.nama;
         } else {
