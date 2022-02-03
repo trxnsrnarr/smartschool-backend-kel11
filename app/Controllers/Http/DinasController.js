@@ -746,16 +746,36 @@ class DinasController {
       .where({ m_ta_id: ta.id })
       .ids();
 
-    const rombel = await MJadwalMengajar.query()
+    const rombelJadwal = await MJadwalMengajar.query()
       .with("rombel", (builder) => {
         builder.where({ dihapus: 0 });
       })
       .whereIn("m_rombel_id", rombelIds)
       .where({ m_ta_id: ta.id })
-      .with("mataPelajaran")
       .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
       .fetch();
+      
+    let janganUlangRombel = [];
+    const rombelData = rombelJadwal.toJSON().filter((d) => {
+      if (
+        !janganUlangRombel.find(
+          (e) =>
+            e.m_rombel_id == d.m_rombel_id &&
+            e.m_mata_pelajaran_id == d.m_mata_pelajaran_id
+        )
+      ) {
+        janganUlangRombel.push(d);
+        return true;
+      } else {
+        return false;
+      }
+    });
 
+    const rombel = await Promise.all(
+      rombelData.map(async(d)=>{
+        return d.rombel.nama
+      })
+    )
     const mataPelajaran = await MMataPelajaran.query()
       .select("id", "nama")
       .where({ m_user_id: user.id })
