@@ -11,6 +11,9 @@ class MRpp extends Model {
   mataPelajaran() {
     return this.belongsTo("App/Models/MMataPelajaran");
   }
+  ta() {
+    return this.belongsTo("App/Models/Mta");
+  }
 
   sekolah() {
     return this.belongsTo("App/Models/MSekolah");
