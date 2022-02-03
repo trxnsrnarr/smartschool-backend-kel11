@@ -3910,6 +3910,7 @@ class MainController {
       alamat,
       alamat_perusahaan,
       deskripsi,
+      usaha,
     } = request.post();
     const rules = {
       nama: "required",
@@ -3985,6 +3986,7 @@ class MainController {
             ? sertifikasi_keahlian.toString()
             : null,
           pengalaman: pengalaman.length ? pengalaman.toString() : null,
+          usaha: usaha.length ? usaha.toString() : null,
           purnakarya,
           deskripsi: htmlEscaper.escape(deskripsi),
           alamat_perusahaan,
@@ -4005,6 +4007,7 @@ class MainController {
           ? sertifikasi_keahlian.toString()
           : null,
         pengalaman: pengalaman.length ? pengalaman.toString() : null,
+        usaha: usaha.length ? usaha.toString() : null,
         purnakarya,
         deskripsi: htmlEscaper.escape(deskripsi),
         alamat_perusahaan,
@@ -4059,6 +4062,7 @@ class MainController {
       purnakarya,
       pengalaman,
       deskripsi,
+      usaha,
     } = request.post();
     const rules = {
       nama: "required",
@@ -4104,6 +4108,7 @@ class MainController {
           ? sertifikasi_keahlian.toString()
           : null,
         pengalaman: pengalaman.length ? pengalaman.toString() : null,
+        usaha: usaha.length ? usaha.toString() : null,
         purnakarya,
         deskripsi: htmlEscaper.escape(deskripsi),
       });
