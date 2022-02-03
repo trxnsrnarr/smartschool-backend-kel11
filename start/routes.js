@@ -1450,7 +1450,10 @@ Route.delete(
 Route.get("/buku-kerja-guru", "DinasController.getBukuKerjaGuru");
 Route.get("/buku-kerja-detail", "DinasController.getBukuKerja");
 Route.post("/buku-kerja", "DinasController.postBukuKerja");
+Route.put("/buku-kerja/:rpp_id", "DinasController.putBukuKerja");
+Route.delete("/buku-kerja/:rpp_id", "DinasController.deleteBukuKerja");
 
+Route.get("/otomatis-akun-keuangan", "SecondController.otomatisAkun");
 // Dinas
 Route.get("/dashboard/dinas", "DinasController.getDashboard");
 Route.get("/data-warga-sekolah", "DinasController.getData");
