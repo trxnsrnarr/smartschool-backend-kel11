@@ -784,6 +784,7 @@ class DinasController {
 
     let tingkatRombel = [];
     const semuaTA = await Mta.query()
+    .select("id","tahun","semester")
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .fetch();

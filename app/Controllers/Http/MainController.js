@@ -4870,6 +4870,13 @@ class MainController {
       .where({ m_sekolah_id: sekolah.id })
       .fetch();
 
+      
+    const semuaTA = await Mta.query()
+    .select("id","tahun","semester")
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
     const { rombel_id, kode_hari, ta_id } = request.get();
 
     let materi;
@@ -5272,6 +5279,7 @@ class MainController {
       totalMapel,
       ekskul,
       mapelKelas,
+      semuaTA
     });
   }
 
