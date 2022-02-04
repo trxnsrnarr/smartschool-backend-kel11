@@ -9008,14 +9008,14 @@ class SecondController {
       });
       data[17] = await MKeuAkun.create({
         nama: "MEJA",
-        kode: 12110,
+        kode: 12120,
         dihapus: 0,
         m_sekolah_id: sekolah.id,
         saldo_normal: "Debit",
       });
       data[18] = await MKeuAkun.create({
         nama: "KURSI",
-        kode: 12110,
+        kode: 12130,
         dihapus: 0,
         m_sekolah_id: sekolah.id,
         saldo_normal: "Debit",
