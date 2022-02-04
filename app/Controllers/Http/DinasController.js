@@ -2264,137 +2264,137 @@ class DinasController {
           })
       }
     
-      const data = await MRpp.query()
-        .where({ m_user_id: user_id })
-        .andWhere({ dihapus: 0 })
-        .where({ tipe: "kode etik" })
-        .fetch();
+      // const data1 = await MRpp.query()
+      //   .where({ m_user_id: user_id })
+      //   .andWhere({ dihapus: 0 })
+      //   .where({ tipe: "kode etik" })
+      //   .fetch();
     
-      const data = await MRpp.query()
-        .where({ m_user_id: user_id })
-        .andWhere({ dihapus: 0 })
-        .where({ tipe: "ikrar" })
-        .fetch();
+      // const data2 = await MRpp.query()
+      //   .where({ m_user_id: user_id })
+      //   .andWhere({ dihapus: 0 })
+      //   .where({ tipe: "ikrar" })
+      //   .fetch();
     
-      const data = await MRpp.query()
-        .where({ m_user_id: user_id })
-        .andWhere({ dihapus: 0 })
-        .where({ tipe: "tata tertib" })
-        .fetch();
+      // const data = await MRpp.query()
+      //   .where({ m_user_id: user_id })
+      //   .andWhere({ dihapus: 0 })
+      //   .where({ tipe: "tata tertib" })
+      //   .fetch();
     
-      const data = await MRpp.query()
-        .where({ m_user_id: user_id })
-        .andWhere({ dihapus: 0 })
-        .where({ tipe: "pembiasaan" })
-        .fetch();
+      // const data = await MRpp.query()
+      //   .where({ m_user_id: user_id })
+      //   .andWhere({ dihapus: 0 })
+      //   .where({ tipe: "pembiasaan" })
+      //   .fetch();
     
-      const data = await MRpp.query()
+      // const data = await MRpp.query()
 
-        .where({ m_user_id: user_id })
-        .andWhere({ dihapus: 0 })
-        .where({ tipe: "kalender" })
-        .fetch();
+      //   .where({ m_user_id: user_id })
+      //   .andWhere({ dihapus: 0 })
+      //   .where({ tipe: "kalender" })
+      //   .fetch();
     
-      const data = await MRpp.query()
+      // const data = await MRpp.query()
 
-        .where({ m_user_id: user_id })
-        .andWhere({ dihapus: 0 })
-        .where({ tipe: "alokasi" })
-        .fetch();
+      //   .where({ m_user_id: user_id })
+      //   .andWhere({ dihapus: 0 })
+      //   .where({ tipe: "alokasi" })
+      //   .fetch();
     
-      const data = await MRpp.query()
+      // const data = await MRpp.query()
 
-        .where({ m_user_id: user_id })
-        .andWhere({ dihapus: 0 })
-        .where({ tipe: "ptahunan" })
-        .fetch();
+      //   .where({ m_user_id: user_id })
+      //   .andWhere({ dihapus: 0 })
+      //   .where({ tipe: "ptahunan" })
+      //   .fetch();
     
-      const data = await MRpp.query()
+      // const data = await MRpp.query()
 
-        .where({ m_user_id: user_id })
-        .andWhere({ dihapus: 0 })
-        .where({ tipe: "psemester" })
-        .fetch();
+      //   .where({ m_user_id: user_id })
+      //   .andWhere({ dihapus: 0 })
+      //   .where({ tipe: "psemester" })
+      //   .fetch();
     
-      const data = await MRpp.query()
+      // const data = await MRpp.query()
 
-        .where({ m_user_id: user_id })
-        .andWhere({ dihapus: 0 })
-        .where({ tipe: "jurnal" })
-        .fetch();
+      //   .where({ m_user_id: user_id })
+      //   .andWhere({ dihapus: 0 })
+      //   .where({ tipe: "jurnal" })
+      //   .fetch();
     
-      const data = await MRpp.query()
+      // const data = await MRpp.query()
 
-        .where({ m_user_id: user_id })
-        .andWhere({ dihapus: 0 })
-        .where({ tipe: "daftar evaluasi" })
-        .fetch();
+      //   .where({ m_user_id: user_id })
+      //   .andWhere({ dihapus: 0 })
+      //   .where({ tipe: "daftar evaluasi" })
+      //   .fetch();
     
-      const data = await MRpp.query()
+      // const data = await MRpp.query()
 
-        .where({ m_user_id: user_id })
-        .andWhere({ dihapus: 0 })
-        .where({ tipe: "tindak lanjut" })
-        .fetch();
+      //   .where({ m_user_id: user_id })
+      //   .andWhere({ dihapus: 0 })
+      //   .where({ tipe: "tindak lanjut" })
+      //   .fetch();
     
-      const data = await MRpp.query()
-        .where({ m_user_id: user_id })
-        .andWhere({ dihapus: 0 })
-        .where({ tipe: "akhlak" })
-        .fetch();
+      // const data = await MRpp.query()
+      //   .where({ m_user_id: user_id })
+      //   .andWhere({ dihapus: 0 })
+      //   .where({ tipe: "akhlak" })
+      //   .fetch();
     
-      const data = await MRpp.query()
+      // const data = await MRpp.query()
 
-        .where({ m_user_id: user_id })
-        .andWhere({ dihapus: 0 })
-        .where({ tipe: "hasil ulangan" })
-        .fetch();
+      //   .where({ m_user_id: user_id })
+      //   .andWhere({ dihapus: 0 })
+      //   .where({ tipe: "hasil ulangan" })
+      //   .fetch();
     
-      const data = await MRpp.query()
-        .where({ m_user_id: user_id })
-        .andWhere({ dihapus: 0 })
-        .where({ tipe: "program perbaikan" })
-        .fetch();
+      // const data = await MRpp.query()
+      //   .where({ m_user_id: user_id })
+      //   .andWhere({ dihapus: 0 })
+      //   .where({ tipe: "program perbaikan" })
+      //   .fetch();
     
-      const data = await MRpp.query()
+      // const data = await MRpp.query()
 
-        .where({ m_user_id: user_id })
-        .andWhere({ dihapus: 0 })
-        .where({ tipe: "buku pegangan" })
-        .fetch();
+      //   .where({ m_user_id: user_id })
+      //   .andWhere({ dihapus: 0 })
+      //   .where({ tipe: "buku pegangan" })
+      //   .fetch();
     
-      const data = await MRpp.query()
-        .where({ m_user_id: user_id })
-        .andWhere({ dihapus: 0 })
-        .where({ tipe: "daya serap" })
-        .fetch();
+      // const data = await MRpp.query()
+      //   .where({ m_user_id: user_id })
+      //   .andWhere({ dihapus: 0 })
+      //   .where({ tipe: "daya serap" })
+      //   .fetch();
     
-      const data = await MRpp.query()
+      // const data = await MRpp.query()
 
-        .where({ m_user_id: user_id })
-        .andWhere({ dihapus: 0 })
-        .where({ tipe: "kisi soal" })
-        .fetch();
+      //   .where({ m_user_id: user_id })
+      //   .andWhere({ dihapus: 0 })
+      //   .where({ tipe: "kisi soal" })
+      //   .fetch();
     
-      const data = await MRpp.query()
+      // const data = await MRpp.query()
 
-        .where({ m_user_id: user_id })
-        .andWhere({ dihapus: 0 })
-        .where({ tipe: "soal" })
-        .fetch();
+      //   .where({ m_user_id: user_id })
+      //   .andWhere({ dihapus: 0 })
+      //   .where({ tipe: "soal" })
+      //   .fetch();
     
-      const data = await MRpp.query()
+      // const data = await MRpp.query()
 
-        .where({ m_user_id: user_id })
-        .andWhere({ dihapus: 0 })
-        .where({ tipe: "butir soal" })
-        .fetch();
+      //   .where({ m_user_id: user_id })
+      //   .andWhere({ dihapus: 0 })
+      //   .where({ tipe: "butir soal" })
+      //   .fetch();
     
-      const data = await MRpp.query()
-        .where({ m_user_id: user_id })
-        .andWhere({ dihapus: 0 })
-        .where({ tipe: "perbaikan soal" })
-        .fetch();
+      // const data = await MRpp.query()
+      //   .where({ m_user_id: user_id })
+      //   .andWhere({ dihapus: 0 })
+      //   .where({ tipe: "perbaikan soal" })
+      //   .fetch();
     
 
     return response.ok({
