@@ -5584,13 +5584,13 @@ class SecondController {
       ],
     });
 
-    const rencana = await MRencanaKeuangan.query()
+    const rencana11 = await MRencanaKeuangan.query()
       .where({ id: rencana_id })
       .first();
     worksheet.getCell("A1").value = sekolah.nama;
     worksheet.getCell(
       "A2"
-    ).value = `LAPORAN ANALISA ${rencana.nama.toUpperCase()} DAN REALISASI ANGGARAN`;
+    ).value = `LAPORAN ANALISA ${rencana11.nama.toUpperCase()} DAN REALISASI ANGGARAN`;
     worksheet.getCell("A3").value = `Tanggal : ${awal1} - ${akhir1}`;
 
     worksheet.getColumn("A").width = 12;
