@@ -773,7 +773,7 @@ class DinasController {
 
     const rombel = await Promise.all(
       rombelData.map(async (d) => {
-        return d.rombel.nama;
+        return d.rombel;
       })
     );
     const mataPelajaran = await MMataPelajaran.query()
@@ -784,7 +784,7 @@ class DinasController {
 
     let tingkatRombel = [];
     const semuaTA = await Mta.query()
-    .select("id","tahun","semester")
+      .select("id", "tahun", "semester")
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .fetch();
@@ -2209,6 +2209,200 @@ class DinasController {
 
     return response.ok({
       message: messageDeleteSuccess,
+    });
+  }
+
+  async getBukuKerjaDinas({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+    let {tipe,user_id } = request.get();
+
+    const ta = await this.getTAAktif(sekolah);
+
+    const guru = await User.query().select("id","nama").where({m_sekolah_id:sekolah.id}).andWhere({dihapus:0}).fetch()
+
+    if (tipe == "bukuKerja1") {
+        const skl = await MRpp.query()
+          .where({ m_user_id: user_id })
+          .andWhere({ dihapus: 0 })
+          .andWhere({ tipe: "skl" })
+          .fetch();
+      
+        const rpp = await MRpp.query()
+          .where({ m_user_id: user_id })
+          .andWhere({ dihapus: 0 })
+          .where({ tipe: "rpp" })
+          .fetch();
+      
+        const silabus = await MRpp.query()
+          .where({ m_user_id: user_id })
+          .andWhere({ dihapus: 0 })
+          .where({ tipe: "silabus" })
+          .fetch();
+      
+        const kkm = await MRpp.query()
+          .where({ m_user_id: user_id })
+          .andWhere({ dihapus: 0 })
+          .where({ tipe: "kkm" })
+          .fetch();
+
+        const total = skl.length + rpp.length + silabus.length + kkm.length
+
+          return response.ok({
+            total,
+            skl,
+            rpp,
+            silabus,
+            kkm,
+          })
+      }
+    
+      const data = await MRpp.query()
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "kode etik" })
+        .fetch();
+    
+      const data = await MRpp.query()
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "ikrar" })
+        .fetch();
+    
+      const data = await MRpp.query()
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "tata tertib" })
+        .fetch();
+    
+      const data = await MRpp.query()
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "pembiasaan" })
+        .fetch();
+    
+      const data = await MRpp.query()
+
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "kalender" })
+        .fetch();
+    
+      const data = await MRpp.query()
+
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "alokasi" })
+        .fetch();
+    
+      const data = await MRpp.query()
+
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "ptahunan" })
+        .fetch();
+    
+      const data = await MRpp.query()
+
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "psemester" })
+        .fetch();
+    
+      const data = await MRpp.query()
+
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "jurnal" })
+        .fetch();
+    
+      const data = await MRpp.query()
+
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "daftar evaluasi" })
+        .fetch();
+    
+      const data = await MRpp.query()
+
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "tindak lanjut" })
+        .fetch();
+    
+      const data = await MRpp.query()
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "akhlak" })
+        .fetch();
+    
+      const data = await MRpp.query()
+
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "hasil ulangan" })
+        .fetch();
+    
+      const data = await MRpp.query()
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "program perbaikan" })
+        .fetch();
+    
+      const data = await MRpp.query()
+
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "buku pegangan" })
+        .fetch();
+    
+      const data = await MRpp.query()
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "daya serap" })
+        .fetch();
+    
+      const data = await MRpp.query()
+
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "kisi soal" })
+        .fetch();
+    
+      const data = await MRpp.query()
+
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "soal" })
+        .fetch();
+    
+      const data = await MRpp.query()
+
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "butir soal" })
+        .fetch();
+    
+      const data = await MRpp.query()
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "perbaikan soal" })
+        .fetch();
+    
+
+    return response.ok({
+      data,
+      rombel,
+      mataPelajaran,
+      semuaTA,
+      tingkatRombel,
     });
   }
 
