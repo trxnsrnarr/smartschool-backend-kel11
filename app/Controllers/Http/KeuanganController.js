@@ -865,7 +865,7 @@ class KeuanganController {
       });
     }
 
-    const transaksi = await MKeuTransaksi.query()
+    const transaksi = await MRencanaTransaksi.query()
       .where({ id: transaksi_id })
       .first();
     const rencana = await MRencanaKeuangan.query()
