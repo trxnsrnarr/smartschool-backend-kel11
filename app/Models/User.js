@@ -168,6 +168,10 @@ class User extends Model {
   pembayaran() {
     return this.hasMany("App/Models/MPembayaranSiswa", "id", "m_user_id");
   }
+
+  rpp() {
+    return this.hasMany("App/Models/MRpp", "id", "m_user_id");
+  }
 }
 
 module.exports = User;

@@ -5617,23 +5617,42 @@ class SecondController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
+    const rencana = await this.getRencanaAktif(sekolah);
 
     let { search, tanggal_awal, tanggal_akhir } = request.get();
 
-    let transaksiIds;
+    let transaksiIds, rencanaTransaksiIds;
+
+    rencanaTransaksiIds = MRencanaTransaksi.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ m_rencana_keuangan_id: rencana.id })
+      .where({ dihapus: 0 });
+
     if (tanggal_awal && tanggal_akhir) {
       transaksiIds = await MKeuTransaksi.query()
         .whereBetween("tanggal", [tanggal_awal, tanggal_akhir])
         .where({ m_sekolah_id: sekolah.id })
         .where({ dihapus: 0 })
         .ids();
+      rencanaTransaksiIds.whereBetween("tanggal", [
+        moment(tanggal_awal).startOf("month").format("YYYY-MM-DD HH:mm:ss"),
+        moment(tanggal_akhir).endOf("month").format("YYYY-MM-DD HH:mm:ss"),
+      ]);
     }
+
+    rencanaTransaksiIds = await rencanaTransaksiIds.ids();
 
     const akun = await MKeuAkun.query()
       .with("jurnal", (builder) => {
         builder.where({ dihapus: 0 });
         if (transaksiIds) {
           builder.whereIn("m_keu_transaksi_id", transaksiIds);
+        }
+      })
+      .with("rencanaJurnal", (builder) => {
+        builder.where({ dihapus: 0 });
+        if (rencanaTransaksiIds) {
+          builder.whereIn("m_rencana_transaksi_id", rencanaTransaksiIds);
         }
       })
       .andWhere({ dihapus: 0 })
