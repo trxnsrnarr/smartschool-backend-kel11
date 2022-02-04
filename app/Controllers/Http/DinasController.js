@@ -754,7 +754,7 @@ class DinasController {
       .where({ m_ta_id: ta.id })
       .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
       .fetch();
-      
+
     let janganUlangRombel = [];
     const rombelData = rombelJadwal.toJSON().filter((d) => {
       if (
@@ -772,10 +772,10 @@ class DinasController {
     });
 
     const rombel = await Promise.all(
-      rombelData.map(async(d)=>{
-        return d.rombel.nama
+      rombelData.map(async (d) => {
+        return d.rombel.nama;
       })
-    )
+    );
     const mataPelajaran = await MMataPelajaran.query()
       .select("id", "nama")
       .where({ m_user_id: user.id })
@@ -811,216 +811,197 @@ class DinasController {
     }
     let data;
     if (tipe == "skl") {
-      data = await MRpp.query()
+      data = MRpp.query()
         .with("mataPelajaran")
         .with("ta")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .andWhere({ tipe: "skl" })
-        .orderBy("created_at", "desc")
-        .fetch();
+        .orderBy("created_at", "desc");
     } else if (tipe == "rpp") {
-      data = await MRpp.query()
+      data = MRpp.query()
         .with("mataPelajaran")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .orderBy("created_at", "desc")
-        .where({ tipe: "rpp" })
-        .fetch();
+        .where({ tipe: "rpp" });
     } else if (tipe == "silabus") {
-      data = await MRpp.query()
+      data = MRpp.query()
         .with("mataPelajaran")
         .with("ta")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .orderBy("created_at", "desc")
-        .where({ tipe: "silabus" })
-        .fetch();
+        .where({ tipe: "silabus" });
     } else if (tipe == "kkm") {
-      data = await MRpp.query()
+      data = MRpp.query()
         .with("mataPelajaran")
         .with("ta")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .orderBy("created_at", "desc")
-        .where({ tipe: "kkm" })
-        .fetch();
+        .where({ tipe: "kkm" });
     } else if (tipe == "kode etik") {
-      data = await MRpp.query()
+      data = MRpp.query()
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .orderBy("created_at", "desc")
-        .where({ tipe: "kode etik" })
-        .fetch();
+        .where({ tipe: "kode etik" });
     } else if (tipe == "ikrar") {
-      data = await MRpp.query()
+      data = MRpp.query()
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .orderBy("created_at", "desc")
-        .where({ tipe: "ikrar" })
-        .fetch();
+        .where({ tipe: "ikrar" });
     } else if (tipe == "tata tertib") {
-      data = await MRpp.query()
+      data = MRpp.query()
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .orderBy("created_at", "desc")
-        .where({ tipe: "tata tertib" })
-        .fetch();
+        .where({ tipe: "tata tertib" });
     } else if (tipe == "pembiasaan") {
-      data = await MRpp.query()
+      data = MRpp.query()
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .orderBy("created_at", "desc")
-        .where({ tipe: "pembiasaan" })
-        .fetch();
+        .where({ tipe: "pembiasaan" });
     } else if (tipe == "kalender") {
-      data = await MRpp.query()
+      data = MRpp.query()
         .with("ta")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .orderBy("created_at", "desc")
-        .where({ tipe: "kalender" })
-        .fetch();
+        .where({ tipe: "kalender" });
     } else if (tipe == "alokasi") {
-      data = await MRpp.query()
+      data = MRpp.query()
         .with("ta")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .orderBy("created_at", "desc")
-        .where({ tipe: "alokasi" })
-        .fetch();
+        .where({ tipe: "alokasi" });
     } else if (tipe == "ptahunan") {
-      data = await MRpp.query()
+      data = MRpp.query()
         .with("ta")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .orderBy("created_at", "desc")
-        .where({ tipe: "ptahunan" })
-        .fetch();
+        .where({ tipe: "ptahunan" });
     } else if (tipe == "psemester") {
-      data = await MRpp.query()
+      data = MRpp.query()
         .with("ta")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .orderBy("created_at", "desc")
-        .where({ tipe: "psemester" })
-        .fetch();
+        .where({ tipe: "psemester" });
     } else if (tipe == "jurnal") {
-      data = await MRpp.query()
+      data = MRpp.query()
         .with("ta")
         .with("rombel")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .orderBy("created_at", "desc")
-        .where({ tipe: "jurnal" })
-        .fetch();
+        .where({ tipe: "jurnal" });
     } else if (tipe == "daftar evaluasi") {
-      data = await MRpp.query()
+      data = MRpp.query()
         .with("ta")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .orderBy("created_at", "desc")
-        .where({ tipe: "daftar evaluasi" })
-        .fetch();
+        .where({ tipe: "daftar evaluasi" });
     } else if (tipe == "tindak lanjut") {
-      data = await MRpp.query()
+      data = MRpp.query()
         .with("ta")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .orderBy("created_at", "desc")
-        .where({ tipe: "tindak lanjut" })
-        .fetch();
+        .where({ tipe: "tindak lanjut" });
     } else if (tipe == "akhlak") {
-      data = await MRpp.query()
+      data = MRpp.query()
         .with("ta")
         .with("rombel")
         .with("mataPelajaran")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .orderBy("created_at", "desc")
-        .where({ tipe: "akhlak" })
-        .fetch();
+        .where({ tipe: "akhlak" });
     } else if (tipe == "hasil ulangan") {
-      data = await MRpp.query()
+      data = MRpp.query()
         .with("ta")
         .with("rombel")
         .with("mataPelajaran")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .orderBy("created_at", "desc")
-        .where({ tipe: "hasil ulangan" })
-        .fetch();
+        .where({ tipe: "hasil ulangan" });
     } else if (tipe == "program perbaikan") {
-      data = await MRpp.query()
+      data = MRpp.query()
         .with("ta")
         .with("rombel")
         .with("mataPelajaran")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .orderBy("created_at", "desc")
-        .where({ tipe: "program perbaikan" })
-        .fetch();
+        .where({ tipe: "program perbaikan" });
     } else if (tipe == "buku pegangan") {
-      data = await MRpp.query()
+      data = MRpp.query()
         .with("ta")
         .with("rombel")
         .with("mataPelajaran")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .orderBy("created_at", "desc")
-        .where({ tipe: "buku pegangan" })
-        .fetch();
+        .where({ tipe: "buku pegangan" });
     } else if (tipe == "daya serap") {
-      data = await MRpp.query()
+      data = MRpp.query()
         .with("ta")
         .with("rombel")
         .with("mataPelajaran")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .orderBy("created_at", "desc")
-        .where({ tipe: "daya serap" })
-        .fetch();
+        .where({ tipe: "daya serap" });
     } else if (tipe == "kisi soal") {
-      data = await MRpp.query()
+      data = MRpp.query()
         .with("ta")
         .with("rombel")
         .with("mataPelajaran")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .orderBy("created_at", "desc")
-        .where({ tipe: "kisi soal" })
-        .fetch();
+        .where({ tipe: "kisi soal" });
     } else if (tipe == "soal") {
-      data = await MRpp.query()
+      data = MRpp.query()
         .with("ta")
         .with("rombel")
         .with("mataPelajaran")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .orderBy("created_at", "desc")
-        .where({ tipe: "soal" })
-        .fetch();
+        .where({ tipe: "soal" });
     } else if (tipe == "butir soal") {
-      data = await MRpp.query()
+      data = MRpp.query()
         .with("ta")
         .with("rombel")
         .with("mataPelajaran")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .orderBy("created_at", "desc")
-        .where({ tipe: "butir soal" })
-        .fetch();
+        .where({ tipe: "butir soal" });
     } else if (tipe == "perbaikan soal") {
-      data = await MRpp.query()
+      data = MRpp.query()
         .with("ta")
         .with("rombel")
         .with("mataPelajaran")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .orderBy("created_at", "desc")
-        .where({ tipe: "perbaikan soal" })
-        .fetch();
+        .where({ tipe: "perbaikan soal" });
     }
+
+    if (search) {
+      data = data.where("nama", "like", `%${search}%`);
+    }
+    data = await data.fetch();
 
     return response.ok({
       data,
