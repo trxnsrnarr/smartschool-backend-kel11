@@ -4870,9 +4870,8 @@ class MainController {
       .where({ m_sekolah_id: sekolah.id })
       .fetch();
 
-      
     const semuaTA = await Mta.query()
-    .select("id","tahun","semester")
+      .select("id", "tahun", "semester")
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .fetch();
@@ -5114,31 +5113,33 @@ class MainController {
       let materiIds;
 
       if (sekolah.id == 40 || sekolah.id == 13) {
-        const mataPelajaranGuru = await MMataPelajaran.query()
-          .where(
-            "nama",
-            "like",
-            `%${jadwalMengajar.toJSON().mataPelajaran.nama}%`
-          )
-          .andWhere({ m_user_id: user.id })
-          .andWhere({ dihapus: 0 })
-          .andWhere({ m_ta_id: ta_id })
-          .first();
-        materi = await MMateri.query()
-          .where({ tingkat: jadwalMengajar.toJSON().rombel.tingkat })
-          .andWhere({
-            m_jurusan_id: jadwalMengajar.toJSON().rombel.m_jurusan_id,
-          })
-          .where({ m_mata_pelajaran_id: mataPelajaranGuru.id })
-          .first();
-        if (!materi) {
+        if (ta_id) {
+          const mataPelajaranGuru = await MMataPelajaran.query()
+            .where(
+              "nama",
+              "like",
+              `%${jadwalMengajar.toJSON().mataPelajaran.nama}%`
+            )
+            .andWhere({ m_user_id: user.id })
+            .andWhere({ dihapus: 0 })
+            .andWhere({ m_ta_id: ta_id })
+            .first();
           materi = await MMateri.query()
             .where({ tingkat: jadwalMengajar.toJSON().rombel.tingkat })
             .andWhere({
-              m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id,
+              m_jurusan_id: jadwalMengajar.toJSON().rombel.m_jurusan_id,
             })
             .where({ m_mata_pelajaran_id: mataPelajaranGuru.id })
             .first();
+          if (!materi) {
+            materi = await MMateri.query()
+              .where({ tingkat: jadwalMengajar.toJSON().rombel.tingkat })
+              .andWhere({
+                m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id,
+              })
+              .where({ m_mata_pelajaran_id: mataPelajaranGuru.id })
+              .first();
+          }
         }
       }
 
@@ -5279,7 +5280,7 @@ class MainController {
       totalMapel,
       ekskul,
       mapelKelas,
-      semuaTA
+      semuaTA,
     });
   }
 
