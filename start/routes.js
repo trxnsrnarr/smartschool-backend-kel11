@@ -1454,8 +1454,12 @@ Route.put("/buku-kerja/:rpp_id", "DinasController.putBukuKerja");
 Route.delete("/buku-kerja/:rpp_id", "DinasController.deleteBukuKerja");
 
 Route.get("/otomatis-akun-keuangan", "SecondController.otomatisAkun");
+
+Route.post("/download/jadwal", "RombelController.downloadJadwalMengajarTingkat");
 // Dinas
 Route.get("/dashboard/dinas", "DinasController.getDashboard");
+
+Route.get("/dinas/buku-kerja", "DinasController.getBukuKerjaDinas");
 Route.get("/data-warga-sekolah", "DinasController.getData");
 
 Route.get("/ip", "MainController.ip");
