@@ -711,7 +711,7 @@ class KeuanganController {
         }),
 
       editJurnal.map(async (d) => {
-        const jurnalLama = semuaJurnal.toJSON().find((e) => e.id == d);
+        const jurnalLama = semuaJurnal.toJSON().find((e) => e.id == d.id);
         const akunLama = semuaAkun
           .toJSON()
           .find((e) => e.id == jurnalLama.m_keu_akun_id);
