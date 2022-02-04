@@ -605,7 +605,7 @@ class MainController {
           })
           .where("aktif", 1);
       })
-      .where("gpds_event", "jawatimur")
+      .where("gpds_event", "yogyakarta")
       .orderBy("jumlah_topik", "desc");
 
     return response.ok({
@@ -939,7 +939,7 @@ class MainController {
         });
       } else {
         const sekolahSS = await MSekolah.create({
-          gpds_event: "jawatimur",
+          gpds_event: "yogyakarta",
           nama: sekolah.sekolah,
           domain: `https://${domain}.smarteschool.id`,
           status: sekolah.status || "N",
@@ -975,7 +975,7 @@ class MainController {
     let sekolahSS = check;
     if (!check) {
       sekolahSS = await MSekolah.create({
-        gpds_event: "jawatimur",
+        gpds_event: "yogyakarta",
         nama: sekolah,
         npsn,
         provinsi: propinsi,
