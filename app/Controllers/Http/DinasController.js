@@ -1367,6 +1367,9 @@ class DinasController {
         rombelData,
       });
     } else if (tipe == "pertemuan") {
+      if(!pertemuan_id){
+        return 'Silahkan Pilih Pertemuan';
+      }
       const timelineAll = await MTimeline.query()
         .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
         .where({ m_user_id: jadwalMengajar.toJSON().mataPelajaran.m_user_id })
