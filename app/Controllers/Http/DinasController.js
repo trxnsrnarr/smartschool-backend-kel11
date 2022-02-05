@@ -1262,11 +1262,7 @@ class DinasController {
     });
   }
 
-  async getDaftarKehadiran({
-    response,
-    request,
-    auth,
-  }) {
+  async getDaftarKehadiran({ response, request, auth }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -1276,7 +1272,7 @@ class DinasController {
     }
 
     const user = await auth.getUser();
-    let { tipe, pertemuan_id } = request.get();
+    let { tipe, pertemuan_id, m_rombel_id, m_mata_pelajaran_id } = request.get();
 
     const mataPelajaranIds = await MMataPelajaran.query()
       .where({ m_user_id: user.id })
@@ -1301,7 +1297,7 @@ class DinasController {
       .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
       .fetch();
 
-      let janganUlangRombel = [];
+    let janganUlangRombel = [];
     const rombelData = rombelMengajar.toJSON().filter((d) => {
       if (
         !janganUlangRombel.find(
@@ -1317,20 +1313,16 @@ class DinasController {
       }
     });
 
-    const rombel = await Promise.all(
-      rombelData.map(async (d) => {
-        return d.rombel;
-      })
-    );
-
     const jadwalMengajar = await MJadwalMengajar.query()
-      .with("rombel")
-      .with("mataPelajaran").whereIn("m_rombel_id", rombelIds)
-      .where({ m_ta_id: ta.id })
+      .with("rombel", (builder) => {
+        builder.select("id", "nama");
+      })
       .with("mataPelajaran", (builder) => {
         builder.select("id", "nama");
       })
-      .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
+      .where({m_rombel_id:m_rombel_id})
+      .where({ m_ta_id: ta.id })
+      .where({m_mata_pelajaran_id:m_mata_pelajaran_id})
       .first();
     if (tipe == "rekap") {
       const timelineIds = await MTimeline.query()
@@ -1372,7 +1364,7 @@ class DinasController {
         rombelMengajar,
         jumlahPertemuan,
         siswa,
-        rombel,
+        rombelData,
       });
     } else if (tipe == "pertemuan") {
       const timelineAll = await MTimeline.query()
@@ -1453,7 +1445,7 @@ class DinasController {
         timelineAll,
         timelines,
         rombelMengajar,
-        rombel
+        rombelData,
       });
     }
   }
