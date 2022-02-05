@@ -1568,6 +1568,9 @@ oute.get("/buku-kerja-nilai/:jadwal_mengajar_id/user/:user_id", "DinasController
 Route.post("/buku-kerja", "DinasController.postBukuKerja");
 Route.put("/buku-kerja/:rpp_id", "DinasController.putBukuKerja");
 Route.delete("/buku-kerja/:rpp_id", "DinasController.deleteBukuKerja");
+Route.post("/buku-kerja-soal", "DinasController.postBukuKerjaSoal");
+Route.put("/buku-kerja-soal/:rpp_id", "DinasController.putBukuKerjaSoal");
+Route.delete("/buku-kerja-soal/:rpp_id", "DinasController.deleteBukuKerjaSoal");
 
 Route.get("/otomatis-akun-keuangan", "SecondController.otomatisAkun");
 
