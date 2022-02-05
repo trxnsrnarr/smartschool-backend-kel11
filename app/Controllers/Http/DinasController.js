@@ -1275,7 +1275,8 @@ class DinasController {
 
     const user = await auth.getUser();
     const ta = await this.getTAAktif(sekolah);
-    let { tipe, pertemuan_id, m_rombel_id, m_mata_pelajaran_id } = request.get();
+    let { tipe, pertemuan_id, m_rombel_id, m_mata_pelajaran_id } =
+      request.get();
 
     const mataPelajaranIds = await MMataPelajaran.query()
       .where({ m_user_id: user.id })
@@ -1321,11 +1322,11 @@ class DinasController {
         builder.select("id", "nama");
       })
       .with("mataPelajaran", (builder) => {
-        builder.select("id", "nama","m_user_id");
+        builder.select("id", "nama", "m_user_id");
       })
-      .where({m_rombel_id:m_rombel_id})
+      .where({ m_rombel_id: m_rombel_id })
       .where({ m_ta_id: ta.id })
-      .where({m_mata_pelajaran_id:m_mata_pelajaran_id})
+      .where({ m_mata_pelajaran_id: m_mata_pelajaran_id })
       .first();
     if (tipe == "rekap") {
       const timelineIds = await MTimeline.query()
@@ -1335,9 +1336,9 @@ class DinasController {
         .andWhere({ dihapus: 0 })
         .ids();
 
-        if(!timelineIds){
-          return "Guru belum membuat pertemuan"
-        }
+      if (!timelineIds) {
+        return "Guru belum membuat pertemuan";
+      }
 
       const tkTimelineIds = await TkTimeline.query()
         .where("m_timeline_id", timelineIds)
@@ -1375,12 +1376,12 @@ class DinasController {
       });
     } else if (tipe == "pertemuan") {
       const timelineAll = await MTimeline.query()
-      .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
-      .where({ m_user_id: jadwalMengajar.toJSON().mataPelajaran.m_user_id })
-      .andWhere({ tipe: "absen" })
-      .andWhere({ dihapus: 0 })
-      .fetch();
-      if(!pertemuan_id){
+        .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
+        .where({ m_user_id: jadwalMengajar.toJSON().mataPelajaran.m_user_id })
+        .andWhere({ tipe: "absen" })
+        .andWhere({ dihapus: 0 })
+        .fetch();
+      if (!pertemuan_id) {
         return response.ok({
           // timeline,
           timelineAll,
@@ -1465,7 +1466,12 @@ class DinasController {
       });
     }
   }
-  async getDaftarNilai({ response, request, auth }) {
+  async getDaftarNilai({
+    response,
+    request,
+    auth,
+    params: { jadwal_mengajar_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -1475,6 +1481,7 @@ class DinasController {
     }
 
     const user = await auth.getUser();
+    const ta = await this.getTAAktif(sekolah);
     let { tipe, search } = request.get();
 
     const mataPelajaranIds = await MMataPelajaran.query()
@@ -1515,145 +1522,92 @@ class DinasController {
         return false;
       }
     });
+    const data = await MJadwalMengajar.query()
+      .with("rombel")
+      .with("mataPelajaran")
+      .where({ id: jadwal_mengajar_id })
+      .first();
 
+    let materi;
+    materi = MMateri.query()
+      .where({ m_mata_pelajaran_id: data.m_mata_pelajaran_id })
+      .andWhere({ tingkat: data.toJSON().rombel.tingkat })
+      .andWhere({ dihapus: 0 });
+    if (data.toJSON().mataPelajaran.kelompok == "C") {
+      materi.andWhere({ m_jurusan_id: data.toJSON().rombel.m_jurusan_id });
+    }
+    materi = await materi.first();
+
+    let rekapIds;
+    rekapIds = MRekap.query()
+      .where({ m_materi_id: materi.id })
+      .andWhere({ tipe: tipe })
+      .andWhere({ m_ta_id: ta.id });
+    if (tipe == "ujian") {
+      rekapIds.where({ teknik: "UH" });
+    }
+    rekapIds = await rekapIds.ids();
+
+    const rekapRombelIds = await MRekapRombel.query()
+      .whereIn("m_rekap_id", rekapIds)
+      .andWhere({ m_rombel_id: data.m_rombel_id })
+      .andWhere({ dihapus: 0 })
+      .ids();
     const jadwalMengajar = await MJadwalMengajar.query()
       .with("rombel", (builder) => {
-        builder.select("id", "nama");
+        builder
+          .with("anggotaRombel", (builder) => {
+            builder
+              .with("user", async (builder) => {
+                builder
+                  .select(
+                    "id",
+                    "nama",
+                    "whatsapp",
+                    "email",
+                    "avatar",
+                    "gender",
+                    "agama",
+                    "m_sekolah_id"
+                  )
+                  // .with("nilaiRekapSiswa", (builder) => {
+                  //   builder.whereIn("m_rekap_rombel_id", rekapRombelIds);
+                  // })
+                  .withCount("nilaiRekapSiswa as jumlahTotal", (builder) => {
+                    builder.whereIn("m_rekap_rombel_id", rekapRombelIds);
+                  })
+                  .withCount("nilaiRekapSiswa as jumlahKkm", (builder) => {
+                    builder
+                      .whereIn("m_rekap_rombel_id", rekapRombelIds)
+                      .where(
+                        "nilai",
+                        "<",
+                        `${data.toJSON().mataPelajaran.kkm}`
+                      );
+                  })
+                  .withCount("nilaiRekapSiswa as nilaiKosong", (builder) => {
+                    builder
+                      .whereIn("m_rekap_rombel_id", rekapRombelIds)
+                      .where({ nilai: 0 });
+                  });
+                if (search) {
+                  builder.where("nama", "like", `%${search}%`);
+                }
+              })
+              .where({ dihapus: 0 });
+          })
+          .with("user");
       })
       .with("mataPelajaran", (builder) => {
         builder.select("id", "nama");
       })
-      .where({m_rombel_id:m_rombel_id})
       .where({ m_ta_id: ta.id })
-      .where({m_mata_pelajaran_id:m_mata_pelajaran_id})
+      .where({ id: jadwal_mengajar_id })
       .first();
-    if (tipe == "tugas") {
-      const timelineIds = await MTimeline.query()
-        .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
-        .where({ m_user_id: jadwalMengajar.toJSON().mataPelajaran.m_user_id })
-        .andWhere({ tipe: "absen" })
-        .andWhere({ dihapus: 0 })
-        .ids();
 
-      const tkTimelineIds = await TkTimeline.query()
-        .where("m_timeline_id", timelineIds)
-        .ids();
-
-      const anggotaRombelIds = await MAnggotaRombel.query()
-        .where({ dihapus: 0 })
-        .andWhere({ m_rombel_id: jadwalMengajar.m_rombel_id })
-        .pluck("m_user_id");
-
-      const siswa = await User.query()
-        .withCount("absenKelas as hadir", (builder) => {
-          builder.whereIn("id", tkTimelineIds).where({ absen: "hadir" });
-        })
-        .withCount("absenKelas as sakit", (builder) => {
-          builder.whereIn("id", tkTimelineIds).where({ absen: "sakit" });
-        })
-        .withCount("absenKelas as izin", (builder) => {
-          builder.whereIn("id", tkTimelineIds).where({ absen: "izin" });
-        })
-        .withCount("absenKelas as alpa", (builder) => {
-          builder.whereIn("id", tkTimelineIds).whereNull("absen");
-        })
-        .select("id", "nama")
-        .where({ dihapus: 0 })
-        .whereIn("id", anggotaRombelIds)
-        .fetch();
-
-      const jumlahPertemuan = timelineIds.length;
-      return response.ok({
-        rombelMengajar,
-        jumlahPertemuan,
-        siswa,
-        rombelData,
-      });
-    } else if (tipe == "ujian") {
-      if(!pertemuan_id){
-        return 'Silahkan Pilih Pertemuan';
-      }
-      const timelineAll = await MTimeline.query()
-        .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
-        .where({ m_user_id: jadwalMengajar.toJSON().mataPelajaran.m_user_id })
-        .andWhere({ tipe: "absen" })
-        .andWhere({ dihapus: 0 })
-        .fetch();
-
-      const timeline = await MTimeline.query()
-        .with("user")
-        .with("rombel")
-        .with("tkTimeline", (builder) => {
-          builder.with("user");
-        })
-        .withCount("tkTimeline as total_respon_absen", (builder) => {
-          builder.whereNotNull("waktu_absen");
-        })
-        .withCount("tkTimeline as total_hadir", (builder) => {
-          builder.where({ absen: "hadir" }).whereNotNull("waktu_absen");
-        })
-        .withCount("tkTimeline as total_sakit", (builder) => {
-          builder.where({ absen: "sakit" }).whereNotNull("waktu_absen");
-        })
-        .withCount("tkTimeline as total_izin", (builder) => {
-          builder.where({ absen: "izin" }).whereNotNull("waktu_absen");
-        })
-        .withCount("tkTimeline as total_alpa", (builder) => {
-          builder.whereNull("waktu_absen");
-        })
-        .withCount("tkTimeline as total_siswa")
-        .where({ id: pertemuan_id })
-        .andWhere({ dihapus: 0 })
-        .first();
-
-      const range = [
-        moment(
-          timeline.tipe == "tugas"
-            ? timeline.toJSON().tugas.tanggal_pembagian
-            : timeline.toJSON().tanggal_pembagian
-        ).format("YYYY-MM-DD 00:00:00"),
-        moment(
-          timeline.tipe == "tugas"
-            ? timeline.toJSON().tugas.tanggal_pembagian
-            : timeline.toJSON().tanggal_pembagian
-        ).format("YYYY-MM-DD 23:59:29"),
-      ];
-
-      const timelineBiasa = await MTimeline.query()
-        .with("tugas", (builder) => {
-          builder
-            .with("soal", (builder) => {
-              builder.where({ dihapus: 0 }).with("soal");
-            })
-            .with("timeline", (builder) => {
-              builder.with("rombel").with("tkTimeline");
-            });
-        })
-        .with("user")
-        .withCount("tkTimeline as total_respon", (builder) => {
-          builder.whereNotNull("waktu_pengumpulan");
-        })
-        .withCount("tkTimeline as total_absen", (builder) => {
-          builder.whereNotNull("waktu_absen");
-        })
-        .withCount("tkTimeline as total_siswa")
-        .where({ m_user_id: timeline.m_user_id })
-        .andWhere({ dihapus: 0 })
-        .andWhere({ m_rombel_id: timeline.m_rombel_id })
-        .whereBetween("tanggal_pembagian", range)
-        .andWhereNot({ tipe: "tugas" })
-        .fetch();
-
-      const timelines = timelineBiasa;
-
-      return response.ok({
-        timeline,
-        timelineAll,
-        timelines,
-        rombelMengajar,
-        rombelData,
-      });
-    }
+    return response.ok({
+      jadwalMengajar,
+    });
   }
 
   async postBukuKerja({ response, request, auth }) {

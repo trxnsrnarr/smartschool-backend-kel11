@@ -153,6 +153,10 @@ class User extends Model {
     return this.belongsTo("App/Models/MUjianSiswa", "id", "m_user_id");
   }
 
+  nilaiRekapSiswa() {
+    return this.hasMany("App/Models/TkRekapNilai", "id", "m_user_id");
+  }
+
   nilaiSemuaUjian() {
     return this.hasMany("App/Models/MUjianSiswa", "id", "m_user_id");
   }
