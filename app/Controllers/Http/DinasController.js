@@ -1335,6 +1335,10 @@ class DinasController {
         .andWhere({ dihapus: 0 })
         .ids();
 
+        if(!timelineIds){
+          return "Guru belum membuat pertemuan"
+        }
+
       const tkTimelineIds = await TkTimeline.query()
         .where("m_timeline_id", timelineIds)
         .ids();
