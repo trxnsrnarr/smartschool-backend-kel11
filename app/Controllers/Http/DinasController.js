@@ -997,6 +997,30 @@ class DinasController {
         .andWhere({ dihapus: 0 })
         .orderBy("created_at", "desc")
         .where({ tipe: "perbaikan soal" });
+    }else if (tipe == "kehadiran"){
+      data = MJadwalMengajar.query()
+      .with("rombel", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .whereIn("m_rombel_id", rombelIds)
+      .where({ m_ta_id: ta.id })
+      .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
+    }else if (tipe == "nilai"){
+      data = MJadwalMengajar.query()
+      .with("rombel", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .whereIn("m_rombel_id", rombelIds)
+      .where({ m_ta_id: ta.id })
+      .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
+    }else if (tipe == "jadwal"){
+      data = MJadwalMengajar.query()
+      .with("rombel", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .whereIn("m_rombel_id", rombelIds)
+      .where({ m_ta_id: ta.id })
+      .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
     }
 
     if (search) {
