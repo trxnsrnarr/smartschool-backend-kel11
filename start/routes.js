@@ -1562,6 +1562,7 @@ Route.delete(
 //Buku Kerja  Service
 Route.get("/buku-kerja-guru", "DinasController.getBukuKerjaGuru");
 Route.get("/buku-kerja-detail", "DinasController.getBukuKerja");
+Route.get("/buku-kerja-kehadiran", "DinasController.getDaftarKehadiran");
 Route.post("/buku-kerja", "DinasController.postBukuKerja");
 Route.put("/buku-kerja/:rpp_id", "DinasController.putBukuKerja");
 Route.delete("/buku-kerja/:rpp_id", "DinasController.deleteBukuKerja");

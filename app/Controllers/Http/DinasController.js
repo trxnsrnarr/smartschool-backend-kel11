@@ -1266,7 +1266,6 @@ class DinasController {
     response,
     request,
     auth,
-    params: { jadwal_mengajar_id },
   }) {
     const domain = request.headers().origin;
 
@@ -1302,10 +1301,36 @@ class DinasController {
       .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
       .fetch();
 
+      let janganUlangRombel = [];
+    const rombelData = rombelMengajar.toJSON().filter((d) => {
+      if (
+        !janganUlangRombel.find(
+          (e) =>
+            e.m_rombel_id == d.m_rombel_id &&
+            e.m_mata_pelajaran_id == d.m_mata_pelajaran_id
+        )
+      ) {
+        janganUlangRombel.push(d);
+        return true;
+      } else {
+        return false;
+      }
+    });
+
+    const rombel = await Promise.all(
+      rombelData.map(async (d) => {
+        return d.rombel;
+      })
+    );
+
     const jadwalMengajar = await MJadwalMengajar.query()
       .with("rombel")
-      .with("mataPelajaran")
-      .where({ id: jadwal_mengajar_id })
+      .with("mataPelajaran").whereIn("m_rombel_id", rombelIds)
+      .where({ m_ta_id: ta.id })
+      .with("mataPelajaran", (builder) => {
+        builder.select("id", "nama");
+      })
+      .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
       .first();
     if (tipe == "rekap") {
       const timelineIds = await MTimeline.query()
@@ -1347,6 +1372,7 @@ class DinasController {
         rombelMengajar,
         jumlahPertemuan,
         siswa,
+        rombel,
       });
     } else if (tipe == "pertemuan") {
       const timelineAll = await MTimeline.query()
@@ -1427,6 +1453,7 @@ class DinasController {
         timelineAll,
         timelines,
         rombelMengajar,
+        rombel
       });
     }
   }
