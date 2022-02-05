@@ -13,7 +13,7 @@ class MJadwalMengajar extends Model {
     return this.belongsTo("App/Models/MMataPelajaran");
   }
   ta() {
-    return this.belongsTo("App/Models/Mta");
+    return this.belongsTo("App/Models/Mta","m_ta_id");
   }
 
   rombel() {
