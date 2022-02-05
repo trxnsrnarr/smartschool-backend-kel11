@@ -1378,8 +1378,8 @@ class DinasController {
       .fetch();
       if(!pertemuan_id){
         return response.ok({
-          timeline,
-          // timelineAll,
+          // timeline,
+          timelineAll,
           // timelines,
           rombelMengajar,
           rombelData,
