@@ -12,6 +12,9 @@ class MJadwalMengajar extends Model {
   mataPelajaran() {
     return this.belongsTo("App/Models/MMataPelajaran");
   }
+  ta() {
+    return this.belongsTo("App/Models/Mta");
+  }
 
   rombel() {
     return this.belongsTo("App/Models/MRombel");
