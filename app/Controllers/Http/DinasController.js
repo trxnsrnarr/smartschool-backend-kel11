@@ -1321,7 +1321,7 @@ class DinasController {
         builder.select("id", "nama");
       })
       .with("mataPelajaran", (builder) => {
-        builder.select("id", "nama");
+        builder.select("id", "nama","m_user_id");
       })
       .where({m_rombel_id:m_rombel_id})
       .where({ m_ta_id: ta.id })
