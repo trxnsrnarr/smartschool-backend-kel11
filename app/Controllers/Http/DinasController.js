@@ -883,6 +883,7 @@ class DinasController {
     } else if (tipe == "ptahunan") {
       data = MRpp.query()
         .with("ta")
+        .with("rombel")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .orderBy("created_at", "desc")
@@ -890,6 +891,7 @@ class DinasController {
     } else if (tipe == "psemester") {
       data = MRpp.query()
         .with("ta")
+        .with("rombel")
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .orderBy("created_at", "desc")
