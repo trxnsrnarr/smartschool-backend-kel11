@@ -1609,6 +1609,127 @@ class DinasController {
       jadwalMengajar,
     });
   }
+  async detailSiswaRekap({
+    response,
+    request,
+    auth,
+    params: { user_id, jadwal_mengajar_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const ta = await this.getTAAktif(sekolah);
+    const siswa = await User.query()
+      .with("anggotaRombel", (builder) => {
+        builder.with("rombel").where({ dihapus: 0 });
+      })
+      .where({ id: user_id })
+      .first();
+      const data = await MJadwalMengajar.query()
+      .where({ id: jadwal_mengajar_id })
+      .first();
+
+    const mapelSingkat = await MMataPelajaran.query()
+      .where({ id: data.m_mata_pelajaran_id })
+      .first();
+
+    const mapel = await MMataPelajaran.query()
+      .with("user")
+      .with("materi", (builder) => {
+        builder.where({ tingkat: siswa.toJSON().anggotaRombel.rombel.tingkat });
+        if (mapelSingkat.kelompok == "C") {
+          if (siswa.toJSON().anggotaRombel.rombel.m_jurusan_id != null) {
+            builder.andWhere({
+              m_jurusan_id: siswa.toJSON().anggotaRombel.rombel.m_jurusan_id,
+            });
+          }
+        }
+      })
+      .where({ id: data.m_mata_pelajaran_id })
+      .first();
+
+    const rekap = await TkRekapNilai.query()
+      .with("rekapRombel", (builder) => {
+        builder.with("rekap", (builder) => {
+          builder
+            .where({ tipe: "tugas" })
+            .andWhere({ m_ta_id: ta.id })
+            .andWhere({ dihapus: 0 })
+            .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+        });
+      })
+      .where({ m_user_id: user_id })
+      .fetch();
+
+    const rekapUjian = await TkRekapNilai.query()
+      .with("rekapRombel", (builder) => {
+        builder.with("rekap", (builder) => {
+          builder
+            .where({ tipe: "ujian" })
+            .andWhere({ teknik: "UH" })
+            .andWhere({ m_ta_id: ta.id })
+            .andWhere({ dihapus: 0 })
+            .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+        });
+      })
+      .where({ m_user_id: user_id })
+      .fetch();
+
+      const result = await Promise.all(
+        rekap.toJSON().map(async (d) => {
+          if (d.rekapRombel.rekap == null) {
+            return;
+          }
+          return d;
+        })
+      );
+    
+      const data = result.filter((d) => d != null);
+    
+      let jumlah1 = 0;
+    
+      result
+        .filter((d) => d != null)
+        .forEach((d) => {
+          jumlah1 += d.nilai;
+        });
+    
+      const rata = jumlah1 / data.length;
+    
+      const result1 = await Promise.all(
+        rekapUjian.toJSON().map(async (d) => {
+          if (d.rekapRombel.rekap == null) {
+            return;
+          }
+          return d;
+        })
+      );
+    
+      const dataUjian = result1.filter((d) => d != null);
+    
+      let jumlah = 0;
+    
+      result1
+        .filter((d) => d != null)
+        .forEach((d) => {
+          jumlah += d.nilai;
+        });
+    
+      const rataUjian = jumlah / dataUjian.length;
+
+    return response.ok({
+      data,
+      rata,
+      dataUjian,
+      rataUjian, 
+      siswa,
+      mapel,
+    });
+  }
 
   async postBukuKerja({ response, request, auth }) {
     const domain = request.headers().origin;
