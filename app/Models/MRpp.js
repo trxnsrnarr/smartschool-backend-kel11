@@ -9,11 +9,11 @@ class MRpp extends Model {
   }
 
   mataPelajaran() {
-    return this.belongsTo("App/Models/MMataPelajaran");
+    return this.belongsTo("App/Models/MMataPelajaran","m_rombel_id");
   }
 
   rombel() {
-    return this.belongsTo("App/Models/MRombel");
+    return this.belongsTo("App/Models/MRombel","m_rombel_id");
   }
 
   ta() {
