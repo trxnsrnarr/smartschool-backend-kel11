@@ -1345,16 +1345,16 @@ class DinasController {
         .pluck("m_user_id");
 
       const siswa = await User.query()
-        .withCount("absenKelas as hadir", (builder) => {
+        .withCount("absenRombel as hadir", (builder) => {
           builder.whereIn("id", tkTimelineIds).where({ absen: "hadir" });
         })
-        .withCount("absenKelas as sakit", (builder) => {
+        .withCount("absenRombel as sakit", (builder) => {
           builder.whereIn("id", tkTimelineIds).where({ absen: "sakit" });
         })
-        .withCount("absenKelas as izin", (builder) => {
+        .withCount("absenRombel as izin", (builder) => {
           builder.whereIn("id", tkTimelineIds).where({ absen: "izin" });
         })
-        .withCount("absenKelas as alpa", (builder) => {
+        .withCount("absenRombel as alpa", (builder) => {
           builder.whereIn("id", tkTimelineIds).whereNull("absen");
         })
         .select("id", "nama")

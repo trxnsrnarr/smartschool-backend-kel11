@@ -37,7 +37,7 @@ class User extends Model {
   tugasnilai() {
     return this.hasMany("App/Models/TkTimeline", "id", "m_user_id");
   }
-  absenKelas() {
+  absenRombel() {
     return this.hasMany("App/Models/TkTimeline", "id", "m_user_id");
   }
 
