@@ -1370,15 +1370,21 @@ class DinasController {
         rombelData,
       });
     } else if (tipe == "pertemuan") {
-      if(!pertemuan_id){
-        return 'Silahkan Pilih Pertemuan';
-      }
       const timelineAll = await MTimeline.query()
-        .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
-        .where({ m_user_id: jadwalMengajar.toJSON().mataPelajaran.m_user_id })
-        .andWhere({ tipe: "absen" })
-        .andWhere({ dihapus: 0 })
-        .fetch();
+      .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
+      .where({ m_user_id: jadwalMengajar.toJSON().mataPelajaran.m_user_id })
+      .andWhere({ tipe: "absen" })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+      if(!pertemuan_id){
+        return response.ok({
+          timeline,
+          // timelineAll,
+          // timelines,
+          rombelMengajar,
+          rombelData,
+        });
+      }
 
       const timeline = await MTimeline.query()
         .with("user")
@@ -1465,7 +1471,7 @@ class DinasController {
     }
 
     const user = await auth.getUser();
-    let { tipe, pertemuan_id, m_rombel_id, m_mata_pelajaran_id } = request.get();
+    let { tipe, search } = request.get();
 
     const mataPelajaranIds = await MMataPelajaran.query()
       .where({ m_user_id: user.id })
