@@ -733,7 +733,7 @@ class DinasController {
     }
 
     const user = await auth.getUser();
-    let { search, tipe } = request.get();
+    let { search, tipe, kode_hari } = request.get();
 
     const ta = await this.getTAAktif(sekolah);
     const mataPelajaranIds = await MMataPelajaran.query()
@@ -1020,6 +1020,11 @@ class DinasController {
         .where({ m_ta_id: ta.id })
         .whereIn("m_mata_pelajaran_id", mataPelajaranIds);
     } else if (tipe == "jadwal") {
+      const jamIds = await MJamMengajar.query()
+        .where({ m_ta_id: ta.id })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .andWhere({ kode_hari: kode_hari })
+        .ids();
       data = MJadwalMengajar.query()
         .with("rombel", (builder) => {
           builder.where({ dihapus: 0 });
@@ -1028,7 +1033,8 @@ class DinasController {
         .with("mataPelajaran")
         .with("ta")
         .where({ m_ta_id: ta.id })
-        .whereIn("m_mata_pelajaran_id", mataPelajaranIds);
+        .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
+        .whereIn("m_jam_mengajar_id", jamIds);
     }
 
     if (search) {
@@ -1629,7 +1635,7 @@ class DinasController {
       })
       .where({ id: user_id })
       .first();
-      const data = await MJadwalMengajar.query()
+    const data = await MJadwalMengajar.query()
       .where({ id: jadwal_mengajar_id })
       .first();
 
@@ -1679,53 +1685,53 @@ class DinasController {
       .where({ m_user_id: user_id })
       .fetch();
 
-      const result = await Promise.all(
-        rekap.toJSON().map(async (d) => {
-          if (d.rekapRombel.rekap == null) {
-            return;
-          }
-          return d;
-        })
-      );
-    
-      const data = result.filter((d) => d != null);
-    
-      let jumlah1 = 0;
-    
-      result
-        .filter((d) => d != null)
-        .forEach((d) => {
-          jumlah1 += d.nilai;
-        });
-    
-      const rata = jumlah1 / data.length;
-    
-      const result1 = await Promise.all(
-        rekapUjian.toJSON().map(async (d) => {
-          if (d.rekapRombel.rekap == null) {
-            return;
-          }
-          return d;
-        })
-      );
-    
-      const dataUjian = result1.filter((d) => d != null);
-    
-      let jumlah = 0;
-    
-      result1
-        .filter((d) => d != null)
-        .forEach((d) => {
-          jumlah += d.nilai;
-        });
-    
-      const rataUjian = jumlah / dataUjian.length;
+    const result = await Promise.all(
+      rekap.toJSON().map(async (d) => {
+        if (d.rekapRombel.rekap == null) {
+          return;
+        }
+        return d;
+      })
+    );
+
+    const dataTugas = result.filter((d) => d != null);
+
+    let jumlah1 = 0;
+
+    result
+      .filter((d) => d != null)
+      .forEach((d) => {
+        jumlah1 += d.nilai;
+      });
+
+    const rataTugas = jumlah1 / data.length;
+
+    const result1 = await Promise.all(
+      rekapUjian.toJSON().map(async (d) => {
+        if (d.rekapRombel.rekap == null) {
+          return;
+        }
+        return d;
+      })
+    );
+
+    const dataUjian = result1.filter((d) => d != null);
+
+    let jumlah = 0;
+
+    result1
+      .filter((d) => d != null)
+      .forEach((d) => {
+        jumlah += d.nilai;
+      });
+
+    const rataUjian = jumlah / dataUjian.length;
 
     return response.ok({
-      data,
-      rata,
+      dataTugas,
+      rataTugas,
       dataUjian,
-      rataUjian, 
+      rataUjian,
       siswa,
       mapel,
     });
