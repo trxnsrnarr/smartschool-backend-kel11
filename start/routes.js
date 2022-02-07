@@ -679,6 +679,7 @@ Route.post("/timeline", "MainController.postTimeline");
 Route.put("/timeline/:timeline_id", "MainController.putTimeline");
 Route.delete("/timeline/:timeline_id", "MainController.deleteTimeline");
 Route.post("/timeline/download-absen", "MainController.downloadTimelineAbsen");
+Route.post("/timeline/download-absen/:pertemuan_id", "DinasController.downloadTimelineAbsen");
 
 // m timeline komen
 Route.post("/timeline-komen", "MainController.postTimelineKomen");
@@ -946,6 +947,10 @@ Route.post(
 Route.post(
   "/absen-siswa2/rekapdownload",
   "MainController.downloadRekapAbsenSiswa2"
+);
+Route.post(
+  "/absen-siswa/rekapdownload/dinas",
+  "DinasController.downloadRekapAbsenSiswaDinas"
 );
 
 // Mutasi Service
