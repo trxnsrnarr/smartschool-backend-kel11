@@ -4873,7 +4873,6 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-
     const industri = await MSekolahIndustri.query()
       .with("industri")
       .where({ m_sekolah_id: sekolah.id })
@@ -4913,56 +4912,7 @@ class MainController {
           builder
             .with("anggotaRombel", (builder) => {
               builder.where({ dihapus: 0 }).with("user", async (builder) => {
-                builder
-                  .where({ dihapus: 0 })
-                  .with("keteranganRapor", (builder) => {
-                    builder
-                      .where({ dihapus: 0 })
-                      .andWhere({ m_ta_id: data.m_ta_id })
-                      .where({ tipe: "uts" });
-                  })
-                  .with("keteranganRaporUas", (builder) => {
-                    builder
-                      .where({ dihapus: 0 })
-                      .andWhere({ m_ta_id: data.m_ta_id })
-                      .where({ tipe: "uas" });
-                  })
-                  .with("keteranganPkl", (builder) => {
-                    builder.where({ dihapus: 0 });
-                  })
-                  .with("raporEkskul")
-                  .with("prestasi", (builder) => {
-                    builder.where({ dihapus: 0 });
-                  })
-                  .with("rekapSikap", (builder) => {
-                    builder.with("predikat").where({ dihapus: 0 });
-                  })
-                  .with("nilaiUjian", (builder) => {
-                    if (data) {
-                      builder.where({
-                        m_mata_pelajaran_id: data.m_mata_pelajaran_id,
-                      });
-                    }
-                  })
-                  .withCount(
-                    "nilaiSemuaUjian as jumlahMapelDikerjakan",
-                    (builder) => {
-                      builder.andWhere({ m_ta_id: data.m_ta_id });
-                    }
-                  );
-                if (sekolah.id == 33) {
-                  builder.with("sikapYadika", (builder) => {
-                    builder.where({ dihapus: 0 });
-                  });
-                } else {
-                  builder
-                    .with("sikapUas", (builder) => {
-                      builder.where({ dihapus: 0 }).where({ tipe: "uas" });
-                    })
-                    .with("sikap", (builder) => {
-                      builder.where({ dihapus: 0 }).where({ tipe: "uts" });
-                    });
-                }
+                builder.where({ dihapus: 0 });
               });
             })
             .with("user");
