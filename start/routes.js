@@ -598,6 +598,7 @@ Route.put("/v2/mutasi/:transaksi_id", "SecondController.putTransaksi");
 Route.delete("/v2/mutasi/:transaksi_id", "SecondController.deleteTransaksi");
 Route.post("/download/neraca", "SecondController.downloadNeraca");
 Route.post("/download/jurnal", "SecondController.downloadJurnal");
+Route.post("/download/jurnal/:perencanaan_id", "KeuanganController.downloadJurnal");
 Route.post("/download/laba-rugi", "SecondController.downloadLabaRugi");
 Route.post("/download/arus-kas", "SecondController.downloadArusKas");
 
