@@ -2587,7 +2587,15 @@ class MainController {
       .with("anggotaEkskul", (builder) => {
         builder
           .with("user", (builder) => {
-            builder.select("id", "nama", "whatsapp", "avatar");
+            builder
+              .with("anggotaRombel", (builder) => {
+                builder
+                  .with("rombel", (builder) => {
+                    builder.select("id", "nama");
+                  })
+                  .andWhere({ dihapus: 0 });
+              })
+              .select("id", "nama", "whatsapp", "avatar");
           })
           .where({ dihapus: 0 });
       })
@@ -50073,7 +50081,7 @@ class MainController {
       //   `Halo, berikut akun Smarteschool ${siswa.nama} dengan password *${password}*. Berikut link akses Smarteschool: \n ${domain} \n\nInformasi ini bersifat *RAHASIA*`
       // );
       if (m_ekstrakurikuler_id) {
-        const ekstrakurikuler = await MAnggotaEkstrakurikuler.create({
+        const ekstrakurikuler = await MAnggotaEkskul.create({
           role: "Anggota",
           dihapus: 0,
           m_user_id: siswa.toJSON().id,
@@ -50081,20 +50089,20 @@ class MainController {
         });
       }
     } else if (m_ekstrakurikuler_id) {
-      const checkAnggotaEkstrakurikuler = await MAnggotaEkstrakurikuler.query()
+      const checkAnggotaEkstrakurikuler = await MAnggotaEkskul.query()
         .where({ m_ekstrakurikuler_id: m_ekstrakurikuler_id })
         .andWhere({ m_user_id: check.toJSON().id })
         .first();
 
       if (!checkAnggotaEkstrakurikuler) {
-        const ekstrakurikuler = await MAnggotaEkstrakurikuler.create({
+        const ekstrakurikuler = await MAnggotaEkskul.create({
           role: "Anggota",
           dihapus: 0,
           m_user_id: check.toJSON().id,
           m_ekstrakurikuler_id: m_ekstrakurikuler_id,
         });
       } else {
-        const ekstrakurikuler = await MAnggotaEkstrakurikuler.query()
+        const ekstrakurikuler = await MAnggotaEkskul.query()
           .where({ m_ekstrakurikuler_id: m_ekstrakurikuler_id })
           .andWhere({ m_user_id: check.toJSON().id })
           .update({
@@ -50133,15 +50141,19 @@ class MainController {
 
     let { m_user_id, m_ekstrakurikuler_id } = request.post();
 
-    let validation = await validate(
-      request.post(),
-      rulesUserPost,
-      messagesUser
-    );
+    // let validation = await validate(
+    //   request.post(),
+    //   rulesUserPost,
+    //   messagesUser
+    // );
 
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
-    }
+    // if (validation.fails()) {
+    //   return response.unprocessableEntity(validation.messages());
+    // }
+
+    const anggotaEkskul = await MAnggotaEkskul.query()
+      .where({ m_ekstrakurikuler_id: m_ekstrakurikuler_id })
+      .pluck("m_user_id");
 
     m_user_id = m_user_id.length ? m_user_id : [];
 
@@ -50149,27 +50161,35 @@ class MainController {
       await Promise.all(
         m_user_id.map(async (d) => {
           if (m_ekstrakurikuler_id) {
-            const checkAnggotaEkstrakurikuler =
-              await MAnggotaEkstrakurikuler.query()
-                .where({ m_ekstrakurikuler_id: m_ekstrakurikuler_id })
-                .andWhere({ m_user_id: d })
-                .first();
+            const checkAnggotaEkstrakurikuler = anggotaEkskul.find(
+              (e) => e == d
+            );
 
             if (!checkAnggotaEkstrakurikuler) {
-              const ekstrakurikuler = await MAnggotaEkstrakurikuler.create({
+              const ekstrakurikuler = await MAnggotaEkskul.create({
                 role: "Anggota",
                 dihapus: 0,
                 m_user_id: d,
                 m_ekstrakurikuler_id: m_ekstrakurikuler_id,
               });
             } else {
-              const ekstrakurikuler = await MAnggotaEkstrakurikuler.query()
+              const ekstrakurikuler = await MAnggotaEkskul.query()
                 .where({ m_ekstrakurikuler_id: m_ekstrakurikuler_id })
                 .andWhere({ m_user_id: d })
                 .update({
                   dihapus: 0,
                 });
             }
+          }
+        }),
+        anggotaEkskul.map(async (d) => {
+          if (!m_user_id.includes(d)) {
+            await MAnggotaEkskul.query()
+              .where({ m_ekstrakurikuler_id: m_ekstrakurikuler_id })
+              .andWhere({ m_user_id: d })
+              .update({
+                dihapus: 1,
+              });
           }
         })
       );

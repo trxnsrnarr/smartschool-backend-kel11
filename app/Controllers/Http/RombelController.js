@@ -71,6 +71,17 @@ class RombelController {
     }
 
     const anggota = await User.query()
+      .with("anggotaRombel", (builder) => {
+        builder
+          .with("rombel", (builder) => {
+            builder.select("id", "nama");
+          })
+          .whereIn(
+            "m_rombel_id",
+            typeof m_rombel_id == "object" ? m_rombel_id : [m_rombel_id]
+          )
+          .andWhere({ dihapus: 0 });
+      })
       .select("id", "nama", "whatsapp")
       .where({ dihapus: 0 })
       .whereIn("id", userIds)
