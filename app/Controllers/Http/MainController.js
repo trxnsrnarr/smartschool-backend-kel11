@@ -4865,6 +4865,7 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
+
     const industri = await MSekolahIndustri.query()
       .with("industri")
       .where({ m_sekolah_id: sekolah.id })
@@ -4909,13 +4910,13 @@ class MainController {
                   .with("keteranganRapor", (builder) => {
                     builder
                       .where({ dihapus: 0 })
-                      .andWhere({ m_ta_id: ta.id })
+                      .andWhere({ m_ta_id: data.m_ta_id })
                       .where({ tipe: "uts" });
                   })
                   .with("keteranganRaporUas", (builder) => {
                     builder
                       .where({ dihapus: 0 })
-                      .andWhere({ m_ta_id: ta.id })
+                      .andWhere({ m_ta_id: data.m_ta_id })
                       .where({ tipe: "uas" });
                   })
                   .with("keteranganPkl", (builder) => {
@@ -4938,7 +4939,7 @@ class MainController {
                   .withCount(
                     "nilaiSemuaUjian as jumlahMapelDikerjakan",
                     (builder) => {
-                      builder.andWhere({ m_ta_id: ta.id });
+                      builder.andWhere({ m_ta_id: data.m_ta_id });
                     }
                   );
                 if (sekolah.id == 33) {
@@ -5008,13 +5009,13 @@ class MainController {
                     .with("keteranganRapor", (builder) => {
                       builder
                         .where({ dihapus: 0 })
-                        .andWhere({ m_ta_id: ta.id })
+                        .andWhere({ m_ta_id: data.m_ta_id })
                         .where({ tipe: "uts" });
                     })
                     .with("keteranganRaporUas", (builder) => {
                       builder
                         .where({ dihapus: 0 })
-                        .andWhere({ m_ta_id: ta.id })
+                        .andWhere({ m_ta_id: data.m_ta_id })
                         .where({ tipe: "uas" });
                     })
                     .with("keteranganPkl", (builder) => {
@@ -5042,7 +5043,7 @@ class MainController {
                     .withCount(
                       "nilaiSemuaUjian as jumlahMapelDikerjakan",
                       (builder) => {
-                        builder.andWhere({ m_ta_id: ta.id });
+                        builder.andWhere({ m_ta_id: data.m_ta_id });
                       }
                     )
                     .with("nilaiSemuaUjian", (builder) => {
@@ -5061,7 +5062,7 @@ class MainController {
                         //   "<",
                         //   `${kkm.toJSON().mataPelajaran.kkm}`
                         // )
-                        .where({ m_ta_id: ta.id })
+                        .where({ m_ta_id: data.m_ta_id })
                         .with("mapel", (builder) => {
                           builder.select("id", "nama");
                         });
@@ -5089,7 +5090,7 @@ class MainController {
 
       const jamMengajarIds = await MJamMengajar.query()
         .where({ kode_hari: kode_hari })
-        .andWhere({ m_ta_id: ta.id })
+        .andWhere({ m_ta_id: data.m_ta_id })
         .ids();
 
       checkAbsensi = await MJadwalMengajar.query()
