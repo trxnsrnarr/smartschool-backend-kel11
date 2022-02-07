@@ -2634,13 +2634,13 @@ class KeuanganController {
     if (rumusNaik) {
       let rumus = JSON.parse(rumusNaik.rumus);
       rumus.push({ operator: "plus" }, { id: kategori.id });
-      await MKeuRumusArusKas.query()
+      await MRencanaRumusArusKas.query()
         .where({ id: rumusNaik.id })
         .update({
           rumus: JSON.stringify(rumus),
         });
     } else {
-      await MKeuRumusArusKas.create({
+      await MRencanaRumusArusKas.create({
         dihapus: 0,
         m_sekolah_id: sekolah.id,
         m_rencana_keuangan_id: rencana.id,
@@ -2656,13 +2656,13 @@ class KeuanganController {
     if (rumusAkhir) {
       let rumus = JSON.parse(rumusAkhir.rumus);
       rumus.push({ operator: "plus" }, { id: kategori.id });
-      await MKeuRumusSaldoKasAkhir.query()
+      await MRencanaRumusSaldoKasAkhir.query()
         .where({ id: rumusAkhir.id })
         .update({
           rumus: JSON.stringify(rumus),
         });
     } else {
-      await MKeuRumusSaldoKasAkhir.create({
+      await MRencanaRumusSaldoKasAkhir.create({
         dihapus: 0,
         m_sekolah_id: sekolah.id,
         m_rencana_keuangan_id: rencana.id,
@@ -2801,12 +2801,12 @@ class KeuanganController {
       .where({ id: kategoriArus.m_rencana_keuangan_id })
       .first();
 
-      const rumusNaik = await MKeuRumusArusKas.query()
+      const rumusNaik = await MRencanaRumusArusKas.query()
       .where({ m_sekolah_id: sekolah.id })
       .where({ dihapus: 0 }).where({ m_rencana_keuangan_id: rencana.id })
       .first();
 
-    const rumusAkhir = await MKeuRumusSaldoKasAkhir.query()
+    const rumusAkhir = await MRencanaRumusSaldoKasAkhir.query()
       .where({ m_sekolah_id: sekolah.id })
       .where({ dihapus: 0 }).where({ m_rencana_keuangan_id: rencana.id })
       .first();
