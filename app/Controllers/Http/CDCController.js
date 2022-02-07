@@ -845,6 +845,7 @@ class CDCController {
 
     return response.ok({
       message: messagePostSuccess,
+      perusahaan,
     });
   }
 
@@ -1225,10 +1226,11 @@ class CDCController {
 
     const { nama, logo, bidang, perusahaan_id } = request.post();
 
+    let sekolah;
     if (perusahaan_id) {
-      const sekolah = await TkPerusahaanSekolah.create({
+      sekolah = await TkPerusahaanSekolah.create({
         m_sekolah_id: sekolah.id,
-        m_perusahaan_id: perusahaan.id,
+        m_perusahaan_id: perusahaan_id,
         dihapus: 0,
       });
       return response.ok({
@@ -1243,7 +1245,7 @@ class CDCController {
       dihapus: 0,
     });
 
-    const sekolah = await TkPerusahaanSekolah.create({
+    sekolah = await TkPerusahaanSekolah.create({
       m_sekolah_id: sekolah.id,
       m_perusahaan_id: perusahaan.id,
       dihapus: 0,
