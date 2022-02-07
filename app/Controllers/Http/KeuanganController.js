@@ -2816,7 +2816,7 @@ class KeuanganController {
       dihapus: 0,
     });
 
-    const kategoriArus = await MrencanaKategoriArusKas.query()
+    const kategoriArus = await MRencanaKategoriArusKas.query()
       .where({ id: m_rencana_kategori_arus_kas_id })
       .first();
 
