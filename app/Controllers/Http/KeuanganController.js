@@ -3598,7 +3598,7 @@ class KeuanganController {
     for (let i = 0; i < rumus12.length; i++) {
       const d = rumus12[i];
       if (d.id) {
-        kategoriAkun = await MKeuKategoriArusKas.query()
+        kategoriAkun = await MKeuAkun.query()
           .where({ id: d.id })
           .first();
         rumusFix = rumusFix + kategoriAkun.nama;
@@ -3685,7 +3685,7 @@ class KeuanganController {
       for (let i = 0; i < rumusSebelum.rumus.length; i++) {
         const d = rumusSebelum.rumus[i];
         if (d.id) {
-          kategoriAkun = await MRencanaKategoriArusKas.query()
+          kategoriAkun = await MKeuAkun.query()
             .where({ id: d.id })
             .first();
           rumusSebelum2 = rumusSebelum2 + kategoriAkun.nama;
@@ -3702,7 +3702,7 @@ class KeuanganController {
       for (let i = 0; i < rumus12.length; i++) {
         const d = rumus12[i];
         if (d.id) {
-          kategoriAkun = await MRencanaKategoriArusKas.query()
+          kategoriAkun = await MKeuAkun.query()
             .where({ id: d.id })
             .first();
           rumusFix = rumusFix + kategoriAkun.nama;
