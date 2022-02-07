@@ -27,6 +27,7 @@ const TkRencanaKategoriTipeAkun = use("App/Models/TkRencanaKategoriTipeAkun");
 const MHistoriAktivitas = use("App/Models/MHistoriAktivitas");
 const MRekSekolah = use("App/Models/MRekSekolah");
 
+const Excel = require("exceljs");
 const moment = require("moment");
 require("moment/locale/id");
 moment.locale("id");
@@ -39,6 +40,22 @@ const messageNotFound = "Data tidak ditemukan";
 const messageForbidden = "Dilarang, anda bukan seorang admin";
 const messageEmailSuccess = "Data berhasil dikirim ke email";
 const pesanSudahDitambahkan = "Data sudah ditambahkan";
+
+const monthNames = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
 function titleCase(str) {
   var splitStr = str.toLowerCase().split(" ");
   for (var i = 0; i < splitStr.length; i++) {
@@ -2900,7 +2917,7 @@ class KeuanganController {
       dihapus: 0,
     });
 
-    const kategoriArus = await MrencanaKategoriArusKas.query()
+    const kategoriArus = await MRencanaKategoriArusKas.query()
       .where({ id: m_rencana_kategori_arus_kas_id })
       .first();
 
