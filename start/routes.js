@@ -958,6 +958,10 @@ Route.post(
   "/download/rekap/nilai-siswa",
   "DinasController.downloadRekapNilai"
 );
+Route.post(
+  "/download/jadwal-dinas",
+  "DinasController.downloadJadwalDinas"
+);
 // Mutasi Service
 Route.post("/mutasi/importmutasi", "MainController.importMutasi");
 Route.post("/mutasi/download-mutasi", "MainController.downloadMutasi");
