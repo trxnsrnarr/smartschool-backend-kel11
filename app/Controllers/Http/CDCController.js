@@ -974,7 +974,7 @@ class CDCController {
     }
     perusahaan = await perusahaan.fetch();
 
-    const perusahaan = await TkPerusahaanSekolah.query()
+    const perusahaanSekolah = await TkPerusahaanSekolah.query()
       .with("penerimaan", (builder) => {
         builder
           .withCount("siswa", (builder) => {
@@ -989,7 +989,7 @@ class CDCController {
     let totalSiswa = 0;
 
     await Promise.all(
-      perusahaan.toJSON().map(async (d) => {
+      perusahaanSekolah.toJSON().map(async (d) => {
         await Promise.all(
           d.penerimaan.map(async (e) => {
             await Promise.all(
