@@ -2745,6 +2745,493 @@ class DinasController {
     });
   }
 
+  async downloadTimelineAbsen({ response, request,params:{pertemuan_id} }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    // const { pertemuan_id } = request.post();
+
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD HH-mm-ss-") + new Date().getTime();
+
+    const timeline = await MTimeline.query()
+      .with("tkTimeline", (builder) => {
+        builder.with("user");
+      })
+      .with("user")
+      .andWhere({ tipe: "absen" })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ id: pertemuan_id })
+      .first();
+      // return timeline
+
+    const workbook = new Excel.Workbook();
+    // Create workbook & add worksheet
+    const worksheet = workbook.addWorksheet(
+      `Pertemuan ${timeline.toJSON().tanggal_pertemuan}`
+    );
+
+    await Promise.all(
+      timeline.toJSON().tkTimeline.sort((a, b) => ("" + a.user.nama).localeCompare("" + b.user.nama)).map(async (e, idx) => {
+        // add column headers
+        worksheet.getRow(10).values = ["No","Nama", "Absen", "Waktu Absen"];
+
+        worksheet.columns = [
+          { key: "no" },
+          { key: "user" },
+          { key: "absen" },
+          { key: "waktu_absen" },
+        ];
+
+        // Add row using key mapping to columns
+        const row = worksheet.addRow({
+          no: `${idx + 1}`,
+          user: e.user.nama,
+          absen: e.absen || "alpa",
+          waktu_absen: e.waktu_absen,
+        });
+      })
+    );
+
+    worksheet.getCell("A1").value = "Nama";
+    worksheet.getCell("B1").value = timeline.toJSON().user.nama;
+    worksheet.getCell("D1").value = "NIP";
+    worksheet.getCell("E1").value = timeline.toJSON().user.nip;
+    worksheet.getCell("D2").value = "Link Pertemuan";
+    worksheet.getCell("E2").value = timeline.gmeet;
+    worksheet.getCell("A2").value = "Tanggal Pertemuan";
+    worksheet.getCell("B2").value = timeline.toJSON().tanggal_dibuat;
+
+    worksheet.getCell("A4").value = "RPP";
+    worksheet.getCell("A5").value = timeline.toJSON().rpp ? timeline.toJSON().rpp.toString() :"-";
+
+    worksheet.getCell("A7").value = "Deskripsi";
+    worksheet.getCell("A8").value = timeline.deskripsi;
+
+    worksheet.columns.forEach(function (column, i) {
+      let maxLength = 0;
+      column["eachCell"]({ includeEmpty: true }, function (cell) {
+        let columnLength = cell.value ? cell.value.toString().length : 10;
+
+        if (cell.value == "alpa") {
+          // red
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "F9D5D4" },
+            bgColor: { argb: "F9D5D4" },
+          };
+
+          cell.font = {
+            color: { argb: "FC544B" },
+          };
+        }
+
+        if (cell.value == "sakit") {
+          // yellow
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FCE8D2" },
+            bgColor: { argb: "FCE8D2" },
+          };
+
+          cell.font = {
+            color: { argb: "F9AC50" },
+          };
+        }
+
+        if (cell.value == "izin") {
+          // green
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "E0FCE4" },
+            bgColor: { argb: "E0FCE4" },
+          };
+
+          cell.font = {
+            color: { argb: "63ED7A" },
+          };
+        }
+
+        if (cell.value == "hadir") {
+          // green
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "2680EB" },
+            bgColor: { argb: "2680EB" },
+          };
+
+          cell.font = {
+            color: { argb: "FFFFFF" },
+          };
+        }
+
+        if (columnLength > maxLength) {
+          maxLength = columnLength;
+        }
+      });
+
+      column.width = maxLength < 15 ? 15 : maxLength > 30 ? 30 : 15;
+    });
+    
+    worksheet.addConditionalFormatting({
+      ref: `A11:D${timeline.toJSON().tkTimeline.length + 10}`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              // bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "left",
+            },
+            // fill: {
+            //   type: "pattern",
+            //   pattern: "solid",
+            //   bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            // },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: "A10:D10",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet.getColumn("A").width = 6;
+    worksheet.getColumn("B").width = 20;
+    worksheet.getColumn("C").width = 10;
+    worksheet.getColumn("D").width = 20;
+
+    let namaFile = `/uploads/absen-pertemuan-${timeline.toJSON().tanggal_pertemuan}-${new Date().getTime()}.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
+
+  async downloadRekapAbsenSiswaDinas({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+    const user = await auth.getUser();
+    const { jadwal_mengajar_id } = request.post();
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
+      const jadwalMengajar = await MJadwalMengajar.query()
+      .with("rombel", (builder) => {
+        builder.select("id", "nama");
+      })
+      .with("mataPelajaran", (builder) => {
+        builder.select("id", "nama", "m_user_id");
+      })
+      // .where({ m_rombel_id: m_rombel_id })
+      .where({ m_ta_id: ta.id })
+      .where({ id: jadwal_mengajar_id })
+      .first();
+
+      // const rombel = await MRombel.query().where({ id: jadwalMengajar.m_rombel_id }).first();
+      const timelineIds = await MTimeline.query()
+      .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
+      .where({ m_user_id: jadwalMengajar.toJSON().mataPelajaran.m_user_id })
+      .andWhere({ tipe: "absen" })
+      .andWhere({ dihapus: 0 })
+      .ids();
+      
+      if (!timelineIds) {
+        return "Guru belum membuat pertemuan";
+      }
+      const tkTimelineIds = await TkTimeline.query()
+        .where("m_timeline_id", timelineIds)
+        .ids();
+
+      const anggotaRombelIds = await MAnggotaRombel.query()
+        .where({ dihapus: 0 })
+        .andWhere({ m_rombel_id: jadwalMengajar.m_rombel_id })
+        .pluck("m_user_id");
+
+        const absenSiswa = await User.query()
+        .select("id", "nama","whatsapp")
+        .withCount("absenRombel as hadir", (builder) => {
+          builder.whereIn("id", tkTimelineIds).where({ absen: "hadir" });
+        })
+        .withCount("absenRombel as sakit", (builder) => {
+          builder.whereIn("id", tkTimelineIds).where({ absen: "sakit" });
+        })
+        .withCount("absenRombel as izin", (builder) => {
+          builder.whereIn("id", tkTimelineIds).where({ absen: "izin" });
+        })
+        .withCount("absenRombel as alpa", (builder) => {
+          builder.whereIn("id", tkTimelineIds).whereNull("absen");
+        })
+        .where({ dihapus: 0 })
+        .whereIn("id", anggotaRombelIds)
+        .fetch();
+
+      const jumlahPertemuan = timelineIds.length;
+
+    let workbook = new Excel.Workbook();
+
+    let worksheet = workbook.addWorksheet(`RekapAbsen`);
+    worksheet.getCell(
+      "A5"
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
+    worksheet.addConditionalFormatting({
+      ref: `A1:H4`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 16,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: `A4:H4`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+    worksheet.mergeCells(`A1:H1`);
+    worksheet.mergeCells(`A2:H2`);
+    worksheet.mergeCells(`A3:H3`);
+    worksheet.mergeCells(`A4:H4`);
+    worksheet.addConditionalFormatting({
+      ref: `A6:H6`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+
+    await Promise.all(
+      absenSiswa.toJSON().map(async (d, idx) => {
+        worksheet.addConditionalFormatting({
+          ref: `B${(idx + 1) * 1 + 6}:H${(idx + 1) * 1 + 6}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "left",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet.addConditionalFormatting({
+          ref: `A${(idx + 1) * 1 + 6}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet.getRow(6).values = [
+          "No",
+          "Nama",
+          "Whatsapp",
+          "Hadir",
+          // "Telat",
+          "Sakit",
+          "Izin",
+          "Alpa",
+          "Persentase"
+        ];
+
+        worksheet.columns = [
+          { key: "no" },
+          { key: "user" },
+          { key: "whatsapp" },
+          { key: "hadir" },
+          // { key: "telat" },
+          { key: "sakit" },
+          { key: "izin" },
+          { key: "alpa" },
+          { key: "persen" },
+        ];
+
+        let row = worksheet.addRow({
+          no: `${idx + 1}`,
+          user: d ? d.nama : "-",
+          whatsapp: d ? d.whatsapp : "-",
+          hadir: d ? d.__meta__.hadir : "-",
+          // telat: d ? d.__meta__.telat : "-",
+          sakit: d ? d.__meta__.sakit : "-",
+          izin: d ? d.__meta__.izin : "-",
+          alpa: d ? d.__meta__.alpa : "-",
+          persen: `${(d ? d.__meta__.hadir:"0" / jumlahPertemuan )* 100}%`,
+        });
+      })
+    );
+
+    worksheet.getCell("A1").value = "Rekap Absen";
+    worksheet.getCell("A2").value = sekolah.nama;
+    worksheet.getCell("A3").value = jadwalMengajar.toJSON().rombel.nama;
+    worksheet.getCell("A4").value = `Jumlah Total : ${jumlahPertemuan} Pertemuan`;
+
+    worksheet.views = [
+      {
+        state: "frozen",
+        xSplit: 2,
+        ySplit: 6,
+        topLeftCell: "A6",
+        activeCell: "A6",
+      },
+    ];
+
+    let namaFile = `/uploads/rekap-absen-siswa ${keluarantanggalseconds}.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
+
   async ip({ response, request }) {
     return response.ok({ ip: [request.ip(), request.ips()] });
   }
@@ -2754,3 +3241,4 @@ class DinasController {
   }
 }
 module.exports = DinasController;
+

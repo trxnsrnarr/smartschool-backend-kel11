@@ -2008,7 +2008,7 @@ class KeuanganController {
       jenis: "Buat Template Laporan",
       tipe: "Perencanaan",
       m_user_id: user.id,
-      awal: `${tipe} : `,
+      awal: `${titleCase(tipe)} : `,
       akhir: `${nama}`,
       bawah: `${rencana.nama} - Laporan Neraca`,
       m_sekolah_id: sekolah.id,
