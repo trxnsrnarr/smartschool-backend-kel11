@@ -128,6 +128,7 @@ Route.get("/eskul/:ekskul_id", "MainController.detailEskul");
 Route.post("/eskul", "MainController.postEskul");
 Route.put("/eskul/:id", "MainController.putEskul");
 Route.delete("/eskul/:id", "MainController.deleteEskul");
+Route.post("/anggota-eskul/:ekskul_id", "MainController.postSiswaEkskulV2");
 Route.delete("/anggota-eskul/:ekskul_id", "MainController.deleteAnggotaEskul");
 
 // ta
