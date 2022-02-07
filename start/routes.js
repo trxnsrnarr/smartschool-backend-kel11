@@ -1122,7 +1122,8 @@ Route.post("/cdc/acara", "MainControler.postAcaraPerusahaan");
 Route.put("/cdc/acara/:acara_id", "MainControler.putAcaraPerusahaan");
 Route.delete("/cdc/acara/:acara_id", "MainControler.deleteAcaraPerusahaan");
 
-Route.post("/cdc/perusahaan", "MainControler.postPerusahaan");
+Route.post("/cdc/perusahaan", "CDCController.postPerusahaan");
+Route.post("/perusahaan-sekolah", "CDCController.postPerusahaanSekolah");
 Route.put("/cdc/perusahaan/:perusahaan_id", "MainControler.putPerusahaan");
 Route.put(
   "/cdc/profil-perusahaan/:perusahaan_id",
