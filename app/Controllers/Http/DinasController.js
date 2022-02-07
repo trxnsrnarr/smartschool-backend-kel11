@@ -165,7 +165,17 @@ const messageNotFound = "Data tidak ditemukan";
 const messageForbidden = "Dilarang, anda bukan seorang admin";
 const messageEmailSuccess = "Data berhasil dikirim ke email";
 const pesanSudahDitambahkan = "Data sudah ditambahkan";
-
+function titleCase(str) {
+  var splitStr = str.toLowerCase().split(" ");
+  for (var i = 0; i < splitStr.length; i++) {
+    // You do not need to check if i is larger than splitStr length, as your for does that for you
+    // Assign it back to the array
+    splitStr[i] =
+      splitStr[i].charAt(0).toUpperCase() + splitStr[i].substring(1);
+  }
+  // Directly return the joined string
+  return splitStr.join(" ");
+}
 // RULES
 const rulesUserPost = {
   nama: "required",
@@ -1613,6 +1623,7 @@ class DinasController {
 
     return response.ok({
       jadwalMengajar,
+      rombelData,
     });
   }
   async detailSiswaRekap({
@@ -2745,7 +2756,7 @@ class DinasController {
     });
   }
 
-  async downloadTimelineAbsen({ response, request,params:{pertemuan_id} }) {
+  async downloadTimelineAbsen({ response, request, params: { pertemuan_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -2768,7 +2779,7 @@ class DinasController {
       .andWhere({ dihapus: 0 })
       .andWhere({ id: pertemuan_id })
       .first();
-      // return timeline
+    // return timeline
 
     const workbook = new Excel.Workbook();
     // Create workbook & add worksheet
@@ -2777,25 +2788,30 @@ class DinasController {
     );
 
     await Promise.all(
-      timeline.toJSON().tkTimeline.sort((a, b) => ("" + a.user.nama).localeCompare("" + b.user.nama)).map(async (e, idx) => {
-        // add column headers
-        worksheet.getRow(10).values = ["No","Nama", "Absen", "Waktu Absen"];
+      timeline
+        .toJSON()
+        .tkTimeline.sort((a, b) =>
+          ("" + a.user.nama).localeCompare("" + b.user.nama)
+        )
+        .map(async (e, idx) => {
+          // add column headers
+          worksheet.getRow(10).values = ["No", "Nama", "Absen", "Waktu Absen"];
 
-        worksheet.columns = [
-          { key: "no" },
-          { key: "user" },
-          { key: "absen" },
-          { key: "waktu_absen" },
-        ];
+          worksheet.columns = [
+            { key: "no" },
+            { key: "user" },
+            { key: "absen" },
+            { key: "waktu_absen" },
+          ];
 
-        // Add row using key mapping to columns
-        const row = worksheet.addRow({
-          no: `${idx + 1}`,
-          user: e.user.nama,
-          absen: e.absen || "alpa",
-          waktu_absen: e.waktu_absen,
-        });
-      })
+          // Add row using key mapping to columns
+          const row = worksheet.addRow({
+            no: `${idx + 1}`,
+            user: e.user.nama,
+            absen: e.absen || "alpa",
+            waktu_absen: e.waktu_absen,
+          });
+        })
     );
 
     worksheet.getCell("A1").value = "Nama";
@@ -2808,7 +2824,9 @@ class DinasController {
     worksheet.getCell("B2").value = timeline.toJSON().tanggal_dibuat;
 
     worksheet.getCell("A4").value = "RPP";
-    worksheet.getCell("A5").value = timeline.toJSON().rpp ? timeline.toJSON().rpp.toString() :"-";
+    worksheet.getCell("A5").value = timeline.toJSON().rpp
+      ? timeline.toJSON().rpp.toString()
+      : "-";
 
     worksheet.getCell("A7").value = "Deskripsi";
     worksheet.getCell("A8").value = timeline.deskripsi;
@@ -2881,7 +2899,7 @@ class DinasController {
 
       column.width = maxLength < 15 ? 15 : maxLength > 30 ? 30 : 15;
     });
-    
+
     worksheet.addConditionalFormatting({
       ref: `A11:D${timeline.toJSON().tkTimeline.length + 10}`,
       rules: [
@@ -2951,7 +2969,9 @@ class DinasController {
     worksheet.getColumn("C").width = 10;
     worksheet.getColumn("D").width = 20;
 
-    let namaFile = `/uploads/absen-pertemuan-${timeline.toJSON().tanggal_pertemuan}-${new Date().getTime()}.xlsx`;
+    let namaFile = `/uploads/absen-pertemuan-${
+      timeline.toJSON().tanggal_pertemuan
+    }-${new Date().getTime()}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -2978,7 +2998,7 @@ class DinasController {
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
-      const jadwalMengajar = await MJadwalMengajar.query()
+    const jadwalMengajar = await MJadwalMengajar.query()
       .with("rombel", (builder) => {
         builder.select("id", "nama");
       })
@@ -2990,45 +3010,45 @@ class DinasController {
       .where({ id: jadwal_mengajar_id })
       .first();
 
-      // const rombel = await MRombel.query().where({ id: jadwalMengajar.m_rombel_id }).first();
-      const timelineIds = await MTimeline.query()
+    // const rombel = await MRombel.query().where({ id: jadwalMengajar.m_rombel_id }).first();
+    const timelineIds = await MTimeline.query()
       .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
       .where({ m_user_id: jadwalMengajar.toJSON().mataPelajaran.m_user_id })
       .andWhere({ tipe: "absen" })
       .andWhere({ dihapus: 0 })
       .ids();
-      
-      if (!timelineIds) {
-        return "Guru belum membuat pertemuan";
-      }
-      const tkTimelineIds = await TkTimeline.query()
-        .where("m_timeline_id", timelineIds)
-        .ids();
 
-      const anggotaRombelIds = await MAnggotaRombel.query()
-        .where({ dihapus: 0 })
-        .andWhere({ m_rombel_id: jadwalMengajar.m_rombel_id })
-        .pluck("m_user_id");
+    if (!timelineIds) {
+      return "Guru belum membuat pertemuan";
+    }
+    const tkTimelineIds = await TkTimeline.query()
+      .where("m_timeline_id", timelineIds)
+      .ids();
 
-        const absenSiswa = await User.query()
-        .select("id", "nama","whatsapp")
-        .withCount("absenRombel as hadir", (builder) => {
-          builder.whereIn("id", tkTimelineIds).where({ absen: "hadir" });
-        })
-        .withCount("absenRombel as sakit", (builder) => {
-          builder.whereIn("id", tkTimelineIds).where({ absen: "sakit" });
-        })
-        .withCount("absenRombel as izin", (builder) => {
-          builder.whereIn("id", tkTimelineIds).where({ absen: "izin" });
-        })
-        .withCount("absenRombel as alpa", (builder) => {
-          builder.whereIn("id", tkTimelineIds).whereNull("absen");
-        })
-        .where({ dihapus: 0 })
-        .whereIn("id", anggotaRombelIds)
-        .fetch();
+    const anggotaRombelIds = await MAnggotaRombel.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_rombel_id: jadwalMengajar.m_rombel_id })
+      .pluck("m_user_id");
 
-      const jumlahPertemuan = timelineIds.length;
+    const absenSiswa = await User.query()
+      .select("id", "nama", "whatsapp")
+      .withCount("absenRombel as hadir", (builder) => {
+        builder.whereIn("id", tkTimelineIds).where({ absen: "hadir" });
+      })
+      .withCount("absenRombel as sakit", (builder) => {
+        builder.whereIn("id", tkTimelineIds).where({ absen: "sakit" });
+      })
+      .withCount("absenRombel as izin", (builder) => {
+        builder.whereIn("id", tkTimelineIds).where({ absen: "izin" });
+      })
+      .withCount("absenRombel as alpa", (builder) => {
+        builder.whereIn("id", tkTimelineIds).whereNull("absen");
+      })
+      .where({ dihapus: 0 })
+      .whereIn("id", anggotaRombelIds)
+      .fetch();
+
+    const jumlahPertemuan = timelineIds.length;
 
     let workbook = new Excel.Workbook();
 
@@ -3180,7 +3200,7 @@ class DinasController {
           "Sakit",
           "Izin",
           "Alpa",
-          "Persentase"
+          "Persentase",
         ];
 
         worksheet.columns = [
@@ -3204,7 +3224,7 @@ class DinasController {
           sakit: d ? d.__meta__.sakit : "-",
           izin: d ? d.__meta__.izin : "-",
           alpa: d ? d.__meta__.alpa : "-",
-          persen: `${(d ? d.__meta__.hadir:"0" / jumlahPertemuan )* 100}%`,
+          persen: `${(d ? d.__meta__.hadir : "0" / jumlahPertemuan) * 100}%`,
         });
       })
     );
@@ -3212,7 +3232,9 @@ class DinasController {
     worksheet.getCell("A1").value = "Rekap Absen";
     worksheet.getCell("A2").value = sekolah.nama;
     worksheet.getCell("A3").value = jadwalMengajar.toJSON().rombel.nama;
-    worksheet.getCell("A4").value = `Jumlah Total : ${jumlahPertemuan} Pertemuan`;
+    worksheet.getCell(
+      "A4"
+    ).value = `Jumlah Total : ${jumlahPertemuan} Pertemuan`;
 
     worksheet.views = [
       {
@@ -3231,6 +3253,422 @@ class DinasController {
 
     return namaFile;
   }
+  async downloadRekapNilai({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    const user = await auth.getUser();
+    const { jadwal_mengajar_id, tipe } = request.post();
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
+    const jadwalMengajar = await MJadwalMengajar.query()
+      .with("mataPelajaran", (builder) => {
+        builder.with("user");
+      })
+      .with("rombel")
+      .where({ id: jadwal_mengajar_id })
+      .first();
+
+    let materi;
+    materi = MMateri.query()
+      .where({ m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id })
+      .andWhere({ tingkat: jadwalMengajar.toJSON().rombel.tingkat })
+      .andWhere({ dihapus: 0 });
+    if (jadwalMengajar.toJSON().mataPelajaran.kelompok == "C") {
+      materi.andWhere({
+        m_jurusan_id: jadwalMengajar.toJSON().rombel.m_jurusan_id,
+      });
+    }
+    materi = await materi.first();
+
+    let rekapIds;
+    rekapIds = MRekap.query()
+      .where({ m_materi_id: materi.id })
+      .andWhere({ tipe: tipe })
+      .andWhere({ m_ta_id: ta.id });
+    if (tipe == "ujian") {
+      rekapIds.where({ teknik: "UH" });
+    }
+    rekapIds = await rekapIds.ids();
+
+    const rekapRombelIds = await MRekapRombel.query()
+      .whereIn("m_rekap_id", rekapIds)
+      .andWhere({ m_rombel_id: jadwalMengajar.m_rombel_id })
+      .andWhere({ dihapus: 0 })
+      .ids();
+
+    const rekapRombel = await MRekapRombel.query()
+      .whereIn("m_rekap_id", rekapIds)
+      .andWhere({ m_rombel_id: jadwalMengajar.m_rombel_id })
+      .andWhere({ dihapus: 0 })
+      .orderBy("id", "asc")
+      .fetch();
+
+    const userIds = await MAnggotaRombel.query()
+      .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
+      .andWhere({ dihapus: 0 })
+      .pluck("m_user_id");
+
+    const analisisNilai = await User.query()
+      .with("nilaiRekapSiswa", (builder) => {
+        builder
+          .whereIn("m_rekap_rombel_id", rekapRombelIds)
+          .orderBy("m_rekap_rombel_id", "asc");
+      })
+      .withCount("nilaiRekapSiswa as jumlahTotal", (builder) => {
+        builder.whereIn("m_rekap_rombel_id", rekapRombelIds);
+      })
+      .withCount("nilaiRekapSiswa as jumlahKkm", (builder) => {
+        builder
+          .whereIn("m_rekap_rombel_id", rekapRombelIds)
+          .where("nilai", "<", `${jadwalMengajar.toJSON().mataPelajaran.kkm}`);
+      })
+      .withCount("nilaiRekapSiswa as nilaiKosong", (builder) => {
+        builder
+          .whereIn("m_rekap_rombel_id", rekapRombelIds)
+          .where({ nilai: 0 });
+      })
+      .whereIn("id", userIds)
+      .fetch();
+
+    let workbook = new Excel.Workbook();
+
+    let worksheet = workbook.addWorksheet(`Rekap ${tipe}`);
+    worksheet.getCell("A1").value = sekolah.nama;
+    worksheet.getCell("A2").value = jadwalMengajar.toJSON().rombel.nama;
+    worksheet.getCell("A3").value = jadwalMengajar.toJSON().mataPelajaran.nama;
+    worksheet.getCell("A4").value = ta.tahun;
+
+    worksheet.getCell(
+      "A6"
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
+
+    worksheet.getColumn("A").width = 28;
+    worksheet.getColumn("B").width = 14;
+    worksheet.getColumn("C").width = 8;
+    worksheet.getColumn("D").width = 8.5;
+    worksheet.getColumn("E").width = 9;
+    worksheet.getColumn("F").width = 14;
+    worksheet.getColumn("G").width = 10;
+    worksheet.getColumn("H").width = 8;
+    worksheet.getColumn("I").width = 11;
+
+    let totalTugas;
+    // add column headers
+    await Promise.all(
+      analisisNilai
+        .toJSON()
+        .sort((a, b) => ("" + a.nama).localeCompare(b.nama))
+        .map(async (d, idx) => {
+          worksheet.getRow(7).values = [
+            "No",
+            "Nama",
+            "Jumlah Nilai",
+            "Dibawah KKM",
+          ];
+          worksheet.columns = [
+            { key: "no" },
+            { key: "user" },
+            { key: "jumlah" },
+            { key: "dibawahkkm" },
+          ];
+          let row = worksheet.addRow({
+            no: `${idx + 1}`,
+            user: d ? d.nama : "-",
+            jumlah: `${d.__meta__.jumlahTotal - d.__meta__.nilaiKosong}/${
+              d.__meta__.jumlahTotal
+            } Nilai`,
+            dibawahkkm: `${d.__meta__.jumlahKkm} ${tipe}`,
+          });
+          totalTugas = d.nilaiRekapSiswa.length;
+          // const row = worksheet.getRow(8);
+          await Promise.all(
+            d.nilaiRekapSiswa.map(async (e, nox) => {
+              worksheet.getColumn([`${(nox + 1) * 1 + 4}`]).values = [
+                ``,
+                ``,
+                ``,
+                ``,
+                ``,
+                ``,
+                `${titleCase(tipe)} ${nox + 1}`,
+                ,
+              ];
+              row.getCell([`${(nox + 1) * 1 + 4}`]).value = `${
+                e.nilai ? e.nilai : "0"
+              }`;
+              row.getCell([`${(nox + 1) * 1 + 4}`]).border = {
+                top: { style: "thin" },
+                left: { style: "thin" },
+                bottom: { style: "thin" },
+                right: { style: "thin" },
+              };
+              worksheet.getColumn([`${(nox + 1) * 1 + 4}`]).fill = {
+                type: "pattern",
+                pattern: "solid",
+                bgColor: {
+                  argb: "C0C0C0",
+                  fgColor: { argb: "C0C0C0" },
+                },
+              };
+              // worksheet.getCell(`E${(nox + 1) * 1 + 8}`).value = e.nilai;
+              // worksheet.columns = [
+              //   { key: `tugas${nox+1}` },
+              // ];
+
+              worksheet.addConditionalFormatting({
+                ref: `${(nox + 1) * 1 + 7}`,
+                rules: [
+                  {
+                    type: "expression",
+                    formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                    style: {
+                      border: {
+                        top: { style: "thin" },
+                        left: { style: "thin" },
+                        bottom: { style: "thin" },
+                        right: { style: "thin" },
+                      },
+                      font: {
+                        name: "Times New Roman",
+                        family: 4,
+                        size: 11,
+                        // bold: true,
+                      },
+                      alignment: {
+                        vertical: "middle",
+                        horizontal: "left",
+                      },
+                    },
+                  },
+                ],
+              });
+
+              // // Add row using key mapping to columns
+              // let row = worksheet.addRow ({
+              //   tugas1: e ? e.nilai : "-",
+              //   tugas2: e ? e.nilai : "-",
+              //   tugas3: e ? e.nilai : "-",
+              //   tugas4: e ? e.nilai : "-",
+              //   tugas5: e ? e.nilai : "-",
+              // });
+            })
+          );
+
+          // worksheet.addConditionalFormatting({
+          //   ref: `A7:${colName(totalTugas + 4)}7`,
+          //   rules: [
+          //     {
+          //       type: "expression",
+          //       formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          //       style: {
+          //         border: {
+          //           top: { style: "thin" },
+          //           left: { style: "thin" },
+          //           bottom: { style: "thin" },
+          //           right: { style: "thin" },
+          //         },
+          //         font: {
+          //           name: "Times New Roman",
+          //           family: 4,
+          //           size: 14,
+          //           bold: true,
+          //         },
+          //         fill: {
+          //           type: "pattern",
+          //           pattern: "solid",
+          //           bgColor: {
+          //             argb: "C0C0C0",
+          //             fgColor: { argb: "C0C0C0" },
+          //           },
+          //         },
+          //         alignment: {
+          //           vertical: "middle",
+          //           horizontal: "center",
+          //         },
+          //       },
+          //     },
+          //   ],
+          // });
+
+          worksheet.addConditionalFormatting({
+            ref: `A${(idx + 1) * 1 + 7}:D${(idx + 1) * 1 + 7}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 11,
+                    // bold: true,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "left",
+                  },
+                },
+              },
+            ],
+          });
+        })
+    );
+    worksheet.addConditionalFormatting({
+      ref: `A7:${colName(totalTugas + 3)}7`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 14,
+              bold: true,
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: {
+                argb: "C0C0C0",
+                fgColor: { argb: "C0C0C0" },
+              },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+    worksheet.mergeCells(`A1:J1`);
+    worksheet.mergeCells(`A2:${colName(totalTugas + 3)}2`);
+    worksheet.mergeCells(`A3:${colName(totalTugas + 3)}3`);
+    worksheet.mergeCells(`A4:${colName(totalTugas + 3)}4`);
+    worksheet.mergeCells(`A6:${colName(totalTugas + 3)}6`);
+    worksheet.addConditionalFormatting({
+      ref: `A1:${colName(totalTugas + 3)}4`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 16,
+              bold: true,
+            },
+            // fill: {
+            //   type: "pattern",
+            //   pattern: "solid",
+            //   bgColor: { argb: "0000FF", fgColor: { argb: "0000FF" } },
+            // },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+    // await Promise.all(
+    //   rekapRombel.toJSON().map(async (d) => {
+    //     worksheet.getRow(`${analisisNilai.length + 10}`).values = [
+    //       "No",
+    //       "Materi",
+    //       `${titleCase(tipe)}`,
+    //       "Nama Tugas",
+    //     ];
+    //     worksheet.columns = [
+    //       { key: "no" },
+    //       { key: "materi" },
+    //       { key: "tugas" },
+    //       { key: "nama" },
+    //     ];
+    //     let row = worksheet.addRow({
+    //       no: `${idx + 1}`,
+    //       materi: d ? d.nama : "-",
+    //       tugas: `${titleCase(tipe)} ${idx + 1}`,
+    //       nama: `${d.__meta__.jumlahKkm} ${tipe}`,
+    //     });
+    //   })
+    // );
+    worksheet.addConditionalFormatting({
+      ref: `A${analisisNilai.length + 10}:D${analisisNilai.length + 10 + rekapRombel.length}`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 14,
+              bold: true,
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: {
+                argb: "C0C0C0",
+                fgColor: { argb: "C0C0C0" },
+              },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+          },
+        },
+      ],
+    });
+    worksheet.getCell("A1").value = sekolah.nama;
+    worksheet.getCell("A2").value = jadwalMengajar.toJSON().rombel.nama;
+    worksheet.getCell("A3").value = jadwalMengajar.toJSON().mataPelajaran.nama;
+    worksheet.getCell("A4").value = ta.tahun;
+    worksheet.getColumn("A").width = 6;
+    worksheet.getColumn("B").width = 18;
+    worksheet.getColumn("C").width = 16;
+    worksheet.getColumn("D").width = 20;
+    worksheet.getCell(
+      "A6"
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
+    let namaFile = `/uploads/rekap-nilai-${tipe}-${keluarantanggalseconds}.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
 
   async ip({ response, request }) {
     return response.ok({ ip: [request.ip(), request.ips()] });
@@ -3241,4 +3679,3 @@ class DinasController {
   }
 }
 module.exports = DinasController;
-
