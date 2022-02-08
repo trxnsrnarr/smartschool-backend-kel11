@@ -1373,7 +1373,7 @@ class KeuanganController {
         akhir: `"${akun.nama}"`,
         bawah: `${rencana.nama} - Laporan Laba/Rugi`,
         m_sekolah_id: sekolah.id,
-        alamat_id: transaksi.m_rencana_keuangan_id,
+        alamat_id: rencana.id,
       });
     }
 
