@@ -1428,7 +1428,7 @@ class KeuanganController {
       akhir: `${akun.nama}`,
       bawah: `${rencana.nama} - Laporan Laba/Rugi`,
       m_sekolah_id: sekolah.id,
-      alamat_id: transaksi.m_rencana_keuangan_id,
+      alamat_id: kategoriLaba.m_rencana_keuangan_id,
     });
 
     return response.ok({
@@ -1673,7 +1673,7 @@ class KeuanganController {
       akhir: `${rumusFix}`,
       bawah: `${rencana.nama} - Laporan Laba/Rugi`,
       m_sekolah_id: sekolah.id,
-      alamat_id: transaksi.m_rencana_keuangan_id,
+      alamat_id: rumusSebelum.m_rencana_keuangan_id,
     });
 
     return response.ok({
