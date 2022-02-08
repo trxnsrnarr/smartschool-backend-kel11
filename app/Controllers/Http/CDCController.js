@@ -983,7 +983,12 @@ class CDCController {
           })
           .where({ dihapus: 0 });
       })
-      .with("perusahaan")
+      .with("perusahaan", (builder) => {
+        builder.where({ dihapus: 0 });
+        if (search) {
+          builder.andWhere("nama", "like", `%${search}%`);
+        }
+      })
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .fetch();
