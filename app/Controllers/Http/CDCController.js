@@ -966,6 +966,7 @@ class CDCController {
     // const { rombel_id } = request.post();
     const perusahaanIds = await TkPerusahaanSekolah.query()
       .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
       .pluck("m_perusahaan_id");
 
     perusahaan = MPerusahaan.query().whereIn("id", perusahaanIds);
@@ -984,7 +985,7 @@ class CDCController {
       })
       .with("perusahaan")
       .where({ m_sekolah_id: sekolah.id })
-      .where({ dihapus: 0 })
+      .andWhere({ dihapus: 0 })
       .fetch();
 
     let totalSiswa = 0;
