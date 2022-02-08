@@ -1359,8 +1359,11 @@ class CDCController {
       .first();
 
     penerimaan = MPenerimaanPerusahaan.query()
-      .withCount("siswa", (builder) => {
+      .withCount("siswa as siswa", (builder) => {
         builder.where({ dihapus: 0 });
+      })
+      .with("ta", builder => {
+        builder.select("id", "tahun")
       })
       .where({ dihapus: 0 })
       .andWhere({ tk_perusahaan_sekolah_id: perusahaan_id });
@@ -1373,7 +1376,7 @@ class CDCController {
 
     await Promise.all(
       penerimaan.toJSON().map(async (d) => {
-        totalSiswa = totalSiswa + d.siswa.__meta__;
+        totalSiswa = totalSiswa + d.__meta__.siswa;
       })
     );
 
