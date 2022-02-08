@@ -1019,7 +1019,7 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { search, jurusan_id,page } = request.get();
+    let { search, jurusan_id, page } = request.get();
     const user = await auth.getUser();
     page = page ? parseInt(page) : 1;
 
@@ -1078,11 +1078,11 @@ class CDCController {
         });
       })
       .where({ dihapus: 0 })
-      .whereIn("m_rombel_id", rombelIds)
-      if(jurusan_id){
-        penerimaanSiswa.where({m_jurusan_id:jurusan_id})
-      }
-      penerimaanSiswa = await penerimaanSiswa.paginate(page,25);
+      .whereIn("m_rombel_id", rombelIds);
+    if (jurusan_id) {
+      penerimaanSiswa.where({ m_jurusan_id: jurusan_id });
+    }
+    penerimaanSiswa = await penerimaanSiswa.paginate(page, 25);
 
     const perusahaan = await TkPerusahaanSekolah.query()
       .with("penerimaan", (builder) => {
@@ -1224,11 +1224,10 @@ class CDCController {
 
     const user = await auth.getUser();
 
-    const { nama, logo, bidang, perusahaan_id } = request.post();
+    const { nama, nama_pt, logo, bidang, perusahaan_id } = request.post();
 
-    let sekolah;
     if (perusahaan_id) {
-      sekolah = await TkPerusahaanSekolah.create({
+      await TkPerusahaanSekolah.create({
         m_sekolah_id: sekolah.id,
         m_perusahaan_id: perusahaan_id,
         dihapus: 0,
@@ -1242,10 +1241,11 @@ class CDCController {
       nama,
       logo,
       bidang,
+      nama_pt,
       dihapus: 0,
     });
 
-    sekolah = await TkPerusahaanSekolah.create({
+    await TkPerusahaanSekolah.create({
       m_sekolah_id: sekolah.id,
       m_perusahaan_id: perusahaan.id,
       dihapus: 0,
@@ -1272,18 +1272,19 @@ class CDCController {
 
     const user = await auth.getUser();
 
-    const { nama, logo, bidang } = request.post();
+    const { nama, nama_pt, logo, bidang } = request.post();
 
-    const perusahaan = await MPerusahaaan.query()
+    const perusahaan = await MPerusahaan.query()
       .where({ id: perusahaan_id })
       .update({
         nama,
         logo,
         bidang,
-        province_id,
-        regency_id,
-        district_id,
-        village_id,
+        nama_pt,
+        // province_id,
+        // regency_id,
+        // district_id,
+        // village_id,
         dihapus: 0,
       });
 
