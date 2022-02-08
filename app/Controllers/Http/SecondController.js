@@ -1854,6 +1854,7 @@ class SecondController {
       tanggal,
       jurnal = [],
       m_rencana_transaksi_id,
+      m_barang_id,
     } = request.post();
 
     const rules = {
@@ -1874,6 +1875,7 @@ class SecondController {
       nomor,
       tanggal,
       m_rencana_transaksi_id,
+      m_barang_id,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
     });

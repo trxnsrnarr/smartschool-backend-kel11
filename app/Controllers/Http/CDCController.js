@@ -984,6 +984,7 @@ class CDCController {
       })
       .with("perusahaan")
       .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
       .fetch();
 
     let totalSiswa = 0;
@@ -1362,8 +1363,8 @@ class CDCController {
       .withCount("siswa as siswa", (builder) => {
         builder.where({ dihapus: 0 });
       })
-      .with("ta", builder => {
-        builder.select("id", "tahun")
+      .with("ta", (builder) => {
+        builder.select("id", "tahun");
       })
       .where({ dihapus: 0 })
       .andWhere({ tk_perusahaan_sekolah_id: perusahaan_id });
