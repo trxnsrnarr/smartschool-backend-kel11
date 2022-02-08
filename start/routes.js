@@ -591,6 +591,10 @@ Route.post("/mutasi", "MainController.postMutasiV1");
 Route.put("/mutasi/:mutasi_id", "MainController.putMutasiV1");
 Route.delete("/mutasi/:mutasi_id", "MainController.deleteMutasi");
 
+// Inventaris
+Route.get("/inventaris", "KeuanganController.getBarang");
+Route.get("/inventaris-aktif", "KeuanganController.getTransaksiBarang");
+
 // mutasi v2
 Route.get("/v2/mutasi", "SecondController.getTransaksi");
 Route.post("/v2/mutasi", "SecondController.postTransaksi");
@@ -1142,7 +1146,10 @@ Route.put(
 );
 
 // PKL Sekolah
-Route.get("/penerimaan-perusahaan/:perusahaan_id", "CDCController.getPenerimaanPerusahaan");
+Route.get(
+  "/penerimaan-perusahaan/:perusahaan_id",
+  "CDCController.getPenerimaanPerusahaan"
+);
 Route.post("/penerimaan-perusahaan", "CDCController.postPenerimaanPerusahaan");
 
 Route.post("/cdc/perusahaan", "CDCController.postPerusahaan");

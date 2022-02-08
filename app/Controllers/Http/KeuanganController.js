@@ -26,6 +26,7 @@ const MRencanaAktivitasTransaksi = use("App/Models/MRencanaAktivitasTransaksi");
 const TkRencanaKategoriTipeAkun = use("App/Models/TkRencanaKategoriTipeAkun");
 const MHistoriAktivitas = use("App/Models/MHistoriAktivitas");
 const MRekSekolah = use("App/Models/MRekSekolah");
+const MBarang = use("App/Models/MBarang");
 
 const Excel = require("exceljs");
 const moment = require("moment");
@@ -4280,18 +4281,23 @@ class KeuanganController {
 
     page = page ? parseInt(page) : 1;
 
+    const barangIds = await MKeuTransaksi.query()
+      .distinct("m_barang_id")
+      .fetch();
+
     let barang;
 
     barang = MBarang.query()
       .with("lokasi")
       .where({ dihapus: 0 })
+      .whereNotIn("id", barangIds)
       .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ verifikasi: 0 });
 
     if (search) {
       barang.andWhere("nama", "like", `%${search}%`);
     }
-    if (tangggal_awal) {
+    if (tanggal_awal) {
       barang.whereBetween("created_at", [tanggal_awal, tanggal_akhir]);
     }
 
