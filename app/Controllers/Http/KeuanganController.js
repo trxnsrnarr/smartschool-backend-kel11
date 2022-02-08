@@ -26,6 +26,7 @@ const MRencanaAktivitasTransaksi = use("App/Models/MRencanaAktivitasTransaksi");
 const TkRencanaKategoriTipeAkun = use("App/Models/TkRencanaKategoriTipeAkun");
 const MHistoriAktivitas = use("App/Models/MHistoriAktivitas");
 const MRekSekolah = use("App/Models/MRekSekolah");
+const MBarang = use("App/Models/MBarang");
 
 const Excel = require("exceljs");
 const moment = require("moment");
@@ -4291,7 +4292,7 @@ class KeuanganController {
     if (search) {
       barang.andWhere("nama", "like", `%${search}%`);
     }
-    if (tangggal_awal) {
+    if (tanggal_awal) {
       barang.whereBetween("created_at", [tanggal_awal, tanggal_akhir]);
     }
 
