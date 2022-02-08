@@ -1008,6 +1008,7 @@ class CDCController {
 
     return response.ok({
       perusahaan,
+      perusahaanSekolah,
       semuaPerusahaan,
     });
   }
