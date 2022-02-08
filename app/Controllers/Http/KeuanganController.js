@@ -4281,11 +4281,16 @@ class KeuanganController {
 
     page = page ? parseInt(page) : 1;
 
+    const barangIds = await MKeuTransaksi.query()
+      .distinct("m_barang_id")
+      .fetch();
+
     let barang;
 
     barang = MBarang.query()
       .with("lokasi")
       .where({ dihapus: 0 })
+      .whereNotIn("id", barangIds)
       .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ verifikasi: 0 });
 

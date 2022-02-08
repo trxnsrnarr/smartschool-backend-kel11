@@ -529,6 +529,7 @@ class SecondController {
         builder
           .whereNot({ status: "lunas" })
           .whereNull("ditangguhkan")
+          .where({ dihapus: 0 })
           .with("rombelPembayaran", (builder) => {
             builder
               .select("id", "m_pembayaran_id")
@@ -1878,6 +1879,10 @@ class SecondController {
       m_barang_id,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
+    });
+
+    await MBarang.query().where({ id: m_barang_id }).update({
+      verifikasi: 1,
     });
 
     await Promise.all(
