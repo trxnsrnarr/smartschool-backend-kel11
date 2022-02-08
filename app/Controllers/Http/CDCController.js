@@ -1353,6 +1353,8 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
+    const ta = await this.getTAAktif(sekolah);
+
     let { search } = request.get();
     const user = await auth.getUser();
     let penerimaan;
@@ -1388,10 +1390,17 @@ class CDCController {
       })
     );
 
+    const status = await MPenerimaanPerusahaan.query()
+      .where({ dihapus: 0 })
+      .where({ tk_perusahaan_sekolah_id: perusahaan_id })
+      .where({ m_ta_id: ta.id })
+      .first();
+
     return response.ok({
       penerimaan,
       perusahaan,
       totalSiswa,
+      status: status ? 1 : 0,
     });
   }
 
