@@ -1049,7 +1049,7 @@ class DinasController {
     }
 
     if (search) {
-      data = data.where("nama", "like", `%${search}%`);
+      data = data.where("judul", "like", `%${search}%`);
     }
     data = await data.fetch();
 
