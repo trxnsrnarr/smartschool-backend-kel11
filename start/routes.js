@@ -598,7 +598,10 @@ Route.put("/v2/mutasi/:transaksi_id", "SecondController.putTransaksi");
 Route.delete("/v2/mutasi/:transaksi_id", "SecondController.deleteTransaksi");
 Route.post("/download/neraca", "SecondController.downloadNeraca");
 Route.post("/download/jurnal", "SecondController.downloadJurnal");
-Route.post("/download/jurnal/:perencanaan_id", "KeuanganController.downloadJurnal");
+Route.post(
+  "/download/jurnal/:perencanaan_id",
+  "KeuanganController.downloadJurnal"
+);
 Route.post("/download/laba-rugi", "SecondController.downloadLabaRugi");
 Route.post("/download/arus-kas", "SecondController.downloadArusKas");
 
@@ -681,7 +684,10 @@ Route.post("/timeline", "MainController.postTimeline");
 Route.put("/timeline/:timeline_id", "MainController.putTimeline");
 Route.delete("/timeline/:timeline_id", "MainController.deleteTimeline");
 Route.post("/timeline/download-absen", "MainController.downloadTimelineAbsen");
-Route.post("/timeline/download-absen/:pertemuan_id", "DinasController.downloadTimelineAbsen");
+Route.post(
+  "/timeline/download-absen/:pertemuan_id",
+  "DinasController.downloadTimelineAbsen"
+);
 
 // m timeline komen
 Route.post("/timeline-komen", "MainController.postTimelineKomen");
@@ -954,14 +960,8 @@ Route.post(
   "/absen-siswa/rekapdownload/dinas",
   "DinasController.downloadRekapAbsenSiswaDinas"
 );
-Route.post(
-  "/download/rekap/nilai-siswa",
-  "DinasController.downloadRekapNilai"
-);
-Route.post(
-  "/download/jadwal-dinas",
-  "DinasController.downloadJadwalDinas"
-);
+Route.post("/download/rekap/nilai-siswa", "DinasController.downloadRekapNilai");
+Route.post("/download/jadwal-dinas", "DinasController.downloadJadwalDinas");
 // Mutasi Service
 Route.post("/mutasi/importmutasi", "MainController.importMutasi");
 Route.post("/mutasi/download-mutasi", "MainController.downloadMutasi");
@@ -1125,7 +1125,14 @@ Route.delete("/cdc/acara/:acara_id", "MainControler.deleteAcaraPerusahaan");
 // Perusahaan sekolah
 Route.get("/perusahaan-sekolah", "CDCController.getPerusahaanSekolah");
 Route.post("/perusahaan-sekolah", "CDCController.postPerusahaanSekolah");
-Route.put("/perusahaan-sekolah/:perusahaan_id", "CDCController.putPerusahaanSekolah");
+Route.put(
+  "/perusahaan-sekolah/:perusahaan_id",
+  "CDCController.putPerusahaanSekolah"
+);
+
+// PKL Sekolah
+Route.get("/penerimaan-perusahaan/:perusahaan_id", "CDCController.getPenerimaanPerusahaan");
+Route.post("/penerimaan-perusahaan", "CDCController.postPenerimaanPerusahaan");
 
 Route.post("/cdc/perusahaan", "CDCController.postPerusahaan");
 Route.put("/cdc/perusahaan/:perusahaan_id", "MainControler.putPerusahaan");
@@ -1582,8 +1589,14 @@ Route.delete(
 Route.get("/buku-kerja-guru", "DinasController.getBukuKerjaGuru");
 Route.get("/buku-kerja-detail", "DinasController.getBukuKerja");
 Route.get("/buku-kerja-kehadiran", "DinasController.getDaftarKehadiran");
-Route.get("/buku-kerja-nilai/:jadwal_mengajar_id", "DinasController.getDaftarNilai");
-Route.get("/buku-kerja-nilai/:jadwal_mengajar_id/user/:user_id", "DinasController.detailSiswaRekap");
+Route.get(
+  "/buku-kerja-nilai/:jadwal_mengajar_id",
+  "DinasController.getDaftarNilai"
+);
+Route.get(
+  "/buku-kerja-nilai/:jadwal_mengajar_id/user/:user_id",
+  "DinasController.detailSiswaRekap"
+);
 Route.post("/buku-kerja", "DinasController.postBukuKerja");
 Route.put("/buku-kerja/:rpp_id", "DinasController.putBukuKerja");
 Route.delete("/buku-kerja/:rpp_id", "DinasController.deleteBukuKerja");
@@ -1593,7 +1606,10 @@ Route.delete("/buku-kerja-soal/:rpp_id", "DinasController.deleteBukuKerjaSoal");
 
 Route.get("/otomatis-akun-keuangan", "SecondController.otomatisAkun");
 
-Route.post("/download/jadwal", "RombelController.downloadJadwalMengajarTingkat");
+Route.post(
+  "/download/jadwal",
+  "RombelController.downloadJadwalMengajarTingkat"
+);
 // Dinas
 Route.get("/dashboard/dinas", "DinasController.getDashboard");
 
