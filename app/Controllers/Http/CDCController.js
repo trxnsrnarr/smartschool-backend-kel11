@@ -966,6 +966,7 @@ class CDCController {
     // const { rombel_id } = request.post();
     const perusahaanIds = await TkPerusahaanSekolah.query()
       .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
       .pluck("m_perusahaan_id");
 
     perusahaan = MPerusahaan.query().whereIn("id", perusahaanIds);
@@ -982,8 +983,14 @@ class CDCController {
           })
           .where({ dihapus: 0 });
       })
-      .with("perusahaan")
+      .with("perusahaan", (builder) => {
+        builder.where({ dihapus: 0 });
+        if (search) {
+          builder.andWhere("nama", "like", `%${search}%`);
+        }
+      })
       .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
       .fetch();
 
     let totalSiswa = 0;
@@ -1006,6 +1013,7 @@ class CDCController {
 
     return response.ok({
       perusahaan,
+      perusahaanSekolah,
       semuaPerusahaan,
     });
   }
@@ -1362,8 +1370,8 @@ class CDCController {
       .withCount("siswa as siswa", (builder) => {
         builder.where({ dihapus: 0 });
       })
-      .with("ta", builder => {
-        builder.select("id", "tahun")
+      .with("ta", (builder) => {
+        builder.select("id", "tahun");
       })
       .where({ dihapus: 0 })
       .andWhere({ tk_perusahaan_sekolah_id: perusahaan_id });
