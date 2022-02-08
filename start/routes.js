@@ -962,6 +962,7 @@ Route.post(
   "/download/jadwal-dinas",
   "DinasController.downloadJadwalDinas"
 );
+
 // Mutasi Service
 Route.post("/mutasi/importmutasi", "MainController.importMutasi");
 Route.post("/mutasi/download-mutasi", "MainController.downloadMutasi");
@@ -1126,6 +1127,9 @@ Route.delete("/cdc/acara/:acara_id", "MainControler.deleteAcaraPerusahaan");
 Route.get("/perusahaan-sekolah", "CDCController.getPerusahaanSekolah");
 Route.post("/perusahaan-sekolah", "CDCController.postPerusahaanSekolah");
 Route.put("/perusahaan-sekolah/:perusahaan_id", "CDCController.putPerusahaanSekolah");
+Route.delete(
+  "/perusahaan-sekolah/:perusahaan_id", "CDCController.deletePerusahaanSekolah"
+);
 
 Route.post("/cdc/perusahaan", "CDCController.postPerusahaan");
 Route.put("/cdc/perusahaan/:perusahaan_id", "MainControler.putPerusahaan");
@@ -1594,6 +1598,12 @@ Route.delete("/buku-kerja-soal/:rpp_id", "DinasController.deleteBukuKerjaSoal");
 Route.get("/otomatis-akun-keuangan", "SecondController.otomatisAkun");
 
 Route.post("/download/jadwal", "RombelController.downloadJadwalMengajarTingkat");
+Route.post("/download/import-jadwal", "RombelController.downloadImportJadwalMengajarTingkat");
+
+Route.post(
+  "/import/jadwal-mengajar",
+  "RombelController.importJadwalMengajar"
+);
 // Dinas
 Route.get("/dashboard/dinas", "DinasController.getDashboard");
 
