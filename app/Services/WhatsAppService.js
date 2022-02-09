@@ -1,12 +1,24 @@
 const { default: axios } = require("axios");
+const User = use("App/Models/User");
 
 class WhatsAppService {
-  static async sendMessage(number, message) {
+  static async kirimNotifWa(user_id, pesan) {
+    const check = await User.query().where({ id: user_id }).first();
+
+    if (!check.wa_real) {
+      return "whatsapp belum terverifikasi";
+    }
+
+    const data = await this.sendMessage(check.wa_real, pesan, 1);
+    return data;
+  }
+
+  static async sendMessage(number, message, format) {
     try {
       const { data } = await axios.post(
         `https://whatsapp.smarteschool.net/send-message`,
         {
-          number: `${number}@c.us`,
+          number: format ? `${number}` : `${number}@c.us`,
           message: message,
         }
       );
