@@ -1144,7 +1144,9 @@ Route.put(
   "/perusahaan-sekolah/:perusahaan_id",
   "CDCController.putPerusahaanSekolah"
 );
-
+Route.delete(
+  "/penerimaan-perusahaan/:penerimaan_id", "CDCController.deletePenerimaanPerusahaan"
+);
 // PKL Sekolah
 Route.get(
   "/penerimaan-perusahaan/:perusahaan_id",
