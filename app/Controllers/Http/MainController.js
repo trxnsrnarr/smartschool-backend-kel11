@@ -5189,6 +5189,34 @@ class MainController {
           .where({ m_rombel_id: rombelLama.id })
           .andWhere({ m_materi_id: materi.id })
           .first();
+        }else{
+          analisisMateri = await TkMateriRombel.query()
+          .with("materi", (builder) => {
+            builder.with("bab", (builder) => {
+              builder
+                .with("topik", (builder) => {
+                  builder
+                    .withCount(
+                      "materiKesimpulan as totalKesimpulan",
+                      (builder) => {
+                        builder
+                          .whereIn("m_user_id", userIds)
+                          .whereNotNull("kesimpulan");
+                      }
+                    )
+                    .where({ dihapus: 0 });
+                })
+                .where({ dihapus: 0 });
+            });
+          })
+          .with("rombel", (builder) => {
+            builder.withCount("anggotaRombel as totalAnggota", (builder) => {
+              builder.where({ dihapus: 0 });
+            });
+          })
+          .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
+          .andWhere({ m_materi_id: materi.id })
+          .first();
         }
 
       } else {
