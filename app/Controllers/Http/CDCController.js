@@ -1417,18 +1417,19 @@ class CDCController {
 
     const ta = await this.getTAAktif(sekolah);
 
-    const { data_siswa, surat_tugas, mou, tk_perusahaan_sekolah_id } =
+    const { nama, data_siswa, surat_tugas, mou, tk_perusahaan_sekolah_id } =
       request.post();
 
     const check = await MPenerimaanPerusahaan.query()
-      .where({ nama: ta.tahun })
+      .where({ tahun: ta.tahun })
       .andWhere({ dihapus: 0 })
       .andWhere({ tk_perusahaan_sekolah_id: tk_perusahaan_sekolah_id })
       .first();
 
     if (!check) {
       const sekolah = await MPenerimaanPerusahaan.create({
-        nama: ta.tahun,
+        nama,
+        tahun: ta.tahun,
         data_siswa,
         surat_tugas,
         mou,
