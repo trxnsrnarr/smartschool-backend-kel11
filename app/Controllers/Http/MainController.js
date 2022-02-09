@@ -5151,6 +5151,8 @@ class MainController {
           .fetch();
       }
       if (sekolah.id == 40 || sekolah.id == 13) {
+        if(ta_id){
+
         const rombelLama = await MRombel.query()
           .where({ m_ta_id: ta_id })
           .andWhere({ m_sekolah_id: sekolah.id })
@@ -5187,6 +5189,8 @@ class MainController {
           .where({ m_rombel_id: rombelLama.id })
           .andWhere({ m_materi_id: materi.id })
           .first();
+        }
+
       } else {
         analisisMateri = await TkMateriRombel.query()
           .with("materi", (builder) => {
