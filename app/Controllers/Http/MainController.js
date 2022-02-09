@@ -5083,22 +5083,23 @@ class MainController {
             .andWhere({ dihapus: 0 })
             .andWhere({ m_ta_id: ta_id })
             .first();
+            // return mataPelajaranGuru
           materi = await MMateri.query()
             .where({ tingkat: jadwalMengajar.toJSON().rombel.tingkat })
             .andWhere({
               m_jurusan_id: jadwalMengajar.toJSON().rombel.m_jurusan_id,
             })
             .where({ m_mata_pelajaran_id: mataPelajaranGuru.id })
+            .andWhere({dihapus:0})
             .first();
           if (!materi) {
             materi = await MMateri.query()
               .where({ tingkat: jadwalMengajar.toJSON().rombel.tingkat })
-              .andWhere({
-                m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id,
-              })
               .where({ m_mata_pelajaran_id: mataPelajaranGuru.id })
+              .andWhere({dihapus:0})
               .first();
           }
+          // return materi
         }
       }
 
@@ -5150,6 +5151,15 @@ class MainController {
           .fetch();
       }
       if (sekolah.id == 40 || sekolah.id == 13) {
+        const rombelLama = await MRombel.query()
+          .where({ m_ta_id: ta_id })
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .andWhere({
+            m_jurusan_id: jadwalMengajar.toJSON().rombel.m_jurusan_id,
+          })
+          .andWhere({ nama: jadwalMengajar.toJSON().rombel.nama })
+          .first();
+          // return materi
         analisisMateri = await TkMateriRombel.query()
           .with("materi", (builder) => {
             builder.with("bab", (builder) => {
@@ -5174,7 +5184,7 @@ class MainController {
               builder.where({ dihapus: 0 });
             });
           })
-          .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
+          .where({ m_rombel_id: rombelLama.id })
           .andWhere({ m_materi_id: materi.id })
           .first();
       } else {
