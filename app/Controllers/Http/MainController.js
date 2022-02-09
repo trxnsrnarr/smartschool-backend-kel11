@@ -9333,16 +9333,17 @@ class MainController {
     const { m_jadwal_mengajar_id, absen, hari_ini, waktu_saat_ini } =
       request.get();
 
-    const jadwalMengajar = await MJadwalMengajar.query()
-      .with("rombel")
-      .with("mataPelajaran")
-      .where({ id: m_jadwal_mengajar_id })
-      .first();
     if (user.role == "admin") {
       return response.ok({
         role: "admin",
       });
     }
+
+    const jadwalMengajar = await MJadwalMengajar.query()
+      .with("rombel")
+      .with("mataPelajaran")
+      .where({ id: m_jadwal_mengajar_id })
+      .first();
 
     const userIds = await MAnggotaRombel.query()
       .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
