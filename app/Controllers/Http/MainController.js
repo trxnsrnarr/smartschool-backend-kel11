@@ -3172,6 +3172,7 @@ class MainController {
         .andWhere({ dihapus: 0 })
         .whereIn("role", ["guru", "admin", "kepsek"])
         .andWhere("nama", "like", `%${search}%`)
+        .orderBy("nama","asc")
         .paginate(page, 25);
     } else {
       guru = await User.query()
@@ -3188,6 +3189,7 @@ class MainController {
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ dihapus: 0 })
         .whereIn("role", ["guru", "admin", "kepsek"])
+        .orderBy("nama","asc")
         .paginate(page, 25);
     }
 
@@ -4801,6 +4803,7 @@ class MainController {
       .andWhere({ m_ta_id: ta.id })
       .andWhere({ dihapus: 0 })
       .andWhere({ kelompok: kelompok })
+      .orderBy("nama","asc")
       .fetch();
 
     const jurusan = await MJurusan.query()
@@ -5671,6 +5674,7 @@ class MainController {
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ m_ta_id: ta.id })
       .andWhere({ dihapus: 0 })
+      .orderBy("nama","asc")
       .fetch();
 
     const mataPelajaranKelompokA = [];
