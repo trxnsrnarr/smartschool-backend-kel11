@@ -466,7 +466,7 @@ class MainController {
 
   async getTAAktif(sekolah) {
     const ta = await Mta.query()
-      .select("id", "tahun")
+      .select("id", "tahun", "semester")
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ aktif: 1 })
       .andWhere({ dihapus: 0 })
