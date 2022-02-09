@@ -8532,6 +8532,11 @@ class MainController {
         message: "siswa",
       });
     }
+    if (user.role == "admin") {
+      return response.ok({
+        message: "admin",
+      });
+    }
 
     const jadwalMengajar = await MJadwalMengajar.query()
       .with("rombel")
@@ -9333,7 +9338,7 @@ class MainController {
       .with("mataPelajaran")
       .where({ id: m_jadwal_mengajar_id })
       .first();
-    if (!jadwalMengajar) {
+    if (user.role == "admin") {
       return response.ok({
         role: "admin",
       });
