@@ -1881,9 +1881,11 @@ class SecondController {
       m_sekolah_id: sekolah.id,
     });
 
-    await MBarang.query().where({ id: m_barang_id }).update({
-      verifikasi: 1,
-    });
+    if (m_barang_id){
+      await MBarang.query().where({ id: m_barang_id }).update({
+        verifikasi: 1,
+      });
+    }
 
     await Promise.all(
       jurnal.map(async (d) => {
