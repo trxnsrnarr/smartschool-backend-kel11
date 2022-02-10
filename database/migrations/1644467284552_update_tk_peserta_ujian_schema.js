@@ -7,7 +7,7 @@ class UpdateTkPesertaUjianSchema extends Schema {
   up() {
     this.table("tk_peserta_ujian", (table) => {
       // alter table
-      table.integer("warning");
+      table.integer("warning").defaultTo(0);
     });
   }
 
