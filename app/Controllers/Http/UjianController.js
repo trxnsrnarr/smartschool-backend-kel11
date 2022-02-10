@@ -67,7 +67,7 @@ class UjianController {
         message: messageNotFound,
       });
     }
-    const pesertaUjian = await TkPesertaUjian.query()
+    const pesertaUjianData = await TkPesertaUjian.query()
       .withCount("jawabanSiswa as totalDijawab", (builder) => {
         builder.where({ dijawab: 1 });
       })
@@ -75,11 +75,11 @@ class UjianController {
       .first();
 
     return response.ok({
-      doc_id: pesertaUjian.doc_id,
-      tk_jadwal_ujian_id: pesertaUjian.tk_jadwal_ujian_id,
-      user_id: pesertaUjian.m_user_id,
+      doc_id: pesertaUjianData.doc_id,
+      tk_jadwal_ujian_id: pesertaUjianData.tk_jadwal_ujian_id,
+      user_id: pesertaUjianData.m_user_id,
       warning: warning,
-      progress: pesertaUjian.__meta__.totalDijawab,
+      progress: pesertaUjianData.toJSON().__meta__.totalDijawab,
     });
   }
 }
