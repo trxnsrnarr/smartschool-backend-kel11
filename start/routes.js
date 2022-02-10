@@ -635,6 +635,7 @@ Route.get(
 );
 Route.post("/peserta-ujian", "MainController.postPesertaUjian");
 Route.put("/peserta-ujian/:peserta_ujian_id", "MainController.putPesertaUjian");
+Route.put("/peserta-ujian-2/:peserta_ujian_id", "UjianController.putPesertaUjian");
 Route.put(
   "/reset-peserta-ujian/:peserta_ujian_id",
   "MainController.resetPesertaUjian"
