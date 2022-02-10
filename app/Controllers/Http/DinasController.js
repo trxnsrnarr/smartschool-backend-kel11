@@ -752,7 +752,7 @@ class DinasController {
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .andWhere({ role: "guru" })
-      .first();
+      .fetch();
 
     const mataPelajaranIds = await MMataPelajaran.query()
       .where({ m_user_id: user.id })
