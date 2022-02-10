@@ -67,20 +67,20 @@ class UjianController {
         message: messageNotFound,
       });
     }
-    const pesertaUjianData = await TkPesertaUjian.query()
-      .with("jawabanSiswa", (builder) => {
-        builder.with("soal");
+    const pesertaUjian = await TkPesertaUjian.query()
+      .withCount("jawabanSiswa as totalDijawab", (builder) => {
+        builder.where({ dijawab: 1 });
       })
-      .with("user")
       .where({ id: peserta_ujian_id })
       .first();
 
-    await jadwalUjianReference.doc(`${pesertaUjianData.doc_id}`).set(
-      {
-        warning: warning,
-      },
-      { merge: true }
-    );
+    return response.ok({
+      doc_id: pesertaUjian.doc_id,
+      tk_jadwal_ujian_id: pesertaUjian.tk_jadwal_ujian_id,
+      user_id: pesertaUjian.m_user_id,
+      warning: warning,
+      progress: pesertaUjian.__meta__.totalDijawab,
+    });
   }
 }
 
