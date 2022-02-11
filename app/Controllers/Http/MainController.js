@@ -12683,6 +12683,11 @@ class MainController {
     const total = count[0].total;
 
     if (user.role == "guru") {
+      const ujianIds = await MUjian.query()
+        .where({ m_user_id: user.id })
+        .where({ dihapus: 0 })
+        .ids();
+      
       const mataPelajaranIds = await MMataPelajaran.query()
         .where({ m_user_id: user.id })
         .ids();
@@ -12704,11 +12709,17 @@ class MainController {
         .andWhere({ m_ta_id: ta.id })
         .fetch();
 
-      const jadwalIds = await TkJadwalUjian.query()
+      const jadwaRombellIds = await TkJadwalUjian.query()
         .whereIn("m_rombel_id", rombelIds)
         .andWhere({ dihapus: 0 })
         .distinct("m_jadwal_ujian_id")
         .pluck("m_jadwal_ujian_id");
+      const jadwalSoalIds = await MJadwalUjian.query()
+        .whereIn("m_ujian_id", ujianIds)
+        .andWhere({ dihapus: 0 })
+        .ids();
+
+      const jadwalIds = [...jadwaRombellIds, ...jadwalSoalIds]
 
       const jadwalLainnya = await MJadwalUjian.query()
         .with("ujian", (builder) => {
@@ -14154,7 +14165,11 @@ class MainController {
       pesertaUjian = await TkPesertaUjian.query()
         .with("jadwalUjian", (builder) => {
           builder.with("jadwalUjian", (builder) => {
-            builder.with("ujian");
+            builder.with("ujian", builder => {
+              builder.with("soalUjian", builder => {
+                builder.where({ dihapus: 0 }).select("id", "m_ujian_id", "m_soal_ujian_id")
+              })
+            });
           });
         })
         .with("jawabanSiswa", (builder) => {
