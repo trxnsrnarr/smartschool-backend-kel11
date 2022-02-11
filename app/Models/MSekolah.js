@@ -28,6 +28,10 @@ class MSekolah extends Model {
     return this.hasMany("App/Models/User", "m_sekolah_id");
   }
 
+  guru() {
+    return this.hasMany("App/Models/User");
+  }
+
   fitur() {
     return this.hasOne("App/Models/MFiturSekolah", "id", "m_sekolah_id");
   }

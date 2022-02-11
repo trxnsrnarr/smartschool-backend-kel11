@@ -532,24 +532,29 @@ class MainController {
 
   async getMasterSekolahDinasSummary({ response, request }) {
     const totalSD = await Sekolah.query()
-      .where("kode_prop", "020000")
+      .where("kode_prop", "010000")
       .andWhere("bentuk", "SD")
+      .whereNotNull('m_sekolah_id')
       .getCount();
     const totalSMP = await Sekolah.query()
-      .where("kode_prop", "020000")
+      .where("kode_prop", "010000")
       .andWhere("bentuk", "SMP")
+      .whereNotNull('m_sekolah_id')
       .getCount();
     const totalSMA = await Sekolah.query()
-      .where("kode_prop", "020000")
+      .where("kode_prop", "010000")
       .andWhere("bentuk", "SMA")
+      .whereNotNull('m_sekolah_id')
       .getCount();
     const totalSMK = await Sekolah.query()
-      .where("kode_prop", "020000")
+      .where("kode_prop", "010000")
       .andWhere("bentuk", "SMK")
+      .whereNotNull('m_sekolah_id')
       .getCount();
     const totalSLB = await Sekolah.query()
-      .where("kode_prop", "020000")
+      .where("kode_prop", "010000")
       .andWhere("bentuk", "SLB")
+      .whereNotNull('m_sekolah_id')
       .getCount();
 
     return response.ok({
@@ -580,7 +585,10 @@ class MainController {
   async getMasterSekolahSS({ response, request }) {
     let { page } = request.get();
 
-    page = page ? page : 1;
+    const kodePropsId = await Sekolah.query()
+      .where("kode_prop", "010000")
+      .whereNotNull('m_sekolah_id')
+      .pluck('m_sekolah_id');
 
     const res = MSekolah.query()
       .select(
@@ -605,7 +613,10 @@ class MainController {
           })
           .where("aktif", 1);
       })
-      .where("gpds_event", "yogyakarta")
+      .withCount('guru as totalGuru', (builder) => {
+        builder.where({dihapus: 0}).andWhere({role: 'guru'})
+      })
+      .whereIn('id', kodePropsId)
       .orderBy("jumlah_topik", "desc");
 
     return response.ok({
@@ -939,7 +950,7 @@ class MainController {
         });
       } else {
         const sekolahSS = await MSekolah.create({
-          gpds_event: "yogyakarta",
+          gpds_event: "dkijakarta",
           nama: sekolah.sekolah,
           domain: `https://${domain}.smarteschool.id`,
           status: sekolah.status || "N",
@@ -975,7 +986,7 @@ class MainController {
     let sekolahSS = check;
     if (!check) {
       sekolahSS = await MSekolah.create({
-        gpds_event: "yogyakarta",
+        gpds_event: "dkijakarta",
         nama: sekolah,
         npsn,
         provinsi: propinsi,
@@ -12683,6 +12694,11 @@ class MainController {
     const total = count[0].total;
 
     if (user.role == "guru") {
+      const ujianIds = await MUjian.query()
+        .where({ m_user_id: user.id })
+        .where({ dihapus: 0 })
+        .ids();
+      
       const mataPelajaranIds = await MMataPelajaran.query()
         .where({ m_user_id: user.id })
         .ids();
@@ -12704,11 +12720,17 @@ class MainController {
         .andWhere({ m_ta_id: ta.id })
         .fetch();
 
-      const jadwalIds = await TkJadwalUjian.query()
+      const jadwaRombellIds = await TkJadwalUjian.query()
         .whereIn("m_rombel_id", rombelIds)
         .andWhere({ dihapus: 0 })
         .distinct("m_jadwal_ujian_id")
         .pluck("m_jadwal_ujian_id");
+      const jadwalSoalIds = await MJadwalUjian.query()
+        .whereIn("m_ujian_id", ujianIds)
+        .andWhere({ dihapus: 0 })
+        .ids();
+
+      const jadwalIds = [...jadwaRombellIds, ...jadwalSoalIds]
 
       const jadwalLainnya = await MJadwalUjian.query()
         .with("ujian", (builder) => {
@@ -14154,7 +14176,11 @@ class MainController {
       pesertaUjian = await TkPesertaUjian.query()
         .with("jadwalUjian", (builder) => {
           builder.with("jadwalUjian", (builder) => {
-            builder.with("ujian");
+            builder.with("ujian", builder => {
+              builder.with("soalUjian", builder => {
+                builder.where({ dihapus: 0 }).select("id", "m_ujian_id", "m_soal_ujian_id")
+              })
+            });
           });
         })
         .with("jawabanSiswa", (builder) => {
