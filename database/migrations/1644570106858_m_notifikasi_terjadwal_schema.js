@@ -12,6 +12,7 @@ class MNotifikasiTerjadwalSchema extends Schema {
       table.text("pesan")
       table.string("tujuan")
       table.boolean("dikirim").defaultTo(0);
+      table.boolean("diupdate").defaultTo(0);
       table.timestamps()
     })
   }
