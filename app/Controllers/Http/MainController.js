@@ -187,6 +187,12 @@ const db = firestore.db();
 const bucket = firestore.bucket();
 const FieldValue = firestore.FieldValue();
 var striptags = require("striptags");
+const {
+  kirimNotifWa,
+  ubahNotifWa,
+  hapusNotifWa,
+  kirimNotifWaLangsung,
+} = require("../../Services/WhatsAppService");
 // reference to
 const jadwalUjianReference = db.collection("jadwal-ujian");
 
@@ -206,6 +212,8 @@ const messageNotFound = "Data tidak ditemukan";
 const messageForbidden = "Dilarang, anda bukan seorang admin";
 const messageEmailSuccess = "Data berhasil dikirim ke email";
 const pesanSudahDitambahkan = "Data sudah ditambahkan";
+
+var cronJobs = {};
 
 // RULES
 const rulesUserPost = {
@@ -3172,7 +3180,7 @@ class MainController {
         .andWhere({ dihapus: 0 })
         .whereIn("role", ["guru", "admin", "kepsek"])
         .andWhere("nama", "like", `%${search}%`)
-        .orderBy("nama","asc")
+        .orderBy("nama", "asc")
         .paginate(page, 25);
     } else {
       guru = await User.query()
@@ -3189,7 +3197,7 @@ class MainController {
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ dihapus: 0 })
         .whereIn("role", ["guru", "admin", "kepsek"])
-        .orderBy("nama","asc")
+        .orderBy("nama", "asc")
         .paginate(page, 25);
     }
 
@@ -4803,7 +4811,7 @@ class MainController {
       .andWhere({ m_ta_id: ta.id })
       .andWhere({ dihapus: 0 })
       .andWhere({ kelompok: kelompok })
-      .orderBy("nama","asc")
+      .orderBy("nama", "asc")
       .fetch();
 
     const jurusan = await MJurusan.query()
@@ -5086,20 +5094,20 @@ class MainController {
             .andWhere({ dihapus: 0 })
             .andWhere({ m_ta_id: ta_id })
             .first();
-            // return mataPelajaranGuru
+          // return mataPelajaranGuru
           materi = await MMateri.query()
             .where({ tingkat: jadwalMengajar.toJSON().rombel.tingkat })
             .andWhere({
               m_jurusan_id: jadwalMengajar.toJSON().rombel.m_jurusan_id,
             })
             .where({ m_mata_pelajaran_id: mataPelajaranGuru.id })
-            .andWhere({dihapus:0})
+            .andWhere({ dihapus: 0 })
             .first();
           if (!materi) {
             materi = await MMateri.query()
               .where({ tingkat: jadwalMengajar.toJSON().rombel.tingkat })
               .where({ m_mata_pelajaran_id: mataPelajaranGuru.id })
-              .andWhere({dihapus:0})
+              .andWhere({ dihapus: 0 })
               .first();
           }
           // return materi
@@ -5154,74 +5162,72 @@ class MainController {
           .fetch();
       }
       if (sekolah.id == 40 || sekolah.id == 13) {
-        if(ta_id){
-
-        const rombelLama = await MRombel.query()
-          .where({ m_ta_id: ta_id })
-          .andWhere({ m_sekolah_id: sekolah.id })
-          .andWhere({
-            m_jurusan_id: jadwalMengajar.toJSON().rombel.m_jurusan_id,
-          })
-          .andWhere({ nama: jadwalMengajar.toJSON().rombel.nama })
-          .first();
+        if (ta_id) {
+          const rombelLama = await MRombel.query()
+            .where({ m_ta_id: ta_id })
+            .andWhere({ m_sekolah_id: sekolah.id })
+            .andWhere({
+              m_jurusan_id: jadwalMengajar.toJSON().rombel.m_jurusan_id,
+            })
+            .andWhere({ nama: jadwalMengajar.toJSON().rombel.nama })
+            .first();
           // return materi
-        analisisMateri = await TkMateriRombel.query()
-          .with("materi", (builder) => {
-            builder.with("bab", (builder) => {
-              builder
-                .with("topik", (builder) => {
-                  builder
-                    .withCount(
-                      "materiKesimpulan as totalKesimpulan",
-                      (builder) => {
-                        builder
-                          .whereIn("m_user_id", userIds)
-                          .whereNotNull("kesimpulan");
-                      }
-                    )
-                    .where({ dihapus: 0 });
-                })
-                .where({ dihapus: 0 });
-            });
-          })
-          .with("rombel", (builder) => {
-            builder.withCount("anggotaRombel as totalAnggota", (builder) => {
-              builder.where({ dihapus: 0 });
-            });
-          })
-          .where({ m_rombel_id: rombelLama.id })
-          .andWhere({ m_materi_id: materi.id })
-          .first();
-        }else{
           analisisMateri = await TkMateriRombel.query()
-          .with("materi", (builder) => {
-            builder.with("bab", (builder) => {
-              builder
-                .with("topik", (builder) => {
-                  builder
-                    .withCount(
-                      "materiKesimpulan as totalKesimpulan",
-                      (builder) => {
-                        builder
-                          .whereIn("m_user_id", userIds)
-                          .whereNotNull("kesimpulan");
-                      }
-                    )
-                    .where({ dihapus: 0 });
-                })
-                .where({ dihapus: 0 });
-            });
-          })
-          .with("rombel", (builder) => {
-            builder.withCount("anggotaRombel as totalAnggota", (builder) => {
-              builder.where({ dihapus: 0 });
-            });
-          })
-          .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
-          .andWhere({ m_materi_id: materi.id })
-          .first();
+            .with("materi", (builder) => {
+              builder.with("bab", (builder) => {
+                builder
+                  .with("topik", (builder) => {
+                    builder
+                      .withCount(
+                        "materiKesimpulan as totalKesimpulan",
+                        (builder) => {
+                          builder
+                            .whereIn("m_user_id", userIds)
+                            .whereNotNull("kesimpulan");
+                        }
+                      )
+                      .where({ dihapus: 0 });
+                  })
+                  .where({ dihapus: 0 });
+              });
+            })
+            .with("rombel", (builder) => {
+              builder.withCount("anggotaRombel as totalAnggota", (builder) => {
+                builder.where({ dihapus: 0 });
+              });
+            })
+            .where({ m_rombel_id: rombelLama.id })
+            .andWhere({ m_materi_id: materi.id })
+            .first();
+        } else {
+          analisisMateri = await TkMateriRombel.query()
+            .with("materi", (builder) => {
+              builder.with("bab", (builder) => {
+                builder
+                  .with("topik", (builder) => {
+                    builder
+                      .withCount(
+                        "materiKesimpulan as totalKesimpulan",
+                        (builder) => {
+                          builder
+                            .whereIn("m_user_id", userIds)
+                            .whereNotNull("kesimpulan");
+                        }
+                      )
+                      .where({ dihapus: 0 });
+                  })
+                  .where({ dihapus: 0 });
+              });
+            })
+            .with("rombel", (builder) => {
+              builder.withCount("anggotaRombel as totalAnggota", (builder) => {
+                builder.where({ dihapus: 0 });
+              });
+            })
+            .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
+            .andWhere({ m_materi_id: materi.id })
+            .first();
         }
-
       } else {
         analisisMateri = await TkMateriRombel.query()
           .with("materi", (builder) => {
@@ -5674,7 +5680,7 @@ class MainController {
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ m_ta_id: ta.id })
       .andWhere({ dihapus: 0 })
-      .orderBy("nama","asc")
+      .orderBy("nama", "asc")
       .fetch();
 
     const mataPelajaranKelompokA = [];
@@ -8726,9 +8732,9 @@ class MainController {
       .where({ id: m_jadwal_mengajar_id })
       .first();
 
-    // const mapel = await MMataPelajaran.query()
-    //   .where({ id: jadwalMengajar.m_mata_pelajaran_id })
-    //   .first();
+    const mapel = await MMataPelajaran.query()
+      .where({ id: jadwalMengajar.m_mata_pelajaran_id })
+      .first();
 
     const tugas = await MTugas.create({
       judul,
@@ -8897,24 +8903,41 @@ class MainController {
               });
 
               // NOTIFIKASI WHATSAPP
-              try {
-                const task = cron.schedule(
+              // try {
+              //   const task = cron.schedule(
+              //     `${menit} ${jam} ${tanggal} ${bulan} *`,
+              //     async () => {
+              // await WhatsAppService.sendMessage(
+              //   d.user.whatsapp,
+              //   `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}?hal=tugas`
+              // );
+              // WhatsAppService()
+              if (soal.length) {
+                await kirimNotifWa(
+                  d.m_user_id,
                   `${menit} ${jam} ${tanggal} ${bulan} *`,
-                  async () => {
-                    // await WhatsAppService.sendMessage(
-                    //   d.user.whatsapp,
-                    //   `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}?hal=tugas`
-                    // );
-                  },
-                  {
-                    scheduled: true,
-                    timezone: "Asia/Jakarta",
-                  }
+                  `tugas-${timeline.id}-${d.m_user_id}`,
+                  `Halo ${d.user.nama}, ada tugas kuis dari Guru ${user.nama} (${mapel.nama}) dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timeline.id}?hal=tugas`
                 );
-                return task;
-              } catch (error) {
-                console.log(error);
+              } else {
+                await kirimNotifWa(
+                  d.m_user_id,
+                  `${menit} ${jam} ${tanggal} ${bulan} *`,
+                  `tugas-${timeline.id}-${d.m_user_id}`,
+                  `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama}) dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timeline.id}?hal=tugas`
+                );
               }
+              //     },
+              //     {
+              //       scheduled: true,
+              //       timezone: "Asia/Jakarta",
+              //     }
+              //   );
+              //   cronJobs[`tugas-${timeline.id}-${d.m_user_id}`] = task;
+              //   return task;
+              // } catch (error) {
+              //   console.log(error);
+              // }
             })
           );
         } else {
@@ -8932,25 +8955,40 @@ class MainController {
                     });
                   }
 
-                  // NOTIFIKASI WHATSAPP
-                  try {
-                    const task = cron.schedule(
+                  if (soal.length) {
+                    await kirimNotifWa(
+                      d.m_user_id,
                       `${menit} ${jam} ${tanggal} ${bulan} *`,
-                      async () => {
-                        // await WhatsAppService.sendMessage(
-                        //   d.user.whatsapp,
-                        //   `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}?hal=tugas`
-                        // );
-                      },
-                      {
-                        scheduled: true,
-                        timezone: "Asia/Jakarta",
-                      }
+                      `tugas-${timeline.id}-${d.m_user_id}`,
+                      `Halo ${d.user.nama}, ada tugas kuis dari Guru ${user.nama} (${mapel.nama}) dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${t.id}?hal=tugas`
                     );
-                    return task;
-                  } catch (error) {
-                    console.log(error);
+                  } else {
+                    await kirimNotifWa(
+                      d.m_user_id,
+                      `${menit} ${jam} ${tanggal} ${bulan} *`,
+                      `tugas-${timeline.id}-${d.m_user_id}`,
+                      `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama}) dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${t.id}?hal=tugas`
+                    );
                   }
+                  // NOTIFIKASI WHATSAPP
+                  // try {
+                  //   const task = cron.schedule(
+                  //     `${menit} ${jam} ${tanggal} ${bulan} *`,
+                  //     async () => {
+                  //       // await WhatsAppService.sendMessage(
+                  //       //   d.user.whatsapp,
+                  //       //   `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}?hal=tugas`
+                  //       // );
+                  //     },
+                  //     {
+                  //       scheduled: true,
+                  //       timezone: "Asia/Jakarta",
+                  //     }
+                  //   );
+                  //   return task;
+                  // } catch (error) {
+                  //   console.log(error);
+                  // }
                 })
               );
             })
@@ -8995,6 +9033,11 @@ class MainController {
       materi = [],
       soal = [],
     } = request.post();
+    const tanggal = moment(tanggal_pembagian).format(`DD`);
+    const bulan = moment(tanggal_pembagian).format(`M`);
+    const waktu = `${tanggal_pembagian} ${waktu_pembagian}`;
+    const jam = moment(waktu).format(`H`);
+    const menit = moment(waktu).format(`mm`);
 
     const jadwalMengajar = await MJadwalMengajar.query()
       .where({ id: m_jadwal_mengajar_id })
@@ -9250,6 +9293,12 @@ class MainController {
                 dihapus: 0,
                 dikumpulkan: 0,
               });
+
+              await ubahNotifWa(
+                `${menit} ${jam} ${tanggal} ${bulan} *`,
+                `tugas-${timeline.id}-${d.m_user_id}`,
+                `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama}) dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}?hal=tugas`
+              );
               // if (d.user.email != null) {
               //   const gmail = await Mail.send(`emails.tugas`, d, (message) => {
               //     message
@@ -9317,6 +9366,12 @@ class MainController {
     await TkTimeline.query()
       .whereIn("m_timeline_id", timelineIds)
       .update({ dihapus: 1 });
+
+    await Promise.all(
+      timelineIds.map(async (d) => {
+        await hapusNotifWa(`tugas-${d}`);
+      })
+    );
 
     return response.ok({
       message: messageDeleteSuccess,
@@ -10019,9 +10074,9 @@ class MainController {
       .where({ id: m_jadwal_mengajar_id })
       .first();
 
-    // const mapel = await MMataPelajaran.query()
-    //   .where({ id: jadwalMengajar.m_mata_pelajaran_id })
-    //   .first();
+    const mapel = await MMataPelajaran.query()
+      .where({ id: jadwalMengajar.m_mata_pelajaran_id })
+      .first();
 
     let timeline;
 
@@ -10076,25 +10131,32 @@ class MainController {
             m_timeline_id: timeline.id,
             dihapus: 0,
           });
+
+          await kirimNotifWa(
+            d.m_user_id,
+            `${menit} ${jam} ${tanggal} ${bulan} *`,
+            `absen-${timeline.id}-${d.m_user_id}`,
+            `Halo ${d.user.nama}, ada pertemuan dari Guru ${user.nama} (${mapel.nama}). Silahkan klik tautan berikut untuk melihat pertemuan! Semangat!! ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timeline.id}?hal=pertemuan`
+          );
           // NOTIFIKASI WHATSAPP
-          try {
-            const task = cron.schedule(
-              `${menit} ${jam} ${tanggal} ${bulan} *`,
-              async () => {
-                // await WhatsAppService.sendMessage(
-                //   6281316119411,
-                //   `Halo ${d.user.nama}, ada pertemuan dari Guru ${user.nama} (${mapel.nama}. Silahkan klik tautan berikut untuk melihat pertemuan! Semangat!! ${domain}/smartschool/timeline/${timeline.id}?hal=pertemuan`
-                // );
-              },
-              {
-                scheduled: true,
-                timezone: "Asia/Jakarta",
-              }
-            );
-            return task;
-          } catch (error) {
-            console.log(error);
-          }
+          // try {
+          //   const task = cron.schedule(
+          //     `${menit} ${jam} ${tanggal} ${bulan} *`,
+          //     async () => {
+          //       // await WhatsAppService.sendMessage(
+          //       //   6281316119411,
+          //       //   `Halo ${d.user.nama}, ada pertemuan dari Guru ${user.nama} (${mapel.nama}. Silahkan klik tautan berikut untuk melihat pertemuan! Semangat!! ${domain}/smartschool/timeline/${timeline.id}?hal=pertemuan`
+          //       // );
+          //     },
+          //     {
+          //       scheduled: true,
+          //       timezone: "Asia/Jakarta",
+          //     }
+          //   );
+          //   return task;
+          // } catch (error) {
+          //   console.log(error);
+          // }
         })
       );
       await TkTimeline.createMany(userIds);
@@ -10139,6 +10201,12 @@ class MainController {
             m_timeline_id: timeline.id,
             dihapus: 0,
           });
+          await kirimNotifWa(
+            d.m_user_id,
+            `${menit} ${jam} ${tanggal} ${bulan} *`,
+            `tugas-${timeline.id}-${d.m_user_id}`,
+            `Halo ${d.user.nama}, ada diskusi dari Guru ${user.nama} (${mapel.nama}). Silahkan klik tautan berikut untuk melihat pertemuan! Semangat!! ${domain}/smartschool/timeline/${timeline.id}?hal=pertemuan`
+          );
         })
       );
 
@@ -10166,6 +10234,8 @@ class MainController {
             .andWhere({ dihapus: 0 })
             .getCount();
 
+          const topik = await MTopik.query().with("bab").where({id:d}).first()
+
           await MSekolah.query().where({ id: sekolah.id }).update({
             jumlah_topik: jumlahTopik,
           });
@@ -10181,13 +10251,19 @@ class MainController {
             .pluck("m_user_id");
 
           let userIds = [];
-          anggotaRombel.map((d) => {
+          anggotaRombel.map(async (d) => {
             userIds.push({
               m_user_id: d,
               tipe: "materi",
               m_timeline_id: timeline.id,
               dihapus: 0,
             });
+            await kirimNotifWa(
+              d,
+              `${menit} ${jam} ${tanggal} ${bulan} *`,
+              `materi-${timeline.id}-${topik.id}-${d.m_user_id}`,
+              `Halo ${d.user.nama}, ada materi dari Guru ${user.nama} (${mapel.nama}) BAB ${topik.toJSON().bab.judul} - ${topik.judul}. Silahkan klik tautan berikut untuk melihat materi! Semangat!! ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timeline.id}?hal=materi`
+            );
           });
 
           await TkTimeline.createMany(userIds);
@@ -10245,13 +10321,31 @@ class MainController {
         .where({ id: m_jadwal_mengajar_id })
         .first();
     }
+    // const jadwalSekarang
 
     let timeline;
+
+    const timelineTk = await TkTimeline.query()
+    .with("timeline",(builder)=>{
+      builder.with("tugas")
+    })
+    .with("user")
+    .where({ id: timeline_id })
+    .first()
 
     if (tipe == "nilai") {
       timeline = await TkTimeline.query().where({ id: timeline_id }).update({
         nilai,
       });
+      // const timelineUtama = await MTimeline.query().where({timelineTk})
+      if(timelineTk.toJSON().timeline.tugas.show_nilai == 1){
+
+        await kirimNotifWaLangsung(
+          timelineTk.m_user_id,  
+          `tugas-${timelineTk.id}-${timelineTk.m_user_id}`,
+          `Halo ${e.user.nama}, nilai tugas ${timelineTk.toJSON().timeline.tugas.nama} telah diberikan oleh ${user.nama}. Tekan tautan link berikut untuk melihat nilai ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timelineTk.m_timeline_id}?hal=tugas`
+          );
+        }
     }
 
     if (tipe == "diskusi") {
@@ -10279,6 +10373,7 @@ class MainController {
             keterangan: keterangan,
             waktu_absen: moment().utc(7).format("YYYY-MM-DD HH:mm:ss"),
           });
+
         return;
       } else if (user.role == "siswa") {
         timeline = await TkTimeline.query()
@@ -10308,6 +10403,11 @@ class MainController {
             //   jadwalMengajar.toJSON().mataPelajaran.id || m_mata_pelajaran_id,
             gmeet,
           });
+        await ubahNotifWa(
+          `${menit} ${jam} ${tanggal} ${bulan} *`,
+          `tugas-${timeline_id}`,
+          `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/timeline/${timeline.id}?hal=tugas`
+        );
       }
     }
 
@@ -10318,6 +10418,12 @@ class MainController {
         waktu_pengumpulan: waktu_pengumpulan,
         dikumpulkan: dikumpulkan,
       });
+      
+      await kirimNotifWaLangsung(
+        timelineTk.toJSON().timeline.m_user_id,  
+        `tugas-${timelineTk.id}-${timelineTk.toJSON().timeline.m_user_id}`,
+        `Halo ${e.user.nama}, nilai tugas ${timelineTk.toJSON().timeline.tugas.nama} telah diberikan oleh ${user.nama}. Tekan tautan link berikut untuk melihat nilai ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timelineTk.m_timeline_id}?hal=tugas`
+      );
       if (ulangi) {
         await TkPesertaUjian.query()
           .whwere({ tk_timeline_id: timeline_id })
@@ -10401,6 +10507,8 @@ class MainController {
     const timeline = await MTimeline.query().where({ id: timeline_id }).update({
       dihapus: 1,
     });
+
+    await hapusNotifWa(`tugas-${timeline_id}`);
 
     if (!timeline) {
       return response.notFound({
@@ -13948,7 +14056,7 @@ class MainController {
       m_ujian_id,
     } = request.post();
 
-    const pembuatUjian = await MUjian.query().where({ id: m_ujian_id }).first();
+    const pembuatUjian = await MUjian.query().with("mataPelajaran").where({ id: m_ujian_id }).first();
 
     const jadwalUjian = await MJadwalUjian.create({
       jumlah_pg,
@@ -13980,6 +14088,18 @@ class MainController {
             dihapus: 0,
             m_jadwal_ujian_id: jadwalUjian.id,
           });
+          const anggotaRombel = await MAnggotaRombel.query().with("user").where({dihapus:0}).andWhere({m_rombel_id:rombel}).fetch()
+
+          await Promise.all(
+            anggotaRombel.toJSON().map(async (d) => {
+              await kirimNotifWa(
+                d.m_user_id,
+                `${menit} ${jam} ${tanggal} ${bulan} *`,
+                `ujian-${jadwalUjian.id}-${d.m_user_id}`,
+                `Halo ${d.user.nama}, ada ujian yang akan datang dari Guru ${user.nama} (${pembuatUjian.toJSON().mataPelajaran.nama}). Silahkan klik tautan berikut untuk melihat ujian! Semangat!! ${domain}/smartschool/jadwal-ujian?subnav=akan-datang`
+              );
+
+            }));
         })
       );
 
@@ -18228,14 +18348,21 @@ class MainController {
                     m_sekolah_id: sekolah.id,
                   });
                   // NOTIFIKASI WHATSAPP
-                  try {
-                    // await WhatsAppService.sendMessage(
-                    //   `${e.user.whatsapp}`,
-                    //   `Halo ${e.user.nama}, ${nama} telah keluar, segera lunasi pembayaran. Tekan tautan link berikut untuk melakukan pembayaran ${domain}/smartschool/tagihan/${bayarSiswa.id}`
-                    // );
-                  } catch (error) {
-                    console.log(error);
-                  }
+
+                  await kirimNotifWaLangsung(
+                    d.m_user_id,
+                    `pembayaran-${timeline.id}-${d.m_user_id}`,
+                    `Halo ${e.user.nama}, ${nama} telah keluar, segera lunasi pembayaran. Tekan tautan link berikut untuk melakukan pembayaran ${domain}/smartschool/tagihan/${bayarSiswa.id}`
+                  );
+                  // try {
+                  //   // await WhatsAppService.sendMessage(
+                  //   //   `${e.user.whatsapp}`,
+                  //   //   `Halo ${e.user.nama}, ${nama} telah keluar, segera lunasi pembayaran. Tekan tautan link berikut untuk melakukan pembayaran ${domain}/smartschool/tagihan/${bayarSiswa.id}`
+                  //   // );
+                  // } catch (error) {
+                  //   console.log(error);
+                  // }
+
 
                   // if (e.user.email != null) {
                   // try {
