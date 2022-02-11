@@ -532,24 +532,29 @@ class MainController {
 
   async getMasterSekolahDinasSummary({ response, request }) {
     const totalSD = await Sekolah.query()
-      .where("kode_prop", "020000")
+      .where("kode_prop", "010000")
       .andWhere("bentuk", "SD")
+      .whereNotNull('m_sekolah_id')
       .getCount();
     const totalSMP = await Sekolah.query()
-      .where("kode_prop", "020000")
+      .where("kode_prop", "010000")
       .andWhere("bentuk", "SMP")
+      .whereNotNull('m_sekolah_id')
       .getCount();
     const totalSMA = await Sekolah.query()
-      .where("kode_prop", "020000")
+      .where("kode_prop", "010000")
       .andWhere("bentuk", "SMA")
+      .whereNotNull('m_sekolah_id')
       .getCount();
     const totalSMK = await Sekolah.query()
-      .where("kode_prop", "020000")
+      .where("kode_prop", "010000")
       .andWhere("bentuk", "SMK")
+      .whereNotNull('m_sekolah_id')
       .getCount();
     const totalSLB = await Sekolah.query()
-      .where("kode_prop", "020000")
+      .where("kode_prop", "010000")
       .andWhere("bentuk", "SLB")
+      .whereNotNull('m_sekolah_id')
       .getCount();
 
     return response.ok({
@@ -580,7 +585,10 @@ class MainController {
   async getMasterSekolahSS({ response, request }) {
     let { page } = request.get();
 
-    page = page ? page : 1;
+    const kodePropsId = await Sekolah.query()
+      .where("kode_prop", "010000")
+      .whereNotNull('m_sekolah_id')
+      .pluck('m_sekolah_id');
 
     const res = MSekolah.query()
       .select(
@@ -605,7 +613,10 @@ class MainController {
           })
           .where("aktif", 1);
       })
-      .where("gpds_event", "yogyakarta")
+      .withCount('guru as totalGuru', (builder) => {
+        builder.where({dihapus: 0}).andWhere({role: 'guru'})
+      })
+      .whereIn('id', kodePropsId)
       .orderBy("jumlah_topik", "desc");
 
     return response.ok({
@@ -939,7 +950,7 @@ class MainController {
         });
       } else {
         const sekolahSS = await MSekolah.create({
-          gpds_event: "yogyakarta",
+          gpds_event: "dkijakarta",
           nama: sekolah.sekolah,
           domain: `https://${domain}.smarteschool.id`,
           status: sekolah.status || "N",
@@ -975,7 +986,7 @@ class MainController {
     let sekolahSS = check;
     if (!check) {
       sekolahSS = await MSekolah.create({
-        gpds_event: "yogyakarta",
+        gpds_event: "dkijakarta",
         nama: sekolah,
         npsn,
         provinsi: propinsi,
