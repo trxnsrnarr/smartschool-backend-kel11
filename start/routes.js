@@ -970,6 +970,10 @@ Route.post(
   "DinasController.downloadRekapNilai"
 );
 Route.post(
+  "/download/jadwal-buku-kerja",
+  "DinasController.downloadJadwalBukuKerja"
+);
+Route.post(
   "/download/jadwal-dinas",
   "DinasController.downloadJadwalDinas"
 );
