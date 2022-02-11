@@ -1144,8 +1144,17 @@ Route.put(
   "/perusahaan-sekolah/:perusahaan_id",
   "CDCController.putPerusahaanSekolah"
 );
+Route.put(
+  "/penerimaan-perusahaan/:penerimaan_id", "CDCController.putPenerimaanPerusahaan"
+);
 Route.delete(
   "/penerimaan-perusahaan/:penerimaan_id", "CDCController.deletePenerimaanPerusahaan"
+);
+Route.get("/penerimaan-siswa/:penerimaan_id", "CDCController.getPenerimaanSiswa");
+Route.post("/penerimaan-siswa/:penerimaan_id", "CDCController.postPenerimaanSiswa");
+Route.put("/penerimaan-siswa/:siswa_id", "CDCController.putPenerimaanSiswa");
+Route.delete(
+  "/penerimaan-siswa/:siswa_id", "CDCController.deletePenerimaanSiswa"
 );
 // PKL Sekolah
 Route.get(
@@ -1625,6 +1634,7 @@ Route.put("/buku-kerja-soal/:rpp_id", "DinasController.putBukuKerjaSoal");
 Route.delete("/buku-kerja-soal/:rpp_id", "DinasController.deleteBukuKerjaSoal");
 
 Route.get("/otomatis-akun-keuangan", "SecondController.otomatisAkun");
+Route.get("/otomatis-neraca-keuangan", "SecondController.otomatisNeraca");
 
 Route.post("/download/jadwal", "RombelController.downloadJadwalMengajarTingkat");
 Route.post("/download/import-jadwal", "RombelController.downloadImportJadwalMengajarTingkat");
