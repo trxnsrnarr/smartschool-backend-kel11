@@ -624,7 +624,7 @@ class DinasController {
         .fetch();
 
       let total;
-      total = await User.query()
+      total = User.query()
         .where({ dihapus: 0 })
         .andWhere({ m_sekolah_id: sekolah.id });
       if (role == "siswa") {
@@ -748,14 +748,14 @@ class DinasController {
     const ta = await this.getTAAktif(sekolah);
 
     const semuaGuru = await User.query()
-      .select("id","nama")
+      .select("id", "nama")
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .andWhere({ role: "guru" })
       .fetch();
 
     const mataPelajaranIds = await MMataPelajaran.query()
-      .where({ m_user_id: user.id })
+      .where({ m_user_id: user_id })
       .ids();
 
     const rombelIds = await MRombel.query()
@@ -1980,12 +1980,12 @@ class DinasController {
       .andWhere({ role: "guru" })
       .fetch();
 
-      // return allUser
+    // return allUser
 
     // return m_user_id;
     let penyusun = `${user.nama}`;
     if (m_user_id) {
-       await Promise.all(
+      await Promise.all(
         m_user_id.map(async (d) => {
           const penyusun1 = allUser.toJSON().find((e) => e.id == d);
           // return penyusun1;
@@ -2589,10 +2589,12 @@ class DinasController {
 
     const ta = await this.getTAAktif(sekolah);
 
+    let total = 0;
     const guru = await User.query()
       .select("id", "nama")
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
+      .orderBy("nama", "asc")
       .fetch();
 
     if (tipe == "bukuKerja1") {
@@ -2620,149 +2622,316 @@ class DinasController {
         .where({ tipe: "kkm" })
         .fetch();
 
-      const total = skl.length + rpp.length + silabus.length + kkm.length;
+      if (skl.toJSON().length) {
+        total = total + 1;
+      }
+      if (rpp.toJSON().length) {
+        total = total + 1;
+      }
+      if (silabus.toJSON().length) {
+        total = total + 1;
+      }
+      if (kkm.toJSON().length) {
+        total = total + 1;
+      }
 
       return response.ok({
         total,
         skl,
+        skl_total: skl.toJSON().length,
         rpp,
+        rpp_total: rpp.toJSON().length,
         silabus,
+        silabus_total: silabus.toJSON().length,
         kkm,
+        kkm_total: kkm.toJSON().length,
+        guru,
+      });
+    }
+    if (tipe == "bukuKerja2") {
+      const kodeEtik = await MRpp.query()
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "kode etik" })
+        .fetch();
+
+      const ikrar = await MRpp.query()
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "ikrar" })
+        .fetch();
+
+      const tataTertib = await MRpp.query()
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "tata tertib" })
+        .fetch();
+
+      const pembiasaan = await MRpp.query()
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "pembiasaan" })
+        .fetch();
+
+      const kalender = await MRpp.query()
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "kalender" })
+        .fetch();
+
+      const alokasi = await MRpp.query()
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "alokasi" })
+        .fetch();
+
+      const ptahunan = await MRpp.query()
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "ptahunan" })
+        .fetch();
+
+      const psemester = await MRpp.query()
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "psemester" })
+        .fetch();
+
+      const jurnal = await MRpp.query()
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "jurnal" })
+        .fetch();
+
+      if (kodeEtik.toJSON().length) {
+        total = total + 1;
+      }
+      if (ikrar.toJSON().length) {
+        total = total + 1;
+      }
+      if (tataTertib.toJSON().length) {
+        total = total + 1;
+      }
+      if (pembiasaan.toJSON().length) {
+        total = total + 1;
+      }
+      if (kalender.toJSON().length) {
+        total = total + 1;
+      }
+      if (alokasi.toJSON().length) {
+        total = total + 1;
+      }
+      if (ptahunan.toJSON().length) {
+        total = total + 1;
+      }
+      if (psemester.toJSON().length) {
+        total = total + 1;
+      }
+      if (jurnal.toJSON().length) {
+        total = total + 1;
+      }
+      return response.ok({
+        total,
+        kodeEtik,
+        ikrar,
+        tataTertib,
+        pembiasaan,
+        kalender,
+        alokasi,
+        ptahunan,
+        psemester,
+        jurnal,
+        kodeEtik_total: kodeEtik.toJSON().length,
+        ikrar_total: ikrar.toJSON().length,
+        tataTertib_total: tataTertib.toJSON().length,
+        pembiasaan_total: pembiasaan.toJSON().length,
+        kalender_total: kalender.toJSON().length,
+        alokasi_total: alokasi.toJSON().length,
+        ptahunan_total: ptahunan.toJSON().length,
+        psemester_total: psemester.toJSON().length,
+        jurnal_total: jurnal.toJSON().length,
+        guru,
       });
     }
 
-    // const data1 = await MRpp.query()
-    //   .where({ m_user_id: user_id })
-    //   .andWhere({ dihapus: 0 })
-    //   .where({ tipe: "kode etik" })
-    //   .fetch();
+    if (tipe == "bukuKerja3") {
+      const mataPelajaranIds = await MMataPelajaran.query()
+        .where({ m_user_id: user_id })
+        .ids();
 
-    // const data2 = await MRpp.query()
-    //   .where({ m_user_id: user_id })
-    //   .andWhere({ dihapus: 0 })
-    //   .where({ tipe: "ikrar" })
-    //   .fetch();
+      const rombelIds = await MRombel.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ dihapus: 0 })
+        .where({ m_ta_id: ta.id })
+        .ids();
+      const kehadiran = await MJadwalMengajar.query()
+        .with("rombel", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .whereIn("m_rombel_id", rombelIds)
+        .with("mataPelajaran")
+        .with("ta")
+        .where({ m_ta_id: ta.id })
+        .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
+        .fetch();
 
-    // const data = await MRpp.query()
-    //   .where({ m_user_id: user_id })
-    //   .andWhere({ dihapus: 0 })
-    //   .where({ tipe: "tata tertib" })
-    //   .fetch();
+      const nilai = await MJadwalMengajar.query()
+        .with("rombel", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .whereIn("m_rombel_id", rombelIds)
+        .with("mataPelajaran")
+        .with("ta")
+        .where({ m_ta_id: ta.id })
+        .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
+        .fetch();
 
-    // const data = await MRpp.query()
-    //   .where({ m_user_id: user_id })
-    //   .andWhere({ dihapus: 0 })
-    //   .where({ tipe: "pembiasaan" })
-    //   .fetch();
+      const jadwalMengajar = user_id;
 
-    // const data = await MRpp.query()
+      const akhlak = await MRpp.query()
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "akhlak" })
+        .fetch();
 
-    //   .where({ m_user_id: user_id })
-    //   .andWhere({ dihapus: 0 })
-    //   .where({ tipe: "kalender" })
-    //   .fetch();
+      const hasilUlangan = await MRpp.query()
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "hasil ulangan" })
+        .fetch();
 
-    // const data = await MRpp.query()
+      const progPerbaikan = await MRpp.query()
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "program perbaikan" })
+        .fetch();
 
-    //   .where({ m_user_id: user_id })
-    //   .andWhere({ dihapus: 0 })
-    //   .where({ tipe: "alokasi" })
-    //   .fetch();
+      const bukuPegangan = await MRpp.query()
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "buku pegangan" })
+        .fetch();
 
-    // const data = await MRpp.query()
+      const dayaSerap = await MRpp.query()
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "daya serap" })
+        .fetch();
 
-    //   .where({ m_user_id: user_id })
-    //   .andWhere({ dihapus: 0 })
-    //   .where({ tipe: "ptahunan" })
-    //   .fetch();
+      const kisiSoal = await MRpp.query()
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "kisi soal" })
+        .fetch();
 
-    // const data = await MRpp.query()
+      const soal = await MRpp.query()
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "soal" })
+        .fetch();
 
-    //   .where({ m_user_id: user_id })
-    //   .andWhere({ dihapus: 0 })
-    //   .where({ tipe: "psemester" })
-    //   .fetch();
+      const butirSoal = await MRpp.query()
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "butir soal" })
+        .fetch();
 
-    // const data = await MRpp.query()
+      const perbaikanSoal = await MRpp.query()
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "perbaikan soal" })
+        .fetch();
 
-    //   .where({ m_user_id: user_id })
-    //   .andWhere({ dihapus: 0 })
-    //   .where({ tipe: "jurnal" })
-    //   .fetch();
+      if (akhlak.toJSON().length) {
+        total = total + 1;
+      }
+      if (hasilUlangan.toJSON().length) {
+        total = total + 1;
+      }
+      if (progPerbaikan.toJSON().length) {
+        total = total + 1;
+      }
+      if (hasilUlangan.toJSON().length) {
+        total = total + 1;
+      }
+      if (bukuPegangan.toJSON().length) {
+        total = total + 1;
+      }
+      if (dayaSerap.toJSON().length) {
+        total = total + 1;
+      }
+      if (kisiSoal.toJSON().length) {
+        total = total + 1;
+      }
+      if (soal.toJSON().length) {
+        total = total + 1;
+      }
+      if (butirSoal.toJSON().length) {
+        total = total + 1;
+      }
+      if (perbaikanSoal.toJSON().length) {
+        total = total + 1;
+      }
+      total = total + 3;
+      return response.ok({
+        kehadiran,
+        nilai,
+        jadwalMengajar,
+        akhlak,
+        hasilUlangan,
+        progPerbaikan,
+        hasilUlangan,
+        bukuPegangan,
+        dayaSerap,
+        kisiSoal,
+        soal,
+        butirSoal,
+        perbaikanSoal,
+        kehadiran_total: kehadiran.toJSON().length,
+        nilai_total: nilai.toJSON().length,
+        jadwalMengajar_total: 1,
+        akhlak_total: akhlak.toJSON().length,
+        hasilUlangan_total: hasilUlangan.toJSON().length,
+        progPerbaikan_total: progPerbaikan.toJSON().length,
+        hasilUlangan_total: hasilUlangan.toJSON().length,
+        bukuPegangan_total: bukuPegangan.toJSON().length,
+        dayaSerap_total: dayaSerap.toJSON().length,
+        kisiSoal_total: kisiSoal.toJSON().length,
+        soal_total: soal.toJSON().length,
+        butirSoal_total: butirSoal.toJSON().length,
+        perbaikanSoal_total: perbaikanSoal.toJSON().length,
+        guru,
+      });
+    }
 
-    // const data = await MRpp.query()
+    if (tipe == "bukuKerja4") {
+      const daftarEvaluasi = await MRpp.query()
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "daftar evaluasi" })
+        .fetch();
+      const tindakLanjut = await MRpp.query()
+        .where({ m_user_id: user_id })
+        .andWhere({ dihapus: 0 })
+        .where({ tipe: "tindak lanjut" })
+        .fetch();
 
-    //   .where({ m_user_id: user_id })
-    //   .andWhere({ dihapus: 0 })
-    //   .where({ tipe: "daftar evaluasi" })
-    //   .fetch();
+      if (daftarEvaluasi.toJSON().length) {
+        total = total + 1;
+      }
+      if (tindakLanjut.toJSON().length) {
+        total = total + 1;
+      }
 
-    // const data = await MRpp.query()
-
-    //   .where({ m_user_id: user_id })
-    //   .andWhere({ dihapus: 0 })
-    //   .where({ tipe: "tindak lanjut" })
-    //   .fetch();
-
-    // const data = await MRpp.query()
-    //   .where({ m_user_id: user_id })
-    //   .andWhere({ dihapus: 0 })
-    //   .where({ tipe: "akhlak" })
-    //   .fetch();
-
-    // const data = await MRpp.query()
-
-    //   .where({ m_user_id: user_id })
-    //   .andWhere({ dihapus: 0 })
-    //   .where({ tipe: "hasil ulangan" })
-    //   .fetch();
-
-    // const data = await MRpp.query()
-    //   .where({ m_user_id: user_id })
-    //   .andWhere({ dihapus: 0 })
-    //   .where({ tipe: "program perbaikan" })
-    //   .fetch();
-
-    // const data = await MRpp.query()
-
-    //   .where({ m_user_id: user_id })
-    //   .andWhere({ dihapus: 0 })
-    //   .where({ tipe: "buku pegangan" })
-    //   .fetch();
-
-    // const data = await MRpp.query()
-    //   .where({ m_user_id: user_id })
-    //   .andWhere({ dihapus: 0 })
-    //   .where({ tipe: "daya serap" })
-    //   .fetch();
-
-    // const data = await MRpp.query()
-
-    //   .where({ m_user_id: user_id })
-    //   .andWhere({ dihapus: 0 })
-    //   .where({ tipe: "kisi soal" })
-    //   .fetch();
-
-    // const data = await MRpp.query()
-
-    //   .where({ m_user_id: user_id })
-    //   .andWhere({ dihapus: 0 })
-    //   .where({ tipe: "soal" })
-    //   .fetch();
-
-    // const data = await MRpp.query()
-
-    //   .where({ m_user_id: user_id })
-    //   .andWhere({ dihapus: 0 })
-    //   .where({ tipe: "butir soal" })
-    //   .fetch();
-
-    // const data = await MRpp.query()
-    //   .where({ m_user_id: user_id })
-    //   .andWhere({ dihapus: 0 })
-    //   .where({ tipe: "perbaikan soal" })
-    //   .fetch();
-
+      return response.ok({
+        total,
+        daftarEvaluasi,
+        tindakLanjut,
+        daftarEvaluasi_total: daftarEvaluasi.toJSON().length,
+        tindakLanjut_total: tindakLanjut.toJSON().length,
+        guru,
+      });
+    }
     return response.ok({
       data,
       rombel,
@@ -3941,6 +4110,399 @@ class DinasController {
     return namaFile;
   }
 
+  async downloadJadwalBukuKerja({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const ta = await this.getTAAktif(sekolah);
+    const user = await auth.getUser();
+
+    const { jadwal_mengajar_id, tipe } = request.post();
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+    const mataPelajaranIds = await MMataPelajaran.query()
+      .where({ m_user_id: user.id })
+      .ids();
+
+    const rombelIds = await MRombel.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
+      .where({ m_ta_id: ta.id })
+      .ids();
+    const hari = [
+      {
+        id: 1,
+        hari: "Senin",
+      },
+      {
+        id: 2,
+        hari: "Selasa",
+      },
+      {
+        id: 3,
+        hari: "Rabu",
+      },
+      {
+        id: 4,
+        hari: "Kamis",
+      },
+      {
+        id: 5,
+        hari: "Jumat",
+      },
+      {
+        id: 6,
+        hari: "Sabtu",
+      },
+      // {
+      //   id: 7,
+      //   hari: "minggu",
+      // },
+    ];
+    let workbook = new Excel.Workbook();
+    let worksheet = workbook.addWorksheet(`Jadwal`);
+    let mengajar = 0;
+    for (let no = 0; no < hari.length; no++) {
+      const ss = hari[no];
+      const jamIds = await MJamMengajar.query()
+        .where({ m_ta_id: ta.id })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .andWhere({ kode_hari: ss.id })
+        .ids();
+      const data = await MJadwalMengajar.query()
+        .with("rombel", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .whereIn("m_rombel_id", rombelIds)
+        .with("mataPelajaran")
+        .with("ta")
+        .with("jamMengajar")
+        .where({ m_ta_id: ta.id })
+        .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
+        .whereIn("m_jam_mengajar_id", jamIds)
+        .fetch();
+
+      const data11 = await Promise.all(
+        data.toJSON().map(async (d, idx) => {
+          // return d.jamMengajar;
+          worksheet.addConditionalFormatting({
+            ref: `C${(idx + 1) * 1 + 5}:E${(idx + 1) * 1 + 5}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 11,
+                    // bold: true,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "left",
+                  },
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
+                },
+              },
+            ],
+          });
+          worksheet.addConditionalFormatting({
+            ref: `B${(idx + 1) * 1 + 5}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 11,
+                    // bold: true,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
+                },
+              },
+            ],
+          });
+          // add column headers
+          if (no == 0) {
+            worksheet.getRow(`${5 + mengajar + no}`).values = [
+              "Hari",
+              "Jam Ke-",
+              "Waktu",
+              "Mata Pelajaran",
+              "Kelas",
+            ];
+          } else {
+            worksheet.getRow(`${5 + mengajar + no}`).values = [
+              "",
+              "",
+              "",
+              "",
+              "",
+            ];
+          }
+          worksheet.columns = [
+            { key: "hari" },
+            { key: "jam" },
+            { key: "waktu" },
+            { key: "mapel" },
+            { key: "kelas" },
+          ];
+
+          // Add row using key mapping to columns
+          let row = worksheet.addRow({
+            jam: `${d.jamMengajar ? d.jamMengajar.jam_ke : "-"}`,
+            waktu: `${d.jamMengajar ? d.jamMengajar.jamFormat : "-"}`,
+            mapel: d.mataPelajaran ? d.mataPelajaran.nama : "-",
+            kelas: d.rombel ? d.rombel.nama : "-",
+          });
+        })
+      );
+      // return {data, ss,no};
+      worksheet.getCell(`A${6 + mengajar + no}`).value = ss.hari;
+      worksheet.mergeCells(
+        `A${6 + mengajar + no}:A${5 + mengajar + data.toJSON().length + no}`
+      );
+      worksheet.addConditionalFormatting({
+        ref: `A${6 + mengajar + no}:A${
+          5 + mengajar + data.toJSON().length + no
+        }`,
+        rules: [
+          {
+            type: "expression",
+            formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+            style: {
+              font: {
+                name: "Times New Roman",
+                family: 4,
+                size: 16,
+                bold: true,
+              },
+              fill: {
+                type: "pattern",
+                pattern: "solid",
+                bgColor: {
+                  argb: "C0C0C0",
+                  fgColor: { argb: "C0C0C0" },
+                },
+              },
+              alignment: {
+                vertical: "middle",
+                horizontal: "center",
+                textRotation: 90,
+              },
+              border: {
+                top: { style: "thin" },
+                left: { style: "thin" },
+                bottom: { style: "thin" },
+                right: { style: "thin" },
+              },
+            },
+          },
+        ],
+      });
+
+      worksheet.mergeCells(
+        `A${6 + mengajar + data.toJSON().length + no}:E${
+          6 + mengajar + data.toJSON().length + no
+        }`
+      );
+      // return 6 + data.toJSON().length + no;
+      worksheet.addConditionalFormatting({
+        ref: `A${6 + mengajar + data.toJSON().length + no}:E${
+          6 + mengajar + data.toJSON().length + no
+        }`,
+        rules: [
+          {
+            type: "expression",
+            formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+            style: {
+              fill: {
+                type: "pattern",
+                pattern: "solid",
+                bgColor: {
+                  argb: "C0C0C0",
+                  fgColor: { argb: "C0C0C0" },
+                },
+              },
+              border: {
+                top: { style: "thin" },
+                left: { style: "thin" },
+                bottom: { style: "thin" },
+                right: { style: "thin" },
+              },
+            },
+          },
+        ],
+      });
+      mengajar = mengajar + data.toJSON().length;
+      // return data11
+    }
+    // return mengajar;
+
+    worksheet.addConditionalFormatting({
+      ref: `C6:E${11 + mengajar}`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 11,
+              // bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "left",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: `B6:B${11 + mengajar}`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 11,
+              // bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+
+    worksheet.getColumn("A").width = 8;
+    worksheet.getColumn("B").width = 18;
+    worksheet.getColumn("C").width = 18;
+    worksheet.getColumn("D").width = 20;
+    worksheet.getColumn("E").width = 20;
+    worksheet.mergeCells("A1:E1");
+    worksheet.mergeCells("A2:E2");
+    worksheet.mergeCells("A3:E3");
+    worksheet.mergeCells("A4:E4");
+    // worksheet.getCell(
+    //   "A5"
+    // ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
+    worksheet.addConditionalFormatting({
+      ref: "A1:E4",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 16,
+              bold: true,
+            },
+            // fill: {
+            //   type: "pattern",
+            //   pattern: "solid",
+            //   bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            // },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            // border: {
+            //   top: { style: "thin" },
+            //   left: { style: "thin" },
+            //   bottom: { style: "thin" },
+            //   right: { style: "thin" },
+            // },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: "A5:E5",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet.getCell("A1").value = "Rekap Jadwal";
+    worksheet.getCell("A2").value = sekolah.nama;
+    worksheet.getCell("A3").value = ta.tahun;
+    // return result
+    let namaFile = `/uploads/rekap-jadwal-${user.nama}-${keluarantanggalseconds}.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
+
   async downloadJadwalDinas({ response, request, auth }) {
     const domain = request.headers().origin;
 
@@ -3952,11 +4514,11 @@ class DinasController {
     const ta = await this.getTAAktif(sekolah);
     const user = await auth.getUser();
 
-    // const { jadwal_mengajar_id, tipe } = request.post();
+    const { user_id } = request.post();
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
     const mataPelajaranIds = await MMataPelajaran.query()
-      .where({ m_user_id: user.id })
+      .where({ m_user_id: user_id })
       .ids();
 
     const rombelIds = await MRombel.query()
