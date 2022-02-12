@@ -534,27 +534,27 @@ class MainController {
     const totalSD = await Sekolah.query()
       .where("kode_prop", "010000")
       .andWhere("bentuk", "SD")
-      .whereNotNull('m_sekolah_id')
+      .whereNotNull("m_sekolah_id")
       .getCount();
     const totalSMP = await Sekolah.query()
       .where("kode_prop", "010000")
       .andWhere("bentuk", "SMP")
-      .whereNotNull('m_sekolah_id')
+      .whereNotNull("m_sekolah_id")
       .getCount();
     const totalSMA = await Sekolah.query()
       .where("kode_prop", "010000")
       .andWhere("bentuk", "SMA")
-      .whereNotNull('m_sekolah_id')
+      .whereNotNull("m_sekolah_id")
       .getCount();
     const totalSMK = await Sekolah.query()
       .where("kode_prop", "010000")
       .andWhere("bentuk", "SMK")
-      .whereNotNull('m_sekolah_id')
+      .whereNotNull("m_sekolah_id")
       .getCount();
     const totalSLB = await Sekolah.query()
       .where("kode_prop", "010000")
       .andWhere("bentuk", "SLB")
-      .whereNotNull('m_sekolah_id')
+      .whereNotNull("m_sekolah_id")
       .getCount();
 
     return response.ok({
@@ -587,8 +587,8 @@ class MainController {
 
     const kodePropsId = await Sekolah.query()
       .where("kode_prop", "010000")
-      .whereNotNull('m_sekolah_id')
-      .pluck('m_sekolah_id');
+      .whereNotNull("m_sekolah_id")
+      .pluck("m_sekolah_id");
 
     const res = MSekolah.query()
       .select(
@@ -613,10 +613,10 @@ class MainController {
           })
           .where("aktif", 1);
       })
-      .withCount('guru as totalGuru', (builder) => {
-        builder.where({dihapus: 0}).andWhere({role: 'guru'})
+      .withCount("guru as totalGuru", (builder) => {
+        builder.where({ dihapus: 0 }).andWhere({ role: "guru" });
       })
-      .whereIn('id', kodePropsId)
+      .whereIn("id", kodePropsId)
       .orderBy("jumlah_topik", "desc");
 
     return response.ok({
@@ -3183,7 +3183,7 @@ class MainController {
         .andWhere({ dihapus: 0 })
         .whereIn("role", ["guru", "admin", "kepsek"])
         .andWhere("nama", "like", `%${search}%`)
-        .orderBy("nama","asc")
+        .orderBy("nama", "asc")
         .paginate(page, 25);
     } else {
       guru = await User.query()
@@ -3200,7 +3200,7 @@ class MainController {
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ dihapus: 0 })
         .whereIn("role", ["guru", "admin", "kepsek"])
-        .orderBy("nama","asc")
+        .orderBy("nama", "asc")
         .paginate(page, 25);
     }
 
@@ -4814,7 +4814,7 @@ class MainController {
       .andWhere({ m_ta_id: ta.id })
       .andWhere({ dihapus: 0 })
       .andWhere({ kelompok: kelompok })
-      .orderBy("nama","asc")
+      .orderBy("nama", "asc")
       .fetch();
 
     const jurusan = await MJurusan.query()
@@ -5097,20 +5097,20 @@ class MainController {
             .andWhere({ dihapus: 0 })
             .andWhere({ m_ta_id: ta_id })
             .first();
-            // return mataPelajaranGuru
+          // return mataPelajaranGuru
           materi = await MMateri.query()
             .where({ tingkat: jadwalMengajar.toJSON().rombel.tingkat })
             .andWhere({
               m_jurusan_id: jadwalMengajar.toJSON().rombel.m_jurusan_id,
             })
             .where({ m_mata_pelajaran_id: mataPelajaranGuru.id })
-            .andWhere({dihapus:0})
+            .andWhere({ dihapus: 0 })
             .first();
           if (!materi) {
             materi = await MMateri.query()
               .where({ tingkat: jadwalMengajar.toJSON().rombel.tingkat })
               .where({ m_mata_pelajaran_id: mataPelajaranGuru.id })
-              .andWhere({dihapus:0})
+              .andWhere({ dihapus: 0 })
               .first();
           }
           // return materi
@@ -5165,74 +5165,72 @@ class MainController {
           .fetch();
       }
       if (sekolah.id == 40 || sekolah.id == 13) {
-        if(ta_id){
-
-        const rombelLama = await MRombel.query()
-          .where({ m_ta_id: ta_id })
-          .andWhere({ m_sekolah_id: sekolah.id })
-          .andWhere({
-            m_jurusan_id: jadwalMengajar.toJSON().rombel.m_jurusan_id,
-          })
-          .andWhere({ nama: jadwalMengajar.toJSON().rombel.nama })
-          .first();
+        if (ta_id) {
+          const rombelLama = await MRombel.query()
+            .where({ m_ta_id: ta_id })
+            .andWhere({ m_sekolah_id: sekolah.id })
+            .andWhere({
+              m_jurusan_id: jadwalMengajar.toJSON().rombel.m_jurusan_id,
+            })
+            .andWhere({ nama: jadwalMengajar.toJSON().rombel.nama })
+            .first();
           // return materi
-        analisisMateri = await TkMateriRombel.query()
-          .with("materi", (builder) => {
-            builder.with("bab", (builder) => {
-              builder
-                .with("topik", (builder) => {
-                  builder
-                    .withCount(
-                      "materiKesimpulan as totalKesimpulan",
-                      (builder) => {
-                        builder
-                          .whereIn("m_user_id", userIds)
-                          .whereNotNull("kesimpulan");
-                      }
-                    )
-                    .where({ dihapus: 0 });
-                })
-                .where({ dihapus: 0 });
-            });
-          })
-          .with("rombel", (builder) => {
-            builder.withCount("anggotaRombel as totalAnggota", (builder) => {
-              builder.where({ dihapus: 0 });
-            });
-          })
-          .where({ m_rombel_id: rombelLama.id })
-          .andWhere({ m_materi_id: materi.id })
-          .first();
-        }else{
           analisisMateri = await TkMateriRombel.query()
-          .with("materi", (builder) => {
-            builder.with("bab", (builder) => {
-              builder
-                .with("topik", (builder) => {
-                  builder
-                    .withCount(
-                      "materiKesimpulan as totalKesimpulan",
-                      (builder) => {
-                        builder
-                          .whereIn("m_user_id", userIds)
-                          .whereNotNull("kesimpulan");
-                      }
-                    )
-                    .where({ dihapus: 0 });
-                })
-                .where({ dihapus: 0 });
-            });
-          })
-          .with("rombel", (builder) => {
-            builder.withCount("anggotaRombel as totalAnggota", (builder) => {
-              builder.where({ dihapus: 0 });
-            });
-          })
-          .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
-          .andWhere({ m_materi_id: materi.id })
-          .first();
+            .with("materi", (builder) => {
+              builder.with("bab", (builder) => {
+                builder
+                  .with("topik", (builder) => {
+                    builder
+                      .withCount(
+                        "materiKesimpulan as totalKesimpulan",
+                        (builder) => {
+                          builder
+                            .whereIn("m_user_id", userIds)
+                            .whereNotNull("kesimpulan");
+                        }
+                      )
+                      .where({ dihapus: 0 });
+                  })
+                  .where({ dihapus: 0 });
+              });
+            })
+            .with("rombel", (builder) => {
+              builder.withCount("anggotaRombel as totalAnggota", (builder) => {
+                builder.where({ dihapus: 0 });
+              });
+            })
+            .where({ m_rombel_id: rombelLama.id })
+            .andWhere({ m_materi_id: materi.id })
+            .first();
+        } else {
+          analisisMateri = await TkMateriRombel.query()
+            .with("materi", (builder) => {
+              builder.with("bab", (builder) => {
+                builder
+                  .with("topik", (builder) => {
+                    builder
+                      .withCount(
+                        "materiKesimpulan as totalKesimpulan",
+                        (builder) => {
+                          builder
+                            .whereIn("m_user_id", userIds)
+                            .whereNotNull("kesimpulan");
+                        }
+                      )
+                      .where({ dihapus: 0 });
+                  })
+                  .where({ dihapus: 0 });
+              });
+            })
+            .with("rombel", (builder) => {
+              builder.withCount("anggotaRombel as totalAnggota", (builder) => {
+                builder.where({ dihapus: 0 });
+              });
+            })
+            .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
+            .andWhere({ m_materi_id: materi.id })
+            .first();
         }
-
       } else {
         analisisMateri = await TkMateriRombel.query()
           .with("materi", (builder) => {
@@ -5685,7 +5683,7 @@ class MainController {
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ m_ta_id: ta.id })
       .andWhere({ dihapus: 0 })
-      .orderBy("nama","asc")
+      .orderBy("nama", "asc")
       .fetch();
 
     const mataPelajaranKelompokA = [];
@@ -9738,7 +9736,9 @@ class MainController {
               });
             })
             .with("materi", (builder) => {
-              builder.with("bab");
+              builder.with("bab").with("materiKesimpulan", (builder) => {
+                builder.where({ m_user_id: user.id });
+              });
             })
             .withCount("komen as total_komen", (builder) => {
               builder.where({ dihapus: 0 });
@@ -12698,7 +12698,7 @@ class MainController {
         .where({ m_user_id: user.id })
         .where({ dihapus: 0 })
         .ids();
-      
+
       const mataPelajaranIds = await MMataPelajaran.query()
         .where({ m_user_id: user.id })
         .ids();
@@ -12730,7 +12730,7 @@ class MainController {
         .andWhere({ dihapus: 0 })
         .ids();
 
-      const jadwalIds = [...jadwaRombellIds, ...jadwalSoalIds]
+      const jadwalIds = [...jadwaRombellIds, ...jadwalSoalIds];
 
       const jadwalLainnya = await MJadwalUjian.query()
         .with("ujian", (builder) => {
@@ -14176,10 +14176,12 @@ class MainController {
       pesertaUjian = await TkPesertaUjian.query()
         .with("jadwalUjian", (builder) => {
           builder.with("jadwalUjian", (builder) => {
-            builder.with("ujian", builder => {
-              builder.with("soalUjian", builder => {
-                builder.where({ dihapus: 0 }).select("id", "m_ujian_id", "m_soal_ujian_id")
-              })
+            builder.with("ujian", (builder) => {
+              builder.with("soalUjian", (builder) => {
+                builder
+                  .where({ dihapus: 0 })
+                  .select("id", "m_ujian_id", "m_soal_ujian_id");
+              });
             });
           });
         })
