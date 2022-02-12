@@ -624,7 +624,7 @@ class DinasController {
         .fetch();
 
       let total;
-      total = await User.query()
+      total = User.query()
         .where({ dihapus: 0 })
         .andWhere({ m_sekolah_id: sekolah.id });
       if (role == "siswa") {
