@@ -2591,6 +2591,12 @@ class DinasController {
 
     let total = 0;
     const guru = await User.query()
+      .with("rpp", (builder) => {
+        builder
+          .where({ dihapus: 0 })
+          .whereNotNull("tipe")
+          .select("id", "m_user_id", "tipe");
+      })
       .select("id", "nama")
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
