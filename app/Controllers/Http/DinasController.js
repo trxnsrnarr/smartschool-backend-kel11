@@ -2907,6 +2907,7 @@ class DinasController {
         butirSoal_total: butirSoal.toJSON().length,
         perbaikanSoal_total: perbaikanSoal.toJSON().length,
         guru,
+        total,
       });
     }
 
