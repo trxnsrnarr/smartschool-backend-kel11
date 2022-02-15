@@ -989,7 +989,10 @@ class CDCController {
         //   builder.andWhere("nama", "like", `%${search}%`);
         // }
       })
-      .whereIn("m_perusahaan_id", perusahaan.toJSON().map(d => d.id))
+      .whereIn(
+        "m_perusahaan_id",
+        perusahaan.toJSON().map((d) => d.id)
+      )
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .fetch();
@@ -1554,13 +1557,24 @@ class CDCController {
       .where({ id: perusahaanTk.m_perusahaan_id })
       .first();
 
+    let userIds;
+
+    userIds = userIds
+      .query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ role: "siswa" });
+    if (search) {
+      userIds.where("nama", "like", `%${search}%`);
+    }
+
+    userIds = await userIds.ids();
+
     const siswa = await MPenerimaanSiswa.query()
       .with("user", (builder) => {
         builder.select("id", "nama");
-        if (search) {
-          builder.where("nama", "like", `%${search}%`);
-        }
       })
+      .whereIn("m_user_id", userIds)
       .where({ m_penerimaan_perusahaan_id: penerimaan_id })
       .fetch();
 
