@@ -36,7 +36,7 @@ class MRombel extends Model {
     return this.belongsTo("App/Models/MSekolah");
   }
   penerimaanSiswa() {
-    return this.hasMany("App/Models/MPenerimaanSiswa", "m_rombel_id");
+    return this.hasMany("App/Models/MPenerimaanSiswa", "id","m_rombel_id");
   }
 }
 
