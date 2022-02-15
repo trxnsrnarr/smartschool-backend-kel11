@@ -4386,6 +4386,315 @@ class KeuanganController {
       rencana,
     });
   }
+  async downloadJurnalAsetAktif({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { tanggal_awal, tanggal_akhir } = request.post();
+
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
+    const awal1 = moment(tanggal_awal).locale("id").format("DD MMMM YYYY ");
+    const akhir1 = moment(tanggal_akhir).locale("id").format("DD MMMM YYYY ");
+
+    const transaksi = await MKeuTransaksi.query()
+      .with("jurnal", (builder) => {
+        builder.with("akun").where({ dihapus: 0 });
+      })
+      .withCount("jurnal as total", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .whereBetween("tanggal", [`${tanggal_awal}`, `${tanggal_akhir}`])
+      .whereNotNull("m_barang_id")
+      .fetch();
+
+    // return transaksi;
+
+    let workbook = new Excel.Workbook();
+    let worksheet = workbook.addWorksheet(`Jurnal Umum`);
+    worksheet.mergeCells("A1:D1");
+    worksheet.mergeCells("A2:D2");
+    worksheet.mergeCells("A3:D3");
+
+    worksheet.addConditionalFormatting({
+      ref: "A1:D1",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 14,
+              bold: true,
+            },
+            // fill: {
+            //   type: "pattern",
+            //   pattern: "solid",
+            //   bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            // },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            // border: {
+            //   top: { style: "thin" },
+            //   left: { style: "thin" },
+            //   bottom: { style: "thin" },
+            //   right: { style: "thin" },
+            // },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: "A2:D3",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 14,
+              // bold: true,
+            },
+            // fill: {
+            //   type: "pattern",
+            //   pattern: "solid",
+            //   bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            // },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            // border: {
+            //   top: { style: "thin" },
+            //   left: { style: "thin" },
+            //   bottom: { style: "thin" },
+            //   right: { style: "thin" },
+            // },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: "A5:D5",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+
+    const dateObj = new Date();
+    const tahun = dateObj.getYear();
+    const bulan = monthNames[dateObj.getMonth()];
+    let awal = 0;
+    let nilaiDebit = 0;
+    let nilaiKredit = 0;
+
+    await Promise.all(
+      transaksi.toJSON().map(async (d, idx) => {
+        // add column headers
+        worksheet.getRow(5).values = [
+          "Tanggal",
+          "Nama Akun",
+          "Debit",
+          "Kredit",
+        ];
+        await Promise.all(
+          d.jurnal.map(async (e) => {
+            worksheet.columns = [
+              { key: "" },
+              { key: "akun" },
+              { key: "debit" },
+              { key: "kredit" },
+            ];
+
+            // Add row using key mapping to columns
+            if (e.jenis == "debit") {
+              let row = worksheet.addRow({
+                akun: e.akun ? e.akun.nama : "-",
+                debit: `${(e ? e.saldo : "0").toLocaleString("id-ID", {
+                  style: "currency",
+                  currency: "IDR",
+                })}`,
+              });
+
+              nilaiDebit = nilaiDebit + e.saldo;
+            } else if (e.jenis == "kredit") {
+              let row = worksheet.addRow({
+                akun: e.akun ? e.akun.nama : "-",
+                kredit: `${(e ? e.saldo : "0").toLocaleString("id-ID", {
+                  style: "currency",
+                  currency: "IDR",
+                })}`,
+              });
+              nilaiKredit = nilaiKredit + e.saldo;
+            }
+          })
+        );
+        const tanggalUtama = moment(`${d.tanggal}`).format(
+          "DD-MM-YYYY HH:mm:ss"
+        );
+
+        if (idx == 0) {
+          worksheet.getCell(`A${(idx + 1) * 1 + 5}`).value = `${tanggalUtama}`;
+          worksheet.mergeCells(
+            `A${(idx + 1) * 1 + 5}:A${(idx + 1) * 1 + 4 + d.__meta__.total}`
+          );
+        } else if (idx > 0) {
+          worksheet.getCell(`A${6 + awal}`).value = `${tanggalUtama}`;
+
+          worksheet.mergeCells(`A${6 + awal}:A${5 + awal + d.__meta__.total}`);
+        }
+        awal = awal + d.__meta__.total;
+      })
+    );
+
+    worksheet.addConditionalFormatting({
+      ref: `B6:D${6 + awal}`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 11,
+              // bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "left",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: `A6:A${6 + awal}`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 11,
+              // bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+              wrapText: true,
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+
+    worksheet.getCell(
+      `A${8 + awal}`
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
+
+    worksheet.getCell(`B${6 + awal}`).value = `Total`;
+    worksheet.getCell(`C${6 + awal}`).value = `${nilaiDebit.toLocaleString(
+      "id-ID",
+      {
+        style: "currency",
+        currency: "IDR",
+      }
+    )}`;
+    worksheet.getCell(`D${6 + awal}`).value = `${nilaiKredit.toLocaleString(
+      "id-ID",
+      {
+        style: "currency",
+        currency: "IDR",
+      }
+    )}`;
+
+    worksheet.getCell("A1").value = sekolah.nama;
+    worksheet.getCell("A2").value = "JURNAL UMUM";
+    worksheet.getCell("A3").value = `Tanggal : ${awal1} - ${akhir1}`;
+
+    worksheet.getColumn("A").width = 20;
+    worksheet.getColumn("B").width = 23;
+    worksheet.getColumn("C").width = 28;
+    worksheet.getColumn("D").width = 28;
+
+    let namaFile = `/uploads/Jurnal-Umum-${bulan}-${keluarantanggalseconds}.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+    // worksheet.columns = [
+    //   { key: "Tanggal" },
+    //   { key: "akun" },
+    //   { key: "debet" },
+    //   { key: "kredit" },
+    // ];
+
+    // // Add row using key mapping to columns
+    // let row = worksheet.addRow({
+    //   Tanggal: d ? d.transaksi:"-",
+    //   akun: d.jurnal.akun ? d.jurnal.akun.nama : "-",
+    //   debet: d ? d.debet : "-",
+    //   kredit: d ? d.kredit : "-",
+    // });
+
+    return namaFile;
+  }
 }
 
 module.exports = KeuanganController;
