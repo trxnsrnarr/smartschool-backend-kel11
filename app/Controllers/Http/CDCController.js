@@ -1030,7 +1030,11 @@ class CDCController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
+    const ta = await this.getTAAktif(sekolah);
 
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
     let { search, jurusan_id, page } = request.get();
     const user = await auth.getUser();
     page = page ? parseInt(page) : 1;
