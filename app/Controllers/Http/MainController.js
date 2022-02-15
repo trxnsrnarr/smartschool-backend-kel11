@@ -2826,7 +2826,7 @@ class MainController {
       });
     }
     if (!user.wa_real) {
-      return resposen.badRequest({
+      return response.badRequest({
         message:
           "Nomor Whatsapp Belum terverifikasi. Hubungi admin untuk mereset password anda",
       });
