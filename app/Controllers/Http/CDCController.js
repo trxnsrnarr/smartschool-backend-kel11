@@ -1074,7 +1074,7 @@ class CDCController {
 
     const userTotal = await User.query()
       .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah_id })
+      .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ role: "siswa" })
       .count("* as total");
 
