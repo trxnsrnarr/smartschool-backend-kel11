@@ -1563,8 +1563,7 @@ class CDCController {
 
     let userIds;
 
-    userIds = userIds
-      .query()
+    userIds = User.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .andWhere({ role: "siswa" });
