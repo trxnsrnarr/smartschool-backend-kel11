@@ -1170,6 +1170,10 @@ Route.get(
   "/penerimaan-perusahaan/:perusahaan_id",
   "CDCController.getPenerimaanPerusahaan"
 );
+Route.get(
+  "/penerimaan",
+  "CDCController.getPenerimaanPkl"
+);
 Route.post("/penerimaan-perusahaan", "CDCController.postPenerimaanPerusahaan");
 
 Route.post("/cdc/perusahaan", "CDCController.postPerusahaan");
