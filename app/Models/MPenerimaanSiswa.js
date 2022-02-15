@@ -15,6 +15,9 @@ class MPenerimaanSiswa extends Model {
   penerimaanPerusahaan() {
     return this.belongsTo("App/Models/MPenerimaanPerusahaan");
   }
+  rombel() {
+    return this.belongsTo("App/Models/MRombel");
+  }
   
 }
 
