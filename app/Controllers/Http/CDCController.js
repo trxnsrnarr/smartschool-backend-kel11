@@ -1077,13 +1077,20 @@ class CDCController {
       .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ role: "siswa" })
       .count("* as total");
+    let userIds;
 
+    userIds = User.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ role: "siswa" });
+    if (search) {
+      userIds.where("nama", "like", `%${search}%`);
+    }
+
+    userIds = await userIds.ids();
     penerimaanSiswa = MPenerimaanSiswa.query()
       .with("user", (builder) => {
         builder.select("id", "nama");
-        if (search) {
-          builder.where("nama", "like", `%${search}%`);
-        }
       })
       .with("rombel", (builder) => {
         builder.select("id", "nama");
@@ -1094,9 +1101,11 @@ class CDCController {
         });
       })
       .where({ dihapus: 0 })
-      .whereIn("m_rombel_id", rombelIds);
+      .whereIn("m_user_id", userIds);
     if (jurusan_id) {
-      penerimaanSiswa.where({ m_jurusan_id: jurusan_id });
+      penerimaanSiswa
+        .where({ m_jurusan_id: jurusan_id })
+        .whereIn("m_rombel_id", rombelIds);
     }
     penerimaanSiswa = await penerimaanSiswa.paginate(page, 25);
 
