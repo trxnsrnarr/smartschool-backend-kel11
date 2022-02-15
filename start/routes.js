@@ -1171,7 +1171,7 @@ Route.get(
   "CDCController.getPenerimaanPerusahaan"
 );
 Route.get(
-  "/penerimaan",
+  "/pkl/penerimaan",
   "CDCController.getPenerimaanPkl"
 );
 Route.post("/penerimaan-perusahaan", "CDCController.postPenerimaanPerusahaan");
