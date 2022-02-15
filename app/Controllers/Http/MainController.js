@@ -8921,37 +8921,39 @@ class MainController {
               //     async () => {
               // await WhatsAppService.sendMessage(
               //   d.user.whatsapp,
-              //   `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! 
+              //   `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!!
               // ${domain}/smartschool/timeline/${timeline.id}?hal=tugas`
               // );
               // WhatsAppService()
-              if (soal.length) {
-                await MNotifikasiTerjadwal.create({
-                  tanggal_dibagikan:tanggal_pembagian,
-                  tanggal_cron:`${menit} ${jam} ${tanggal} ${bulan} *`,
-                  pesan:`Halo ${d.user.nama}, ada tugas kuis dari Guru ${user.nama} (${mapel.nama}) dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! \n \n ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timeline.id}?hal=tugas`,
-                  tujuan:"085891296109",
-                  
-                })
+              if (!draft) {
+                if (soal.length) {
+                  await MNotifikasiTerjadwal.create({
+                    tanggal_dibagikan: tanggal_pembagian,
+                    tanggal_cron: `${menit} ${jam} ${tanggal} ${bulan} *`,
+                    pesan: `Halo ${d.user.nama}, ada tugas kuis dari Guru ${user.nama} (${mapel.nama}) dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! \n \n ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timeline.id}?hal=tugas`,
+                    tujuan: "085891296109",
+                    nama: `tugas-${tugas.id}-${d.m_user_id}`,
+                  });
+                  // await kirimNotifWa(
+                  //   d.m_user_id,
+                  //   `${menit} ${jam} ${tanggal} ${bulan} *`,
+                  //   `tugasKuis-${timeline.id}-${d.m_user_id}`,
+                  //   `Halo ${d.user.nama}, ada tugas kuis dari Guru ${user.nama} (${mapel.nama}) dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timeline.id}?hal=tugas`
+                  // );
+                } else {
+                  await MNotifikasiTerjadwal.create({
+                    tanggal_dibagikan: tanggal_pembagian,
+                    tanggal_cron: `${menit} ${jam} ${tanggal} ${bulan} *`,
+                    pesan: `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama}) dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! \n \n ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timeline.id}?hal=tugas`,
+                    tujuan: "085891296109",
+                    nama: `tugas-${tugas.id}-${d.m_user_id}`,
+                  });
+                }
                 // await kirimNotifWa(
                 //   d.m_user_id,
                 //   `${menit} ${jam} ${tanggal} ${bulan} *`,
-                //   `tugas-${timeline.id}-${d.m_user_id}`,
-                //   `Halo ${d.user.nama}, ada tugas kuis dari Guru ${user.nama} (${mapel.nama}) dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timeline.id}?hal=tugas`
-                // );
-              } else {
-                await MNotifikasiTerjadwal.create({
-                  tanggal_dibagikan:tanggal_pembagian,
-                  tanggal_cron:`${menit} ${jam} ${tanggal} ${bulan} *`,
-                  pesan:`Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama}) dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! \n \n ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timeline.id}?hal=tugas`,
-                  tujuan:"085891296109",
-                  
-                })
-                // await kirimNotifWa(
-                //   d.m_user_id,
-                //   `${menit} ${jam} ${tanggal} ${bulan} *`,
-                //   `tugas-${timeline.id}-${d.m_user_id}`,
-                //   `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama}) dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! 
+                //   `tugas-${tugas.id}-${d.m_user_id}`,
+                //   `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama}) dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!!
                 // ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timeline.id}?hal=tugas`
                 // );
               }
@@ -8961,7 +8963,7 @@ class MainController {
               //       timezone: "Asia/Jakarta",
               //     }
               //   );
-              //   cronJobs[`tugas-${timeline.id}-${d.m_user_id}`] = task;
+              //   cronJobs[`tugas-${tugas.id}-${d.m_user_id}`] = task;
               //   return task;
               // } catch (error) {
               //   console.log(error);
@@ -8983,37 +8985,39 @@ class MainController {
                     });
                   }
 
-                   if (soal.length) {
-                await MNotifikasiTerjadwal.create({
-                  tanggal_dibagikan:tanggal_pembagian,
-                  tanggal_cron:`${menit} ${jam} ${tanggal} ${bulan} *`,
-                  pesan:`Halo ${d.user.nama}, ada tugas kuis dari Guru ${user.nama} (${mapel.nama}) dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! \n \n ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timeline.id}?hal=tugas`,
-                  tujuan:"085891296109",
-                  
-                })
-                // await kirimNotifWa(
-                //   d.m_user_id,
-                //   `${menit} ${jam} ${tanggal} ${bulan} *`,
-                //   `tugas-${timeline.id}-${d.m_user_id}`,
-                //   `Halo ${d.user.nama}, ada tugas kuis dari Guru ${user.nama} (${mapel.nama}) dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! 
-                // ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timeline.id}?hal=tugas`
-                // );
-              } else {
-                await MNotifikasiTerjadwal.create({
-                  tanggal_dibagikan:tanggal_pembagian,
-                  tanggal_cron:`${menit} ${jam} ${tanggal} ${bulan} *`,
-                  pesan:`Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama}) dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! \n \n ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timeline.id}?hal=tugas`,
-                  tujuan:"085891296109",
-                  
-                })
-                // await kirimNotifWa(
-                //   d.m_user_id,
-                //   `${menit} ${jam} ${tanggal} ${bulan} *`,
-                //   `tugas-${timeline.id}-${d.m_user_id}`,
-                //   `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama}) dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! 
-                // ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timeline.id}?hal=tugas`
-                // );
-              }
+                  if (!draft) {
+                    if (soal.length) {
+                      await MNotifikasiTerjadwal.create({
+                        tanggal_dibagikan: tanggal_pembagian,
+                        tanggal_cron: `${menit} ${jam} ${tanggal} ${bulan} *`,
+                        pesan: `Halo ${d.user.nama}, ada tugas kuis dari Guru ${user.nama} (${mapel.nama}) dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! \n \n ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timeline.id}?hal=tugas`,
+                        tujuan: "085891296109",
+                        nama: `tugas-${tugas.id}-${d.m_user_id}`,
+                      });
+                      // await kirimNotifWa(
+                      //   d.m_user_id,
+                      //   `${menit} ${jam} ${tanggal} ${bulan} *`,
+                      //   `tugas-${tugas.id}-${d.m_user_id}`,
+                      //   `Halo ${d.user.nama}, ada tugas kuis dari Guru ${user.nama} (${mapel.nama}) dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!!
+                      // ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timeline.id}?hal=tugas`
+                      // );
+                    } else {
+                      await MNotifikasiTerjadwal.create({
+                        tanggal_dibagikan: tanggal_pembagian,
+                        tanggal_cron: `${menit} ${jam} ${tanggal} ${bulan} *`,
+                        pesan: `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama}) dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! \n \n ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timeline.id}?hal=tugas`,
+                        tujuan: "085891296109",
+                        nama: `tugas-${tugas.id}-${d.m_user_id}`,
+                      });
+                      // await kirimNotifWa(
+                      //   d.m_user_id,
+                    }
+                    //   `${menit} ${jam} ${tanggal} ${bulan} *`,
+                    //   `tugas-${timeline.id}-${d.m_user_id}`,
+                    //   `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama}) dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!!
+                    // ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timeline.id}?hal=tugas`
+                    // );
+                  }
                   // NOTIFIKASI WHATSAPP
                   // try {
                   //   const task = cron.schedule(
@@ -9021,7 +9025,7 @@ class MainController {
                   //     async () => {
                   //       // await WhatsAppService.sendMessage(
                   //       //   d.user.whatsapp,
-                  //       //   `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! 
+                  //       //   `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!!
                   // ${domain}/smartschool/timeline/${timeline.id}?hal=tugas`
                   //       // );
                   //     },
@@ -9088,6 +9092,8 @@ class MainController {
       .where({ id: m_jadwal_mengajar_id })
       .first();
 
+    const tugasSebelum = await MTugas.query().where({ id: tugas_id }).first();
+
     const tugas = await MTugas.query()
       .where({ id: tugas_id })
       .update({
@@ -9108,6 +9114,14 @@ class MainController {
         draft,
       });
 
+    const tanggalLengkap = `${tanggal_pembagian} ${
+      waktu_pembagian ? waktu_pembagian : "00:00:00"
+    }`;
+    const tanggalSebelumLengkap = `${moment(tugasSebelum.tanggal_pembagian).format("YYYY-MM-DD HH:mm:ss")} ${
+      tugasSebelum.waktu_pembagian ? tugasSebelum.waktu_pembagian : "00:00:00"
+    }`;
+    // return moment().format("YYYY-MM-DD HH:mm:ss")
+// return tanggalLengkap
     const tugasData = await MTugas.query()
       .where({ id: tugas_id })
       .with("soal", (builder) => {
@@ -9339,22 +9353,38 @@ class MainController {
                 dikumpulkan: 0,
               });
 
-              await ubahNotifWa(
-                `${menit} ${jam} ${tanggal} ${bulan} *`,
-                `tugas-${timeline.id}-${d.m_user_id}`,
-                `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama}) dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! 
-                ${domain}/smartschool/timeline/${timeline.id}?hal=tugas`
-              ); 
-
-                await MNotifikasiTerjadwal.create({
-                  tanggal_dibagikan:tanggal_pembagian,
-                  tanggal_cron:`${menit} ${jam} ${tanggal} ${bulan} *`,
-                  pesan:`Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama}) dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! 
-                  ${domain}/smartschool/timeline/${timeline.id}?hal=tugas`,
-                  tujuan:"085891296109",
-                  nama:`tugas-${timeline.id}-${d.m_user_id}`,
-                })
-              
+              // await ubahNotifWa(
+              //   `${menit} ${jam} ${tanggal} ${bulan} *`,
+              //   `tugas-${timeline.id}-${d.m_user_id}`,
+              //   `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama}) dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!!
+              //   ${domain}/smartschool/timeline/${timeline.id}?hal=tugas`
+              // );
+              if (!draft) {
+                if (soal.length) {
+                  await MNotifikasiTerjadwal.create({
+                    tanggal_dibagikan: tanggal_pembagian,
+                    tanggal_cron: `${menit} ${jam} ${tanggal} ${bulan} *`,
+                    pesan: `Halo ${d.user.nama}, ada tugas kuis dari Guru ${user.nama} (${mapel.nama}) dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! \n \n ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timeline.id}?hal=tugas`,
+                    tujuan: "085891296109",
+                    nama: `tugasKuis-${tugas_id}-${d.m_user_id}`,
+                  });
+                  // await kirimNotifWa(
+                  //   d.m_user_id,
+                  //   `${menit} ${jam} ${tanggal} ${bulan} *`,
+                  //   `tugas-${timeline.id}-${d.m_user_id}`,
+                  //   `Halo ${d.user.nama}, ada tugas kuis dari Guru ${user.nama} (${mapel.nama}) dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!!
+                  // ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timeline.id}?hal=tugas`
+                  // );
+                } else {
+                  await MNotifikasiTerjadwal.create({
+                    tanggal_dibagikan: tanggal_pembagian,
+                    tanggal_cron: `${menit} ${jam} ${tanggal} ${bulan} *`,
+                    pesan: `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama}) dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! \n \n ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timeline.id}?hal=tugas`,
+                    tujuan: "085891296109",
+                    nama: `tugas-${tugas_id}-${d.m_user_id}`,
+                  });
+                }
+              }
               // if (d.user.email != null) {
               //   const gmail = await Mail.send(`emails.tugas`, d, (message) => {
               //     message
@@ -9375,6 +9405,51 @@ class MainController {
         );
 
         await TkTimeline.createMany(userIds);
+      }
+    }
+
+    if (draft == 0) {
+      if (tanggalLengkap != tanggalSebelumLengkap) {
+        if (moment().format("YYYY-MM-DD HH:mm:ss") > tanggalSebelumLengkap) {
+          // const check22 =await MNotifikasiTerjadwal.query()
+          // .where("nama", "like", `%tugas-${tugas_id}-%`)
+          // .first()
+// return moment().format("YYYY-MM-DD HH:mm:ss")
+          // return check22
+          await MNotifikasiTerjadwal.create({
+            tanggal_dibagikan: moment().format("YYYY-MM-DD HH:mm:ss"),
+            tanggal_cron: `*/1 * * * *`,
+            pesan: `Halo, Tugas ${tugasSebelum.judul} telah di ubah jadwal pembagiannya`,
+            tujuan: `085891296109`,
+            
+          });
+          await MNotifikasiTerjadwal.query()
+            .where("nama", "like", `%tugas-${tugas_id}-%`)
+            .andWhere({ dikirim: 1 })
+            .update({
+              diupdate: 1,
+              dikirim: 0,
+              tanggal_dibagikan: tanggalLengkap,
+              tanggal_cron: `${menit} ${jam} ${tanggal} ${bulan} *`,
+            });
+        } else {
+          // return `halo`
+          // return tanggalSebelumLengkap
+          // const check23 =await MNotifikasiTerjadwal.query()
+          // .where("nama", "like", `%tugas-${tugas_id}-%`)
+          // .first()
+
+          // return check23
+          // return menit
+          await MNotifikasiTerjadwal.query()
+            .where("nama", "like", `%tugas-${tugas_id}-%`)
+            .update({
+              diupdate: 1,
+              dikirim: 0,
+              tanggal_dibagikan: tanggalLengkap,
+              tanggal_cron: `${menit} ${jam} ${tanggal} ${bulan} *`,
+            });
+        }
       }
     }
 
@@ -9423,11 +9498,9 @@ class MainController {
       .whereIn("m_timeline_id", timelineIds)
       .update({ dihapus: 1 });
 
-    await Promise.all(
-      timelineIds.map(async (d) => {
-        await hapusNotifWa(`tugas-${d}`);
-      })
-    );
+    await MNotifikasiTerjadwal.query()
+      .where("nama", "like", `%tugas-${tugas_id}-%`)
+      .delete();
 
     return response.ok({
       message: messageDeleteSuccess,
@@ -10192,16 +10265,16 @@ class MainController {
 
           await MNotifikasiTerjadwal.create({
             tanggal_dibagikan: tanggal_pembagian,
-            tanggal_cron:`${menit} ${jam} ${tanggal} ${bulan} *`,
-            pesan:`Halo ${d.user.nama}, ada pertemuan dari Guru ${user.nama} (${mapel.nama}). Silahkan klik tautan berikut untuk melihat pertemuan! Semangat!! \n \n ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timeline.id}?hal=pertemuan`,
-            tujuan:"085891296109",
-            nama:`absen-${timeline.id}-${d.m_user_id}`,
-          })
+            tanggal_cron: `${menit} ${jam} ${tanggal} ${bulan} *`,
+            pesan: `Halo ${d.user.nama}, ada pertemuan dari Guru ${user.nama} (${mapel.nama}). Silahkan klik tautan berikut untuk melihat pertemuan! Semangat!! \n \n ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timeline.id}?hal=pertemuan`,
+            tujuan: "085891296109",
+            nama: `absen-${timeline.id}-${d.m_user_id}`,
+          });
           // await kirimNotifWa(
           //   d.m_user_id,
           //   `${menit} ${jam} ${tanggal} ${bulan} *`,
           //   `absen-${timeline.id}-${d.m_user_id}`,
-          //   `Halo ${d.user.nama}, ada pertemuan dari Guru ${user.nama} (${mapel.nama}). Silahkan klik tautan berikut untuk melihat pertemuan! Semangat!! 
+          //   `Halo ${d.user.nama}, ada pertemuan dari Guru ${user.nama} (${mapel.nama}). Silahkan klik tautan berikut untuk melihat pertemuan! Semangat!!
           // ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timeline.id}?hal=pertemuan`
           // );
           // NOTIFIKASI WHATSAPP
@@ -10211,7 +10284,7 @@ class MainController {
           //     async () => {
           //       // await WhatsAppService.sendMessage(
           //       //   6281316119411,
-          //       //   `Halo ${d.user.nama}, ada pertemuan dari Guru ${user.nama} (${mapel.nama}. Silahkan klik tautan berikut untuk melihat pertemuan! Semangat!! 
+          //       //   `Halo ${d.user.nama}, ada pertemuan dari Guru ${user.nama} (${mapel.nama}. Silahkan klik tautan berikut untuk melihat pertemuan! Semangat!!
           // ${domain}/smartschool/timeline/${timeline.id}?hal=pertemuan`
           //       // );
           //     },
@@ -10317,9 +10390,9 @@ class MainController {
           });
 
           const anggotaRombel = await MAnggotaRombel.query()
-          .with("user",(builder)=>{
-            builder.select("id","nama","wa_real")
-          })
+            .with("user", (builder) => {
+              builder.select("id", "nama", "wa_real");
+            })
             .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
             .andWhere({ dihapus: 0 })
             .fetch();
@@ -10334,7 +10407,7 @@ class MainController {
             });
             await MNotifikasiTerjadwal.create({
               tanggal_dibagikan: tanggal_pembagian,
-              tanggal_cron:`${menit} ${jam} ${tanggal} ${bulan} *`,
+              tanggal_cron: `${menit} ${jam} ${tanggal} ${bulan} *`,
               pesan: `Halo ${d.user.nama}, ada materi dari Guru ${user.nama} (${
                 mapel.nama
               }) BAB ${topik.toJSON().bab.judul} - ${
@@ -10342,9 +10415,9 @@ class MainController {
               }. Silahkan klik tautan berikut untuk melihat materi! Semangat!! \n \n ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${
                 timeline.id
               }?hal=materi`,
-              tujuan:"085891296109",
+              tujuan: "085891296109",
               // nama:`materi-${timeline.id}-${topik.id}-${d.m_user_id}`,
-            })
+            });
             // await kirimNotifWa(
             //   d,
             //   `${menit} ${jam} ${tanggal} ${bulan} *`,
@@ -10353,7 +10426,7 @@ class MainController {
             //     mapel.nama
             //   }) BAB ${topik.toJSON().bab.judul} - ${
             //     topik.judul
-            //   }. Silahkan klik tautan berikut untuk melihat materi! Semangat!! 
+            //   }. Silahkan klik tautan berikut untuk melihat materi! Semangat!!
             // ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${
             //     timeline.id
             //   }?hal=materi`
@@ -10433,20 +10506,19 @@ class MainController {
       });
       // const timelineUtama = await MTimeline.query().where({timelineTk})
       if (timelineTk.toJSON().timeline.tugas.show_nilai == 1) {
-        
         await MNotifikasiTerjadwal.create({
-          tanggal_dibagikan:`${moment().format("YYYY-MM-DD HH:mm:ss")}`,
-          tanggal_cron:`*/1 * * * *`,
+          tanggal_dibagikan: `${moment().format("YYYY-MM-DD HH:mm:ss")}`,
+          tanggal_cron: `*/1 * * * *`,
           pesan: `Halo ${timelineTk.toJSON().user.nama}, nilai tugas ${
-                timelineTk.toJSON().timeline.tugas.judul
-              } telah diberikan oleh Guru ${
-                user.nama
-              }. Tekan tautan link berikut untuk melihat nilai \n \n ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${
-                timelineTk.m_timeline_id
-              }?hal=tugas`,
-          tujuan:"085891296109",
-          nama:`tugasNilai-${timelineTk.id}-${timelineTk.m_user_id}`,
-        })
+            timelineTk.toJSON().timeline.tugas.judul
+          } telah diberikan oleh Guru ${
+            user.nama
+          }. Tekan tautan link berikut untuk melihat nilai \n \n ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${
+            timelineTk.m_timeline_id
+          }?hal=tugas`,
+          tujuan: "085891296109",
+          nama: `tugasNilai-${timelineTk.id}-${timelineTk.m_user_id}`,
+        });
       }
     }
 
@@ -10505,18 +10577,18 @@ class MainController {
             //   jadwalMengajar.toJSON().mataPelajaran.id || m_mata_pelajaran_id,
             gmeet,
           });
-          await MNotifikasiTerjadwal.create({
-            tanggal_pembagian,
-            tanggal_cron:`${menit} ${jam} ${tanggal} ${bulan} *`,
-            pesan: `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! 
+        await MNotifikasiTerjadwal.create({
+          tanggal_pembagian,
+          tanggal_cron: `${menit} ${jam} ${tanggal} ${bulan} *`,
+          pesan: `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! 
               ${domain}/smartschool/timeline/${timeline.id}?hal=tugas`,
-            tujuan:"085891296109",
-            nama: `tugas-${timeline_id}`,
-          })
+          tujuan: "085891296109",
+          nama: `tugas-${timeline_id}`,
+        });
         // await ubahNotifWa(
         //   `${menit} ${jam} ${tanggal} ${bulan} *`,
         //   `tugas-${timeline_id}`,
-        //   `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! 
+        //   `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama} dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!!
         // ${domain}/smartschool/timeline/${timeline.id}?hal=tugas`
         // );
       }
@@ -10537,14 +10609,16 @@ class MainController {
       //     timelineTk.toJSON().timeline.user.nama
       //   } telah mengumpulkan tugas ${
       //     timelineTk.toJSON().timeline.tugas.judul
-      //   }. Tekan tautan link berikut untuk menilai 
+      //   }. Tekan tautan link berikut untuk menilai
       // ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${
       //     timelineTk.m_timeline_id
       //   }?hal=tugas`
-      // ); 
-       await MNotifikasiTerjadwal.create({
-        tanggal_dibagikan:tanggal_pembagian ? tanggal_pembagian:`${moment().format("YYYY-MM-DD HH:mm:ss")}`,
-        tanggal_cron:`*/1 * * * *`,
+      // );
+      await MNotifikasiTerjadwal.create({
+        tanggal_dibagikan: tanggal_pembagian
+          ? tanggal_pembagian
+          : `${moment().format("YYYY-MM-DD HH:mm:ss")}`,
+        tanggal_cron: `*/1 * * * *`,
         pesan: `Halo ${timelineTk.toJSON().timeline.user.nama}, ${
           timelineTk.toJSON().user.nama
         } telah mengumpulkan tugas ${
@@ -10552,9 +10626,11 @@ class MainController {
         }. Tekan tautan link berikut untuk menilai \n \n ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${
           timelineTk.m_timeline_id
         }?hal=tugas`,
-        tujuan:"085891296109",
-        nama: `tugas-${timelineTk.id}-${timelineTk.toJSON().timeline.m_user_id}`,
-      })
+        tujuan: "085891296109",
+        nama: `tugas-${timelineTk.id}-${
+          timelineTk.toJSON().timeline.m_user_id
+        }`,
+      });
       if (ulangi) {
         await TkPesertaUjian.query()
           .whwere({ tk_timeline_id: timeline_id })
@@ -10567,14 +10643,16 @@ class MainController {
         //     timelineTk.toJSON().timeline.tugas.judul
         //   } (${
         //     user.nama
-        //   }) perlu diulangi. Tekan tautan link berikut untuk melihat 
+        //   }) perlu diulangi. Tekan tautan link berikut untuk melihat
         //   ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${
         //     timelineTk.m_timeline_id
         //   }?hal=tugas`
         // );
         await MNotifikasiTerjadwal.create({
-         tanggal_dibagikan:tanggal_pembagian ? tanggal_pembagian:`${moment().format("YYYY-MM-DD HH:mm:ss")}`,
-          tanggal_cron:`*/1 * * * *`,
+          tanggal_dibagikan: tanggal_pembagian
+            ? tanggal_pembagian
+            : `${moment().format("YYYY-MM-DD HH:mm:ss")}`,
+          tanggal_cron: `*/1 * * * *`,
           pesan: `Halo ${timelineTk.toJSON().user.nama}, tugas ${
             timelineTk.toJSON().timeline.tugas.judul
           } (${
@@ -10582,9 +10660,9 @@ class MainController {
           }) perlu diulangi. Tekan tautan link berikut untuk melihat \n \n ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${
             timelineTk.m_timeline_id
           }?hal=tugas`,
-          tujuan:"085891296109",
+          tujuan: "085891296109",
           nama: `tugas-${timelineTk.id}-${timelineTk.m_user_id}`,
-        })
+        });
       }
     }
 
@@ -10665,7 +10743,8 @@ class MainController {
       dihapus: 1,
     });
 
-    await hapusNotifWa(`absen-${timeline_id}`);
+    if(tipe)
+    // await hapusNotifWa(`absen-${timeline_id}`);
 
     if (!timeline) {
       return response.notFound({
@@ -10840,7 +10919,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { tk_timeline_id, komen,m_jadwal_mengajar_id } = request.post();
+    const { tk_timeline_id, komen, m_jadwal_mengajar_id } = request.post();
     const rules = {
       komen: "required",
     };
@@ -10866,19 +10945,27 @@ class MainController {
       .where({ id: timeline_id })
       .first();
 
-    if(user.role == "siswa"){
+    if (user.role == "siswa") {
       await kirimNotifWaLangsung(
         user.id,
         `komen-${tkTimelineKomen.id}-${user.id}`,
-        `Halo ${user.nama}, ada balasan komentar dari Guru ${timelineTk.toJSON().timeline.user.nama} dengan komentar ${komen}. Silahkan klik tautan berikut untuk membalasnya! Semangat!! 
-        ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${tkTimeline.m_timeline_id}?hal=tugas`
+        `Halo ${user.nama}, ada balasan komentar dari Guru ${
+          timelineTk.toJSON().timeline.user.nama
+        } dengan komentar ${komen}. Silahkan klik tautan berikut untuk membalasnya! Semangat!! 
+        ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${
+          tkTimeline.m_timeline_id
+        }?hal=tugas`
       );
-    }else if ( user.role == "guru"){
+    } else if (user.role == "guru") {
       await kirimNotifWaLangsung(
         user.id,
         `komen-${tkTimelineKomen.id}-${user.id}`,
-        `Halo ${user.nama}, ada balasan komentar dari Siswa ${timelineTk.toJSON().user.nama} dengan komentar ${komen}. Silahkan klik tautan berikut untuk membalasnya! Semangat!! 
-        ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${tkTimeline.m_timeline_id}?hal=tugas`
+        `Halo ${user.nama}, ada balasan komentar dari Siswa ${
+          timelineTk.toJSON().user.nama
+        } dengan komentar ${komen}. Silahkan klik tautan berikut untuk membalasnya! Semangat!! 
+        ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${
+          tkTimeline.m_timeline_id
+        }?hal=tugas`
       );
     }
 
@@ -18567,7 +18654,7 @@ class MainController {
                   // try {
                   //   // await WhatsAppService.sendMessage(
                   //   //   `${e.user.whatsapp}`,
-                  //   //   `Halo ${e.user.nama}, ${nama} telah keluar, segera lunasi pembayaran. Tekan tautan link berikut untuk melakukan pembayaran 
+                  //   //   `Halo ${e.user.nama}, ${nama} telah keluar, segera lunasi pembayaran. Tekan tautan link berikut untuk melakukan pembayaran
                   // ${domain}/smartschool/tagihan/${bayarSiswa.id}`
                   //   // );
                   // } catch (error) {
@@ -19141,7 +19228,7 @@ class MainController {
     // try {
     //   await WhatsAppService.sendMessage(
     //     6281316119411,
-    //     `Halo ${e.user.nama}, Pembayaran kamu telah dikonfirmasi. Tekan tautan link berikut untuk melihat pembayaran 
+    //     `Halo ${e.user.nama}, Pembayaran kamu telah dikonfirmasi. Tekan tautan link berikut untuk melihat pembayaran
     // ${domain}/smartschool/tagihan/${riwayat_pembayaran_siswa_id}`
     //   );
     // } catch (error) {
@@ -47637,9 +47724,9 @@ class MainController {
       } else {
         return `${user.nama} ${absen.absen} masuk pada ${moment(
           absen.created_at
-        ).format("HH:mm")} dan pulang pada ${moment(
-          absen.waktu_pulang
-        ).format("HH:mm")}`;
+        ).format("HH:mm")} dan pulang pada ${moment(absen.waktu_pulang).format(
+          "HH:mm"
+        )}`;
       }
     } else if (absen.absen == "izin") {
       return `${user.nama} ${absen.absen} dengan keterangan ${absen.keterangan} dan lampiran ${absen.lampiran}`;
