@@ -984,11 +984,12 @@ class CDCController {
           .where({ dihapus: 0 });
       })
       .with("perusahaan", (builder) => {
-        builder.where({ dihapus: 0 });
-        if (search) {
-          builder.andWhere("nama", "like", `%${search}%`);
-        }
+        // builder.where({ dihapus: 0 });
+        // if (search) {
+        //   builder.andWhere("nama", "like", `%${search}%`);
+        // }
       })
+      .whereIn("m_perusahaan_id", perusahaan.toJSON().map(d => d.id))
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .fetch();
