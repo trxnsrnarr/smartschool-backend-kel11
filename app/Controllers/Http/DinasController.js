@@ -755,7 +755,7 @@ class DinasController {
       .fetch();
 
     const mataPelajaranIds = await MMataPelajaran.query()
-      .where({ m_user_id: user_id })
+      .where({ m_user_id: user.id })
       .ids();
 
     const rombelIds = await MRombel.query()
@@ -2878,7 +2878,7 @@ class DinasController {
       if (perbaikanSoal.toJSON().length) {
         total = total + 1;
       }
-      total = total + 3;
+      total = total + 2;
       return response.ok({
         kehadiran,
         nilai,
