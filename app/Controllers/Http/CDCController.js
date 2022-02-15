@@ -1078,7 +1078,7 @@ class CDCController {
       .andWhere({ role: "siswa" })
       .count("* as total");
 
-    penerimaanSiswa = await MPenerimaanSiswa.query()
+    penerimaanSiswa = MPenerimaanSiswa.query()
       .with("user", (builder) => {
         builder.select("id", "nama");
         if (search) {
