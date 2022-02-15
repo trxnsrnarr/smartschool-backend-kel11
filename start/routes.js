@@ -970,6 +970,10 @@ Route.post(
   "DinasController.downloadRekapNilai"
 );
 Route.post(
+  "/download/semua-rekap/nilai-siswa",
+  "DinasController.downloadSemuaRekapNilai"
+);
+Route.post(
   "/download/jadwal-buku-kerja",
   "DinasController.downloadJadwalBukuKerja"
 );
@@ -1641,6 +1645,7 @@ Route.delete("/buku-kerja-soal/:rpp_id", "DinasController.deleteBukuKerjaSoal");
 Route.get("/otomatis-akun-keuangan", "SecondController.otomatisAkun");
 Route.get("/otomatis-neraca-keuangan", "SecondController.otomatisNeraca");
 
+Route.post("/download/aset-aktif", "RombelController.downloadJurnalAsetAktif");
 Route.post("/download/jadwal", "RombelController.downloadJadwalMengajarTingkat");
 Route.post("/download/import-jadwal", "RombelController.downloadImportJadwalMengajarTingkat");
 
