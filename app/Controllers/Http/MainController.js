@@ -10979,6 +10979,17 @@ class MainController {
       });
     }
 
+    try {
+      if(user.profil.telp_ayah || user.profil.telp_ibu){
+        await WhatsAppService.sendMessage(
+          user.profil.telp_ayah || user.profil.telp_ibu,
+           `Halo, absen anak anda sudah masuk`
+         );
+      }
+    } catch {
+
+    }
+
     return response.ok({
       user,
     });
