@@ -1657,6 +1657,9 @@ Route.get("/data-warga-sekolah", "DinasController.getData");
 // Pengawas
 Route.get("/dashboard/pengawas", "PengawasController.getDashboardPengawas");
 
+// Marketplace
+Route.resource('marketplace', 'MarketPlaceController')
+
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
