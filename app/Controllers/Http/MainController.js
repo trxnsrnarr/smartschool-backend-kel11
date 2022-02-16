@@ -2826,7 +2826,7 @@ class MainController {
       });
     }
     if (!user.wa_real) {
-      return resposen.badRequest({
+      return response.badRequest({
         message:
           "Nomor Whatsapp Belum terverifikasi. Hubungi admin untuk mereset password anda",
       });
@@ -4039,7 +4039,6 @@ class MainController {
 
     const checkProfil = await MProfilUser.query()
       .where({ m_user_id: user.id })
-      .where({ dihapus: 0 })
       .first();
     if (checkProfil) {
       await MProfilUser.query().where({ id: checkProfil.id }).update({
@@ -4048,7 +4047,6 @@ class MainController {
     } else {
       await MProfilUser.create({
         alamat,
-        dihapus: 0,
         m_user_id: user.id,
       });
     }

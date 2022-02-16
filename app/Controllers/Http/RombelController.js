@@ -5,11 +5,26 @@ const Mta = use("App/Models/Mta");
 const MAnggotaRombel = use("App/Models/MAnggotaRombel");
 const User = use("App/Models/User");
 const MRombel = use("App/Models/MRombel");
+const MMateri = use("App/Models/MMateri");
+const MMataPelajaran = use("App/Models/MMataPelajaran");
+const MJadwalMengajar = use("App/Models/MJadwalMengajar");
+const MKategoriMapel = use("App/Models/MKategoriMapel");
+const TkMapelRapor = use("App/Models/TkMapelRapor");
+const TkMateriRombel = use("App/Models/TkMateriRombel");
+const Helpers = use("Helpers");
 const moment = require("moment");
 require("moment/locale/id");
 moment.locale("id");
 const MJamMengajar = use("App/Models/MJamMengajar");
 const Excel = require("exceljs");
+const messagePostSuccess = "Data berhasil ditambahkan";
+const messageSaveSuccess = "Data berhasil disimpan";
+const messagePutSuccess = "Data berhasil diubah";
+const messageDeleteSuccess = "Data berhasil dihapus";
+const messageNotFound = "Data tidak ditemukan";
+const messageForbidden = "Dilarang, anda bukan seorang admin";
+const messageEmailSuccess = "Data berhasil dikirim ke email";
+const pesanSudahDitambahkan = "Data sudah ditambahkan";
 function colName(n) {
   var ordA = "a".charCodeAt(0);
   var ordZ = "z".charCodeAt(0);
@@ -137,31 +152,31 @@ class RombelController {
     const hari = [
       {
         id: 1,
-        hari: "senin",
+        hari: "Senin",
       },
       {
         id: 2,
-        hari: "selasa",
+        hari: "Selasa",
       },
       {
         id: 3,
-        hari: "rabu",
+        hari: "Rabu",
       },
       {
         id: 4,
-        hari: "kamis",
+        hari: "Kamis",
       },
       {
         id: 5,
-        hari: "jumat",
+        hari: "Jumat",
       },
       {
         id: 6,
-        hari: "sabtu",
+        hari: "Sabtu",
       },
       {
         id: 7,
-        hari: "minggu",
+        hari: "Minggu",
       },
     ];
 
@@ -175,7 +190,7 @@ class RombelController {
 
     const result = await Promise.all(
       hari.map(async (ss) => {
-        const jamMengajar = await MJamMengajar.query()
+        const jamMengajarData = await MJamMengajar.query()
           .with("jadwalMengajar", (builder) => {
             builder
               .with("mataPelajaran", (builder) => {
@@ -184,16 +199,24 @@ class RombelController {
               .with("rombel")
               .whereIn("m_rombel_id", rombelIds);
           })
+          .withCount("jadwalMengajar as total", (builder) => {
+            builder
+              .whereIn("m_rombel_id", rombelIds)
+              .whereNotNull("m_mata_pelajaran_id");
+          })
           .where({ m_sekolah_id: sekolah.id })
           .andWhere({ kode_hari: ss.id })
           .andWhere({ m_ta_id: ta.id })
           .fetch();
 
-        if (!jamMengajar.toJSON()[0]) {
+        if (!jamMengajarData.toJSON()[0]) {
           return;
         }
+        const jamMengajar = jamMengajarData
+          .toJSON()
+          .filter((d) => d.__meta__.total != 0 || d.istirahat);
 
-        const total = jamMengajar.toJSON()[0].jadwalMengajar.length;
+        const total = jamMengajar[0].jadwalMengajar.length;
 
         let worksheet = workbook.addWorksheet(`${ss.hari}`);
 
@@ -211,7 +234,7 @@ class RombelController {
         let sudahMerge;
         // add column headers
         const data = await Promise.all(
-          jamMengajar.toJSON().map(async (d, idx) => {
+          jamMengajar.map(async (d, idx) => {
             worksheet.getRow(5).values = [
               "HARI",
               "WAKTU",
@@ -282,6 +305,7 @@ class RombelController {
                 jamke: d ? d.jam_ke : "-",
               });
               // const row = worksheet.getRow(8);
+
               isi = await Promise.all(
                 d.jadwalMengajar.map(async (e, nox) => {
                   worksheet.getColumn([`${(nox + 1) * 2 + 2}`]).values = [
@@ -314,7 +338,7 @@ class RombelController {
                         : "-"
                       : "-"
                   }`;
-                  if (idx == jamMengajar.toJSON().length - 1) {
+                  if (idx == jamMengajar.length - 1) {
                     if (sudahMerge <= d.jadwalMengajar.length) {
                       worksheet.mergeCells(
                         `${colName((nox + 1) * 2 + 2)}6:
@@ -434,8 +458,8 @@ class RombelController {
 
             // sudahMerge = "asdas";
 
-            if (idx == jamMengajar.toJSON().length - 1) {
-              worksheet.getCell("A8").value = "Senin";
+            if (idx == jamMengajar.length - 1) {
+              worksheet.getCell("A8").value = ss.hari;
               worksheet.mergeCells(`A8:A${(idx + 1) * 1 + 7}`);
               worksheet.addConditionalFormatting({
                 ref: `A8:A${(idx + 1) * 1 + 7}`,
@@ -570,6 +594,933 @@ class RombelController {
     await workbook.xlsx.writeFile(`public${namaFile}`);
 
     return namaFile;
+  }
+
+  async downloadImportJadwalMengajarTingkat({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    const user = await auth.getUser();
+
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
+    const { tingkat } = request.get();
+
+    let tingkatGet;
+
+    if (tingkat) {
+      tingkatGet = tingkat;
+    } else {
+      tingkatGet = tingkatRombel[0];
+    }
+    const hari = [
+      {
+        id: 1,
+        hari: "Senin",
+      },
+      {
+        id: 2,
+        hari: "Selasa",
+      },
+      {
+        id: 3,
+        hari: "Rabu",
+      },
+      {
+        id: 4,
+        hari: "Kamis",
+      },
+      {
+        id: 5,
+        hari: "Jumat",
+      },
+      {
+        id: 6,
+        hari: "Sabtu",
+      },
+      {
+        id: 7,
+        hari: "Minggu",
+      },
+    ];
+
+    const mataPelajaran = await MMataPelajaran.query()
+      .with("user", (builder) => {
+        builder.select("id", "nama");
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    const rombelIds = await MRombel.query()
+      .where({ tingkat: tingkatGet })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .ids();
+    let workbook = new Excel.Workbook();
+
+    const result = await Promise.all(
+      hari.map(async (ss) => {
+        const jamMengajar = await MJamMengajar.query()
+          .with("jadwalMengajar", (builder) => {
+            builder
+              .with("mataPelajaran", (builder) => {
+                builder.with("user");
+              })
+              .with("rombel")
+              .whereIn("m_rombel_id", rombelIds);
+          })
+          .where({ m_sekolah_id: sekolah.id })
+          .andWhere({ kode_hari: ss.id })
+          .andWhere({ m_ta_id: ta.id })
+          .fetch();
+
+        if (!jamMengajar.toJSON()[0]) {
+          return;
+        }
+
+        const total = jamMengajar.toJSON()[0].jadwalMengajar.length;
+
+        let worksheet = workbook.addWorksheet(`${ss.hari}`);
+
+        worksheet.getCell("A1").value = sekolah.nama;
+        worksheet.getCell("A2").value = "JADWAL KEGIATAN PEMBELAJARAN";
+        worksheet.getCell("A3").value = `TAHUN PELAJARAN ${ta.tahun}`;
+
+        // worksheet.getCell(
+        //   "A6"
+        // ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
+
+        // return jamMengajar.toJSON().length;
+        // return total;
+
+        let sudahMerge;
+        // add column headers
+        const data = await Promise.all(
+          jamMengajar.toJSON().map(async (d, idx) => {
+            worksheet.getRow(5).values = [
+              "HARI",
+              "WAKTU",
+              "JAM KE",
+              `${tingkat}`,
+            ];
+            worksheet.getRow(6).values = ["HARI", "WAKTU", "JAM KE"];
+            worksheet.getRow(7).values = ["HARI", "WAKTU", "JAM KE"];
+            worksheet.columns = [
+              { key: "" },
+              { key: "waktu" },
+              { key: "jamke" },
+            ];
+
+            let isi;
+
+            if (d.istirahat == 1) {
+              let row = worksheet.addRow({
+                waktu: d ? d.jamFormat : "-",
+                jamke: "ISTIRAHAT",
+              });
+              worksheet.mergeCells(
+                `C${(idx + 1) * 1 + 7}:${colName(total * 1 + 2)}${
+                  (idx + 1) * 1 + 7
+                }`
+              );
+              worksheet.addConditionalFormatting({
+                ref: `B${(idx + 1) * 1 + 7}:${colName(total * 1 + 2)}${
+                  (idx + 1) * 1 + 7
+                }`,
+                rules: [
+                  {
+                    type: "expression",
+                    formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                    style: {
+                      border: {
+                        top: { style: "thin" },
+                        left: { style: "thin" },
+                        bottom: { style: "thin" },
+                        right: { style: "thin" },
+                      },
+                      font: {
+                        name: "Times New Roman",
+                        family: 4,
+                        size: 11,
+                        // bold: true,
+                      },
+                      alignment: {
+                        vertical: "middle",
+                        horizontal: "center",
+                      },
+                      fill: {
+                        type: "pattern",
+                        pattern: "solid",
+                        bgColor: {
+                          argb: "C0C0C0",
+                          fgColor: { argb: "C0C0C0" },
+                        },
+                      },
+                    },
+                  },
+                ],
+              });
+              isi = 0;
+            } else {
+              let row = worksheet.addRow({
+                waktu: d ? d.jamFormat : "-",
+                jamke: d ? d.jam_ke : "-",
+              });
+              // const row = worksheet.getRow(8);
+              isi = await Promise.all(
+                d.jadwalMengajar.map(async (e, nox) => {
+                  worksheet.getColumn([`${(nox + 1) * 1 + 3}`]).values = [
+                    ``,
+                    ``,
+                    ``,
+                    ``,
+                    `${tingkat}`,
+                    `${e.rombel ? e.rombel.nama : "-"}`,
+                    `Id Mapel`,
+                    ,
+                  ];
+                  row.getCell([`${(nox + 1) * 1 + 3}`]).value = `${
+                    e.mataPelajaran ? e.mataPelajaran.id : "-"
+                  }`;
+                  // if(nox == d.jadwalMengajar.length -1){
+                  //   sudahMerge = 1;
+                  // }
+
+                  row.getCell([`${(nox + 1) * 1 + 3}`]).border = {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  };
+                  worksheet.getColumn([`${(nox + 1) * 1 + 3}`]).fill = {
+                    type: "pattern",
+                    pattern: "solid",
+                    bgColor: {
+                      argb: "C0C0C0",
+                      fgColor: { argb: "C0C0C0" },
+                    },
+                  };
+                  worksheet.getColumn(colName((nox + 1) * 1 + 3)).width = 20;
+                  // worksheet.getCell(`E${(nox + 1) * 1 + 8}`).value = e.nilai;
+                  // worksheet.columns = [
+                  //   { key: `tugas${nox+1}` },
+                  // ];
+                  worksheet.addConditionalFormatting({
+                    ref: `B${(idx + 1) * 1 + 7}:C${(idx + 1) * 1 + 7}`,
+                    rules: [
+                      {
+                        type: "expression",
+                        formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                        style: {
+                          border: {
+                            top: { style: "thin" },
+                            left: { style: "thin" },
+                            bottom: { style: "thin" },
+                            right: { style: "thin" },
+                          },
+                          font: {
+                            name: "Times New Roman",
+                            family: 4,
+                            size: 11,
+                            // bold: true,
+                          },
+                          alignment: {
+                            vertical: "middle",
+                            horizontal: "center",
+                          },
+                        },
+                      },
+                    ],
+                  });
+                  worksheet.addConditionalFormatting({
+                    ref: `${(nox + 1) * 1 + 3}`,
+                    rules: [
+                      {
+                        type: "expression",
+                        formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                        style: {
+                          border: {
+                            top: { style: "thin" },
+                            left: { style: "thin" },
+                            bottom: { style: "thin" },
+                            right: { style: "thin" },
+                          },
+                          font: {
+                            name: "Times New Roman",
+                            family: 4,
+                            size: 11,
+                            // bold: true,
+                          },
+                          alignment: {
+                            vertical: "middle",
+                            horizontal: "left",
+                          },
+                        },
+                      },
+                    ],
+                  });
+                  // return { awal, akhir };
+                })
+              );
+            }
+
+            // sudahMerge = "asdas";
+
+            if (idx == jamMengajar.toJSON().length - 1) {
+              worksheet.getCell("A8").value = ss.hari;
+              worksheet.mergeCells(`A8:A${(idx + 1) * 1 + 7}`);
+              worksheet.addConditionalFormatting({
+                ref: `A8:A${(idx + 1) * 1 + 7}`,
+                rules: [
+                  {
+                    type: "expression",
+                    formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                    style: {
+                      font: {
+                        name: "Times New Roman",
+                        family: 4,
+                        size: 16,
+                        bold: true,
+                      },
+                      fill: {
+                        type: "pattern",
+                        pattern: "solid",
+                        bgColor: {
+                          argb: "C0C0C0",
+                          fgColor: { argb: "C0C0C0" },
+                        },
+                      },
+                      alignment: {
+                        vertical: "middle",
+                        horizontal: "center",
+                        textRotation: 90,
+                      },
+                    },
+                  },
+                ],
+              });
+              const data112 = await Promise.all(
+                mataPelajaran.toJSON().map(async (mata) => {
+                  worksheet.getRow((idx + 1) * 1 + 11).values = [
+                    "ID",
+                    "Mata Pelajaran",
+                    "Nama Guru",
+                  ];
+                  worksheet.columns = [
+                    { key: "id" },
+                    { key: "mapel" },
+                    { key: "nama" },
+                  ];
+
+                  let row = worksheet.addRow({
+                    id: mata ? mata.id : "-",
+                    mapel: mata ? mata.nama : "-",
+                    nama: mata.user ? mata.user.nama : "-",
+                  });
+                })
+              );
+              worksheet.addConditionalFormatting({
+                ref: `A${(idx + 1) * 1 + 11}:C${(idx + 1) * 1 + 11}`,
+                rules: [
+                  {
+                    type: "expression",
+                    formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                    style: {
+                      font: {
+                        name: "Times New Roman",
+                        family: 4,
+                        size: 16,
+                        bold: true,
+                      },
+                      fill: {
+                        type: "pattern",
+                        pattern: "solid",
+                        bgColor: {
+                          argb: "C0C0C0",
+                          fgColor: { argb: "C0C0C0" },
+                        },
+                      },
+                      alignment: {
+                        vertical: "middle",
+                        horizontal: "center",
+                        // textRotation: 90,
+                      },
+                      border: {
+                        top: { style: "thin" },
+                        left: { style: "thin" },
+                        bottom: { style: "thin" },
+                        right: { style: "thin" },
+                      },
+                    },
+                  },
+                ],
+              });
+              worksheet.addConditionalFormatting({
+                ref: `A${(idx + 1) * 1 + 12}:C${
+                  (idx + 1) * 1 + 11 + mataPelajaran.toJSON().length
+                }`,
+                rules: [
+                  {
+                    type: "expression",
+                    formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                    style: {
+                      font: {
+                        name: "Times New Roman",
+                        family: 4,
+                        size: 14,
+                        // bold: true,
+                      },
+                      // fill: {
+                      //   type: "pattern",
+                      //   pattern: "solid",
+                      //   bgColor: {
+                      //     argb: "C0C0C0",
+                      //     fgColor: { argb: "C0C0C0" },
+                      //   },
+                      // },
+                      alignment: {
+                        vertical: "middle",
+                        horizontal: "left",
+                        // textRotation: 90,
+                      },
+                      border: {
+                        top: { style: "thin" },
+                        left: { style: "thin" },
+                        bottom: { style: "thin" },
+                        right: { style: "thin" },
+                      },
+                    },
+                  },
+                ],
+              });
+            }
+            // return isi;
+          })
+        );
+
+        worksheet.addConditionalFormatting({
+          ref: `A5:${colName(total * 1 + 2)}7`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 14,
+                  bold: true,
+                },
+                fill: {
+                  type: "pattern",
+                  pattern: "solid",
+                  bgColor: {
+                    argb: "C0C0C0",
+                    fgColor: { argb: "C0C0C0" },
+                  },
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                  wrapText: true,
+                },
+              },
+            },
+          ],
+        });
+        worksheet.mergeCells(`D5:${colName(total * 1 + 2)}5`);
+        worksheet.mergeCells(`A5:A7`);
+        worksheet.mergeCells(`B5:B7`);
+        worksheet.mergeCells(`C5:C7`);
+        worksheet.getCell("A1").value = sekolah.nama;
+        worksheet.getCell("A2").value = "JADWAL KEGIATAN PEMBELAJARAN";
+        worksheet.getCell("A3").value = `TAHUN PELAJARAN ${ta.tahun}`;
+        worksheet.mergeCells(`A1:${colName(total * 1 + 2)}1`);
+        worksheet.mergeCells(`A2:${colName(total * 1 + 2)}2`);
+        worksheet.mergeCells(`A3:${colName(total * 1 + 2)}3`);
+        worksheet.addConditionalFormatting({
+          ref: `A1:${colName(total * 1 + 2)}3`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 16,
+                  bold: true,
+                },
+                // fill: {
+                //   type: "pattern",
+                //   pattern: "solid",
+                //   bgColor: { argb: "0000FF", fgColor: { argb: "0000FF" } },
+                // },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                  // textRotation: 'vertical'
+                },
+              },
+            },
+          ],
+        });
+
+        worksheet.getColumn("A").width = 9;
+        worksheet.getColumn("B").width = 12;
+        worksheet.getColumn("C").width = 8;
+        for (let i = 4; i <= 100; i++) {
+          worksheet.getColumn(i).width = 20;
+        }
+        worksheet.views = [
+          {
+            state: "frozen",
+            xSplit: 3,
+            ySplit: 7,
+            topLeftCell: "A8",
+            activeCell: "A8",
+          },
+        ];
+        // return data;
+      })
+    );
+    // return result;
+    let namaFile = `/uploads/Rekap-Jadwal-Mengajar-${tingkat}-${keluarantanggalseconds}.xlsx`;
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
+  async importJadwalMengajarServices(filelocation, response, sekolah, ta) {
+    var workbook = new Excel.Workbook();
+
+    workbook = await workbook.xlsx.readFile(filelocation);
+    const hari = [
+      {
+        id: 1,
+        hari: "Senin",
+      },
+      {
+        id: 2,
+        hari: "Selasa",
+      },
+      {
+        id: 3,
+        hari: "Rabu",
+      },
+      {
+        id: 4,
+        hari: "Kamis",
+      },
+      {
+        id: 5,
+        hari: "Jumat",
+      },
+      {
+        id: 6,
+        hari: "Sabtu",
+      },
+      // {
+      //   id: 7,
+      //   hari: "minggu",
+      // },
+    ];
+    const semuaJam = await MJamMengajar.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .fetch();
+
+    const semuaRombel = await MRombel.query()
+      .where({ dihapus: 0 })
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .fetch();
+    const mataPelajaranIds = await MMataPelajaran.query()
+      .where({ m_ta_id: ta.id })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .ids();
+
+    const semuaMateri = await MMateri.query()
+      .whereIn("m_mata_pelajaran", mataPelajaranIds)
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    for (let no = 0; no < hari.length; no++) {
+      const ss = hari[no];
+      let explanation = workbook.getWorksheet(`${ss.hari}`);
+
+      let colCommentJam = explanation.getColumn("A");
+
+      let colComment = explanation.getRow(6);
+      const jamTotal = semuaJam
+        .toJSON()
+        .filter((d) => d.hari == ss.hari).length;
+
+      // return jamTotal;
+      // return colComment
+
+      // return dataKelas;
+      let data = [];
+      colComment.eachCell(async (cell, rowNumber) => {
+        if (rowNumber > 3) {
+          colCommentJam.eachCell(async (cell, rowNumberJam) => {
+            if (rowNumberJam >= 8 && rowNumberJam <= jamTotal + 7) {
+              if (
+                explanation.getCell("C" + rowNumberJam).value &&
+                explanation.getCell("C" + rowNumberJam).value != "ISTIRAHAT"
+              ) {
+                data.push({
+                  kelas: explanation.getCell(colName(rowNumber - 1) + 6).value,
+                  jam_mulai: explanation
+                    .getCell("B" + rowNumberJam)
+                    .value.slice(0, 5),
+                  jam_selesai: explanation
+                    .getCell("B" + rowNumberJam)
+                    .value.slice(8, 14),
+
+                  jam_ke: explanation.getCell("C" + rowNumberJam).value,
+                  mapel: explanation.getCell(
+                    colName(rowNumber - 1) + rowNumberJam
+                  ).value,
+                });
+              }
+              // dataKelas.push({
+              // });
+            }
+          });
+        }
+      });
+      // return data;
+
+      const result = await Promise.all(
+        data.map(async (d) => {
+          const jam = semuaJam.toJSON().find((c) => {
+            return (
+              c.jam_ke == d.jam_ke &&
+              c.hari == ss.hari &&
+              c.jam_mulai == `${d.jam_mulai}:00` &&
+              c.jam_selesai == `${d.jam_selesai}:00`
+            );
+          });
+
+          // return jam;
+
+          // const rombel = await MRombel.query()
+          //   .where({ nama: d.kelas })
+          //   .where({ m_ta_id: ta.id })
+          //   .andWhere({ m_sekolah_id: sekolah.id })
+          //   .first();
+          const rombel = semuaRombel.toJSON().find((c) => c.nama == d.kelas);
+
+          // return rombel
+
+          let kosongkan;
+          if (d.mapel == "-") {
+            kosongkan = 1;
+          }
+          let jadwalMengajar;
+          // const kosongkan = d.mapel;
+          if (!kosongkan) {
+            const checkKategoriMapel = await MKategoriMapel.query()
+              .where({ m_rombel_id: rombel.id })
+              .first();
+
+            if (!checkKategoriMapel) {
+              await MKategoriMapel.create({
+                nama: "Muatan Nasional",
+                dihapus: 0,
+                m_rombel_id: rombel.id,
+              });
+              await MKategoriMapel.create({
+                nama: "Muatan Kewilayahan",
+                dihapus: 0,
+                m_rombel_id: rombel.id,
+              });
+              await MKategoriMapel.create({
+                nama: "Muatan Peminatan Kejurusan",
+                dihapus: 0,
+                m_rombel_id: rombel.id,
+              });
+            }
+          }
+
+          if (kosongkan) {
+            const jadwal = await MJadwalMengajar.query()
+              .where({ m_rombel_id: rombel.id })
+              .andWhere({ m_jam_mengajar_id: jam.id })
+              .andWhere({ m_ta_id: ta.id })
+              .first();
+
+            jadwalMengajar = await MJadwalMengajar.query()
+              .where({ id: jadwal.id })
+              .update({
+                m_mata_pelajaran_id: null,
+                diubah: 1,
+              });
+
+            const stillTeaching = await MJadwalMengajar.query()
+              .where({ m_mata_pelajaran_id: jadwal.m_mata_pelajaran_id })
+              .andWhere({ m_rombel_id: jadwal.m_rombel_id })
+              .first();
+
+            if (
+              jadwal.m_rombel_id &&
+              jadwal.m_mata_pelajaran_id &&
+              !stillTeaching
+            ) {
+              const kategoriMapel = await MKategoriMapel.query()
+                .where({ m_rombel_id: jadwal.m_rombel_id })
+                .fetch();
+
+              const checkTkMapel = await TkMapelRapor.query()
+                .where({ m_mata_pelajaran_id: jadwal.m_mata_pelajaran_id })
+                .whereIn(
+                  "m_kategori_mapel_id",
+                  kategoriMapel.toJSON().map((item) => item.id)
+                )
+                .first();
+
+              if (checkTkMapel) {
+                await TkMapelRapor.query()
+                  .where({
+                    m_kategori_mapel_id: checkTkMapel.m_kategori_mapel_id,
+                  })
+                  .andWhere({ m_mata_pelajaran_id: jadwal.m_mata_pelajaran_id })
+                  .delete();
+              }
+            }
+
+            // return response.ok({
+            //   message: messagePutSuccess,
+            // });
+          } else {
+            const jadwalAwal = await MJadwalMengajar.query()
+              .where({ m_rombel_id: rombel.id })
+              .andWhere({ m_jam_mengajar_id: jam.id })
+              .andWhere({ m_ta_id: ta.id })
+              .first();
+
+            const kategoriMapel = await MKategoriMapel.query()
+              .where({ m_rombel_id: rombel.id })
+              .fetch();
+
+            const checkTkMapel = await TkMapelRapor.query()
+              .where({
+                m_mata_pelajaran_id: jadwalAwal.m_mata_pelajaran_id || d.mapel,
+              })
+              .whereIn(
+                "m_kategori_mapel_id",
+                kategoriMapel.toJSON().map((item) => item.id)
+              )
+              .first();
+
+            const mapel = await MMataPelajaran.query()
+              .where({ id: d.mapel })
+              .first();
+
+            if (!checkTkMapel) {
+              await TkMapelRapor.create({
+                m_mata_pelajaran_id: d.mapel,
+                nama: mapel.nama,
+                kkm2: mapel.kkm,
+                m_kategori_mapel_id: kategoriMapel.toJSON()[0].id,
+                dihapus: 0,
+                urutan: 1,
+              });
+            } else {
+              const tkExist = await TkMapelRapor.query()
+                .whereIn(
+                  "m_kategori_mapel_id",
+                  kategoriMapel.toJSON().map((item) => item.id)
+                )
+                .where({ m_mata_pelajaran_id: d.mapel })
+                .first();
+              if (tkExist) {
+                const stillTeaching = await MJadwalMengajar.query()
+                  .where({
+                    m_mata_pelajaran_id: jadwalAwal.m_mata_pelajaran_id,
+                  })
+                  .andWhere({ m_rombel_id: rombel.id })
+                  .first();
+                if (!stillTeaching) {
+                  await TkMapelRapor.query()
+                    .where({
+                      m_kategori_mapel_id: checkTkMapel.m_kategori_mapel_id,
+                    })
+                    .andWhere({
+                      m_mata_pelajaran_id: jadwalAwal.m_mata_pelajaran_id,
+                    })
+                    .delete();
+                }
+              } else {
+                await TkMapelRapor.query()
+                  .where({
+                    m_kategori_mapel_id: checkTkMapel.m_kategori_mapel_id,
+                  })
+                  .andWhere({
+                    m_mata_pelajaran_id: jadwalAwal.m_mata_pelajaran_id,
+                  })
+                  .update({
+                    m_mata_pelajaran_id: d.mapel,
+                    m_kategori_mapel_id: checkTkMapel.m_kategori_mapel_id,
+                    nama: mapel.nama,
+                    kkm2: mapel.kkm,
+                  });
+              }
+            }
+            jadwalMengajar = await MJadwalMengajar.query()
+              .where({ m_rombel_id: rombel.id })
+              .andWhere({ m_jam_mengajar_id: jam.id })
+              .andWhere({ m_ta_id: ta.id })
+              .update({
+                m_mata_pelajaran_id: d.mapel,
+                diubah: 1,
+              });
+          }
+          const mataPelajaran = await MMataPelajaran.query()
+            .where({ id: d.mapel })
+            .first();
+          let janganUlangMateri = [];
+          const materiData = semuaMateri.toJSON().filter(async (d) => {
+            if (
+              !janganUlangMateri.find(
+                (e) =>
+                  e.tingkat == d.tingkat &&
+                  e.m_mata_pelajaran_id == d.m_mata_pelajaran_id &&
+                  e.dihapus == 0
+              )
+            ) {
+              if (mataPelajaran.kelompok == "C") {
+                const check = await MMateri.query()
+                  .where({ m_mata_pelajaran_id: d.mapel })
+                  .andWhere({ tingkat })
+                  .andWhere({ m_jurusan_id })
+                  .first();
+                if (check) {
+                  if (check.dihapus) {
+                    await MMateri.query()
+                      .where({ id: check.id })
+                      .update({ dihapus: 0 });
+                  }
+                }
+
+                if (!check) {
+                  const materi = await MMateri.create({
+                    tingkat,
+                    m_jurusan_id,
+                    m_mata_pelajaran_id,
+                  });
+
+                  await TkMateriRombel.create({
+                    m_materi_id: materi.id,
+                    m_rombel_id,
+                  });
+                } else {
+                  const checkTk = await TkMateriRombel.query()
+                    .where({ m_materi_id: check.id })
+                    .andWhere({ m_rombel_id })
+                    .first();
+                  await TkMateriRombel.create({
+                    m_materi_id: check.id,
+                    m_rombel_id,
+                  });
+                }
+              } else {
+                const check = await MMateri.query()
+                  .where({ m_mata_pelajaran_id })
+                  .andWhere({ tingkat })
+                  .first();
+                if (check) {
+                  if (check.dihapus) {
+                    await MMateri.query()
+                      .where({ id: check.id })
+                      .update({ dihapus: 0 });
+                  }
+                }
+
+                if (!check) {
+                  const materi = await MMateri.create({
+                    tingkat,
+                    m_mata_pelajaran_id,
+                  });
+
+                  await TkMateriRombel.create({
+                    m_materi_id: materi.id,
+                    m_rombel_id,
+                  });
+                } else {
+                  const checkTk = await TkMateriRombel.query()
+                    .where({ m_materi_id: check.id })
+                    .andWhere({ m_rombel_id })
+                    .first();
+                  if (!checkTk) {
+                    await TkMateriRombel.create({
+                      m_materi_id: check.id,
+                      m_rombel_id,
+                    });
+                  }
+                }
+              }
+              janganUlangMateri.push(d);
+              return true;
+            } else {
+              return false;
+            }
+          });
+          return;
+        })
+      );
+      // return result;
+    }
+  }
+
+  async importJadwalMengajar({ request, response, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const ta = await this.getTAAktif(sekolah);
+
+    let file = request.file("file");
+    let fname = `import-excel.xlsx`;
+
+    //move uploaded file into custom folder
+    await file.move(Helpers.tmpPath("/uploads"), {
+      name: fname,
+      overwrite: true,
+    });
+
+    if (!file.moved()) {
+      return fileUpload.error();
+    }
+
+    return await this.importJadwalMengajarServices(
+      `tmp/uploads/${fname}`,
+      response,
+      sekolah,
+      ta
+    );
   }
 }
 

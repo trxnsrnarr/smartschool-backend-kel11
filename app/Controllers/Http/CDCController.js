@@ -984,11 +984,15 @@ class CDCController {
           .where({ dihapus: 0 });
       })
       .with("perusahaan", (builder) => {
-        builder.where({ dihapus: 0 });
-        if (search) {
-          builder.andWhere("nama", "like", `%${search}%`);
-        }
+        // builder.where({ dihapus: 0 });
+        // if (search) {
+        //   builder.andWhere("nama", "like", `%${search}%`);
+        // }
       })
+      .whereIn(
+        "m_perusahaan_id",
+        perusahaan.toJSON().map((d) => d.id)
+      )
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .fetch();
@@ -1026,7 +1030,11 @@ class CDCController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
+    const ta = await this.getTAAktif(sekolah);
 
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
     let { search, jurusan_id, page } = request.get();
     const user = await auth.getUser();
     page = page ? parseInt(page) : 1;
@@ -1066,16 +1074,23 @@ class CDCController {
 
     const userTotal = await User.query()
       .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah_id })
+      .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ role: "siswa" })
       .count("* as total");
+    let userIds;
 
-    penerimaanSiswa = await MPenerimaanSiswa.query()
+    userIds = User.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ role: "siswa" });
+    if (search) {
+      userIds.where("nama", "like", `%${search}%`);
+    }
+
+    userIds = await userIds.ids();
+    penerimaanSiswa = MPenerimaanSiswa.query()
       .with("user", (builder) => {
         builder.select("id", "nama");
-        if (search) {
-          builder.where("nama", "like", `%${search}%`);
-        }
       })
       .with("rombel", (builder) => {
         builder.select("id", "nama");
@@ -1086,9 +1101,11 @@ class CDCController {
         });
       })
       .where({ dihapus: 0 })
-      .whereIn("m_rombel_id", rombelIds);
+      .whereIn("m_user_id", userIds);
     if (jurusan_id) {
-      penerimaanSiswa.where({ m_jurusan_id: jurusan_id });
+      penerimaanSiswa
+        .where({ m_jurusan_id: jurusan_id })
+        .whereIn("m_rombel_id", rombelIds);
     }
     penerimaanSiswa = await penerimaanSiswa.paginate(page, 25);
 
@@ -1553,13 +1570,23 @@ class CDCController {
       .where({ id: perusahaanTk.m_perusahaan_id })
       .first();
 
+    let userIds;
+
+    userIds = User.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ role: "siswa" });
+    if (search) {
+      userIds.where("nama", "like", `%${search}%`);
+    }
+
+    userIds = await userIds.ids();
+
     const siswa = await MPenerimaanSiswa.query()
       .with("user", (builder) => {
         builder.select("id", "nama");
-        if (search) {
-          builder.where("nama", "like", `%${search}%`);
-        }
       })
+      .whereIn("m_user_id", userIds)
       .where({ m_penerimaan_perusahaan_id: penerimaan_id })
       .fetch();
 
