@@ -36527,6 +36527,9 @@ class MainController {
     const disposisi = await MDisposisi.query()
       .with("surat")
       .with("pelaporanDisposisi")
+      .with("user",(builder)=>{
+          builder.select("id","nama","wa_real")
+        })
       .where({ id: disposisi_id })
       .first();
 

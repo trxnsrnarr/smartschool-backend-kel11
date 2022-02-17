@@ -13,6 +13,9 @@ class MDisposisi extends Model {
   pelaporanDisposisi() {
     return this.belongsTo("App/Models/MPelaporanDisposisi");
   }
+  user() {
+    return this.belongsTo("App/Models/User");
+  }
 }
 
 module.exports = MDisposisi;
