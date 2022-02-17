@@ -14,7 +14,7 @@ class MDisposisi extends Model {
     return this.belongsTo("App/Models/MPelaporanDisposisi");
   }
   user() {
-    return this.belongsTo("App/Models/User");
+    return this.belongsTo("App/Models/User","m_user_id");
   }
 }
 
