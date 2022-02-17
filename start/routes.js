@@ -1171,6 +1171,10 @@ Route.get(
   "/penerimaan-perusahaan/:perusahaan_id",
   "CDCController.getPenerimaanPerusahaan"
 );
+Route.get(
+  "/pkl/penerimaan",
+  "CDCController.getPenerimaanPkl"
+);
 Route.post("/penerimaan-perusahaan", "CDCController.postPenerimaanPerusahaan");
 
 Route.post("/cdc/perusahaan", "CDCController.postPerusahaan");
@@ -1646,7 +1650,7 @@ Route.delete("/buku-kerja-soal/:rpp_id", "DinasController.deleteBukuKerjaSoal");
 Route.get("/otomatis-akun-keuangan", "SecondController.otomatisAkun");
 Route.get("/otomatis-neraca-keuangan", "SecondController.otomatisNeraca");
 
-Route.post("/download/aset-aktif", "RombelController.downloadJurnalAsetAktif");
+Route.post("/download/aset-aktif", "KeuanganController.downloadJurnalAsetAktif");
 Route.post("/download/jadwal", "RombelController.downloadJadwalMengajarTingkat");
 Route.post("/download/import-jadwal", "RombelController.downloadImportJadwalMengajarTingkat");
 
