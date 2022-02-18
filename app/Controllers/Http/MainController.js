@@ -10932,7 +10932,7 @@ class MainController {
     }
 
     const user = await User.query()
-      .select("id", "whatsapp", "role", "m_sekolah_id")
+      .select("id", "whatsapp", "role", "m_sekolah_id", "nama")
       .with("profil", (builder) => {
         builder.select("id", "m_user_id", "telp_ayah", "telp_ibu");
       })
