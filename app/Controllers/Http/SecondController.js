@@ -9798,7 +9798,7 @@ class SecondController {
 
       const BEBANLISTRIK = semuaAkun
         .toJSON()
-        .find((d) => d.nama == "BEBAN LISTRIK");
+        .find((d) => d.nama == "BEBAN LISTRIK, AIR, TELEPON");
       await TkKategoriAkunLabaRugi.create({
         m_keu_kategori_laba_rugi_id: beban.id,
         m_keu_akun_id: BEBANLISTRIK.id,
@@ -9826,7 +9826,7 @@ class SecondController {
 
       const BEBANPERAWATAN = semuaAkun
         .toJSON()
-        .find((d) => d.nama == "BEBAN PERAWATAN");
+        .find((d) => d.nama == "BEBAN PERAWATAN PERALATAN");
       await TkKategoriAkunLabaRugi.create({
         m_keu_kategori_laba_rugi_id: beban.id,
         m_keu_akun_id: BEBANPERAWATAN.id,

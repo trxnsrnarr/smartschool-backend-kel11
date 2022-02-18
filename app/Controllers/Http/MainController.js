@@ -36180,13 +36180,15 @@ class MainController {
       page = 1,
       tipe,
       search,
-      nav = "semua",
+      nav ="semua",
       tanggal_awal,
       tanggal_akhir,
     } = request.get();
 
-    let surat;
+    // return nav
 
+    let surat;
+    let suratDataIds;
     if (user.role == "admin") {
       if (tipe != "disposisi") {
         surat = MSurat.query()
@@ -36199,19 +36201,22 @@ class MainController {
         } else if (tipe == "keputusan") {
           surat.andWhere({ tipe: "keputusan" });
         }
-      } else {
+      } else if (tipe == "disposisi") {
+        suratDataIds = MSurat.query()
+        .where({m_sekolah_id:sekolah.id})
+        .andWhere({dihapus:0});
+        if (search) {
+          suratDataIds.where("perihal", "like", `%${search}%`);
+        }
+
+        suratDataIds = await suratDataIds.ids()
+
+
         surat = MDisposisi.query()
-          .with("surat", (builder) => {
-            builder
-              .where({ m_sekolah_id: sekolah.id })
-              .andWhere({ dihapus: 0 });
-            if (search) {
-              builder.where("perihal", "like", `%${search}%`);
-            }
-          })
+          .with("surat")
           .with("pelaporanDisposisi")
           .where({ dihapus: 0 })
-          .andWhere({ m_user_id: user.id });
+          .whereIn("m_surat_id",suratDataIds);
         if (nav == "belum selesai") {
           surat.andWhere({ status: 0 });
         } else if (nav == "selesai") {
@@ -36237,17 +36242,20 @@ class MainController {
             .andWhere({ teruskan: 1 });
         }
       } else if (tipe == "disposisi") {
+         suratDataIds = MSurat.query()
+        .where({m_sekolah_id:sekolah.id})
+        .andWhere({dihapus:0});
+        if (search) {
+          suratDataIds.where("perihal", "like", `%${search}%`);
+        }
+
+        suratDataIds = await suratDataIds.ids()
+
         surat = MDisposisi.query()
-          .with("surat", (builder) => {
-            builder
-              .where({ m_sekolah_id: sekolah.id })
-              .andWhere({ dihapus: 0 });
-            if (search) {
-              builder.where("perihal", "like", `%${search}%`);
-            }
-          })
+          .with("surat")
           .with("pelaporanDisposisi")
-          .where({ dihapus: 0 });
+          .where({ dihapus: 0 })
+          .whereIn("m_surat_id",suratDataIds);
         if (nav == "belum selesai") {
           surat.andWhere({ status: 0 });
         } else if (nav == "selesai") {
@@ -36266,6 +36274,8 @@ class MainController {
         ]);
       }
     }
+    // return suratDataIds;
+
     surat = await surat.paginate(page, 10);
 
     if (tipe == "disposisi") {
@@ -36527,6 +36537,9 @@ class MainController {
     const disposisi = await MDisposisi.query()
       .with("surat")
       .with("pelaporanDisposisi")
+      .with("user",(builder)=>{
+          builder.select("id","nama","wa_real")
+        })
       .where({ id: disposisi_id })
       .first();
 
