@@ -10986,7 +10986,7 @@ class MainController {
             await MNotifikasiTerjadwal.create({
               tanggal_dibagikan: moment().format("YYYY-MM-DD HH:mm:ss"),
               tanggal_cron: `*/1 * * * *`,
-              pesan: `Halo ${d.user.nama}, Kegiatan ${timelineSebelum.tipe} tanggal ${timelineSebelum.tanggal_pembagian} telah di hapus`,
+              pesan: `Halo ${d.user.nama}, ${timelineSebelum.tipe} tanggal ${timelineSebelum.tanggal_pembagian} telah di hapus`,
               tujuan: d.user.wa_real,
             });
           }
@@ -14585,6 +14585,8 @@ class MainController {
       .where({ id: m_ujian_id })
       .first();
 
+      return waktu_dibuka;
+
     const jadwalUjian = await MJadwalUjian.create({
       jumlah_pg,
       jumlah_esai,
@@ -14616,24 +14618,25 @@ class MainController {
             m_jadwal_ujian_id: jadwalUjian.id,
           });
           const anggotaRombel = await MAnggotaRombel.query()
-            .with("user")
+            .with("user",(builder)=>{
+              builder.select("id","nama",
+             " wa_real")
+            })
             .where({ dihapus: 0 })
             .andWhere({ m_rombel_id: rombel })
             .fetch();
 
           await Promise.all(
             anggotaRombel.toJSON().map(async (d) => {
-              await kirimNotifWa(
-                d.m_user_id,
-                `${menit} ${jam} ${tanggal} ${bulan} *`,
-                `ujian-${jadwalUjian.id}-${d.m_user_id}`,
-                `Halo ${d.user.nama}, ada ujian yang akan datang dari Guru ${
-                  user.nama
-                } (${
-                  pembuatUjian.toJSON().mataPelajaran.nama
-                }). Silahkan klik tautan berikut untuk melihat ujian! Semangat!! 
-                ${domain}/smartschool/jadwal-ujian?subnav=akan-datang`
-              );
+              if(d.user.wa_real){
+                await MNotifikasiTerjadwal.create({
+                  tanggal_dibagikan: tanggal_pembagian,
+                  tanggal_cron: `${menit} ${jam} ${tanggal} ${bulan} *`,
+                  pesan: `Halo ${d.user.nama}, ada tugas kuis dari Guru ${user.nama} (${mapel.nama}) dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! \n \n ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timeline.id}?hal=tugas`,
+                  tujuan: d.user.wa_real,
+                  nama: `tugas-${tugas.id}-${d.m_user_id}`,
+                });
+              }
             })
           );
         })
