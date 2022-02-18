@@ -1666,6 +1666,11 @@ Route.get("/data-warga-sekolah", "DinasController.getData");
 // Pengawas
 Route.get("/dashboard/pengawas", "PengawasController.getDashboardPengawas");
 
+//superadmin
+Route.get("/super-admin/sekolah", "MainController.getSuperAdminSekolah");
+Route.post("/super-admin/sekolah", "MainController.postSekolah");
+Route.get("/super-admin/sekolah/:sekolah_id", "MainController.detailSuperAdminSekolah");
+
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
