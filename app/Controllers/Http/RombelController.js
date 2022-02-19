@@ -11,6 +11,7 @@ const MJadwalMengajar = use("App/Models/MJadwalMengajar");
 const MKategoriMapel = use("App/Models/MKategoriMapel");
 const TkMapelRapor = use("App/Models/TkMapelRapor");
 const TkMateriRombel = use("App/Models/TkMateriRombel");
+const MAbsen = use("App/Models/MAbsen");
 const Helpers = use("Helpers");
 const moment = require("moment");
 require("moment/locale/id");
