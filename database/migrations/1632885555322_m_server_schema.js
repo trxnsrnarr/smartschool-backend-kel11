@@ -10,9 +10,10 @@ class MServerSchema extends Schema {
       table.string("nama");
       table.string("ip");
       table.string("tagihan");
-      table.text("ram")
-      table.text("cpu")
-      table.text("storage")
+      table.text("ram");
+      table.text("cpu");
+      table.text("storage");
+      table.boolean("dihapus").defaultTo(0);
       table.timestamps();
     });
   }
