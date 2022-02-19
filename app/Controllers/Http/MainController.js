@@ -11017,9 +11017,9 @@ class MainController {
         role: user.role,
         absen,
         keterangan,
-        foto_masuk,
-        lokasi_masuk,
-        lokasi_pulang
+        foto_masuk, 
+        lokasi_masuk :JSON.stringify(lokasi_masuk),
+        lokasi_pulang:JSON.stringify(lokasi_pulang),
       });
     }
 
@@ -11070,8 +11070,8 @@ class MainController {
         absen,
         foto_pulang,
         waktu_pulang,
-        lokasi_masuk,
-        lokasi_pulang
+        lokasi_masuk :JSON.stringify(lokasi_masuk),
+        lokasi_pulang:JSON.stringify(lokasi_pulang),
       });
     }
 
