@@ -7044,6 +7044,7 @@ class MainController {
           role: explanation.getCell("F" + rowNumber).value,
           password: explanation.getCell("G " + rowNumber).value,
           wa_ayah: explanation.getCell("H" + rowNumber).value,
+          no_ujian: explanation.getCell("I" + rowNumber).value,
         });
       }
     });
@@ -7065,6 +7066,7 @@ class MainController {
             password: `${d.password}`,
             role: "siswa",
             m_sekolah_id: sekolah.id,
+            no_ujian: d.no_ujian,
             dihapus: 0,
           });
 
@@ -7084,7 +7086,7 @@ class MainController {
         }
         await User.query()
           .where({ id: checkUser.toJSON().id })
-          .update({ dihapus: 0, password: await Hash.make(`${d.password}`) });
+          .update({ dihapus: 0, password: await Hash.make(`${d.password}`), no_ujian: d.no_ujian });
 
         const checkAnggotaRombel = await MAnggotaRombel.query()
           .andWhere({ m_user_id: checkUser.toJSON().id })
