@@ -25,7 +25,7 @@ class MSekolah extends Model {
   }
 
   siswa() {
-    return this.hasMany("App/Models/User", "m_sekolah_id");
+    return this.hasMany("App/Models/User","id", "m_sekolah_id");
   }
 
   guru() {

@@ -16,7 +16,7 @@ class TkPerusahaanSekolah extends Model {
   }
   
   penerimaan() {
-    return this.hasMany("App/Models/MPenerimaanPerusahaan", "tk_perusahaan_sekolah_id");
+    return this.hasMany("App/Models/MPenerimaanPerusahaan");
   }
 }
 
