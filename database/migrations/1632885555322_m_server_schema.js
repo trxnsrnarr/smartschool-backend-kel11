@@ -8,6 +8,7 @@ class MServerSchema extends Schema {
     this.create("m_server", (table) => {
       table.increments();
       table.string("nama");
+      table.text("foto");
       table.string("ip");
       table.string("tagihan");
       table.text("ram");
