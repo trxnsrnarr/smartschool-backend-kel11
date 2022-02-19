@@ -617,11 +617,17 @@ class DinasController {
         absenUser.whereIn("role", ["guru", "admin", "kepsek"]);
       }
       absenUser = await absenUser.fetch();
-      const absen = await MAbsen.query()
-        .where({ role: role })
-        .andWhere({ m_sekolah_id: sekolah.id })
-        .whereBetween("created_at", [awal, akhir])
-        .fetch();
+      let absen
+      absen = MAbsen.query()
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .whereBetween("created_at", [awal, akhir])
+      if (role == "siswa") {
+        absen.andWhere({ role: role });
+      } else if (role == "gtk") {
+        absen.whereIn("role", ["guru", "admin", "kepsek"]);
+      }
+
+      absen = await absen.fetch();
 
       let total;
       total = User.query()
