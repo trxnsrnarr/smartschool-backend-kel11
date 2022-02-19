@@ -1568,13 +1568,15 @@ class RombelController {
       .where({ role: "siswa" })
       .andWhere({ m_sekolah_id: sekolah.id })
       .whereBetween("created_at", [awal, akhir])
+      .whereIn("m_user_id", anggotaRombelIds)
       .fetch();
 
     let total;
     total = User.query()
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ role: "siswa" });
+      .andWhere({ role: "siswa" })
+      .whereIn("id", anggotaRombelIds);
 
     total = await total.getCount();
     const hadir = absen.toJSON().filter((d) => d.absen == "hadir").length;
