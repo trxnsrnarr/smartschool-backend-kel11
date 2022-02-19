@@ -14579,13 +14579,18 @@ class MainController {
       rombel_id,
       m_ujian_id,
     } = request.post();
+    const tanggal = moment(waktu_dibuka).format(`DD`);
+    const bulan = moment(waktu_dibuka).format(`M`);
+    const jam = moment(waktu_dibuka).format(`H`);
+    const menit = moment(waktu_dibuka).format(`mm`);
+
 
     const pembuatUjian = await MUjian.query()
       .with("mataPelajaran")
       .where({ id: m_ujian_id })
       .first();
 
-      return waktu_dibuka;
+      // return waktu_dibuka;
 
     const jadwalUjian = await MJadwalUjian.create({
       jumlah_pg,
@@ -14630,11 +14635,18 @@ class MainController {
             anggotaRombel.toJSON().map(async (d) => {
               if(d.user.wa_real){
                 await MNotifikasiTerjadwal.create({
-                  tanggal_dibagikan: tanggal_pembagian,
-                  tanggal_cron: `${menit} ${jam} ${tanggal} ${bulan} *`,
-                  pesan: `Halo ${d.user.nama}, ada tugas kuis dari Guru ${user.nama} (${mapel.nama}) dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! \n \n ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timeline.id}?hal=tugas`,
+                  tanggal_dibagikan: moment().format("YYYY-MM-DD HH:mm:ss"),
+                  tanggal_cron: `*/1 * * * *`,
+                  pesan: `Halo ${d.user.nama}, ada Ujian ${pembuatUjian.toJSON().mataPelajaran.nama} yang akan datang dengan judul ${pembuatUjian.nama}. Silahkan klik tautan berikut untuk melihat! Semangat!! \n \n ${domain}/smartschool/ujian`,
                   tujuan: d.user.wa_real,
-                  nama: `tugas-${tugas.id}-${d.m_user_id}`,
+                  nama: `ujian-${jadwalUjian.id}-${d.m_user_id}`,
+                });
+                await MNotifikasiTerjadwal.create({
+                  tanggal_dibagikan: waktu_dibuka,
+                  tanggal_cron: `${menit} ${jam} ${tanggal} ${bulan} *`,
+                  pesan: `Halo ${d.user.nama}, ada Ujian ${pembuatUjian.toJSON().mataPelajaran.nama} yang sedang berlangsung dengan judul ${pembuatUjian.nama}. Silahkan klik tautan berikut untuk melihat! Semangat!! \n \n ${domain}/smartschool/ujian`,
+                  tujuan: d.user.wa_real,
+                  nama: `ujian-${jadwalUjian.id}-${d.m_user_id}`,
                 });
               }
             })
@@ -15608,7 +15620,7 @@ class MainController {
     if (user.wa_real) {
       await WhatsAppService.sendMessage(
         user.wa_real,
-        `Halo, jawaban ujianmu sudah masuk. Tunggu gurumu memeriksanya ya!`
+        `Halo ${user.nama}, jawaban ujianmu sudah masuk. Tunggu gurumu memeriksanya ya!`
       );
     }
 
