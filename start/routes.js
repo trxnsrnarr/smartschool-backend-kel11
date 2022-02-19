@@ -1666,6 +1666,8 @@ Route.get("/data-warga-sekolah", "DinasController.getData");
 // Pengawas
 Route.get("/dashboard/pengawas", "PengawasController.getDashboardPengawas");
 
+// Marketplace
+Route.resource('marketplace', 'MarketPlaceController')
 //superadmin
 Route.get("/super-admin/sekolah", "MainController.getSuperAdminSekolah");
 Route.post("/super-admin/sekolah", "MainController.postSekolah");
