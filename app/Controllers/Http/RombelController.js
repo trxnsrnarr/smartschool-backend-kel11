@@ -1522,6 +1522,84 @@ class RombelController {
       ta
     );
   }
+
+  async getDataAbsenWalas({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const ta = await this.getTAAktif(sekolah);
+
+    let { tanggal, page, rombel_id, search } =
+      request.get();
+
+    page = page ? parseInt(page) : 1;
+
+    const awal = moment().format("YYYY-MM-DD 00:00:00");
+    const akhir = moment().format("YYYY-MM-DD 23:59:59");
+
+    const anggotaRombelIds = await MAnggotaRombel.query()
+      .where({ m_rombel_id: rombel_id })
+      .andWhere({ dihapus: 0 })
+      .pluck("m_user_id");
+
+    let absenUser;
+    absenUser = User.query()
+      .with("absen", (builder) => {
+        builder.where("created_at", "like", `%${tanggal}%`);
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ role: "siswa" })
+      .whereIn("id", anggotaRombelIds)
+      if(search){
+        absenUser.andWhere("nama","like",`%${search}%`)
+      };
+
+    absenUser = await absenUser.fetch();
+    const absen = await MAbsen.query()
+      .where({ role: "siswa" })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .whereBetween("created_at", [awal, akhir])
+      .fetch();
+
+    let total;
+    total = User.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ role: "siswa" });
+
+    total = await total.getCount();
+    const hadir = absen.toJSON().filter((d) => d.absen == "hadir").length;
+
+    const sakit = absen.toJSON().filter((d) => d.absen == "sakit").length;
+
+    const izin = absen.toJSON().filter((d) => d.absen == "izin").length;
+
+    const alpa =
+      total -
+      absen
+        .toJSON()
+        .filter(
+          (d) => d.absen == "hadir" || d.absen == "sakit" || d.absen == "izin"
+        ).length;
+
+    return response.ok({
+      absen: {
+        hadir,
+        sakit,
+        izin,
+        alpa,
+      },
+      absenUser,
+    });
+  }
 }
 
 module.exports = RombelController;

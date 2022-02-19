@@ -792,6 +792,7 @@ Route.post(
   "MainController.downloadAbsenRombelTanggal"
 );
 Route.get("/absen/:absen_id", "MainController.detailAbsen");
+Route.get("/absen/rombel-walas", "RombelController.getDataAbsenWalas");
 
 // test
 Route.get("/test", "MainController.downloadPendaftarPPDB");
