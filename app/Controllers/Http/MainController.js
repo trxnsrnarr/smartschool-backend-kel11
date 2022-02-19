@@ -10994,7 +10994,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    let { absen, keterangan, lampiran, foto_masuk, user_id } = request.post();
+    let { absen, keterangan, lampiran, foto_masuk, user_id , lokasi_masuk, lokasi_pulang} = request.post();
 
     lampiran = lampiran ? lampiran.toString() : null;
 
@@ -11016,6 +11016,8 @@ class MainController {
         absen,
         keterangan,
         foto_masuk,
+        lokasi_masuk,
+        lokasi_pulang
       });
     }
 
@@ -11048,7 +11050,11 @@ class MainController {
       foto_pulang,
       waktu_pulang,
       foto_masuk,
+      lokasi_masuk,
+      lokasi_pulang
     } = request.post();
+
+    // return JSON.stringify(lokasi_masuk) ;
 
     if (absen != "hadir") {
       await MAbsen.query().where({ id: absen_id }).update({
@@ -11062,6 +11068,8 @@ class MainController {
         absen,
         foto_pulang,
         waktu_pulang,
+        lokasi_masuk,
+        lokasi_pulang
       });
     }
 
