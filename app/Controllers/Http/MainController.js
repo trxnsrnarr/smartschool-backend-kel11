@@ -6925,13 +6925,21 @@ class MainController {
 
           return;
         }
+
         await User.query()
-          .where({ id: checkUser.toJSON().id })
-          .update({
-            nama: d.nama,
-            dihapus: 0,
-            password: await Hash.make(d.password || "smarteschool"),
-          });
+            .where({ id: checkUser.toJSON().id })
+            .update({
+              nama: d.nama,
+              dihapus: 0,
+            });
+
+          if(d.password) {
+            await User.query()
+            .where({ id: checkUser.toJSON().id })
+            .update({
+              password: await Hash.make(d.password || "smarteschool"),
+            });
+          }
 
         const checkAnggotaRombel = await MAnggotaRombel.query()
           .andWhere({ m_user_id: checkUser.toJSON().id })
