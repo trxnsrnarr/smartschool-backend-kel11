@@ -1070,6 +1070,7 @@ class CDCController {
         });
       })
       .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
       .fetch();
 
     const userTotal = await User.query()
