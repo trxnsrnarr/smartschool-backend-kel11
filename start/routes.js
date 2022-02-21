@@ -1161,6 +1161,7 @@ Route.delete(
   "/penerimaan-perusahaan/:penerimaan_id", "CDCController.deletePenerimaanPerusahaan"
 );
 Route.get("/penerimaan-siswa/:penerimaan_id", "CDCController.getPenerimaanSiswa");
+Route.get("/pkl/penerimaan", "CDCController.getPenerimaanPkl");
 Route.post("/penerimaan-siswa/:penerimaan_id", "CDCController.postPenerimaanSiswa");
 Route.put("/penerimaan-siswa/:siswa_id", "CDCController.putPenerimaanSiswa");
 Route.delete(
