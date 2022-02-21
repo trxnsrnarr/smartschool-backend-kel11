@@ -129,6 +129,10 @@ const MAnggotaEkskul = use("App/Models/MAnggotaEkskul");
 const MFiturSekolah = use("App/Models/MFiturSekolah");
 const MSuratKeputusan = use("App/Models/MSuratKeputusan");
 const TkSuratKeputusanUser = use("App/Models/TkSuratKeputusanUser");
+const MServer = use("App/Models/MServer");
+const TkServerSekolah = use("App/Models/TkServerSekolah");
+const MPembayaranSekolah = use("App/Models/MPembayaranSekolah");
+const MDokumenPembayaranSekolah = use("App/Models/MDokumenPembayaranSekolah");
 
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
@@ -7086,7 +7090,11 @@ class MainController {
         }
         await User.query()
           .where({ id: checkUser.toJSON().id })
-          .update({ dihapus: 0, password: await Hash.make(`${d.password}`), no_ujian: d.no_ujian });
+          .update({
+            dihapus: 0,
+            password: await Hash.make(`${d.password}`),
+            no_ujian: d.no_ujian,
+          });
 
         const checkAnggotaRombel = await MAnggotaRombel.query()
           .andWhere({ m_user_id: checkUser.toJSON().id })
@@ -10996,7 +11004,15 @@ class MainController {
 
     const user = await auth.getUser();
 
-    let { absen, keterangan, lampiran, foto_masuk, user_id , lokasi_masuk, lokasi_pulang} = request.post();
+    let {
+      absen,
+      keterangan,
+      lampiran,
+      foto_masuk,
+      user_id,
+      lokasi_masuk,
+      lokasi_pulang,
+    } = request.post();
 
     lampiran = lampiran ? lampiran.toString() : null;
 
@@ -11017,9 +11033,9 @@ class MainController {
         role: user.role,
         absen,
         keterangan,
-        foto_masuk, 
-        lokasi_masuk :JSON.stringify(lokasi_masuk),
-        lokasi_pulang:JSON.stringify(lokasi_pulang),
+        foto_masuk,
+        lokasi_masuk: JSON.stringify(lokasi_masuk),
+        lokasi_pulang: JSON.stringify(lokasi_pulang),
       });
     }
 
@@ -11053,7 +11069,7 @@ class MainController {
       waktu_pulang,
       foto_masuk,
       lokasi_masuk,
-      lokasi_pulang
+      lokasi_pulang,
     } = request.post();
 
     // return JSON.stringify(lokasi_masuk) ;
@@ -11065,14 +11081,16 @@ class MainController {
         lampiran: lampiran.toString(),
       });
     } else {
-      await MAbsen.query().where({ id: absen_id }).update({
-        foto_masuk,
-        absen,
-        foto_pulang,
-        waktu_pulang,
-        lokasi_masuk :JSON.stringify(lokasi_masuk),
-        lokasi_pulang:JSON.stringify(lokasi_pulang),
-      });
+      await MAbsen.query()
+        .where({ id: absen_id })
+        .update({
+          foto_masuk,
+          absen,
+          foto_pulang,
+          waktu_pulang,
+          lokasi_masuk: JSON.stringify(lokasi_masuk),
+          lokasi_pulang: JSON.stringify(lokasi_pulang),
+        });
     }
 
     return response.ok({
@@ -36190,7 +36208,7 @@ class MainController {
       page = 1,
       tipe,
       search,
-      nav ="semua",
+      nav = "semua",
       tanggal_awal,
       tanggal_akhir,
     } = request.get();
@@ -36213,20 +36231,19 @@ class MainController {
         }
       } else if (tipe == "disposisi") {
         suratDataIds = MSurat.query()
-        .where({m_sekolah_id:sekolah.id})
-        .andWhere({dihapus:0});
+          .where({ m_sekolah_id: sekolah.id })
+          .andWhere({ dihapus: 0 });
         if (search) {
           suratDataIds.where("perihal", "like", `%${search}%`);
         }
 
-        suratDataIds = await suratDataIds.ids()
-
+        suratDataIds = await suratDataIds.ids();
 
         surat = MDisposisi.query()
           .with("surat")
           .with("pelaporanDisposisi")
           .where({ dihapus: 0 })
-          .whereIn("m_surat_id",suratDataIds);
+          .whereIn("m_surat_id", suratDataIds);
         if (nav == "belum selesai") {
           surat.andWhere({ status: 0 });
         } else if (nav == "selesai") {
@@ -36252,20 +36269,20 @@ class MainController {
             .andWhere({ teruskan: 1 });
         }
       } else if (tipe == "disposisi") {
-         suratDataIds = MSurat.query()
-        .where({m_sekolah_id:sekolah.id})
-        .andWhere({dihapus:0});
+        suratDataIds = MSurat.query()
+          .where({ m_sekolah_id: sekolah.id })
+          .andWhere({ dihapus: 0 });
         if (search) {
           suratDataIds.where("perihal", "like", `%${search}%`);
         }
 
-        suratDataIds = await suratDataIds.ids()
+        suratDataIds = await suratDataIds.ids();
 
         surat = MDisposisi.query()
           .with("surat")
           .with("pelaporanDisposisi")
           .where({ dihapus: 0 })
-          .whereIn("m_surat_id",suratDataIds);
+          .whereIn("m_surat_id", suratDataIds);
         if (nav == "belum selesai") {
           surat.andWhere({ status: 0 });
         } else if (nav == "selesai") {
@@ -36547,9 +36564,9 @@ class MainController {
     const disposisi = await MDisposisi.query()
       .with("surat")
       .with("pelaporanDisposisi")
-      .with("user",(builder)=>{
-          builder.select("id","nama","wa_real")
-        })
+      .with("user", (builder) => {
+        builder.select("id", "nama", "wa_real");
+      })
       .where({ id: disposisi_id })
       .first();
 
@@ -41329,9 +41346,13 @@ class MainController {
     // const { rombel_id } = request.post();
     let sekolah;
 
-    sekolah = MSekolah.query().withCount("siswa as total", (builder) => {
-      builder.where({ dihapus: 0 });
-    });
+    sekolah = MSekolah.query()
+      .with("tkServer", (builder) => {
+        builder.with("server");
+      })
+      .withCount("siswa as total", (builder) => {
+        builder.where({ dihapus: 0 });
+      });
 
     if (search) {
       sekolah.where("nama", "like", `%${search}%`);
@@ -41453,6 +41474,12 @@ class MainController {
       link_dapodik,
     });
 
+    if (!sekolah) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
     return response.ok({
       message: messagePostSuccess,
     });
@@ -41462,7 +41489,7 @@ class MainController {
     response,
     request,
     auth,
-    params: { pembayaran_id },
+    params: { pembayaranSekolah_id },
   }) {
     const user = await User.query().count("* as total");
     // const { rombel_id } = request.post();
@@ -41471,7 +41498,7 @@ class MainController {
       .with("dokumen", (builder) => {
         builder.where({ dihapus: 0 });
       })
-      .where({ id: pembayaran_id })
+      .where({ id: pembayaranSekolah_id })
       .first();
 
     return response.ok({
@@ -41485,8 +41512,21 @@ class MainController {
     auth,
     params: { sekolah_id },
   }) {
-    const { nama, tanggal, jumlah, mulai_kontrak, akhir_kontrak } =
-      request.post();
+    const {
+      nama,
+      mulai_kontrak,
+      akhir_kontrak,
+      jumlah_pembayaran,
+      smarteschool,
+      internet,
+      face_recog,
+      stand_fr,
+      jumlah_pengguna,
+      jumlah_fr,
+      jumlah_stand,
+      ukuran_bandwidth,
+      invoice_bulan,
+    } = request.post();
 
     let validation = await validate(
       request.post(),
@@ -41500,10 +41540,18 @@ class MainController {
 
     const sekolah = await MPembayaranSekolah.create({
       nama,
-      tanggal,
-      jumlah,
       mulai_kontrak,
       akhir_kontrak,
+      jumlah_pembayaran,
+      smarteschool,
+      internet,
+      face_recog,
+      stand_fr,
+      jumlah_pengguna,
+      jumlah_fr,
+      jumlah_stand,
+      ukuran_bandwidth,
+      invoice_bulan,
       m_sekolah_id: sekolah_id,
       dihapus: 0,
     });
@@ -41519,8 +41567,21 @@ class MainController {
     auth,
     params: { pembayaranSekolah_id },
   }) {
-    const { nama, tanggal, jumlah, mulai_kontrak, akhir_kontrak } =
-      request.post();
+    const {
+      nama,
+      mulai_kontrak,
+      akhir_kontrak,
+      jumlah_pembayaran,
+      smarteschool,
+      internet,
+      face_recog,
+      stand_fr,
+      jumlah_pengguna,
+      jumlah_fr,
+      jumlah_stand,
+      ukuran_bandwidth,
+      invoice_bulan,
+    } = request.post();
 
     let validation = await validate(
       request.post(),
@@ -41536,14 +41597,41 @@ class MainController {
       .where({ id: pembayaranSekolah_id })
       .update({
         nama,
-        tanggal,
-        jumlah,
         mulai_kontrak,
         akhir_kontrak,
+        jumlah_pembayaran,
+        smarteschool,
+        internet,
+        face_recog,
+        stand_fr,
+        jumlah_pengguna,
+        jumlah_fr,
+        jumlah_stand,
+        ukuran_bandwidth,
+        invoice_bulan,
       });
 
     return response.ok({
       message: messagePutSuccess,
+    });
+  }
+
+  async deletePembayaranSekolah({
+    response,
+    request,
+    auth,
+    params: { pembayaranSekolah_id },
+  }) {
+    
+
+    const sekolah = await MPembayaranSekolah.query()
+      .where({ id: pembayaranSekolah_id })
+      .update({
+        dihapus: 1
+      });
+
+    return response.ok({
+      message: messageDeleteSuccess,
     });
   }
 
@@ -41626,6 +41714,56 @@ class MainController {
     });
   }
 
+  async getSuperAdminServer({ response, request, auth }) {
+    let { search, page } = request.get();
+    const user = await User.query().count("* as total");
+    // const { rombel_id } = request.post();
+    let server;
+
+    server = MServer.query().with("tkSekolah", (builder) => {
+      builder
+        .with("sekolah", (builder) => {
+          builder.with("siswa as total", (builder) => {
+            builder.where({ dihapus: 0 });
+          });
+        })
+        .where({ dihapus: 0 });
+    });
+
+    if (search) {
+      server.where("nama", "like", `%${search}%`);
+    }
+
+    server = await server.paginate(page, 10);
+
+    return response.ok({
+      server,
+    });
+  }
+
+  async detailSuperAdminServer({
+    response,
+    request,
+    auth,
+    params: { server_id },
+  }) {
+    const server = await MServer.query()
+      .with("tkSekolah", (builder) => {
+        builder
+          .with("sekolah", (builder) => {
+            builder.with("siswa as total", (builder) => {
+              builder.where({ dihapus: 0 });
+            });
+          })
+          .where({ dihapus: 0 });
+      })
+      .where({ id: server_id })
+      .first();
+
+    return response.ok({
+      server,
+    });
+  }
   async postServer({ response, request, auth }) {
     const { nama, ip, tagihan } = request.post();
 
@@ -41669,6 +41807,11 @@ class MainController {
       ip,
       tagihan,
     });
+    if (!server) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
 
     return response.ok({
       message: messagePutSuccess,
@@ -41679,14 +41822,18 @@ class MainController {
     const server = await MServer.query().where({ id: server_id }).update({
       dihapus: 1,
     });
-
+    if (!server) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
     return response.ok({
       message: messageDeleteSuccess,
     });
   }
 
-  async postSekolahServer({ response, request, auth, params: { server_id } }) {
-    const { sekolah_id } = request.post();
+  async postSekolahServer({ response, request, auth }) {
+    const { sekolah_id, server_id } = request.post();
 
     let validation = await validate(
       request.post(),
@@ -41706,6 +41853,63 @@ class MainController {
 
     return response.ok({
       message: messagePostSuccess,
+    });
+  }
+
+  async putSekolahServer({
+    response,
+    request,
+    auth,
+    params: { tk_sekolah_server_id },
+  }) {
+    const { sekolah_id, server_id } = request.post();
+
+    let validation = await validate(
+      request.post(),
+      rulesUserPost,
+      messagesUser
+    );
+
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const server = await TkServerSekolah.query()
+      .where({ id: tk_sekolah_server_id })
+      .update({
+        sekolah_id,
+        server_id,
+      });
+    if (!server) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteSekolahServer({
+    response,
+    request,
+    auth,
+    params: { tk_sekolah_server_id },
+  }) {
+    const server = await TkServerSekolah.query()
+      .where({ id: tk_sekolah_server_id })
+      .update({
+        dihapus: 1,
+      });
+    if (!server) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
     });
   }
 
