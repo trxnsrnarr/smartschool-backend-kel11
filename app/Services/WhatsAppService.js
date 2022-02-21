@@ -47,7 +47,7 @@ class WhatsAppService {
       return data;
     } catch (err) {
       // console.log(err.response.data);
-      return err.response.data;
+      return err;
     }
   }
 }
