@@ -1678,7 +1678,7 @@ Route.put("/super-admin/sekolah/:sekolah_id", "MainController.putSekolah");
 Route.delete("/super-admin/sekolah/:sekolah_id", "MainController.deleteSekolah");
 
 //SuperAdmin Server
-Route.get("/super-admin/server", "MainController.getSuperAdminSekolah");
+Route.get("/super-admin/server", "MainController.getSuperAdminServer");
 Route.get("/super-admin/server/:server_id", "MainController.detailSuperAdminServer");
 Route.post("/super-admin/server", "MainController.postServer");
 Route.put("/super-admin/server/:server_id", "MainController.putServer");
