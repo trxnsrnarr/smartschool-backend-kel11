@@ -36,6 +36,10 @@ class MSekolah extends Model {
     return this.hasOne("App/Models/MFiturSekolah", "id", "m_sekolah_id");
   }
 
+  tkServer() {
+    return this.belongsTo("App/Models/TkServerSekolah", "id", "m_sekolah_id");
+  }
+
   static get computed() {
     return ["tingkat_format"];
   }

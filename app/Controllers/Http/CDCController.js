@@ -1113,7 +1113,7 @@ class CDCController {
     const perusahaan = await TkPerusahaanSekolah.query()
       .with("penerimaan", (builder) => {
         builder
-          .withCount("siswa", (builder) => {
+          .withCount("siswa as total", (builder) => {
             builder.where({ dihapus: 0 });
           })
           .where({ dihapus: 0 });
@@ -1127,15 +1127,14 @@ class CDCController {
 
     await Promise.all(
       perusahaan.toJSON().map(async (d) => {
-        await Promise.all(
-          d.penerimaan.map(async (e) => {
-            await Promise.all(
-              e.siswa.map(async (s) => {
-                totalSiswa = totalSiswa + s.siswa.__meta__;
-              })
+        if(d.penerimaan){
+
+          await Promise.all(
+            d.penerimaan.map(async (e) => {
+              totalSiswa = totalSiswa + e ? e.__meta__.total:"0";
+            })
             );
-          })
-        );
+          }
         totalPartner = totalPartner + 1;
       })
     );

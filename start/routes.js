@@ -1669,10 +1669,37 @@ Route.get("/dashboard/pengawas", "PengawasController.getDashboardPengawas");
 
 // Marketplace
 Route.resource('marketplace', 'MarketPlaceController')
-//superadmin
+//superadmin Sekolah
 Route.get("/super-admin/sekolah", "MainController.getSuperAdminSekolah");
-Route.post("/super-admin/sekolah", "MainController.postSekolah");
 Route.get("/super-admin/sekolah/:sekolah_id", "MainController.detailSuperAdminSekolah");
+Route.post("/super-admin/sekolah", "MainController.postSekolah");
+Route.put("/super-admin/sekolah/:sekolah_id", "MainController.putSekolah");
+Route.delete("/super-admin/sekolah/:sekolah_id", "MainController.deleteSekolah");
+
+//SuperAdmin Server
+Route.get("/super-admin/server", "MainController.getSuperAdminSekolah");
+Route.get("/super-admin/server/:server_id", "MainController.detailSuperAdminServer");
+Route.post("/super-admin/server", "MainController.postServer");
+Route.put("/super-admin/server/:server_id", "MainController.putServer");
+Route.delete("/super-admin/server/:server_id", "MainController.deleteServer");
+
+//SuperAdmin Sekolah Server
+Route.post("/super-admin/sekolah-server", "MainController.postSekolahServer");
+Route.put("/super-admin/sekolah-server/:tk_sekolah_server_id", "MainController.putSekolahServer");
+Route.delete("/super-admin/sekolah-server/:tk_sekolah_server_id", "MainController.deleteSekolahServer");
+
+//SuperAdmin Pembayaran Sekolah
+Route.get("/super-admin/pembayaran/:pembayaranSekolah_id", "MainController.detailPembayaranSekolah");
+Route.post("/super-admin/pembayaran/:sekolah_id", "MainController.postPembayaranSekolah");
+Route.put("/super-admin/pembayaran/:pembayaranSekolah_id", "MainController.putPembayaranSekolah");
+Route.delete("/super-admin/pembayaran/:pembayaranSekolah_id", "MainController.deletePembayaranSekolah");
+
+//SuperAdmin Dokumen Pembayaran Sekolah
+Route.post("/super-admin/dokumen/:pembayaranSekolah_id", "MainController.postDokumenPembayaranSekolah");
+Route.put("/super-admin/dokumen/:dokumenPembayaranSekolah_id", "MainController.putDokumenPembayaranSekolah");
+Route.delete("/super-admin/dokumen/:dokumenPembayaranSekolah_id", "MainController.deleteDokumenPembayaranSekolah");
+
+
 
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
