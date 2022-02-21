@@ -1086,6 +1086,7 @@ class CDCController {
     userIds = await userIds.ids();
     penerimaanSiswa = MPenerimaanSiswa.query()
       .with("user", (builder) => {
+        builder.select("id","nama")
       })
       .with("rombel", (builder) => {
         builder.select("id", "nama");
@@ -1127,14 +1128,13 @@ class CDCController {
       .getCount();
     await Promise.all(
       perusahaan.toJSON().map(async (d) => {
-        if(d.penerimaan){
-
+        if (d.penerimaan) {
           await Promise.all(
             d.penerimaan.map(async (e) => {
-              totalSiswa = totalSiswa + e ? e.__meta__.total:"0";
+              totalSiswa = totalSiswa + e.__meta__.total;
             })
-            );
-          }
+          );
+        }
         totalPartner = totalPartner + 1;
       })
     );
