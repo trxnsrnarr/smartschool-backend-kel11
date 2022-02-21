@@ -12731,7 +12731,7 @@ class MainController {
         .pluck("m_rombel_id");
 
       const rombel = await MRombel.query()
-        .whereIn("id", [...rombelIds, ...rombelWalas])
+        .whereIn("id", [...rombelIds])
         .andWhere({ dihapus: 0 })
         .andWhere({ m_ta_id: ta.id })
         .fetch();
