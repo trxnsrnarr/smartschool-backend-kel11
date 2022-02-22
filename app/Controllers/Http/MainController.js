@@ -41939,7 +41939,10 @@ class MainController {
             const totalDibayar =
               pembayaranSiswa
                 .toJSON()
-                .riwayat.reduce((a, b) => a + b.nominal, 0) + d.nominal;
+                .riwayat.reduce(
+                  (a, b) => a + (b.dikonfirmasi ? b.nominal : 0),
+                  0
+                ) + d.nominal;
             const totalTagihan =
               pembayaranSiswa.toJSON().rombelPembayaran?.pembayaran?.nominal;
             if (totalDibayar < totalTagihan - 1) {
@@ -41949,17 +41952,11 @@ class MainController {
                   status: "belum lunas",
                 });
             } else {
-              if (
-                !pembayaranSiswa
-                  .toJSON()
-                  .riwayat.some((item) => !item.dikonfirmasi)
-              ) {
-                await MPembayaranSiswa.query()
-                  .where({ id: pembayaranSiswa.id })
-                  .update({
-                    status: "lunas",
-                  });
-              }
+              await MPembayaranSiswa.query()
+                .where({ id: pembayaranSiswa.id })
+                .update({
+                  status: "lunas",
+                });
             }
             return d.nominal;
           }
