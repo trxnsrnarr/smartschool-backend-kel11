@@ -6930,20 +6930,18 @@ class MainController {
           return;
         }
 
-        await User.query()
-            .where({ id: checkUser.toJSON().id })
-            .update({
-              nama: d.nama,
-              dihapus: 0,
-            });
+        await User.query().where({ id: checkUser.toJSON().id }).update({
+          nama: d.nama,
+          dihapus: 0,
+        });
 
-          if(d.password) {
-            await User.query()
+        if (d.password) {
+          await User.query()
             .where({ id: checkUser.toJSON().id })
             .update({
               password: await Hash.make(d.password || "smarteschool"),
             });
-          }
+        }
 
         const checkAnggotaRombel = await MAnggotaRombel.query()
           .andWhere({ m_user_id: checkUser.toJSON().id })
@@ -41055,7 +41053,10 @@ class MainController {
             const totalDibayar =
               pembayaranSiswa
                 .toJSON()
-                .riwayat.reduce((a, b) => a + b.nominal, 0) + d.nominal;
+                .riwayat.reduce(
+                  (a, b) => a + (b.dikonfirmasi ? b.nominal : 0),
+                  0
+                ) + d.nominal;
             const totalTagihan =
               pembayaranSiswa.toJSON().rombelPembayaran?.pembayaran?.nominal;
             if (totalDibayar < totalTagihan) {
@@ -41065,17 +41066,11 @@ class MainController {
                   status: "belum lunas",
                 });
             } else {
-              if (
-                !pembayaranSiswa
-                  .toJSON()
-                  .riwayat.some((item) => !item.dikonfirmasi)
-              ) {
-                await MPembayaranSiswa.query()
-                  .where({ id: pembayaranSiswa.id })
-                  .update({
-                    status: "lunas",
-                  });
-              }
+              await MPembayaranSiswa.query()
+                .where({ id: pembayaranSiswa.id })
+                .update({
+                  status: "lunas",
+                });
             }
             return d.nominal;
           }
@@ -41630,12 +41625,10 @@ class MainController {
     auth,
     params: { pembayaranSekolah_id },
   }) {
-    
-
     const sekolah = await MPembayaranSekolah.query()
       .where({ id: pembayaranSekolah_id })
       .update({
-        dihapus: 1
+        dihapus: 1,
       });
 
     return response.ok({
