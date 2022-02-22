@@ -9056,7 +9056,7 @@ class MainController {
                             pesan: `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama}) dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! \n \n${domain}/smartschool/rombel/${m_jadwal_mengajar_id}?nav=tugas&subnav=saat-ini`,
                             tujuan: d.user.wa_real,
                             nama: `tugas-${timeline.id}-${d.m_user_id}`,
-                          })
+                          });
                           // await kirimNotifWa(
                           //   d.m_user_id,
                         }
@@ -9454,12 +9454,12 @@ class MainController {
 
                     //kelas lama
                     await MNotifikasiTerjadwal.create({
-                        tanggal_dibagikan: tanggal_pembagian,
-                        tanggal_cron: `${menit} ${jam} ${tanggal} ${bulan} *`,
-                        pesan: `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama}) dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! \n \n${domain}/smartschool/kelas/${jadwalSendiri.id}/rombel/${m_jadwal_mengajar_id}?nav=tugas&subnav=saat-ini`,
-                        tujuan: d.user.wa_real,
-                        nama: `tugas-${tugas_id}-${d.m_user_id}`,
-                      });
+                      tanggal_dibagikan: tanggal_pembagian,
+                      tanggal_cron: `${menit} ${jam} ${tanggal} ${bulan} *`,
+                      pesan: `Halo ${d.user.nama}, ada tugas dari Guru ${user.nama} (${mapel.nama}) dengan judul ${judul}. Silahkan kerjakan dengan klik tautan berikut ya! Semangat!! \n \n${domain}/smartschool/kelas/${jadwalSendiri.id}/rombel/${m_jadwal_mengajar_id}?nav=tugas&subnav=saat-ini`,
+                      tujuan: d.user.wa_real,
+                      nama: `tugas-${tugas_id}-${d.m_user_id}`,
+                    });
                   }
                 }
                 // if (d.user.email != null) {
@@ -10388,7 +10388,7 @@ class MainController {
             //   nama: `absen-${timeline.id}-${d.m_user_id}`,
             // });
 
-                await MNotifikasiTerjadwal.create({
+            await MNotifikasiTerjadwal.create({
               tanggal_dibagikan: tanggal_pembagian,
               tanggal_cron: `${menit} ${jam} ${tanggal} ${bulan} *`,
               pesan: `Halo ${d.user.nama}, ada pertemuan dari Guru ${user.nama} (${mapel.nama}). Silahkan klik tautan berikut untuk melihat pertemuan! Semangat!! \n \n${domain}/smartschool/rombel/${m_jadwal_mengajar_id}?nav=pertemuan`,
@@ -10471,7 +10471,7 @@ class MainController {
           //   d.m_user_id,
           //   `${menit} ${jam} ${tanggal} ${bulan} *`,
           //   `tugas-${timeline.id}-${d.m_user_id}`,
-          //   `Halo ${d.user.nama}, ada diskusi dari Guru ${user.nama} (${mapel.nama}). Silahkan klik tautan berikut untuk melihat pertemuan! Semangat!! 
+          //   `Halo ${d.user.nama}, ada diskusi dari Guru ${user.nama} (${mapel.nama}). Silahkan klik tautan berikut untuk melihat pertemuan! Semangat!!
           //   ${domain}/smartschool/timeline/${timeline.id}?hal=pertemuan`
           // );
         })
@@ -47393,82 +47393,61 @@ class MainController {
           } catch (err) {
             return { mapelBaru, rombelBaru, jamBaru };
           }
-
-          if (mapelBaru.kelompok == "C") {
-            const check = await MMateri.query()
-              .where({ m_mata_pelajaran_id: mapelBaru.id })
-              .andWhere({ tingkat: rombelBaru.tingkat })
-              .andWhere({ m_jurusan_id: rombelBaru.m_jurusan_id })
-              .first();
-
-            if (!check) {
-              const materi = await MMateri.create(
-                {
-                  tingkat: rombelBaru.tingkat,
-                  m_jurusan_id: rombelBaru.m_jurusan_id,
-                  m_mata_pelajaran_id: mapelBaru.id,
-                }
-                // trx
-              );
-
-              await TkMateriRombel.create(
-                {
-                  m_materi_id: materi.id,
-                  m_rombel_id: rombelBaru.id,
-                }
-                // trx
-              );
-            } else {
-              const checkTk = await TkMateriRombel.query()
-                .where({ m_materi_id: check.id })
-                .andWhere({ m_rombel_id: rombelBaru.id })
+          const semuaMateri = await MMateri.query()
+            .whereIn("m_mata_pelajaran", mapelBaruData)
+            .andWhere({ dihapus: 0 })
+            .fetch();
+          let janganUlangMateri = [];
+          const materiData = semuaMateri.toJSON().filter(async (s) => {
+            if (
+              !janganUlangMateri.find(
+                (e) =>
+                  e.tingkat == s.tingkat &&
+                  e.m_mata_pelajaran_id == s.m_mata_pelajaran_id &&
+                  e.dihapus == 0
+              )
+            ) {
+              const check = await MMateri.query()
+                .where({ m_mata_pelajaran_id: s.m_mata_pelajaran_id })
+                .andWhere({ tingkat: s.tingkat })
                 .first();
-              await TkMateriRombel.create(
-                {
-                  m_materi_id: check.id,
-                  m_rombel_id: rombelBaru.id,
+              if (check) {
+                if (check.dihapus) {
+                  await MMateri.query()
+                    .where({ id: check.id })
+                    .update({ dihapus: 0 });
                 }
-                // trx
-              );
-            }
-          } else {
-            const check = await MMateri.query()
-              .where({ m_mata_pelajaran_id: mapelBaru.id })
-              .andWhere({ tingkat: rombelBaru.tingkat })
-              .first();
-
-            if (!check) {
-              const materi = await MMateri.create(
-                {
-                  tingkat: rombelBaru.tingkat,
-                  m_mata_pelajaran_id: mapelBaru.id,
-                }
-                // trx
-              );
-
-              await TkMateriRombel.create(
-                {
-                  m_materi_id: materi.id,
-                  m_rombel_id: rombelBaru.id,
-                }
-                // trx
-              );
-            } else {
-              const checkTk = await TkMateriRombel.query()
-                .where({ m_materi_id: check.id })
-                .andWhere({ m_rombel_id: rombelBaru.id })
-                .first();
-              if (!checkTk) {
-                await TkMateriRombel.create(
-                  {
-                    m_materi_id: check.id,
-                    m_rombel_id: rombelBaru.id,
-                  }
-                  // trx
-                );
               }
+
+              if (!check) {
+                const materi = await MMateri.create({
+                  tingkat: s.tingkat,
+                  m_mata_pelajaran_id: s.m_mata_pelajaran_id,
+                });
+
+                await TkMateriRombel.create({
+                  m_materi_id: materi.id,
+                  m_rombel_id: d.m_rombel_id,
+                });
+              } else {
+                const checkTk = await TkMateriRombel.query()
+                  .where({ m_materi_id: check.id })
+                  .andWhere({ m_rombel_id: d.m_rombel_id })
+                  .first();
+                if (!checkTk) {
+                  await TkMateriRombel.create({
+                    m_materi_id: check.id,
+                    m_rombel_id: d.m_rombel_id,
+                  });
+                }
+              }
+
+              janganUlangMateri.push(d);
+              return true;
+            } else {
+              return false;
             }
-          }
+          });
           // result.push(1);
           // }
           // await trx.commit();
