@@ -47465,6 +47465,11 @@ class MainController {
       .andWhere({ m_sekolah_id: sekolah.id })
       .fetch();
 
+    const mapelBaruDataIds = await MMataPelajaran.query()
+      .where({ m_ta_id: taBaru.id })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .ids();
+
     let all;
     if (taBaru.jadwal_sinkron == 0) {
       all = await Promise.all(
@@ -47566,7 +47571,7 @@ class MainController {
             return { mapelBaru, rombelBaru, jamBaru };
           }
           const semuaMateri = await MMateri.query()
-            .whereIn("m_mata_pelajaran", mapelBaruData)
+            .whereIn("m_mata_pelajaran", mapelBaruDataIds)
             .andWhere({ dihapus: 0 })
             .fetch();
           let janganUlangMateri = [];
@@ -51114,7 +51119,31 @@ class MainController {
       .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ m_ta_id: ta_id })
       .fetch();
+      let tingkatData = [];
 
+      if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA") {
+        tingkatData = ["X", "XI", "XII", "XIII"];
+      } else if (sekolah.tingkat == "SMP") {
+        tingkatData = ["VII", "VIII", "IX"];
+      } else if (sekolah.tingkat == "SD") {
+        tingkatData = ["I", "II", "III", "IV", "V", "VI"];
+      } else if (sekolah.tingkat == "SLB") {
+        tingkatData = [
+          "I",
+          "II",
+          "III",
+          "IV",
+          "V",
+          "VI",
+          "VII",
+          "VIII",
+          "IX",
+          "X",
+          "XI",
+          "XII",
+        ];
+      }
+  
     // const urutan = rombel
     //   .toJSON()
     //   .anggotaRombel.sort((a, b) => {
@@ -51131,7 +51160,8 @@ class MainController {
 
     return response.ok({
       rombel,
-      semuaTA
+      semuaTA,
+      tingkatData
       // urutan,
     });
   }
