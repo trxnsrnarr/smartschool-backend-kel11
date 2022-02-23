@@ -51079,8 +51079,14 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
+    const ta = await this.getTAAktif(sekolah);
+    const { ta_id = ta.id, search } = request.get();
 
-    const { ta_id, search } = request.get();
+    const semuaTA = await Mta.query()
+    .select("id", "tahun", "semester")
+    .where({ m_sekolah_id: sekolah.id })
+    .andWhere({ dihapus: 0 })
+    .fetch();
     // return ta_id;
 
     const rombel = await MRombel.query()
@@ -51125,6 +51131,7 @@ class MainController {
 
     return response.ok({
       rombel,
+      semuaTA
       // urutan,
     });
   }
