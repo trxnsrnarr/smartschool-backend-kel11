@@ -11807,7 +11807,15 @@ class MainController {
     }
 
     const fileName = new Date().getTime();
-    await Drive.put(`fr/${fileName}.jpeg`, Buffer.from(photo, "base64"));
+    let url = "";
+    if (photo) {
+      const filePhoto =  bucket.file(`fr/${fileName}.jpeg`);
+      filePhoto.save(Buffer.from(photo, "base64")).then(async () => {
+        const response = await filePhoto.get()
+        url = response[1].mediaLink;
+      })
+      // await Drive.put(`fr/${fileName}.jpeg`, Buffer.from(photo, "base64"));
+    }
 
     const absen = await MAbsen.query()
       .where("created_at", "like", `%${moment().format("YYYY-MM-DD")}%`)
@@ -11820,7 +11828,7 @@ class MainController {
         m_user_id: user.id,
         role: user.role,
         absen: "hadir",
-        foto_masuk_local: fileName,
+        foto_masuk_local: url,
         masker: mask,
         suhu: temp,
       });
@@ -11830,7 +11838,7 @@ class MainController {
         m_user_id: user.id,
         role: user.role,
         absen: "hadir",
-        foto_pulang_local: fileName,
+        foto_pulang_local: url,
         masker: mask,
         suhu: temp,
       });
