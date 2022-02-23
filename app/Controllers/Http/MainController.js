@@ -13330,8 +13330,11 @@ class MainController {
 
     let totalSoalTambah = 0;
 
-    const result = await Promise.all(
-      data.map(async (d) => {
+
+    for (let i = 0; i < data.length; i++) {
+      const d = data[i];
+    // const result = await Promise.all(
+    //   data.map(async (d) => {
         const soalUjian = await MSoalUjian.create({
           kd: d.kd,
           kd_konten_materi: d.kd_konten_materi,
@@ -13360,8 +13363,9 @@ class MainController {
           m_soal_ujian_id: soalUjian.id,
         });
         totalSoalTambah = totalSoalTambah + 1;
-      })
-    );
+    //   })
+    // );
+    }
 
     const checkTotal = await MRpp.query()
       .where({ m_ujian_id: m_ujian_id })
@@ -13375,7 +13379,7 @@ class MainController {
         });
     }
 
-    return result;
+    return "Data Berhasil Di Input";
   }
 
   async importSoalUjian({ response, request, auth }) {
