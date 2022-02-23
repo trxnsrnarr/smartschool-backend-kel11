@@ -36429,8 +36429,8 @@ class MainController {
               foto_masuk: anggota.user
                 ? anggota.user.absen
                   ? anggota.user.absen.length
-                    ? anggota.user.absen[0].foto_masuk ||
-                      anggota.user.absen[0].foto_masuk_local
+                    ? anggota.user.absen[0].foto_masuk_local ||
+                      anggota.user.absen[0].foto_masuk
                     : "-"
                   : "-"
                 : "-",
@@ -36444,8 +36444,8 @@ class MainController {
               foto_pulang: anggota.user
                 ? anggota.user.absen
                   ? anggota.user.absen.length
-                    ? anggota.user.absen[0].foto_pulang ||
-                      anggota.user.absen[0].foto_pulang_local
+                    ? anggota.user.absen[0].foto_pulang_local ||
+                      anggota.user.absen[0].foto_pulang
                     : "-"
                   : "-"
                 : "-",
