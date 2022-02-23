@@ -1239,6 +1239,7 @@ class MainController {
       nuptk,
       pangkat,
       golongan,
+      wa_real,
     } = request.post();
     whatsapp = whatsapp.trim();
 
@@ -1712,6 +1713,7 @@ class MainController {
 
       // identitas
       nama,
+      wa_real,
       nama_panggilan,
       whatsapp,
       gender,
@@ -1811,6 +1813,7 @@ class MainController {
 
     let userPayload = {
       // identitas
+      wa_real,
       nama_ibu,
       nama,
       nama_ayah,
