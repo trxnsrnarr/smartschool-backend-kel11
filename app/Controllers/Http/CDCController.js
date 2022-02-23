@@ -978,7 +978,7 @@ class CDCController {
     const perusahaanSekolah = await TkPerusahaanSekolah.query()
       .with("penerimaan", (builder) => {
         builder
-          .withCount("siswa", (builder) => {
+          .withCount("siswa as total", (builder) => {
             builder.where({ dihapus: 0 });
           })
           .where({ dihapus: 0 });
@@ -1003,11 +1003,7 @@ class CDCController {
       perusahaanSekolah.toJSON().map(async (d) => {
         await Promise.all(
           d.penerimaan.map(async (e) => {
-            await Promise.all(
-              e.siswa.map(async (s) => {
-                totalSiswa = totalSiswa + s.siswa.__meta__;
-              })
-            );
+            totalSiswa = totalSiswa + e.__meta__.total;
           })
         );
       })
@@ -1019,6 +1015,7 @@ class CDCController {
       perusahaan,
       perusahaanSekolah,
       semuaPerusahaan,
+      totalSiswa,
     });
   }
 
@@ -1074,8 +1071,6 @@ class CDCController {
       .fetch();
 
     const userTotal = await User.query()
-      .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ role: "siswa" })
       .count("* as total");
     let userIds;
@@ -1091,7 +1086,7 @@ class CDCController {
     userIds = await userIds.ids();
     penerimaanSiswa = MPenerimaanSiswa.query()
       .with("user", (builder) => {
-        builder.select("id", "nama");
+        builder.select("id","nama")
       })
       .with("rombel", (builder) => {
         builder.select("id", "nama");
@@ -1120,21 +1115,26 @@ class CDCController {
       })
       .with("perusahaan")
       .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
       .fetch();
 
     let totalSiswa = 0;
     let totalPartner = 0;
 
+    const totalSemuaSiswa = await User.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ role: "siswa" })
+      .andWhere({ dihapus: 0 })
+      .getCount();
     await Promise.all(
       perusahaan.toJSON().map(async (d) => {
-        if(d.penerimaan){
-
+        if (d.penerimaan) {
           await Promise.all(
             d.penerimaan.map(async (e) => {
-              totalSiswa = totalSiswa + e ? e.__meta__.total:"0";
+              totalSiswa = totalSiswa + e.__meta__.total;
             })
-            );
-          }
+          );
+        }
         totalPartner = totalPartner + 1;
       })
     );
@@ -1143,7 +1143,7 @@ class CDCController {
       perusahaan,
       totalSiswa,
       totalPartner,
-      userTotal,
+      totalSemuaSiswa,
       rombel,
       jurusan,
       penerimaanSiswa,
@@ -1477,11 +1477,12 @@ class CDCController {
 
     const user = await auth.getUser();
 
-    const { data_siswa, surat_tugas, mou } = request.post();
+    const { nama, data_siswa, surat_tugas, mou } = request.post();
 
     const perusahaan = await MPenerimaanPerusahaan.query()
       .where({ id: penerimaan_id })
       .update({
+        nama,
         data_siswa,
         surat_tugas,
         mou,
@@ -1559,12 +1560,14 @@ class CDCController {
         builder.where({ dihapus: 0 });
       })
       .where({ id: penerimaan_id })
+      .andWhere({ dihapus: 0 })
       .first();
 
     const perusahaanTk = await TkPerusahaanSekolah.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ id: penerimaan.tk_perusahaan_sekolah_id })
       .first();
+    // return perusahaanTk
 
     const perusahaan = await MPerusahaan.query()
       .where({ id: perusahaanTk.m_perusahaan_id })
@@ -1588,6 +1591,7 @@ class CDCController {
       })
       .whereIn("m_user_id", userIds)
       .where({ m_penerimaan_perusahaan_id: penerimaan_id })
+      .andWhere({ dihapus: 0 })
       .fetch();
 
     let jurusan = await MJurusan.query()
@@ -1664,15 +1668,15 @@ class CDCController {
       m_penerimaan_perusahaan_id,
     } = request.post();
 
-    let validation = await validate(
-      request.post(),
-      rulesUserPost,
-      messagesUser
-    );
+    // let validation = await validate(
+    //   request.post(),
+    //   rulesUserPost,
+    //   messagesUser
+    // );
 
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
-    }
+    // if (validation.fails()) {
+    //   return response.unprocessableEntity(validation.messages());
+    // }
 
     m_user_id = m_user_id.length ? m_user_id : [];
 
@@ -1680,7 +1684,10 @@ class CDCController {
     const date2 = moment(`${tanggal_selesai}`);
     const diff = date2.diff(date1);
 
+    // return diff
     const lama = moment(diff).format(`MM`);
+
+    // return lama;
 
     const rombelIds = await MRombel.query()
       .where({ dihapus: 0 })
@@ -1702,8 +1709,10 @@ class CDCController {
             lama_pkl: lama,
             m_user_id: d,
             m_penerimaan_perusahaan_id,
-            m_rombel_id: anggotaRombel.m_rombel_id,
-            m_jurusan_id: anggotaRombel.toJSON().rombel.m_jurusan_id,
+            m_rombel_id: anggotaRombel ? anggotaRombel.m_rombel_id : null,
+            m_jurusan_id: anggotaRombel
+              ? anggotaRombel.toJSON().rombel.m_jurusan_id
+              : null,
             dihapus: 0,
           });
         })
