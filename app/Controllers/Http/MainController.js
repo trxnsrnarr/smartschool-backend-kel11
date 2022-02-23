@@ -47571,7 +47571,7 @@ class MainController {
             return { mapelBaru, rombelBaru, jamBaru };
           }
           const semuaMateri = await MMateri.query()
-            .whereIn("m_mata_pelajaran", mapelBaruDataIds)
+            .whereIn("m_mata_pelajaran_id", mapelBaruDataIds)
             .andWhere({ dihapus: 0 })
             .fetch();
           let janganUlangMateri = [];
