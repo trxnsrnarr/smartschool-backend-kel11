@@ -11868,26 +11868,26 @@ class MainController {
 
     lampiran = lampiran ? lampiran.toString() : null;
 
-    const anggotaRombel = await MAnggotaRombel.query()
-      .with("rombel", (builder) => {
-        builder.with("user", (builder) => {
-          builder.select("id", "nama", "wa_real");
-        });
-      })
-      .where({ m_user_id: user.id })
-      .andWhere({ dihapus: 0 })
-      .first();
+    // const anggotaRombel = await MAnggotaRombel.query()
+    //   .with("rombel", (builder) => {
+    //     builder.with("user", (builder) => {
+    //       builder.select("id", "nama", "wa_real");
+    //     });
+    //   })
+    //   .where({ m_user_id: user.id })
+    //   .andWhere({ dihapus: 0 })
+    //   .first();
 
-    const mapel = await MMataPelajaran.query()
-      .where({ m_user_id: anggotaRombel.toJSON().rombel.m_user_id })
-      .andWhere({ m_ta_id: ta.id })
-      .andWhere({ dihapus: 0 })
-      .first();
+    // const mapel = await MMataPelajaran.query()
+    //   .where({ m_user_id: anggotaRombel.rombel.m_user_id })
+    //   .andWhere({ m_ta_id: ta.id })
+    //   .andWhere({ dihapus: 0 })
+    //   .first();
 
-    const jadwalMengajar = await MJadwalMengajar.query()
-      .where({ m_mata_pelajaran_id: mapel.id })
-      .andWhere({ m_rombel_id: anggotaRombel.m_rombel_id })
-      .first();
+    // const jadwalMengajar = await MJadwalMengajar.query()
+    //   .where({ m_mata_pelajaran_id: mapel.id })
+    //   .andWhere({ m_rombel_id: anggotaRombel.m_rombel_id })
+    //   .first();
 
     let data;
     if (absen != "hadir") {
@@ -11901,9 +11901,9 @@ class MainController {
       });
       // if (absen == "izin") {
       //   await WhatsAppService.sendMessage(
-      //     anggotaRombel.toJSON().rombel.user.wa_real,
+      //     anggotaRombel.rombel.user.wa_real,
       //     `Halo ${
-      //       anggotaRombel.toJSON().rombel.user.nama
+      //       anggotaRombel.rombel.user.nama
       //     }, anak perwalian Anda atas nama *${
       //       user.nama
       //     }* izin hari ini. Silahkan menekan tautan berikut untuk melihat detail keterangan absensi siswa Anda. \n \n${domain}/smarteschool/kelas${
@@ -11912,9 +11912,9 @@ class MainController {
       //   );
       // } else if (absen == "sakit") {
       //   await WhatsAppService.sendMessage(
-      //     anggotaRombel.toJSON().rombel.user.wa_real,
+      //     anggotaRombel.rombel.user.wa_real,
       //     `Halo ${
-      //       anggotaRombel.toJSON().rombel.user.nama
+      //       anggotaRombel.rombel.user.nama
       //     }, anak perwalian Anda atas nama *${
       //       user.nama
       //     }* hari ini sakit. Silahkan menekan tautan berikut untuk melihat detail keterangan absensi siswa Anda. \n \n${domain}/smarteschool/kelas${
