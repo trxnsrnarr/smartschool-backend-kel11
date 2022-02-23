@@ -11809,11 +11809,11 @@ class MainController {
     const fileName = new Date().getTime();
     let url = "";
     if (photo) {
-      const filePhoto =  bucket.file(`fr/${fileName}.jpeg`);
+      const filePhoto = bucket.file(`fr/${fileName}.jpeg`);
       filePhoto.save(Buffer.from(photo, "base64")).then(async () => {
-        const response = await filePhoto.get()
+        const response = await filePhoto.get();
         url = response[1].mediaLink;
-      })
+      });
       // await Drive.put(`fr/${fileName}.jpeg`, Buffer.from(photo, "base64"));
     }
 
@@ -13341,41 +13341,40 @@ class MainController {
 
     let totalSoalTambah = 0;
 
-
     for (let i = 0; i < data.length; i++) {
       const d = data[i];
-    // const result = await Promise.all(
-    //   data.map(async (d) => {
-        const soalUjian = await MSoalUjian.create({
-          kd: d.kd,
-          kd_konten_materi: d.kd_konten_materi,
-          level_kognitif: d.level_kognitif,
-          bentuk: d.bentuk,
-          // akm_konten_materi,
-          // akm_konteks_materi,
-          // akm_proses_kognitif,
-          pertanyaan: htmlEscaper.escape(d.pertanyaan),
-          jawaban_a: htmlEscaper.escape(d.jawaban_a),
-          jawaban_b: htmlEscaper.escape(d.jawaban_b),
-          jawaban_c: htmlEscaper.escape(d.jawaban_c),
-          jawaban_d: htmlEscaper.escape(d.jawaban_d),
-          jawaban_e: htmlEscaper.escape(d.jawaban_e),
-          kj_pg: d.kj_pg,
-          // rubrik_kj: JSON.stringify(rubrik_kj),
-          pembahasan: htmlEscaper.escape(d.pembahasan),
-          nilai_soal: d.nilai_soal,
-          m_user_id: user.id,
-          dihapus: 0,
-        });
+      // const result = await Promise.all(
+      //   data.map(async (d) => {
+      const soalUjian = await MSoalUjian.create({
+        kd: d.kd,
+        kd_konten_materi: d.kd_konten_materi,
+        level_kognitif: d.level_kognitif,
+        bentuk: d.bentuk,
+        // akm_konten_materi,
+        // akm_konteks_materi,
+        // akm_proses_kognitif,
+        pertanyaan: htmlEscaper.escape(d.pertanyaan),
+        jawaban_a: htmlEscaper.escape(d.jawaban_a),
+        jawaban_b: htmlEscaper.escape(d.jawaban_b),
+        jawaban_c: htmlEscaper.escape(d.jawaban_c),
+        jawaban_d: htmlEscaper.escape(d.jawaban_d),
+        jawaban_e: htmlEscaper.escape(d.jawaban_e),
+        kj_pg: d.kj_pg,
+        // rubrik_kj: JSON.stringify(rubrik_kj),
+        pembahasan: htmlEscaper.escape(d.pembahasan),
+        nilai_soal: d.nilai_soal,
+        m_user_id: user.id,
+        dihapus: 0,
+      });
 
-        const tkSoalUjian = await TkSoalUjian.create({
-          dihapus: 0,
-          m_ujian_id: m_ujian_id,
-          m_soal_ujian_id: soalUjian.id,
-        });
-        totalSoalTambah = totalSoalTambah + 1;
-    //   })
-    // );
+      const tkSoalUjian = await TkSoalUjian.create({
+        dihapus: 0,
+        m_ujian_id: m_ujian_id,
+        m_soal_ujian_id: soalUjian.id,
+      });
+      totalSoalTambah = totalSoalTambah + 1;
+      //   })
+      // );
     }
 
     const checkTotal = await MRpp.query()
@@ -36431,7 +36430,7 @@ class MainController {
                 ? anggota.user.absen
                   ? anggota.user.absen.length
                     ? anggota.user.absen[0].foto_masuk ||
-                      `https://server1.smarteschool.net/fr/${anggota.user.absen[0].foto_masuk_local}.jpeg`
+                      anggota.user.absen[0].foto_masuk_local
                     : "-"
                   : "-"
                 : "-",
@@ -36446,7 +36445,7 @@ class MainController {
                 ? anggota.user.absen
                   ? anggota.user.absen.length
                     ? anggota.user.absen[0].foto_pulang ||
-                      `https://server1.smarteschool.net/fr/${anggota.user.absen[0].foto_pulang_local}.jpeg`
+                      anggota.user.absen[0].foto_pulang_local
                     : "-"
                   : "-"
                 : "-",
@@ -51103,10 +51102,10 @@ class MainController {
     const { ta_id = ta.id, search } = request.get();
 
     const semuaTA = await Mta.query()
-    .select("id", "tahun", "semester")
-    .where({ m_sekolah_id: sekolah.id })
-    .andWhere({ dihapus: 0 })
-    .fetch();
+      .select("id", "tahun", "semester")
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
     // return ta_id;
 
     const rombel = await MRombel.query()
@@ -51134,31 +51133,31 @@ class MainController {
       .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ m_ta_id: ta_id })
       .fetch();
-      let tingkatData = [];
+    let tingkatData = [];
 
-      if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA") {
-        tingkatData = ["X", "XI", "XII", "XIII"];
-      } else if (sekolah.tingkat == "SMP") {
-        tingkatData = ["VII", "VIII", "IX"];
-      } else if (sekolah.tingkat == "SD") {
-        tingkatData = ["I", "II", "III", "IV", "V", "VI"];
-      } else if (sekolah.tingkat == "SLB") {
-        tingkatData = [
-          "I",
-          "II",
-          "III",
-          "IV",
-          "V",
-          "VI",
-          "VII",
-          "VIII",
-          "IX",
-          "X",
-          "XI",
-          "XII",
-        ];
-      }
-  
+    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA") {
+      tingkatData = ["X", "XI", "XII", "XIII"];
+    } else if (sekolah.tingkat == "SMP") {
+      tingkatData = ["VII", "VIII", "IX"];
+    } else if (sekolah.tingkat == "SD") {
+      tingkatData = ["I", "II", "III", "IV", "V", "VI"];
+    } else if (sekolah.tingkat == "SLB") {
+      tingkatData = [
+        "I",
+        "II",
+        "III",
+        "IV",
+        "V",
+        "VI",
+        "VII",
+        "VIII",
+        "IX",
+        "X",
+        "XI",
+        "XII",
+      ];
+    }
+
     // const urutan = rombel
     //   .toJSON()
     //   .anggotaRombel.sort((a, b) => {
@@ -51176,7 +51175,7 @@ class MainController {
     return response.ok({
       rombel,
       semuaTA,
-      tingkatData
+      tingkatData,
       // urutan,
     });
   }
