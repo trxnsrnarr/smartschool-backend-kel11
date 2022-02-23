@@ -616,11 +616,14 @@ class DinasController {
       } else if (role == "gtk") {
         absenUser.whereIn("role", ["guru", "admin", "kepsek"]);
       }
-      absenUser = await absenUser.fetch();
-      let absen
+      if (search) {
+        absenUser.andWhere("nama", "like", `%${search}%`);
+      }
+      absenUser = await absenUser.paginate(page, 25);
+      let absen;
       absen = MAbsen.query()
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .whereBetween("created_at", [awal, akhir])
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .whereBetween("created_at", [awal, akhir]);
       if (role == "siswa") {
         absen.andWhere({ role: role });
       } else if (role == "gtk") {
@@ -3444,7 +3447,9 @@ class DinasController {
       },
     ];
 
-    let namaFile = `/uploads/daftar-hadir-${jadwalMengajar.toJSON().rombel.nama} ${keluarantanggalseconds}.xlsx`;
+    let namaFile = `/uploads/daftar-hadir-${
+      jadwalMengajar.toJSON().rombel.nama
+    } ${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -3917,7 +3922,7 @@ class DinasController {
       .andWhere({ tipe: "tugas" })
       .andWhere({ m_ta_id: ta.id })
       .ids();
-  
+
     const rekapUjianIds = await MRekap.query()
       .where({ m_materi_id: materi.id })
       .andWhere({ tipe: "ujian" })
@@ -3930,7 +3935,7 @@ class DinasController {
       .andWhere({ m_rombel_id: jadwalMengajar.m_rombel_id })
       .andWhere({ dihapus: 0 })
       .ids();
-      const rekapRombelUjianIds = await MRekapRombel.query()
+    const rekapRombelUjianIds = await MRekapRombel.query()
       .whereIn("m_rekap_id", rekapUjianIds)
       .andWhere({ m_rombel_id: jadwalMengajar.m_rombel_id })
       .andWhere({ dihapus: 0 })
@@ -3944,7 +3949,7 @@ class DinasController {
       .orderBy("id", "asc")
       .fetch();
 
-      const rekapRombelUjian = await MRekapRombel.query()
+    const rekapRombelUjian = await MRekapRombel.query()
       .with("rekap")
       .whereIn("m_rekap_id", rekapUjianIds)
       .andWhere({ m_rombel_id: jadwalMengajar.m_rombel_id })
@@ -3981,7 +3986,7 @@ class DinasController {
       .whereIn("id", userIds)
       .fetch();
 
-      const analisisNilaiUjian = await User.query()
+    const analisisNilaiUjian = await User.query()
       .with("nilaiRekapSiswa", (builder) => {
         builder
           .whereIn("m_rekap_rombel_id", rekapRombelUjianIds)
@@ -4542,12 +4547,8 @@ class DinasController {
     });
     await Promise.all(
       rekapRombelUjian.toJSON().map(async (d, idx) => {
-        worksheet1.getRow(`${analisisNilaiUjian.toJSON().length + 10}`).values = [
-          "No",
-          "Materi",
-          `Ujian`,
-          "Nama Ujian",
-        ];
+        worksheet1.getRow(`${analisisNilaiUjian.toJSON().length + 10}`).values =
+          ["No", "Materi", `Ujian`, "Nama Ujian"];
         worksheet1.columns = [
           { key: "no" },
           { key: "materi" },
@@ -4603,7 +4604,9 @@ class DinasController {
     });
     worksheet1.addConditionalFormatting({
       ref: `A${analisisNilaiUjian.toJSON().length + 10}:D${
-        analisisNilaiUjian.toJSON().length + 10 + rekapRombelUjian.toJSON().length
+        analisisNilaiUjian.toJSON().length +
+        10 +
+        rekapRombelUjian.toJSON().length
       }`,
       rules: [
         {
@@ -4659,7 +4662,9 @@ class DinasController {
       "A6"
     ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
 
-    let namaFile = `/uploads/daftar-nilai-${jadwalMengajar.toJSON().rombel.nama}-${keluarantanggalseconds}.xlsx`;
+    let namaFile = `/uploads/daftar-nilai-${
+      jadwalMengajar.toJSON().rombel.nama
+    }-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
