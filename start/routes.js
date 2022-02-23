@@ -635,7 +635,10 @@ Route.get(
 );
 Route.post("/peserta-ujian", "MainController.postPesertaUjian");
 Route.put("/peserta-ujian/:peserta_ujian_id", "MainController.putPesertaUjian");
-Route.put("/peserta-ujian-2/:peserta_ujian_id", "UjianController.putPesertaUjian");
+Route.put(
+  "/peserta-ujian-2/:peserta_ujian_id",
+  "UjianController.putPesertaUjian"
+);
 Route.put(
   "/reset-peserta-ujian/:peserta_ujian_id",
   "MainController.resetPesertaUjian"
@@ -966,10 +969,7 @@ Route.post(
   "/absen-siswa/rekapdownload/dinas",
   "DinasController.downloadRekapAbsenSiswaDinas"
 );
-Route.post(
-  "/download/rekap/nilai-siswa",
-  "DinasController.downloadRekapNilai"
-);
+Route.post("/download/rekap/nilai-siswa", "DinasController.downloadRekapNilai");
 Route.post(
   "/download/semua-rekap/nilai-siswa",
   "DinasController.downloadSemuaRekapNilai"
@@ -978,10 +978,7 @@ Route.post(
   "/download/jadwal-buku-kerja",
   "DinasController.downloadJadwalBukuKerja"
 );
-Route.post(
-  "/download/jadwal-dinas",
-  "DinasController.downloadJadwalDinas"
-);
+Route.post("/download/jadwal-dinas", "DinasController.downloadJadwalDinas");
 
 // Mutasi Service
 Route.post("/mutasi/importmutasi", "MainController.importMutasi");
@@ -1146,36 +1143,46 @@ Route.delete("/cdc/acara/:acara_id", "MainControler.deleteAcaraPerusahaan");
 // Perusahaan sekolah
 Route.get("/perusahaan-sekolah", "CDCController.getPerusahaanSekolah");
 Route.post("/perusahaan-sekolah", "CDCController.postPerusahaanSekolah");
-Route.put("/perusahaan-sekolah/:perusahaan_id", "CDCController.putPerusahaanSekolah");
+Route.put(
+  "/perusahaan-sekolah/:perusahaan_id",
+  "CDCController.putPerusahaanSekolah"
+);
 Route.delete(
-  "/perusahaan-sekolah/:perusahaan_id", "CDCController.deletePerusahaanSekolah"
+  "/perusahaan-sekolah/:perusahaan_id",
+  "CDCController.deletePerusahaanSekolah"
 );
 Route.put(
   "/perusahaan-sekolah/:perusahaan_id",
   "CDCController.putPerusahaanSekolah"
 );
 Route.put(
-  "/penerimaan-perusahaan/:penerimaan_id", "CDCController.putPenerimaanPerusahaan"
+  "/penerimaan-perusahaan/:penerimaan_id",
+  "CDCController.putPenerimaanPerusahaan"
 );
 Route.delete(
-  "/penerimaan-perusahaan/:penerimaan_id", "CDCController.deletePenerimaanPerusahaan"
+  "/penerimaan-perusahaan/:penerimaan_id",
+  "CDCController.deletePenerimaanPerusahaan"
 );
-Route.get("/penerimaan-siswa/:penerimaan_id", "CDCController.getPenerimaanSiswa");
+Route.get(
+  "/penerimaan-siswa/:penerimaan_id",
+  "CDCController.getPenerimaanSiswa"
+);
 Route.get("/pkl/penerimaan", "CDCController.getPenerimaanPkl");
-Route.post("/penerimaan-siswa/:penerimaan_id", "CDCController.postPenerimaanSiswa");
+Route.post(
+  "/penerimaan-siswa/:penerimaan_id",
+  "CDCController.postPenerimaanSiswa"
+);
 Route.put("/penerimaan-siswa/:siswa_id", "CDCController.putPenerimaanSiswa");
 Route.delete(
-  "/penerimaan-siswa/:siswa_id", "CDCController.deletePenerimaanSiswa"
+  "/penerimaan-siswa/:siswa_id",
+  "CDCController.deletePenerimaanSiswa"
 );
 // PKL Sekolah
 Route.get(
   "/penerimaan-perusahaan/:perusahaan_id",
   "CDCController.getPenerimaanPerusahaan"
 );
-Route.get(
-  "/pkl/penerimaan",
-  "CDCController.getPenerimaanPkl"
-);
+Route.get("/pkl/penerimaan", "CDCController.getPenerimaanPkl");
 Route.post("/penerimaan-perusahaan", "CDCController.postPenerimaanPerusahaan");
 
 Route.post("/cdc/perusahaan", "CDCController.postPerusahaan");
@@ -1511,6 +1518,8 @@ Route.post(
   "/download/ledger-nilai-yadika/:rombel_id",
   "MainController.downloadLedgerNilaiYadika"
 );
+Route.get("/ledger-nilai", "MainController.getLedgerNilai");
+Route.get("/ledger-nilai/:rombel_id", "MainController.detailLedgerNilai");
 
 Route.post("/naik-kelas-jam", "MainController.naikTAJam");
 
@@ -1651,14 +1660,20 @@ Route.delete("/buku-kerja-soal/:rpp_id", "DinasController.deleteBukuKerjaSoal");
 Route.get("/otomatis-akun-keuangan", "SecondController.otomatisAkun");
 Route.get("/otomatis-neraca-keuangan", "SecondController.otomatisNeraca");
 
-Route.post("/download/aset-aktif", "KeuanganController.downloadJurnalAsetAktif");
-Route.post("/download/jadwal", "RombelController.downloadJadwalMengajarTingkat");
-Route.post("/download/import-jadwal", "RombelController.downloadImportJadwalMengajarTingkat");
-
 Route.post(
-  "/import/jadwal-mengajar",
-  "RombelController.importJadwalMengajar"
+  "/download/aset-aktif",
+  "KeuanganController.downloadJurnalAsetAktif"
 );
+Route.post(
+  "/download/jadwal",
+  "RombelController.downloadJadwalMengajarTingkat"
+);
+Route.post(
+  "/download/import-jadwal",
+  "RombelController.downloadImportJadwalMengajarTingkat"
+);
+
+Route.post("/import/jadwal-mengajar", "RombelController.importJadwalMengajar");
 // Dinas
 Route.get("/dashboard/dinas", "DinasController.getDashboard");
 
@@ -1669,38 +1684,72 @@ Route.get("/data-warga-sekolah", "DinasController.getData");
 Route.get("/dashboard/pengawas", "PengawasController.getDashboardPengawas");
 
 // Marketplace
-Route.resource('marketplace', 'MarketPlaceController')
+Route.resource("marketplace", "MarketPlaceController");
 //superadmin Sekolah
 Route.get("/super-admin/sekolah", "MainController.getSuperAdminSekolah");
-Route.get("/super-admin/sekolah/:sekolah_id", "MainController.detailSuperAdminSekolah");
+Route.get(
+  "/super-admin/sekolah/:sekolah_id",
+  "MainController.detailSuperAdminSekolah"
+);
 Route.post("/super-admin/sekolah", "MainController.postSekolah");
 Route.put("/super-admin/sekolah/:sekolah_id", "MainController.putSekolah");
-Route.delete("/super-admin/sekolah/:sekolah_id", "MainController.deleteSekolah");
+Route.delete(
+  "/super-admin/sekolah/:sekolah_id",
+  "MainController.deleteSekolah"
+);
 
 //SuperAdmin Server
 Route.get("/super-admin/server", "MainController.getSuperAdminServer");
-Route.get("/super-admin/server/:server_id", "MainController.detailSuperAdminServer");
+Route.get(
+  "/super-admin/server/:server_id",
+  "MainController.detailSuperAdminServer"
+);
 Route.post("/super-admin/server", "MainController.postServer");
 Route.put("/super-admin/server/:server_id", "MainController.putServer");
 Route.delete("/super-admin/server/:server_id", "MainController.deleteServer");
 
 //SuperAdmin Sekolah Server
 Route.post("/super-admin/sekolah-server", "MainController.postSekolahServer");
-Route.put("/super-admin/sekolah-server/:tk_sekolah_server_id", "MainController.putSekolahServer");
-Route.delete("/super-admin/sekolah-server/:tk_sekolah_server_id", "MainController.deleteSekolahServer");
+Route.put(
+  "/super-admin/sekolah-server/:tk_sekolah_server_id",
+  "MainController.putSekolahServer"
+);
+Route.delete(
+  "/super-admin/sekolah-server/:tk_sekolah_server_id",
+  "MainController.deleteSekolahServer"
+);
 
 //SuperAdmin Pembayaran Sekolah
-Route.get("/super-admin/pembayaran/:pembayaranSekolah_id", "MainController.detailPembayaranSekolah");
-Route.post("/super-admin/pembayaran/:sekolah_id", "MainController.postPembayaranSekolah");
-Route.put("/super-admin/pembayaran/:pembayaranSekolah_id", "MainController.putPembayaranSekolah");
-Route.delete("/super-admin/pembayaran/:pembayaranSekolah_id", "MainController.deletePembayaranSekolah");
+Route.get(
+  "/super-admin/pembayaran/:pembayaranSekolah_id",
+  "MainController.detailPembayaranSekolah"
+);
+Route.post(
+  "/super-admin/pembayaran/:sekolah_id",
+  "MainController.postPembayaranSekolah"
+);
+Route.put(
+  "/super-admin/pembayaran/:pembayaranSekolah_id",
+  "MainController.putPembayaranSekolah"
+);
+Route.delete(
+  "/super-admin/pembayaran/:pembayaranSekolah_id",
+  "MainController.deletePembayaranSekolah"
+);
 
 //SuperAdmin Dokumen Pembayaran Sekolah
-Route.post("/super-admin/dokumen/:pembayaranSekolah_id", "MainController.postDokumenPembayaranSekolah");
-Route.put("/super-admin/dokumen/:dokumenPembayaranSekolah_id", "MainController.putDokumenPembayaranSekolah");
-Route.delete("/super-admin/dokumen/:dokumenPembayaranSekolah_id", "MainController.deleteDokumenPembayaranSekolah");
-
-
+Route.post(
+  "/super-admin/dokumen/:pembayaranSekolah_id",
+  "MainController.postDokumenPembayaranSekolah"
+);
+Route.put(
+  "/super-admin/dokumen/:dokumenPembayaranSekolah_id",
+  "MainController.putDokumenPembayaranSekolah"
+);
+Route.delete(
+  "/super-admin/dokumen/:dokumenPembayaranSekolah_id",
+  "MainController.deleteDokumenPembayaranSekolah"
+);
 
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
