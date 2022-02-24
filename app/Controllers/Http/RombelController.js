@@ -1605,11 +1605,11 @@ class RombelController {
   }
 
   async getTimelineWalas({ response, request, auth }) {
-    const user = await auth.getUser();
-
+    
     const domain = request.headers().origin;
-
+    
     const sekolah = await this.getSekolahByDomain(domain);
+    const user = await auth.getUser();
 
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
@@ -1637,16 +1637,10 @@ class RombelController {
       .whereNotNull("m_mata_pelajaran_id");
 
     if (m_mata_pelajaran_id) {
-      mapelIds.where({ m_mata_pelajaran_id });
+      mapelIds.where({ m_mata_pelajaran_id:m_mata_pelajaran_id });
     }
 
     mapelIds = await mapelIds.pluck("m_mata_pelajaran_id");
-
-    const mapelKelas = await MMataPelajaran.query()
-      .whereIn("id", mapelIds)
-      .fetch();
-
-    const tanggalBerlangsung = [];
 
     let timeline;
 
@@ -1656,14 +1650,14 @@ class RombelController {
     //   .ids();
 
     const userIds = await MAnggotaRombel.query()
-      .where({ m_rombel_id: jadwalMengajar.toJSON().rombel.id })
+      .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
       .andWhere({ dihapus: 0 })
       .pluck("m_user_id");
 
     const timelineLainnya = await MTimeline.query()
       .whereNull("m_mata_pelajaran_id")
       .andWhere({ dihapus: 0 })
-      .andWhere("m_rombel_id", jadwalMengajar.toJSON().rombel.id)
+      .andWhere("m_rombel_id", jadwalMengajar.m_rombel_id)
       .whereIn("m_user_id", userIds)
       .ids();
 
@@ -1701,7 +1695,7 @@ class RombelController {
       })
       .whereNull("m_mata_pelajaran_id")
       .whereIn("m_mata_pelajaran_id", mapelIds)
-      .andWhere({ m_rombel_id: jadwalMengajar.toJSON().rombel.id })
+      .andWhere({ m_rombel_id: jadwalMengajar.m_rombel_id })
       .andWhere({ dihapus: 0 })
       // .whereIn("m_tugas_id", tugasIds)
       .orWhereIn("id", timelineLainnya)
@@ -1746,7 +1740,7 @@ class RombelController {
       //   m_mata_pelajaran_id: jadwalMengajar.toJSON().mataPelajaran.id,
       // })
       .whereIn("m_mata_pelajaran_id", mapelIds)
-      .andWhere({ m_rombel_id: jadwalMengajar.toJSON().rombel.id })
+      .andWhere({ m_rombel_id: jadwalMengajar.m_rombel_id })
       // .andWhere({ m_user_id: user.id })
       .andWhere({ dihapus: 0 })
       // .whereIn("m_tugas_id", tugasIds)
