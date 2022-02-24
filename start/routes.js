@@ -687,6 +687,7 @@ Route.delete("/soal-kuis/:soal_kuis_id", "MainController.deleteSoalKuis");
 // timeline
 Route.get("/timeline", "MainController.getTimeline");
 Route.get("/v2/timeline", "SecondController.getTimelineBaru");
+Route.get("/timeline/walas", "rombelController.getTimelineWalas");
 Route.get("/timeline/:timeline_id", "MainController.detailTimeline");
 Route.post("/timeline", "MainController.postTimeline");
 Route.put("/timeline/:timeline_id", "MainController.putTimeline");
