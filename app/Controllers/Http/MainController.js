@@ -51108,7 +51108,7 @@ class MainController {
       .fetch();
     // return ta_id;
 
-    const rombel = await MRombel.query()
+    let rombel = MRombel.query()
       .with("anggotaRombel", (builder) => {
         builder
           .with("user", (builder) => {
@@ -51119,7 +51119,7 @@ class MainController {
               .with("profil", (builder) => {
                 builder.select("m_user_id", "nis");
               })
-              .select("id", "nama", "gender");
+              .select("id", "nama", "gender", "agama");
           })
           .where({ dihapus: 0 });
       })
@@ -51129,10 +51129,22 @@ class MainController {
       .with("user", (builder) => {
         builder.select("id", "nama");
       })
+      .with("kkm", (builder) => {
+        builder
+          .with("mapelRapor", (builder) => {
+            builder.with("mataPelajaran").where({ dihapus: 0 });
+          })
+          .where({ dihapus: 0 });
+      })
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta_id })
-      .fetch();
+      .andWhere({ m_ta_id: ta_id });
+
+    if (search) {
+      rombel.where("nama", "like", `%${search}%`);
+    }
+
+    rombel = await rombel.fetch();
     let tingkatData = [];
 
     if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA") {
