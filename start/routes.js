@@ -215,6 +215,7 @@ Route.get(
   "/jadwal-mengajar/pertemuan",
   "MainController.getJadwalMengajarPertemuan"
 );
+Route.get("/jadwal-mengajar/pertemuan-v2", "DinasController.getKbm");
 Route.put(
   "/jadwal-mengajar/:jadwal_mengajar_id",
   "MainController.putJadwalMengajar"

@@ -5705,6 +5705,133 @@ class DinasController {
     return namaFile;
   }
 
+  async getKbm({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { tanggal } = request.get();
+
+    if (
+      user.role == "admin" ||
+      user.role == "pengawas" ||
+      user.role == "kepsek"
+    ) {
+      const userIds = await User.query()
+        .where({ dihapus: 0 })
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ role: "guru" })
+        .ids();
+
+      const rombelIds = await MRombel.query()
+        .where({ m_ta_id: ta.id })
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ dihapus: 0 })
+        .ids();
+
+      const tugasIds = await MTugas.query()
+        .whereIn("m_user_id", userIds)
+        .where({ dihapus: 0 })
+        .where(
+          "tanggal_pembagian",
+          "like",
+          `%${tanggal || moment().format("YYYY-MM-DD")}%`
+        )
+        .ids();
+
+      const timelineTugas = await MTimeline.query()
+        .whereIn("m_tugas_id", tugasIds)
+        .where({ dihapus: 0 })
+        .ids();
+
+      const timelineId = await MTimeline.query()
+        .whereIn("m_rombel_id", rombelIds)
+        .whereIn("tipe", ["absen", "materi"])
+        .where(
+          "tanggal_pembagian",
+          "like",
+          `%${tanggal || moment().format("YYYY-MM-DD")}%`
+        )
+        .ids();
+
+      const timelineIds = [...timelineTugas, ...timelineId];
+
+      let timeline = await MTimeline.query()
+        .with("tugas", (builder) => {
+          builder
+            .with("soal", (builder) => {
+              builder.where({ dihapus: 0 }).with("soal");
+            })
+            .with("timeline", (builder) => {
+              builder.with("rombel").with("tkTimeline");
+            });
+        })
+        .with("user")
+        .with("materi", (builder) => {
+          builder
+            .with("bab")
+            .withCount("materiKesimpulan as totalKesimpulan", (builder) => {
+              builder.whereNotNull("kesimpulan");
+            });
+        })
+        .with("rombel", (builder) => {
+          builder.select("nama", "id");
+        })
+        .with("mataPelajaran", (builder) => {
+          builder.select("nama", "id");
+        })
+        .with("komen", (builder) => {
+          builder.with("user").where({ dihapus: 0 });
+        })
+        .withCount("tkTimeline as total_respon", (builder) => {
+          builder.whereNotNull("waktu_pengumpulan");
+        })
+        .withCount("tkTimeline as total_absen", (builder) => {
+          builder.whereNotNull("waktu_absen");
+        })
+        .withCount("tkTimeline as total_siswa")
+        .withCount("komen as total_komen", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .whereIn("id", timelineIds)
+        .fetch();
+
+      let jamMengajarIds = await MJamMengajar.query()
+        .where({ kode_hari: new Date(tanggal).getDay() })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .andWhere({ m_ta_id: ta.id })
+        .ids();
+
+      const total = await MJadwalMengajar.query()
+        .distinct("m_rombel_id")
+        .whereIn("m_rombel_id", rombelIds)
+        .where({ m_ta_id: ta.id })
+        .whereIn("m_jam_mengajar_id", jamMengajarIds)
+        .fetch();
+
+      return response.ok({
+        pertemuan: timeline,
+        total,
+      });
+    } else {
+      return response.unauthorized({
+        message: "Anda tidak memiliki hak akses",
+      });
+    }
+  }
+
   async ip({ response, request }) {
     return response.ok({ ip: [request.ip(), request.ips()] });
   }
