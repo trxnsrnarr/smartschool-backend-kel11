@@ -15021,6 +15021,7 @@ class MainController {
       gmeet,
       diacak,
       rombel_id,
+      m_ujian_id,
     } = request.post();
 
     const waktu_dibuka1 = moment(waktu_dibuka).format("YYYY-MM-DD HH:mm:ss");
@@ -15044,6 +15045,19 @@ class MainController {
     //   })
     //   .where({ id: jadwal_ujian_id })
     //   .first();
+
+    // const checkJadwal = await MJadwalUjian.query()
+    //   .with("rombelUjian",(builder)=>{
+    //     builder.with("peserta")
+    //   })
+    //   .where({id:jadwal_ujian_id})
+    //   .first()
+
+    // await Promise.all(
+    //   checkJadwal.toJSON().rombelUjian.map((d)=>{
+        
+    //   })
+    // )
 
     // return jadwalUjianData
 
@@ -42492,7 +42506,8 @@ class MainController {
       })
       .withCount("siswa as total", (builder) => {
         builder.where({ dihapus: 0 });
-      });
+      })
+      .where({trial:0});
 
     if (search) {
       sekolah.where("nama", "like", `%${search}%`);
@@ -46702,7 +46717,7 @@ class MainController {
       .where({ id: rombel_id })
       .first();
 
-    // return rombel;
+      let dataaa = 0;
 
     let workbook = new Excel.Workbook();
 
@@ -46809,13 +46824,17 @@ class MainController {
                   ];
                   // worksheet.mergeCells(`${(total + 1) * 2 + 3}:${(total + 1) * 2 + 4}`);
 
+                  if(!r.mataPelajaran.nilaiIndividu){
+                    dataaa = dataaa+1;
+                    return
+                  }
                   row.getCell([`${(total + 1) * 2 + 3}`]).value = `${
-                    r.mataPelajaran.nilaiIndividu.nilai
+                    r.mataPelajaran.nilaiIndividu
                       ? r.mataPelajaran.nilaiIndividu.nilai
                       : "-"
                   }`;
                   row.getCell([`${(total + 1) * 2 + 4}`]).value = `${
-                    r.mataPelajaran.nilaiIndividu.nilai_keterampilan
+                    r.mataPelajaran.nilaiIndividu
                       ? r.mataPelajaran.nilaiIndividu.nilai_keterampilan
                       : "-"
                   }`;
@@ -46946,6 +46965,9 @@ class MainController {
           });
         })
     );
+    if(dataaa > 10){
+      return "Data untuk Leger Nilai Belum Lengkap"
+    }
     // return result;
     worksheet.getCell(
       "A1"
@@ -46954,14 +46976,12 @@ class MainController {
     worksheet.getCell("A3").value = sekolah.nama;
     worksheet.getCell("A4").value = `TAHUN PELAJARAN ${ta.tahun}`;
     // worksheet.getCell("A3").value = jadwalMengajar.toJSON().mataPelajaran.nama;
+    
 
     worksheet.getCell(
       "A5"
     ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
-    worksheet.mergeCells(`A1:${colName(alreadyMerged + 1)}1`);
-    worksheet.mergeCells(`A2:${colName(alreadyMerged + 1)}2`);
-    worksheet.mergeCells(`A3:${colName(alreadyMerged + 1)}3`);
-    worksheet.mergeCells(`A4:${colName(alreadyMerged + 1)}4`);
+  
     worksheet.addConditionalFormatting({
       ref: "A1:I4",
       rules: [
@@ -46994,9 +47014,18 @@ class MainController {
     worksheet.mergeCells(`C6:C8`);
     worksheet.mergeCells(`D6:D8`);
 
-    worksheet.mergeCells(6, 5, 6, `${alreadyMerged}`);
-    worksheet.mergeCells(6, `${alreadyMerged + 1}`, 8, `${alreadyMerged + 1}`);
-    worksheet.mergeCells(6, `${alreadyMerged + 2}`, 8, `${alreadyMerged + 2}`);
+    if(dataaa<10){
+
+      worksheet.mergeCells(6, 5, 6, `${alreadyMerged}`);
+      worksheet.mergeCells(6, `${alreadyMerged + 1}`, 8, `${alreadyMerged + 1}`);
+      worksheet.mergeCells(6, `${alreadyMerged + 2}`, 8, `${alreadyMerged + 2}`);
+
+        worksheet.mergeCells(`A1:${colName(alreadyMerged + 1)}1`);
+        worksheet.mergeCells(`A2:${colName(alreadyMerged + 1)}2`);
+        worksheet.mergeCells(`A3:${colName(alreadyMerged + 1)}3`);
+        worksheet.mergeCells(`A4:${colName(alreadyMerged + 1)}4`);
+      
+    }
 
     worksheet.getCell(`${colName(alreadyMerged)}6`).value = `JUMLAH`;
     worksheet.getCell(`${colName(alreadyMerged + 1)}6`).value = `PERINGKAT`;
@@ -47037,6 +47066,7 @@ class MainController {
       ],
     });
 
+    // return dataaa
     worksheet.getColumn("B").width = 14;
     worksheet.getColumn("C").width = 28;
     worksheet.getColumn(`${colName(alreadyMerged)}`).width = 12;
