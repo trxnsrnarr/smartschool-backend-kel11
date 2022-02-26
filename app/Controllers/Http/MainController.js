@@ -910,13 +910,13 @@ class MainController {
       res = { ...res.toJSON(), ta };
     }
 
-    let { data } = await axios({
-      url: `https://dapo.kemdikbud.go.id/api/getHasilPencarian?keyword=${res.npsn}`,
-    });
+    // let { data } = await axios({
+    //   url: `https://dapo.kemdikbud.go.id/api/getHasilPencarian?keyword=${res.npsn}`,
+    // });
 
     return response.ok({
       data: res,
-      dapo: data[0],
+      // dapo: data[0],
     });
   }
 
