@@ -1605,9 +1605,8 @@ class RombelController {
   }
 
   async getTimelineWalas({ response, request, auth }) {
-    
     const domain = request.headers().origin;
-    
+
     const sekolah = await this.getSekolahByDomain(domain);
     const user = await auth.getUser();
 
@@ -1632,7 +1631,7 @@ class RombelController {
       .first();
 
     let mapelIds;
-     mapelIds =  MJadwalMengajar.query()
+    mapelIds = MJadwalMengajar.query()
       .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
       .whereNotNull("m_mata_pelajaran_id");
 
@@ -1677,8 +1676,14 @@ class RombelController {
             builder.with("rombel").with("tkTimeline");
           });
       })
-      .with("mataPelajaran")
-      .with("user")
+      .with("mataPelajaran", (builder) => {
+        builder.with("materi", (builder) => {
+          builder.with("bab");
+        });
+      })
+      .with("user", (builder) => {
+        builder.select("id", "nama");
+      })
       .with("materi", (builder) => {
         builder
           .with("bab")
@@ -1687,7 +1692,11 @@ class RombelController {
           });
       })
       .with("komen", (builder) => {
-        builder.with("user").where({ dihapus: 0 });
+        builder
+          .with("user", (builder) => {
+            builder.select("id", "nama");
+          })
+          .where({ dihapus: 0 });
       })
       .withCount("tkTimeline as total_respon", (builder) => {
         builder.whereNotNull("waktu_pengumpulan");
@@ -1718,8 +1727,14 @@ class RombelController {
             builder.with("rombel").with("tkTimeline");
           });
       })
-      .with("mataPelajaran")
-      .with("user")
+      .with("mataPelajaran", (builder) => {
+        builder.with("materi", (builder) => {
+          builder.with("bab");
+        });
+      })
+      .with("user", (builder) => {
+        builder.select("id", "nama");
+      })
       .with("materi", (builder) => {
         builder
           .with("bab")
@@ -1842,7 +1857,7 @@ class RombelController {
     // );
 
     return response.ok({
-      timeline
+      timeline,
       // berlangsung: timeline.filter((d) => {
       //   let dibagikan = d.tanggal_pembagian;
       //   if (d.tipe == "tugas") {
