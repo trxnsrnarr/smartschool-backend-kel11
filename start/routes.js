@@ -28,7 +28,7 @@ Route.get(
 );
 Route.get("/master/sekolah-ss", "MainController.getMasterSekolahSS");
 Route.get("/master/sekolah", "MainController.getMasterSekolah");
-Route.get("/master/sekolah/npsn", "MainController.getMasterSekolahNpsn");
+Route.post("/master/sekolah/npsn", "MainController.getMasterSekolahNpsn");
 Route.get(
   "/master/sekolah/propinsi",
   "MainController.getMasterSekolahProvinsi"

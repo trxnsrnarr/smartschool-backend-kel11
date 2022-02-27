@@ -831,11 +831,12 @@ class MainController {
   }
 
   async getMasterSekolahNpsn({ response, request }) {
-    const { npsn } = request.get();
+    // const { npsn } = request.get();
 
-    let { data } = await axios({
-      url: `https://dapo.kemdikbud.go.id/api/getHasilPencarian?keyword=${npsn}`,
-    });
+    // let { data } = await axios({
+    //   url: `https://dapo.kemdikbud.go.id/api/getHasilPencarian?keyword=${npsn}`,
+    // });
+    let { data } = request.post();
 
     const check = await Promise.all(
       data.map((d) => {
