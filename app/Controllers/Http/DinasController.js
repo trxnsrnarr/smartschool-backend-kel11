@@ -5841,7 +5841,7 @@ class DinasController {
             }
           }
 
-          return { ...d, status };
+          return { ...d, status, bab: d.materi.map((e) => e.bab) };
         })
       );
 
