@@ -5808,6 +5808,43 @@ class DinasController {
         .whereIn("id", timelineIds)
         .fetch();
 
+      timeline = await Promise.all(
+        timeline.toJSON().map((d) => {
+          /*** 1 = saat ini
+           ** 2 = akan datang
+           ** 3 = sudah selesai
+           */
+          let status = 1;
+
+          let dibagikan = d.tanggal_pembagian;
+          if (d.tipe == "tugas") {
+            dibagikan = d.tugas.tanggal_pembagian;
+          }
+
+          if (moment(dibagikan).toDate() > moment().toDate()) {
+            status = 2;
+          } else {
+            if (d.tipe == "tugas") {
+              if (d.__meta__.total_respon >= d.__meta__.total_siswa) {
+                status = 3;
+              }
+            } else if (d.tipe == "absen") {
+              if (moment(d.tanggal_akhir).toDate() < moment().toDate()) {
+                status = 3;
+              }
+            } else if (d.tipe == "materi") {
+              if (
+                d.materi[0].__meta__.totalKesimpulan >= d.__meta__.total_siswa
+              ) {
+                status = 3;
+              }
+            }
+          }
+
+          return { ...d, status };
+        })
+      );
+
       let jamMengajarIds = await MJamMengajar.query()
         .where({ kode_hari: new Date(tanggal).getDay() })
         .andWhere({ m_sekolah_id: sekolah.id })
