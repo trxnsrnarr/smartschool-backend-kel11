@@ -3914,7 +3914,8 @@ class KeuanganController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { search, tanggal_awal, tanggal_akhir, jenis, tipe } = request.get();
+    let { search, tanggal_awal, tanggal_akhir, jenis, tipe, m_user_id } =
+      request.get();
 
     let histori;
 
@@ -3952,9 +3953,15 @@ class KeuanganController {
       .distinct("jenis")
       .pluck("jenis");
 
+    const userIds = await MHistoriAktivitas.query()
+      .distinct("m_user_id")
+      .pluck("m_user_id");
+    const users = await User.query().whereIn("id", userIds).fetch();
+
     return response.ok({
       histori,
       jenis: jenisData,
+      users,
     });
   }
 
@@ -4004,12 +4011,20 @@ class KeuanganController {
     histori = await histori.orderBy("id", "desc").fetch();
 
     const jenisData = await MHistoriAktivitas.query()
+      .where({ tipe: "SarPras" })
       .distinct("jenis")
       .pluck("jenis");
+
+    const userIds = await MHistoriAktivitas.query()
+      .where({ tipe: "SarPras" })
+      .distinct("m_user_id")
+      .pluck("m_user_id");
+    const users = await User.query().whereIn("id", userIds).fetch();
 
     return response.ok({
       histori,
       jenis: jenisData,
+      users,
     });
   }
   async downloadJurnal({

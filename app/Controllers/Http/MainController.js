@@ -32512,7 +32512,7 @@ class MainController {
 
     if(lokasiSebelum.lebar != lebar){
       await MHistoriAktivitas.create({
-        jenis: "Ubah Barang",
+        jenis: "Ubah Lokasi",
         m_user_id: user.id,
         awal: `Lebar Lokasi : ${lokasiSebelum.lebar} menjadi `,
         akhir: `"${lebar}"`,
@@ -32524,7 +32524,7 @@ class MainController {
 
     if(lokasiSebelum.panjang != panjang){
       await MHistoriAktivitas.create({
-        jenis: "Ubah Barang",
+        jenis: "Ubah Lokasi",
         m_user_id: user.id,
         awal: `Panjang Lokasi : ${lokasiSebelum.panjang} menjadi `,
         akhir: `"${panjang}"`,
@@ -32536,7 +32536,7 @@ class MainController {
 
     if(lokasiSebelum.no_regis != no_regis){
       await MHistoriAktivitas.create({
-        jenis: "Ubah Barang",
+        jenis: "Ubah Lokasi",
         m_user_id: user.id,
         awal: `Nomor Registrasi Lokasi : ${lokasiSebelum.no_regis} menjadi `,
         akhir: `"${no_regis}"`,
@@ -32548,7 +32548,7 @@ class MainController {
 
     if(lokasiSebelum.jenis != jenis){
       await MHistoriAktivitas.create({
-        jenis: "Ubah Barang",
+        jenis: "Ubah Lokasi",
         m_user_id: user.id,
         awal: `Jenis Lokasi : ${lokasiSebelum.jenis} menjadi `,
         akhir: `"${jenis}"`,
@@ -32559,7 +32559,7 @@ class MainController {
     }
     if(lokasiSebelum.nama != nama){
       await MHistoriAktivitas.create({
-        jenis: "Ubah Barang",
+        jenis: "Ubah Lokasi",
         m_user_id: user.id,
         awal: `Nama Lokasi : ${lokasiSebelum.nama} menjadi `,
         akhir: `"${nama}"`,
@@ -32868,12 +32868,12 @@ class MainController {
       });
     }
 
-    if(barangSebelum.nama_kepemilikan != nama_kepemilikan){
+    if(barangSebelum.nama_pemilik != nama_pemilik){
       await MHistoriAktivitas.create({
         jenis: "Ubah Barang",
         m_user_id: user.id,
-        awal: `Kepemilikan - NamaP Pemilik/Peminjam : ${barangSebelum.nama_kepemilikan} menjadi `,
-        akhir: `"${nama_kepemilikan}"`,
+        awal: `Kepemilikan - NamaP Pemilik/Peminjam : ${barangSebelum.nama_pemilik} menjadi `,
+        akhir: `"${nama_pemilik}"`,
         bawah: `${barangSebelum.nama}`,
         m_sekolah_id: sekolah.id,
         tipe: "SarPras",
@@ -32978,12 +32978,12 @@ class MainController {
     });
   }
 
-  if(barangSebelum.kode != kode){
+  if(barangSebelum.kode_barang != kode_barang){
     await MHistoriAktivitas.create({
       jenis: "Ubah Barang",
       m_user_id: user.id,
-      awal: `Kode Barang : ${barangSebelum.kode} menjadi `,
-      akhir: `"${kode}"`,
+      awal: `Kode Barang : ${barangSebelum.kode_barang} menjadi `,
+      akhir: `"${kode_barang}"`,
       bawah: `${barangSebelum.nama}`,
       m_sekolah_id: sekolah.id,
       tipe: "SarPras",
