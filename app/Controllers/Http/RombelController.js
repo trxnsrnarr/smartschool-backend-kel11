@@ -1876,6 +1876,230 @@ class RombelController {
       // }),
     });
   }
+
+  async downloadRombelPassword({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const user = await auth.getUser();
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const { rombel_id } = request.post();
+
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
+    const query = MRombel.query()
+      .with("user")
+      .with("anggotaRombel", (builder) => {
+        builder.where({ dihapus: 0 }).with("user");
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id });
+
+    const rombel = rombel_id
+      ? await query.where({ id: rombel_id }).fetch()
+      : await query.fetch();
+
+    let workbook = new Excel.Workbook();
+    function makeid(length) {
+      var result = "";
+      var characters =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+      var charactersLength = characters.length;
+      for (var i = 0; i < length; i++) {
+        result += characters.charAt(
+          Math.floor(Math.random() * charactersLength)
+        );
+      }
+      return result;
+    }
+
+    await Promise.all(
+      rombel.toJSON().map(async (d, idx) => {
+        let worksheet = workbook.addWorksheet(`${idx + 1}.${d.nama}`);
+        worksheet.getCell("A1").value = "Rekap Data Siswa";
+        worksheet.getCell("A2").value = sekolah.nama;
+        worksheet.getCell("A3").value = ta.tahun;
+        worksheet.getCell("A4 ").value = d.nama;
+        worksheet.getCell(
+          "A6"
+        ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
+        worksheet.addConditionalFormatting({
+          ref: `A1:F4`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 16,
+                  bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+              },
+            },
+          ],
+        });
+        worksheet.mergeCells(`A1:F1`);
+        worksheet.mergeCells(`A2:F2`);
+        worksheet.mergeCells(`A3:F3`);
+        worksheet.mergeCells(`A4:F4`);
+        worksheet.addConditionalFormatting({
+          ref: `A7:F7`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                fill: {
+                  type: "pattern",
+                  pattern: "solid",
+                  bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+
+        await Promise.all(
+          d.anggotaRombel.map(async (anggota, idx) => {
+            worksheet.addConditionalFormatting({
+              ref: `B${(idx + 1) * 1 + 7}:F${(idx + 1) * 1 + 7}`,
+              rules: [
+                {
+                  type: "expression",
+                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                  style: {
+                    font: {
+                      name: "Times New Roman",
+                      family: 4,
+                      size: 11,
+                      // bold: true,
+                    },
+                    alignment: {
+                      vertical: "middle",
+                      horizontal: "left",
+                    },
+                    border: {
+                      top: { style: "thin" },
+                      left: { style: "thin" },
+                      bottom: { style: "thin" },
+                      right: { style: "thin" },
+                    },
+                  },
+                },
+              ],
+            });
+            worksheet.addConditionalFormatting({
+              ref: `A${(idx + 1) * 1 + 7}`,
+              rules: [
+                {
+                  type: "expression",
+                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                  style: {
+                    font: {
+                      name: "Times New Roman",
+                      family: 4,
+                      size: 11,
+                      // bold: true,
+                    },
+                    alignment: {
+                      vertical: "middle",
+                      horizontal: "center",
+                    },
+                    border: {
+                      top: { style: "thin" },
+                      left: { style: "thin" },
+                      bottom: { style: "thin" },
+                      right: { style: "thin" },
+                    },
+                  },
+                },
+              ],
+            });
+            // add column headers
+            worksheet.getRow(7).values = [
+              "No",
+              "Nama",
+              "Whatsapp",
+              "Email",
+              "Gender",
+              "Jabatan",
+              "Password",
+            ];
+
+            worksheet.columns = [
+              { key: "no" },
+              { key: "user" },
+              { key: "whatsapp" },
+              { key: "email" },
+              { key: "gender" },
+              { key: "jabatan" },
+              { key: "password" },
+            ];
+
+            const pwBaru = makeid(8);
+            await User.query()
+              .where({ id: anggota.user.id })
+              .update({ password: await Hash.make(pwBaru) });
+
+            // Add row using key mapping to columns
+            let row = worksheet.addRow({
+              no: `${idx + 1}`,
+              user: anggota.user ? anggota.user.nama : "-",
+              whatsapp: anggota.user ? anggota.user.whatsapp : "-",
+              email: anggota.user ? anggota.user.email : "-",
+              gender: anggota.user ? anggota.user.gender : "-",
+              jabatan: anggota ? anggota.role : "-",
+              password: pwBaru,
+            });
+          })
+        );
+      })
+    );
+    let namaFile = `/uploads/rekap-rombel-${rombel
+      .toJSON()
+      .map((d) => d.nama)
+      .join(" ")}-${new Date().getTime()}.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
 }
 
 module.exports = RombelController;
