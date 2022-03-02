@@ -6141,7 +6141,6 @@ class SecondController {
     const rumus = await MRumusLabaRugi.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
-      .limit(1)
       .fetch();
 
     const keuangan = await MKeuTemplateAkun.query()

@@ -1040,7 +1040,6 @@ class KeuanganController {
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .andWhere({ m_rencana_keuangan_id: perencanaan_id })
-      .limit(1)
       .fetch();
 
     const akun = await MKeuAkun.query()
