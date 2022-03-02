@@ -13,6 +13,7 @@ const TkMapelRapor = use("App/Models/TkMapelRapor");
 const TkMateriRombel = use("App/Models/TkMateriRombel");
 const MAbsen = use("App/Models/MAbsen");
 const MTimeline = use("App/Models/MTimeline");
+const Hash = use("Hash");
 const Helpers = use("Helpers");
 const moment = require("moment");
 require("moment/locale/id");
