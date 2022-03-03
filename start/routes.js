@@ -65,6 +65,8 @@ Route.post("/loginwhatsapp", "MainController.loginWhatsapp");
 Route.post("/login", "MainController.login");
 Route.post("/loginadminwhatsapp", "MainController.loginAdminWhatsapp");
 Route.post("/loginadmin", "MainController.loginAdmin");
+Route.post("/loginwhatsapp-barang", "UserController.loginWhatsapp");
+Route.post("/login-barang", "UserController.login");
 Route.get("/profil", "MainController.getProfil");
 Route.put("/profil", "MainController.putProfil");
 Route.put("/ubah-password", "MainController.putUbahPassword");
@@ -1752,6 +1754,30 @@ Route.delete(
   "/super-admin/dokumen/:dokumenPembayaranSekolah_id",
   "MainController.deleteDokumenPembayaranSekolah"
 );
+
+//BroadCast
+//SuperAdmin Dokumen Pembayaran Sekolah
+Route.get(
+  "/broadcast",
+  "UserController.getBroadcast"
+);
+Route.get(
+  "/broadcast-post",
+  "UserController.getPostBroadcast"
+);
+Route.post(
+  "/broadcast",
+  "UserController.postBroadcast"
+);
+Route.put(
+  "/broadcast/:broadcast_id",
+  "UserController.putBroadcast"
+);
+Route.delete(
+  "/broadcast/:broadcast_id",
+  "UserController.deleteBroadcast"
+);
+
 
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
