@@ -5191,7 +5191,7 @@ class MainController {
         .where({ tingkat: jadwalMengajar.toJSON().rombel.tingkat })
         .andWhere({ m_jurusan_id: jadwalMengajar.toJSON().rombel.m_jurusan_id })
         .andWhere({ m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id })
-        .andWhere({dihapus:0})
+        .andWhere({ dihapus: 0 })
         .first();
 
       let materiIds;
@@ -15059,7 +15059,7 @@ class MainController {
 
     // await Promise.all(
     //   checkJadwal.toJSON().rombelUjian.map((d)=>{
-        
+
     //   })
     // )
 
@@ -32494,7 +32494,9 @@ class MainController {
     }
 
     foto = foto ? foto.toString() : null;
-    const lokasiSebelum = await MLokasi.query().where({ id: lokasi_id }).first()
+    const lokasiSebelum = await MLokasi.query()
+      .where({ id: lokasi_id })
+      .first();
     const lokasi = await MLokasi.query().where({ id: lokasi_id }).update({
       jenis,
       nama,
@@ -32510,9 +32512,9 @@ class MainController {
       });
     }
 
-    if(lokasiSebelum.lebar != lebar){
+    if (lokasiSebelum.lebar != lebar) {
       await MHistoriAktivitas.create({
-        jenis: "Ubah Barang",
+        jenis: "Ubah Lokasi",
         m_user_id: user.id,
         awal: `Lebar Lokasi : ${lokasiSebelum.lebar} menjadi `,
         akhir: `"${lebar}"`,
@@ -32522,9 +32524,9 @@ class MainController {
       });
     }
 
-    if(lokasiSebelum.panjang != panjang){
+    if (lokasiSebelum.panjang != panjang) {
       await MHistoriAktivitas.create({
-        jenis: "Ubah Barang",
+        jenis: "Ubah Lokasi",
         m_user_id: user.id,
         awal: `Panjang Lokasi : ${lokasiSebelum.panjang} menjadi `,
         akhir: `"${panjang}"`,
@@ -32534,9 +32536,9 @@ class MainController {
       });
     }
 
-    if(lokasiSebelum.no_regis != no_regis){
+    if (lokasiSebelum.no_regis != no_regis) {
       await MHistoriAktivitas.create({
-        jenis: "Ubah Barang",
+        jenis: "Ubah Lokasi",
         m_user_id: user.id,
         awal: `Nomor Registrasi Lokasi : ${lokasiSebelum.no_regis} menjadi `,
         akhir: `"${no_regis}"`,
@@ -32546,9 +32548,9 @@ class MainController {
       });
     }
 
-    if(lokasiSebelum.jenis != jenis){
+    if (lokasiSebelum.jenis != jenis) {
       await MHistoriAktivitas.create({
-        jenis: "Ubah Barang",
+        jenis: "Ubah Lokasi",
         m_user_id: user.id,
         awal: `Jenis Lokasi : ${lokasiSebelum.jenis} menjadi `,
         akhir: `"${jenis}"`,
@@ -32557,9 +32559,9 @@ class MainController {
         tipe: "SarPras",
       });
     }
-    if(lokasiSebelum.nama != nama){
+    if (lokasiSebelum.nama != nama) {
       await MHistoriAktivitas.create({
-        jenis: "Ubah Barang",
+        jenis: "Ubah Lokasi",
         m_user_id: user.id,
         awal: `Nama Lokasi : ${lokasiSebelum.nama} menjadi `,
         akhir: `"${nama}"`,
@@ -32569,7 +32571,7 @@ class MainController {
       });
     }
 
-    if(lokasiSebelum.foto != foto){
+    if (lokasiSebelum.foto != foto) {
       await MHistoriAktivitas.create({
         jenis: "Ubah Lokasi",
         m_user_id: user.id,
@@ -32600,7 +32602,9 @@ class MainController {
     // if ((user.role != "admin" || user.role  == 'kurikulum') || user.m_sekolah_id != sekolah.id) {
     //   return response.forbidden({ message: messageForbidden });
     // }
-    const lokasiSebelum = await MLokasi.query().where({ id: lokasi_id }).first()
+    const lokasiSebelum = await MLokasi.query()
+      .where({ id: lokasi_id })
+      .first();
     const lokasi = await MLokasi.query().where({ id: lokasi_id }).update({
       dihapus: 1,
     });
@@ -32817,7 +32821,9 @@ class MainController {
         return response.unprocessableEntity(validation.messages());
       }
     }
-    const barangSebelum = await MBarang.query().where({ id: barang_id }).first()
+    const barangSebelum = await MBarang.query()
+      .where({ id: barang_id })
+      .first();
     const barang = await MBarang.query().where({ id: barang_id }).update({
       kode_barang,
       nama,
@@ -32842,7 +32848,7 @@ class MainController {
       });
     }
 
-    if(barangSebelum.nota != nota){
+    if (barangSebelum.nota != nota) {
       await MHistoriAktivitas.create({
         jenis: "Ubah Barang",
         m_user_id: user.id,
@@ -32854,9 +32860,13 @@ class MainController {
       });
     }
 
-    if(barangSebelum.m_lokasi_id != m_lokasi_id){
-      const lokasiSebelum = await MLokasi.query().where({id:barangSebelum.m_lokasi_id}).first()
-      const lokasiSesudah = await MLokasi.query().where({id:barangSebelum.m_lokasi_id}).first()
+    if (barangSebelum.m_lokasi_id != m_lokasi_id) {
+      const lokasiSebelum = await MLokasi.query()
+        .where({ id: barangSebelum.m_lokasi_id })
+        .first();
+      const lokasiSesudah = await MLokasi.query()
+        .where({ id: barangSebelum.m_lokasi_id })
+        .first();
       await MHistoriAktivitas.create({
         jenis: "Ubah Barang",
         m_user_id: user.id,
@@ -32868,19 +32878,19 @@ class MainController {
       });
     }
 
-    if(barangSebelum.nama_kepemilikan != nama_kepemilikan){
+    if (barangSebelum.nama_pemilik != nama_pemilik) {
       await MHistoriAktivitas.create({
         jenis: "Ubah Barang",
         m_user_id: user.id,
-        awal: `Kepemilikan - NamaP Pemilik/Peminjam : ${barangSebelum.nama_kepemilikan} menjadi `,
-        akhir: `"${nama_kepemilikan}"`,
+        awal: `Kepemilikan - NamaP Pemilik/Peminjam : ${barangSebelum.nama_pemilik} menjadi `,
+        akhir: `"${nama_pemilik}"`,
         bawah: `${barangSebelum.nama}`,
         m_sekolah_id: sekolah.id,
         tipe: "SarPras",
       });
     }
 
-    if(barangSebelum.kepemilikan != kepemilikan){
+    if (barangSebelum.kepemilikan != kepemilikan) {
       await MHistoriAktivitas.create({
         jenis: "Ubah Barang",
         m_user_id: user.id,
@@ -32892,7 +32902,7 @@ class MainController {
       });
     }
 
-    if(barangSebelum.rusak != rusak){
+    if (barangSebelum.rusak != rusak) {
       await MHistoriAktivitas.create({
         jenis: "Ubah Barang",
         m_user_id: user.id,
@@ -32904,7 +32914,7 @@ class MainController {
       });
     }
 
-    if(barangSebelum.baik != baik){
+    if (barangSebelum.baik != baik) {
       await MHistoriAktivitas.create({
         jenis: "Ubah Barang",
         m_user_id: user.id,
@@ -32916,7 +32926,7 @@ class MainController {
       });
     }
 
-    if(barangSebelum.harga != harga){
+    if (barangSebelum.harga != harga) {
       await MHistoriAktivitas.create({
         jenis: "Ubah Barang",
         m_user_id: user.id,
@@ -32928,7 +32938,7 @@ class MainController {
       });
     }
 
-    if(barangSebelum.jumlah != jumlah){
+    if (barangSebelum.jumlah != jumlah) {
       await MHistoriAktivitas.create({
         jenis: "Ubah Barang",
         m_user_id: user.id,
@@ -32940,8 +32950,7 @@ class MainController {
       });
     }
 
-    
-    if(barangSebelum.deskripsi != deskripsi){
+    if (barangSebelum.deskripsi != deskripsi) {
       await MHistoriAktivitas.create({
         jenis: "Ubah Barang",
         m_user_id: user.id,
@@ -32953,77 +32962,78 @@ class MainController {
       });
     }
 
- 
-  if(barangSebelum.asal != asal){
-    await MHistoriAktivitas.create({
-      jenis: "Ubah Barang",
-      m_user_id: user.id,
-      awal: `Asal Barang : ${barangSebelum.asal} menjadi `,
-      akhir: `"${asal}"`,
-      bawah: `${barangSebelum.nama}`,
-      m_sekolah_id: sekolah.id,
-      tipe: "SarPras",
-    });
-  }
+    if (barangSebelum.asal != asal) {
+      await MHistoriAktivitas.create({
+        jenis: "Ubah Barang",
+        m_user_id: user.id,
+        awal: `Asal Barang : ${barangSebelum.asal} menjadi `,
+        akhir: `"${asal}"`,
+        bawah: `${barangSebelum.nama}`,
+        m_sekolah_id: sekolah.id,
+        tipe: "SarPras",
+      });
+    }
 
-  if(barangSebelum.tahun_beli != tahun_beli){
-    await MHistoriAktivitas.create({
-      jenis: "Ubah Barang",
-      m_user_id: user.id,
-      awal: `Tanggal Dibeli : ${moment(barangSebelum.tahun_beli).format("dddd, DD MMM YYYY")} menjadi `,
-      akhir: `"${moment(tahun_beli).format("dddd, DD MMM YYYY")}"`,
-      bawah: `${barangSebelum.nama}`,
-      m_sekolah_id: sekolah.id,
-      tipe: "SarPras",
-    });
-  }
+    if (barangSebelum.tahun_beli != tahun_beli) {
+      await MHistoriAktivitas.create({
+        jenis: "Ubah Barang",
+        m_user_id: user.id,
+        awal: `Tanggal Dibeli : ${moment(barangSebelum.tahun_beli).format(
+          "dddd, DD MMM YYYY"
+        )} menjadi `,
+        akhir: `"${moment(tahun_beli).format("dddd, DD MMM YYYY")}"`,
+        bawah: `${barangSebelum.nama}`,
+        m_sekolah_id: sekolah.id,
+        tipe: "SarPras",
+      });
+    }
 
-  if(barangSebelum.kode != kode){
-    await MHistoriAktivitas.create({
-      jenis: "Ubah Barang",
-      m_user_id: user.id,
-      awal: `Kode Barang : ${barangSebelum.kode} menjadi `,
-      akhir: `"${kode}"`,
-      bawah: `${barangSebelum.nama}`,
-      m_sekolah_id: sekolah.id,
-      tipe: "SarPras",
-    });
-  }
-  if(barangSebelum.merk != merk){
-    await MHistoriAktivitas.create({
-      jenis: "Ubah Barang",
-      m_user_id: user.id,
-      awal: `Merk Barang : ${barangSebelum.merk} menjadi `,
-      akhir: `"${merk}"`,
-      bawah: `${barangSebelum.nama}`,
-      m_sekolah_id: sekolah.id,
-      tipe: "SarPras",
-    });
-  }
-  
-  if(barangSebelum.nama != nama){
-    await MHistoriAktivitas.create({
-      jenis: "Ubah Barang",
-    m_user_id: user.id,
-    awal: `Nama Barang : ${barangSebelum.nama} menjadi `,
-    akhir: `"${nama}"`,
-    bawah: `${barangSebelum.nama}`,
-    m_sekolah_id: sekolah.id,
-    tipe: "SarPras",
-  });
-}
+    if (barangSebelum.kode_barang != kode_barang) {
+      await MHistoriAktivitas.create({
+        jenis: "Ubah Barang",
+        m_user_id: user.id,
+        awal: `Kode Barang : ${barangSebelum.kode_barang} menjadi `,
+        akhir: `"${kode_barang}"`,
+        bawah: `${barangSebelum.nama}`,
+        m_sekolah_id: sekolah.id,
+        tipe: "SarPras",
+      });
+    }
+    if (barangSebelum.merk != merk) {
+      await MHistoriAktivitas.create({
+        jenis: "Ubah Barang",
+        m_user_id: user.id,
+        awal: `Merk Barang : ${barangSebelum.merk} menjadi `,
+        akhir: `"${merk}"`,
+        bawah: `${barangSebelum.nama}`,
+        m_sekolah_id: sekolah.id,
+        tipe: "SarPras",
+      });
+    }
 
-  if(barangSebelum.foto != foto){
-    await MHistoriAktivitas.create({
-      jenis: "Ubah Barang",
-      m_user_id: user.id,
-      awal: `Foto Barang : File foto barang telah diubah`,
-      akhir: `"${foto}"`,
-      bawah: `${barangSebelum.nama}`,
-      m_sekolah_id: sekolah.id,
-      tipe: "SarPras",
-    });
-  }
+    if (barangSebelum.nama != nama) {
+      await MHistoriAktivitas.create({
+        jenis: "Ubah Barang",
+        m_user_id: user.id,
+        awal: `Nama Barang : ${barangSebelum.nama} menjadi `,
+        akhir: `"${nama}"`,
+        bawah: `${barangSebelum.nama}`,
+        m_sekolah_id: sekolah.id,
+        tipe: "SarPras",
+      });
+    }
+
+    if (barangSebelum.foto != foto) {
+      await MHistoriAktivitas.create({
+        jenis: "Ubah Barang",
+        m_user_id: user.id,
+        awal: `Foto Barang : File foto barang telah diubah`,
+        akhir: `"${foto}"`,
+        bawah: `${barangSebelum.nama}`,
+        m_sekolah_id: sekolah.id,
+        tipe: "SarPras",
+      });
+    }
 
     return response.ok({
       message: messagePutSuccess,
@@ -33040,9 +33050,7 @@ class MainController {
     }
 
     const user = await auth.getUser();
-    const {
-      verifikasi
-    } = request.post();
+    const { verifikasi } = request.post();
     if (
       user.role != "admin" ||
       user.role == "guru" ||
@@ -33050,7 +33058,9 @@ class MainController {
     ) {
       return response.forbidden({ message: messageForbidden });
     }
-    const barangSebelum = await MBarang.query().where({ id: barang_id }).first()
+    const barangSebelum = await MBarang.query()
+      .where({ id: barang_id })
+      .first();
     const barang = await MBarang.query().where({ id: barang_id }).update({
       dihapus: 1,
     });
@@ -33060,7 +33070,7 @@ class MainController {
         message: messageNotFound,
       });
     }
-    if(verifikasi){
+    if (verifikasi) {
       await MHistoriAktivitas.create({
         jenis: "Proses Inventaris",
         m_user_id: user.id,
@@ -33087,8 +33097,6 @@ class MainController {
       akhir: `${barangSebelum.nama}`,
       m_sekolah_id: sekolah.id,
     });
-
-   
 
     return response.ok({
       message: messageDeleteSuccess,
@@ -42829,7 +42837,7 @@ class MainController {
       .withCount("siswa as total", (builder) => {
         builder.where({ dihapus: 0 });
       })
-      .where({trial:0});
+      .where({ trial: 0 });
 
     if (search) {
       sekolah.where("nama", "like", `%${search}%`);
@@ -47044,7 +47052,7 @@ class MainController {
       .where({ id: rombel_id })
       .first();
 
-      let dataaa = 0;
+    let dataaa = 0;
 
     let workbook = new Excel.Workbook();
 
@@ -47151,9 +47159,9 @@ class MainController {
                   ];
                   // worksheet.mergeCells(`${(total + 1) * 2 + 3}:${(total + 1) * 2 + 4}`);
 
-                  if(!r.mataPelajaran.nilaiIndividu){
-                    dataaa = dataaa+1;
-                    return
+                  if (!r.mataPelajaran.nilaiIndividu) {
+                    dataaa = dataaa + 1;
+                    return;
                   }
                   row.getCell([`${(total + 1) * 2 + 3}`]).value = `${
                     r.mataPelajaran.nilaiIndividu
@@ -47292,8 +47300,8 @@ class MainController {
           });
         })
     );
-    if(dataaa > 10){
-      return "Data untuk Leger Nilai Belum Lengkap"
+    if (dataaa > 10) {
+      return "Data untuk Leger Nilai Belum Lengkap";
     }
     // return result;
     worksheet.getCell(
@@ -47303,12 +47311,11 @@ class MainController {
     worksheet.getCell("A3").value = sekolah.nama;
     worksheet.getCell("A4").value = `TAHUN PELAJARAN ${ta.tahun}`;
     // worksheet.getCell("A3").value = jadwalMengajar.toJSON().mataPelajaran.nama;
-    
 
     worksheet.getCell(
       "A5"
     ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
-  
+
     worksheet.addConditionalFormatting({
       ref: "A1:I4",
       rules: [
@@ -47341,17 +47348,25 @@ class MainController {
     worksheet.mergeCells(`C6:C8`);
     worksheet.mergeCells(`D6:D8`);
 
-    if(dataaa<10){
-
+    if (dataaa < 10) {
       worksheet.mergeCells(6, 5, 6, `${alreadyMerged}`);
-      worksheet.mergeCells(6, `${alreadyMerged + 1}`, 8, `${alreadyMerged + 1}`);
-      worksheet.mergeCells(6, `${alreadyMerged + 2}`, 8, `${alreadyMerged + 2}`);
+      worksheet.mergeCells(
+        6,
+        `${alreadyMerged + 1}`,
+        8,
+        `${alreadyMerged + 1}`
+      );
+      worksheet.mergeCells(
+        6,
+        `${alreadyMerged + 2}`,
+        8,
+        `${alreadyMerged + 2}`
+      );
 
-        worksheet.mergeCells(`A1:${colName(alreadyMerged + 1)}1`);
-        worksheet.mergeCells(`A2:${colName(alreadyMerged + 1)}2`);
-        worksheet.mergeCells(`A3:${colName(alreadyMerged + 1)}3`);
-        worksheet.mergeCells(`A4:${colName(alreadyMerged + 1)}4`);
-      
+      worksheet.mergeCells(`A1:${colName(alreadyMerged + 1)}1`);
+      worksheet.mergeCells(`A2:${colName(alreadyMerged + 1)}2`);
+      worksheet.mergeCells(`A3:${colName(alreadyMerged + 1)}3`);
+      worksheet.mergeCells(`A4:${colName(alreadyMerged + 1)}4`);
     }
 
     worksheet.getCell(`${colName(alreadyMerged)}6`).value = `JUMLAH`;

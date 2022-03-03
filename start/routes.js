@@ -434,6 +434,9 @@ Route.delete(
   "KeuanganController.deleteKategoriAnalisis"
 );
 
+// Histori sarpras
+Route.get("/histori-sarpras", "KeuanganController.getHistoriSarpras");
+
 // Histori keuangan
 Route.get("/histori-keuangan", "KeuanganController.getHistori");
 // Route.post("/histori-keuangan", "KeuanganController.postKategoriAnalisis")
