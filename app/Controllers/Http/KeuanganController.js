@@ -1028,7 +1028,8 @@ class KeuanganController {
           .orderBy("urutan", "asc");
       })
       .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id });
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_rencana_keuangan_id: perencanaan_id });
 
     if (search) {
       kategori.andWhere("nama", "like", `%${search}%`);
@@ -4768,7 +4769,7 @@ class KeuanganController {
     return namaFile;
   }
 
-  async otomatisNeraca({ response, request, auth }) {
+  async otomatisNeraca({ response, request, auth, params: { rencana_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -4785,6 +4786,7 @@ class KeuanganController {
     const check = await MRencanaKategoriNeraca.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
+      .andWhere({ m_rencana_keuangan_id: rencana_id })
       .first();
 
     if (!check) {
@@ -4798,12 +4800,13 @@ class KeuanganController {
         nama: "AKTIVA LANCAR",
         warna: "#00D084",
         dihapus: 0,
+        m_rencana_keuangan_id: rencana_id,
         m_sekolah_id: sekolah.id,
       });
 
       const KAS = semuaAkun.toJSON().find((d) => d.nama == "KAS");
       await TkRencanaKategoriNeraca.create({
-        m_keu_kategori_neraca_id: Al.id,
+        m_rencana_kategori_neraca_id: Al.id,
         m_keu_akun_id: KAS.id,
         dihapus: 0,
         urutan: 1,
@@ -4811,7 +4814,7 @@ class KeuanganController {
 
       const DANABOS = semuaAkun.toJSON().find((d) => d.nama == "DANA BOS");
       await TkRencanaKategoriNeraca.create({
-        m_keu_kategori_neraca_id: Al.id,
+        m_rencana_kategori_neraca_id: Al.id,
         m_keu_akun_id: DANABOS.id,
         dihapus: 0,
         urutan: 1,
@@ -4819,7 +4822,7 @@ class KeuanganController {
 
       const DANABOP = semuaAkun.toJSON().find((d) => d.nama == "DANA BOP");
       await TkRencanaKategoriNeraca.create({
-        m_keu_kategori_neraca_id: Al.id,
+        m_rencana_kategori_neraca_id: Al.id,
         m_keu_akun_id: DANABOP.id,
         dihapus: 0,
         urutan: 1,
@@ -4827,7 +4830,7 @@ class KeuanganController {
 
       const DANABPMU = semuaAkun.toJSON().find((d) => d.nama == "DANA BPMU");
       await TkRencanaKategoriNeraca.create({
-        m_keu_kategori_neraca_id: Al.id,
+        m_rencana_kategori_neraca_id: Al.id,
         m_keu_akun_id: DANABPMU.id,
         dihapus: 0,
         urutan: 1,
@@ -4837,7 +4840,7 @@ class KeuanganController {
         .toJSON()
         .find((d) => d.nama == "DANA YAYASAN");
       await TkRencanaKategoriNeraca.create({
-        m_keu_kategori_neraca_id: Al.id,
+        m_rencana_kategori_neraca_id: Al.id,
         m_keu_akun_id: DANAYAYASAN.id,
         dihapus: 0,
         urutan: 1,
@@ -4849,11 +4852,12 @@ class KeuanganController {
         warna: "#00D084",
         dihapus: 0,
         m_sekolah_id: sekolah.id,
+        m_rencana_keuangan_id: rencana_id,
       });
 
       const INVENTARIS = semuaAkun.toJSON().find((d) => d.nama == "INVENTARIS");
       await TkRencanaKategoriNeraca.create({
-        m_keu_kategori_neraca_id: At.id,
+        m_rencana_kategori_neraca_id: At.id,
         m_keu_akun_id: INVENTARIS.id,
         dihapus: 0,
         urutan: 1,
@@ -4861,7 +4865,7 @@ class KeuanganController {
 
       const KENDARAAN = semuaAkun.toJSON().find((d) => d.nama == "KENDARAAN");
       await TkRencanaKategoriNeraca.create({
-        m_keu_kategori_neraca_id: At.id,
+        m_rencana_kategori_neraca_id: At.id,
         m_keu_akun_id: KENDARAAN.id,
         dihapus: 0,
         urutan: 1,
@@ -4871,7 +4875,7 @@ class KeuanganController {
         .toJSON()
         .find((d) => d.nama == "GEDUNG SEKOLAH");
       await TkRencanaKategoriNeraca.create({
-        m_keu_kategori_neraca_id: At.id,
+        m_rencana_kategori_neraca_id: At.id,
         m_keu_akun_id: GEDUNGSEKOLAH.id,
         dihapus: 0,
         urutan: 1,
@@ -4883,13 +4887,14 @@ class KeuanganController {
         warna: "#EB144C",
         dihapus: 0,
         m_sekolah_id: sekolah.id,
+        m_rencana_keuangan_id: rencana_id,
       });
 
       const UTANGUSAHA = semuaAkun
         .toJSON()
         .find((d) => d.nama == "UTANG USAHA");
       await TkRencanaKategoriNeraca.create({
-        m_keu_kategori_neraca_id: Ul.id,
+        m_rencana_kategori_neraca_id: Ul.id,
         m_keu_akun_id: UTANGUSAHA.id,
         dihapus: 0,
         urutan: 1,
@@ -4899,7 +4904,7 @@ class KeuanganController {
         .toJSON()
         .find((d) => d.nama == "UTANG PAJAK");
       await TkRencanaKategoriNeraca.create({
-        m_keu_kategori_neraca_id: Ul.id,
+        m_rencana_kategori_neraca_id: Ul.id,
         m_keu_akun_id: UTANGPAJAK.id,
         dihapus: 0,
         urutan: 1,
@@ -4909,7 +4914,7 @@ class KeuanganController {
         .toJSON()
         .find((d) => d.nama == "UTANG JANGKA PENDEK LAINNYA");
       await TkRencanaKategoriNeraca.create({
-        m_keu_kategori_neraca_id: Ul.id,
+        m_rencana_kategori_neraca_id: Ul.id,
         m_keu_akun_id: UTANGJANGKAP.id,
         dihapus: 0,
         urutan: 1,
@@ -4921,13 +4926,14 @@ class KeuanganController {
         warna: "#EB144C",
         dihapus: 0,
         m_sekolah_id: sekolah.id,
+        m_rencana_keuangan_id: rencana_id,
       });
 
       const UTANGOBLIGASI = semuaAkun
         .toJSON()
         .find((d) => d.nama == "UTANG OBLIGASI");
       await TkRencanaKategoriNeraca.create({
-        m_keu_kategori_neraca_id: Ujp.id,
+        m_rencana_kategori_neraca_id: Ujp.id,
         m_keu_akun_id: UTANGOBLIGASI.id,
         dihapus: 0,
         urutan: 1,
@@ -4939,11 +4945,12 @@ class KeuanganController {
         warna: "#EB144C",
         dihapus: 0,
         m_sekolah_id: sekolah.id,
+        m_rencana_keuangan_id: rencana_id,
       });
 
       const MODAL = semuaAkun.toJSON().find((d) => d.nama == "MODAL");
       await TkRencanaKategoriNeraca.create({
-        m_keu_kategori_neraca_id: E.id,
+        m_rencana_kategori_neraca_id: E.id,
         m_keu_akun_id: MODAL.id,
         dihapus: 0,
         urutan: 1,
@@ -4953,14 +4960,14 @@ class KeuanganController {
         .toJSON()
         .find((d) => d.nama == "LABA DITAHAN");
       await TkRencanaKategoriNeraca.create({
-        m_keu_kategori_neraca_id: E.id,
+        m_rencana_kategori_neraca_id: E.id,
         m_keu_akun_id: LABADITAHAN.id,
         dihapus: 0,
         urutan: 1,
       });
     }
   }
-  async otomatisLabaRugi({ response, request, auth }) {
+  async otomatisLabaRugi({ response, request, auth, params: { rencana_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -4977,6 +4984,7 @@ class KeuanganController {
     const check = await MRencanaKategoriLabaRugi.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
+      .andWhere({ m_rencana_keuangan_id: rencana_id })
       .first();
 
     if (!check) {
@@ -4989,6 +4997,7 @@ class KeuanganController {
         nama: "PENDAPATAN",
         warna: "#00D084",
         dihapus: 0,
+        m_rencana_keuangan_id: rencana_id,
         m_sekolah_id: sekolah.id,
       });
 
@@ -4996,7 +5005,7 @@ class KeuanganController {
         .toJSON()
         .find((d) => d.nama == "PENDAPATAN JASA");
       await TkRencanaKategoriLabaRugi.create({
-        m_keu_kategori_laba_rugi_id: pendapatan.id,
+        m_rencana_kategori_laba_rugi_id: pendapatan.id,
         m_keu_akun_id: PENDAPATANJASA.id,
         dihapus: 0,
         urutan: 1,
@@ -5006,22 +5015,23 @@ class KeuanganController {
         .toJSON()
         .find((d) => d.nama == "PENDAPATAN LAINNYA");
       await TkRencanaKategoriLabaRugi.create({
-        m_keu_kategori_laba_rugi_id: pendapatan.id,
+        m_rencana_kategori_laba_rugi_id: pendapatan.id,
         m_keu_akun_id: PENDAPATANLAINNYA.id,
         dihapus: 0,
         urutan: 1,
       });
 
       const beban = await MRencanaKategoriLabaRugi.create({
-        nama: "BEBAN - BEBAN",
+        nama: "BEBAN",
         warna: "#00D084",
         dihapus: 0,
         m_sekolah_id: sekolah.id,
+        m_rencana_keuangan_id: rencana_id,
       });
 
       const BEBANGAJI = semuaAkun.toJSON().find((d) => d.nama == "BEBAN GAJI");
       await TkRencanaKategoriLabaRugi.create({
-        m_keu_kategori_laba_rugi_id: beban.id,
+        m_rencana_kategori_laba_rugi_id: beban.id,
         m_keu_akun_id: BEBANGAJI.id,
         dihapus: 0,
         urutan: 1,
@@ -5031,7 +5041,7 @@ class KeuanganController {
         .toJSON()
         .find((d) => d.nama == "BEBAN LISTRIK, AIR, TELEPON");
       await TkRencanaKategoriLabaRugi.create({
-        m_keu_kategori_laba_rugi_id: beban.id,
+        m_rencana_kategori_laba_rugi_id: beban.id,
         m_keu_akun_id: BEBANLISTRIK.id,
         dihapus: 0,
         urutan: 1,
@@ -5041,7 +5051,7 @@ class KeuanganController {
         .toJSON()
         .find((d) => d.nama == "BEBAN PERLENGKAPAN KANTOR");
       await TkRencanaKategoriLabaRugi.create({
-        m_keu_kategori_laba_rugi_id: beban.id,
+        m_rencana_kategori_laba_rugi_id: beban.id,
         m_keu_akun_id: BEBANPERLENGKAPAN.id,
         dihapus: 0,
         urutan: 1,
@@ -5049,7 +5059,7 @@ class KeuanganController {
 
       const BEBANSEWA = semuaAkun.toJSON().find((d) => d.nama == "BEBAN SEWA");
       await TkRencanaKategoriLabaRugi.create({
-        m_keu_kategori_laba_rugi_id: beban.id,
+        m_rencana_kategori_laba_rugi_id: beban.id,
         m_keu_akun_id: BEBANSEWA.id,
         dihapus: 0,
         urutan: 1,
@@ -5059,7 +5069,7 @@ class KeuanganController {
         .toJSON()
         .find((d) => d.nama == "BEBAN PERAWATAN PERALATAN");
       await TkRencanaKategoriLabaRugi.create({
-        m_keu_kategori_laba_rugi_id: beban.id,
+        m_rencana_kategori_laba_rugi_id: beban.id,
         m_keu_akun_id: BEBANPERAWATAN.id,
         dihapus: 0,
         urutan: 1,
@@ -5069,7 +5079,7 @@ class KeuanganController {
         .toJSON()
         .find((d) => d.nama == "BEBAN ASURANSI");
       await TkRencanaKategoriLabaRugi.create({
-        m_keu_kategori_laba_rugi_id: beban.id,
+        m_rencana_kategori_laba_rugi_id: beban.id,
         m_keu_akun_id: BEBANASURANSI.id,
         dihapus: 0,
         urutan: 1,
@@ -5079,7 +5089,7 @@ class KeuanganController {
         .toJSON()
         .find((d) => d.nama == "BEBAN LAINNYA");
       await TkRencanaKategoriLabaRugi.create({
-        m_keu_kategori_laba_rugi_id: beban.id,
+        m_rencana_kategori_laba_rugi_id: beban.id,
         m_keu_akun_id: BEBANLAIN.id,
         dihapus: 0,
         urutan: 1,
@@ -5100,10 +5110,11 @@ class KeuanganController {
         rumus: JSON.stringify(rumus),
         dihapus: 0,
         m_sekolah_id: sekolah.id,
+        m_rencana_keuangan_id: rencana_id,
       });
     }
   }
-  async otomatisArusKas({ response, request, auth }) {
+  async otomatisArusKas({ response, request, auth, params: { rencana_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -5120,6 +5131,7 @@ class KeuanganController {
     const check = await MRencanaKategoriArusKas.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
+      .andWhere({ m_rencana_keuangan_id: rencana_id })
       .first();
 
     if (!check) {
@@ -5134,6 +5146,7 @@ class KeuanganController {
         warna: "#00D084",
         dihapus: 0,
         m_sekolah_id: sekolah.id,
+        m_rencana_keuangan_id: rencana_id,
       });
 
       // Aktivitas LabaBersih
@@ -5141,14 +5154,15 @@ class KeuanganController {
         nama: "Laba Bersih",
         dihapus: 0,
         m_sekolah_id: sekolah.id,
+        m_rencana_keuangan_id: rencana_id,
       });
       const LABABERSIH = semuaAkun
         .toJSON()
         .find((d) => d.nama == "LABA BERSIH");
 
       await TkRencanaKategoriTipeAkun.create({
-        m_keu_kategori_tipe_akun_id: LabaBersih.id,
-        m_keu_akun: LABABERSIH.id,
+        m_rencana_kategori_tipe_akun_id: LabaBersih.id,
+        m_keu_akun_id: LABABERSIH.id,
         dihapus: 0,
         urutan: 1,
       });
@@ -5157,8 +5171,8 @@ class KeuanganController {
         judul: "Laba Bersih",
         dihapus: 0,
         m_sekolah_id: sekolah.id,
-        m_keu_kategori_tipe_akun_id: LabaBersih.id,
-        m_keu_kategori_arus_kas_id: operasi.id,
+        m_rencana_kategori_tipe_akun_id: LabaBersih.id,
+        m_rencana_kategori_arus_kas_id: operasi.id,
         urutan: 1,
         laba: 1,
       });
@@ -5168,6 +5182,7 @@ class KeuanganController {
         nama: "Akun Piutang",
         dihapus: 0,
         m_sekolah_id: sekolah.id,
+        m_rencana_keuangan_id: rencana_id,
       });
 
       const PIUTANGPENDAPATAN = semuaAkun
@@ -5178,14 +5193,14 @@ class KeuanganController {
         .find((d) => d.nama == "PIUTANG KARYAWAN");
 
       await TkRencanaKategoriTipeAkun.create({
-        m_keu_kategori_tipe_akun_id: AkunPiutang.id,
-        m_keu_akun: PIUTANGPENDAPATAN.id,
+        m_rencana_kategori_tipe_akun_id: AkunPiutang.id,
+        m_keu_akun_id: PIUTANGPENDAPATAN.id,
         dihapus: 0,
         urutan: 1,
       });
       await TkRencanaKategoriTipeAkun.create({
-        m_keu_kategori_tipe_akun_id: AkunPiutang.id,
-        m_keu_akun: PIUTANGKARYAWAN.id,
+        m_rencana_kategori_tipe_akun_id: AkunPiutang.id,
+        m_keu_akun_id: PIUTANGKARYAWAN.id,
         dihapus: 0,
         urutan: 1,
       });
@@ -5194,8 +5209,8 @@ class KeuanganController {
         judul: "Akun Piutang",
         dihapus: 0,
         m_sekolah_id: sekolah.id,
-        m_keu_kategori_tipe_akun_id: AkunPiutang.id,
-        m_keu_kategori_arus_kas_id: operasi.id,
+        m_rencana_kategori_tipe_akun_id: AkunPiutang.id,
+        m_rencana_kategori_arus_kas_id: operasi.id,
         urutan: 1,
         laba: 1,
       });
@@ -5205,6 +5220,7 @@ class KeuanganController {
         nama: "Aset Lancar",
         dihapus: 0,
         m_sekolah_id: sekolah.id,
+        m_rencana_keuangan_id: rencana_id,
       });
 
       const KAS = semuaAkun.toJSON().find((d) => d.nama == "KAS");
@@ -5214,32 +5230,32 @@ class KeuanganController {
       const YAYASAN = semuaAkun.toJSON().find((d) => d.nama == "DANA YAYASAN");
 
       await TkRencanaKategoriTipeAkun.create({
-        m_keu_kategori_tipe_akun_id: AsetLancar.id,
-        m_keu_akun: KAS.id,
+        m_rencana_kategori_tipe_akun_id: AsetLancar.id,
+        m_keu_akun_id: KAS.id,
         dihapus: 0,
         urutan: 1,
       });
       await TkRencanaKategoriTipeAkun.create({
-        m_keu_kategori_tipe_akun_id: AsetLancar.id,
-        m_keu_akun: BOS.id,
+        m_rencana_kategori_tipe_akun_id: AsetLancar.id,
+        m_keu_akun_id: BOS.id,
         dihapus: 0,
         urutan: 1,
       });
       await TkRencanaKategoriTipeAkun.create({
-        m_keu_kategori_tipe_akun_id: AsetLancar.id,
-        m_keu_akun: BOP.id,
+        m_rencana_kategori_tipe_akun_id: AsetLancar.id,
+        m_keu_akun_id: BOP.id,
         dihapus: 0,
         urutan: 1,
       });
       await TkRencanaKategoriTipeAkun.create({
-        m_keu_kategori_tipe_akun_id: AsetLancar.id,
-        m_keu_akun: BPMU.id,
+        m_rencana_kategori_tipe_akun_id: AsetLancar.id,
+        m_keu_akun_id: BPMU.id,
         dihapus: 0,
         urutan: 1,
       });
       await TkRencanaKategoriTipeAkun.create({
-        m_keu_kategori_tipe_akun_id: AsetLancar.id,
-        m_keu_akun: YAYASAN.id,
+        m_rencana_kategori_tipe_akun_id: AsetLancar.id,
+        m_keu_akun_id: YAYASAN.id,
         dihapus: 0,
         urutan: 1,
       });
@@ -5248,8 +5264,8 @@ class KeuanganController {
         judul: "Aset Lancar",
         dihapus: 0,
         m_sekolah_id: sekolah.id,
-        m_keu_kategori_tipe_akun_id: AsetLancar.id,
-        m_keu_kategori_arus_kas_id: operasi.id,
+        m_rencana_kategori_tipe_akun_id: AsetLancar.id,
+        m_rencana_kategori_arus_kas_id: operasi.id,
         urutan: 1,
         laba: 1,
       });
@@ -5272,20 +5288,20 @@ class KeuanganController {
       // .find((d) => d.nama == "KURSI");
 
       // await TkRencanaKategoriTipeAkun.create({
-      //   m_keu_kategori_tipe_akun_id:PersediaanBarang.id,
-      //   m_keu_akun: LEMARI.id,
+      //   m_rencana_kategori_tipe_akun_id:PersediaanBarang.id,
+      //   m_keu_akun_id: LEMARI.id,
       //   dihapus:0,
       //   urutan:1
       // })
       // await TkRencanaKategoriTipeAkun.create({
-      //   m_keu_kategori_tipe_akun_id:PersediaanBarang.id,
-      //   m_keu_akun: MEJA.id,
+      //   m_rencana_kategori_tipe_akun_id:PersediaanBarang.id,
+      //   m_keu_akun_id: MEJA.id,
       //   dihapus:0,
       //   urutan:1
       // })
       // await TkRencanaKategoriTipeAkun.create({
-      //   m_keu_kategori_tipe_akun_id:PersediaanBarang.id,
-      //   m_keu_akun: KURSI.id,
+      //   m_rencana_kategori_tipe_akun_id:PersediaanBarang.id,
+      //   m_keu_akun_id: KURSI.id,
       //   dihapus:0,
       //   urutan:1
       // })
@@ -5294,8 +5310,8 @@ class KeuanganController {
       //   judul: "Persediaan Barang",
       //   dihapus:0,
       //   m_sekolah_id:sekolah.id,
-      //   m_keu_kategori_tipe_akun_id: PersediaanBarang.id,
-      //   m_keu_kategori_arus_kas_id: operasi.id,
+      //   m_rencana_kategori_tipe_akun_id: PersediaanBarang.id,
+      //   m_rencana_kategori_arus_kas_id: operasi.id,
       //   urutan:1,
       //   laba:1
       // })
@@ -5306,6 +5322,7 @@ class KeuanganController {
         nama: "Penyusutan & Amortisasi",
         dihapus: 0,
         m_sekolah_id: sekolah.id,
+        m_rencana_keuangan_id: rencana_id,
       });
 
       const BEBANPPK = semuaAkun
@@ -5322,26 +5339,26 @@ class KeuanganController {
         .find((d) => d.nama == "BEBAN PENYUSUTAN GEDUNG");
 
       await TkRencanaKategoriTipeAkun.create({
-        m_keu_kategori_tipe_akun_id: Penyusutan.id,
-        m_keu_akun: BEBANPPK.id,
+        m_rencana_kategori_tipe_akun_id: Penyusutan.id,
+        m_keu_akun_id: BEBANPPK.id,
         dihapus: 0,
         urutan: 1,
       });
       await TkRencanaKategoriTipeAkun.create({
-        m_keu_kategori_tipe_akun_id: Penyusutan.id,
-        m_keu_akun: BEBANPPB.id,
+        m_rencana_kategori_tipe_akun_id: Penyusutan.id,
+        m_keu_akun_id: BEBANPPB.id,
         dihapus: 0,
         urutan: 1,
       });
       await TkRencanaKategoriTipeAkun.create({
-        m_keu_kategori_tipe_akun_id: Penyusutan.id,
-        m_keu_akun: BEBANPK.id,
+        m_rencana_kategori_tipe_akun_id: Penyusutan.id,
+        m_keu_akun_id: BEBANPK.id,
         dihapus: 0,
         urutan: 1,
       });
       await TkRencanaKategoriTipeAkun.create({
-        m_keu_kategori_tipe_akun_id: Penyusutan.id,
-        m_keu_akun: BEBANPG.id,
+        m_rencana_kategori_tipe_akun_id: Penyusutan.id,
+        m_keu_akun_id: BEBANPG.id,
         dihapus: 0,
         urutan: 1,
       });
@@ -5350,8 +5367,8 @@ class KeuanganController {
         judul: "Penyusutan & Amortisasi",
         dihapus: 0,
         m_sekolah_id: sekolah.id,
-        m_keu_kategori_tipe_akun_id: Penyusutan.id,
-        m_keu_kategori_arus_kas_id: operasi.id,
+        m_rencana_kategori_tipe_akun_id: Penyusutan.id,
+        m_rencana_kategori_arus_kas_id: operasi.id,
         urutan: 1,
         laba: 1,
       });
@@ -5361,6 +5378,7 @@ class KeuanganController {
         nama: "Investasi",
         warna: "#00D084",
         dihapus: 0,
+        m_rencana_keuangan_id: rencana_id,
         m_sekolah_id: sekolah.id,
       });
 
@@ -5369,6 +5387,7 @@ class KeuanganController {
         nama: "Aset Tetap",
         dihapus: 0,
         m_sekolah_id: sekolah.id,
+        m_rencana_keuangan_id: rencana_id,
       });
       const LEMARI = semuaAkun.toJSON().find((d) => d.nama == "LEMARI");
       const MEJA = semuaAkun.toJSON().find((d) => d.nama == "MEJA");
@@ -5376,35 +5395,35 @@ class KeuanganController {
       const KENDARAAN = semuaAkun.toJSON().find((d) => d.nama == "KENDARAAN");
       const GEDUNGSEKOLAH = semuaAkun
         .toJSON()
-        .find((d) => d.nama == "GEDUNGSEKOLAH");
+        .find((d) => d.nama == "GEDUNG SEKOLAH");
 
       await TkRencanaKategoriTipeAkun.create({
-        m_keu_kategori_tipe_akun_id: PersediaanBarang.id,
-        m_keu_akun: LEMARI.id,
+        m_rencana_kategori_tipe_akun_id: AsetTetap.id,
+        m_keu_akun_id: LEMARI.id,
         dihapus: 0,
         urutan: 1,
       });
       await TkRencanaKategoriTipeAkun.create({
-        m_keu_kategori_tipe_akun_id: PersediaanBarang.id,
-        m_keu_akun: MEJA.id,
+        m_rencana_kategori_tipe_akun_id: AsetTetap.id,
+        m_keu_akun_id: MEJA.id,
         dihapus: 0,
         urutan: 1,
       });
       await TkRencanaKategoriTipeAkun.create({
-        m_keu_kategori_tipe_akun_id: PersediaanBarang.id,
-        m_keu_akun: KURSI.id,
+        m_rencana_kategori_tipe_akun_id: AsetTetap.id,
+        m_keu_akun_id: KURSI.id,
         dihapus: 0,
         urutan: 1,
       });
       await TkRencanaKategoriTipeAkun.create({
-        m_keu_kategori_tipe_akun_id: PersediaanBarang.id,
-        m_keu_akun: KENDARAAN.id,
+        m_rencana_kategori_tipe_akun_id: AsetTetap.id,
+        m_keu_akun_id: KENDARAAN.id,
         dihapus: 0,
         urutan: 1,
       });
       await TkRencanaKategoriTipeAkun.create({
-        m_keu_kategori_tipe_akun_id: PersediaanBarang.id,
-        m_keu_akun: GEDUNGSEKOLAH.id,
+        m_rencana_kategori_tipe_akun_id: AsetTetap.id,
+        m_keu_akun_id: GEDUNGSEKOLAH.id,
         dihapus: 0,
         urutan: 1,
       });
@@ -5413,8 +5432,8 @@ class KeuanganController {
         judul: "Aset Tetap",
         dihapus: 0,
         m_sekolah_id: sekolah.id,
-        m_keu_kategori_tipe_akun_id: AsetTetap.id,
-        m_keu_kategori_arus_kas_id: Investasi.id,
+        m_rencana_kategori_tipe_akun_id: AsetTetap.id,
+        m_rencana_kategori_arus_kas_id: Investasi.id,
         urutan: 1,
         laba: 1,
       });
@@ -5425,6 +5444,7 @@ class KeuanganController {
         warna: "#00D084",
         dihapus: 0,
         m_sekolah_id: sekolah.id,
+        m_rencana_keuangan_id: rencana_id,
       });
 
       // Aktivitas DIVIDEN
@@ -5432,12 +5452,13 @@ class KeuanganController {
         nama: "Dividen",
         dihapus: 0,
         m_sekolah_id: sekolah.id,
+        m_rencana_keuangan_id: rencana_id,
       });
       const DIVIDEN = semuaAkun.toJSON().find((d) => d.nama == "DIVIDEN");
 
       await TkRencanaKategoriTipeAkun.create({
-        m_keu_kategori_tipe_akun_id: Dividen.id,
-        m_keu_akun: DIVIDEN.id,
+        m_rencana_kategori_tipe_akun_id: Dividen.id,
+        m_keu_akun_id: DIVIDEN.id,
         dihapus: 0,
         urutan: 1,
       });
@@ -5446,15 +5467,15 @@ class KeuanganController {
         judul: "Dividen",
         dihapus: 0,
         m_sekolah_id: sekolah.id,
-        m_keu_kategori_tipe_akun_id: Dividen.id,
-        m_keu_kategori_arus_kas_id: Pendanaan.id,
+        m_rencana_kategori_tipe_akun_id: Dividen.id,
+        m_rencana_kategori_arus_kas_id: Pendanaan.id,
         urutan: 1,
         laba: 1,
       });
 
       const rumusUtama = [
         {
-          id: Operasi.id,
+          id: operasi.id,
         },
         {
           operator: "plus",
@@ -5473,6 +5494,7 @@ class KeuanganController {
         rumus: JSON.stringify(rumusUtama),
         dihapus: 0,
         m_sekolah_id: sekolah.id,
+        m_rencana_keuangan_id: rencana_id,
       });
 
       const PENDAPATANJASA = semuaAkun
@@ -5496,11 +5518,12 @@ class KeuanganController {
         rumus: JSON.stringify(rumusAwal),
         dihapus: 0,
         m_sekolah_id: sekolah.id,
+        m_rencana_keuangan_id: rencana_id,
       });
 
       const rumusAkhir = [
         {
-          id: Operasi.id,
+          id: operasi.id,
         },
         {
           operator: "plus",
@@ -5519,6 +5542,7 @@ class KeuanganController {
         rumus: JSON.stringify(rumusAkhir),
         dihapus: 0,
         m_sekolah_id: sekolah.id,
+        m_rencana_keuangan_id: rencana_id,
       });
     }
   }

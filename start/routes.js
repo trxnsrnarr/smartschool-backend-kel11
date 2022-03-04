@@ -65,6 +65,8 @@ Route.post("/loginwhatsapp", "MainController.loginWhatsapp");
 Route.post("/login", "MainController.login");
 Route.post("/loginadminwhatsapp", "MainController.loginAdminWhatsapp");
 Route.post("/loginadmin", "MainController.loginAdmin");
+Route.post("/loginwhatsapp-barang", "UserController.loginWhatsapp");
+Route.post("/login-barang", "UserController.login");
 Route.get("/profil", "MainController.getProfil");
 Route.put("/profil", "MainController.putProfil");
 Route.put("/ubah-password", "MainController.putUbahPassword");
@@ -1235,6 +1237,7 @@ Route.get("/surel-arsip/:arsip_id", "MainController.detailArsipSurel");
 // barang Service
 Route.get("/barang", "MainController.getBarang");
 Route.get("/barang/:barang_id", "MainController.detailBarang");
+Route.get("/barang-aplikasi/:barang_id", "SecondController.detailBarang");
 Route.post("/barang", "MainController.postBarang");
 Route.put("/barang/:barang_id", "MainController.putBarang");
 Route.delete("/barang/:barang_id", "MainController.deleteBarang");
@@ -1664,6 +1667,11 @@ Route.delete("/buku-kerja-soal/:rpp_id", "DinasController.deleteBukuKerjaSoal");
 
 Route.get("/otomatis-akun-keuangan", "SecondController.otomatisAkun");
 Route.get("/otomatis-neraca-keuangan", "SecondController.otomatisNeraca");
+Route.get("/otomatis-neraca-keuangan/:rencana_id", "KeuanganController.otomatisNeraca");
+Route.get("/otomatis-labarugi-keuangan", "SecondController.otomatisLabaRugi");
+Route.get("/otomatis-labarugi-keuangan/:rencana_id", "KeuanganController.otomatisLabaRugi");
+Route.get("/otomatis-aruskas-keuangan", "SecondController.otomatisArusKas");
+Route.get("/otomatis-aruskas-keuangan/:rencana_id", "KeuanganController.otomatisArusKas");
 
 Route.post(
   "/download/aset-aktif",
@@ -1755,6 +1763,30 @@ Route.delete(
   "/super-admin/dokumen/:dokumenPembayaranSekolah_id",
   "MainController.deleteDokumenPembayaranSekolah"
 );
+
+//BroadCast
+//SuperAdmin Dokumen Pembayaran Sekolah
+Route.get(
+  "/broadcast",
+  "UserController.getBroadcast"
+);
+Route.get(
+  "/broadcast-post",
+  "UserController.getPostBroadcast"
+);
+Route.post(
+  "/broadcast",
+  "UserController.postBroadcast"
+);
+Route.put(
+  "/broadcast/:broadcast_id",
+  "UserController.putBroadcast"
+);
+Route.delete(
+  "/broadcast/:broadcast_id",
+  "UserController.deleteBroadcast"
+);
+
 
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)

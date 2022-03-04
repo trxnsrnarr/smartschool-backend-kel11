@@ -32396,6 +32396,7 @@ class MainController {
     const barang = await MBarang.query()
       .with("lokasi")
       .where({ id: barang_id })
+      .andWhere({m_sekolah_id:sekolah.id})
       .first();
 
     return response.ok({
@@ -42860,12 +42861,11 @@ class MainController {
       .withCount("siswa as total", (builder) => {
         builder.where({ dihapus: 0 });
       })
-      .with("pembayaranAktif", (builder) => {
-        builder
-          .where("tanggal_akhir", ">=", moment().format("YYYY-MM-DD"))
-          .where("tanggal_awal", "<=", moment().format("YYYY-MM-DD"))
-          .where({ dihapus: 0 });
-      })
+      .with("pembayaranAktif",(builder=>{
+        builder.where("akhir_kontrak", ">=", moment().format("YYYY-MM-DD"))
+        .where("mulai_kontrak", "<=", moment().format("YYYY-MM-DD"))
+        .where({dihapus:0});
+      }))
       .where({ id: sekolah_id })
       .first();
 
@@ -42976,7 +42976,7 @@ class MainController {
     });
   }
 
-  async detailPembayaranSekolah({
+  async detailPembayaranSekolah({ 
     response,
     request,
     auth,
@@ -42984,7 +42984,7 @@ class MainController {
   }) {
     const user = await User.query().count("* as total");
     // const { rombel_id } = request.post();
-    let pembayaran = MPembayaranSekolah.query()
+    let pembayaran =  await MPembayaranSekolah.query()
       .with("sekolah")
       .with("dokumen", (builder) => {
         builder.where({ dihapus: 0 });

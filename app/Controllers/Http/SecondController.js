@@ -9807,7 +9807,7 @@ class SecondController {
       });
 
       const beban = await MKeuKategoriLabaRugi.create({
-        nama: "BEBAN - BEBAN",
+        nama: "BEBAN",
         warna: "#00D084",
         dihapus: 0,
         m_sekolah_id: sekolah.id,
@@ -10502,6 +10502,489 @@ class SecondController {
       message: messagePostSuccess,
     });
   }
+
+   async detailBarang({ response, request,auth, params: { barang_id } }) {
+
+    const user = await auth.getUser();
+    const barang = await MBarang.query()
+      .with("lokasi")
+      .where({ id: barang_id })
+      .first();
+
+    return response.ok({
+      barang: barang,
+      user
+    });
+  }
+  async postBarang({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      foto,
+      nama,
+      merk,
+      kode_barang,
+      tahun_beli,
+      asal,
+      deskripsi,
+      jumlah,
+      harga,
+      kepemilikan,
+      nama_pemilik,
+      m_lokasi_id,
+      baik,
+      rusak,
+      nota,
+    } = request.post();
+
+    let foto1 = foto ? foto.toString() : null;
+
+    const fiturSekolah = await MFiturSekolah.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .first();
+    const fitur = JSON.parse(fiturSekolah ? fiturSekolah.fitur : "{}");
+
+    const rules = {
+      kode_barang: "required",
+      nama: "required",
+      // foto1: "required",
+      merk: "required",
+      tahun_beli: "required",
+      asal: "required",
+      harga: "required",
+      deskripsi: "required",
+      jumlah: "required",
+      kepemilikan: "required",
+      // nama_pemilik: "required",
+      m_lokasi_id: "required",
+    };
+    const message = {
+      "kode_barang.required": "Jenis harus diisi",
+      "nama.required": "Nama harus diisi",
+      // "foto1.required": "Foto harus diisi",
+      "merk.required": "Nomor Registrasi harus diisi",
+      "tahun_beli.required": "Lebar harus diisi",
+      "asal.required": "Panjang harus diisi",
+      "harga.required": "Harga harus diisi",
+      "deskripsi.required": "Spesifikasi harus diisi",
+      "jumlah.required": "Jumlah harus diisi",
+      "kepemilikan.required": "Kepemilikan harus diisi",
+      // "nama_pemilik.required": "Nama Pemilik harus diisi",
+      "m_lokasi_id.required": "Lokasi harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    if (fitur) {
+      if (fitur.nota_barang == 1) {
+        const rules = {
+          nota: "required",
+        };
+        const message = {
+          "nota.required": "Nota harus diisi",
+        };
+        const validation = await validate(request.all(), rules, message);
+        if (validation.fails()) {
+          return response.unprocessableEntity(validation.messages());
+        }
+      }
+    }
+
+    const barang = await MBarang.create({
+      kode_barang,
+      nama,
+      merk,
+      tahun_beli,
+      asal,
+      harga,
+      jumlah,
+      deskripsi,
+      foto: foto1,
+      kepemilikan,
+      nama_pemilik,
+      m_lokasi_id,
+      dihapus: 0,
+      baik: baik || jumlah,
+      rusak: rusak || 0,
+      m_sekolah_id: sekolah.id,
+      nota,
+    });
+
+    await MHistoriAktivitas.create({
+      jenis: "Buat Barang",
+      tipe: "SarPras",
+      m_user_id: user.id,
+      akhir: `${nama}`,
+      m_sekolah_id: sekolah.id,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putBarang({ response, request, auth, params: { barang_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      foto,
+      nama,
+      merk,
+      kode_barang,
+      tahun_beli,
+      asal,
+      deskripsi,
+      jumlah,
+      harga,
+      kepemilikan,
+      nama_pemilik,
+      m_lokasi_id,
+      baik,
+      rusak,
+      nota,
+    } = request.post();
+
+    const foto1 = foto ? foto.toString() : null;
+    const fiturSekolah = await MFiturSekolah.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .first();
+    const fitur = JSON.parse(fiturSekolah.fitur || "{}");
+    const rules = {
+      kode_barang: "required",
+      nama: "required",
+      // foto: "required",
+      merk: "required",
+      tahun_beli: "required",
+      asal: "required",
+      harga: "required",
+      deskripsi: "required",
+      jumlah: "required",
+      kepemilikan: "required",
+      // nama_pemilik: "required",
+      m_lokasi_id: "required",
+    };
+    const message = {
+      "kode_barang.required": "Jenis harus diisi",
+      "nama.required": "Nama harus diisi",
+      // "foto.required": "Foto harus diisi",
+      "merk.required": "Nomor Registrasi harus diisi",
+      "tahun_beli.required": "Lebar harus diisi",
+      "asal.required": "Panjang harus diisi",
+      "harga.required": "Harga harus diisi",
+      "deskripsi.required": "Spesifikasi harus diisi",
+      "jumlah.required": "Jumlah harus diisi",
+      "kepemilikan.required": "Kepemilikan harus diisi",
+      // "nama_pemilik.required": "Nama Pemilik harus diisi",
+      "m_lokasi_id.required": "Lokasi harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+    if (fitur.nota_barang == 1) {
+      const rules = {
+        nota: "required",
+      };
+      const message = {
+        "nota.required": "Nota harus diisi",
+      };
+      const validation = await validate(request.all(), rules, message);
+      if (validation.fails()) {
+        return response.unprocessableEntity(validation.messages());
+      }
+    }
+    const barangSebelum = await MBarang.query()
+      .where({ id: barang_id })
+      .first();
+    const barang = await MBarang.query().where({ id: barang_id }).update({
+      kode_barang,
+      nama,
+      merk,
+      tahun_beli,
+      asal,
+      harga,
+      jumlah,
+      deskripsi,
+      foto: foto1,
+      kepemilikan,
+      nama_pemilik,
+      m_lokasi_id,
+      baik,
+      rusak,
+      nota,
+    });
+
+    if (!barang) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    if (barangSebelum.nota != nota) {
+      await MHistoriAktivitas.create({
+        jenis: "Ubah Barang",
+        m_user_id: user.id,
+        awal: `Nota Barang : File nota barang telah diubah`,
+        akhir: `"${nota}"`,
+        bawah: `${barangSebelum.nama}`,
+        m_sekolah_id: sekolah.id,
+        tipe: "SarPras",
+      });
+    }
+
+    if (barangSebelum.m_lokasi_id != m_lokasi_id) {
+      const lokasiSebelum = await MLokasi.query()
+        .where({ id: barangSebelum.m_lokasi_id })
+        .first();
+      const lokasiSesudah = await MLokasi.query()
+        .where({ id: barangSebelum.m_lokasi_id })
+        .first();
+      await MHistoriAktivitas.create({
+        jenis: "Ubah Barang",
+        m_user_id: user.id,
+        awal: `Lokasi Barang : ${lokasiSebelum.nama} menjadi `,
+        akhir: `"${lokasiSesudah.nama}"`,
+        bawah: `${barangSebelum.nama}`,
+        m_sekolah_id: sekolah.id,
+        tipe: "SarPras",
+      });
+    }
+
+    if (barangSebelum.nama_pemilik != nama_pemilik) {
+      await MHistoriAktivitas.create({
+        jenis: "Ubah Barang",
+        m_user_id: user.id,
+        awal: `Kepemilikan - NamaP Pemilik/Peminjam : ${barangSebelum.nama_pemilik} menjadi `,
+        akhir: `"${nama_pemilik}"`,
+        bawah: `${barangSebelum.nama}`,
+        m_sekolah_id: sekolah.id,
+        tipe: "SarPras",
+      });
+    }
+
+    if (barangSebelum.kepemilikan != kepemilikan) {
+      await MHistoriAktivitas.create({
+        jenis: "Ubah Barang",
+        m_user_id: user.id,
+        awal: `Kepemilikan Barang : ${barangSebelum.kepemilikan} menjadi `,
+        akhir: `"${kepemilikan}"`,
+        bawah: `${barangSebelum.nama}`,
+        m_sekolah_id: sekolah.id,
+        tipe: "SarPras",
+      });
+    }
+
+    if (barangSebelum.rusak != rusak) {
+      await MHistoriAktivitas.create({
+        jenis: "Ubah Barang",
+        m_user_id: user.id,
+        awal: `Jumlah Barang dengan Kondisi Rusak : ${barangSebelum.rusak} menjadi `,
+        akhir: `"${rusak}"`,
+        bawah: `${barangSebelum.nama}`,
+        m_sekolah_id: sekolah.id,
+        tipe: "SarPras",
+      });
+    }
+
+    if (barangSebelum.baik != baik) {
+      await MHistoriAktivitas.create({
+        jenis: "Ubah Barang",
+        m_user_id: user.id,
+        awal: `Jumlah Barang dengan Kondisi Baik : ${barangSebelum.baik} menjadi `,
+        akhir: `"${baik}"`,
+        bawah: `${barangSebelum.nama}`,
+        m_sekolah_id: sekolah.id,
+        tipe: "SarPras",
+      });
+    }
+
+    if (barangSebelum.harga != harga) {
+      await MHistoriAktivitas.create({
+        jenis: "Ubah Barang",
+        m_user_id: user.id,
+        awal: `Harga Barang : ${barangSebelum.harga} menjadi `,
+        akhir: `"${harga}"`,
+        bawah: `${barangSebelum.nama}`,
+        m_sekolah_id: sekolah.id,
+        tipe: "SarPras",
+      });
+    }
+
+    if (barangSebelum.jumlah != jumlah) {
+      await MHistoriAktivitas.create({
+        jenis: "Ubah Barang",
+        m_user_id: user.id,
+        awal: `Jumlah Barang : ${barangSebelum.jumlah} menjadi `,
+        akhir: `"${jumlah}"`,
+        bawah: `${barangSebelum.nama}`,
+        m_sekolah_id: sekolah.id,
+        tipe: "SarPras",
+      });
+    }
+
+    if (barangSebelum.deskripsi != deskripsi) {
+      await MHistoriAktivitas.create({
+        jenis: "Ubah Barang",
+        m_user_id: user.id,
+        awal: `Spesifikasi Barang : ${barangSebelum.deskripsi} menjadi `,
+        akhir: `"${deskripsi}"`,
+        bawah: `${barangSebelum.nama}`,
+        m_sekolah_id: sekolah.id,
+        tipe: "SarPras",
+      });
+    }
+
+    if (barangSebelum.asal != asal) {
+      await MHistoriAktivitas.create({
+        jenis: "Ubah Barang",
+        m_user_id: user.id,
+        awal: `Asal Barang : ${barangSebelum.asal} menjadi `,
+        akhir: `"${asal}"`,
+        bawah: `${barangSebelum.nama}`,
+        m_sekolah_id: sekolah.id,
+        tipe: "SarPras",
+      });
+    }
+
+    if (barangSebelum.tahun_beli != tahun_beli) {
+      await MHistoriAktivitas.create({
+        jenis: "Ubah Barang",
+        m_user_id: user.id,
+        awal: `Tanggal Dibeli : ${moment(barangSebelum.tahun_beli).format(
+          "dddd, DD MMM YYYY"
+        )} menjadi `,
+        akhir: `"${moment(tahun_beli).format("dddd, DD MMM YYYY")}"`,
+        bawah: `${barangSebelum.nama}`,
+        m_sekolah_id: sekolah.id,
+        tipe: "SarPras",
+      });
+    }
+
+    if (barangSebelum.kode_barang != kode_barang) {
+      await MHistoriAktivitas.create({
+        jenis: "Ubah Barang",
+        m_user_id: user.id,
+        awal: `Kode Barang : ${barangSebelum.kode_barang} menjadi `,
+        akhir: `"${kode_barang}"`,
+        bawah: `${barangSebelum.nama}`,
+        m_sekolah_id: sekolah.id,
+        tipe: "SarPras",
+      });
+    }
+    if (barangSebelum.merk != merk) {
+      await MHistoriAktivitas.create({
+        jenis: "Ubah Barang",
+        m_user_id: user.id,
+        awal: `Merk Barang : ${barangSebelum.merk} menjadi `,
+        akhir: `"${merk}"`,
+        bawah: `${barangSebelum.nama}`,
+        m_sekolah_id: sekolah.id,
+        tipe: "SarPras",
+      });
+    }
+
+    if (barangSebelum.nama != nama) {
+      await MHistoriAktivitas.create({
+        jenis: "Ubah Barang",
+        m_user_id: user.id,
+        awal: `Nama Barang : ${barangSebelum.nama} menjadi `,
+        akhir: `"${nama}"`,
+        bawah: `${barangSebelum.nama}`,
+        m_sekolah_id: sekolah.id,
+        tipe: "SarPras",
+      });
+    }
+
+    if (barangSebelum.foto != foto) {
+      await MHistoriAktivitas.create({
+        jenis: "Ubah Barang",
+        m_user_id: user.id,
+        awal: `Foto Barang : File foto barang telah diubah`,
+        akhir: `"${foto}"`,
+        bawah: `${barangSebelum.nama}`,
+        m_sekolah_id: sekolah.id,
+        tipe: "SarPras",
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteBarang({ response, request, auth, params: { barang_id } }) {
+  
+    const user = await auth.getUser();
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
+      return response.forbidden({ message: messageForbidden });
+    }
+    const barangSebelum = await MBarang.query()
+      .where({ id: barang_id })
+      .first();
+    const barang = await MBarang.query().where({ id: barang_id }).update({
+      dihapus: 1,
+    });
+
+    if (!barang) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+    if (verifikasi) {
+      await MHistoriAktivitas.create({
+        jenis: "Proses Inventaris",
+        m_user_id: user.id,
+        awal: `Verifikasi Ditolak : `,
+        akhir: `"${barangSebelum.nama}"`,
+        bawah: `Aset Tertunda`,
+        m_sekolah_id: sekolah.id,
+        tipe: "SarPras",
+      });
+      await MHistoriAktivitas.create({
+        jenis: "Proses Inventaris",
+        m_user_id: user.id,
+        awal: `Verifikasi Ditolak : `,
+        akhir: `"${barang.nama}"`,
+        bawah: `Aset Tertunda`,
+        m_sekolah_id: sekolah.id,
+        tipe: "Realisasi",
+      });
+    }
+    await MHistoriAktivitas.create({
+      jenis: "Hapus Barang",
+      tipe: "SarPras",
+      m_user_id: user.id,
+      akhir: `${barangSebelum.nama}`,
+      m_sekolah_id: sekolah.id,
+    });
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
 }
 
 module.exports = SecondController;
