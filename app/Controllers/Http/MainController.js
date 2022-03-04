@@ -32396,6 +32396,7 @@ class MainController {
     const barang = await MBarang.query()
       .with("lokasi")
       .where({ id: barang_id })
+      .andWhere({m_sekolah_id:sekolah.id})
       .first();
 
     return response.ok({
