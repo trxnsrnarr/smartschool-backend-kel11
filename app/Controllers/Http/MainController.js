@@ -581,9 +581,29 @@ class MainController {
   }
 
   async getMasterSekolahSSSummary({ response, request }) {
-    const totalSekolah = await Sekolah.query()
+    let { page, propinsi, kabupaten } = request.get();
+
+    let totalSekolah
+
+    if(propinsi) {
+      totalSekolah = await Sekolah.query()
+      .where("kode_prop", propinsi)
       .whereNotNull("m_sekolah_id")
       .getCount();
+      if(kabupaten) {
+        totalSekolah = await Sekolah.query()
+        .where("kode_prop", propinsi)
+        .andWhere("kode_kab_kota", kabupaten)
+        .whereNotNull("m_sekolah_id")
+        .getCount();
+
+      }
+    } else {
+      totalSekolah = await Sekolah.query()
+      .whereNotNull("m_sekolah_id")
+      .getCount();
+    }
+
     const totalGpds = await MSekolah.query().where({ gpds: 1 }).getCount();
     const totalPro = await MSekolah.query().where({ trial: 0 }).getCount();
     const totalTrial = await MSekolah.query().where({ trial: 1 }).getCount();
@@ -597,12 +617,27 @@ class MainController {
   }
 
   async getMasterSekolahSS({ response, request }) {
-    let { page } = request.get();
+    let { page, propinsi, kabupaten } = request.get();
 
-    const kodePropsId = await Sekolah.query()
-      .where("kode_prop", "010000")
-      .whereNotNull("m_sekolah_id")
-      .pluck("m_sekolah_id");
+    let kodePropsId;
+
+      if(propinsi) {
+        kodePropsId = await Sekolah.query()
+        .where("kode_prop", propinsi)
+        .whereNotNull("m_sekolah_id")
+        .pluck("m_sekolah_id");
+        if(kabupaten) {
+          kodePropsId = await Sekolah.query()
+          .where("kode_prop", propinsi)
+          .andWhere("kode_kab_kota", kabupaten)
+          .whereNotNull("m_sekolah_id")
+          .pluck("m_sekolah_id");
+        }
+      } else {
+        kodePropsId = await Sekolah.query()
+        .whereNotNull("m_sekolah_id")
+        .pluck("m_sekolah_id");
+      }
 
     const res = MSekolah.query()
       .select(
