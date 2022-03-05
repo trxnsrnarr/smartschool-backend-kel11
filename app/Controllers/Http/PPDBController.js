@@ -1064,11 +1064,6 @@ class PPDBController {
         "<=",
         moment().endOf("day").format("YYYY-MM-DD HH:mm:ss")
       )
-      .andWhere(
-        "ditutup",
-        ">=",
-        moment().startOf("day").format("YYYY-MM-DD HH:mm:ss")
-      )
       .andWhere({ m_sekolah_id: sekolah.id })
       .whereIn("id", gelombangIds)
       .andWhere({ m_ta_id: ta.id })
@@ -1101,7 +1096,7 @@ class PPDBController {
               });
           })
           .where({ dihapus: 0 })
-          .whereIn("m_gelombang_ppdb_id", gelombangIds)
+          // .whereIn("m_gelombang_ppdb_id", gelombangIds)
           .andWhere({ m_user_id: user.id })
           .whereIn("m_gelombang_ppdb_id", checkIds)
           .first();
