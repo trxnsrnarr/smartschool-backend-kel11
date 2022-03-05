@@ -1101,7 +1101,7 @@ class PPDBController {
               });
           })
           .where({ dihapus: 0 })
-          .whereIn("m_gelombang_ppdb_id", gelombangIds)
+          // .whereIn("m_gelombang_ppdb_id", gelombangIds)
           .andWhere({ m_user_id: user.id })
           .whereIn("m_gelombang_ppdb_id", checkIds)
           .first();
