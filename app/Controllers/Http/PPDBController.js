@@ -1064,11 +1064,6 @@ class PPDBController {
         "<=",
         moment().endOf("day").format("YYYY-MM-DD HH:mm:ss")
       )
-      .andWhere(
-        "ditutup",
-        ">=",
-        moment().startOf("day").format("YYYY-MM-DD HH:mm:ss")
-      )
       .andWhere({ m_sekolah_id: sekolah.id })
       .whereIn("id", gelombangIds)
       .andWhere({ m_ta_id: ta.id })
