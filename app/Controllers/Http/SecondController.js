@@ -10519,6 +10519,22 @@ class SecondController {
     });
   }
 
+  async getProfil({ auth, response, request }) {
+
+    const user = await auth.getUser();
+
+    const userData = await User.query()
+      .where({ id: user.id })
+      .with("sekolah")
+      .with("profil")
+      .first();
+
+
+    return response.ok({
+      user: userData,
+    });
+  }
+
    async detailBarang({ response, request,auth, params: { barang_id } }) {
 
     const user = await auth.getUser();
@@ -10533,14 +10549,6 @@ class SecondController {
     });
   }
   async postBarang({ response, request, auth }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
     const user = await auth.getUser();
 
     const {
@@ -10650,15 +10658,14 @@ class SecondController {
   }
 
   async putBarang({ response, request, auth, params: { barang_id } }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
+    
     const user = await auth.getUser();
+    if (
+      user.role != "admin" ||
+      user.role == "guru" 
+    ) {
+      return response.forbidden({ message: messageForbidden });
+    }
 
     const {
       foto,
@@ -10951,8 +10958,7 @@ class SecondController {
     const user = await auth.getUser();
     if (
       user.role != "admin" ||
-      user.role == "guru" ||
-      user.m_sekolah_id != sekolah.id
+      user.role == "guru"
     ) {
       return response.forbidden({ message: messageForbidden });
     }
@@ -10968,26 +10974,7 @@ class SecondController {
         message: messageNotFound,
       });
     }
-    if (verifikasi) {
-      await MHistoriAktivitas.create({
-        jenis: "Proses Inventaris",
-        m_user_id: user.id,
-        awal: `Verifikasi Ditolak : `,
-        akhir: `"${barangSebelum.nama}"`,
-        bawah: `Aset Tertunda`,
-        m_sekolah_id: sekolah.id,
-        tipe: "SarPras",
-      });
-      await MHistoriAktivitas.create({
-        jenis: "Proses Inventaris",
-        m_user_id: user.id,
-        awal: `Verifikasi Ditolak : `,
-        akhir: `"${barang.nama}"`,
-        bawah: `Aset Tertunda`,
-        m_sekolah_id: sekolah.id,
-        tipe: "Realisasi",
-      });
-    }
+    
     await MHistoriAktivitas.create({
       jenis: "Hapus Barang",
       tipe: "SarPras",
