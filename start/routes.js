@@ -65,8 +65,6 @@ Route.post("/loginwhatsapp", "MainController.loginWhatsapp");
 Route.post("/login", "MainController.login");
 Route.post("/loginadminwhatsapp", "MainController.loginAdminWhatsapp");
 Route.post("/loginadmin", "MainController.loginAdmin");
-Route.post("/loginwhatsapp-barang", "UserController.loginWhatsapp");
-Route.post("/login-barang", "UserController.login");
 Route.get("/profil", "MainController.getProfil");
 Route.put("/profil", "MainController.putProfil");
 Route.put("/ubah-password", "MainController.putUbahPassword");
@@ -1237,7 +1235,6 @@ Route.get("/surel-arsip/:arsip_id", "MainController.detailArsipSurel");
 // barang Service
 Route.get("/barang", "MainController.getBarang");
 Route.get("/barang/:barang_id", "MainController.detailBarang");
-Route.get("/barang-aplikasi/:barang_id", "SecondController.detailBarang");
 Route.post("/barang", "MainController.postBarang");
 Route.put("/barang/:barang_id", "MainController.putBarang");
 Route.delete("/barang/:barang_id", "MainController.deleteBarang");
@@ -1787,6 +1784,15 @@ Route.delete(
   "UserController.deleteBroadcast"
 );
 
+// aplikasi
+
+Route.post("/loginwhatsapp-barang", "UserController.loginWhatsapp");
+Route.post("/login-barang", "UserController.login");
+Route.get("/profil-aplikasi","SecondController.getProfil")
+Route.get("/barang-aplikasi/:barang_id", "SecondController.detailBarang");
+Route.post("/barang-aplikasi", "SecondController.postBarang");
+Route.put("/barang-aplikasi/:barang_id", "SecondController.putBarang");
+Route.delete("/barang-aplikasi/:barang_id", "SecondController.deleteBarang");
 
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
