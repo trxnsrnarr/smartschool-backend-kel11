@@ -13617,7 +13617,7 @@ class MainController {
     page = page ? page : 1;
 
     const jadwalUjian = await MJadwalUjian.query()
-      .select("id")
+      .select("id", 'waktu_dibuka', 'waktu_ditutup')
       .with("rombelUjian", (builder) => {
         builder
           .select("id", "m_rombel_id", "m_jadwal_ujian_id")
@@ -13633,7 +13633,7 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .andWhere("waktu_dibuka", ">", moment().format("YYYY-MM-DD HH:mm:ss"))
       .orderBy("waktu_dibuka", "asc")
-      .paginate(page, 30);
+      .paginate(page, 1000);
 
     return response.ok({
       jadwalUjian,
