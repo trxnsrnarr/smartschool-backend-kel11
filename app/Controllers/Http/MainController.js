@@ -32844,51 +32844,51 @@ let totalSLB
     const fiturSekolah = await MFiturSekolah.query()
       .where({ m_sekolah_id: sekolah.id })
       .first();
-    const fitur = JSON.parse(fiturSekolah.fitur || "{}");
-    const rules = {
-      kode_barang: "required",
-      nama: "required",
-      // foto: "required",
-      merk: "required",
-      tahun_beli: "required",
-      asal: "required",
-      harga: "required",
-      deskripsi: "required",
-      jumlah: "required",
-      kepemilikan: "required",
-      // nama_pemilik: "required",
-      m_lokasi_id: "required",
-    };
-    const message = {
-      "kode_barang.required": "Jenis harus diisi",
-      "nama.required": "Nama harus diisi",
-      // "foto.required": "Foto harus diisi",
-      "merk.required": "Nomor Registrasi harus diisi",
-      "tahun_beli.required": "Lebar harus diisi",
-      "asal.required": "Panjang harus diisi",
-      "harga.required": "Harga harus diisi",
-      "deskripsi.required": "Spesifikasi harus diisi",
-      "jumlah.required": "Jumlah harus diisi",
-      "kepemilikan.required": "Kepemilikan harus diisi",
-      // "nama_pemilik.required": "Nama Pemilik harus diisi",
-      "m_lokasi_id.required": "Lokasi harus diisi",
-    };
-    const validation = await validate(request.all(), rules, message);
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
-    }
-    if (fitur.nota_barang == 1) {
-      const rules = {
-        nota: "required",
-      };
-      const message = {
-        "nota.required": "Nota harus diisi",
-      };
-      const validation = await validate(request.all(), rules, message);
-      if (validation.fails()) {
-        return response.unprocessableEntity(validation.messages());
-      }
-    }
+    const fitur = fiturSekolah ? JSON.parse(fiturSekolah.fitur) : {};
+    // const rules = {
+    //   kode_barang: "required",
+    //   nama: "required",
+    //   // foto: "required",
+    //   merk: "required",
+    //   tahun_beli: "required",
+    //   asal: "required",
+    //   harga: "required",
+    //   deskripsi: "required",
+    //   jumlah: "required",
+    //   kepemilikan: "required",
+    //   // nama_pemilik: "required",
+    //   m_lokasi_id: "required",
+    // };
+    // const message = {
+    //   "kode_barang.required": "Jenis harus diisi",
+    //   "nama.required": "Nama harus diisi",
+    //   // "foto.required": "Foto harus diisi",
+    //   "merk.required": "Nomor Registrasi harus diisi",
+    //   "tahun_beli.required": "Lebar harus diisi",
+    //   "asal.required": "Panjang harus diisi",
+    //   "harga.required": "Harga harus diisi",
+    //   "deskripsi.required": "Spesifikasi harus diisi",
+    //   "jumlah.required": "Jumlah harus diisi",
+    //   "kepemilikan.required": "Kepemilikan harus diisi",
+    //   // "nama_pemilik.required": "Nama Pemilik harus diisi",
+    //   "m_lokasi_id.required": "Lokasi harus diisi",
+    // };
+    // const validation = await validate(request.all(), rules, message);
+    // if (validation.fails()) {
+    //   return response.unprocessableEntity(validation.messages());
+    // }
+    // if (fitur.nota_barang == 1) {
+    //   const rules = {
+    //     nota: "required",
+    //   };
+    //   const message = {
+    //     "nota.required": "Nota harus diisi",
+    //   };
+    //   const validation = await validate(request.all(), rules, message);
+    //   if (validation.fails()) {
+    //     return response.unprocessableEntity(validation.messages());
+    //   }
+    // }
     const barangSebelum = await MBarang.query()
       .where({ id: barang_id })
       .first();
