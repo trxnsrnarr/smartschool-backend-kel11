@@ -545,31 +545,63 @@ class MainController {
   }
 
   async getMasterSekolahDinasSummary({ response, request }) {
-    const totalSD = await Sekolah.query()
-      .where("kode_prop", "010000")
+    let { page, propinsi, kabupaten } = request.get();
+
+    let totalSD
+let totalSMP
+let totalSMA
+let totalSMK
+let totalSLB
+
+
+    if(propinsi) {
+      totalSD = await Sekolah.query()
+      .where("kode_prop", propinsi)
       .andWhere("bentuk", "SD")
       .whereNotNull("m_sekolah_id")
       .getCount();
-    const totalSMP = await Sekolah.query()
-      .where("kode_prop", "010000")
+     totalSMP = await Sekolah.query()
+      .where("kode_prop", propinsi)
       .andWhere("bentuk", "SMP")
       .whereNotNull("m_sekolah_id")
       .getCount();
-    const totalSMA = await Sekolah.query()
-      .where("kode_prop", "010000")
+     totalSMA = await Sekolah.query()
+      .where("kode_prop", propinsi)
       .andWhere("bentuk", "SMA")
       .whereNotNull("m_sekolah_id")
       .getCount();
-    const totalSMK = await Sekolah.query()
-      .where("kode_prop", "010000")
+     totalSMK = await Sekolah.query()
+      .where("kode_prop", propinsi)
       .andWhere("bentuk", "SMK")
       .whereNotNull("m_sekolah_id")
       .getCount();
-    const totalSLB = await Sekolah.query()
-      .where("kode_prop", "010000")
+     totalSLB = await Sekolah.query()
+      .where("kode_prop", propinsi)
       .andWhere("bentuk", "SLB")
       .whereNotNull("m_sekolah_id")
       .getCount();
+    } else {
+       totalSD = await Sekolah.query()
+      .where("bentuk", "SD")
+      .whereNotNull("m_sekolah_id")
+      .getCount();
+     totalSMP = await Sekolah.query()
+      .where("bentuk", "SMP")
+      .whereNotNull("m_sekolah_id")
+      .getCount();
+     totalSMA = await Sekolah.query()
+      .where("bentuk", "SMA")
+      .whereNotNull("m_sekolah_id")
+      .getCount();
+     totalSMK = await Sekolah.query()
+      .where("bentuk", "SMK")
+      .whereNotNull("m_sekolah_id")
+      .getCount();
+     totalSLB = await Sekolah.query()
+      .where("bentuk", "SLB")
+      .whereNotNull("m_sekolah_id")
+      .getCount();
+    }
 
     return response.ok({
       totalSD,
