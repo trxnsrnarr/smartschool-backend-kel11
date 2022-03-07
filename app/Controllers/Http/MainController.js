@@ -32862,6 +32862,7 @@ class MainController {
       baik,
       rusak,
       nota,
+      verifikasi,
     } = request.post();
 
     const foto1 = foto ? foto.toString() : null;
@@ -32932,11 +32933,33 @@ class MainController {
       baik,
       rusak,
       nota,
+      verifikasi,
     });
 
     if (!barang) {
       return response.notFound({
         message: messageNotFound,
+      });
+    }
+
+    if (verifikasi == 0) {
+      await MHistoriAktivitas.create({
+        jenis: "Proses Inventaris",
+        m_user_id: user.id,
+        awal: `Verifikasi Ditolak : `,
+        akhir: `"${barang.nama}"`,
+        bawah: `Aset Tertunda`,
+        m_sekolah_id: sekolah.id,
+        tipe: "SarPras",
+      });
+      await MHistoriAktivitas.create({
+        jenis: "Proses Inventaris",
+        m_user_id: user.id,
+        awal: `Verifikasi Ditolak : `,
+        akhir: `"${barang.nama}"`,
+        bawah: `Aset Tertunda`,
+        m_sekolah_id: sekolah.id,
+        tipe: "Realisasi",
       });
     }
 
