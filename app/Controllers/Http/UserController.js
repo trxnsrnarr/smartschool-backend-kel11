@@ -134,7 +134,7 @@ class UserController {
 
     let broadcast;
 
-    broadcast = await MBroadcast.query()
+    broadcast = MBroadcast.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 });
 
@@ -164,7 +164,7 @@ class UserController {
         moment().format("YYYY-MM-DD HH:mm:ss")
       );
     }
-    if (jenis == "draft") {
+    if (jenis == "draf") {
       broadcast.where({ draft: 1 });
     }
     broadcast = await broadcast.fetch();
@@ -300,6 +300,7 @@ class UserController {
       draft,
       dihapus: 0,
       m_user_id: user.id,
+      m_sekolah_id: sekolah.id,
     });
 
     if (broadcast) {
@@ -307,7 +308,7 @@ class UserController {
         const createData = [];
         const created_at = moment().format("YYYY-MM-DD HH:mm:ss");
 
-        if (("" + kepada).includes('\"value\":\"semua\"')) {
+        if (("" + kepada).includes('"value":"semua"')) {
           const semuaUser = await User.query()
             .select("id", "nama", "wa_real")
             .where({ role: "siswa" })
