@@ -7,7 +7,7 @@ class MRencanaRumusLabaRugiSchema extends Schema {
   up() {
     this.table("m_rencana_rumus_laba_rugi", (table) => {
       // alter table
-      table.name("nama");
+      table.string("nama");
     });
   }
 
