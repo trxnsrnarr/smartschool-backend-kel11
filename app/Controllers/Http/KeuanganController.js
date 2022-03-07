@@ -1454,7 +1454,7 @@ class KeuanganController {
 
     const user = await auth.getUser();
 
-    let { rumus } = request.post();
+    let { rumus, nama } = request.post();
 
     const rules = {
       rumus: "required",
@@ -1469,6 +1469,7 @@ class KeuanganController {
 
     const rumus1 = await MRencanaRumusLabaRugi.create({
       rumus,
+      nama,
       dihapus: 0,
       m_rencana_keuangan_id: perencanaan_id,
       m_sekolah_id: sekolah.id,
@@ -1526,7 +1527,7 @@ class KeuanganController {
 
     const user = await auth.getUser();
 
-    let { rumus } = request.post();
+    let { rumus, nama } = request.post();
 
     const rules = {
       rumus: "required",
@@ -1545,6 +1546,13 @@ class KeuanganController {
     const rumusSebelum = await MRencanaRumusLabaRugi.query()
       .where({ id: rumus_id })
       .first();
+    if (rumusSebelum.nama != nama) {
+      const rumus1 = await MRencanaRumusLabaRugi.query()
+        .where({ id: rumus_id })
+        .update({
+          nama,
+        });
+    }
 
     if (rumusSebelum.rumus != rumus) {
       const rumus1 = await MRencanaRumusLabaRugi.query()
