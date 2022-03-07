@@ -16170,7 +16170,7 @@ class MainController {
     //   `Halo, jawaban ujianmu sudah masuk. Tunggu gurumu memeriksanya ya!`
     // );
     if (user.wa_real) {
-      await WhatsAppService.sendMessage(
+      WhatsAppService.sendMessage(
         user.wa_real,
         `Halo ${user.nama}, jawaban ujianmu sudah masuk. Tunggu gurumu memeriksanya ya!`
       );
