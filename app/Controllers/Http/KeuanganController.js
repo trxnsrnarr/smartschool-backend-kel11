@@ -1007,6 +1007,12 @@ class KeuanganController {
         .where({ dihapus: 0 })
         .andWhere({ m_rencana_keuangan_id: perencanaan_id })
         .ids();
+    } else {
+      transaksiIds = await MRencanaTransaksi.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ dihapus: 0 })
+        .andWhere({ m_rencana_keuangan_id: perencanaan_id })
+        .ids();
     }
 
     let kategori;
