@@ -11853,7 +11853,7 @@ let totalSLB
   }
 
   async postAbsenFr({ response, request }) {
-    let { photo, mask, temp, whatsapp, ipCamera, domain } = request.post();
+    let { photo, mask, temp, whatsapp, ipCamera, domain, waktu_masuk, waktu_pulang } = request.post();
 
     const sekolah = await this.getSekolahByDomain(domain);
 
@@ -11889,7 +11889,7 @@ let totalSLB
     }
 
     const absen = await MAbsen.query()
-      .where("created_at", "like", `%${moment().format("YYYY-MM-DD")}%`)
+      .where("created_at", "like", `%${moment(waktu_masuk || waktu_pulang).format("YYYY-MM-DD")}%`)
       .andWhere({ m_user_id: user.id })
       .first();
 
@@ -11902,6 +11902,8 @@ let totalSLB
         foto_masuk_local: url,
         masker: mask,
         suhu: temp,
+        waktu_masuk,
+        waktu_pulang,
       });
     } else {
       await MAbsen.query().where({ id: absen.id }).update({
@@ -11912,6 +11914,8 @@ let totalSLB
         foto_pulang_local: url,
         masker: mask,
         suhu: temp,
+        waktu_masuk,
+        waktu_pulang,
       });
     }
 
