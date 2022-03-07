@@ -547,60 +547,59 @@ class MainController {
   async getMasterSekolahDinasSummary({ response, request }) {
     let { page, propinsi, kabupaten } = request.get();
 
-    let totalSD
-let totalSMP
-let totalSMA
-let totalSMK
-let totalSLB
+    let totalSD;
+    let totalSMP;
+    let totalSMA;
+    let totalSMK;
+    let totalSLB;
 
-
-    if(propinsi) {
+    if (propinsi) {
       totalSD = await Sekolah.query()
-      .where("kode_prop", propinsi)
-      .andWhere("bentuk", "SD")
-      .whereNotNull("m_sekolah_id")
-      .getCount();
-     totalSMP = await Sekolah.query()
-      .where("kode_prop", propinsi)
-      .andWhere("bentuk", "SMP")
-      .whereNotNull("m_sekolah_id")
-      .getCount();
-     totalSMA = await Sekolah.query()
-      .where("kode_prop", propinsi)
-      .andWhere("bentuk", "SMA")
-      .whereNotNull("m_sekolah_id")
-      .getCount();
-     totalSMK = await Sekolah.query()
-      .where("kode_prop", propinsi)
-      .andWhere("bentuk", "SMK")
-      .whereNotNull("m_sekolah_id")
-      .getCount();
-     totalSLB = await Sekolah.query()
-      .where("kode_prop", propinsi)
-      .andWhere("bentuk", "SLB")
-      .whereNotNull("m_sekolah_id")
-      .getCount();
+        .where("kode_prop", propinsi)
+        .andWhere("bentuk", "SD")
+        .whereNotNull("m_sekolah_id")
+        .getCount();
+      totalSMP = await Sekolah.query()
+        .where("kode_prop", propinsi)
+        .andWhere("bentuk", "SMP")
+        .whereNotNull("m_sekolah_id")
+        .getCount();
+      totalSMA = await Sekolah.query()
+        .where("kode_prop", propinsi)
+        .andWhere("bentuk", "SMA")
+        .whereNotNull("m_sekolah_id")
+        .getCount();
+      totalSMK = await Sekolah.query()
+        .where("kode_prop", propinsi)
+        .andWhere("bentuk", "SMK")
+        .whereNotNull("m_sekolah_id")
+        .getCount();
+      totalSLB = await Sekolah.query()
+        .where("kode_prop", propinsi)
+        .andWhere("bentuk", "SLB")
+        .whereNotNull("m_sekolah_id")
+        .getCount();
     } else {
-       totalSD = await Sekolah.query()
-      .where("bentuk", "SD")
-      .whereNotNull("m_sekolah_id")
-      .getCount();
-     totalSMP = await Sekolah.query()
-      .where("bentuk", "SMP")
-      .whereNotNull("m_sekolah_id")
-      .getCount();
-     totalSMA = await Sekolah.query()
-      .where("bentuk", "SMA")
-      .whereNotNull("m_sekolah_id")
-      .getCount();
-     totalSMK = await Sekolah.query()
-      .where("bentuk", "SMK")
-      .whereNotNull("m_sekolah_id")
-      .getCount();
-     totalSLB = await Sekolah.query()
-      .where("bentuk", "SLB")
-      .whereNotNull("m_sekolah_id")
-      .getCount();
+      totalSD = await Sekolah.query()
+        .where("bentuk", "SD")
+        .whereNotNull("m_sekolah_id")
+        .getCount();
+      totalSMP = await Sekolah.query()
+        .where("bentuk", "SMP")
+        .whereNotNull("m_sekolah_id")
+        .getCount();
+      totalSMA = await Sekolah.query()
+        .where("bentuk", "SMA")
+        .whereNotNull("m_sekolah_id")
+        .getCount();
+      totalSMK = await Sekolah.query()
+        .where("bentuk", "SMK")
+        .whereNotNull("m_sekolah_id")
+        .getCount();
+      totalSLB = await Sekolah.query()
+        .where("bentuk", "SLB")
+        .whereNotNull("m_sekolah_id")
+        .getCount();
     }
 
     return response.ok({
@@ -615,25 +614,24 @@ let totalSLB
   async getMasterSekolahSSSummary({ response, request }) {
     let { page, propinsi, kabupaten } = request.get();
 
-    let totalSekolah
+    let totalSekolah;
 
-    if(propinsi) {
+    if (propinsi) {
       totalSekolah = await Sekolah.query()
-      .where("kode_prop", propinsi)
-      .whereNotNull("m_sekolah_id")
-      .getCount();
-      if(kabupaten) {
-        totalSekolah = await Sekolah.query()
         .where("kode_prop", propinsi)
-        .andWhere("kode_kab_kota", kabupaten)
         .whereNotNull("m_sekolah_id")
         .getCount();
-
+      if (kabupaten) {
+        totalSekolah = await Sekolah.query()
+          .where("kode_prop", propinsi)
+          .andWhere("kode_kab_kota", kabupaten)
+          .whereNotNull("m_sekolah_id")
+          .getCount();
       }
     } else {
       totalSekolah = await Sekolah.query()
-      .whereNotNull("m_sekolah_id")
-      .getCount();
+        .whereNotNull("m_sekolah_id")
+        .getCount();
     }
 
     const totalGpds = await MSekolah.query().where({ gpds: 1 }).getCount();
@@ -653,23 +651,23 @@ let totalSLB
 
     let kodePropsId;
 
-      if(propinsi) {
-        kodePropsId = await Sekolah.query()
+    if (propinsi) {
+      kodePropsId = await Sekolah.query()
         .where("kode_prop", propinsi)
         .whereNotNull("m_sekolah_id")
         .pluck("m_sekolah_id");
-        if(kabupaten) {
-          kodePropsId = await Sekolah.query()
+      if (kabupaten) {
+        kodePropsId = await Sekolah.query()
           .where("kode_prop", propinsi)
           .andWhere("kode_kab_kota", kabupaten)
           .whereNotNull("m_sekolah_id")
           .pluck("m_sekolah_id");
-        }
-      } else {
-        kodePropsId = await Sekolah.query()
+      }
+    } else {
+      kodePropsId = await Sekolah.query()
         .whereNotNull("m_sekolah_id")
         .pluck("m_sekolah_id");
-      }
+    }
 
     const res = MSekolah.query()
       .select(
@@ -11853,7 +11851,16 @@ let totalSLB
   }
 
   async postAbsenFr({ response, request }) {
-    let { photo, mask, temp, whatsapp, ipCamera, domain, waktu_masuk, waktu_pulang } = request.post();
+    let {
+      photo,
+      mask,
+      temp,
+      whatsapp,
+      ipCamera,
+      domain,
+      waktu_masuk,
+      waktu_pulang,
+    } = request.post();
 
     const sekolah = await this.getSekolahByDomain(domain);
 
@@ -11862,7 +11869,7 @@ let totalSLB
     }
 
     const user = await User.query()
-      .select("id", "whatsapp", "role", "m_sekolah_id", "nama")
+      .select("id", "whatsapp", "role", "m_sekolah_id", "nama", "wa_real")
       .with("profil", (builder) => {
         builder.select("id", "m_user_id", "telp_ayah", "telp_ibu");
       })
@@ -11877,6 +11884,15 @@ let totalSLB
       });
     }
 
+    if (user.wa_real) {
+      WhatsAppService.sendMessage(
+        user.wa_real,
+        `Muka Anda terdeteksi camera pada ${moment(
+          waktu_masuk || waktu_pulang
+        ).format("YYYY-MM-DD HH:mm:ss")}`
+      );
+    }
+
     const fileName = new Date().getTime();
     let url = "";
     if (photo) {
@@ -11889,7 +11905,11 @@ let totalSLB
     }
 
     const absen = await MAbsen.query()
-      .where("created_at", "like", `%${moment(waktu_masuk || waktu_pulang).format("YYYY-MM-DD")}%`)
+      .where(
+        "created_at",
+        "like",
+        `%${moment(waktu_masuk || waktu_pulang).format("YYYY-MM-DD")}%`
+      )
       .andWhere({ m_user_id: user.id })
       .first();
 
@@ -13653,7 +13673,7 @@ let totalSLB
     page = page ? page : 1;
 
     const jadwalUjian = await MJadwalUjian.query()
-      .select("id", 'waktu_dibuka', 'waktu_ditutup')
+      .select("id", "waktu_dibuka", "waktu_ditutup")
       .with("rombelUjian", (builder) => {
         builder
           .select("id", "m_rombel_id", "m_jadwal_ujian_id")
@@ -32467,7 +32487,7 @@ let totalSLB
     const barang = await MBarang.query()
       .with("lokasi")
       .where({ id: barang_id })
-      .andWhere({m_sekolah_id:sekolah.id})
+      .andWhere({ m_sekolah_id: sekolah.id })
       .first();
 
     return response.ok({
@@ -42932,11 +42952,12 @@ let totalSLB
       .withCount("siswa as total", (builder) => {
         builder.where({ dihapus: 0 });
       })
-      .with("pembayaranAktif",(builder=>{
-        builder.where("akhir_kontrak", ">=", moment().format("YYYY-MM-DD"))
-        .where("mulai_kontrak", "<=", moment().format("YYYY-MM-DD"))
-        .where({dihapus:0});
-      }))
+      .with("pembayaranAktif", (builder) => {
+        builder
+          .where("akhir_kontrak", ">=", moment().format("YYYY-MM-DD"))
+          .where("mulai_kontrak", "<=", moment().format("YYYY-MM-DD"))
+          .where({ dihapus: 0 });
+      })
       .where({ id: sekolah_id })
       .first();
 
@@ -43047,7 +43068,7 @@ let totalSLB
     });
   }
 
-  async detailPembayaranSekolah({ 
+  async detailPembayaranSekolah({
     response,
     request,
     auth,
@@ -43055,7 +43076,7 @@ let totalSLB
   }) {
     const user = await User.query().count("* as total");
     // const { rombel_id } = request.post();
-    let pembayaran =  await MPembayaranSekolah.query()
+    let pembayaran = await MPembayaranSekolah.query()
       .with("sekolah")
       .with("dokumen", (builder) => {
         builder.where({ dihapus: 0 });
