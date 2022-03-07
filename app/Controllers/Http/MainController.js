@@ -545,31 +545,63 @@ class MainController {
   }
 
   async getMasterSekolahDinasSummary({ response, request }) {
-    const totalSD = await Sekolah.query()
-      .where("kode_prop", "010000")
+    let { page, propinsi, kabupaten } = request.get();
+
+    let totalSD
+let totalSMP
+let totalSMA
+let totalSMK
+let totalSLB
+
+
+    if(propinsi) {
+      totalSD = await Sekolah.query()
+      .where("kode_prop", propinsi)
       .andWhere("bentuk", "SD")
       .whereNotNull("m_sekolah_id")
       .getCount();
-    const totalSMP = await Sekolah.query()
-      .where("kode_prop", "010000")
+     totalSMP = await Sekolah.query()
+      .where("kode_prop", propinsi)
       .andWhere("bentuk", "SMP")
       .whereNotNull("m_sekolah_id")
       .getCount();
-    const totalSMA = await Sekolah.query()
-      .where("kode_prop", "010000")
+     totalSMA = await Sekolah.query()
+      .where("kode_prop", propinsi)
       .andWhere("bentuk", "SMA")
       .whereNotNull("m_sekolah_id")
       .getCount();
-    const totalSMK = await Sekolah.query()
-      .where("kode_prop", "010000")
+     totalSMK = await Sekolah.query()
+      .where("kode_prop", propinsi)
       .andWhere("bentuk", "SMK")
       .whereNotNull("m_sekolah_id")
       .getCount();
-    const totalSLB = await Sekolah.query()
-      .where("kode_prop", "010000")
+     totalSLB = await Sekolah.query()
+      .where("kode_prop", propinsi)
       .andWhere("bentuk", "SLB")
       .whereNotNull("m_sekolah_id")
       .getCount();
+    } else {
+       totalSD = await Sekolah.query()
+      .where("bentuk", "SD")
+      .whereNotNull("m_sekolah_id")
+      .getCount();
+     totalSMP = await Sekolah.query()
+      .where("bentuk", "SMP")
+      .whereNotNull("m_sekolah_id")
+      .getCount();
+     totalSMA = await Sekolah.query()
+      .where("bentuk", "SMA")
+      .whereNotNull("m_sekolah_id")
+      .getCount();
+     totalSMK = await Sekolah.query()
+      .where("bentuk", "SMK")
+      .whereNotNull("m_sekolah_id")
+      .getCount();
+     totalSLB = await Sekolah.query()
+      .where("bentuk", "SLB")
+      .whereNotNull("m_sekolah_id")
+      .getCount();
+    }
 
     return response.ok({
       totalSD,
@@ -13617,7 +13649,7 @@ class MainController {
     page = page ? page : 1;
 
     const jadwalUjian = await MJadwalUjian.query()
-      .select("id")
+      .select("id", 'waktu_dibuka', 'waktu_ditutup')
       .with("rombelUjian", (builder) => {
         builder
           .select("id", "m_rombel_id", "m_jadwal_ujian_id")
@@ -13633,7 +13665,7 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .andWhere("waktu_dibuka", ">", moment().format("YYYY-MM-DD HH:mm:ss"))
       .orderBy("waktu_dibuka", "asc")
-      .paginate(page, 30);
+      .paginate(page, 1000);
 
     return response.ok({
       jadwalUjian,
@@ -32812,51 +32844,51 @@ class MainController {
     const fiturSekolah = await MFiturSekolah.query()
       .where({ m_sekolah_id: sekolah.id })
       .first();
-    const fitur = JSON.parse(fiturSekolah.fitur || "{}");
-    const rules = {
-      kode_barang: "required",
-      nama: "required",
-      // foto: "required",
-      merk: "required",
-      tahun_beli: "required",
-      asal: "required",
-      harga: "required",
-      deskripsi: "required",
-      jumlah: "required",
-      kepemilikan: "required",
-      // nama_pemilik: "required",
-      m_lokasi_id: "required",
-    };
-    const message = {
-      "kode_barang.required": "Jenis harus diisi",
-      "nama.required": "Nama harus diisi",
-      // "foto.required": "Foto harus diisi",
-      "merk.required": "Nomor Registrasi harus diisi",
-      "tahun_beli.required": "Lebar harus diisi",
-      "asal.required": "Panjang harus diisi",
-      "harga.required": "Harga harus diisi",
-      "deskripsi.required": "Spesifikasi harus diisi",
-      "jumlah.required": "Jumlah harus diisi",
-      "kepemilikan.required": "Kepemilikan harus diisi",
-      // "nama_pemilik.required": "Nama Pemilik harus diisi",
-      "m_lokasi_id.required": "Lokasi harus diisi",
-    };
-    const validation = await validate(request.all(), rules, message);
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
-    }
-    if (fitur.nota_barang == 1) {
-      const rules = {
-        nota: "required",
-      };
-      const message = {
-        "nota.required": "Nota harus diisi",
-      };
-      const validation = await validate(request.all(), rules, message);
-      if (validation.fails()) {
-        return response.unprocessableEntity(validation.messages());
-      }
-    }
+    const fitur = fiturSekolah ? JSON.parse(fiturSekolah.fitur) : {};
+    // const rules = {
+    //   kode_barang: "required",
+    //   nama: "required",
+    //   // foto: "required",
+    //   merk: "required",
+    //   tahun_beli: "required",
+    //   asal: "required",
+    //   harga: "required",
+    //   deskripsi: "required",
+    //   jumlah: "required",
+    //   kepemilikan: "required",
+    //   // nama_pemilik: "required",
+    //   m_lokasi_id: "required",
+    // };
+    // const message = {
+    //   "kode_barang.required": "Jenis harus diisi",
+    //   "nama.required": "Nama harus diisi",
+    //   // "foto.required": "Foto harus diisi",
+    //   "merk.required": "Nomor Registrasi harus diisi",
+    //   "tahun_beli.required": "Lebar harus diisi",
+    //   "asal.required": "Panjang harus diisi",
+    //   "harga.required": "Harga harus diisi",
+    //   "deskripsi.required": "Spesifikasi harus diisi",
+    //   "jumlah.required": "Jumlah harus diisi",
+    //   "kepemilikan.required": "Kepemilikan harus diisi",
+    //   // "nama_pemilik.required": "Nama Pemilik harus diisi",
+    //   "m_lokasi_id.required": "Lokasi harus diisi",
+    // };
+    // const validation = await validate(request.all(), rules, message);
+    // if (validation.fails()) {
+    //   return response.unprocessableEntity(validation.messages());
+    // }
+    // if (fitur.nota_barang == 1) {
+    //   const rules = {
+    //     nota: "required",
+    //   };
+    //   const message = {
+    //     "nota.required": "Nota harus diisi",
+    //   };
+    //   const validation = await validate(request.all(), rules, message);
+    //   if (validation.fails()) {
+    //     return response.unprocessableEntity(validation.messages());
+    //   }
+    // }
     const barangSebelum = await MBarang.query()
       .where({ id: barang_id })
       .first();
