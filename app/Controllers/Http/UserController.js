@@ -523,9 +523,11 @@ class UserController {
     const ta = await this.getTAAktif(sekolah);
     const user = await auth.getUser();
 
-    const broadcast = await MBroadcast.where({ id: broadcast_id }).update({
-      dihapus: 1,
-    });
+    const broadcast = await MBroadcast.query()
+      .where({ id: broadcast_id })
+      .update({
+        dihapus: 1,
+      });
 
     return response.ok({
       message: messageDeleteSuccess,
