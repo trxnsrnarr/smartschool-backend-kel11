@@ -143,7 +143,7 @@ class RombelController {
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
-    const { tingkat } = request.get();
+    const { tingkat } = request.post();
 
     let tingkatGet;
 
@@ -615,10 +615,10 @@ class RombelController {
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
-    const { tingkat } = request.get();
+    const { tingkat } = request.post();
 
     let tingkatGet;
-
+    
     if (tingkat) {
       tingkatGet = tingkat;
     } else {
@@ -1162,7 +1162,7 @@ class RombelController {
       .ids();
 
     const semuaMateri = await MMateri.query()
-      .whereIn("m_mata_pelajaran", mataPelajaranIds)
+      .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
       .andWhere({ dihapus: 0 })
       .fetch();
 
