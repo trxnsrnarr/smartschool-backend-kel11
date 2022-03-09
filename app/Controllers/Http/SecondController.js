@@ -9943,7 +9943,7 @@ class SecondController {
 
       await TkKategoriTipeAkun.create({
         m_keu_kategori_tipe_akun_id: LabaBersih.id,
-        m_keu_akun: LABABERSIH.id,
+        m_keu_akun_id: LABABERSIH.id,
         dihapus: 0,
         urutan: 1,
       });
@@ -9974,13 +9974,13 @@ class SecondController {
 
       await TkKategoriTipeAkun.create({
         m_keu_kategori_tipe_akun_id: AkunPiutang.id,
-        m_keu_akun: PIUTANGPENDAPATAN.id,
+        m_keu_akun_id: PIUTANGPENDAPATAN.id,
         dihapus: 0,
         urutan: 1,
       });
       await TkKategoriTipeAkun.create({
         m_keu_kategori_tipe_akun_id: AkunPiutang.id,
-        m_keu_akun: PIUTANGKARYAWAN.id,
+        m_keu_akun_id: PIUTANGKARYAWAN.id,
         dihapus: 0,
         urutan: 1,
       });
@@ -10010,31 +10010,31 @@ class SecondController {
 
       await TkKategoriTipeAkun.create({
         m_keu_kategori_tipe_akun_id: AsetLancar.id,
-        m_keu_akun: KAS.id,
+        m_keu_akun_id: KAS.id,
         dihapus: 0,
         urutan: 1,
       });
       await TkKategoriTipeAkun.create({
         m_keu_kategori_tipe_akun_id: AsetLancar.id,
-        m_keu_akun: BOS.id,
+        m_keu_akun_id: BOS.id,
         dihapus: 0,
         urutan: 1,
       });
       await TkKategoriTipeAkun.create({
         m_keu_kategori_tipe_akun_id: AsetLancar.id,
-        m_keu_akun: BOP.id,
+        m_keu_akun_id: BOP.id,
         dihapus: 0,
         urutan: 1,
       });
       await TkKategoriTipeAkun.create({
         m_keu_kategori_tipe_akun_id: AsetLancar.id,
-        m_keu_akun: BPMU.id,
+        m_keu_akun_id: BPMU.id,
         dihapus: 0,
         urutan: 1,
       });
       await TkKategoriTipeAkun.create({
         m_keu_kategori_tipe_akun_id: AsetLancar.id,
-        m_keu_akun: YAYASAN.id,
+        m_keu_akun_id: YAYASAN.id,
         dihapus: 0,
         urutan: 1,
       });
@@ -10068,19 +10068,19 @@ class SecondController {
 
       // await TkKategoriTipeAkun.create({
       //   m_keu_kategori_tipe_akun_id:PersediaanBarang.id,
-      //   m_keu_akun: LEMARI.id,
+      //   m_keu_akun_id: LEMARI.id,
       //   dihapus:0,
       //   urutan:1
       // })
       // await TkKategoriTipeAkun.create({
       //   m_keu_kategori_tipe_akun_id:PersediaanBarang.id,
-      //   m_keu_akun: MEJA.id,
+      //   m_keu_akun_id: MEJA.id,
       //   dihapus:0,
       //   urutan:1
       // })
       // await TkKategoriTipeAkun.create({
       //   m_keu_kategori_tipe_akun_id:PersediaanBarang.id,
-      //   m_keu_akun: KURSI.id,
+      //   m_keu_akun_id: KURSI.id,
       //   dihapus:0,
       //   urutan:1
       // })
@@ -10118,25 +10118,25 @@ class SecondController {
 
       await TkKategoriTipeAkun.create({
         m_keu_kategori_tipe_akun_id: Penyusutan.id,
-        m_keu_akun: BEBANPPK.id,
+        m_keu_akun_id: BEBANPPK.id,
         dihapus: 0,
         urutan: 1,
       });
       await TkKategoriTipeAkun.create({
         m_keu_kategori_tipe_akun_id: Penyusutan.id,
-        m_keu_akun: BEBANPPB.id,
+        m_keu_akun_id: BEBANPPB.id,
         dihapus: 0,
         urutan: 1,
       });
       await TkKategoriTipeAkun.create({
         m_keu_kategori_tipe_akun_id: Penyusutan.id,
-        m_keu_akun: BEBANPK.id,
+        m_keu_akun_id: BEBANPK.id,
         dihapus: 0,
         urutan: 1,
       });
       await TkKategoriTipeAkun.create({
         m_keu_kategori_tipe_akun_id: Penyusutan.id,
-        m_keu_akun: BEBANPG.id,
+        m_keu_akun_id: BEBANPG.id,
         dihapus: 0,
         urutan: 1,
       });
@@ -10171,35 +10171,35 @@ class SecondController {
       const KENDARAAN = semuaAkun.toJSON().find((d) => d.nama == "KENDARAAN");
       const GEDUNGSEKOLAH = semuaAkun
         .toJSON()
-        .find((d) => d.nama == "GEDUNGSEKOLAH");
+        .find((d) => d.nama == "GEDUNG SEKOLAH");
 
       await TkKategoriTipeAkun.create({
-        m_keu_kategori_tipe_akun_id: PersediaanBarang.id,
-        m_keu_akun: LEMARI.id,
+        m_keu_kategori_tipe_akun_id: AsetTetap.id,
+        m_keu_akun_id: LEMARI.id,
         dihapus: 0,
         urutan: 1,
       });
       await TkKategoriTipeAkun.create({
-        m_keu_kategori_tipe_akun_id: PersediaanBarang.id,
-        m_keu_akun: MEJA.id,
+        m_keu_kategori_tipe_akun_id: AsetTetap.id,
+        m_keu_akun_id: MEJA.id,
         dihapus: 0,
         urutan: 1,
       });
       await TkKategoriTipeAkun.create({
-        m_keu_kategori_tipe_akun_id: PersediaanBarang.id,
-        m_keu_akun: KURSI.id,
+        m_keu_kategori_tipe_akun_id: AsetTetap.id,
+        m_keu_akun_id: KURSI.id,
         dihapus: 0,
         urutan: 1,
       });
       await TkKategoriTipeAkun.create({
-        m_keu_kategori_tipe_akun_id: PersediaanBarang.id,
-        m_keu_akun: KENDARAAN.id,
+        m_keu_kategori_tipe_akun_id: AsetTetap.id,
+        m_keu_akun_id: KENDARAAN.id,
         dihapus: 0,
         urutan: 1,
       });
       await TkKategoriTipeAkun.create({
-        m_keu_kategori_tipe_akun_id: PersediaanBarang.id,
-        m_keu_akun: GEDUNGSEKOLAH.id,
+        m_keu_kategori_tipe_akun_id: AsetTetap.id,
+        m_keu_akun_id: GEDUNGSEKOLAH.id,
         dihapus: 0,
         urutan: 1,
       });
@@ -10232,7 +10232,7 @@ class SecondController {
 
       await TkKategoriTipeAkun.create({
         m_keu_kategori_tipe_akun_id: Dividen.id,
-        m_keu_akun: DIVIDEN.id,
+        m_keu_akun_id: DIVIDEN.id,
         dihapus: 0,
         urutan: 1,
       });
@@ -10249,7 +10249,7 @@ class SecondController {
 
       const rumusUtama = [
         {
-          id: Operasi.id,
+          id: operasi.id,
         },
         {
           operator: "plus",
@@ -10295,7 +10295,7 @@ class SecondController {
 
       const rumusAkhir = [
         {
-          id: Operasi.id,
+          id: operasi.id,
         },
         {
           operator: "plus",
@@ -10669,11 +10669,11 @@ class SecondController {
       nota,
     } = request.post();
 
-    const foto1 = foto ? foto.toString() : null;
-    const fiturSekolah = await MFiturSekolah.query()
-      .where({ m_sekolah_id: sekolah.id })
-      .first();
-    const fitur = JSON.parse(fiturSekolah.fitur || "{}");
+    // const foto1 = foto ? foto.toString() : null;
+    // const fiturSekolah = await MFiturSekolah.query()
+    //   .where({ m_sekolah_id: sekolah.id })
+    //   .first();
+    // const fitur = JSON.parse(fiturSekolah.fitur || "{}");
     const rules = {
       kode_barang: "required",
       nama: "required",
@@ -10706,18 +10706,7 @@ class SecondController {
     if (validation.fails()) {
       return response.unprocessableEntity(validation.messages());
     }
-    if (fitur.nota_barang == 1) {
-      const rules = {
-        nota: "required",
-      };
-      const message = {
-        "nota.required": "Nota harus diisi",
-      };
-      const validation = await validate(request.all(), rules, message);
-      if (validation.fails()) {
-        return response.unprocessableEntity(validation.messages());
-      }
-    }
+    
     const barangSebelum = await MBarang.query()
       .where({ id: barang_id })
       .first();
