@@ -403,93 +403,106 @@ class UserController {
       tingkat,
       jurusan_id,
       tanggal_dibagikan,
-      draft,
+      draf: draft,
     } = request.post();
 
-    const broadcast = await MBroadcast.where({ id: broadcast_id }).first();
+    const broadcast = await MBroadcast.query()
+      .where({ id: broadcast_id })
+      .first();
 
-    const broadcastUpdate = await MBroadcast.where({ id: broadcast_id }).update(
-      {
+    if (moment(broadcast.tanggal_dibagikan) < moment()) {
+      return response.conflict({
+        message: "broadcast sudah terkirim",
+      });
+    }
+
+    const broadcastUpdate = await MBroadcast.query()
+      .where({ id: broadcast_id })
+      .update({
         judul,
-        pesan: htmlEscaper.escape(pesan),
+        pesan: pesan,
         kepada,
         tanggal_dibagikan,
         draft,
         dihapus: 0,
         m_user_id: user.id,
-      }
-    );
+      });
+
+    await MNotifikasiTerjadwal.query()
+      .where("nama", "like", `%broadcast-${broadcast_id}%`)
+      .delete();
 
     if (broadcastUpdate) {
       if (!draft) {
-        if (rombel_id) {
-          await Promise.all(
-            rombel_id.map(async (d) => {
-              const anggotaRombelData = await MAnggotaRombel.query()
-                .with("user", (builder) => {
-                  builder.select("id", "nama", "wa_real");
-                })
-                .where({ m_rombel_id: d })
-                .andWhere({ dihapus: 0 })
-                .fetch();
-              await Promise.all(
-                anggotaRombelData.toJSON().map(async (d) => {
-                  const checkNotif = await MNotifikasiTerjadwal.query()
-                    .where({ nama: `broadcast-${broadcast.id}-${d.m_user_id}` })
-                    .first();
+        const createData = [];
+        const created_at = moment().format("YYYY-MM-DD HH:mm:ss");
 
-                  if (!checkNotif) {
-                    if (d.user.wa_real) {
-                      await MNotifikasiTerjadwal.create({
-                        tanggal_dibagikan,
-                        tanggal_cron: ``,
-                        pesan,
-                        tujuan: d.user.wa_real,
-                        nama: `broadcast-${broadcast.id}-${d.m_user_id}`,
-                      });
-                    }
-                  }
-                })
-              );
-            })
-          );
-        }
-        if (user_id) {
+        if (("" + kepada).includes('"value":"semua"')) {
           const semuaUser = await User.query()
             .select("id", "nama", "wa_real")
             .where({ role: "siswa" })
             .andWhere({ dihapus: 0 })
             .whereNotNull("wa_real")
+            .where({ m_sekolah_id: sekolah.id })
             .fetch();
-          await Promise.all(
-            user_id.map(async (d) => {
-              const checkNotif = await MNotifikasiTerjadwal.query()
-                .where({ nama: `broadcast-${broadcast.id}-${d}` })
-                .first();
-              if (!checkNotif) {
-                const userData = semuaUser.toJSON().find((d) => d.id == d);
-                await MNotifikasiTerjadwal.create({
-                  tanggal_dibagikan,
-                  tanggal_cron: ``,
-                  pesan,
-                  tujuan: userData.wa_real,
-                  nama: `broadcast-${broadcast.id}-${d}`,
+          semuaUser.toJSON().map((d) => {
+            createData.push({
+              tanggal_dibagikan,
+              tanggal_cron: ``,
+              pesan,
+              tujuan: d.wa_real,
+              nama: `broadcast-${broadcast.id}-${d.id}`,
+              created_at,
+            });
+          });
+        } else {
+          if (rombel_id) {
+            await Promise.all(
+              rombel_id.map(async (d) => {
+                const anggotaRombelData = await MAnggotaRombel.query()
+                  .with("user", (builder) => {
+                    builder.select("id", "nama", "wa_real");
+                  })
+                  .where({ m_rombel_id: d })
+                  .andWhere({ dihapus: 0 })
+                  .fetch();
+                anggotaRombelData.toJSON().map((d) => {
+                  if (!user_id.includes(d.m_user_id) && d.user.wa_real)
+                    createData.push({
+                      tanggal_dibagikan,
+                      tanggal_cron: ``,
+                      pesan,
+                      tujuan: d.user.wa_real,
+                      nama: `broadcast-${broadcast.id}-${d.m_user_id}`,
+                      created_at,
+                    });
                 });
-              }
-            })
-          );
+              })
+            );
+          }
+          if (user_id) {
+            const semuaUser = await User.query()
+              .select("id", "nama", "wa_real")
+              .where({ role: "siswa" })
+              .andWhere({ dihapus: 0 })
+              .whereNotNull("wa_real")
+              .where({ m_sekolah_id: sekolah.id })
+              .whereIn("id", user_id)
+              .fetch();
+
+            semuaUser.toJSON().map((d) => {
+              createData.push({
+                tanggal_dibagikan,
+                tanggal_cron: ``,
+                pesan,
+                tujuan: d.wa_real,
+                nama: `broadcast-${broadcast.id}-${d.id}`,
+                created_at,
+              });
+            });
+          }
         }
-        await MNotifikasiTerjadwal.where(
-          "nama",
-          "like",
-          `%broadcast-${broadcast.id}-%`
-        ).update({
-          tanggal_dibagikan,
-          tanggal_cron: ``,
-          pesan,
-          tujuan: d.user.wa_real,
-          nama: `broadcast-${broadcast.id}-${d.m_user_id}`,
-        });
+        await MNotifikasiTerjadwal.createMany(createData);
       }
     }
 
