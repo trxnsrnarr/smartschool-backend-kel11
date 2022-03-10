@@ -33170,7 +33170,7 @@ class MainController {
         jenis: "Proses Inventaris",
         m_user_id: user.id,
         awal: `Verifikasi Ditolak : `,
-        akhir: `"${barang.nama}"`,
+        akhir: `"${barangSebelum.nama}"`,
         bawah: `Aset Tertunda`,
         m_sekolah_id: sekolah.id,
         tipe: "Realisasi",
