@@ -40,6 +40,10 @@ class MSekolah extends Model {
     return this.belongsTo("App/Models/TkServerSekolah", "id", "m_sekolah_id");
   }
 
+  pembayaranAktif(){
+    return this.belongsTo("App/Models/MPembayaranSekolah", "id", "m_sekolah_id");
+  }
+
   static get computed() {
     return ["tingkat_format"];
   }

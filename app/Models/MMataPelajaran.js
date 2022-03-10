@@ -15,6 +15,10 @@ class MMataPelajaran extends Model {
   user() {
     return this.belongsTo("App/Models/User", "m_user_id");
   }
+  
+  ta() {
+    return this.belongsTo("App/Models/Mta", "m_ta_id");
+  }
 
   nilaiSiswa() {
     return this.hasMany("App/Models/MUjianSiswa", "id", "m_mata_pelajaran_id");
