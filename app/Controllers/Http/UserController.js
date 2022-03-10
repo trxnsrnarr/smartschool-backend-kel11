@@ -130,6 +130,7 @@ class UserController {
       tingkat,
       jurusan_id,
       rombel_id,
+      page,
     } = request.get();
 
     let broadcast;
@@ -151,23 +152,21 @@ class UserController {
       broadcast.andWhere("kepada", "like", `%${kepada}%`);
     }
     if (jenis == "terjadwal") {
-      broadcast.where(
-        "tanggal_dibagikan",
-        ">",
-        moment().format("YYYY-MM-DD HH:mm:ss")
-      );
+      broadcast
+        .where("tanggal_dibagikan", ">", moment().format("YYYY-MM-DD HH:mm:ss"))
+        .where({ draft: 0 });
     }
     if (jenis == "terkirim") {
-      broadcast.where(
-        "tanggal_dibagikan",
-        "<",
-        moment().format("YYYY-MM-DD HH:mm:ss")
-      );
+      broadcast
+        .where("tanggal_dibagikan", "<", moment().format("YYYY-MM-DD HH:mm:ss"))
+        .where({ draft: 0 });
     }
     if (jenis == "draf") {
       broadcast.where({ draft: 1 });
     }
-    broadcast = await broadcast.fetch();
+    broadcast = await broadcast
+      .orderBy("tanggal_dibagikan", "desc")
+      .paginate(page, 10);
 
     return response.ok({
       broadcast,
@@ -289,7 +288,7 @@ class UserController {
       tingkat,
       jurusan_id,
       tanggal_dibagikan,
-      draft,
+      draf: draft,
     } = request.post();
 
     const broadcast = await MBroadcast.create({
@@ -410,7 +409,7 @@ class UserController {
       .where({ id: broadcast_id })
       .first();
 
-    if (moment(broadcast.tanggal_dibagikan) < moment()) {
+    if (moment(broadcast.tanggal_dibagikan) < moment() && broadcast.draf == 0) {
       return response.conflict({
         message: "broadcast sudah terkirim",
       });
