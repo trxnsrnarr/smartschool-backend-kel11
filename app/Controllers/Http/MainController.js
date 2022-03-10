@@ -10935,7 +10935,9 @@ class MainController {
           .update({
             lampiran: lampiran.toString(),
             absen: absen,
-            keterangan: keterangan,
+            keterangan: htmlEscaper.escape(
+              ("" + keterangan).trim() ? keterangan : "-"
+            ),
             waktu_absen: moment().utc(7).format("YYYY-MM-DD HH:mm:ss"),
           });
 
@@ -10946,7 +10948,9 @@ class MainController {
           .update({
             lampiran: lampiran.toString(),
             absen: absen,
-            keterangan: keterangan,
+            keterangan: htmlEscaper.escape(
+              ("" + keterangan).trim() ? keterangan : "-"
+            ),
             waktu_absen: moment().utc(7).format("YYYY-MM-DD HH:mm:ss"),
           });
       } else {
