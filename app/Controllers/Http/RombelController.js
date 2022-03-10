@@ -143,7 +143,7 @@ class RombelController {
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
-    const { tingkat } = request.get();
+    const { tingkat } = request.post();
 
     let tingkatGet;
 
@@ -615,10 +615,10 @@ class RombelController {
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
-    const { tingkat } = request.get();
+    const { tingkat } = request.post();
 
     let tingkatGet;
-
+    
     if (tingkat) {
       tingkatGet = tingkat;
     } else {
@@ -1162,12 +1162,12 @@ class RombelController {
       .ids();
 
     const semuaMateri = await MMateri.query()
-      .whereIn("m_mata_pelajaran", mataPelajaranIds)
+      .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
       .andWhere({ dihapus: 0 })
       .fetch();
 
-    for (let no = 0; no < hari.length; no++) {
-      const ss = hari[no];
+    for await (const ss of hari) {
+      // const ss = hari[no];
       let explanation = workbook.getWorksheet(`${ss.hari}`);
 
       let colCommentJam = explanation.getColumn("A");
@@ -1493,6 +1493,7 @@ class RombelController {
       );
       // return result;
     }
+    return 'selesai'
   }
 
   async importJadwalMengajar({ request, response, auth }) {

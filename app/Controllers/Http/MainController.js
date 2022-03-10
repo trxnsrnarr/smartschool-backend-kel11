@@ -12964,7 +12964,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { nama, tipe, tingkat, m_mata_pelajaran_id } = request.post();
+    let { nama, tipe, tingkat, m_mata_pelajaran_id } = request.post();
     const rules = {
       nama: "required",
       tipe: "required",
@@ -12979,6 +12979,9 @@ class MainController {
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
       return response.unprocessableEntity(validation.messages());
+    }
+    if (tipe == "literasi" || tipe == "numerasi") {
+      m_mata_pelajaran_id = null;
     }
 
     const ujian = await MUjian.query().where({ id: ujian_id }).update({
@@ -33199,7 +33202,7 @@ class MainController {
         jenis: "Proses Inventaris",
         m_user_id: user.id,
         awal: `Verifikasi Ditolak : `,
-        akhir: `"${barang.nama}"`,
+        akhir: `"${barangSebelum.nama}"`,
         bawah: `Aset Tertunda`,
         m_sekolah_id: sekolah.id,
         tipe: "Realisasi",
