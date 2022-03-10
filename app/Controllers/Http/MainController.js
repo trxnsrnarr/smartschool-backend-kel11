@@ -11869,7 +11869,7 @@ class MainController {
     }
 
     const user = await User.query()
-      .select("id", "whatsapp", "role", "m_sekolah_id", "nama")
+      .select("id", "whatsapp", "role", "m_sekolah_id", "nama", "wa_real")
       .with("profil", (builder) => {
         builder.select("id", "m_user_id", "telp_ayah", "telp_ibu");
       })
@@ -11882,6 +11882,15 @@ class MainController {
       return response.notFound({
         message: "Data tidak ditemukan",
       });
+    }
+
+    if (user.wa_real) {
+      WhatsAppService.sendMessage(
+        user.wa_real,
+        `Muka Anda terdeteksi camera pada ${moment(
+          waktu_masuk || waktu_pulang
+        ).format("YYYY-MM-DD HH:mm:ss")}`
+      );
     }
 
     const fileName = new Date().getTime();
@@ -32856,6 +32865,7 @@ class MainController {
       baik,
       rusak,
       nota,
+      verifikasi,
     } = request.post();
 
     const foto1 = foto ? foto.toString() : null;
@@ -32926,11 +32936,33 @@ class MainController {
       baik,
       rusak,
       nota,
+      verifikasi,
     });
 
     if (!barang) {
       return response.notFound({
         message: messageNotFound,
+      });
+    }
+
+    if (verifikasi == 0) {
+      await MHistoriAktivitas.create({
+        jenis: "Proses Inventaris",
+        m_user_id: user.id,
+        awal: `Verifikasi Ditolak : `,
+        akhir: `"${barang.nama}"`,
+        bawah: `Aset Tertunda`,
+        m_sekolah_id: sekolah.id,
+        tipe: "SarPras",
+      });
+      await MHistoriAktivitas.create({
+        jenis: "Proses Inventaris",
+        m_user_id: user.id,
+        awal: `Verifikasi Ditolak : `,
+        akhir: `"${barang.nama}"`,
+        bawah: `Aset Tertunda`,
+        m_sekolah_id: sekolah.id,
+        tipe: "Realisasi",
       });
     }
 

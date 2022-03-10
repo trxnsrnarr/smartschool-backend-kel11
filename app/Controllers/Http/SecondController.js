@@ -6590,9 +6590,7 @@ class SecondController {
       .where({ id: rumus_id })
       .first();
 
-    await MRumusLabaRugi.query()
-      .where({ id: rumus_id })
-      .update({ nama });
+    await MRumusLabaRugi.query().where({ id: rumus_id }).update({ nama });
 
     if (rumusSebelum.rumus != rumus) {
       const rumus1 = await MRumusLabaRugi.query()
@@ -10504,7 +10502,6 @@ class SecondController {
   }
 
   async getProfil({ auth, response, request }) {
-
     const user = await auth.getUser();
 
     const userData = await User.query()
@@ -10513,14 +10510,12 @@ class SecondController {
       .with("profil")
       .first();
 
-
     return response.ok({
       user: userData,
     });
   }
 
-   async detailBarang({ response, request,auth, params: { barang_id } }) {
-
+  async detailBarang({ response, request, auth, params: { barang_id } }) {
     const user = await auth.getUser();
     const barang = await MBarang.query()
       .with("lokasi")
@@ -10529,7 +10524,7 @@ class SecondController {
 
     return response.ok({
       barang: barang,
-      user
+      user,
     });
   }
   async postBarang({ response, request, auth }) {
@@ -10642,14 +10637,14 @@ class SecondController {
   }
 
   async putBarang({ response, request, auth, params: { barang_id } }) {
-    
     const user = await auth.getUser();
-    if (
-      user.role != "admin" ||
-      user.role == "guru" 
-    ) {
+    if (user.role != "admin" || user.role == "guru") {
       return response.forbidden({ message: messageForbidden });
     }
+
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
 
     const {
       foto,
@@ -10667,6 +10662,7 @@ class SecondController {
       baik,
       rusak,
       nota,
+      verifikasi,
     } = request.post();
 
     // const foto1 = foto ? foto.toString() : null;
@@ -10726,11 +10722,33 @@ class SecondController {
       baik,
       rusak,
       nota,
+      verifikasi,
     });
 
     if (!barang) {
       return response.notFound({
         message: messageNotFound,
+      });
+    }
+
+    if (verifikasi == 0) {
+      await MHistoriAktivitas.create({
+        jenis: "Proses Inventaris",
+        m_user_id: user.id,
+        awal: `Verifikasi Ditolak : `,
+        akhir: `"${barang.nama}"`,
+        bawah: `Aset Tertunda`,
+        m_sekolah_id: sekolah.id,
+        tipe: "SarPras",
+      });
+      await MHistoriAktivitas.create({
+        jenis: "Proses Inventaris",
+        m_user_id: user.id,
+        awal: `Verifikasi Ditolak : `,
+        akhir: `"${barang.nama}"`,
+        bawah: `Aset Tertunda`,
+        m_sekolah_id: sekolah.id,
+        tipe: "Realisasi",
       });
     }
 
@@ -10927,12 +10945,8 @@ class SecondController {
   }
 
   async deleteBarang({ response, request, auth, params: { barang_id } }) {
-  
     const user = await auth.getUser();
-    if (
-      user.role != "admin" ||
-      user.role == "guru"
-    ) {
+    if (user.role != "admin" || user.role == "guru") {
       return response.forbidden({ message: messageForbidden });
     }
     const barangSebelum = await MBarang.query()
@@ -10947,7 +10961,7 @@ class SecondController {
         message: messageNotFound,
       });
     }
-    
+
     await MHistoriAktivitas.create({
       jenis: "Hapus Barang",
       tipe: "SarPras",
@@ -10960,7 +10974,6 @@ class SecondController {
       message: messageDeleteSuccess,
     });
   }
-
 }
 
 module.exports = SecondController;
