@@ -10935,7 +10935,7 @@ class MainController {
           .update({
             lampiran: lampiran.toString(),
             absen: absen,
-            keterangan: keterangan,
+            keterangan,
             waktu_absen: moment().utc(7).format("YYYY-MM-DD HH:mm:ss"),
           });
 
@@ -10946,7 +10946,7 @@ class MainController {
           .update({
             lampiran: lampiran.toString(),
             absen: absen,
-            keterangan: keterangan,
+            keterangan,
             waktu_absen: moment().utc(7).format("YYYY-MM-DD HH:mm:ss"),
           });
       } else {
@@ -11050,12 +11050,16 @@ class MainController {
     }
 
     if (tipe == "tugas") {
-      timeline = await TkTimeline.query().where({ id: timeline_id }).update({
-        lampiran: lampiran.toString(),
-        keterangan: keterangan,
-        waktu_pengumpulan: waktu_pengumpulan,
-        dikumpulkan: dikumpulkan,
-      });
+      timeline = await TkTimeline.query()
+        .where({ id: timeline_id })
+        .update({
+          lampiran: lampiran.toString(),
+          keterangan: ("" + keterangan).trim()
+            ? htmlEscaper.escape(keterangan)
+            : null,
+          waktu_pengumpulan: waktu_pengumpulan,
+          dikumpulkan: dikumpulkan,
+        });
 
       // await kirimNotifWaLangsung(
       //   timelineTk.toJSON().timeline.m_user_id,
@@ -13274,12 +13278,14 @@ class MainController {
       akm_proses_kognitif,
       sumber_buku,
       audio,
-      pertanyaan: htmlEscaper.escape(pertanyaan),
-      jawaban_a: htmlEscaper.escape(jawaban_a),
-      jawaban_b: htmlEscaper.escape(jawaban_b),
-      jawaban_c: htmlEscaper.escape(jawaban_c),
-      jawaban_d: htmlEscaper.escape(jawaban_d),
-      jawaban_e: htmlEscaper.escape(jawaban_e),
+      pertanyaan: htmlEscaper.escape(
+        ("" + pertanyaan).trim() ? pertanyaan : "-"
+      ),
+      jawaban_a: htmlEscaper.escape(("" + jawaban_a).trim() ? jawaban_a : "-"),
+      jawaban_b: htmlEscaper.escape(("" + jawaban_b).trim() ? jawaban_b : "-"),
+      jawaban_c: htmlEscaper.escape(("" + jawaban_c).trim() ? jawaban_c : "-"),
+      jawaban_d: htmlEscaper.escape(("" + jawaban_d).trim() ? jawaban_d : "-"),
+      jawaban_e: htmlEscaper.escape(("" + jawaban_e).trim() ? jawaban_e : "-"),
       kj_pg,
       kj_uraian,
       jawaban_pg_kompleks,
