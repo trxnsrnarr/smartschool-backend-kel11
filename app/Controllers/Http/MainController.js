@@ -1931,6 +1931,13 @@ class MainController {
     }
     tanggal_lahir == "Invalid date" ? delete userPayload.tanggal_lahir : null;
 
+    const checkwhatsapp = await User.query()
+      .where({whatsapp: whatsapp})
+      .first();
+    if (checkwhatsapp) {
+      return response.forbidden({ message: "Nomor whatsapp sudah terdaftar"})
+    }
+
     await User.query().where({ id: user.id }).update(userPayload);
 
     const check = await MProfilUser.query()
