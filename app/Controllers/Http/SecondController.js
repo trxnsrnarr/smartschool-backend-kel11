@@ -5779,6 +5779,14 @@ class SecondController {
           builder.whereIn("m_rencana_transaksi_id", rencanaTransaksiIds);
         }
       })
+      .with("rek", (builder) => {
+        builder.where({ dihapus: 0 }).whereNull("m_rencana_keuangan_id");
+      })
+      .with("rekRencana", (builder) => {
+        builder
+          .where({ dihapus: 0 })
+          .where({ m_rencana_keuangan_id: rencana.id });
+      })
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .fetch();
@@ -6207,6 +6215,14 @@ class SecondController {
         if (rencanaTransaksiIds) {
           builder.whereIn("m_rencana_transaksi_id", rencanaTransaksiIds);
         }
+      })
+      .with("rek", (builder) => {
+        builder.where({ dihapus: 0 }).whereNull("m_rencana_keuangan_id");
+      })
+      .with("rekRencana", (builder) => {
+        builder
+          .where({ dihapus: 0 })
+          .where({ m_rencana_keuangan_id: rencana.id });
       })
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
