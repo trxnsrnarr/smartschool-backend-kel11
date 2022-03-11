@@ -301,6 +301,11 @@ class UserController {
       dihapus: 0,
       m_user_id: user.id,
       m_sekolah_id: sekolah.id,
+      lampiran: lampiran
+        ? typeof lampiran == "string"
+          ? lampiran
+          : JSON.stringify(lampiran)
+        : null,
     });
 
     const created_at = moment().format("YYYY-MM-DD HH:mm:ss");
@@ -443,6 +448,11 @@ class UserController {
         draft,
         dihapus: 0,
         m_user_id: user.id,
+        lampiran: lampiran
+          ? typeof lampiran == "string"
+            ? lampiran
+            : JSON.stringify(lampiran)
+          : null,
       });
 
     await MNotifikasiTerjadwal.query()
