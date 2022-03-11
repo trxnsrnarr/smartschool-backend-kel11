@@ -11517,7 +11517,7 @@ class MainController {
           timelineTk.toJSON().timeline.user.nama
         } dengan komentar ${komen}. Silahkan klik tautan berikut untuk membalasnya! Semangat!! 
         ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${
-          tkTimeline.m_timeline_id
+          timelineTk.m_timeline_id
         }?hal=tugas`
       );
     } else if (user.role == "guru") {
@@ -11528,7 +11528,7 @@ class MainController {
           timelineTk.toJSON().user.nama
         } dengan komentar ${komen}. Silahkan klik tautan berikut untuk membalasnya! Semangat!! 
         ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${
-          tkTimeline.m_timeline_id
+          timelineTk.m_timeline_id
         }?hal=tugas`
       );
     }
