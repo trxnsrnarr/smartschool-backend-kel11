@@ -11054,9 +11054,7 @@ class MainController {
         .where({ id: timeline_id })
         .update({
           lampiran: lampiran.toString(),
-          keterangan: ("" + keterangan).trim()
-            ? htmlEscaper.escape(keterangan)
-            : null,
+          keterangan: keterangan,
           waktu_pengumpulan: waktu_pengumpulan,
           dikumpulkan: dikumpulkan,
         });
@@ -13278,14 +13276,12 @@ class MainController {
       akm_proses_kognitif,
       sumber_buku,
       audio,
-      pertanyaan: htmlEscaper.escape(
-        ("" + pertanyaan).trim() ? pertanyaan : "-"
-      ),
-      jawaban_a: htmlEscaper.escape(("" + jawaban_a).trim() ? jawaban_a : "-"),
-      jawaban_b: htmlEscaper.escape(("" + jawaban_b).trim() ? jawaban_b : "-"),
-      jawaban_c: htmlEscaper.escape(("" + jawaban_c).trim() ? jawaban_c : "-"),
-      jawaban_d: htmlEscaper.escape(("" + jawaban_d).trim() ? jawaban_d : "-"),
-      jawaban_e: htmlEscaper.escape(("" + jawaban_e).trim() ? jawaban_e : "-"),
+      pertanyaan: htmlEscaper.escape(pertanyaan || "-"),
+      jawaban_a: htmlEscaper.escape(jawaban_a || "-"),
+      jawaban_b: htmlEscaper.escape(jawaban_b || "-"),
+      jawaban_c: htmlEscaper.escape(jawaban_c || "-"),
+      jawaban_d: htmlEscaper.escape(jawaban_d || "-"),
+      jawaban_e: htmlEscaper.escape(jawaban_e || "-"),
       kj_pg,
       kj_uraian,
       jawaban_pg_kompleks,
@@ -13294,9 +13290,7 @@ class MainController {
       opsi_a_uraian,
       opsi_b_uraian,
       rubrik_kj: JSON.stringify(rubrik_kj),
-      pembahasan: htmlEscaper.escape(
-        pembahasan ? (pembahasan.trim() ? pembahasan : "-") : "-"
-      ),
+      pembahasan: htmlEscaper.escape(pembahasan || "-"),
       nilai_soal,
       m_user_id: user.id,
       dihapus: 0,
