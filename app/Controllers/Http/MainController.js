@@ -11506,7 +11506,7 @@ class MainController {
         builder.with("tugas").with("user");
       })
       .with("user")
-      .where({ id: timeline_id })
+      .where({ id: tk_timeline_id })
       .first();
 
     if (user.role == "siswa") {
