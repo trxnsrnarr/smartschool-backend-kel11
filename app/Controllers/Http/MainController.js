@@ -10935,9 +10935,7 @@ class MainController {
           .update({
             lampiran: lampiran.toString(),
             absen: absen,
-            keterangan: htmlEscaper.escape(
-              ("" + keterangan).trim() ? keterangan : "-"
-            ),
+            keterangan,
             waktu_absen: moment().utc(7).format("YYYY-MM-DD HH:mm:ss"),
           });
 
@@ -10948,9 +10946,7 @@ class MainController {
           .update({
             lampiran: lampiran.toString(),
             absen: absen,
-            keterangan: htmlEscaper.escape(
-              ("" + keterangan).trim() ? keterangan : "-"
-            ),
+            keterangan,
             waktu_absen: moment().utc(7).format("YYYY-MM-DD HH:mm:ss"),
           });
       } else {
@@ -11054,12 +11050,16 @@ class MainController {
     }
 
     if (tipe == "tugas") {
-      timeline = await TkTimeline.query().where({ id: timeline_id }).update({
-        lampiran: lampiran.toString(),
-        keterangan: keterangan,
-        waktu_pengumpulan: waktu_pengumpulan,
-        dikumpulkan: dikumpulkan,
-      });
+      timeline = await TkTimeline.query()
+        .where({ id: timeline_id })
+        .update({
+          lampiran: lampiran.toString(),
+          keterangan: ("" + keterangan).trim()
+            ? htmlEscaper.escape(keterangan)
+            : null,
+          waktu_pengumpulan: waktu_pengumpulan,
+          dikumpulkan: dikumpulkan,
+        });
 
       // await kirimNotifWaLangsung(
       //   timelineTk.toJSON().timeline.m_user_id,
