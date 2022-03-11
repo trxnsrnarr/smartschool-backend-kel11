@@ -38152,6 +38152,20 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
+    const ta = await Mta.query()
+    .with("sekolah",(builder)=>{
+      builder.select("id","nama")
+    })
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ aktif: 1 })
+      .first();
+
+    if (!ta) {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+
     const user = await auth.getUser();
 
     // const { rombel_id } = request.post();
@@ -38166,6 +38180,7 @@ class MainController {
 
     return response.ok({
       disposisi,
+      ta
     });
   }
 
