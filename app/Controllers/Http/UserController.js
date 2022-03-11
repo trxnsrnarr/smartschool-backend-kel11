@@ -407,7 +407,21 @@ class UserController {
       jurusan_id,
       tanggal_dibagikan,
       draf: draft,
+      lampiran,
     } = request.post();
+
+    const created_at = moment().format("YYYY-MM-DD HH:mm:ss");
+    const payload = {
+      tanggal_dibagikan,
+      tanggal_cron: ``,
+      pesan,
+      created_at,
+      lampiran: lampiran
+        ? typeof lampiran == "string"
+          ? lampiran
+          : JSON.stringify(lampiran)
+        : null,
+    };
 
     const broadcast = await MBroadcast.query()
       .where({ id: broadcast_id })
@@ -450,12 +464,9 @@ class UserController {
             .fetch();
           semuaUser.toJSON().map((d) => {
             createData.push({
-              tanggal_dibagikan,
-              tanggal_cron: ``,
-              pesan,
               tujuan: d.wa_real,
               nama: `broadcast-${broadcast.id}-${d.id}`,
-              created_at,
+              ...payload,
             });
           });
         } else {
@@ -472,12 +483,9 @@ class UserController {
                 anggotaRombelData.toJSON().map((d) => {
                   if (!user_id.includes(d.m_user_id) && d.user.wa_real)
                     createData.push({
-                      tanggal_dibagikan,
-                      tanggal_cron: ``,
-                      pesan,
                       tujuan: d.user.wa_real,
                       nama: `broadcast-${broadcast.id}-${d.m_user_id}`,
-                      created_at,
+                      ...payload,
                     });
                 });
               })
@@ -495,12 +503,9 @@ class UserController {
 
             semuaUser.toJSON().map((d) => {
               createData.push({
-                tanggal_dibagikan,
-                tanggal_cron: ``,
-                pesan,
                 tujuan: d.wa_real,
                 nama: `broadcast-${broadcast.id}-${d.id}`,
-                created_at,
+                ...payload,
               });
             });
           }
