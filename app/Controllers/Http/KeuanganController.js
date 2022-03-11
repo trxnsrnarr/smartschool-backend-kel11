@@ -962,6 +962,11 @@ class KeuanganController {
           builder.whereIn("m_rencana_transaksi_id", transaksiIds);
         }
       })
+      .with("rekRencana", (builder) => {
+        builder
+          .where({ dihapus: 0 })
+          .where({ m_rencana_keuangan_id: perencanaan_id });
+      })
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .fetch();
@@ -1073,6 +1078,11 @@ class KeuanganController {
         if (transaksiIds) {
           builder.whereIn("m_rencana_transaksi_id", transaksiIds);
         }
+      })
+      .with("rekRencana", (builder) => {
+        builder
+          .where({ dihapus: 0 })
+          .where({ m_rencana_keuangan_id: perencanaan_id });
       })
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
