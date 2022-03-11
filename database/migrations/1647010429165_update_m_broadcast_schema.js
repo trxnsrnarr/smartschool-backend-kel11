@@ -5,14 +5,14 @@ const Schema = use("Schema");
 
 class UpdateMBroadcastSchema extends Schema {
   up() {
-    this.table("update_m_broadcasts", (table) => {
+    this.table("m_broadcast", (table) => {
       // alter table
       table.text("lampiran");
     });
   }
 
   down() {
-    this.table("update_m_broadcasts", (table) => {
+    this.table("m_broadcast", (table) => {
       // reverse alternations
     });
   }
