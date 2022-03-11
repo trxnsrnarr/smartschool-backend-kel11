@@ -11054,7 +11054,7 @@ class MainController {
         .where({ id: timeline_id })
         .update({
           lampiran: lampiran.toString(),
-          keterangan: keterangan,
+          keterangan: ("" +keterangan),
           waktu_pengumpulan: waktu_pengumpulan,
           dikumpulkan: dikumpulkan,
         });
