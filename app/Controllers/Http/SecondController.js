@@ -1116,6 +1116,10 @@ class SecondController {
     const check = await MRekSekolah.query()
       .where({ m_keu_akun_id: akun.id })
       .first();
+      const checkDihapus = await MRekSekolah.query()
+    .where({ m_keu_akun_id: akun.id })
+    .andWhere({dihapus:0})
+    .first();
     if (rek) {
       if (check) {
         await MRekSekolah.query().where({ id: check.id }).update({
@@ -1164,15 +1168,17 @@ class SecondController {
             tipe: "Realisasi",
           });
         }
-        await MHistoriAktivitas.create({
-          jenis: "Ubah Akun",
-          m_user_id: user.id,
-          awal: `Terhubung dengan Akun Rekening? : Tidak menjadi `,
-          akhir: `"Ya"`,
-          bawah: `${akun.nama}`,
-          m_sekolah_id: sekolah.id,
-          tipe: "Realisasi",
-        });
+        if (!checkDihapus) {
+          await MHistoriAktivitas.create({
+            jenis: "Ubah Akun",
+            m_user_id: user.id,
+            awal: `Terhubung dengan Akun Rekening? : Tidak menjadi `,
+            akhir: `"Ya"`,
+            bawah: `${akun.nama}`,
+            m_sekolah_id: sekolah.id,
+            tipe: "Realisasi",
+          });
+        }
       } else {
         await MRekSekolah.create({
           bank,
@@ -10702,7 +10708,7 @@ class SecondController {
     if (validation.fails()) {
       return response.unprocessableEntity(validation.messages());
     }
-    
+
     const barangSebelum = await MBarang.query()
       .where({ id: barang_id })
       .first();
