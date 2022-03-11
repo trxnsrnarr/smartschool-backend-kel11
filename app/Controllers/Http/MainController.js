@@ -19061,6 +19061,7 @@ class MainController {
 
     const query = MRekSekolah.query()
       .where({ dihapus: 0 })
+      .whereNull("m_rencana_keuangan_id")
       .andWhere({ m_sekolah_id: sekolah.id });
 
     if (search) {

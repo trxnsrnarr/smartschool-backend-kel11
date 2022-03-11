@@ -197,6 +197,7 @@ class KeuanganController {
       //       .whereIn("m_rencana_transaksi_id", transaksiIds);
       //   });
       // })
+      .where({ m_rencana_keuangan_id: perencanaan_id })
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .fetch();
