@@ -197,6 +197,7 @@ class KeuanganController {
       //       .whereIn("m_rencana_transaksi_id", transaksiIds);
       //   });
       // })
+      .where({ m_rencana_keuangan_id: perencanaan_id })
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .fetch();
@@ -217,7 +218,9 @@ class KeuanganController {
       })
       .first();
     const akun = await MKeuAkun.query()
-      .with("rek")
+      .with("rek", (builder) => {
+        builder.where({ m_rencana_keuangan_id: perencanaan_id });
+      })
       .with("rencanaJurnal", (builder) => {
         builder.whereIn("id", jurnalIds);
       })
@@ -336,6 +339,21 @@ class KeuanganController {
       dihapus: 0,
       m_sekolah_id: sekolah.id,
     });
+
+    const akunRekenings = await MRekSekolah.query()
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
+    const akunRencana = akunRekenings.toJSON().map((d) => {
+      delete d.id;
+      return {
+        ...d,
+        m_rencana_keuangan_id: perencanaan.id,
+      };
+    });
+
+    await MRekSekolah.createMany(akunRencana);
 
     await MHistoriAktivitas.create({
       jenis: "Buat Perencanaan",
@@ -944,6 +962,11 @@ class KeuanganController {
           builder.whereIn("m_rencana_transaksi_id", transaksiIds);
         }
       })
+      .with("rekRencana", (builder) => {
+        builder
+          .where({ dihapus: 0 })
+          .where({ m_rencana_keuangan_id: perencanaan_id });
+      })
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .fetch();
@@ -1055,6 +1078,11 @@ class KeuanganController {
         if (transaksiIds) {
           builder.whereIn("m_rencana_transaksi_id", transaksiIds);
         }
+      })
+      .with("rekRencana", (builder) => {
+        builder
+          .where({ dihapus: 0 })
+          .where({ m_rencana_keuangan_id: perencanaan_id });
       })
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })

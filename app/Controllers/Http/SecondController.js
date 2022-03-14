@@ -200,6 +200,7 @@ const db = firestore.db();
 const bucket = firestore.bucket();
 const FieldValue = firestore.FieldValue();
 var striptags = require("striptags");
+const { otomatisAkun } = require("../../Services/KeuanganServices");
 // reference to
 const jadwalUjianReference = db.collection("jadwal-ujian");
 
@@ -876,8 +877,17 @@ class SecondController {
     }
 
     const keuangan = await query.first();
+    if (!keuangan) {
+      await otomatisAkun(sekolah);
+    }
     const akun = await MKeuAkun.query()
-      .with("rek")
+      .with("rek", (builder) => {
+        builder
+          .where({
+            m_sekolah_id: sekolah.id,
+          })
+          .whereNull("m_rencana_keuangan_id");
+      })
       .with("jurnal", (builder) => {
         builder
           .select("id", "m_keu_transaksi_id", "m_keu_akun_id")
@@ -891,6 +901,7 @@ class SecondController {
       .fetch();
     const rekening = await MRekSekolah.query()
       .where({ dihapus: 0 })
+      .whereNull("m_rencana_keuangan_id")
       .andWhere({ m_sekolah_id: sekolah.id })
       .fetch();
 
@@ -939,7 +950,9 @@ class SecondController {
 
     const keuangan = await query.first();
     const akun = await MKeuAkun.query()
-      .with("rek")
+      .with("rek", (builder) => {
+        builder.where({ m_rencana_keuangan_id: perencanaan_id });
+      })
       .with("rencanaJurnal", (builder) => {
         builder.whereIn("id", jurnalIds);
       })
@@ -949,6 +962,7 @@ class SecondController {
     const rekening = await MRekSekolah.query()
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
+      .where({ m_rencana_keuangan_id: perencanaan_id })
       .fetch();
 
     return response.ok({
@@ -1046,6 +1060,27 @@ class SecondController {
         m_sekolah_id: sekolah.id,
         m_keu_akun_id: akun.id,
       });
+
+      const rencanaIds = await MRencanaKeuangan.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ dihapus: 0 })
+        .pluck("id");
+
+      const rekRencana = rencanaIds.map((d) => {
+        return {
+          bank,
+          norek,
+          nama,
+          saldo: 0,
+          jenis: nama,
+          dihapus: 0,
+          m_sekolah_id: sekolah.id,
+          m_keu_akun_id: akun.id,
+          m_rencana_keuangan_id: d,
+        };
+      });
+
+      await MRekSekolah.createMany(rekRencana);
     }
     if (struktur) {
       await MKeuTemplateAkun.query()
@@ -1095,7 +1130,16 @@ class SecondController {
 
     const user = await auth.getUser();
 
-    let { nama, kode, bank, norek, saldo, rek, struktur } = request.post();
+    let {
+      nama,
+      kode,
+      bank,
+      norek,
+      saldo,
+      rek,
+      struktur,
+      m_rencana_keuangan_id,
+    } = request.post();
 
     const rules = {
       nama: "required",
@@ -1113,23 +1157,69 @@ class SecondController {
     const akun = await MKeuAkun.query().where({ id: keu_akun_id }).first();
     let update;
 
-    const check = await MRekSekolah.query()
+    let check = MRekSekolah.query().where({ m_keu_akun_id: akun.id });
+    let checkDihapus = MRekSekolah.query()
       .where({ m_keu_akun_id: akun.id })
-      .first();
-    const checkDihapus = await MRekSekolah.query()
-      .where({ m_keu_akun_id: akun.id })
-      .andWhere({ dihapus: 0 })
-      .first();
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 });
+
+    if (m_rencana_keuangan_id) {
+      check.where({ m_rencana_keuangan_id });
+      checkDihapus.where({ m_rencana_keuangan_id });
+    }
+
+    check = await check.first();
+    checkDihapus = await checkDihapus.first();
+
     if (rek) {
       if (check) {
         await MRekSekolah.query().where({ id: check.id }).update({
           bank,
           norek,
           saldo,
+          m_sekolah_id: sekolah.id,
           jenis: nama,
           dihapus: 0,
           m_keu_akun_id: akun.id,
         });
+
+        if (!m_rencana_keuangan_id) {
+          const rencanas = await MRencanaKeuangan.query()
+            .where({ m_sekolah_id: sekolah.id })
+            .where({ dihapus: 0 })
+            .fetch();
+          await Promise.all(
+            rencanas.toJSON().map(async (d) => {
+              const check = await MRekSekolah.query()
+                .where({ m_rencana_keuangan_id: d.id })
+                .where({ m_keu_akun_id: akun.id })
+                .first();
+              if (check) {
+                await MRekSekolah.query().where({ id: check.id }).update({
+                  bank,
+                  norek,
+                  jenis: nama,
+                  dihapus: 0,
+                  m_sekolah_id: sekolah.id,
+                  m_keu_akun_id: akun.id,
+                  m_rencana_keuangan_id: d.id,
+                });
+              } else {
+                await MRekSekolah.create({
+                  bank,
+                  norek,
+                  saldo: 0,
+                  jenis: nama,
+                  dihapus: 0,
+                  m_keu_akun_id: akun.id,
+                  m_sekolah_id: sekolah.id,
+                  m_rencana_keuangan_id: d.id,
+                });
+              }
+            })
+          );
+        }
+
         if (bank != check.bank) {
           await MHistoriAktivitas.create({
             jenis: "Ubah Akun",
@@ -1202,7 +1292,7 @@ class SecondController {
       }
     } else if (!rek) {
       if (check) {
-        await MRekSekolah.query().where({ id: check.id }).update({
+        await MRekSekolah.query().where({ m_keu_akun_id: akun.id }).update({
           dihapus: 1,
         });
       }
@@ -5691,6 +5781,14 @@ class SecondController {
           builder.whereIn("m_rencana_transaksi_id", rencanaTransaksiIds);
         }
       })
+      .with("rek", (builder) => {
+        builder.where({ dihapus: 0 }).whereNull("m_rencana_keuangan_id");
+      })
+      .with("rekRencana", (builder) => {
+        builder
+          .where({ dihapus: 0 })
+          .where({ m_rencana_keuangan_id: rencana.id });
+      })
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .fetch();
@@ -6119,6 +6217,14 @@ class SecondController {
         if (rencanaTransaksiIds) {
           builder.whereIn("m_rencana_transaksi_id", rencanaTransaksiIds);
         }
+      })
+      .with("rek", (builder) => {
+        builder.where({ dihapus: 0 }).whereNull("m_rencana_keuangan_id");
+      })
+      .with("rekRencana", (builder) => {
+        builder
+          .where({ dihapus: 0 })
+          .where({ m_rencana_keuangan_id: rencana.id });
       })
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
@@ -9561,6 +9667,7 @@ class SecondController {
         m_sekolah_id: sekolah.id,
         template: JSON.stringify(template),
       });
+      await otomatisAkun(sekolah);
 
       return response.ok({
         message: messagePostSuccess,

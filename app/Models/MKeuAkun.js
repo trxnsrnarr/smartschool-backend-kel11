@@ -11,6 +11,22 @@ class MKeuAkun extends Model {
   rek() {
     return this.hasOne("App/Models/MRekSekolah");
   }
+  rek1() {
+    return this.hasOne("App/Models/MRekSekolah");
+  }
+  rek2() {
+    return this.hasOne("App/Models/MRekSekolah");
+  }
+  
+  rekRencana() {
+    return this.hasOne("App/Models/MRekSekolah");
+  }
+  rekRencana1() {
+    return this.hasOne("App/Models/MRekSekolah");
+  }
+  rekRencana2() {
+    return this.hasOne("App/Models/MRekSekolah");
+  }
 
   jurnal() {
     return this.hasMany("App/Models/MKeuJurnal");
