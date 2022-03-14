@@ -1931,11 +1931,18 @@ class MainController {
     }
     tanggal_lahir == "Invalid date" ? delete userPayload.tanggal_lahir : null;
 
-    const checkwhatsapp = await User.query()
-      .where({whatsapp: whatsapp})
-      .first();
-    if (checkwhatsapp) {
-      return response.forbidden({ message: "Nomor whatsapp sudah terdaftar"})
+    if (whatsapp) {
+      const checkwhatsapp = await User.query()
+        .where({ whatsapp: whatsapp })
+        .where({ dihapus: 0 })
+        .where({ m_sekolah_id: sekolah.id })
+        .first();
+
+      if (checkwhatsapp) {
+        return response.forbidden({
+          message: "Nomor whatsapp sudah terdaftar",
+        });
+      }
     }
 
     await User.query().where({ id: user.id }).update(userPayload);
@@ -11061,7 +11068,7 @@ class MainController {
         .where({ id: timeline_id })
         .update({
           lampiran: lampiran.toString(),
-          keterangan: ("" +keterangan),
+          keterangan: "" + keterangan,
           waktu_pengumpulan: waktu_pengumpulan,
           dikumpulkan: dikumpulkan,
         });
@@ -38161,9 +38168,9 @@ class MainController {
     }
 
     const ta = await Mta.query()
-    .with("sekolah",(builder)=>{
-      builder.select("id","nama")
-    })
+      .with("sekolah", (builder) => {
+        builder.select("id", "nama");
+      })
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .andWhere({ aktif: 1 })
@@ -38172,7 +38179,6 @@ class MainController {
     if (!ta) {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
-
 
     const user = await auth.getUser();
 
@@ -38188,7 +38194,7 @@ class MainController {
 
     return response.ok({
       disposisi,
-      ta
+      ta,
     });
   }
 
