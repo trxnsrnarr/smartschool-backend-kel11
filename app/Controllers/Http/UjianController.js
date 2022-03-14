@@ -197,50 +197,50 @@ class UjianController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { m_ujian_id, tipe_soal, search, kesukaran_id } = request.get();
+    const { m_ujian_id, tipe_soal, search, kesukaran } = request.get();
     const materi = await MMateri.query().where({ id: materi_id }).first();
-    // const check = await MTemplateKesukaranMapel.query()
-    //   .where({ m_materi_id: materi_id })
-    //   .andWhere({ dihapus: 0 })
-    //   .first();
+    const check = await MTemplateKesukaranMapel.query()
+      .where({ m_materi_id: materi_id })
+      .andWhere({ dihapus: 0 })
+      .first();
 
-    //   if(!check){
-    //     await MTemplateKesukaranMapel.create({
-    //       judul:`Sangat Mudah`,
-    //       batas_bawah:`0.9`,
-    //       batas_atas:`1`,
-    //       dihapus:0,
-    //       m_materi_id:materi_id
-    //     })
-    //     await MTemplateKesukaranMapel.create({
-    //       judul:`Mudah`,
-    //       batas_bawah:`0.7`,
-    //       batas_atas:`0.89`,
-    //       dihapus:0,
-    //       m_materi_id:materi_id
-    //     })
-    //     await MTemplateKesukaranMapel.create({
-    //       judul:`Sedang`,
-    //       batas_bawah:`0.5`,
-    //       batas_atas:`0.69`,
-    //       dihapus:0,
-    //       m_materi_id:materi_id
-    //     })
-    //     await MTemplateKesukaranMapel.create({
-    //       judul:`Sukar`,
-    //       batas_bawah:`0.3`,
-    //       batas_atas:`0.49`,
-    //       dihapus:0,
-    //       m_materi_id:materi_id
-    //     })
-    //     await MTemplateKesukaranMapel.create({
-    //       judul:`Sangat Sukar`,
-    //       batas_bawah:`0`,
-    //       batas_atas:`0.29`,
-    //       dihapus:0,
-    //       m_materi_id:materi_id
-    //     })
-    //   }
+    if (!check) {
+      await MTemplateKesukaranMapel.create({
+        judul: `Sangat Mudah`,
+        batas_bawah: `0.9`,
+        batas_atas: `1`,
+        dihapus: 0,
+        m_materi_id: materi_id,
+      });
+      await MTemplateKesukaranMapel.create({
+        judul: `Mudah`,
+        batas_bawah: `0.7`,
+        batas_atas: `0.89`,
+        dihapus: 0,
+        m_materi_id: materi_id,
+      });
+      await MTemplateKesukaranMapel.create({
+        judul: `Sedang`,
+        batas_bawah: `0.5`,
+        batas_atas: `0.69`,
+        dihapus: 0,
+        m_materi_id: materi_id,
+      });
+      await MTemplateKesukaranMapel.create({
+        judul: `Sukar`,
+        batas_bawah: `0.3`,
+        batas_atas: `0.49`,
+        dihapus: 0,
+        m_materi_id: materi_id,
+      });
+      await MTemplateKesukaranMapel.create({
+        judul: `Sangat Sukar`,
+        batas_bawah: `0`,
+        batas_atas: `0.29`,
+        dihapus: 0,
+        m_materi_id: materi_id,
+      });
+    }
 
     let ujianIds;
     ujianIds = MUjian.query()
@@ -275,7 +275,7 @@ class UjianController {
       .andWhere({ dihapus: 0 })
       .fetch();
 
-      // return soalUjianIds;
+    // return soalUjianIds;
 
     let jumlahSoalPg = 0;
     let jumlahSoalEsai = 0;
@@ -283,10 +283,10 @@ class UjianController {
     let jumlahSoalUraian = 0;
     let jumlahSoalMenjodohkan = 0;
 
-    // const template = await MTemplateKesukaranMapel.query()
-    //   .where({ m_materi_id: materi_id })
-    //   .andWhere({ dihapus: 0 })
-    //   .fetch();
+    const template = await MTemplateKesukaranMapel.query()
+      .where({ m_materi_id: materi_id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
 
     let dataSoal = [];
 
@@ -319,36 +319,41 @@ class UjianController {
           bentuk_soal = "menjodohkan";
         }
         let hitung;
-        if(d.soal.__meta__.totalSiswa){
-          hitung = d.soal.__meta__.totalBenarSiswa 
-          // await Promise.all(
-            //   template.toJSON().map(async (e) => {
-        //     if (
-        //       data >= e.batas_bawah &&
-        //       data <= e.batas_atas
-        //     ) {
-        //       return e.judul;
-        //     }
-        //     let rata;
-        //     rata = 0;
-        //   })
-        // );
-      }else{
-        hitung = `-`
-      }
+        if (d.soal.__meta__.totalSiswa) {
+          hitung = d.soal.__meta__.totalBenarSiswa/d.soal.__meta__.totalSiswa;
+          await Promise.all(
+            template.toJSON().map(async (e) => {
+              if (hitung >= e.batas_bawah && hitung <= e.batas_atas) {
+                // hitung = e.judul;
+              }
+            })
+          );
+        } else {
+          hitung = `-`;
+        }
         return dataSoal.push({
           id: d.soal.id,
           nama_bank: d.ujian.nama,
           soal: d.soal.pertanyaan,
           bentuk: bentuk,
           bentuk_soal: bentuk_soal,
-          kesukaran:hitung
+          kesukaran: hitung,
         });
       })
     );
     if (tipe_soal) {
       dataSoal.toJSON().filter((d) => {
         if (d.bentuk_soal == tipe_soal) {
+          return true;
+        } else {
+          return false;
+        }
+      });
+    }
+
+    if (kesukaran) {
+      dataSoal.toJSON().filter((d) => {
+        if (d.kesukaran == kesukaran) {
           return true;
         } else {
           return false;
@@ -376,7 +381,7 @@ class UjianController {
       jumlahSoalUraian,
       jumlahSoalMenjodohkan,
       jumlahBankSoal,
-      // template,
+      template,
     });
   }
 
@@ -431,6 +436,11 @@ class UjianController {
       .andWhere({ dihapus: 0 })
       .fetch();
 
+      const template = await MTemplateKesukaranMapel.query()
+      .where({ m_materi_id: materi_id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
     let jumlahSoalPg = 0;
     let jumlahSoalEsai = 0;
     let jumlahSoalPgKompleks = 0;
@@ -472,18 +482,26 @@ class UjianController {
           bentuk = "Menjodohkan";
           bentuk_soal = "menjodohkan";
         }
-        // await Promise.all(
-        //   template.toJSON().map(async (e) => {
-        //     let rata;
-        //     rata = 0;
-        //   })
-        // );
+        let hitung;
+        if (d.soal.__meta__.totalSiswa) {
+          hitung = d.soal.__meta__.totalBenarSiswa/d.soal.__meta__.totalSiswa;
+          await Promise.all(
+            template.toJSON().map(async (e) => {
+              if (hitung >= e.batas_bawah && hitung <= e.batas_atas) {
+                // hitung = e.judul;
+              }
+            })
+          );
+        } else {
+          hitung = `-`;
+        }
         return dataSoal.push({
           id: d.soal.id,
           nama_bank: d.ujian.nama,
           soal: d.soal.pertanyaan,
           bentuk: bentuk,
           bentuk_soal: bentuk_soal,
+          kesukaran:hitung
         });
       })
     );
@@ -666,7 +684,7 @@ class UjianController {
           soal: d ? d.soal : "-",
           bank_soal: d ? d.nama_bank : "-",
           tipe_soal: d ? d.bentuk : "-",
-          kesukaran: d ? d.kesukaran : "-",
+          kesukaran: d ? d.hitung : "-",
         });
       })
     );
