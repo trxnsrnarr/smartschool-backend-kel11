@@ -1933,6 +1933,7 @@ class MainController {
 
     if (whatsapp) {
       const checkwhatsapp = await User.query()
+        .where("id", "!=", user.id)
         .where({ whatsapp: whatsapp })
         .where({ dihapus: 0 })
         .where({ m_sekolah_id: sekolah.id })
