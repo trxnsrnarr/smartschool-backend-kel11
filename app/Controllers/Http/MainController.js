@@ -49735,7 +49735,7 @@ class MainController {
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
-    const rekening = await MRekSekolah.query().where({ dihapus: 0 }).fetch();
+    const rekening = await MRekSekolah.query().where({ dihapus: 0 }).andWhere({m_sekolah_id:sekolah.id}).fetch();
 
     let workbook = new Excel.Workbook();
     let worksheet = workbook.addWorksheet(`Daftar Rekening`);
