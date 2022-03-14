@@ -1116,10 +1116,10 @@ class SecondController {
     const check = await MRekSekolah.query()
       .where({ m_keu_akun_id: akun.id })
       .first();
-      const checkDihapus = await MRekSekolah.query()
-    .where({ m_keu_akun_id: akun.id })
-    .andWhere({dihapus:0})
-    .first();
+    const checkDihapus = await MRekSekolah.query()
+      .where({ m_keu_akun_id: akun.id })
+      .andWhere({ dihapus: 0 })
+      .first();
     if (rek) {
       if (check) {
         await MRekSekolah.query().where({ id: check.id }).update({
@@ -2208,7 +2208,8 @@ class SecondController {
     const awal1 = moment(tanggal_awal).locale("id").format("DD MMMM YYYY ");
     const akhir1 = moment(tanggal_akhir).locale("id").format("DD MMMM YYYY ");
 
-    const transaksi = await MKeuTransaksi.query()
+    let transaksi;
+    transaksi =  MKeuTransaksi.query()
       .with("jurnal", (builder) => {
         builder.with("akun").where({ dihapus: 0 });
       })
@@ -2216,9 +2217,14 @@ class SecondController {
         builder.where({ dihapus: 0 });
       })
       .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .whereBetween("tanggal", [`${tanggal_awal}`, `${tanggal_akhir}`])
-      .fetch();
+      .andWhere({ m_sekolah_id: sekolah.id });
+    if (tanggal_awal) {
+      transaksi.whereBetween("tanggal", [
+        `${tanggal_awal}`,
+        `${tanggal_akhir}`,
+      ]);
+    }
+    transaksi = await transaksi.fetch();
 
     // return transaksi;
 
@@ -2571,8 +2577,9 @@ class SecondController {
     const dateObj = new Date();
     const bulan = monthNames[dateObj.getMonth()];
     if (rencana_id) {
-      await Promise.all(
+      const coba = await Promise.all(
         data.map(async (d, idx) => {
+          // return `-300000`.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
           // add column headers
           worksheet.getRow(4).values = [
             "NO AKUN",
@@ -2599,18 +2606,20 @@ class SecondController {
             { key: "rpRealisasi1" },
           ];
 
+          const rencanaData = d
+            ? d.total_rencana
+            : "0".replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
+          const realisasiData = d
+            ? d.total
+            : "0".replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
           // Add row using key mapping to columns
           if (d.level == 1) {
             let row = worksheet.addRow({
               nama: `${d ? d.nama : "-"}`,
-              rpRencana1: `${d ? d.total_rencana : ""}`.replace(
-                /\B(?=(\d{3})+(?!\d))/g,
-                "."
-              ),
-              rpRealisasi1: `${d ? d.total : ""}`.replace(
-                /\B(?=(\d{3})+(?!\d))/g,
-                "."
-              ),
+              rpRencana1: rencanaData,
+              rpRealisasi1: realisasiData,
             });
             worksheet.getCell(`B${(idx + 1) * 1 + 5}`).font = {
               bold: true,
@@ -2772,14 +2781,8 @@ class SecondController {
           } else if (d.level == 2) {
             let row = worksheet.addRow({
               nama: d ? d.nama : "-",
-              rpRencana1: `${d ? d.total_rencana : ""}`.replace(
-                /\B(?=(\d{3})+(?!\d))/g,
-                "."
-              ),
-              rpRealisasi1: `${d ? d.total : ""}`.replace(
-                /\B(?=(\d{3})+(?!\d))/g,
-                "."
-              ),
+              rpRencana1: rencanaData,
+              rpRealisasi1: realisasiData,
             });
             worksheet.getCell(`B${(idx + 1) * 1 + 5}`).font = {
               bold: true,
@@ -2800,14 +2803,8 @@ class SecondController {
             let row = worksheet.addRow({
               no: d ? d.kode : "",
               nama: d ? d.nama : "-",
-              rpRencana: `${d ? d.total_rencana : ""}`.replace(
-                /\B(?=(\d{3})+(?!\d))/g,
-                "."
-              ),
-              rpRealisasi: `${d ? d.total : ""}`.replace(
-                /\B(?=(\d{3})+(?!\d))/g,
-                "."
-              ),
+              rpRencana: rencanaData,
+              rpRealisasi: realisasiData,
             });
           }
           worksheet.addConditionalFormatting({
@@ -2866,6 +2863,7 @@ class SecondController {
           });
         })
       );
+      // return coba;
     } else {
       await Promise.all(
         data.map(async (d, idx) => {
@@ -2882,7 +2880,7 @@ class SecondController {
           if (d.level == 1) {
             let row = worksheet.addRow({
               nama: `${d ? d.nama : "-"}`,
-              rp1: `${d ? d.total : ""}`.replace(/\B(?=(\d{3})+(?!\d))/g, "."),
+              rp1: realisasiData,
             });
             worksheet.getCell(`B${(idx + 1) * 1 + 4}`).font = {
               bold: true,
@@ -3044,7 +3042,7 @@ class SecondController {
           } else if (d.level == 2) {
             let row = worksheet.addRow({
               nama: d ? d.nama : "-",
-              rp1: `${d ? d.total : ""}`.replace(/\B(?=(\d{3})+(?!\d))/g, "."),
+              rp1: realisasiData,
             });
             worksheet.getCell(`B${(idx + 1) * 1 + 4}`).font = {
               bold: true,
@@ -3065,7 +3063,7 @@ class SecondController {
             let row = worksheet.addRow({
               no: d ? d.kode : "",
               nama: d ? d.nama : "-",
-              rp: `${d ? d.total : ""}`.replace(/\B(?=(\d{3})+(?!\d))/g, "."),
+              rp: realisasiData,
             });
           }
           worksheet.addConditionalFormatting({
@@ -3196,7 +3194,7 @@ class SecondController {
         .where({ id: rencana_id })
         .first();
 
-      worksheet.getCell("A2").value = `NERACA - RENCANA ${rencana.id}`;
+      worksheet.getCell("A2").value = `NERACA - RENCANA ${rencana.nama}`;
     } else {
       worksheet.addConditionalFormatting({
         ref: "B4",
@@ -4518,14 +4516,14 @@ class SecondController {
           if (d.level == 1) {
             let row = worksheet.addRow({
               nama: d ? d.nama : "-",
-              rpRencana1: `${d ? d.total_rencana : ""}`.replace(
-                /\B(?=(\d{3})+(?!\d))/g,
-                "."
-              ),
-              rpRealisasi1: `${d ? d.total : ""}`.replace(
-                /\B(?=(\d{3})+(?!\d))/g,
-                "."
-              ),
+              rpRencana1: `${
+                d.total_rencana
+                  ? d.total_rencana.replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+                  : ""
+              }`,
+              rpRealisasi1: `${
+                d.total ? d.total.replace(/\B(?=(\d{3})+(?!\d))/g, ".") : ""
+              }`.replace(/\B(?=(\d{3})+(?!\d))/g, "."),
             });
             worksheet.getCell(`B${(idx + 1) * 1 + 5}`).font = {
               bold: true,
@@ -4546,14 +4544,14 @@ class SecondController {
             let row = worksheet.addRow({
               no: d ? d.kode : "",
               nama: d ? d.nama : "-",
-              rpRencana: `${d ? d.total_rencana : ""}`.replace(
-                /\B(?=(\d{3})+(?!\d))/g,
-                "."
-              ),
-              rpRealisasi: `${d ? d.total : ""}`.replace(
-                /\B(?=(\d{3})+(?!\d))/g,
-                "."
-              ),
+              rpRencana: `${
+                d.total_rencana
+                  ? d.total_rencana.replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+                  : ""
+              }`,
+              rpRealisasi: `${
+                d.total ? d.total.replace(/\B(?=(\d{3})+(?!\d))/g, ".") : ""
+              }`,
             });
           }
           worksheet.addConditionalFormatting({
@@ -4628,7 +4626,9 @@ class SecondController {
           if (d.level == 1) {
             let row = worksheet.addRow({
               nama: d ? d.nama : "-",
-              rp1: `${d ? d.total : ""}`.replace(/\B(?=(\d{3})+(?!\d))/g, "."),
+              rp1: `${
+                d.total ? d.total.replace(/\B(?=(\d{3})+(?!\d))/g, ".") : ""
+              }`,
             });
             worksheet.getCell(`B${(idx + 1) * 1 + 4}`).font = {
               bold: true,
@@ -4649,7 +4649,9 @@ class SecondController {
             let row = worksheet.addRow({
               no: d ? d.kode : "",
               nama: d ? d.nama : "-",
-              rp: `${d ? d.total : ""}`.replace(/\B(?=(\d{3})+(?!\d))/g, "."),
+              rp: `${
+                d.total ? d.total.replace(/\B(?=(\d{3})+(?!\d))/g, ".") : ""
+              }`,
             });
           }
           worksheet.addConditionalFormatting({
@@ -9142,7 +9144,7 @@ class SecondController {
         saldo_normal: "Kredit",
       });
       data[28] = await MKeuAkun.create({
-        nama: "UTANG BANK",
+        nama: "UTANG OBLIGASI",
         kode: 22100,
         dihapus: 0,
         m_sekolah_id: sekolah.id,
@@ -9156,7 +9158,7 @@ class SecondController {
         saldo_normal: "Kredit",
       });
       data[30] = await MKeuAkun.create({
-        nama: "MODAL SAHAM",
+        nama: "MODAL",
         kode: 31000,
         dihapus: 0,
         m_sekolah_id: sekolah.id,
