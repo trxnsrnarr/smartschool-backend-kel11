@@ -64,6 +64,12 @@ class MSoalUjian extends Model {
   getAspekLevel({ level_kognitif }) {
     return level_kognitif ? level_kognitif.toUpperCase() : "";
   }
+  jawabanSiswa() {
+    return this.belongsTo("App/Models/TkJawabanUjianSiswa", 'id', "m_soal_ujian_id");
+  }
+  jawabanSemuaSiswa(){
+    return this.hasMany("App/Models/TkJawabanUjianSiswa", 'id', "m_soal_ujian_id");
+  }
 }
 
 module.exports = MSoalUjian;
