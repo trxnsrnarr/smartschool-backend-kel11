@@ -13781,7 +13781,7 @@ class MainController {
 
       const jadwalIds = [...jadwaRombellIds, ...jadwalSoalIds];
 
-      const jadwalLainnya = await MJadwalUjian.query()
+      let jadwalLainnya = MJadwalUjian.query()
         .with("ujian", (builder) => {
           if (search) {
             builder.where("nama", "like", `%${search}%`);
@@ -13797,9 +13797,19 @@ class MainController {
             .ids()
         )
         .whereIn("id", jadwalIds)
-        .andWhere({ dihapus: 0 })
-        .andWhere("waktu_dibuka", "<=", hari_ini)
-        .andWhere("waktu_ditutup", ">=", hari_ini)
+        .andWhere({ dihapus: 0 });
+
+      if ((status = "berlangsung")) {
+        jadwalLainnya
+          .andWhere("waktu_dibuka", "<=", hari_ini)
+          .andWhere("waktu_ditutup", ">=", hari_ini);
+      } else if ((status = "akan-datang")) {
+        jadwalLainnya.andWhere("waktu_dibuka", ">", hari_ini);
+      } else {
+        jadwalLainnya.andWhere("waktu_ditutup", "<=", hari_ini);
+      }
+
+      jadwalLainnya = await jadwalLainnya
         .orderBy("waktu_dibuka", "desc")
         .fetch();
 
