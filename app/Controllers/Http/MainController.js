@@ -14358,7 +14358,7 @@ class MainController {
 
     const pesertaUjianData = await User.query()
       .whereIn("id", anggotaRombel)
-      .fetch();
+      .pluck('id','nama');
 
     const workbook = new Excel.Workbook();
 
@@ -49362,8 +49362,8 @@ class MainController {
       .pluck("m_user_id");
 
     const pesertaUjianData = await User.query()
-      .whereIn("id", anggotaRombel)
-      .fetch();
+      .whereIn("id", anggotaRombel).where({})
+      .ids();
 
     await Promise.all(
       [0].map(async (_, idx) => {
@@ -49372,8 +49372,7 @@ class MainController {
         await Promise.all(
           pesertaUjianData
             .toJSON()
-            .sort((a, b) => ("" + a.nama).localeCompare(b.nama))
-            .map(async (d) => {
+            .map(async (dataSiswa) => {
               await Promise.all(
                 jadwalUjian
                   .toJSON()
@@ -49381,7 +49380,7 @@ class MainController {
                     ("" + a.user.nama).localeCompare(b.user.nama)
                   )
                   .map(async (e) => {
-                    if (d.id == e.m_user_id) {
+                    if (dataSiswa == e.m_user_id) {
                       const pesertaUjian = await TkPesertaUjian.query()
                         .with("jawabanSiswa", (builder) => {
                           builder.with("soal");
