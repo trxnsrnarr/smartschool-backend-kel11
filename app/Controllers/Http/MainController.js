@@ -49375,7 +49375,7 @@ class MainController {
 
     const pesertaUjianData = await User.query()
       .whereIn("id", anggotaRombel)
-      .where({})
+      .where({ dihapus: 0 })
       .ids();
 
     await Promise.all(
@@ -49383,7 +49383,7 @@ class MainController {
         // Create workbook & add worksheet
 
         await Promise.all(
-          pesertaUjianData.toJSON().map(async (dataSiswa) => {
+          pesertaUjianData.map(async (dataSiswa) => {
             await Promise.all(
               jadwalUjian
                 .toJSON()
