@@ -262,9 +262,7 @@ class UjianController {
     const soalUjianIds = await TkSoalUjian.query()
       .with("soal", (builder) => {
         builder
-          .withCount("jawabanSemuaSiswa as totalBenarSiswa", (builder) => {
-            builder.where("nilai_soal", ">", 0).whereNotNull("nilai_soal");
-          })
+          .with("jawabanSemuaSiswa")
           .withCount("jawabanSemuaSiswa as totalSiswa");
         if (search) {
           builder.where("nama", "like", `%${search}%`);
@@ -297,14 +295,39 @@ class UjianController {
         }
         let bentuk;
         let bentuk_soal;
+        let jumlahTotal = 0;
         if (d.soal.bentuk.toLowerCase().trim() == "pg") {
           jumlahSoalPg = jumlahSoalPg + 1;
           bentuk = "Pilihan Ganda";
           bentuk_soal = "pg";
+          await Promise.all(
+            d.soal.jawabanSemuaSiswa.map(async (c) => {
+              if (c.jawaban_pg == d.soal.kj_pg) {
+                jumlahTotal = jumlahTotal + 1;
+              }
+            })
+          );
         } else if (d.soal.bentuk.toLowerCase().trim() == "esai") {
           jumlahSoalEsai = jumlahSoalEsai + 1;
           bentuk = "Esai";
           bentuk_soal = "esai";
+          await Promise.all(
+            d.soal.jawabanSemuaSiswa.map(async (c) => {
+              if (JSON.parse(c.jawaban_rubrik_esai)) {
+                if (JSON.parse(c.jawaban_rubrik_esai).length) {
+                  JSON.parse(c.jawaban_rubrik_esai).map((e) => {
+                    if (e.benar) {
+                      jumlahTotal = jumlahTotal + 1;
+                    }
+                  });
+
+                  if (c.jawaban_rubrik_esai.indexOf("true") != -1) {
+                    jumlahTotal = jumlahTotal + 1;
+                  }
+                }
+              }
+            })
+          );
         } else if (d.soal.bentuk.toLowerCase().trim() == "pg_kompleks") {
           jumlahSoalPgKompleks = jumlahSoalPgKompleks + 1;
           bentuk = "Pilihan Ganda Kompleks";
@@ -320,11 +343,11 @@ class UjianController {
         }
         let hitung;
         if (d.soal.__meta__.totalSiswa) {
-          hitung = d.soal.__meta__.totalBenarSiswa/d.soal.__meta__.totalSiswa;
+          hitung = jumlahTotal / d.soal.__meta__.totalSiswa;
           await Promise.all(
             template.toJSON().map(async (e) => {
               if (hitung >= e.batas_bawah && hitung <= e.batas_atas) {
-                // hitung = e.judul;
+                hitung = e.judul;
               }
             })
           );
@@ -426,17 +449,15 @@ class UjianController {
     const soalUjianIds = await TkSoalUjian.query()
       .with("soal", (builder) => {
         builder
-          .withCount("jawabanSemuaSiswa as totalBenarSiswa", (builder) => {
-            builder.where("nilai_soal", ">", 0).whereNotNull("nilai_soal");
-          })
-          .withCount("jawabanSemuaSiswa as totalSiswa");
+          .withCount("jawabanSemuaSiswa as totalSiswa")
+          .with("jawabanSemuaSiswa");
       })
       .with("ujian")
       .whereIn("m_ujian_id", ujianIds)
       .andWhere({ dihapus: 0 })
       .fetch();
 
-      const template = await MTemplateKesukaranMapel.query()
+    const template = await MTemplateKesukaranMapel.query()
       .where({ m_materi_id: materi_id })
       .andWhere({ dihapus: 0 })
       .fetch();
@@ -461,14 +482,39 @@ class UjianController {
         }
         let bentuk;
         let bentuk_soal;
+        let jumlahTotal = 0;
         if (d.soal.bentuk.toLowerCase().trim() == "pg") {
           jumlahSoalPg = jumlahSoalPg + 1;
           bentuk = "Pilihan Ganda";
           bentuk_soal = "pg";
+          await Promise.all(
+            d.soal.jawabanSemuaSiswa.map(async (c) => {
+              if (c.jawaban_pg == d.soal.kj_pg) {
+                jumlahTotal = jumlahTotal + 1;
+              }
+            })
+          );
         } else if (d.soal.bentuk.toLowerCase().trim() == "esai") {
           jumlahSoalEsai = jumlahSoalEsai + 1;
           bentuk = "Esai";
           bentuk_soal = "esai";
+          await Promise.all(
+            d.soal.jawabanSemuaSiswa.map(async (c) => {
+              if (JSON.parse(c.jawaban_rubrik_esai)) {
+                if (JSON.parse(c.jawaban_rubrik_esai).length) {
+                  JSON.parse(c.jawaban_rubrik_esai).map((e) => {
+                    if (e.benar) {
+                      jumlahTotal = jumlahTotal + 1;
+                    }
+                  });
+
+                  if (c.jawaban_rubrik_esai.indexOf("true") != -1) {
+                    jumlahTotal = jumlahTotal + 1;
+                  }
+                }
+              }
+            })
+          );
         } else if (d.soal.bentuk.toLowerCase().trim() == "pg_kompleks") {
           jumlahSoalPgKompleks = jumlahSoalPgKompleks + 1;
           bentuk = "Pilihan Ganda Kompleks";
@@ -482,9 +528,10 @@ class UjianController {
           bentuk = "Menjodohkan";
           bentuk_soal = "menjodohkan";
         }
+
         let hitung;
         if (d.soal.__meta__.totalSiswa) {
-          hitung = d.soal.__meta__.totalBenarSiswa/d.soal.__meta__.totalSiswa;
+          hitung = jumlahTotal / d.soal.__meta__.totalSiswa;
           await Promise.all(
             template.toJSON().map(async (e) => {
               if (hitung >= e.batas_bawah && hitung <= e.batas_atas) {
@@ -501,7 +548,8 @@ class UjianController {
           soal: d.soal.pertanyaan,
           bentuk: bentuk,
           bentuk_soal: bentuk_soal,
-          kesukaran:hitung
+          kesukaran: d.soal.__meta__.totalSiswa,
+          data: d,
         });
       })
     );
