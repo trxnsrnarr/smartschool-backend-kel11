@@ -12682,7 +12682,7 @@ class MainController {
 
   async detailUjian({ response, request, auth, params: { ujian_id } }) {
     const user = await auth.getUser();
-    
+
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -12692,7 +12692,7 @@ class MainController {
     }
 
     if (user.role == "siswa") {
-      return response.forbidden({ message: messageForbidden })
+      return response.forbidden({ message: messageForbidden });
     }
 
     const ujian = await MUjian.query().where({ id: ujian_id }).first();
@@ -13803,17 +13803,9 @@ class MainController {
             .ids()
         )
         .whereIn("id", jadwalIds)
-        .andWhere({ dihapus: 0 });
-
-      if ((status = "berlangsung")) {
-        jadwalLainnya
-          .andWhere("waktu_dibuka", "<=", hari_ini)
-          .andWhere("waktu_ditutup", ">=", hari_ini);
-      } else if ((status = "akan-datang")) {
-        jadwalLainnya.andWhere("waktu_dibuka", ">", hari_ini);
-      } else {
-        jadwalLainnya.andWhere("waktu_ditutup", "<=", hari_ini);
-      }
+        .andWhere({ dihapus: 0 })
+        .andWhere("waktu_dibuka", "<=", hari_ini)
+        .andWhere("waktu_ditutup", ">=", hari_ini);
 
       jadwalLainnya = await jadwalLainnya
         .orderBy("waktu_dibuka", "desc")
@@ -14293,7 +14285,7 @@ class MainController {
     }
 
     if (user.role == "siswa") {
-      return response.forbidden({ message: messageForbidden })
+      return response.forbidden({ message: messageForbidden });
     }
 
     const { tk_jadwal_ujian_id } = request.get();
@@ -14378,7 +14370,7 @@ class MainController {
 
     const pesertaUjianData = await User.query()
       .whereIn("id", anggotaRombel)
-      .pluck('id','nama');
+      .pluck("id", "nama");
 
     const workbook = new Excel.Workbook();
 
@@ -49382,7 +49374,8 @@ class MainController {
       .pluck("m_user_id");
 
     const pesertaUjianData = await User.query()
-      .whereIn("id", anggotaRombel).where({dihapus:0})
+      .whereIn("id", anggotaRombel)
+      .where({ dihapus: 0 })
       .ids();
 
     await Promise.all(
@@ -49390,82 +49383,77 @@ class MainController {
         // Create workbook & add worksheet
 
         await Promise.all(
-          pesertaUjianData
-            .map(async (dataSiswa) => {
-              await Promise.all(
-                jadwalUjian
-                  .toJSON()
-                  .peserta.sort((a, b) =>
-                    ("" + a.user.nama).localeCompare(b.user.nama)
-                  )
-                  .map(async (e) => {
-                    if (dataSiswa == e.m_user_id) {
-                      const pesertaUjian = await TkPesertaUjian.query()
-                        .with("jawabanSiswa", (builder) => {
-                          builder.with("soal");
-                        })
-                        .with("user")
-                        .where({ id: e.id })
-                        .first();
+          pesertaUjianData.map(async (dataSiswa) => {
+            await Promise.all(
+              jadwalUjian
+                .toJSON()
+                .peserta.sort((a, b) =>
+                  ("" + a.user.nama).localeCompare(b.user.nama)
+                )
+                .map(async (e) => {
+                  if (dataSiswa == e.m_user_id) {
+                    const pesertaUjian = await TkPesertaUjian.query()
+                      .with("jawabanSiswa", (builder) => {
+                        builder.with("soal");
+                      })
+                      .with("user")
+                      .where({ id: e.id })
+                      .first();
 
-                      let metaHasil = {
-                        nilaiPg: 0,
-                        nilaiEsai: 0,
-                        nilaiTotal: 0,
-                        benar: 0,
-                      };
-                      let analisisBenar = {};
-                      let analisisTotal = {};
+                    let metaHasil = {
+                      nilaiPg: 0,
+                      nilaiEsai: 0,
+                      nilaiTotal: 0,
+                      benar: 0,
+                    };
+                    let analisisBenar = {};
+                    let analisisTotal = {};
 
-                      await Promise.all(
-                        pesertaUjian.toJSON().jawabanSiswa.map(async (d) => {
-                          if (d.soal.bentuk == "pg") {
-                            if (d.jawaban_pg == d.soal.kj_pg) {
-                              metaHasil.nilaiPg =
-                                metaHasil.nilaiPg + d.soal.nilai_soal;
-                              metaHasil.benar = metaHasil.benar + 1;
-                              analisisBenar[d.soal.kd] = analisisBenar[
-                                d.soal.kd
-                              ]
-                                ? analisisBenar[d.soal.kd] + 1
-                                : 1;
-                            }
-                            analisisTotal[d.soal.kd] = analisisTotal[d.soal.kd]
-                              ? analisisTotal[d.soal.kd] + 1
+                    await Promise.all(
+                      pesertaUjian.toJSON().jawabanSiswa.map(async (d) => {
+                        if (d.soal.bentuk == "pg") {
+                          if (d.jawaban_pg == d.soal.kj_pg) {
+                            metaHasil.nilaiPg =
+                              metaHasil.nilaiPg + d.soal.nilai_soal;
+                            metaHasil.benar = metaHasil.benar + 1;
+                            analisisBenar[d.soal.kd] = analisisBenar[d.soal.kd]
+                              ? analisisBenar[d.soal.kd] + 1
                               : 1;
-                          } else if (d.soal.bentuk == "esai") {
-                            if (JSON.parse(d.jawaban_rubrik_esai)) {
-                              if (JSON.parse(d.jawaban_rubrik_esai).length) {
-                                JSON.parse(d.jawaban_rubrik_esai).map((e) => {
-                                  if (e.benar) {
-                                    metaHasil.nilaiEsai =
-                                      metaHasil.nilaiEsai + e.poin;
-                                  }
-                                });
-
-                                if (
-                                  d.jawaban_rubrik_esai.indexOf("true") != -1
-                                ) {
-                                  metaHasil.benar = metaHasil.benar + 1;
+                          }
+                          analisisTotal[d.soal.kd] = analisisTotal[d.soal.kd]
+                            ? analisisTotal[d.soal.kd] + 1
+                            : 1;
+                        } else if (d.soal.bentuk == "esai") {
+                          if (JSON.parse(d.jawaban_rubrik_esai)) {
+                            if (JSON.parse(d.jawaban_rubrik_esai).length) {
+                              JSON.parse(d.jawaban_rubrik_esai).map((e) => {
+                                if (e.benar) {
+                                  metaHasil.nilaiEsai =
+                                    metaHasil.nilaiEsai + e.poin;
                                 }
+                              });
+
+                              if (d.jawaban_rubrik_esai.indexOf("true") != -1) {
+                                metaHasil.benar = metaHasil.benar + 1;
                               }
                             }
                           }
-                        })
-                      );
+                        }
+                      })
+                    );
 
-                      metaHasil.nilaiTotal =
-                        metaHasil.nilaiPg + metaHasil.nilaiEsai;
+                    metaHasil.nilaiTotal =
+                      metaHasil.nilaiPg + metaHasil.nilaiEsai;
 
-                      await TkPesertaUjian.query().where({ id: e.id }).update({
-                        nilai_pg: metaHasil.nilaiPg,
-                        nilai_esai: metaHasil.nilaiEsai,
-                        nilai: metaHasil.nilaiTotal,
-                      });
-                    }
-                  })
-              );
-            })
+                    await TkPesertaUjian.query().where({ id: e.id }).update({
+                      nilai_pg: metaHasil.nilaiPg,
+                      nilai_esai: metaHasil.nilaiEsai,
+                      nilai: metaHasil.nilaiTotal,
+                    });
+                  }
+                })
+            );
+          })
         );
       })
     );
@@ -49768,7 +49756,10 @@ class MainController {
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
-    const rekening = await MRekSekolah.query().where({ dihapus: 0 }).andWhere({m_sekolah_id:sekolah.id}).fetch();
+    const rekening = await MRekSekolah.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
 
     let workbook = new Excel.Workbook();
     let worksheet = workbook.addWorksheet(`Daftar Rekening`);
