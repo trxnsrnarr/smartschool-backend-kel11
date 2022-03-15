@@ -12681,12 +12681,18 @@ class MainController {
   }
 
   async detailUjian({ response, request, auth, params: { ujian_id } }) {
+    const user = await auth.getUser();
+    
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
 
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    if (user.role == "siswa") {
+      return response.forbidden({ message: messageForbidden })
     }
 
     const ujian = await MUjian.query().where({ id: ujian_id }).first();
@@ -14284,6 +14290,10 @@ class MainController {
 
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    if (user.role == "siswa") {
+      return response.forbidden({ message: messageForbidden })
     }
 
     const { tk_jadwal_ujian_id } = request.get();
