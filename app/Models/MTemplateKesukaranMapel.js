@@ -9,10 +9,10 @@ class MTemplateKesukaranMapel extends Model {
   }
 
   getBatasBawah(batas_bawah) {
-    return batas_bawah ? JSON.parseFloat(batas_bawah) : {};
+    return batas_bawah ? parseFloat(batas_bawah) : {};
   }
   getBatasAtas(batas_atas) {
-    return batas_atas ? JSON.parseFloat(batas_atas) : {};
+    return batas_atas ? parseFloat(batas_atas) : {};
   }
 }
 
