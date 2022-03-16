@@ -14369,8 +14369,9 @@ class MainController {
       .pluck("m_user_id");
 
     const pesertaUjianData = await User.query()
+      .select("id", "nama")
       .whereIn("id", anggotaRombel)
-      .pluck("id", "nama");
+      .fetch();
 
     const workbook = new Excel.Workbook();
 
@@ -14383,6 +14384,7 @@ class MainController {
 
         await Promise.all(
           pesertaUjianData
+            .toJSON()
             .sort((a, b) => ("" + a.nama).localeCompare(b.nama))
             .map(async (d) => {
               await Promise.all(
