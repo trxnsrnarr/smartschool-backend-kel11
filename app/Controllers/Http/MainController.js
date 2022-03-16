@@ -14383,7 +14383,6 @@ class MainController {
 
         await Promise.all(
           pesertaUjianData
-            .toJSON()
             .sort((a, b) => ("" + a.nama).localeCompare(b.nama))
             .map(async (d) => {
               await Promise.all(
