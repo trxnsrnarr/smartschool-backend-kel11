@@ -2548,6 +2548,34 @@ class SecondController {
     ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
 
     worksheet.getCell(`B${6 + awal}`).value = `Total`;
+    worksheet.addConditionalFormatting({
+      ref: `A${6 + awal}:D${6 + awal}`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 11,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+              wrapText: true,
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
     worksheet.getCell(`C${6 + awal}`).value = `${nilaiDebit.toLocaleString(
       "id-ID",
       {
