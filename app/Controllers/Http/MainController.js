@@ -14425,7 +14425,7 @@ class MainController {
                   .peserta.sort((a, b) =>
                     ("" + a.user.nama).localeCompare(b.user.nama)
                   )
-                  .map(async (e) => {
+                  .map(async (e,idx) => {
                     if (d.id == e.m_user_id) {
                       const pesertaUjian = await TkPesertaUjian.query()
                         .with("jawabanSiswa", (builder) => {
