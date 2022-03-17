@@ -13980,6 +13980,7 @@ class MainController {
 
       const userIds = await User.query()
         .where({ m_sekolah_id: sekolah.id })
+        .where({ dihapus: 0 })
         .whereIn("role", ["admin", "guru"])
         .ids();
 
@@ -14369,8 +14370,9 @@ class MainController {
       .pluck("m_user_id");
 
     const pesertaUjianData = await User.query()
+      .select("id", "nama")
       .whereIn("id", anggotaRombel)
-      .pluck("id", "nama");
+      .fetch();
 
     const workbook = new Excel.Workbook();
 
