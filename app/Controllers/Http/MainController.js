@@ -16713,6 +16713,7 @@ class MainController {
 
       return response.ok({
         doc_id: jawabanUjianSiswaData.toJSON().pesertaUjian.doc_id,
+        warning: jawabanUjianSiswaData.toJSON().pesertaUjian.warning,
         tk_jadwal_ujian_id:
           jawabanUjianSiswaData.toJSON().pesertaUjian.tk_jadwal_ujian_id,
         user_id: jawabanUjianSiswaData.toJSON().pesertaUjian.m_user_id,
