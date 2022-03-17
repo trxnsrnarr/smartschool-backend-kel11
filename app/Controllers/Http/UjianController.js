@@ -535,7 +535,7 @@ class UjianController {
           await Promise.all(
             template.toJSON().map(async (e) => {
               if (hitung >= e.batas_bawah && hitung <= e.batas_atas) {
-                // hitung = e.judul;
+                hitung = e.judul;
               }
             })
           );
@@ -548,8 +548,8 @@ class UjianController {
           soal: d.soal.pertanyaan,
           bentuk: bentuk,
           bentuk_soal: bentuk_soal,
-          kesukaran: d.soal.__meta__.totalSiswa,
-          data: d,
+          kesukaran: hitung,
+          // data: d,
         });
       })
     );
@@ -732,7 +732,7 @@ class UjianController {
           soal: d ? d.soal : "-",
           bank_soal: d ? d.nama_bank : "-",
           tipe_soal: d ? d.bentuk : "-",
-          kesukaran: d ? d.hitung : "-",
+          kesukaran: d ? d.kesukaran : "-",
         });
       })
     );
