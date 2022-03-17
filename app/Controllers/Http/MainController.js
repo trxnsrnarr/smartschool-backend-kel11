@@ -14382,7 +14382,38 @@ class MainController {
         const worksheet = workbook.addWorksheet(
           `${jadwalUjian.toJSON().rombel.nama}`
         );
-
+        worksheet.addConditionalFormatting({
+          ref: "A10:G10",
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  bold: true,
+                },
+                fill: {
+                  type: "pattern",
+                  pattern: "solid",
+                  bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
         await Promise.all(
           pesertaUjianData
             .toJSON()
@@ -14404,15 +14435,15 @@ class MainController {
                         .where({ id: e.id })
                         .first();
 
-                        let metaHasil = {
-                          nilaiPg: 0,
-                          nilaiEsai: 0,
-                          nilaiPgKompleks: 0,
-                          nilaiUraian: 0,
-                          nilaiMenjodohkan: 0,
-                          nilaiTotal: 0,
-                          benar: 0,
-                        };
+                      let metaHasil = {
+                        nilaiPg: 0,
+                        nilaiEsai: 0,
+                        nilaiPgKompleks: 0,
+                        nilaiUraian: 0,
+                        nilaiMenjodohkan: 0,
+                        nilaiTotal: 0,
+                        benar: 0,
+                      };
                       let analisisBenar = {};
                       let analisisTotal = {};
 
@@ -14449,29 +14480,36 @@ class MainController {
                                 }
                               }
                             }
-                          }else if (d.soal.bentuk == "pg_kompleks") {
-                            const jawabanKjKompleks = d.soal.jawaban_pg_kompleks.split(",")
-                            const check1 = jawabanKjKompleks.every(e=> d.jawaban_pg_kompleks.includes(e))
-                            const check2 = d.jawaban_pg_kompleks.every(e => d.soal.jawaban_pg_kompleks.includes(e))
-                            if (
-                              check1 && check2
-                            ) {
+                          } else if (d.soal.bentuk == "pg_kompleks") {
+                            const jawabanKjKompleks =
+                              d.soal.jawaban_pg_kompleks.split(",");
+                            const check1 = jawabanKjKompleks.every((e) =>
+                              d.jawaban_pg_kompleks.includes(e)
+                            );
+                            const check2 = d.jawaban_pg_kompleks.every((e) =>
+                              d.soal.jawaban_pg_kompleks.includes(e)
+                            );
+                            if (check1 && check2) {
                               metaHasil.nilaiPgKompleks =
                                 metaHasil.nilaiPgKompleks + d.soal.nilai_soal;
                               metaHasil.benar = metaHasil.benar + 1;
-                              analisisBenar[d.soal.kd] = analisisBenar[d.soal.kd]
+                              analisisBenar[d.soal.kd] = analisisBenar[
+                                d.soal.kd
+                              ]
                                 ? analisisBenar[d.soal.kd] + 1
                                 : 1;
                             }
                             analisisTotal[d.soal.kd] = analisisTotal[d.soal.kd]
                               ? analisisTotal[d.soal.kd] + 1
                               : 1;
-                          }else if (d.soal.bentuk == "uraian") {
+                          } else if (d.soal.bentuk == "uraian") {
                             if (d.jawaban_opsi_uraian == d.soal.kj_uraian) {
                               metaHasil.nilaiUraian =
                                 metaHasil.nilaiUraian + d.soal.nilai_soal;
                               metaHasil.benar = metaHasil.benar + 1;
-                              analisisBenar[d.soal.kd] = analisisBenar[d.soal.kd]
+                              analisisBenar[d.soal.kd] = analisisBenar[
+                                d.soal.kd
+                              ]
                                 ? analisisBenar[d.soal.kd] + 1
                                 : 1;
                             }
@@ -14484,38 +14522,44 @@ class MainController {
                             // const check2 = d.jawaban_menjodohkan.every(e => d.soal.jawaban_pg_kompleks.includes(e))
                             if (d.jawaban_menjodohkan) {
                               if (d.jawaban_menjodohkan.length) {
-                                d.jawaban_menjodohkan.map((e,id) => {
+                                d.jawaban_menjodohkan.map((e, id) => {
                                   // metaHasil.nilaiMenjodohkan = metaHasil.nilaiMenjodohkan+','+ id ;
-                                  const check1 = d.soal.soal_menjodohkan.find((r) => (id + 1 ) == r.id) ;
-                                  if(check){
-                                    if (check1.jawaban == (e - 1)) {
+                                  const check1 = d.soal.soal_menjodohkan.find(
+                                    (r) => id + 1 == r.id
+                                  );
+                                  if (check1) {
+                                    if (check1.jawaban == e - 1) {
                                       metaHasil.nilaiMenjodohkan =
-                                      metaHasil.nilaiMenjodohkan + parseInt(check1.poin);
+                                        metaHasil.nilaiMenjodohkan +
+                                        parseInt(check1.poin);
                                     }
                                   }
                                 });
-    
+
                                 // if (d.jawaban_rubrik_esai.indexOf("true") != -1) {
                                 //   metaHasil.benar = metaHasil.benar + 1;
                                 // }
                               }
                             }
-                          } 
+                          }
                         })
                       );
 
                       metaHasil.nilaiTotal =
-                      metaHasil.nilaiPg +
-                      metaHasil.nilaiEsai +
-                      metaHasil.nilaiPgKompleks +
-                      metaHasil.nilaiUraian +
-                      metaHasil.nilaiMenjodohkan;
+                        metaHasil.nilaiPg +
+                        metaHasil.nilaiEsai +
+                        metaHasil.nilaiPgKompleks +
+                        metaHasil.nilaiUraian +
+                        metaHasil.nilaiMenjodohkan;
 
                       // add column headers
                       worksheet.getRow(10).values = [
                         "Nama",
                         "Nilai PG",
                         "Nilai Esai",
+                        "Nilai PG Kompleks",
+                        "Nilai Uraian",
+                        "Nilai Menjodohkan",
                         "Nilai Total",
                       ];
 
@@ -14523,14 +14567,73 @@ class MainController {
                         { key: "user" },
                         { key: "nilai_pg" },
                         { key: "nilai_esai" },
+                        { key: "nilai_pg_kompleks" },
+                        { key: "nilai_uraian" },
+                        { key: "nilai_menjodohkan" },
                         { key: "nilai_total" },
                       ];
-
+                      worksheet.addConditionalFormatting({
+                        ref: `B${(idx + 1) * 1 + 10}:G${(idx + 1) * 1 + 10}`,
+                        rules: [
+                          {
+                            type: "expression",
+                            formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                            style: {
+                              font: {
+                                name: "Times New Roman",
+                                family: 4,
+                                size: 11,
+                                // bold: true,
+                              },
+                              alignment: {
+                                vertical: "middle",
+                                horizontal: "center",
+                              },
+                              border: {
+                                top: { style: "thin" },
+                                left: { style: "thin" },
+                                bottom: { style: "thin" },
+                                right: { style: "thin" },
+                              },
+                            },
+                          },
+                        ],
+                      });
+                      worksheet.addConditionalFormatting({
+                        ref: `A${(idx + 1) * 1 + 10}`,
+                        rules: [
+                          {
+                            type: "expression",
+                            formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                            style: {
+                              font: {
+                                name: "Times New Roman",
+                                family: 4,
+                                size: 11,
+                                // bold: true,
+                              },
+                              alignment: {
+                                vertical: "middle",
+                                horizontal: "left",
+                              },
+                              border: {
+                                top: { style: "thin" },
+                                left: { style: "thin" },
+                                bottom: { style: "thin" },
+                                right: { style: "thin" },
+                              },
+                            },
+                          },
+                        ],
+                      });
                       // Add row using key mapping to columns
                       const row = worksheet.addRow({
                         user: d.nama,
                         nilai_pg: metaHasil.nilaiPg,
                         nilai_esai: metaHasil.nilaiEsai,
+                        nilai_pg_kompleks: metaHasil.nilaiPgKompleks,
+                        nilai_uraian: metaHasil.nilaiUraian,
+                        nilai_menjodohkan: metaHasil.nilaiMenjodohkan,
                         nilai_total: metaHasil.nilaiTotal,
                       });
                     }
@@ -14553,9 +14656,17 @@ class MainController {
           jadwalUjian.toJSON().jadwalUjian.durasi
         } menit`;
 
+        worksheet.getColumn("A").width = 25;
+        worksheet.getColumn("B").width = 11;
+        worksheet.getColumn("C").width = 11;
+        worksheet.getColumn("D").width = 19;
+        worksheet.getColumn("E").width = 13;
+        worksheet.getColumn("F").width = 19;
+        worksheet.getColumn("G").width = 13;
+
         worksheet.autoFilter = {
           from: "A10",
-          to: "D10",
+          to: "G10",
         };
 
         // worksheet.getCell("A4").value = "RPP";
@@ -49493,12 +49604,15 @@ class MainController {
                           }
                         }
                       } else if (d.soal.bentuk == "pg_kompleks") {
-                        const jawabanKjKompleks = d.soal.jawaban_pg_kompleks.split(",")
-                        const check1 = jawabanKjKompleks.every(e=> d.jawaban_pg_kompleks.includes(e))
-                        const check2 = d.jawaban_pg_kompleks.every(e => d.soal.jawaban_pg_kompleks.includes(e))
-                        if (
-                          check1 && check2
-                        ) {
+                        const jawabanKjKompleks =
+                          d.soal.jawaban_pg_kompleks.split(",");
+                        const check1 = jawabanKjKompleks.every((e) =>
+                          d.jawaban_pg_kompleks.includes(e)
+                        );
+                        const check2 = d.jawaban_pg_kompleks.every((e) =>
+                          d.soal.jawaban_pg_kompleks.includes(e)
+                        );
+                        if (check1 && check2) {
                           metaHasil.nilaiPgKompleks =
                             metaHasil.nilaiPgKompleks + d.soal.nilai_soal;
                           metaHasil.benar = metaHasil.benar + 1;
@@ -49509,7 +49623,7 @@ class MainController {
                         analisisTotal[d.soal.kd] = analisisTotal[d.soal.kd]
                           ? analisisTotal[d.soal.kd] + 1
                           : 1;
-                      }else if (d.soal.bentuk == "uraian") {
+                      } else if (d.soal.bentuk == "uraian") {
                         if (d.jawaban_opsi_uraian == d.soal.kj_uraian) {
                           metaHasil.nilaiUraian =
                             metaHasil.nilaiUraian + d.soal.nilai_soal;
@@ -49527,13 +49641,16 @@ class MainController {
                         // const check2 = d.jawaban_menjodohkan.every(e => d.soal.jawaban_pg_kompleks.includes(e))
                         if (d.jawaban_menjodohkan) {
                           if (d.jawaban_menjodohkan.length) {
-                            d.jawaban_menjodohkan.map((e,id) => {
+                            d.jawaban_menjodohkan.map((e, id) => {
                               // metaHasil.nilaiMenjodohkan = metaHasil.nilaiMenjodohkan+','+ id ;
-                              const check1 = d.soal.soal_menjodohkan.find((r) => (id + 1 ) == r.id) ;
-                              if(check){
-                                if (check1.jawaban == (e - 1)) {
+                              const check1 = d.soal.soal_menjodohkan.find(
+                                (r) => id + 1 == r.id
+                              );
+                              if (check1) {
+                                if (check1.jawaban == e - 1) {
                                   metaHasil.nilaiMenjodohkan =
-                                  metaHasil.nilaiMenjodohkan + parseInt(check1.poin);
+                                    metaHasil.nilaiMenjodohkan +
+                                    parseInt(check1.poin);
                                 }
                               }
                             });
@@ -49543,7 +49660,7 @@ class MainController {
                             // }
                           }
                         }
-                      } 
+                      }
                     })
                   );
 
@@ -49553,7 +49670,7 @@ class MainController {
                     metaHasil.nilaiPgKompleks +
                     metaHasil.nilaiUraian +
                     metaHasil.nilaiMenjodohkan;
-                    // return pesertaUjian; 
+                  // return pesertaUjian;
                   // return {
                   //   nilai_pg: metaHasil.nilaiPg,
                   //   nilai_esai: metaHasil.nilaiEsai,
@@ -49570,13 +49687,13 @@ class MainController {
                 }
               })
             );
-            return check
+            // return check
           })
         );
-        return coba
+        // return coba
       })
     );
-    return test;
+    // return test;
 
     return "Berhasil Update Nilai";
   }
