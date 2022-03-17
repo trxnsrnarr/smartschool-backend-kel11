@@ -13980,6 +13980,7 @@ class MainController {
 
       const userIds = await User.query()
         .where({ m_sekolah_id: sekolah.id })
+        .where({ dihapus: 0 })
         .whereIn("role", ["admin", "guru"])
         .ids();
 
