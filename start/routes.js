@@ -1794,6 +1794,9 @@ Route.delete("/barang-aplikasi/:barang_id", "SecondController.deleteBarang");
 Route.get("/analisis-soal", "UjianController.getAnalisisSoal");
 Route.get("/analisis-soal/:materi_id", "UjianController.detailAnalisisSoal");
 Route.post("/download/analisis-soal/:materi_id", "UjianController.downloadAnalisisButirSoal");
+Route.post("/template-kesukaran", "UjianController.postTemplateKesukaran");
+Route.put("/template-kesukaran/:template_id", "UjianController.putTemplateKesukaran");
+Route.delete("/template-kesukaran/:template_id", "UjianController.deleteTemplateKesukaran");
 
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
