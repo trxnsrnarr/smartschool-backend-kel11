@@ -618,7 +618,7 @@ class RombelController {
     const { tingkat } = request.post();
 
     let tingkatGet;
-    
+
     if (tingkat) {
       tingkatGet = tingkat;
     } else {
@@ -1212,6 +1212,7 @@ class RombelController {
         }
       });
       // return data;
+      let janganUlangMateri = [];
 
       const result = await Promise.all(
         data.map(async (d) => {
@@ -1401,99 +1402,67 @@ class RombelController {
           const mataPelajaran = await MMataPelajaran.query()
             .where({ id: d.mapel })
             .first();
-          let janganUlangMateri = [];
-          const materiData = semuaMateri.toJSON().filter(async (d) => {
+
+          if (mataPelajaran) {
+            const check = await MMateri.query()
+              .where({ m_mata_pelajaran_id: mataPelajaran.id })
+              .andWhere({ tingkat: rombel.tingkat })
+              .first();
             if (
               !janganUlangMateri.find(
                 (e) =>
-                  e.tingkat == d.tingkat &&
-                  e.m_mata_pelajaran_id == d.m_mata_pelajaran_id &&
+                  e.tingkat == rombel.tingkat &&
+                  e.m_mata_pelajaran_id == mataPelajaran.id &&
                   e.dihapus == 0
               )
             ) {
-              if (mataPelajaran.kelompok == "C") {
-                const check = await MMateri.query()
-                  .where({ m_mata_pelajaran_id: d.mapel })
-                  .andWhere({ tingkat })
-                  .andWhere({ m_jurusan_id })
-                  .first();
-                if (check) {
-                  if (check.dihapus) {
-                    await MMateri.query()
-                      .where({ id: check.id })
-                      .update({ dihapus: 0 });
-                  }
-                }
-
-                if (!check) {
-                  const materi = await MMateri.create({
-                    tingkat,
-                    m_jurusan_id,
-                    m_mata_pelajaran_id,
-                  });
-
-                  await TkMateriRombel.create({
-                    m_materi_id: materi.id,
-                    m_rombel_id,
-                  });
-                } else {
-                  const checkTk = await TkMateriRombel.query()
-                    .where({ m_materi_id: check.id })
-                    .andWhere({ m_rombel_id })
-                    .first();
-                  await TkMateriRombel.create({
-                    m_materi_id: check.id,
-                    m_rombel_id,
-                  });
-                }
-              } else {
-                const check = await MMateri.query()
-                  .where({ m_mata_pelajaran_id })
-                  .andWhere({ tingkat })
-                  .first();
-                if (check) {
-                  if (check.dihapus) {
-                    await MMateri.query()
-                      .where({ id: check.id })
-                      .update({ dihapus: 0 });
-                  }
-                }
-
-                if (!check) {
-                  const materi = await MMateri.create({
-                    tingkat,
-                    m_mata_pelajaran_id,
-                  });
-
-                  await TkMateriRombel.create({
-                    m_materi_id: materi.id,
-                    m_rombel_id,
-                  });
-                } else {
-                  const checkTk = await TkMateriRombel.query()
-                    .where({ m_materi_id: check.id })
-                    .andWhere({ m_rombel_id })
-                    .first();
-                  if (!checkTk) {
-                    await TkMateriRombel.create({
-                      m_materi_id: check.id,
-                      m_rombel_id,
-                    });
-                  }
+              if (check) {
+                if (check.dihapus) {
+                  await MMateri.query()
+                    .where({ id: check.id })
+                    .update({ dihapus: 0 });
                 }
               }
-              janganUlangMateri.push(d);
+
+              if (!check) {
+                const materi = await MMateri.create({
+                  tingkat: rombel.tingkat,
+                  m_mata_pelajaran_id: mataPelajaran.id,
+                });
+
+                await TkMateriRombel.create({
+                  m_materi_id: materi.id,
+                  m_rombel_id: rombel.id,
+                });
+              } else {
+                const checkTk = await TkMateriRombel.query()
+                  .where({ m_materi_id: check.id })
+                  .andWhere({ m_rombel_id: rombel.id })
+                  .first();
+                if (!checkTk) {
+                  await TkMateriRombel.create({
+                    m_materi_id: check.id,
+                    m_rombel_id: rombel.id,
+                  });
+                }
+              }
+
+              janganUlangMateri.push({
+                m_mata_pelajaran_id: mataPelajaran.id,
+                tingkat: rombel.tingkat,
+                dihapus: 0,
+                // data: d,
+              });
               return true;
-            } else {
-              return false;
             }
-          });
+          }
+
           return;
         })
       );
       // return result;
     }
-    return 'selesai'
+    return "selesai";
   }
 
   async importJadwalMengajar({ request, response, auth }) {
