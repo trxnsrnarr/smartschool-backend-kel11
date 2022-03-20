@@ -198,7 +198,10 @@ class UjianController {
     }
 
     const { m_ujian_id, tipe_soal, search, kesukaran } = request.get();
-    const materi = await MMateri.query().where({ id: materi_id }).first();
+    const materi = await MMateri.query()
+      .with("mataPelajaran")
+      .where({ id: materi_id })
+      .first();
     const check = await MTemplateKesukaranMapel.query()
       .where({ m_materi_id: materi_id })
       .andWhere({ dihapus: 0 })
@@ -259,13 +262,21 @@ class UjianController {
       .andWhere({ dihapus: 0 })
       .getCount();
 
+      
+    const bankSoalData = await MUjian.query()
+    .select("id","nama")
+    .where({ m_mata_pelajaran_id: materi.m_mata_pelajaran_id })
+    .andWhere({ tingkat: materi.tingkat })
+    .andWhere({ dihapus: 0 })
+    .fetch();
+
     const soalUjianIds = await TkSoalUjian.query()
       .with("soal", (builder) => {
         builder
           .with("jawabanSemuaSiswa")
           .withCount("jawabanSemuaSiswa as totalSiswa");
         if (search) {
-          builder.where("nama", "like", `%${search}%`);
+          builder.where("pertanyaan", "like", `%${search}%`);
         }
       })
       .with("ujian")
@@ -342,17 +353,25 @@ class UjianController {
           bentuk_soal = "menjodohkan";
         }
         let hitung;
+        let warna;
         if (d.soal.__meta__.totalSiswa) {
           hitung = jumlahTotal / d.soal.__meta__.totalSiswa;
           await Promise.all(
             template.toJSON().map(async (e) => {
               if (hitung >= e.batas_bawah && hitung <= e.batas_atas) {
+                if (hitung < 0.5) {
+                  warna = "label-light-danger-ss";
+                } else if (hitung >= 0.5 && hitung < 0.7) {
+                  warna = "label-light-warning-ss";
+                } else if (hitung > 0.7) {
+                  warna = "label-light-success-ss";
+                }
                 hitung = e.judul;
               }
             })
           );
         } else {
-          hitung = `-`;
+          hitung = null;
         }
         return dataSoal.push({
           id: d.soal.id,
@@ -361,11 +380,12 @@ class UjianController {
           bentuk: bentuk,
           bentuk_soal: bentuk_soal,
           kesukaran: hitung,
+          warna: warna,
         });
       })
     );
     if (tipe_soal) {
-      dataSoal.toJSON().filter((d) => {
+      dataSoal = dataSoal.filter((d) => {
         if (d.bentuk_soal == tipe_soal) {
           return true;
         } else {
@@ -375,18 +395,21 @@ class UjianController {
     }
 
     if (kesukaran) {
-      dataSoal.toJSON().filter((d) => {
+     dataSoal = dataSoal.filter((d) => {
         if (d.kesukaran == kesukaran) {
           return true;
         } else {
           return false;
         }
       });
+      // return coba
     }
+    // return kesukaran
 
     let bentukSoal = [];
 
     bentukSoal = [
+      { value: "", label: "Semua" },
       { value: "pg", label: "Pilihan Ganda" },
       { value: "pg_kompleks", label: "Pilihan Ganda Kompleks" },
       { value: "esai", label: "Isian" },
@@ -405,6 +428,8 @@ class UjianController {
       jumlahSoalMenjodohkan,
       jumlahBankSoal,
       template,
+      materi,
+      bankSoalData
     });
   }
 
@@ -809,21 +834,50 @@ class UjianController {
 
     const user = await auth.getUser();
 
-    const { tipe, judul, batas_bawah, batas_atas } = request.post();
+    const { tipe, judul, batas_bawah, batas_atas, m_materi_id } =
+      request.post();
+    const checkBatasBawah = await MTemplateKesukaranMapel.query()
+      .where({ m_materi_id: m_materi_id })
+      .where({ dihapus: 0 })
+      .where("batas_bawah", "<=", batas_bawah)
+      .where("batas_atas", ">=", batas_bawah)
+      .first();
 
-    const rules = {
-      judul: "required",
-      batas_bawah: "required",
-      batas_atas: "required",
-    };
-    const message = {
-      "judul.required": "Judul harus diisi",
-      "batas_bawah.required": "Batas Bawah harus diisi",
-      "batas_atas.required": "Batas Atas harus diisi",
-    };
-    const validation = await validate(request.all(), rules, message);
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
+    const checkBatasAtas = await MTemplateKesukaranMapel.query()
+      .where({ m_materi_id: m_materi_id })
+      .where({ dihapus: 0 })
+      .where("batas_bawah", "<=", batas_atas)
+      .where("batas_atas", ">=", batas_atas)
+      .first();
+
+    const checkRange1 = await MTemplateKesukaranMapel.query()
+      .where({ m_materi_id: m_materi_id })
+      .where({ dihapus: 0 })
+      .where("batas_bawah", "<=", batas_atas)
+      .where("batas_bawah", ">=", batas_bawah)
+      .first();
+    const checkRange2 = await MTemplateKesukaranMapel.query()
+      .where({ m_materi_id: m_materi_id })
+      .where({ dihapus: 0 })
+      .where("batas_atas", "<=", batas_atas)
+      .where("batas_atas", ">=", batas_bawah)
+      .first();
+    if (checkBatasBawah) {
+      return response.expectationFailed({
+        message: `Batas Bawah berada dalam jangkauan Tingkat kesukaran ${checkBatasBawah.judul}`,
+      });
+    }
+    if (checkBatasAtas) {
+      return response.expectationFailed({
+        message: `Batas Atas berada dalam jangkauan Tingkat kesukaran ${checkBatasAtas.judul}`,
+      });
+    }
+    if (checkRange1 || checkRange2) {
+      return response.expectationFailed({
+        message: `Batas nilai bergesekan dengan ${
+          (checkRange1 || checkRange2).judul
+        }`,
+      });
     }
 
     const barang = await MTemplateKesukaranMapel.create({
@@ -856,23 +910,34 @@ class UjianController {
 
     const user = await auth.getUser();
 
-    const { tipe, judul, batas_bawah, batas_atas } = request.post();
+    const { tipe, judul, batas_bawah, batas_atas, m_materi_id } =
+      request.post();
+      const checkBatasBawah = await MTemplateKesukaranMapel.query()
+      .where({ m_materi_id })
+      .where({ dihapus: 0 })
+      .where("batas_bawah", "<=", batas_bawah)
+      .where("batas_atas", ">=", batas_bawah)
+      .whereNot("id", template_id)
+      .first();
 
-    const rules = {
-      judul: "required",
-      batas_bawah: "required",
-      batas_atas: "required",
-    };
-    const message = {
-      "judul.required": "Judul harus diisi",
-      "batas_bawah.required": "Batas Bawah harus diisi",
-      "batas_atas.required": "Batas Atas harus diisi",
-    };
-    const validation = await validate(request.all(), rules, message);
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
+    const checkBatasAtas = await MTemplateKesukaranMapel.query()
+      .where({ m_materi_id })
+      .where({ dihapus: 0 })
+      .where("batas_bawah", "<=", batas_atas)
+      .where("batas_atas", ">=", batas_atas)
+      .whereNot("id", template_id)
+      .first();
+    if (checkBatasBawah) {
+      return response.expectationFailed({
+        message: `Tanggal awal berada dalam jangkauan rencana ${checkBatasBawah.nama}`,
+      });
     }
-    //
+    if (checkBatasAtas) {
+      return response.expectationFailed({
+        message: `Tanggal akhir berada dalam jangkauan rencana ${checkBatasAtas.nama}`,
+      });
+    }
+
     const template = await MTemplateKesukaranMapel.query()
       .where({ id: template_id })
       .update({
@@ -910,10 +975,8 @@ class UjianController {
     }
 
     const user = await auth.getUser();
-    const { verifikasi } = request.post();
     if (
-      user.role != "admin" ||
-      user.role == "guru" ||
+      (user.role != "admin" && user.role != "guru") ||
       user.m_sekolah_id != sekolah.id
     ) {
       return response.forbidden({ message: messageForbidden });
