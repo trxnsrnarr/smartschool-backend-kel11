@@ -43378,17 +43378,9 @@ class MainController {
       jumlah_stand,
       ukuran_bandwidth,
       invoice_bulan,
+      tanggal_pembayaran
+      
     } = request.post();
-
-    let validation = await validate(
-      request.post(),
-      rulesUserPost,
-      messagesUser
-    );
-
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
-    }
 
     const sekolah = await MPembayaranSekolah.create({
       nama,
@@ -43404,6 +43396,7 @@ class MainController {
       jumlah_stand,
       ukuran_bandwidth,
       invoice_bulan,
+      tanggal_pembayaran,
       m_sekolah_id: sekolah_id,
       dihapus: 0,
     });
@@ -43433,17 +43426,10 @@ class MainController {
       jumlah_stand,
       ukuran_bandwidth,
       invoice_bulan,
+      tanggal_pembayaran
     } = request.post();
 
-    let validation = await validate(
-      request.post(),
-      rulesUserPost,
-      messagesUser
-    );
-
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
-    }
+    
 
     const sekolah = await MPembayaranSekolah.query()
       .where({ id: pembayaranSekolah_id })
@@ -43461,6 +43447,7 @@ class MainController {
         jumlah_stand,
         ukuran_bandwidth,
         invoice_bulan,
+        tanggal_pembayaran
       });
 
     return response.ok({
