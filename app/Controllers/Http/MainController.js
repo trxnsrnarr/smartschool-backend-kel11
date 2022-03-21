@@ -23261,7 +23261,7 @@ class MainController {
         .ids();
       timelineTugas = await MTimeline.query()
         .where({ m_user_id: user.id })
-        .whereInd(" m_rombel_id", dataRombelIds )
+        .whereIn(" m_rombel_id", dataRombelIds )
         .with("tugas", (builder) => {
           builder.where({ dihapus: 0 });
         })
