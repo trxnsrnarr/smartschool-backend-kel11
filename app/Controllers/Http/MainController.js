@@ -43195,6 +43195,12 @@ class MainController {
       .with("tkServer", (builder) => {
         builder.with("server");
       })
+      .with("pembayaranAktif", (builder) => {
+        builder
+          .where("akhir_kontrak", ">=", moment().format("YYYY-MM-DD"))
+          .where("mulai_kontrak", "<=", moment().format("YYYY-MM-DD"))
+          .where({ dihapus: 0 });
+      })
       .withCount("siswa as total", (builder) => {
         builder.where({ dihapus: 0 });
       })
