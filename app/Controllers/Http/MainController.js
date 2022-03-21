@@ -7430,7 +7430,13 @@ class MainController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
-
+    
+    let { m_ta_id = ta.id } = request.get();
+    const semuaTA = await Mta.query()
+    .andWhere({ m_sekolah_id: sekolah.id })
+    .andWhere({ dihapus: 0 })
+    .orderBy("id", "desc")
+    .fetch();
     if (sekolah.id == 40) {
       if (user.role == "siswa") {
         const rombelIds = await MRombel.query()
@@ -7556,7 +7562,7 @@ class MainController {
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ m_user_id: user.id })
       .andWhere({ dihapus: 0 })
-      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ m_ta_id: m_ta_id })
       .ids();
 
     const materi = await MMateri.query()
@@ -7566,7 +7572,7 @@ class MainController {
         builder.where({ dihapus: 0 });
       })
       .withCount("rekap as total", (builder) => {
-        builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id });
+        builder.where({ dihapus: 0 }).andWhere({ m_ta_id: m_ta_id });
       })
       .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
       .where({ dihapus: 0 })
@@ -7584,6 +7590,7 @@ class MainController {
 
     return response.ok({
       materi,
+      semuaTA
       // materiLainnya,
     });
   }
@@ -22436,12 +22443,18 @@ class MainController {
     const user = await auth.getUser();
 
     const { nav } = request.get();
-
+    
     const pelajaran = await MMateri.query()
-      .with("mataPelajaran")
+    .with("mataPelajaran")
       .where({ id: materi_id })
       .first();
-
+      const semuaTA = await Mta.query()
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .orderBy("id", "desc")
+      .whereNot({id:pelajaran.toJSON().mataPelajaran.m_ta_id})
+      .fetch();
+      
     const sikapsosial = await MSikapSosial.query().fetch();
 
     // const tugas = await MTugas.query().where({ m_user_id: user.id }).fetch();
@@ -22704,6 +22717,7 @@ class MainController {
       sikapsosial,
       // tugas,
       predikat,
+      semuaTA
     });
   }
 
@@ -23149,10 +23163,15 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
+    const ta = await this.getTAAktif(sekolah);
     const user = await auth.getUser();
 
     const { rombel_id, tipe } = request.get();
-
+    const tahunPelajaranIds = await Mta.query()
+    .where({ tahun: ta.tahun })
+    .andWhere({ dihapus: 0 })
+    .andWhere({ m_sekolah_id: sekolah.id })
+    .ids();
     const pelajaran = await MMateri.query()
       .with("mataPelajaran")
       .where({ id: materi_id })
@@ -23227,13 +23246,22 @@ class MainController {
     }
 
     if (rombel_id) {
+      const rombelAktif = await MRombel.query().where({id:rombel_id}).first()
+      const dataRombelIds = await MRombel.query()
+        .where({ nama: rombelAktif.nama })
+        .andWhere({ tingkat: rombelAktif.tingkat })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .andWhere({dihapus:0})
+        .whereIn("m_ta_id",tahunPelajaranIds)
+        .ids();
       const mapelIds = await MMataPelajaran.query()
         .where({ m_user_id: user.id })
         .where({ dihapus: 0 })
+        .whereIn("m_ta_id",tahunPelajaranIds)
         .ids();
       timelineTugas = await MTimeline.query()
         .where({ m_user_id: user.id })
-        .andWhere({ m_rombel_id: rombel_id })
+        .whereInd(" m_rombel_id", dataRombelIds )
         .with("tugas", (builder) => {
           builder.where({ dihapus: 0 });
         })
@@ -23262,7 +23290,7 @@ class MainController {
             .where({ dihapus: 0 });
         })
         .where({ dihapus: 0 })
-        .whereIn("m_rombel_id", [rombel_id])
+        .whereIn("m_rombel_id", dataRombelIds)
         .fetch();
 
       // return ujianRombel;
@@ -48294,19 +48322,19 @@ class MainController {
             .whereIn("m_mata_pelajaran_id", mapelBaruDataIds)
             .andWhere({ dihapus: 0 })
             .fetch();
-          let janganUlangMateri = [];
-          const materiData = semuaMateri.toJSON().filter(async (s) => {
-            if (
-              !janganUlangMateri.find(
-                (e) =>
-                  e.tingkat == s.tingkat &&
-                  e.m_mata_pelajaran_id == s.m_mata_pelajaran_id &&
-                  e.dihapus == 0
-              )
-            ) {
+          // let janganUlangMateri = [];
+          // const materiData = semuaMateri.toJSON().filter(async (s) => {
+          //   if (
+          //     !janganUlangMateri.find(
+          //       (e) =>
+          //         e.tingkat == s.tingkat &&
+          //         e.m_mata_pelajaran_id == s.m_mata_pelajaran_id &&
+          //         e.dihapus == 0
+          //     )
+          //   ) {
               const check = await MMateri.query()
-                .where({ m_mata_pelajaran_id: s.m_mata_pelajaran_id })
-                .andWhere({ tingkat: s.tingkat })
+                .where({ m_mata_pelajaran_id: mapelBaru.id })
+                .andWhere({ tingkat: rombelBaru.tingkat })
                 .first();
               if (check) {
                 if (check.dihapus) {
@@ -48318,8 +48346,8 @@ class MainController {
 
               if (!check) {
                 const materi = await MMateri.create({
-                  tingkat: s.tingkat,
-                  m_mata_pelajaran_id: s.m_mata_pelajaran_id,
+                  tingkat: rombelBaru.tingkat,
+                  m_mata_pelajaran_id: mapelBaru.id,
                 });
 
                 await TkMateriRombel.create({
@@ -48339,12 +48367,12 @@ class MainController {
                 }
               }
 
-              janganUlangMateri.push(d);
-              return true;
-            } else {
-              return false;
-            }
-          });
+          //     janganUlangMateri.push(d);
+          //     return true;
+          //   } else {
+          //     return false;
+          //   }
+          // });
           // result.push(1);
           // }
           // await trx.commit();
