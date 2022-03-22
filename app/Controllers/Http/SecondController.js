@@ -4661,11 +4661,15 @@ class SecondController {
               nama: d ? d.nama : "-",
               rpRencana1: `${
                 d.total_rencana
-                  ? d.total_rencana.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+                  ? d.total_rencana
+                      .toString()
+                      .replace(/\B(?=(\d{3})+(?!\d))/g, ".")
                   : "0"
               }`,
               rpRealisasi1: `${
-                d.total ? d.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") : "0"
+                d.total
+                  ? d.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+                  : "0"
               }`,
             });
             worksheet.getCell(`B${(idx + 1) * 1 + 5}`).font = {
@@ -4692,11 +4696,15 @@ class SecondController {
               nama: d ? d.nama : "-",
               rpRencana: `${
                 d.total_rencana
-                  ? d.total_rencana.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+                  ? d.total_rencana
+                      .toString()
+                      .replace(/\B(?=(\d{3})+(?!\d))/g, ".")
                   : "0"
               }`,
               rpRealisasi: `${
-                d.total ? d.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") : "0"
+                d.total
+                  ? d.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+                  : "0"
               }`,
             });
           }
@@ -4773,7 +4781,9 @@ class SecondController {
             let row = worksheet.addRow({
               nama: d ? d.nama : "-",
               rp1: `${
-                d.total ? d.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") : "0"
+                d.total
+                  ? d.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+                  : "0"
               }`,
             });
             worksheet.getCell(`B${(idx + 1) * 1 + 4}`).font = {
@@ -4796,7 +4806,9 @@ class SecondController {
               no: d ? d.kode : "",
               nama: d ? d.nama : "-",
               rp: `${
-                d.total ? d.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") : "0"
+                d.total
+                  ? d.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+                  : "0"
               }`,
             });
           }
@@ -11422,6 +11434,104 @@ class SecondController {
     await workbook.xlsx.writeFile(`public${namaFile}`);
 
     return namaFile;
+  }
+  async putPindahRekap({ response, request, auth, params: { rekap_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+    const user = await auth.getUser();
+
+    const { m_ta_id } = request.post();
+    const rules = {
+      m_ta_id: "required",
+    };
+    const message = {
+      "m_ta_id.required": "Tahun harus dipilih",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+    const rekapLama = await MRekap.query().where({ id: rekap_id }).first();
+    const materiLama = await MMateri.query()
+      .with("mataPelajaran")
+      .where({ id: rekapLama.m_materi_id })
+      .first();
+    const mataPelajaranBaru = await MMataPelajaran.query()
+      .where({ m_ta_id })
+      .andWhere({ nama: materiLama.toJSON().mataPelajaran.nama })
+      .andWhere({ kode: materiLama.toJSON().mataPelajaran.kode })
+      .andWhere({ kelompok: materiLama.toJSON().mataPelajaran.kelompok })
+      .andWhere({ dihapus: 0 })
+      .first();
+    const materiBaru = await MMateri.query()
+      .where({ m_mata_pelajaran_id: mataPelajaranBaru.id })
+      .andWhere({ tingkat: materiLama.tingkat })
+      .andWhere({ dihapus: 0 })
+      .first();
+    const rekap = await MRekap.query().where({ id: rekap_id }).update({
+      m_materi_id: materiBaru.id,
+      m_ta_id:m_ta_id,
+      dihapus: 0,
+    });
+
+    const rombelLama = await MRombel.query()
+      .where({ m_ta_id: materiLama.toJSON().mataPelajaran.m_ta_id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    const rombelBaru = await MRombel.query()
+      .where({ m_ta_id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    const rekapRombelData = await MRekapRombel.query()
+      .where({ m_rekap_id: rekap_id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    if (rekapRombelData) {
+      const coba = await Promise.all(
+        rekapRombelData.toJSON().map(async(d) => {
+          const checkRombelLama = rombelLama
+            .toJSON()
+            .find((e) => e.id == d.m_rombel_id);
+          const checkRombelBaru = rombelBaru.toJSON().find((e) => {
+            return (
+              e.tingkat == checkRombelLama.tingkat &&
+              e.nama == checkRombelLama.nama &&
+              e.kelompok == checkRombelLama.kelompok &&
+              e.dihapus == checkRombelLama.dihapus &&
+              e.m_user_id == checkRombelLama.m_user_id &&
+              e.m_jurusan_id == checkRombelLama.m_jurusan_id &&
+              e.m_ta_id == m_ta_id &&
+              e.m_sekolah_id == sekolah.id
+            );
+          });
+          // return checkRombelBaru
+          await MRekapRombel.query().where({ id: d.id }).update({
+            m_rombel_id: checkRombelBaru.id,
+          });
+        })
+      );
+      // return coba
+    }
+
+    if (!rekap) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
   }
 }
 
