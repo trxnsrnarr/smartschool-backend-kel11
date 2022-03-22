@@ -23469,6 +23469,11 @@ class MainController {
 
     let rekap;
     let tugasdata;
+    const tahunPelajaranIds = await Mta.query()
+    .where({ tahun: ta.tahun })
+    .andWhere({ dihapus: 0 })
+    .andWhere({ m_sekolah_id: sekolah.id })
+    .ids();
     if (m_tugas_id) {
       tugasdata = await MTimeline.query()
         .with("listSiswaDinilai", (builder) => {
@@ -23538,9 +23543,17 @@ class MainController {
 
     let all;
     if (m_tugas_id) {
+      const rombelData = await MRombel.query().where({id:m_rombel_id}).first()
+      const dataRombelIds = await MRombel.query()
+      .where({ nama: rombelData.nama })
+      .andWhere({ tingkat: rombelData.tingkat })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .whereIn("m_ta_id", tahunPelajaranIds)
+      .ids();
+        
       const timeline = await MTimeline.query()
         .where({ m_tugas_id: m_tugas_id })
-        .andWhere({ m_rombel_id: m_rombel_id })
+        .whereIn( "m_rombel_id", dataRombelIds)
         .first();
 
       all = await Promise.all(
