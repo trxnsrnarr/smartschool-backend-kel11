@@ -923,6 +923,7 @@ Route.post(
   "MainController.postRekapSikap"
 );
 Route.put("/rekap/:materi_id/:rekap_id", "MainController.putRekap");
+Route.put("/pindah-materi/rekap/:rekap_id", "SecondController.putPindahRekap");
 Route.put(
   "/rekap-template/:template_id",
   "MainController.putTemplateDeskripsi"
