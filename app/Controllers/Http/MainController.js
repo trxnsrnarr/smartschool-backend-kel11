@@ -3833,20 +3833,20 @@ class MainController {
     }
 
     let { nama, whatsapp, gender, password, avatar, photos } = request.post();
-    const rules = {
-      nama: "required",
-      whatsapp: "required",
-      gender: "required",
-    };
-    const message = {
-      "nama.required": "Nama harus diisi",
-      "whatsapp.required": "Whatsapp harus diisi",
-      "gender.required": "Jenis Kelamin harus diisi",
-    };
-    const validation = await validate(request.all(), rules, message);
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
-    }
+    // const rules = {
+    //   nama: "required",
+    //   whatsapp: "required",
+    //   gender: "required",
+    // };
+    // const message = {
+    //   "nama.required": "Nama harus diisi",
+    //   "whatsapp.required": "Whatsapp harus diisi",
+    //   "gender.required": "Jenis Kelamin harus diisi",
+    // };
+    // const validation = await validate(request.all(), rules, message);
+    // if (validation.fails()) {
+    //   return response.unprocessableEntity(validation.messages());
+    // }
     whatsapp = whatsapp.trim();
     photos = JSON.stringify(photos);
 
@@ -43363,11 +43363,14 @@ class MainController {
     params: { pembayaranSekolah_id },
   }) {
     const user = await User.query().count("* as total");
-    // const { rombel_id } = request.post();
+    const { search } = request.post();
     let pembayaran = await MPembayaranSekolah.query()
       .with("sekolah")
       .with("dokumen", (builder) => {
-        builder.where({ dihapus: 0 });
+        builder.where({ dihapus: 0 })
+        if(search){
+          builder.where("nama","like",`%${search}%`)
+        };
       })
       .where({ id: pembayaranSekolah_id })
       .first();
@@ -43499,16 +43502,6 @@ class MainController {
   }) {
     const { nama, jenis, lampiran } = request.post();
 
-    let validation = await validate(
-      request.post(),
-      rulesUserPost,
-      messagesUser
-    );
-
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
-    }
-
     const sekolah = await MDokumenPembayaranSekolah.create({
       nama,
       jenis,
@@ -43529,16 +43522,6 @@ class MainController {
     params: { dokumenPembayaranSekolah_id },
   }) {
     const { nama, jenis, lampiran } = request.post();
-
-    let validation = await validate(
-      request.post(),
-      rulesUserPost,
-      messagesUser
-    );
-
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
-    }
 
     const sekolah = await MDokumenPembayaranSekolah.query()
       .where({ id: dokumenPembayaranSekolah_id })
