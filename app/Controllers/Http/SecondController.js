@@ -1479,7 +1479,11 @@ class SecondController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
+    const ta = await this.getTAAktif(sekolah);
 
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
     const {
       m_jadwal_mengajar_id,
       absen,
@@ -1489,12 +1493,30 @@ class SecondController {
       selesai: waktu_selesai,
     } = request.get();
 
+    const tahunPelajaranIds = await Mta.query()
+      .where({ tahun: ta.tahun })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .ids();
     const jadwalMengajar = await MJadwalMengajar.query()
       .with("rombel")
       .with("mataPelajaran")
       .where({ id: m_jadwal_mengajar_id })
       .first();
-
+    const dataRombelIds = await MRombel.query()
+      .where({ nama: jadwalMengajar.toJSON().rombel.nama })
+      .andWhere({ tingkat: jadwalMengajar.toJSON().rombel.tingkat })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .whereIn("m_ta_id", tahunPelajaranIds)
+      .ids();
+    const dataMapelIds = await MMataPelajaran.query()
+      .where({ nama: jadwalMengajar.toJSON().mataPelajaran.nama })
+      .andWhere({ m_user_id: jadwalMengajar.toJSON().mataPelajaran.m_user_id })
+      .andWhere({ kode: jadwalMengajar.toJSON().mataPelajaran.kode })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .whereIn("m_ta_id", tahunPelajaranIds)
+      .andWhere({ kelompok: jadwalMengajar.toJSON().mataPelajaran.kelompok })
+      .ids();
     const userIds = await MAnggotaRombel.query()
       .where({ m_rombel_id: jadwalMengajar.m_rombel_id })
       .andWhere({ dihapus: 0 })
@@ -1508,7 +1530,8 @@ class SecondController {
     if (user.role == "siswa") {
       const timelineId1 = await MTimeline.query()
         .whereNull("m_mata_pelajaran_id")
-        .andWhere({ m_rombel_id: jadwalMengajar.toJSON().rombel.id })
+        // .andWhere({ m_rombel_id: jadwalMengajar.toJSON().rombel.id })
+        .whereIn("m_rombel_id", dataRombelIds)
         .andWhere({
           m_user_id: jadwalMengajar.toJSON().mataPelajaran.m_user_id,
         })
@@ -1518,8 +1541,8 @@ class SecondController {
 
       const timelineId2 = await MTimeline.query()
         .whereNotNull("m_mata_pelajaran_id")
-        .andWhere({ m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id })
-        .andWhere({ m_rombel_id: jadwalMengajar.toJSON().rombel.id })
+        .whereIn("m_mata_pelajaran_id", dataMapelIds)
+        .whereIn("m_rombel_id", dataRombelIds)
         .andWhere({
           m_user_id: jadwalMengajar.toJSON().mataPelajaran.m_user_id,
         })
@@ -1659,7 +1682,7 @@ class SecondController {
       const timelineLainnya = await MTimeline.query()
         .whereNull("m_mata_pelajaran_id")
         .andWhere({ dihapus: 0 })
-        .andWhere("m_rombel_id", jadwalMengajar.toJSON().rombel.id)
+        .whereIn("m_rombel_id", dataRombelIds)
         .whereIn("m_user_id", userIds)
         .ids();
 
@@ -1695,7 +1718,7 @@ class SecondController {
           builder.where({ dihapus: 0 });
         })
         .whereNull("m_mata_pelajaran_id")
-        .andWhere({ m_rombel_id: jadwalMengajar.toJSON().rombel.id })
+        .whereIn("m_rombel_id", dataRombelIds)
         .andWhere({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         // .whereIn("m_tugas_id", tugasIds)
@@ -1736,10 +1759,8 @@ class SecondController {
           builder.where({ dihapus: 0 });
         })
         .whereNotNull("m_mata_pelajaran_id")
-        .andWhere({
-          m_mata_pelajaran_id: jadwalMengajar.toJSON().mataPelajaran.id,
-        })
-        .andWhere({ m_rombel_id: jadwalMengajar.toJSON().rombel.id })
+        .whereIn("m_mata_pelajaran_id", dataMapelIds)
+        .whereIn("m_rombel_id", dataRombelIds)
         .andWhere({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         // .whereIn("m_tugas_id", tugasIds)
@@ -2332,7 +2353,7 @@ class SecondController {
           formulae: ["MOD(ROW()+COLUMN(),1)=0"],
           style: {
             font: {
-              name: "Times New Roman",
+              name: "Calibri",
               family: 4,
               size: 14,
               bold: true,
@@ -2364,7 +2385,7 @@ class SecondController {
           formulae: ["MOD(ROW()+COLUMN(),1)=0"],
           style: {
             font: {
-              name: "Times New Roman",
+              name: "Calibri",
               family: 4,
               size: 14,
               // bold: true,
@@ -2396,7 +2417,7 @@ class SecondController {
           formulae: ["MOD(ROW()+COLUMN(),1)=0"],
           style: {
             font: {
-              name: "Times New Roman",
+              name: "Calibri",
               family: 4,
               size: 12,
               bold: true,
@@ -2432,10 +2453,10 @@ class SecondController {
       transaksi.toJSON().map(async (d, idx) => {
         // add column headers
         worksheet.getRow(5).values = [
-          "Tanggal",
-          "Nama Akun",
-          "Debit",
-          "Kredit",
+          "TANGGAL",
+          "NAMA AKUN",
+          "DEBIT",
+          "KREDIT",
         ];
         await Promise.all(
           d.jurnal.map(async (e) => {
@@ -2495,7 +2516,7 @@ class SecondController {
           formulae: ["MOD(ROW()+COLUMN(),1)=0"],
           style: {
             font: {
-              name: "Times New Roman",
+              name: "Calibri",
               family: 4,
               size: 11,
               // bold: true,
@@ -2522,7 +2543,7 @@ class SecondController {
           formulae: ["MOD(ROW()+COLUMN(),1)=0"],
           style: {
             font: {
-              name: "Times New Roman",
+              name: "Calibri",
               family: 4,
               size: 11,
               // bold: true,
@@ -2547,7 +2568,7 @@ class SecondController {
       `A${8 + awal}`
     ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
 
-    worksheet.getCell(`B${6 + awal}`).value = `Total`;
+    worksheet.getCell(`B${6 + awal}`).value = `TOTAL`;
     worksheet.addConditionalFormatting({
       ref: `A${6 + awal}:D${6 + awal}`,
       rules: [
@@ -2556,7 +2577,7 @@ class SecondController {
           formulae: ["MOD(ROW()+COLUMN(),1)=0"],
           style: {
             font: {
-              name: "Times New Roman",
+              name: "Calibri",
               family: 4,
               size: 11,
               bold: true,
@@ -2601,6 +2622,380 @@ class SecondController {
     worksheet.getColumn("D").width = 28;
 
     let namaFile = `/uploads/Jurnal-Umum-${bulan}-${keluarantanggalseconds}.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+    // worksheet.columns = [
+    //   { key: "Tanggal" },
+    //   { key: "akun" },
+    //   { key: "debet" },
+    //   { key: "kredit" },
+    // ];
+
+    // // Add row using key mapping to columns
+    // let row = worksheet.addRow({
+    //   Tanggal: d ? d.transaksi:"-",
+    //   akun: d.jurnal.akun ? d.jurnal.akun.nama : "-",
+    //   debet: d ? d.debet : "-",
+    //   kredit: d ? d.kredit : "-",
+    // });
+
+    return namaFile;
+  }
+
+  async downloadTransaksi({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { tanggal_awal, tanggal_akhir } = request.post();
+
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
+    const awal1 = moment(tanggal_awal).locale("id").format("DD MMMM YYYY ");
+    const akhir1 = moment(tanggal_akhir).locale("id").format("DD MMMM YYYY ");
+
+    let transaksi;
+    transaksi = MKeuTransaksi.query()
+      .with("jurnal", (builder) => {
+        builder.with("akun").where({ dihapus: 0 });
+      })
+      .withCount("jurnal as total", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id });
+    if (tanggal_awal) {
+      transaksi.whereBetween("tanggal", [
+        `${tanggal_awal}`,
+        `${tanggal_akhir}`,
+      ]);
+    }
+    transaksi = await transaksi.fetch();
+
+    // return transaksi;
+
+    let workbook = new Excel.Workbook();
+    let worksheet = workbook.addWorksheet(`Transaksi`);
+    worksheet.mergeCells("A1:F1");
+    worksheet.mergeCells("A2:F2");
+    worksheet.mergeCells("A3:F3");
+
+    worksheet.addConditionalFormatting({
+      ref: "A1:F1",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Calibri",
+              family: 4,
+              size: 14,
+              bold: true,
+            },
+            // fill: {
+            //   type: "pattern",
+            //   pattern: "solid",
+            //   bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            // },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            // border: {
+            //   top: { style: "thin" },
+            //   left: { style: "thin" },
+            //   bottom: { style: "thin" },
+            //   right: { style: "thin" },
+            // },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: "A2:F3",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Calibri",
+              family: 4,
+              size: 14,
+              // bold: true,
+            },
+            // fill: {
+            //   type: "pattern",
+            //   pattern: "solid",
+            //   bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            // },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            // border: {
+            //   top: { style: "thin" },
+            //   left: { style: "thin" },
+            //   bottom: { style: "thin" },
+            //   right: { style: "thin" },
+            // },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: "A5:F5",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Calibri",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+
+    const dateObj = new Date();
+    const tahun = dateObj.getYear();
+    const bulan = monthNames[dateObj.getMonth()];
+    let awal = 0;
+    let nilaiDebit = 0;
+    let nilaiKredit = 0;
+
+    await Promise.all(
+      transaksi.toJSON().map(async (d, idx) => {
+        // add column headers
+        worksheet.getRow(5).values = [
+          "TANGGAL TRANSAKSI",
+          "TANGGAL PERUBAHAN",
+          "KETERANGAN TRANSAKSI",
+          "NAMA AKUN",
+          "DEBIT",
+          "KREDIT",
+        ];
+        await Promise.all(
+          d.jurnal.map(async (e) => {
+            worksheet.columns = [
+              { key: "" },
+              { key: "" },
+              { key: "" },
+              { key: "akun" },
+              { key: "debit" },
+              { key: "kredit" },
+            ];
+
+            // Add row using key mapping to columns
+            if (e.jenis == "debit") {
+              let row = worksheet.addRow({
+                akun: e.akun ? e.akun.nama : "-",
+                debit: `${(e ? e.saldo : "0").toLocaleString("id-ID", {
+                  style: "currency",
+                  currency: "IDR",
+                })}`,
+              });
+
+              nilaiDebit = nilaiDebit + e.saldo;
+            } else if (e.jenis == "kredit") {
+              let row = worksheet.addRow({
+                akun: e.akun ? e.akun.nama : "-",
+                kredit: `${(e ? e.saldo : "0").toLocaleString("id-ID", {
+                  style: "currency",
+                  currency: "IDR",
+                })}`,
+              });
+              nilaiKredit = nilaiKredit + e.saldo;
+            }
+          })
+        );
+        const tanggalUtama = moment(`${d.tanggal}`).format("DD-MM-YYYY");
+        const jamUtama = moment(`${d.tanggal}`).format("HH:mm:ss");
+        const tanggalPerubahan = moment(`${d.updated_at}`).format("DD-MM-YYYY");
+        const jamPerubahan = moment(`${d.updated_at}`).format("HH:mm:ss");
+
+        if (idx == 0) {
+          worksheet.getCell(`A${(idx + 1) * 1 + 5}`).value = `${tanggalUtama}
+${jamUtama}`;
+          worksheet.mergeCells(
+            `A${(idx + 1) * 1 + 5}:A${(idx + 1) * 1 + 4 + d.__meta__.total}`
+          );
+          worksheet.getCell(
+            `B${(idx + 1) * 1 + 5}`
+          ).value = `${tanggalPerubahan}
+${jamPerubahan}`;
+          worksheet.mergeCells(
+            `B${(idx + 1) * 1 + 5}:B${(idx + 1) * 1 + 4 + d.__meta__.total}`
+          );
+          worksheet.getCell(`C${(idx + 1) * 1 + 5}`).value = `${d.nama}`;
+          worksheet.mergeCells(
+            `C${(idx + 1) * 1 + 5}:C${(idx + 1) * 1 + 4 + d.__meta__.total}`
+          );
+        } else if (idx > 0) {
+          worksheet.getCell(`A${6 + awal}`).value = `${tanggalUtama}
+${jamUtama}`;
+
+          worksheet.mergeCells(`A${6 + awal}:A${5 + awal + d.__meta__.total}`);
+
+          worksheet.getCell(`B${6 + awal}`).value = `${tanggalPerubahan}
+${jamPerubahan}`;
+
+          worksheet.mergeCells(`B${6 + awal}:B${5 + awal + d.__meta__.total}`);
+
+          worksheet.getCell(`C${6 + awal}`).value = `${d.nama}`;
+
+          worksheet.mergeCells(`C${6 + awal}:C${5 + awal + d.__meta__.total}`);
+        }
+        awal = awal + d.__meta__.total;
+      })
+    );
+
+    worksheet.addConditionalFormatting({
+      ref: `C6:F${6 + awal}`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Calibri",
+              family: 4,
+              size: 11,
+              // bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "left",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: `A6:B${6 + awal}`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Calibri",
+              family: 4,
+              size: 11,
+              // bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+              wrapText: true,
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+
+    worksheet.getCell(
+      `A${8 + awal}`
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
+
+    worksheet.getCell(`C${6 + awal}`).value = `TOTAL`;
+
+    worksheet.mergeCells(`C${6 + awal}:D${6 + awal}`);
+    worksheet.addConditionalFormatting({
+      ref: `A${6 + awal}:F${6 + awal}`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Calibri",
+              family: 4,
+              size: 11,
+              bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+              wrapText: true,
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet.getCell(`E${6 + awal}`).value = `${nilaiDebit.toLocaleString(
+      "id-ID",
+      {
+        style: "currency",
+        currency: "IDR",
+      }
+    )}`;
+    worksheet.getCell(`F${6 + awal}`).value = `${nilaiKredit.toLocaleString(
+      "id-ID",
+      {
+        style: "currency",
+        currency: "IDR",
+      }
+    )}`;
+
+    worksheet.getCell("A1").value = sekolah.nama;
+    worksheet.getCell("A2").value = "DAFTAR TRANSAKSI";
+    worksheet.getCell("A3").value = `Tanggal : ${awal1} - ${akhir1}`;
+
+    worksheet.getColumn("A").width = 26;
+    worksheet.getColumn("B").width = 26;
+    worksheet.getColumn("C").width = 30;
+    worksheet.getColumn("D").width = 23;
+    worksheet.getColumn("E").width = 28;
+    worksheet.getColumn("F").width = 28;
+
+    let namaFile = `/uploads/Transaksi-${bulan}-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -11477,7 +11872,7 @@ class SecondController {
       .first();
     const rekap = await MRekap.query().where({ id: rekap_id }).update({
       m_materi_id: materiBaru.id,
-      m_ta_id:m_ta_id,
+      m_ta_id: m_ta_id,
       dihapus: 0,
     });
 
@@ -11498,7 +11893,7 @@ class SecondController {
 
     if (rekapRombelData) {
       const coba = await Promise.all(
-        rekapRombelData.toJSON().map(async(d) => {
+        rekapRombelData.toJSON().map(async (d) => {
           const checkRombelLama = rombelLama
             .toJSON()
             .find((e) => e.id == d.m_rombel_id);
