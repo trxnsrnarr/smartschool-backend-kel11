@@ -612,6 +612,11 @@ Route.post(
   "/download/jurnal/:perencanaan_id",
   "KeuanganController.downloadJurnal"
 );
+Route.post("/download/transaksi", "SecondController.downloadTransaksi");
+Route.post(
+  "/download/transaksi/:perencanaan_id",
+  "KeuanganController.downloadTransaksi"
+);
 Route.post("/download/laba-rugi", "SecondController.downloadLabaRugi");
 Route.post("/download/arus-kas", "SecondController.downloadArusKas");
 
@@ -1798,6 +1803,9 @@ Route.post("/download/analisis-soal/:materi_id", "UjianController.downloadAnalis
 Route.post("/template-kesukaran", "UjianController.postTemplateKesukaran");
 Route.put("/template-kesukaran/:template_id", "UjianController.putTemplateKesukaran");
 Route.delete("/template-kesukaran/:template_id", "UjianController.deleteTemplateKesukaran");
+
+// alumni update
+Route.get("/alumniv2", "CDCController.getAlumniData");
 
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
