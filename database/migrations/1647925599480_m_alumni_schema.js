@@ -7,7 +7,7 @@ class MAlumniSchema extends Schema {
   up () {
     this.table('m_alumni', (table) => {
       // alter table
-      table.boolean("verifikasi").defaultTo(0);
+      table.boolean("verifikasi");
       table.string("status");
     })
   }
