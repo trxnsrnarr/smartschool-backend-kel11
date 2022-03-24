@@ -1806,6 +1806,8 @@ Route.delete("/template-kesukaran/:template_id", "UjianController.deleteTemplate
 
 // alumni update
 Route.get("/alumniv2", "CDCController.getAlumniData");
+Route.get("/alumniv2/:alumni_id", "CDCController.detailAlumniData");
+Route.put("/alumniv2/:alumni_id", "CDCController.putTerimaAlumni");
 
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
