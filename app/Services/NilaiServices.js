@@ -1,7 +1,14 @@
 const MBobotNilai = use("App/Models/MBobotNilai");
 const MUjianSiswa = use("App/Models/MUjianSiswa");
 
-const HitungNilaiAkhir = async({rekap, rekapUjian, mapel, user_id, ta, sekolah}) => {
+const HitungNilaiAkhir = async ({
+  rekap,
+  rekapUjian,
+  mapel,
+  user_id,
+  ta,
+  sekolah,
+}) => {
   let nilaiAkhir = 0;
   // const listNilai = [
   //   rataUjian,
@@ -67,15 +74,15 @@ const HitungNilaiAkhir = async({rekap, rekapUjian, mapel, user_id, ta, sekolah})
     .first();
 
   const nilaiUTS =
-    ujian.toJSON().nilaiUTS != null ? ujian.toJSON().nilaiUTS?.nilai : null;
+    ujian.toJSON().nilaiUTS != 0 ? ujian.toJSON().nilaiUTS?.nilai : 0;
 
   const nilaiUAS =
-    ujian.toJSON().nilaiUAS != null ? ujian.toJSON().nilaiUAS?.nilai : null;
+    ujian.toJSON().nilaiUAS != 0 ? ujian.toJSON().nilaiUAS?.nilai : 0;
 
   let nilaiUjian;
   let nilaiTugas;
   let nilaiUTSA;
-  
+
   if (nilaiUAS) {
     if (rata && rataUjian) {
       nilaiUjian = (rataUjian * bobot.uh_pas) / 100;
@@ -93,8 +100,16 @@ const HitungNilaiAkhir = async({rekap, rekapUjian, mapel, user_id, ta, sekolah})
       nilaiUTSA = (nilaiUTS * bobot.uts_pas) / 100;
       nilaiUASA = (nilaiUAS * bobot.uas_pas) / 100;
     }
-    nilaiAkhir = nilaiUASA + nilaiUTSA + nilaiUjian + nilaiTugas;
-  }else if (nilaiUTS) {
+    nilaiAkhir = nilaiUASA
+      ? nilaiUASA
+      : 0 + nilaiUTSA
+      ? nilaiUTSA
+      : 0 + nilaiUjian
+      ? nilaiUjian
+      : 0 + nilaiTugas
+      ? nilaiTugas
+      : 0;
+  } else if (nilaiUTS) {
     if (nilaiUjian && nilaiTugas) {
       nilaiUjian = (rataUjian * bobot.uh_pts) / 100;
       nilaiTugas = (rata * bobot.tugas_pts) / 100;
@@ -108,8 +123,14 @@ const HitungNilaiAkhir = async({rekap, rekapUjian, mapel, user_id, ta, sekolah})
       nilaiTugas = (rata * (bobot.uh_pts + bobot.tugas_pts)) / 100;
       nilaiUTSA = (nilaiUTS * bobot.uts_pts) / 100;
     }
-    nilaiAkhir = nilaiUTSA + nilaiUjian + nilaiTugas;
-  } 
+    nilaiAkhir = nilaiUTSA
+      ? nilaiUTSA
+      : 0 + nilaiUjian
+      ? nilaiUjian
+      : 0 + nilaiTugas
+      ? nilaiTugas
+      : 0;
+  }
 
   if (ujian) {
     await MUjianSiswa.query().where({ id: ujian.id }).update({
@@ -128,11 +149,9 @@ const HitungNilaiAkhir = async({rekap, rekapUjian, mapel, user_id, ta, sekolah})
       nilai: nilaiAkhir,
     });
   }
-//   console.log(nilaiAkhir,ujian,rata,rataUjian,data,dataUjian)
-  return {nilaiAkhir,ujian,rata,rataUjian,data,dataUjian};
+  //   console.log(nilaiAkhir,ujian,rata,rataUjian,data,dataUjian)
+  return { nilaiAkhir, ujian, rata, rataUjian, data, dataUjian };
 };
-
-
 
 module.exports = {
   HitungNilaiAkhir,
