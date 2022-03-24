@@ -2511,7 +2511,7 @@ class CDCController {
       .andWhere({ dihapus: 0 })
       .ids();
     let alumniIds = MAlumni.query()
-      // .where({ verifikasi })
+      .where({ verifikasi })
       .andWhere({ dihapus: 0 });
     if (tahun_angkatan) {
       alumniIds = alumniIds.where({ tahun_masuk: tahun_angkatan });
@@ -2519,28 +2519,28 @@ class CDCController {
     alumniIds = await alumniIds.pluck("m_user_id");
 
     const jumlahBekerja = await MAlumni.query()
-      // .where({ verifikasi })
+      .where({ verifikasi })
       .whereIn("m_user_id", userIdss)
       .andWhere({ dihapus: 0 })
       .andWhere({ status: "Bekerja" })
       .getCount();
 
     const jumlahKuliah = await MAlumni.query()
-      // .where({ verifikasi })
+      .where({ verifikasi })
       .whereIn("m_user_id", userIdss)
       .andWhere({ dihapus: 0 })
       .andWhere({ status: "Kuliah" })
       .getCount();
 
     const jumlahBerwirausaha = await MAlumni.query()
-      // .where({ verifikasi })
+      .where({ verifikasi })
       .whereIn("m_user_id", userIdss)
       .andWhere({ dihapus: 0 })
       .andWhere({ status: "Berwirausaha" })
       .getCount();
 
     const jumlahMencariKerja = await MAlumni.query()
-      // .where({ verifikasi })
+      .where({ verifikasi })
       .whereIn("m_user_id", userIdss)
       .andWhere({ dihapus: 0 })
       .andWhere({ status: "Mencari Kerja" })
@@ -2583,6 +2583,7 @@ class CDCController {
         builder.select("id", "nama");
       })
       .where({ dihapus: 0 })
+      .where({ verifikasi })
       .whereIn("m_user_id", userIds);
 
     if (status) {
