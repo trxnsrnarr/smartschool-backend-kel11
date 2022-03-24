@@ -2660,9 +2660,8 @@ class CDCController {
       tahun_masuk,
     } = request.get();
     let alumni1 = await MAlumni.query()
-      .select("id", "jurusan", "tahun_masuk", "status", "m_user_id")
       .with("user", (builder) => {
-        builder.with("profil").select("id", "nama");
+        builder.with("profil");
       })
       .where({ dihapus: 0 })
       .where({ id: alumni_id })
