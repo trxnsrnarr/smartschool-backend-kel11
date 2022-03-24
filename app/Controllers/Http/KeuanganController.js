@@ -895,7 +895,11 @@ class KeuanganController {
       .update({
         dihapus: 1,
       });
-
+    await MRencanaJurnal.query()
+      .where({ m_rencana_transaksi_id: transaksi_id })
+      .update({
+        dihapus: 1,
+      });
     if (!update) {
       return response.notFound({
         message: messageNotFound,

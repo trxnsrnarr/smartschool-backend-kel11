@@ -2279,6 +2279,12 @@ class SecondController {
       .update({
         dihapus: 1,
       });
+
+    await MKeuJurnal.query()
+      .where({ m_keu_transaksi_id: transaksi_id })
+      .update({
+        dihapus: 1,
+      });
     const transaksi = await MKeuTransaksi.query()
       .where({ id: transaksi_id })
       .first();
