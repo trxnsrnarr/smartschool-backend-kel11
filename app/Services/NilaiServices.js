@@ -82,6 +82,7 @@ const HitungNilaiAkhir = async ({
   let nilaiUjian;
   let nilaiTugas;
   let nilaiUTSA;
+  let nilaiUASA;
 
   if (nilaiUAS) {
     if (rata && rataUjian) {
@@ -100,36 +101,23 @@ const HitungNilaiAkhir = async ({
       nilaiUTSA = (nilaiUTS * bobot.uts_pas) / 100;
       nilaiUASA = (nilaiUAS * bobot.uas_pas) / 100;
     }
-    nilaiAkhir = nilaiUASA
-      ? nilaiUASA
-      : 0 + nilaiUTSA
-      ? nilaiUTSA
-      : 0 + nilaiUjian
-      ? nilaiUjian
-      : 0 + nilaiTugas
-      ? nilaiTugas
-      : 0;
+    nilaiAkhir = nilaiUASA + nilaiUTSA + nilaiUjian + nilaiTugas;
   } else if (nilaiUTS) {
-    if (nilaiUjian && nilaiTugas) {
+    if (rataUjian && rata) {
       nilaiUjian = (rataUjian * bobot.uh_pts) / 100;
       nilaiTugas = (rata * bobot.tugas_pts) / 100;
       nilaiUTSA = (nilaiUTS * bobot.uts_pts) / 100;
-    } else if (rataUjian) {
-      nilaiUjian = (rataUjian * (bobot.uh_pts + bobot.tugas_pts)) / 100;
-      nilaiTugas = 0;
-      nilaiUTSA = (nilaiUTS * bobot.uts_pts) / 100;
-    } else if (rata) {
+    } else if (rata != null) {
       nilaiUjian = 0;
       nilaiTugas = (rata * (bobot.uh_pts + bobot.tugas_pts)) / 100;
       nilaiUTSA = (nilaiUTS * bobot.uts_pts) / 100;
+      coba = nilaiTugas + nilaiUTSA;
+    } else if (rataUjian != null) {
+      nilaiUjian = (rataUjian * (bobot.uh_pts + bobot.tugas_pts)) / 100;
+      nilaiTugas = 0;
+      nilaiUTSA = (nilaiUTS * bobot.uts_pts) / 100;
     }
-    nilaiAkhir = nilaiUTSA
-      ? nilaiUTSA
-      : 0 + nilaiUjian
-      ? nilaiUjian
-      : 0 + nilaiTugas
-      ? nilaiTugas
-      : 0;
+    nilaiAkhir = nilaiUTSA + nilaiUjian + nilaiTugas;
   }
 
   if (ujian) {
