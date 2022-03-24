@@ -1086,7 +1086,7 @@ class CDCController {
     userIds = await userIds.ids();
     penerimaanSiswa = MPenerimaanSiswa.query()
       .with("user", (builder) => {
-        builder.select("id","nama")
+        builder.select("id", "nama");
       })
       .with("rombel", (builder) => {
         builder.select("id", "nama");
@@ -2434,6 +2434,341 @@ class CDCController {
 
     return response.ok({
       message: messagePutSuccess,
+    });
+  }
+
+  async putLaporanPrakerin({
+    response,
+    request,
+    auth,
+    params: { laporan_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { judul, foto, lokasi, deskripsi, waktu_awal, waktu_akhir } =
+      request.post();
+
+    const acara = await MAcaraPerusahaaan.query()
+      .where({ id: acara_id })
+      .update({
+        judul,
+        foto,
+        lokasi,
+        deskripsi,
+        waktu_awal,
+        waktu_akhir,
+        dihapus: 0,
+      });
+
+    if (!acara) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async getAlumniData({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    let {
+      verifikasi,
+      search,
+      page,
+      jurusan,
+      status,
+      tingkat,
+      jurusan_id,
+      rombel_id,
+      tahun_angkatan,
+      tahun_masuk,
+    } = request.get();
+    let userIdss = await User.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .ids();
+    let alumniIds = MAlumni.query()
+      // .where({ verifikasi })
+      .andWhere({ dihapus: 0 });
+    if (tahun_angkatan) {
+      alumniIds = alumniIds.where({ tahun_masuk: tahun_angkatan });
+    }
+    alumniIds = await alumniIds.pluck("m_user_id");
+
+    const jumlahBekerja = await MAlumni.query()
+      // .where({ verifikasi })
+      .whereIn("m_user_id", userIdss)
+      .andWhere({ dihapus: 0 })
+      .andWhere({ status: "Bekerja" })
+      .getCount();
+
+    const jumlahKuliah = await MAlumni.query()
+      // .where({ verifikasi })
+      .whereIn("m_user_id", userIdss)
+      .andWhere({ dihapus: 0 })
+      .andWhere({ status: "Kuliah" })
+      .getCount();
+
+    const jumlahBerwirausaha = await MAlumni.query()
+      // .where({ verifikasi })
+      .whereIn("m_user_id", userIdss)
+      .andWhere({ dihapus: 0 })
+      .andWhere({ status: "Berwirausaha" })
+      .getCount();
+
+    const jumlahMencariKerja = await MAlumni.query()
+      // .where({ verifikasi })
+      .whereIn("m_user_id", userIdss)
+      .andWhere({ dihapus: 0 })
+      .andWhere({ status: "Mencari Kerja" })
+      .getCount();
+
+    const jumlahTotal = await User.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .whereIn("id", alumniIds)
+      .getCount();
+
+    const jumlahLaki = await User.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ gender: "L" })
+      .whereIn("id", alumniIds)
+      .getCount();
+
+    const jumlahPerempuan = await User.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ gender: "P" })
+      .whereIn("id", alumniIds)
+      .getCount();
+
+    page = page ? parseInt(page) : 1;
+
+    let userIds = User.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 });
+
+    if (search) {
+      userIds = userIds.where("nama", "like", `%${search}%`);
+    }
+    userIds = await userIds.ids();
+
+    let alumni = MAlumni.query()
+      .select("id", "jurusan", "tahun_masuk", "status", "m_user_id")
+      .with("user", (builder) => {
+        builder.select("id", "nama");
+      })
+      .where({ dihapus: 0 })
+      .whereIn("m_user_id", userIds);
+
+    if (status) {
+      alumni = alumni.where({ status });
+    }
+    if (jurusan) {
+      alumni = alumni.where({ jurusan });
+    }
+    if (tahun_masuk) {
+      alumni = alumni.where({ tahun_masuk });
+    }
+    alumni = await alumni.fetch();
+
+    const statusAlumni = ["Bekerja", "Kuliah", "Berwirausaha", "Mencari Kerja"];
+    let jurusanData = [];
+    alumni.toJSON().filter((d) => {
+      if (!jurusanData.find((e) => e.nama == d.jurusan)) {
+        jurusanData.push({ nama: d.jurusan });
+        return true;
+      } else {
+        return false;
+      }
+    });
+
+    let tahunData = [];
+    alumni.toJSON().filter((d) => {
+      if (!tahunData.find((e) => e.nama == d.tahun_masuk)) {
+        tahunData.push({ nama: d.tahun_masuk });
+        return true;
+      } else {
+        return false;
+      }
+    });
+    return response.ok({
+      jumlahTotal,
+      jumlahLaki: jumlahLaki,
+      jumlahPerempuan: jumlahPerempuan,
+      jumlahBekerja,
+      jumlahBerwirausaha,
+      jumlahKuliah,
+      jumlahMencariKerja,
+      statusAlumni,
+      alumni,
+      jurusanData,
+      tahunData,
+    });
+  }
+
+  async detailAlumniData({ response, request, auth, params: { alumni_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    let {
+      verifikasi,
+      search,
+      page,
+      jurusan,
+      status,
+      tingkat,
+      jurusan_id,
+      rombel_id,
+      tahun_angkatan,
+      tahun_masuk,
+    } = request.get();
+    let alumni1 = await MAlumni.query()
+      .select("id", "jurusan", "tahun_masuk", "status", "m_user_id")
+      .with("user", (builder) => {
+        builder.with("profil").select("id", "nama");
+      })
+      .where({ dihapus: 0 })
+      .where({ id: alumni_id })
+      .first();
+
+    let userIds = await User.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .ids();
+
+    let alumni = MAlumni.query()
+      .select("id", "jurusan", "tahun_masuk", "status", "m_user_id")
+      .with("user", (builder) => {
+        builder.select("id", "nama");
+      })
+      .where({ dihapus: 0 })
+      .whereIn("m_user_id", userIds);
+
+    if (status) {
+      alumni = alumni.where({ status });
+    }
+    if (jurusan) {
+      alumni = alumni.where({ jurusan });
+    }
+    if (tahun_masuk) {
+      alumni = alumni.where({ tahun_masuk });
+    }
+    alumni = await alumni.fetch();
+
+    const statusAlumni = ["Bekerja", "Kuliah", "Berwirausaha", "Mencari Kerja"];
+    let jurusanData = [];
+    alumni.toJSON().filter((d) => {
+      if (!jurusanData.find((e) => e.nama == d.jurusan)) {
+        jurusanData.push({ nama: d.jurusan });
+        return true;
+      } else {
+        return false;
+      }
+    });
+
+    let tahunData = [];
+    alumni.toJSON().filter((d) => {
+      if (!tahunData.find((e) => e.nama == d.tahun_masuk)) {
+        tahunData.push({ nama: d.tahun_masuk });
+        return true;
+      } else {
+        return false;
+      }
+    });
+    return response.ok({
+      statusAlumni,
+      alumni1,
+      alumni,
+      jurusanData,
+      tahunData,
+    });
+  }
+
+  async putTerimaAlumni({ response, request, auth, params: { alumni_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { verifikasi } = request.post();
+
+    const alumni = await MAlumni.query().where({ id: alumni_id }).update({
+      verifikasi,
+    });
+
+    if (!alumni) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteAlumni({ response, request, auth, params: { alumni_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const alumni = await MAlumni.query().where({ id: alumni_id }).update({
+      dihapus: 1,
+    });
+
+    if (!alumni) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
     });
   }
 
