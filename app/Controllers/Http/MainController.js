@@ -29761,14 +29761,14 @@ class MainController {
     const mapel = await MMataPelajaran.query()
       .with("user")
       .with("materi", (builder) => {
-        builder.where({ tingkat: siswa.toJSON().anggotaRombel.rombel.tingkat });
-        if (mapelSingkat.kelompok == "C") {
-          if (siswa.toJSON().anggotaRombel.rombel.m_jurusan_id != null) {
-            builder.andWhere({
-              m_jurusan_id: siswa.toJSON().anggotaRombel.rombel.m_jurusan_id,
-            });
-          }
-        }
+        builder.where({ tingkat: siswa.toJSON().anggotaRombel.rombel.tingkat }).andWhere({dihapus:0});
+        // if (mapelSingkat.kelompok == "C") {
+        //   if (siswa.toJSON().anggotaRombel.rombel.m_jurusan_id != null) {
+        //     builder.andWhere({
+        //       m_jurusan_id: siswa.toJSON().anggotaRombel.rombel.m_jurusan_id,
+        //     });
+        //   }
+        // }
       })
       .where({ id: mata_pelajaran_id })
       .first();
@@ -50143,15 +50143,15 @@ class MainController {
         });
         // add column headers
         worksheet.getRow(4).values = [
-          "No",
-          "Jenis",
-          "Nama Bank",
-          "No Rekening",
-          "Nama Pemilik",
-          "Saldo",
-          "Pemasukan",
-          "Pengeluaran",
-          "Total",
+          "NO",
+          "JENIS",
+          "NAMA BANK",
+          "NO REKENING",
+          "NAMA PEMILIK",
+          "SALDO",
+          "PEMASUKAN",
+          "PENGELUARAN",
+          "TOTAL",
         ];
 
         worksheet.columns = [
