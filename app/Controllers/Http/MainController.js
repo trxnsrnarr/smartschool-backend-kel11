@@ -7430,13 +7430,13 @@ class MainController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
-    
+
     let { m_ta_id = ta.id } = request.get();
     const semuaTA = await Mta.query()
-    .andWhere({ m_sekolah_id: sekolah.id })
-    .andWhere({ dihapus: 0 })
-    .orderBy("id", "desc")
-    .fetch();
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .orderBy("id", "desc")
+      .fetch();
     if (sekolah.id == 40) {
       if (user.role == "siswa") {
         const rombelIds = await MRombel.query()
@@ -7590,7 +7590,7 @@ class MainController {
 
     return response.ok({
       materi,
-      semuaTA
+      semuaTA,
       // materiLainnya,
     });
   }
@@ -11532,9 +11532,8 @@ class MainController {
       .first();
 
     if (user.role == "siswa") {
-      await kirimNotifWaLangsung(
-        user.id,
-        `komen-${tkTimelineKomen.id}-${user.id}`,
+      WhatsAppService.sendMessage(
+        user.wa_real,
         `Halo ${user.nama}, ada balasan komentar dari Guru ${
           timelineTk.toJSON().timeline.user.nama
         } dengan komentar ${komen}. Silahkan klik tautan berikut untuk membalasnya! Semangat!! 
@@ -11542,10 +11541,19 @@ class MainController {
           timelineTk.m_timeline_id
         }?hal=tugas`
       );
+      //  kirimNotifWa(
+      //   user.id,
+      //   `komen-${tkTimelineKomen.id}-${user.id}`,
+      //   `Halo ${user.nama}, ada balasan komentar dari Guru ${
+      //     timelineTk.toJSON().timeline.user.nama
+      //   } dengan komentar ${komen}. Silahkan klik tautan berikut untuk membalasnya! Semangat!! 
+      //   ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${
+      //     timelineTk.m_timeline_id
+      //   }?hal=tugas`
+      // );
     } else if (user.role == "guru") {
-      await kirimNotifWaLangsung(
-        user.id,
-        `komen-${tkTimelineKomen.id}-${user.id}`,
+      WhatsAppService.sendMessage(
+        user.wa_real,
         `Halo ${user.nama}, ada balasan komentar dari Siswa ${
           timelineTk.toJSON().user.nama
         } dengan komentar ${komen}. Silahkan klik tautan berikut untuk membalasnya! Semangat!! 
@@ -11553,6 +11561,16 @@ class MainController {
           timelineTk.m_timeline_id
         }?hal=tugas`
       );
+      //  kirimNotifWa(
+      //   user.id,
+      //   `komen-${tkTimelineKomen.id}-${user.id}`,
+      //   `Halo ${user.nama}, ada balasan komentar dari Siswa ${
+      //     timelineTk.toJSON().user.nama
+      //   } dengan komentar ${komen}. Silahkan klik tautan berikut untuk membalasnya! Semangat!! 
+      //   ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${
+      //     timelineTk.m_timeline_id
+      //   }?hal=tugas`
+      // );
     }
 
     // await WhatsAppService.sendMessage(
@@ -14432,7 +14450,7 @@ class MainController {
                   .peserta.sort((a, b) =>
                     ("" + a.user.nama).localeCompare(b.user.nama)
                   )
-                  .map(async (e,idx) => {
+                  .map(async (e, idx) => {
                     if (d.id == e.m_user_id) {
                       const pesertaUjian = await TkPesertaUjian.query()
                         .with("jawabanSiswa", (builder) => {
@@ -22443,18 +22461,18 @@ class MainController {
     const user = await auth.getUser();
 
     const { nav } = request.get();
-    
+
     const pelajaran = await MMateri.query()
-    .with("mataPelajaran")
+      .with("mataPelajaran")
       .where({ id: materi_id })
       .first();
-      const semuaTA = await Mta.query()
+    const semuaTA = await Mta.query()
       .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .orderBy("id", "desc")
-      .whereNot({id:pelajaran.toJSON().mataPelajaran.m_ta_id})
+      .whereNot({ id: pelajaran.toJSON().mataPelajaran.m_ta_id })
       .fetch();
-      
+
     const sikapsosial = await MSikapSosial.query().fetch();
 
     // const tugas = await MTugas.query().where({ m_user_id: user.id }).fetch();
@@ -22717,7 +22735,7 @@ class MainController {
       sikapsosial,
       // tugas,
       predikat,
-      semuaTA
+      semuaTA,
     });
   }
 
@@ -23168,10 +23186,10 @@ class MainController {
 
     const { rombel_id, tipe } = request.get();
     const tahunPelajaranIds = await Mta.query()
-    .where({ tahun: ta.tahun })
-    .andWhere({ dihapus: 0 })
-    .andWhere({ m_sekolah_id: sekolah.id })
-    .ids();
+      .where({ tahun: ta.tahun })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .ids();
     const pelajaran = await MMateri.query()
       .with("mataPelajaran")
       .where({ id: materi_id })
@@ -23246,22 +23264,24 @@ class MainController {
     }
 
     if (rombel_id) {
-      const rombelAktif = await MRombel.query().where({id:rombel_id}).first()
+      const rombelAktif = await MRombel.query()
+        .where({ id: rombel_id })
+        .first();
       const dataRombelIds = await MRombel.query()
         .where({ nama: rombelAktif.nama })
         .andWhere({ tingkat: rombelAktif.tingkat })
         .andWhere({ m_sekolah_id: sekolah.id })
-        .andWhere({dihapus:0})
-        .whereIn("m_ta_id",tahunPelajaranIds)
+        .andWhere({ dihapus: 0 })
+        .whereIn("m_ta_id", tahunPelajaranIds)
         .ids();
       const mapelIds = await MMataPelajaran.query()
         .where({ m_user_id: user.id })
         .where({ dihapus: 0 })
-        .whereIn("m_ta_id",tahunPelajaranIds)
+        .whereIn("m_ta_id", tahunPelajaranIds)
         .ids();
       timelineTugas = await MTimeline.query()
         .where({ m_user_id: user.id })
-        .whereIn(" m_rombel_id", dataRombelIds )
+        .whereIn(" m_rombel_id", dataRombelIds)
         .with("tugas", (builder) => {
           builder.where({ dihapus: 0 });
         })
@@ -23470,10 +23490,10 @@ class MainController {
     let rekap;
     let tugasdata;
     const tahunPelajaranIds = await Mta.query()
-    .where({ tahun: ta.tahun })
-    .andWhere({ dihapus: 0 })
-    .andWhere({ m_sekolah_id: sekolah.id })
-    .ids();
+      .where({ tahun: ta.tahun })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .ids();
     if (m_tugas_id) {
       tugasdata = await MTimeline.query()
         .with("listSiswaDinilai", (builder) => {
@@ -23543,17 +23563,19 @@ class MainController {
 
     let all;
     if (m_tugas_id) {
-      const rombelData = await MRombel.query().where({id:m_rombel_id}).first()
+      const rombelData = await MRombel.query()
+        .where({ id: m_rombel_id })
+        .first();
       const dataRombelIds = await MRombel.query()
-      .where({ nama: rombelData.nama })
-      .andWhere({ tingkat: rombelData.tingkat })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .whereIn("m_ta_id", tahunPelajaranIds)
-      .ids();
-        
+        .where({ nama: rombelData.nama })
+        .andWhere({ tingkat: rombelData.tingkat })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .whereIn("m_ta_id", tahunPelajaranIds)
+        .ids();
+
       const timeline = await MTimeline.query()
         .where({ m_tugas_id: m_tugas_id })
-        .whereIn( "m_rombel_id", dataRombelIds)
+        .whereIn("m_rombel_id", dataRombelIds)
         .first();
 
       all = await Promise.all(
@@ -29761,7 +29783,9 @@ class MainController {
     const mapel = await MMataPelajaran.query()
       .with("user")
       .with("materi", (builder) => {
-        builder.where({ tingkat: siswa.toJSON().anggotaRombel.rombel.tingkat }).andWhere({dihapus:0});
+        builder
+          .where({ tingkat: siswa.toJSON().anggotaRombel.rombel.tingkat })
+          .andWhere({ dihapus: 0 });
         // if (mapelSingkat.kelompok == "C") {
         //   if (siswa.toJSON().anggotaRombel.rombel.m_jurusan_id != null) {
         //     builder.andWhere({
@@ -43367,10 +43391,10 @@ class MainController {
     let pembayaran = await MPembayaranSekolah.query()
       .with("sekolah")
       .with("dokumen", (builder) => {
-        builder.where({ dihapus: 0 })
-        if(search){
-          builder.where("nama","like",`%${search}%`)
-        };
+        builder.where({ dihapus: 0 });
+        if (search) {
+          builder.where("nama", "like", `%${search}%`);
+        }
       })
       .where({ id: pembayaranSekolah_id })
       .first();
@@ -43400,8 +43424,7 @@ class MainController {
       jumlah_stand,
       ukuran_bandwidth,
       invoice_bulan,
-      tanggal_pembayaran
-      
+      tanggal_pembayaran,
     } = request.post();
 
     const sekolah = await MPembayaranSekolah.create({
@@ -43448,10 +43471,8 @@ class MainController {
       jumlah_stand,
       ukuran_bandwidth,
       invoice_bulan,
-      tanggal_pembayaran
+      tanggal_pembayaran,
     } = request.post();
-
-    
 
     const sekolah = await MPembayaranSekolah.query()
       .where({ id: pembayaranSekolah_id })
@@ -43469,7 +43490,7 @@ class MainController {
         jumlah_stand,
         ukuran_bandwidth,
         invoice_bulan,
-        tanggal_pembayaran
+        tanggal_pembayaran,
       });
 
     return response.ok({
@@ -48321,40 +48342,40 @@ class MainController {
           //         e.dihapus == 0
           //     )
           //   ) {
-              const check = await MMateri.query()
-                .where({ m_mata_pelajaran_id: mapelBaru.id })
-                .andWhere({ tingkat: rombelBaru.tingkat })
-                .first();
-              if (check) {
-                if (check.dihapus) {
-                  await MMateri.query()
-                    .where({ id: check.id })
-                    .update({ dihapus: 0 });
-                }
-              }
+          const check = await MMateri.query()
+            .where({ m_mata_pelajaran_id: mapelBaru.id })
+            .andWhere({ tingkat: rombelBaru.tingkat })
+            .first();
+          if (check) {
+            if (check.dihapus) {
+              await MMateri.query()
+                .where({ id: check.id })
+                .update({ dihapus: 0 });
+            }
+          }
 
-              if (!check) {
-                const materi = await MMateri.create({
-                  tingkat: rombelBaru.tingkat,
-                  m_mata_pelajaran_id: mapelBaru.id,
-                });
+          if (!check) {
+            const materi = await MMateri.create({
+              tingkat: rombelBaru.tingkat,
+              m_mata_pelajaran_id: mapelBaru.id,
+            });
 
-                await TkMateriRombel.create({
-                  m_materi_id: materi.id,
-                  m_rombel_id: d.m_rombel_id,
-                });
-              } else {
-                const checkTk = await TkMateriRombel.query()
-                  .where({ m_materi_id: check.id })
-                  .andWhere({ m_rombel_id: d.m_rombel_id })
-                  .first();
-                if (!checkTk) {
-                  await TkMateriRombel.create({
-                    m_materi_id: check.id,
-                    m_rombel_id: d.m_rombel_id,
-                  });
-                }
-              }
+            await TkMateriRombel.create({
+              m_materi_id: materi.id,
+              m_rombel_id: d.m_rombel_id,
+            });
+          } else {
+            const checkTk = await TkMateriRombel.query()
+              .where({ m_materi_id: check.id })
+              .andWhere({ m_rombel_id: d.m_rombel_id })
+              .first();
+            if (!checkTk) {
+              await TkMateriRombel.create({
+                m_materi_id: check.id,
+                m_rombel_id: d.m_rombel_id,
+              });
+            }
+          }
 
           //     janganUlangMateri.push(d);
           //     return true;
@@ -50009,20 +50030,26 @@ class MainController {
     }
 
     const user = await auth.getUser();
+    const { m_rencana_keuangan_id } = request.post();
 
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
-    const rekening = await MRekSekolah.query()
+    let rekening = MRekSekolah.query()
       .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .fetch();
+      .andWhere({ m_sekolah_id: sekolah.id });
+    if (m_rencana_keuangan_id) {
+      rekening = rekening.andWhere({ m_rencana_keuangan_id });
+    }else{
+      rekening = rekening.whereNull(" m_rencana_keuangan_id ");
+    }
+    rekening = await rekening.fetch();
 
     let workbook = new Excel.Workbook();
     let worksheet = workbook.addWorksheet(`Daftar Rekening`);
 
     worksheet.addConditionalFormatting({
-      ref: "A1:I2",
+      ref: "A1:E2",
       rules: [
         {
           type: "expression",
@@ -50054,7 +50081,7 @@ class MainController {
       ],
     });
     worksheet.addConditionalFormatting({
-      ref: "A4:I4",
+      ref: "A4:E4",
       rules: [
         {
           type: "expression",
@@ -50088,7 +50115,7 @@ class MainController {
     await Promise.all(
       rekening.toJSON().map(async (d, idx) => {
         worksheet.addConditionalFormatting({
-          ref: `B${(idx + 1) * 1 + 4}:I${(idx + 1) * 1 + 4}`,
+          ref: `B${(idx + 1) * 1 + 4}:E${(idx + 1) * 1 + 4}`,
           rules: [
             {
               type: "expression",
@@ -50144,14 +50171,10 @@ class MainController {
         // add column headers
         worksheet.getRow(4).values = [
           "NO",
-          "JENIS",
+          "NAMA AKUN",
           "NAMA BANK",
           "NO REKENING",
-          "NAMA PEMILIK",
           "SALDO",
-          "PEMASUKAN",
-          "PENGELUARAN",
-          "TOTAL",
         ];
 
         worksheet.columns = [
@@ -50159,11 +50182,7 @@ class MainController {
           { key: "jenis" },
           { key: "bank" },
           { key: "norek" },
-          { key: "pemilik" },
           { key: "saldo" },
-          { key: "pemasukan" },
-          { key: "pengeluaran" },
-          { key: "total" },
         ];
 
         // Add row using key mapping to columns
@@ -50172,24 +50191,14 @@ class MainController {
           jenis: d ? d.jenis : "-",
           bank: d ? d.bank : "-",
           norek: d ? d.norek : "-",
-          pemilik: d ? d.pemilik : "-",
-          saldo: d ? d.saldo : "-",
-          pemasukan: d ? d.pemasukan : "-",
-          pengeluaran: d ? d.pengeluaran : "-",
-          total: d
-            ? d.pemasukan
-            : "0" - d
-            ? d.pengeluaran
-            : "0" + d
-            ? d.saldo
-            : "0",
+          saldo: `Rp ${d ? d.saldo : ""}`.replace(/\B(?=(\d{3})+(?!\d))/g, "."),
         });
       })
     );
     worksheet.getCell("A1").value = "Rekap Rekening";
     worksheet.getCell("A2").value = sekolah.nama;
-    worksheet.mergeCells("A1:I1");
-    worksheet.mergeCells("A2:I2");
+    worksheet.mergeCells("A1:E1");
+    worksheet.mergeCells("A2:E2");
     worksheet.getCell(
       "A3"
     ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
