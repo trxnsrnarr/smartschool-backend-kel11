@@ -2166,6 +2166,406 @@ class MainController {
     });
   }
 
+  async postProfilUserAdmin({ auth, response, request }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    const user = await auth.getUser();
+
+    let {
+      bio,
+      pendidikan,
+      pengalaman,
+      prestasi,
+      portofolio,
+      bahasa,
+      keahlian,
+      admin,
+
+      // identitas
+      nama,
+      wa_real,
+      nama_panggilan,
+      whatsapp,
+      gender,
+      agama,
+      tempat_lahir,
+      tanggal_lahir,
+      avatar,
+      home,
+      no_ijazah,
+      tahun_ijazah,
+      file_ijazah,
+
+      // informasi
+      nisn,
+      nis,
+      nrk,
+      nip,
+      nuptk,
+      asal_sekolah,
+      alamat_asal_sekolah,
+      status_keluarga,
+      anak_ke,
+      kelas_diterima,
+      tanggal_masuk,
+      telp_rumah,
+
+      // alamat
+      alamat,
+      province_id,
+      regency_id,
+      district_id,
+      village_id,
+      kodepos,
+
+      // kesehatan
+      tb,
+      bb,
+      gol_darah,
+      buta_warna,
+      kacamata,
+      disabilitas,
+      surat_keterangan_sehat,
+      surat_keterangan_buta_warna,
+
+      // ortu
+      nama_ayah,
+      telp_ayah,
+      alamat_ayah,
+      pekerjaan_ayah,
+      nama_ibu,
+      telp_ibu,
+      alamat_ibu,
+      pekerjaan_ibu,
+      nama_wali,
+      telp_wali,
+      alamat_wali,
+      pekerjaan_wali,
+
+      // rapor
+      fisika1,
+      fisika2,
+      fisika3,
+      fisika4,
+      fisika5,
+      fisika6,
+      matematika1,
+      matematika2,
+      matematika3,
+      matematika4,
+      matematika5,
+      matematika6,
+      bindo1,
+      bindo2,
+      bindo3,
+      bindo4,
+      bindo5,
+      bindo6,
+      bing1,
+      bing2,
+      bing3,
+      bing4,
+      bing5,
+      bing6,
+
+      // lampiran rapor
+      semester1,
+      semester2,
+      semester3,
+      semester4,
+      semester5,
+      semester6,
+      m_user_id,
+
+      //
+      file_ppdb,
+      data_absensi,
+    } = request.post();
+
+    let userPayload = {
+      // identitas
+      wa_real,
+      nama_ibu,
+      nama,
+      nama_ayah,
+      whatsapp,
+      gender,
+      agama,
+      tempat_lahir,
+      tanggal_lahir,
+      avatar,
+      home,
+    };
+
+    if (pendidikan) {
+      pendidikan = JSON.stringify(pendidikan);
+    }
+    if (pengalaman) {
+      pengalaman = JSON.stringify(pengalaman);
+    }
+    if (prestasi) {
+      prestasi = JSON.stringify(prestasi);
+    }
+    if (portofolio) {
+      portofolio = JSON.stringify(portofolio);
+    }
+    if (bahasa) {
+      bahasa = JSON.stringify(bahasa);
+    }
+    if (keahlian) {
+      keahlian = keahlian.toString();
+    }
+    if (!gender) {
+      delete userPayload.gender;
+    }
+    if (!agama) {
+      delete userPayload.agama;
+    }
+    if (!tempat_lahir) {
+      delete userPayload.tempat_lahir;
+    }
+    tanggal_lahir == "Invalid date" ? delete userPayload.tanggal_lahir : null;
+
+    if (!admin) {
+      if (whatsapp) {
+        const checkwhatsapp = await User.query()
+          .where("id", "!=", m_user_id)
+          .where({ whatsapp: whatsapp })
+          .where({ dihapus: 0 })
+          .where({ m_sekolah_id: sekolah.id })
+          .first();
+
+        if (checkwhatsapp) {
+          return response.forbidden({
+            message: "Nomor whatsapp sudah terdaftar",
+          });
+        }
+      }
+    }
+
+    await User.query().where({ id: m_user_id }).update(userPayload);
+
+    const check = await MProfilUser.query()
+      .select("id")
+      .where({
+        m_user_id: m_user_id,
+      })
+      .first();
+    // return check;
+
+    let profil;
+
+    if (check) {
+      profil = await MProfilUser.query().where({ id: check.id }).update({
+        bio,
+        pendidikan,
+        pengalaman,
+        prestasi,
+        portofolio,
+        bahasa,
+        keahlian,
+        nama_panggilan,
+
+        // informasi
+        nisn,
+        nis,
+        nrk,
+        nip,
+        nuptk,
+        asal_sekolah,
+        alamat_asal_sekolah,
+        no_ijazah,
+        tahun_ijazah,
+        file_ijazah,
+        status_keluarga,
+        anak_ke,
+        kelas_diterima,
+        tanggal_masuk,
+        telp_rumah,
+        no_ijazah,
+        tahun_ijazah,
+        file_ijazah,
+
+        // alamat
+        alamat,
+        province_id,
+        regency_id,
+        district_id,
+        village_id,
+        kodepos,
+
+        // kesehatan
+        tb,
+        bb,
+        gol_darah,
+        buta_warna,
+        kacamata,
+        disabilitas,
+        surat_keterangan_sehat,
+        surat_keterangan_buta_warna,
+
+        // ortu
+        nama_ayah,
+        telp_ayah,
+        alamat_ayah,
+        pekerjaan_ayah,
+        nama_ibu,
+        telp_ibu,
+        alamat_ibu,
+        pekerjaan_ibu,
+        nama_wali,
+        telp_wali,
+        alamat_wali,
+        pekerjaan_wali,
+        m_user_id: m_user_id,
+
+        // rapor
+        fisika1,
+        fisika2,
+        fisika3,
+        fisika4,
+        fisika5,
+        fisika6,
+        matematika1,
+        matematika2,
+        matematika3,
+        matematika4,
+        matematika5,
+        matematika6,
+        bindo1,
+        bindo2,
+        bindo3,
+        bindo4,
+        bindo5,
+        bindo6,
+        bing1,
+        bing2,
+        bing3,
+        bing4,
+        bing5,
+        bing6,
+
+        // lampiran rapor
+        semester1,
+        semester2,
+        semester3,
+        semester4,
+        semester5,
+        semester6,
+
+        //
+        file_ppdb,
+        data_absensi,
+      });
+    } else {
+      profil = await MProfilUser.create({
+        bio,
+        pendidikan,
+        pengalaman,
+        prestasi,
+        portofolio,
+        bahasa,
+        keahlian,
+
+        // informasi
+        nisn,
+        nis,
+        nrk,
+        nip,
+        nuptk,
+        alamat_asal_sekolah,
+        no_ijazah,
+        tahun_ijazah,
+        file_ijazah,
+        status_keluarga,
+        anak_ke,
+        kelas_diterima,
+        tanggal_masuk,
+        telp_rumah,
+        no_ijazah,
+        tahun_ijazah,
+        file_ijazah,
+
+        // alamat
+        alamat,
+        province_id,
+        regency_id,
+        district_id,
+        village_id,
+        kodepos,
+
+        // kesehatan
+        tb,
+        bb,
+        gol_darah,
+        buta_warna,
+        kacamata,
+        disabilitas,
+        surat_keterangan_sehat,
+        surat_keterangan_buta_warna,
+
+        // ortu
+        nama_ayah,
+        telp_ayah,
+        alamat_ayah,
+        pekerjaan_ayah,
+        nama_ibu,
+        telp_ibu,
+        alamat_ibu,
+        pekerjaan_ibu,
+        nama_wali,
+        telp_wali,
+        alamat_wali,
+        pekerjaan_wali,
+        m_user_id: m_user_id,
+
+        // rapor
+        fisika1,
+        fisika2,
+        fisika3,
+        fisika4,
+        fisika5,
+        fisika6,
+        matematika1,
+        matematika2,
+        matematika3,
+        matematika4,
+        matematika5,
+        matematika6,
+        bindo1,
+        bindo2,
+        bindo3,
+        bindo4,
+        bindo5,
+        bindo6,
+        bing1,
+        bing2,
+        bing3,
+        bing4,
+        bing5,
+        bing6,
+
+        // lampiran rapor
+        semester1,
+        semester2,
+        semester3,
+        semester4,
+        semester5,
+        semester6,
+
+        //
+        file_ppdb,
+        data_absensi,
+      });
+    }
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
   async putUbahPassword({ auth, response, request }) {
     const domain = request.headers().origin;
 
@@ -11546,7 +11946,7 @@ class MainController {
       //   `komen-${tkTimelineKomen.id}-${user.id}`,
       //   `Halo ${user.nama}, ada balasan komentar dari Guru ${
       //     timelineTk.toJSON().timeline.user.nama
-      //   } dengan komentar ${komen}. Silahkan klik tautan berikut untuk membalasnya! Semangat!! 
+      //   } dengan komentar ${komen}. Silahkan klik tautan berikut untuk membalasnya! Semangat!!
       //   ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${
       //     timelineTk.m_timeline_id
       //   }?hal=tugas`
@@ -11566,7 +11966,7 @@ class MainController {
       //   `komen-${tkTimelineKomen.id}-${user.id}`,
       //   `Halo ${user.nama}, ada balasan komentar dari Siswa ${
       //     timelineTk.toJSON().user.nama
-      //   } dengan komentar ${komen}. Silahkan klik tautan berikut untuk membalasnya! Semangat!! 
+      //   } dengan komentar ${komen}. Silahkan klik tautan berikut untuk membalasnya! Semangat!!
       //   ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${
       //     timelineTk.m_timeline_id
       //   }?hal=tugas`
@@ -50040,7 +50440,7 @@ class MainController {
       .andWhere({ m_sekolah_id: sekolah.id });
     if (m_rencana_keuangan_id) {
       rekening = rekening.andWhere({ m_rencana_keuangan_id });
-    }else{
+    } else {
       rekening = rekening.whereNull(" m_rencana_keuangan_id ");
     }
     rekening = await rekening.fetch();

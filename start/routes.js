@@ -69,6 +69,7 @@ Route.get("/profil", "MainController.getProfil");
 Route.put("/profil", "MainController.putProfil");
 Route.put("/ubah-password", "MainController.putUbahPassword");
 Route.post("/profil-user", "MainController.postProfilUser");
+Route.post("/profil-user-admin", "MainController.postProfilUserAdmin");
 Route.get("/profil-user", "MainController.getProfilUser");
 Route.get("/profil-user/:user_id", "MainController.detailProfilUser");
 Route.post("/profil-user/:user_id", "MainController.postDetailProfilUser");
