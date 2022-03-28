@@ -8,7 +8,6 @@ class UpdateMAlumniSchema extends Schema {
     this.table("m_alumni", (table) => {
       // alter table
       table.string("nik");
-      table.string("status");
       table.date('mulai_bekerja')
       table.string('posisi')
       table.text('id_card')
