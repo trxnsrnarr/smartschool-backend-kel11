@@ -4548,6 +4548,7 @@ class MainController {
       fakultas,
       prodi,
       kartu_mahasiswa,
+      program_pendidikan,
       // wirausaha
       usaha,
       mulai_usaha,
@@ -4631,6 +4632,7 @@ class MainController {
       mulai_kuliah,
       fakultas,
       prodi,
+      program_pendidikan,
       kartu_mahasiswa,
           sekolah_lanjutan: sekolah_lanjutan.length
             ? sekolah_lanjutan.toString()
@@ -4667,6 +4669,7 @@ class MainController {
       mulai_kuliah,
       fakultas,
       prodi,
+      program_pendidikan,
       kartu_mahasiswa,
         sekolah_lanjutan: sekolah_lanjutan.length
           ? sekolah_lanjutan.toString()
