@@ -2248,10 +2248,10 @@ class MainController {
   }
 
   async loginSuperAdmin({ response, request, auth }) {
-    const { password, whatsapp } = request.post();
+    const { password, username } = request.post();
 
     const res = await User.query()
-      .where({ whatsapp })
+      .where({ whatsapp: username })
       .first();
 
     if (!res) {
@@ -4159,26 +4159,7 @@ class MainController {
       nik,
       status,
     } = request.post();
-    const rules = {
-      nama: "required",
-      whatsapp: "required",
-      gender: "required",
-      tanggal_lahir: "required",
-      email: "required",
-      tahun_masuk: "required",
-    };
-    const message = {
-      "nama.required": "Nama harus diisi",
-      "whatsapp.required": "Whatsapp harus diisi",
-      "gender.required": "Jenis Kelamin harus diisi",
-      "tanggal_lahir.required": "Tanggal Lahir harus diisi",
-      "email.required": "Email harus diisi",
-      "tahun_masuk.required": "Tahun Masuk harus diisi",
-    };
-    const validation = await validate(request.all(), rules, message);
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
-    }
+    
 
     const check = await User.query()
       .where({ m_sekolah_id: sekolah.id })
