@@ -554,7 +554,39 @@ class MainController {
     let totalSLB;
 
     if (propinsi) {
-      totalSD = await Sekolah.query()
+      if(kabupaten) {
+        totalSD = await Sekolah.query()
+        .where("kode_prop", propinsi)
+        .andWhere('kode_kab_kota', kabupaten)
+        .andWhere("bentuk", "SD")
+        .whereNotNull("m_sekolah_id")
+        .getCount();
+      totalSMP = await Sekolah.query()
+        .where("kode_prop", propinsi)
+        .andWhere('kode_kab_kota', kabupaten)
+        .andWhere("bentuk", "SMP")
+        .whereNotNull("m_sekolah_id")
+        .getCount();
+      totalSMA = await Sekolah.query()
+        .where("kode_prop", propinsi)
+        .andWhere('kode_kab_kota', kabupaten)
+        .andWhere("bentuk", "SMA")
+        .whereNotNull("m_sekolah_id")
+        .getCount();
+      totalSMK = await Sekolah.query()
+        .where("kode_prop", propinsi)
+        .andWhere('kode_kab_kota', kabupaten)
+        .andWhere("bentuk", "SMK")
+        .whereNotNull("m_sekolah_id")
+        .getCount();
+      totalSLB = await Sekolah.query()
+        .where("kode_prop", propinsi)
+        .andWhere('kode_kab_kota', kabupaten)
+        .andWhere("bentuk", "SLB")
+        .whereNotNull("m_sekolah_id")
+        .getCount();
+      } else {
+totalSD = await Sekolah.query()
         .where("kode_prop", propinsi)
         .andWhere("bentuk", "SD")
         .whereNotNull("m_sekolah_id")
@@ -579,6 +611,9 @@ class MainController {
         .andWhere("bentuk", "SLB")
         .whereNotNull("m_sekolah_id")
         .getCount();
+      }
+
+      
     } else {
       totalSD = await Sekolah.query()
         .where("bentuk", "SD")
