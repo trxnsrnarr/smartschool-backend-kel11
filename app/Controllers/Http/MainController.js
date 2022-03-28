@@ -5636,10 +5636,10 @@ class MainController {
                   } else {
                     builder
                       .with("sikapUas", (builder) => {
-                        builder.where({ dihapus: 0 }).where({ tipe: "uas" });
+                        builder.where({ dihapus: 0 }).andWhere({m_ta_id:data.m_ta_id}).where({ tipe: "uas" });
                       })
                       .with("sikap", (builder) => {
-                        builder.where({ dihapus: 0 }).where({ tipe: "uts" });
+                        builder.where({ dihapus: 0 }).andWhere({m_ta_id:data.m_ta_id}).where({ tipe: "uts" });
                       });
                   }
                 })
