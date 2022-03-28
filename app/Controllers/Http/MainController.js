@@ -1280,6 +1280,21 @@ totalSD = await Sekolah.query()
     return response.ok(res);
   }
 
+  async getProfilAdmin({ auth, response, request }) {
+
+    const user = await auth.getUser();
+
+    const userData = await User.query()
+      .where({ id: user.id })
+      .with("sekolah")
+      .with("profil")
+      .first();
+
+    return response.ok({
+      user: userData,
+    });
+  }
+
   async getProfil({ auth, response, request }) {
     const domain = request.headers().origin;
 

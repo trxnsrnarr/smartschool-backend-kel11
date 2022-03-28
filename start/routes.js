@@ -67,6 +67,7 @@ Route.post("/login-admin", "MainController.loginSuperAdmin");
 Route.post("/loginadminwhatsapp", "MainController.loginAdminWhatsapp");
 Route.post("/loginadmin", "MainController.loginAdmin");
 Route.get("/profil", "MainController.getProfil");
+Route.get("/profil-admin", "MainController.getProfilAdmin");
 Route.put("/profil", "MainController.putProfil");
 Route.put("/ubah-password", "MainController.putUbahPassword");
 Route.post("/profil-user", "MainController.postProfilUser");
