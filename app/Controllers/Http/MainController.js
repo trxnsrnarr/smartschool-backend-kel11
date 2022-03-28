@@ -2247,6 +2247,29 @@ class MainController {
     });
   }
 
+  async loginSuperAdmin({ response, request, auth }) {
+    const { password, whatsapp } = request.post();
+
+    const res = await User.query()
+      .where({ whatsapp })
+      .first();
+
+    if (!res) {
+      return response.notFound({ message: "Akun tidak ditemukan" });
+    }
+
+    if (!(await Hash.verify(password, res.password))) {
+      return response.notFound({ message: "Password yang anda masukan salah" });
+    }
+
+    const { token } = await auth.generate(res);
+
+    return response.ok({
+      message: `Selamat datang ${res.nama}`,
+      token,
+    });
+  }
+
   async login({ response, request, auth }) {
     const domain = request.headers().origin;
 
@@ -4107,16 +4130,33 @@ class MainController {
       jurusan,
       tahun_masuk,
       pekerjaan,
-      kantor,
-      sektor_industri,
-      sekolah_lanjutan,
-      sertifikasi_keahlian,
       purnakarya,
       pengalaman,
       alamat,
-      alamat_perusahaan,
       deskripsi,
+      sertifikasi_keahlian,
+      // pekerjaan
+      kantor,
+      sektor_industri,
+      mulai_bekerja,
+      posisi,
+      alamat_perusahaan,
+      id_card,
+      // kuliah
+      sekolah_lanjutan,
+      mulai_kuliah,
+      fakultas,
+      prodi,
+      kartu_mahasiswa,
+      // wirausaha
       usaha,
+      mulai_usaha,
+      bidang_usaha,
+      posisi_usaha,
+      alamat_usaha,
+      // tambahan
+      nik,
+      status,
     } = request.post();
     const rules = {
       nama: "required",
@@ -4185,6 +4225,13 @@ class MainController {
           pekerjaan,
           kantor,
           sektor_industri,
+          mulai_bekerja,
+          posisi,
+
+      mulai_kuliah,
+      fakultas,
+      prodi,
+      kartu_mahasiswa,
           sekolah_lanjutan: sekolah_lanjutan.length
             ? sekolah_lanjutan.toString()
             : null,
@@ -4193,9 +4240,17 @@ class MainController {
             : null,
           pengalaman: pengalaman.length ? pengalaman.toString() : null,
           usaha: usaha.length ? usaha.toString() : null,
+
+      mulai_usaha,
+      bidang_usaha,
+      posisi_usaha,
+      alamat_usaha,
+          nik,
+          status,
           purnakarya,
           deskripsi: htmlEscaper.escape(deskripsi),
           alamat_perusahaan,
+          id_card,
           dihapus: 0,
           m_user_id: user.id,
         });
@@ -4206,6 +4261,13 @@ class MainController {
         pekerjaan,
         kantor,
         sektor_industri,
+        mulai_bekerja,
+        posisi,
+
+      mulai_kuliah,
+      fakultas,
+      prodi,
+      kartu_mahasiswa,
         sekolah_lanjutan: sekolah_lanjutan.length
           ? sekolah_lanjutan.toString()
           : null,
@@ -4214,9 +4276,17 @@ class MainController {
           : null,
         pengalaman: pengalaman.length ? pengalaman.toString() : null,
         usaha: usaha.length ? usaha.toString() : null,
+
+      mulai_usaha,
+      bidang_usaha,
+      posisi_usaha,
+      alamat_usaha,
+        nik,
+        status,
         purnakarya,
         deskripsi: htmlEscaper.escape(deskripsi),
         alamat_perusahaan,
+        id_card,
         dihapus: 0,
         m_user_id: user.id,
       });
