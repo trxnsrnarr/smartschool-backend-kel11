@@ -63,6 +63,7 @@ Route.get("/sekolah-kemdikbud", "MainController.getMasterSekolah");
 // auth
 Route.post("/loginwhatsapp", "MainController.loginWhatsapp");
 Route.post("/login", "MainController.login");
+Route.post("/login-admin", "MainController.loginSuperAdmin");
 Route.post("/loginadminwhatsapp", "MainController.loginAdminWhatsapp");
 Route.post("/loginadmin", "MainController.loginAdmin");
 Route.get("/profil", "MainController.getProfil");
