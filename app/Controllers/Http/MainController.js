@@ -53324,7 +53324,7 @@ class MainController {
     return namaFile;
   }
 
-  async importAbsensiSiswaServices(filelocation, sekolah, ta, tipe = "uas") {
+  async importAbsensiSiswaServices(filelocation, sekolah, ta, tipe = "uts") {
     var workbook = new Excel.Workbook();
 
     workbook = await workbook.xlsx.readFile(filelocation);
