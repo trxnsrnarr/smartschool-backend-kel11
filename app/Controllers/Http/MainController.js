@@ -16094,7 +16094,15 @@ class MainController {
         })
         .fetch();
 
-      let metaHasil = { nilaiPg: 0, nilaiEsai: 0, nilaiTotal: 0, benar: 0 };
+      let metaHasil = {
+        nilaiPg: 0,
+        nilaiEsai: 0,
+        nilaiPgKompleks: 0,
+        nilaiUraian: 0,
+        nilaiMenjodohkan: 0,
+        nilaiTotal: 0,
+        benar: 0,
+      };
       let analisisBenar = {};
       let analisisTotal = {};
 
@@ -16125,11 +16133,73 @@ class MainController {
                 }
               }
             }
+          }else if (d.soal.bentuk == "pg_kompleks") {
+            const jawabanKjKompleks =
+              d.soal.jawaban_pg_kompleks.split(",");
+            const check1 = jawabanKjKompleks.every((e) =>
+              d.jawaban_pg_kompleks.includes(e)
+            );
+            const check2 = d.jawaban_pg_kompleks.every((e) =>
+              d.soal.jawaban_pg_kompleks.includes(e)
+            );
+            if (check1 && check2) {
+              metaHasil.nilaiPgKompleks =
+                metaHasil.nilaiPgKompleks + d.soal.nilai_soal;
+              metaHasil.benar = metaHasil.benar + 1;
+              analisisBenar[d.soal.kd] = analisisBenar[d.soal.kd]
+                ? analisisBenar[d.soal.kd] + 1
+                : 1;
+            }
+            analisisTotal[d.soal.kd] = analisisTotal[d.soal.kd]
+              ? analisisTotal[d.soal.kd] + 1
+              : 1;
+          } else if (d.soal.bentuk == "uraian") {
+            if (d.jawaban_opsi_uraian == d.soal.kj_uraian) {
+              metaHasil.nilaiUraian =
+                metaHasil.nilaiUraian + d.soal.nilai_soal;
+              metaHasil.benar = metaHasil.benar + 1;
+              analisisBenar[d.soal.kd] = analisisBenar[d.soal.kd]
+                ? analisisBenar[d.soal.kd] + 1
+                : 1;
+            }
+            analisisTotal[d.soal.kd] = analisisTotal[d.soal.kd]
+              ? analisisTotal[d.soal.kd] + 1
+              : 1;
+          } else if (d.soal.bentuk == "menjodohkan") {
+            // const jawabanKjMenjodohkan = d.soal.jawaban_pg_kompleks.split(",")
+            // const check1 = jawabanKjKompleks.every(e=> d.jawaban_pg_kompleks.includes(e))
+            // const check2 = d.jawaban_menjodohkan.every(e => d.soal.jawaban_pg_kompleks.includes(e))
+            if (d.jawaban_menjodohkan) {
+              if (d.jawaban_menjodohkan.length) {
+                d.jawaban_menjodohkan.map((e, id) => {
+                  // metaHasil.nilaiMenjodohkan = metaHasil.nilaiMenjodohkan+','+ id ;
+                  const check1 = d.soal.soal_menjodohkan.find(
+                    (r) => id + 1 == r.id
+                  );
+                  if (check1) {
+                    if (check1.jawaban == e - 1) {
+                      metaHasil.nilaiMenjodohkan =
+                        metaHasil.nilaiMenjodohkan +
+                        parseInt(check1.poin);
+                    }
+                  }
+                });
+
+                // if (d.jawaban_rubrik_esai.indexOf("true") != -1) {
+                //   metaHasil.benar = metaHasil.benar + 1;
+                // }
+              }
+            }
           }
         })
       );
 
-      metaHasil.nilaiTotal = metaHasil.nilaiPg + metaHasil.nilaiEsai;
+      metaHasil.nilaiTotal =
+                    metaHasil.nilaiPg +
+                    metaHasil.nilaiEsai +
+                    metaHasil.nilaiPgKompleks +
+                    metaHasil.nilaiUraian +
+                    metaHasil.nilaiMenjodohkan;
 
       analisisBenar = Object.entries(analisisBenar);
       analisisTotal = Object.entries(analisisTotal);
