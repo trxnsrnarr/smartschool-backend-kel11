@@ -554,7 +554,39 @@ class MainController {
     let totalSLB;
 
     if (propinsi) {
-      totalSD = await Sekolah.query()
+      if(kabupaten) {
+        totalSD = await Sekolah.query()
+        .where("kode_prop", propinsi)
+        .andWhere('kode_kab_kota', kabupaten)
+        .andWhere("bentuk", "SD")
+        .whereNotNull("m_sekolah_id")
+        .getCount();
+      totalSMP = await Sekolah.query()
+        .where("kode_prop", propinsi)
+        .andWhere('kode_kab_kota', kabupaten)
+        .andWhere("bentuk", "SMP")
+        .whereNotNull("m_sekolah_id")
+        .getCount();
+      totalSMA = await Sekolah.query()
+        .where("kode_prop", propinsi)
+        .andWhere('kode_kab_kota', kabupaten)
+        .andWhere("bentuk", "SMA")
+        .whereNotNull("m_sekolah_id")
+        .getCount();
+      totalSMK = await Sekolah.query()
+        .where("kode_prop", propinsi)
+        .andWhere('kode_kab_kota', kabupaten)
+        .andWhere("bentuk", "SMK")
+        .whereNotNull("m_sekolah_id")
+        .getCount();
+      totalSLB = await Sekolah.query()
+        .where("kode_prop", propinsi)
+        .andWhere('kode_kab_kota', kabupaten)
+        .andWhere("bentuk", "SLB")
+        .whereNotNull("m_sekolah_id")
+        .getCount();
+      } else {
+totalSD = await Sekolah.query()
         .where("kode_prop", propinsi)
         .andWhere("bentuk", "SD")
         .whereNotNull("m_sekolah_id")
@@ -579,6 +611,9 @@ class MainController {
         .andWhere("bentuk", "SLB")
         .whereNotNull("m_sekolah_id")
         .getCount();
+      }
+
+      
     } else {
       totalSD = await Sekolah.query()
         .where("bentuk", "SD")
@@ -1243,6 +1278,21 @@ class MainController {
     }
 
     return response.ok(res);
+  }
+
+  async getProfilAdmin({ auth, response, request }) {
+
+    const user = await auth.getUser();
+
+    const userData = await User.query()
+      .where({ id: user.id })
+      .with("sekolah")
+      .with("profil")
+      .first();
+
+    return response.ok({
+      user: userData,
+    });
   }
 
   async getProfil({ auth, response, request }) {
@@ -2629,6 +2679,29 @@ class MainController {
     const res = await User.query()
       .where({ whatsapp })
       .andWhere({ m_sekolah_id: sekolah.id })
+      .first();
+
+    if (!res) {
+      return response.notFound({ message: "Akun tidak ditemukan" });
+    }
+
+    if (!(await Hash.verify(password, res.password))) {
+      return response.notFound({ message: "Password yang anda masukan salah" });
+    }
+
+    const { token } = await auth.generate(res);
+
+    return response.ok({
+      message: `Selamat datang ${res.nama}`,
+      token,
+    });
+  }
+
+  async loginSuperAdmin({ response, request, auth }) {
+    const { password, username } = request.post();
+
+    const res = await User.query()
+      .where({ whatsapp: username })
       .first();
 
     if (!res) {
@@ -4507,37 +4580,37 @@ class MainController {
       jurusan,
       tahun_masuk,
       pekerjaan,
-      kantor,
-      sektor_industri,
-      sekolah_lanjutan,
-      sertifikasi_keahlian,
       purnakarya,
       pengalaman,
       alamat,
-      alamat_perusahaan,
       deskripsi,
+      sertifikasi_keahlian,
+      // pekerjaan
+      kantor,
+      sektor_industri,
+      mulai_bekerja,
+      posisi,
+      alamat_perusahaan,
+      id_card,
+      // kuliah
+      sekolah_lanjutan,
+      mulai_kuliah,
+      fakultas,
+      prodi,
+      kartu_mahasiswa,
+      program_pendidikan,
+      // wirausaha
       usaha,
+      mulai_usaha,
+      bidang_usaha,
+      posisi_usaha,
+      alamat_usaha,
+      // tambahan
+      nik,
+      status,
+      kontrak
     } = request.post();
-    const rules = {
-      nama: "required",
-      whatsapp: "required",
-      gender: "required",
-      tanggal_lahir: "required",
-      email: "required",
-      tahun_masuk: "required",
-    };
-    const message = {
-      "nama.required": "Nama harus diisi",
-      "whatsapp.required": "Whatsapp harus diisi",
-      "gender.required": "Jenis Kelamin harus diisi",
-      "tanggal_lahir.required": "Tanggal Lahir harus diisi",
-      "email.required": "Email harus diisi",
-      "tahun_masuk.required": "Tahun Masuk harus diisi",
-    };
-    const validation = await validate(request.all(), rules, message);
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
-    }
+    
 
     const check = await User.query()
       .where({ m_sekolah_id: sekolah.id })
@@ -4585,6 +4658,15 @@ class MainController {
           pekerjaan,
           kantor,
           sektor_industri,
+          mulai_bekerja,
+          posisi,
+
+      mulai_kuliah,
+      fakultas,
+      prodi,
+      program_pendidikan,
+      kartu_mahasiswa,
+      kontrak,
           sekolah_lanjutan: sekolah_lanjutan.length
             ? sekolah_lanjutan.toString()
             : null,
@@ -4593,9 +4675,17 @@ class MainController {
             : null,
           pengalaman: pengalaman.length ? pengalaman.toString() : null,
           usaha: usaha.length ? usaha.toString() : null,
+
+      mulai_usaha,
+      bidang_usaha,
+      posisi_usaha,
+      alamat_usaha,
+          nik,
+          status,
           purnakarya,
           deskripsi: htmlEscaper.escape(deskripsi),
           alamat_perusahaan,
+          id_card,
           dihapus: 0,
           m_user_id: user.id,
         });
@@ -4606,6 +4696,15 @@ class MainController {
         pekerjaan,
         kantor,
         sektor_industri,
+        mulai_bekerja,
+        posisi,
+
+      mulai_kuliah,
+      fakultas,
+      prodi,
+      program_pendidikan,
+      kartu_mahasiswa,
+      kontrak,
         sekolah_lanjutan: sekolah_lanjutan.length
           ? sekolah_lanjutan.toString()
           : null,
@@ -4614,9 +4713,17 @@ class MainController {
           : null,
         pengalaman: pengalaman.length ? pengalaman.toString() : null,
         usaha: usaha.length ? usaha.toString() : null,
+
+      mulai_usaha,
+      bidang_usaha,
+      posisi_usaha,
+      alamat_usaha,
+        nik,
+        status,
         purnakarya,
         deskripsi: htmlEscaper.escape(deskripsi),
         alamat_perusahaan,
+        id_card,
         dihapus: 0,
         m_user_id: user.id,
       });
