@@ -1911,13 +1911,13 @@ class SecondController {
     let transaksi = MKeuTransaksi.query()
       .with("jurnal", (builder) => {
         builder.where({ dihapus: 0 }).with("akun", (builder) => {
-          builder.select("nama", "id");
+          builder.select("nama", "id","kode");
         });
       })
       .with("rencana", (builder) => {
         builder.with("jurnal", (builder) => {
           builder.where({ dihapus: 0 }).with("akun", (builder) => {
-            builder.select("id", "nama");
+            builder.select("id", "nama","kode");
           });
         });
       })
@@ -2476,7 +2476,7 @@ class SecondController {
             // Add row using key mapping to columns
             if (e.jenis == "debit") {
               let row = worksheet.addRow({
-                akun: e.akun ? e.akun.nama : "-",
+                akun: `${e.akun ? e.akun.kode : "-"} - ${e.akun ? e.akun.nama : "-"}`,
                 debit: `${(e ? e.saldo : "0").toLocaleString("id-ID", {
                   style: "currency",
                   currency: "IDR",
@@ -2486,7 +2486,7 @@ class SecondController {
               nilaiDebit = nilaiDebit + e.saldo;
             } else if (e.jenis == "kredit") {
               let row = worksheet.addRow({
-                akun: e.akun ? e.akun.nama : "-",
+                akun: `${e.akun ? e.akun.kode : "-"} - ${e.akun ? e.akun.nama : "-"}`,
                 kredit: `${(e ? e.saldo : "0").toLocaleString("id-ID", {
                   style: "currency",
                   currency: "IDR",
@@ -2515,7 +2515,7 @@ class SecondController {
     );
 
     worksheet.addConditionalFormatting({
-      ref: `B6:D${6 + awal}`,
+      ref: `B6:B${6 + awal}`,
       rules: [
         {
           type: "expression",
@@ -2530,6 +2530,33 @@ class SecondController {
             alignment: {
               vertical: "middle",
               horizontal: "left",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: `C6:D${6 + awal}`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Calibri",
+              family: 4,
+              size: 11,
+              // bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
             },
             border: {
               top: { style: "thin" },
@@ -2823,7 +2850,7 @@ class SecondController {
             // Add row using key mapping to columns
             if (e.jenis == "debit") {
               let row = worksheet.addRow({
-                akun: e.akun ? e.akun.nama : "-",
+                akun: `${e.akun ? e.akun.kode : "-"} - ${e.akun ? e.akun.nama : "-"}`,
                 debit: `${(e ? e.saldo : "0").toLocaleString("id-ID", {
                   style: "currency",
                   currency: "IDR",
@@ -2833,7 +2860,7 @@ class SecondController {
               nilaiDebit = nilaiDebit + e.saldo;
             } else if (e.jenis == "kredit") {
               let row = worksheet.addRow({
-                akun: e.akun ? e.akun.nama : "-",
+                akun: `${e.akun ? e.akun.kode : "-"} - ${e.akun ? e.akun.nama : "-"}`,
                 kredit: `${(e ? e.saldo : "0").toLocaleString("id-ID", {
                   style: "currency",
                   currency: "IDR",
@@ -2885,7 +2912,7 @@ ${jamPerubahan}`;
     );
 
     worksheet.addConditionalFormatting({
-      ref: `C6:F${6 + awal}`,
+      ref: `C6:D${6 + awal}`,
       rules: [
         {
           type: "expression",
@@ -2900,6 +2927,33 @@ ${jamPerubahan}`;
             alignment: {
               vertical: "middle",
               horizontal: "left",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: `E6:F${6 + awal}`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Calibri",
+              family: 4,
+              size: 11,
+              // bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
             },
             border: {
               top: { style: "thin" },
@@ -6759,12 +6813,14 @@ ${jamPerubahan}`;
 
     const user = await auth.getUser();
 
-    let { nama, warna } = request.post();
+    let { nama, warna,kategori } = request.post();
 
     const rules = {
       nama: "required",
+      kategori: "required",
     };
     const message = {
+      "kategori.required": "Kategori harus dipilih",
       "nama.required": "Nama harus diisi",
     };
     const validation = await validate(request.all(), rules, message);
@@ -6772,9 +6828,10 @@ ${jamPerubahan}`;
       return response.unprocessableEntity(validation.messages());
     }
 
-    const kategori = await MKeuKategoriLabaRugi.create({
+    const kategoris = await MKeuKategoriLabaRugi.create({
       nama,
       warna,
+      kategori,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
     });
@@ -6810,13 +6867,15 @@ ${jamPerubahan}`;
 
     const user = await auth.getUser();
 
-    let { nama, warna } = request.post();
+    let { nama, warna, kategori } = request.post();
 
     const rules = {
       nama: "required",
+      kategori: "required",
     };
     const message = {
       "nama.required": "Nama harus diisi",
+      "kategori.required": "Kategori harus dipilih",
     };
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
@@ -6826,14 +6885,14 @@ ${jamPerubahan}`;
     const kategoriLaba = await MKeuKategoriLabaRugi.query()
       .where({ id: kategori_id })
       .first();
-    const kategori = await MKeuKategoriLabaRugi.query()
+    const kategoris = await MKeuKategoriLabaRugi.query()
       .where({ id: kategori_id })
       .update({
         nama,
         warna,
       });
 
-    if (!kategori) {
+    if (!kategoris) {
       return response.notFound({
         message: messageNotFound,
       });
@@ -11675,7 +11734,7 @@ ${jamPerubahan}`;
                 },
                 alignment: {
                   vertical: "middle",
-                  horizontal: "left",
+                  horizontal: "center",
                 },
                 border: {
                   top: { style: "thin" },

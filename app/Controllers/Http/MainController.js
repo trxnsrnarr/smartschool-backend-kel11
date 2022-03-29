@@ -50707,7 +50707,7 @@ class MainController {
     await Promise.all(
       rekening.toJSON().map(async (d, idx) => {
         worksheet.addConditionalFormatting({
-          ref: `B${(idx + 1) * 1 + 4}:E${(idx + 1) * 1 + 4}`,
+          ref: `B${(idx + 1) * 1 + 4}:C${(idx + 1) * 1 + 4}`,
           rules: [
             {
               type: "expression",
@@ -50722,6 +50722,33 @@ class MainController {
                 alignment: {
                   vertical: "middle",
                   horizontal: "left",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        worksheet.addConditionalFormatting({
+          ref: `D${(idx + 1) * 1 + 4}:E${(idx + 1) * 1 + 4}`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 11,
+                  // bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
                 },
                 border: {
                   top: { style: "thin" },
@@ -50825,7 +50852,7 @@ class MainController {
       .andWhere({ role: "siswa" })
       .andWhere({ m_sekolah_id: 578 })
       .offset(0)
-      .limit(800)
+      .limit(8000)
       .ids();
 
     const ta = await Mta.query()
@@ -50837,16 +50864,27 @@ class MainController {
     const ujian = await MUjianSiswa.query()
       .whereIn("m_user_id", semuaUser)
       .whereNull("nilai_uts")
+      .whereNotNull("uts_id")
+      .andWhere({ m_ta_id: ta.id })
       .fetch();
+    // return ujian;
 
     const awal = moment(`${ta.tanggal_awal}`).format("YYYY-MM-DD ");
     const akhir = moment(`${ta.tanggal_rapor_mid}`).format("YYYY-MM-DD ");
+    // return {awal,akhir}
+    const dataRombelIds = await MRombel.query()
+      .where({ m_ta_id: ta.id })
+      .andWhere({ m_sekolah_id: 578 })
+      .ids();
 
     const semua = await Promise.all(
       ujian.toJSON().map(async (d) => {
         const siswa = await User.query()
           .with("anggotaRombel", (builder) => {
-            builder.with("rombel").where({ dihapus: 0 });
+            builder
+              .with("rombel")
+              .where({ dihapus: 0 })
+              .whereIn("m_rombel_id", dataRombelIds);
           })
           .where({ id: d.m_user_id })
           .first();
@@ -50861,14 +50899,6 @@ class MainController {
             builder.where({
               tingkat: siswa.toJSON().anggotaRombel.rombel.tingkat,
             });
-            if (mapelSingkat.kelompok == "C") {
-              if (siswa.toJSON().anggotaRombel.rombel.m_jurusan_id != null) {
-                builder.andWhere({
-                  m_jurusan_id:
-                    siswa.toJSON().anggotaRombel.rombel.m_jurusan_id,
-                });
-              }
-            }
           })
           .where({ id: d.m_mata_pelajaran_id })
           .first();
@@ -50898,13 +50928,15 @@ class MainController {
                 .where({ tipe: "ujian" })
                 .andWhere({ teknik: "UH" })
                 .andWhere({ m_ta_id: ta.id })
-                .andWhere({ dihapus: 0 })
-                .andWhere({ m_materi_id: mapel.toJSON().materi.id });
+                .andWhere({ dihapus: 0 });
+              // .andWhere({ m_materi_id: mapel.toJSON().materi.id });
             });
           })
           .where({ m_user_id: d.m_user_id })
           .whereBetween("created_at", [`${awal} 00:00:00`, `${akhir} 23:59:59`])
           .fetch();
+
+        // return {rekap,rekapUjian}
 
         const result = await Promise.all(
           rekap.toJSON().map(async (d) => {
@@ -50963,43 +50995,74 @@ class MainController {
           .first();
 
         const nilaiUTS =
-          ujian.toJSON().nilaiUTS != null
-            ? ujian.toJSON().nilaiUTS?.nilai
-            : null;
+          ujian.toJSON().nilaiUTS != 0 ? ujian.toJSON().nilaiUTS?.nilai : 0;
 
         const nilaiUAS =
-          ujian.toJSON().nilaiUAS != null
-            ? ujian.toJSON().nilaiUAS?.nilai
-            : null;
+          ujian.toJSON().nilaiUAS != 0 ? ujian.toJSON().nilaiUAS?.nilai : 0;
 
         let nilaiUjian;
         let nilaiTugas;
         let nilaiUTSA;
-        let nilaiAkhir = 0;
-        if (nilaiUTS) {
-          if (nilaiUjian && nilaiTugas) {
+        let nilaiUASA;
+        let nilaiAkhir;
+
+        if (nilaiUAS) {
+          if (rata && rataUjian) {
+            nilaiUjian = (rataUjian * bobot.uh_pas) / 100;
+            nilaiTugas = (rata * bobot.tugas_pas) / 100;
+            nilaiUTSA = (nilaiUTS * bobot.uts_pas) / 100;
+            nilaiUASA = (nilaiUAS * bobot.uas_pas) / 100;
+          } else if (rataUjian) {
+            nilaiUjian = (rataUjian * (bobot.uh_pas + bobot.tugas_pas)) / 100;
+            nilaiTugas = 0;
+            nilaiUTSA = (nilaiUTS * bobot.uts_pas) / 100;
+            nilaiUASA = (nilaiUAS * bobot.uas_pas) / 100;
+          } else if (rata) {
+            nilaiUjian = 0;
+            nilaiTugas = (rata * (bobot.uh_pas + bobot.tugas_pas)) / 100;
+            nilaiUTSA = (nilaiUTS * bobot.uts_pas) / 100;
+            nilaiUASA = (nilaiUAS * bobot.uas_pas) / 100;
+          }
+          nilaiAkhir = nilaiUASA + nilaiUTSA + nilaiUjian + nilaiTugas;
+        } else if (nilaiUTS) {
+          if (rataUjian && rata) {
             nilaiUjian = (rataUjian * bobot.uh_pts) / 100;
             nilaiTugas = (rata * bobot.tugas_pts) / 100;
             nilaiUTSA = (nilaiUTS * bobot.uts_pts) / 100;
-          } else if (rataUjian) {
-            nilaiUjian = (rataUjian * (bobot.uh_pts + bobot.tugas_pts)) / 100;
-            nilaiTugas = 0;
-            nilaiUTSA = (nilaiUTS * bobot.uts_pts) / 100;
-          } else if (rata) {
+          } else if (rata != null) {
             nilaiUjian = 0;
             nilaiTugas = (rata * (bobot.uh_pts + bobot.tugas_pts)) / 100;
+            nilaiUTSA = (nilaiUTS * bobot.uts_pts) / 100;
+          } else if (rataUjian != null) {
+            nilaiUjian = (rataUjian * (bobot.uh_pts + bobot.tugas_pts)) / 100;
+            nilaiTugas = 0;
             nilaiUTSA = (nilaiUTS * bobot.uts_pts) / 100;
           }
           nilaiAkhir = nilaiUTSA + nilaiUjian + nilaiTugas;
         }
-
-        await MUjianSiswa.query()
-          .where({ id: d.id })
-          .update({
-            nilai_uts: nilaiAkhir,
-            avg_nilai_tugas: rata ? rata : "0",
-            avg_nilai_ujian: rataUjian ? rataUjian : "0",
+        // return {
+        //   rata,rataUjian,nilaiAkhir,id:d.id,
+        //   nilaiUjian,
+        //   nilaiTugas,
+        //  nilaiUTSA,
+        //  nilaiUASA,nilaiUTS,nilaiAkhirsss:d.nilai}
+        if (nilaiAkhir) {
+          await MUjianSiswa.query()
+            .where({ id: d.id })
+            .update({
+              nilai_uts: nilaiAkhir,
+              avg_nilai_tugas: rata ? rata : "0",
+              avg_nilai_ujian: rataUjian ? rataUjian : "0",
+            });
+        } else if (d.nilai != 0) {
+          await MUjianSiswa.query().where({ id: d.id }).update({
+            nilai_uts: d.nilai,
+            avg_nilai_tugas: d.nilai,
+            avg_nilai_ujian: d.nilai,
           });
+        } else {
+          return `gagal ${d.id} ${d.nilai}`;
+        }
       })
     );
 
@@ -51014,8 +51077,8 @@ class MainController {
       // .andWhere({ m_sekolah_id: 33 })
       .andWhere({ role: "siswa" })
       .andWhere({ m_sekolah_id: 578 })
-      .offset(600)
-      .limit(100)
+      .offset(0)
+      .limit(8000)
       .ids();
 
     const ta = await Mta.query()
@@ -51054,18 +51117,18 @@ class MainController {
             builder.where({
               tingkat: siswaKeterampilan.toJSON().anggotaRombel.rombel.tingkat,
             });
-            if (mapelSingkat.kelompok == "C") {
-              if (
-                siswaKeterampilan.toJSON().anggotaRombel.rombel.m_jurusan_id !=
-                null
-              ) {
-                builder.andWhere({
-                  m_jurusan_id:
-                    siswaKeterampilan.toJSON().anggotaRombel.rombel
-                      .m_jurusan_id,
-                });
-              }
-            }
+            // if (mapelSingkat.kelompok == "C") {
+            //   if (
+            //     siswaKeterampilan.toJSON().anggotaRombel.rombel.m_jurusan_id !=
+            //     null
+            //   ) {
+            //     builder.andWhere({
+            //       m_jurusan_id:
+            //         siswaKeterampilan.toJSON().anggotaRombel.rombel
+            //           .m_jurusan_id,
+            //     });
+            //   }
+            // }
           })
           .where({ id: d.m_mata_pelajaran_id })
           .first();

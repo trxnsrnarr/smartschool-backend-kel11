@@ -562,7 +562,7 @@ class KeuanganController {
     let transaksi = MRencanaTransaksi.query()
       .with("jurnal", (builder) => {
         builder.where({ dihapus: 0 }).with("akun", (builder) => {
-          builder.select("nama", "id");
+          builder.select("nama", "id","kode");
         });
       })
       .where({ m_sekolah_id: sekolah.id })
@@ -4097,6 +4097,10 @@ class KeuanganController {
     const awal1 = moment(tanggal_awal).locale("id").format("DD MMMM YYYY ");
     const akhir1 = moment(tanggal_akhir).locale("id").format("DD MMMM YYYY ");
 
+    
+    const bulanAwal1 = moment(tanggal_awal).locale("id").format("MMMM YYYY ");
+    const bulanAkhir1 = moment(tanggal_akhir).locale("id").format("MMMM YYYY ");
+
     const transaksi = await MRencanaTransaksi.query()
       .with("jurnal", (builder) => {
         builder.with("akun").where({ dihapus: 0 });
@@ -4226,7 +4230,7 @@ class KeuanganController {
       transaksi.toJSON().map(async (d, idx) => {
         // add column headers
         worksheet.getRow(5).values = [
-          "TANGGAL",
+          "BULAN",
           "NAMA AKUN",
           "DEBIT",
           "KREDIT",
@@ -4243,7 +4247,7 @@ class KeuanganController {
             // Add row using key mapping to columns
             if (e.jenis == "debit") {
               let row = worksheet.addRow({
-                akun: e.akun ? e.akun.nama : "-",
+                akun: `${e.akun ? e.akun.kode : "-"} - ${e.akun ? e.akun.nama : "-"}`,
                 debit: `${(e ? e.saldo : "0").toLocaleString("id-ID", {
                   style: "currency",
                   currency: "IDR",
@@ -4253,7 +4257,7 @@ class KeuanganController {
               nilaiDebit = nilaiDebit + e.saldo;
             } else if (e.jenis == "kredit") {
               let row = worksheet.addRow({
-                akun: e.akun ? e.akun.nama : "-",
+                akun:`${e.akun ? e.akun.kode : "-"} - ${e.akun ? e.akun.nama : "-"}`,
                 kredit: `${(e ? e.saldo : "0").toLocaleString("id-ID", {
                   style: "currency",
                   currency: "IDR",
@@ -4264,7 +4268,7 @@ class KeuanganController {
           })
         );
         const tanggalUtama = moment(`${d.tanggal}`).format(
-          "DD-MM-YYYY HH:mm:ss"
+          "MM-YYYY"
         );
 
         if (idx == 0) {
@@ -4280,9 +4284,35 @@ class KeuanganController {
         awal = awal + d.__meta__.total;
       })
     );
-
     worksheet.addConditionalFormatting({
-      ref: `B6:D${6 + awal}`,
+      ref: `C6:D${6 + awal}`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Calibri",
+              family: 4,
+              size: 11,
+              // bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: `B6:B${6 + awal}`,
       rules: [
         {
           type: "expression",
@@ -4387,7 +4417,7 @@ class KeuanganController {
 
     worksheet.getCell("A1").value = sekolah.nama;
     worksheet.getCell("A2").value = "JURNAL UMUM";
-    worksheet.getCell("A3").value = `Tanggal : ${awal1} - ${akhir1}`;
+    worksheet.getCell("A3").value = `Bulan : ${bulanAwal1} - ${bulanAkhir1}`;
 
     worksheet.getColumn("A").width = 20;
     worksheet.getColumn("B").width = 23;
@@ -4590,7 +4620,7 @@ class KeuanganController {
             // Add row using key mapping to columns
             if (e.jenis == "debit") {
               let row = worksheet.addRow({
-                akun: e.akun ? e.akun.nama : "-",
+                akun: `${e.akun ? e.akun.kode : "-"} - ${e.akun ? e.akun.nama : "-"}`,
                 debit: `${(e ? e.saldo : "0").toLocaleString("id-ID", {
                   style: "currency",
                   currency: "IDR",
@@ -4600,7 +4630,7 @@ class KeuanganController {
               nilaiDebit = nilaiDebit + e.saldo;
             } else if (e.jenis == "kredit") {
               let row = worksheet.addRow({
-                akun: e.akun ? e.akun.nama : "-",
+                akun: `${e.akun ? e.akun.kode : "-"} - ${e.akun ? e.akun.nama : "-"}`,
                 kredit: `${(e ? e.saldo : "0").toLocaleString("id-ID", {
                   style: "currency",
                   currency: "IDR",
@@ -4648,9 +4678,35 @@ ${jamPerubahan}`;
         awal = awal + d.__meta__.total;
       })
     );
-
     worksheet.addConditionalFormatting({
-      ref: `C6:F${6 + awal}`,
+      ref: `E6:F${6 + awal}`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Calibri",
+              family: 4,
+              size: 11,
+              // bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: `C6:D${6 + awal}`,
       rules: [
         {
           type: "expression",
