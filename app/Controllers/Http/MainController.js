@@ -4608,6 +4608,7 @@ totalSD = await Sekolah.query()
       // tambahan
       nik,
       status,
+      kontrak
     } = request.post();
     
 
@@ -4665,6 +4666,7 @@ totalSD = await Sekolah.query()
       prodi,
       program_pendidikan,
       kartu_mahasiswa,
+      kontrak,
           sekolah_lanjutan: sekolah_lanjutan.length
             ? sekolah_lanjutan.toString()
             : null,
@@ -4702,6 +4704,7 @@ totalSD = await Sekolah.query()
       prodi,
       program_pendidikan,
       kartu_mahasiswa,
+      kontrak,
         sekolah_lanjutan: sekolah_lanjutan.length
           ? sekolah_lanjutan.toString()
           : null,
