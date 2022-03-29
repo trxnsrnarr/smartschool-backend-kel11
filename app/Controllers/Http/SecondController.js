@@ -1911,13 +1911,13 @@ class SecondController {
     let transaksi = MKeuTransaksi.query()
       .with("jurnal", (builder) => {
         builder.where({ dihapus: 0 }).with("akun", (builder) => {
-          builder.select("nama", "id");
+          builder.select("nama", "id","kode");
         });
       })
       .with("rencana", (builder) => {
         builder.with("jurnal", (builder) => {
           builder.where({ dihapus: 0 }).with("akun", (builder) => {
-            builder.select("id", "nama");
+            builder.select("id", "nama","kode");
           });
         });
       })
@@ -2515,7 +2515,34 @@ class SecondController {
     );
 
     worksheet.addConditionalFormatting({
-      ref: `B6:D${6 + awal}`,
+      ref: `B6:B${6 + awal}`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Calibri",
+              family: 4,
+              size: 11,
+              // bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "left",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: `C6:D${6 + awal}`,
       rules: [
         {
           type: "expression",
@@ -2885,7 +2912,34 @@ ${jamPerubahan}`;
     );
 
     worksheet.addConditionalFormatting({
-      ref: `C6:F${6 + awal}`,
+      ref: `C6:D${6 + awal}`,
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Calibri",
+              family: 4,
+              size: 11,
+              // bold: true,
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "left",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: `E6:F${6 + awal}`,
       rules: [
         {
           type: "expression",
@@ -11675,7 +11729,7 @@ ${jamPerubahan}`;
                 },
                 alignment: {
                   vertical: "middle",
-                  horizontal: "left",
+                  horizontal: "center",
                 },
                 border: {
                   top: { style: "thin" },
