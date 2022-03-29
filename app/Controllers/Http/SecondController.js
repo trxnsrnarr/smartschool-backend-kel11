@@ -2476,7 +2476,7 @@ class SecondController {
             // Add row using key mapping to columns
             if (e.jenis == "debit") {
               let row = worksheet.addRow({
-                akun: e.akun ? e.akun.nama : "-",
+                akun: `${e.akun ? e.akun.kode : "-"} - ${e.akun ? e.akun.nama : "-"}`,
                 debit: `${(e ? e.saldo : "0").toLocaleString("id-ID", {
                   style: "currency",
                   currency: "IDR",
@@ -2486,7 +2486,7 @@ class SecondController {
               nilaiDebit = nilaiDebit + e.saldo;
             } else if (e.jenis == "kredit") {
               let row = worksheet.addRow({
-                akun: e.akun ? e.akun.nama : "-",
+                akun: `${e.akun ? e.akun.kode : "-"} - ${e.akun ? e.akun.nama : "-"}`,
                 kredit: `${(e ? e.saldo : "0").toLocaleString("id-ID", {
                   style: "currency",
                   currency: "IDR",
@@ -2556,7 +2556,7 @@ class SecondController {
             },
             alignment: {
               vertical: "middle",
-              horizontal: "left",
+              horizontal: "center",
             },
             border: {
               top: { style: "thin" },
@@ -2850,7 +2850,7 @@ class SecondController {
             // Add row using key mapping to columns
             if (e.jenis == "debit") {
               let row = worksheet.addRow({
-                akun: e.akun ? e.akun.nama : "-",
+                akun: `${e.akun ? e.akun.kode : "-"} - ${e.akun ? e.akun.nama : "-"}`,
                 debit: `${(e ? e.saldo : "0").toLocaleString("id-ID", {
                   style: "currency",
                   currency: "IDR",
@@ -2860,7 +2860,7 @@ class SecondController {
               nilaiDebit = nilaiDebit + e.saldo;
             } else if (e.jenis == "kredit") {
               let row = worksheet.addRow({
-                akun: e.akun ? e.akun.nama : "-",
+                akun: `${e.akun ? e.akun.kode : "-"} - ${e.akun ? e.akun.nama : "-"}`,
                 kredit: `${(e ? e.saldo : "0").toLocaleString("id-ID", {
                   style: "currency",
                   currency: "IDR",
@@ -2953,7 +2953,7 @@ ${jamPerubahan}`;
             },
             alignment: {
               vertical: "middle",
-              horizontal: "left",
+              horizontal: "center",
             },
             border: {
               top: { style: "thin" },
@@ -6813,12 +6813,14 @@ ${jamPerubahan}`;
 
     const user = await auth.getUser();
 
-    let { nama, warna } = request.post();
+    let { nama, warna,kategori } = request.post();
 
     const rules = {
       nama: "required",
+      kategori: "required",
     };
     const message = {
+      "kategori.required": "Kategori harus dipilih",
       "nama.required": "Nama harus diisi",
     };
     const validation = await validate(request.all(), rules, message);
@@ -6826,9 +6828,10 @@ ${jamPerubahan}`;
       return response.unprocessableEntity(validation.messages());
     }
 
-    const kategori = await MKeuKategoriLabaRugi.create({
+    const kategoris = await MKeuKategoriLabaRugi.create({
       nama,
       warna,
+      kategori,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
     });
@@ -6864,13 +6867,15 @@ ${jamPerubahan}`;
 
     const user = await auth.getUser();
 
-    let { nama, warna } = request.post();
+    let { nama, warna, kategori } = request.post();
 
     const rules = {
       nama: "required",
+      kategori: "required",
     };
     const message = {
       "nama.required": "Nama harus diisi",
+      "kategori.required": "Kategori harus dipilih",
     };
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
@@ -6880,14 +6885,14 @@ ${jamPerubahan}`;
     const kategoriLaba = await MKeuKategoriLabaRugi.query()
       .where({ id: kategori_id })
       .first();
-    const kategori = await MKeuKategoriLabaRugi.query()
+    const kategoris = await MKeuKategoriLabaRugi.query()
       .where({ id: kategori_id })
       .update({
         nama,
         warna,
       });
 
-    if (!kategori) {
+    if (!kategoris) {
       return response.notFound({
         message: messageNotFound,
       });

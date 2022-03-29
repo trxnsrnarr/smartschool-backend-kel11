@@ -4247,7 +4247,7 @@ class KeuanganController {
             // Add row using key mapping to columns
             if (e.jenis == "debit") {
               let row = worksheet.addRow({
-                akun: e.akun ? e.akun.nama : "-",
+                akun: `${e.akun ? e.akun.kode : "-"} - ${e.akun ? e.akun.nama : "-"}`,
                 debit: `${(e ? e.saldo : "0").toLocaleString("id-ID", {
                   style: "currency",
                   currency: "IDR",
@@ -4257,7 +4257,7 @@ class KeuanganController {
               nilaiDebit = nilaiDebit + e.saldo;
             } else if (e.jenis == "kredit") {
               let row = worksheet.addRow({
-                akun: e.akun ? e.akun.nama : "-",
+                akun:`${e.akun ? e.akun.kode : "-"} - ${e.akun ? e.akun.nama : "-"}`,
                 kredit: `${(e ? e.saldo : "0").toLocaleString("id-ID", {
                   style: "currency",
                   currency: "IDR",
@@ -4299,7 +4299,7 @@ class KeuanganController {
             },
             alignment: {
               vertical: "middle",
-              horizontal: "left",
+              horizontal: "center",
             },
             border: {
               top: { style: "thin" },
@@ -4620,7 +4620,7 @@ class KeuanganController {
             // Add row using key mapping to columns
             if (e.jenis == "debit") {
               let row = worksheet.addRow({
-                akun: e.akun ? e.akun.nama : "-",
+                akun: `${e.akun ? e.akun.kode : "-"} - ${e.akun ? e.akun.nama : "-"}`,
                 debit: `${(e ? e.saldo : "0").toLocaleString("id-ID", {
                   style: "currency",
                   currency: "IDR",
@@ -4630,7 +4630,7 @@ class KeuanganController {
               nilaiDebit = nilaiDebit + e.saldo;
             } else if (e.jenis == "kredit") {
               let row = worksheet.addRow({
-                akun: e.akun ? e.akun.nama : "-",
+                akun: `${e.akun ? e.akun.kode : "-"} - ${e.akun ? e.akun.nama : "-"}`,
                 kredit: `${(e ? e.saldo : "0").toLocaleString("id-ID", {
                   style: "currency",
                   currency: "IDR",
@@ -4693,7 +4693,7 @@ ${jamPerubahan}`;
             },
             alignment: {
               vertical: "middle",
-              horizontal: "left",
+              horizontal: "center",
             },
             border: {
               top: { style: "thin" },
