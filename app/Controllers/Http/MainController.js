@@ -554,66 +554,64 @@ class MainController {
     let totalSLB;
 
     if (propinsi) {
-      if(kabupaten) {
+      if (kabupaten) {
         totalSD = await Sekolah.query()
-        .where("kode_prop", propinsi)
-        .andWhere('kode_kab_kota', kabupaten)
-        .andWhere("bentuk", "SD")
-        .whereNotNull("m_sekolah_id")
-        .getCount();
-      totalSMP = await Sekolah.query()
-        .where("kode_prop", propinsi)
-        .andWhere('kode_kab_kota', kabupaten)
-        .andWhere("bentuk", "SMP")
-        .whereNotNull("m_sekolah_id")
-        .getCount();
-      totalSMA = await Sekolah.query()
-        .where("kode_prop", propinsi)
-        .andWhere('kode_kab_kota', kabupaten)
-        .andWhere("bentuk", "SMA")
-        .whereNotNull("m_sekolah_id")
-        .getCount();
-      totalSMK = await Sekolah.query()
-        .where("kode_prop", propinsi)
-        .andWhere('kode_kab_kota', kabupaten)
-        .andWhere("bentuk", "SMK")
-        .whereNotNull("m_sekolah_id")
-        .getCount();
-      totalSLB = await Sekolah.query()
-        .where("kode_prop", propinsi)
-        .andWhere('kode_kab_kota', kabupaten)
-        .andWhere("bentuk", "SLB")
-        .whereNotNull("m_sekolah_id")
-        .getCount();
+          .where("kode_prop", propinsi)
+          .andWhere("kode_kab_kota", kabupaten)
+          .andWhere("bentuk", "SD")
+          .whereNotNull("m_sekolah_id")
+          .getCount();
+        totalSMP = await Sekolah.query()
+          .where("kode_prop", propinsi)
+          .andWhere("kode_kab_kota", kabupaten)
+          .andWhere("bentuk", "SMP")
+          .whereNotNull("m_sekolah_id")
+          .getCount();
+        totalSMA = await Sekolah.query()
+          .where("kode_prop", propinsi)
+          .andWhere("kode_kab_kota", kabupaten)
+          .andWhere("bentuk", "SMA")
+          .whereNotNull("m_sekolah_id")
+          .getCount();
+        totalSMK = await Sekolah.query()
+          .where("kode_prop", propinsi)
+          .andWhere("kode_kab_kota", kabupaten)
+          .andWhere("bentuk", "SMK")
+          .whereNotNull("m_sekolah_id")
+          .getCount();
+        totalSLB = await Sekolah.query()
+          .where("kode_prop", propinsi)
+          .andWhere("kode_kab_kota", kabupaten)
+          .andWhere("bentuk", "SLB")
+          .whereNotNull("m_sekolah_id")
+          .getCount();
       } else {
-totalSD = await Sekolah.query()
-        .where("kode_prop", propinsi)
-        .andWhere("bentuk", "SD")
-        .whereNotNull("m_sekolah_id")
-        .getCount();
-      totalSMP = await Sekolah.query()
-        .where("kode_prop", propinsi)
-        .andWhere("bentuk", "SMP")
-        .whereNotNull("m_sekolah_id")
-        .getCount();
-      totalSMA = await Sekolah.query()
-        .where("kode_prop", propinsi)
-        .andWhere("bentuk", "SMA")
-        .whereNotNull("m_sekolah_id")
-        .getCount();
-      totalSMK = await Sekolah.query()
-        .where("kode_prop", propinsi)
-        .andWhere("bentuk", "SMK")
-        .whereNotNull("m_sekolah_id")
-        .getCount();
-      totalSLB = await Sekolah.query()
-        .where("kode_prop", propinsi)
-        .andWhere("bentuk", "SLB")
-        .whereNotNull("m_sekolah_id")
-        .getCount();
+        totalSD = await Sekolah.query()
+          .where("kode_prop", propinsi)
+          .andWhere("bentuk", "SD")
+          .whereNotNull("m_sekolah_id")
+          .getCount();
+        totalSMP = await Sekolah.query()
+          .where("kode_prop", propinsi)
+          .andWhere("bentuk", "SMP")
+          .whereNotNull("m_sekolah_id")
+          .getCount();
+        totalSMA = await Sekolah.query()
+          .where("kode_prop", propinsi)
+          .andWhere("bentuk", "SMA")
+          .whereNotNull("m_sekolah_id")
+          .getCount();
+        totalSMK = await Sekolah.query()
+          .where("kode_prop", propinsi)
+          .andWhere("bentuk", "SMK")
+          .whereNotNull("m_sekolah_id")
+          .getCount();
+        totalSLB = await Sekolah.query()
+          .where("kode_prop", propinsi)
+          .andWhere("bentuk", "SLB")
+          .whereNotNull("m_sekolah_id")
+          .getCount();
       }
-
-      
     } else {
       totalSD = await Sekolah.query()
         .where("bentuk", "SD")
@@ -1281,7 +1279,6 @@ totalSD = await Sekolah.query()
   }
 
   async getProfilAdmin({ auth, response, request }) {
-
     const user = await auth.getUser();
 
     const userData = await User.query()
@@ -2700,9 +2697,7 @@ totalSD = await Sekolah.query()
   async loginSuperAdmin({ response, request, auth }) {
     const { password, username } = request.post();
 
-    const res = await User.query()
-      .where({ whatsapp: username })
-      .first();
+    const res = await User.query().where({ whatsapp: username }).first();
 
     if (!res) {
       return response.notFound({ message: "Akun tidak ditemukan" });
@@ -4583,6 +4578,9 @@ totalSD = await Sekolah.query()
       purnakarya,
       pengalaman,
       alamat,
+      province_id,
+      regency_id,
+      kodepos,
       deskripsi,
       sertifikasi_keahlian,
       // pekerjaan
@@ -4591,6 +4589,7 @@ totalSD = await Sekolah.query()
       mulai_bekerja,
       posisi,
       alamat_perusahaan,
+      kodepos_perusahaan,
       id_card,
       // kuliah
       sekolah_lanjutan,
@@ -4605,12 +4604,13 @@ totalSD = await Sekolah.query()
       bidang_usaha,
       posisi_usaha,
       alamat_usaha,
+      kodepos_usaha,
       // tambahan
       nik,
       status,
-      kontrak
+      kontrak,
+      verifikasi,
     } = request.post();
-    
 
     const check = await User.query()
       .where({ m_sekolah_id: sekolah.id })
@@ -4661,12 +4661,13 @@ totalSD = await Sekolah.query()
           mulai_bekerja,
           posisi,
 
-      mulai_kuliah,
-      fakultas,
-      prodi,
-      program_pendidikan,
-      kartu_mahasiswa,
-      kontrak,
+          mulai_kuliah,
+          fakultas,
+          prodi,
+          program_pendidikan,
+          kartu_mahasiswa,
+          kontrak,
+          verifikasi,
           sekolah_lanjutan: sekolah_lanjutan.length
             ? sekolah_lanjutan.toString()
             : null,
@@ -4676,16 +4677,18 @@ totalSD = await Sekolah.query()
           pengalaman: pengalaman.length ? pengalaman.toString() : null,
           usaha: usaha.length ? usaha.toString() : null,
 
-      mulai_usaha,
-      bidang_usaha,
-      posisi_usaha,
-      alamat_usaha,
+          mulai_usaha,
+          bidang_usaha,
+          posisi_usaha,
+          alamat_usaha,
           nik,
           status,
           purnakarya,
           deskripsi: htmlEscaper.escape(deskripsi),
           alamat_perusahaan,
           id_card,
+          kodepos_perusahaan,
+          kodepos_usaha,
           dihapus: 0,
           m_user_id: user.id,
         });
@@ -4699,12 +4702,13 @@ totalSD = await Sekolah.query()
         mulai_bekerja,
         posisi,
 
-      mulai_kuliah,
-      fakultas,
-      prodi,
-      program_pendidikan,
-      kartu_mahasiswa,
-      kontrak,
+        mulai_kuliah,
+        fakultas,
+        prodi,
+        program_pendidikan,
+        kartu_mahasiswa,
+        kontrak,
+        verifikasi,
         sekolah_lanjutan: sekolah_lanjutan.length
           ? sekolah_lanjutan.toString()
           : null,
@@ -4714,16 +4718,18 @@ totalSD = await Sekolah.query()
         pengalaman: pengalaman.length ? pengalaman.toString() : null,
         usaha: usaha.length ? usaha.toString() : null,
 
-      mulai_usaha,
-      bidang_usaha,
-      posisi_usaha,
-      alamat_usaha,
+        mulai_usaha,
+        bidang_usaha,
+        posisi_usaha,
+        alamat_usaha,
         nik,
         status,
         purnakarya,
         deskripsi: htmlEscaper.escape(deskripsi),
         alamat_perusahaan,
         id_card,
+        kodepos_perusahaan,
+        kodepos_usaha,
         dihapus: 0,
         m_user_id: user.id,
       });
@@ -4735,10 +4741,16 @@ totalSD = await Sekolah.query()
     if (checkProfil) {
       await MProfilUser.query().where({ id: checkProfil.id }).update({
         alamat,
+        province_id,
+        regency_id,
+        kodepos,
       });
     } else {
       await MProfilUser.create({
         alamat,
+        province_id,
+        regency_id,
+        kodepos,
         m_user_id: user.id,
       });
     }
@@ -5743,10 +5755,16 @@ totalSD = await Sekolah.query()
                   } else {
                     builder
                       .with("sikapUas", (builder) => {
-                        builder.where({ dihapus: 0 }).andWhere({m_ta_id:data.m_ta_id}).where({ tipe: "uas" });
+                        builder
+                          .where({ dihapus: 0 })
+                          .andWhere({ m_ta_id: data.m_ta_id })
+                          .where({ tipe: "uas" });
                       })
                       .with("sikap", (builder) => {
-                        builder.where({ dihapus: 0 }).andWhere({m_ta_id:data.m_ta_id}).where({ tipe: "uts" });
+                        builder
+                          .where({ dihapus: 0 })
+                          .andWhere({ m_ta_id: data.m_ta_id })
+                          .where({ tipe: "uts" });
                       });
                   }
                 })
@@ -16240,9 +16258,8 @@ totalSD = await Sekolah.query()
                 }
               }
             }
-          }else if (d.soal.bentuk == "pg_kompleks") {
-            const jawabanKjKompleks =
-              d.soal.jawaban_pg_kompleks.split(",");
+          } else if (d.soal.bentuk == "pg_kompleks") {
+            const jawabanKjKompleks = d.soal.jawaban_pg_kompleks.split(",");
             const check1 = jawabanKjKompleks.every((e) =>
               d.jawaban_pg_kompleks.includes(e)
             );
@@ -16262,8 +16279,7 @@ totalSD = await Sekolah.query()
               : 1;
           } else if (d.soal.bentuk == "uraian") {
             if (d.jawaban_opsi_uraian == d.soal.kj_uraian) {
-              metaHasil.nilaiUraian =
-                metaHasil.nilaiUraian + d.soal.nilai_soal;
+              metaHasil.nilaiUraian = metaHasil.nilaiUraian + d.soal.nilai_soal;
               metaHasil.benar = metaHasil.benar + 1;
               analisisBenar[d.soal.kd] = analisisBenar[d.soal.kd]
                 ? analisisBenar[d.soal.kd] + 1
@@ -16286,8 +16302,7 @@ totalSD = await Sekolah.query()
                   if (check1) {
                     if (check1.jawaban == e - 1) {
                       metaHasil.nilaiMenjodohkan =
-                        metaHasil.nilaiMenjodohkan +
-                        parseInt(check1.poin);
+                        metaHasil.nilaiMenjodohkan + parseInt(check1.poin);
                     }
                   }
                 });
@@ -16302,11 +16317,11 @@ totalSD = await Sekolah.query()
       );
 
       metaHasil.nilaiTotal =
-                    metaHasil.nilaiPg +
-                    metaHasil.nilaiEsai +
-                    metaHasil.nilaiPgKompleks +
-                    metaHasil.nilaiUraian +
-                    metaHasil.nilaiMenjodohkan;
+        metaHasil.nilaiPg +
+        metaHasil.nilaiEsai +
+        metaHasil.nilaiPgKompleks +
+        metaHasil.nilaiUraian +
+        metaHasil.nilaiMenjodohkan;
 
       analisisBenar = Object.entries(analisisBenar);
       analisisTotal = Object.entries(analisisTotal);
