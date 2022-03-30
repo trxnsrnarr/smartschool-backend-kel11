@@ -4153,13 +4153,13 @@ class MainController {
 
     let tingkatData = [];
 
-    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA") {
+    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA" || sekolah.tingkat == "MA" || sekolah.tingkat == "MAK") {
       tingkatData = ["X", "XI", "XII", "XIII"];
-    } else if (sekolah.tingkat == "SMP") {
+    } else if (sekolah.tingkat == "SMP" || sekolah.tingkat == "MTS") {
       tingkatData = ["VII", "VIII", "IX"];
-    } else if (sekolah.tingkat == "SD") {
+    } else if (sekolah.tingkat == "SD" || sekolah.tingkat == "MI") {
       tingkatData = ["I", "II", "III", "IV", "V", "VI"];
-    } else if (sekolah.tingkat == "SLB") {
+    } else if (sekolah.tingkat == "SLB" || sekolah.tingkat == "SUPER") {
       tingkatData = [
         "I",
         "II",
@@ -5534,13 +5534,13 @@ class MainController {
 
     let tingkat = [];
 
-    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA") {
+    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA" || sekolah.tingkat == "MA" || sekolah.tingkat == "MAK") {
       tingkat = ["X", "XI", "XII", "XIII"];
-    } else if (sekolah.tingkat == "SMP") {
+    } else if (sekolah.tingkat == "SMP" || sekolah.tingkat == "MTS") {
       tingkat = ["VII", "VIII", "IX"];
-    } else if (sekolah.tingkat == "SD") {
+    } else if (sekolah.tingkat == "SD" || sekolah.tingkat == "MI") {
       tingkat = ["I", "II", "III", "IV", "V", "VI"];
-    } else if (sekolah.tingkat == "SLB") {
+    } else if (sekolah.tingkat == "SLB" || sekolah.tingkat == "SUPER") {
       tingkat = [
         "I",
         "II",
@@ -6642,13 +6642,13 @@ class MainController {
 
     let tingkatRombel = [];
 
-    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA") {
+    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA" || sekolah.tingkat == "MA" || sekolah.tingkat == "MAK") {
       tingkatRombel = ["X", "XI", "XII"];
-    } else if (sekolah.tingkat == "SMP") {
+    } else if (sekolah.tingkat == "SMP" || sekolah.tingkat == "MTS") {
       tingkatRombel = ["VII", "VIII", "IX"];
-    } else if (sekolah.tingkat == "SD") {
+    } else if (sekolah.tingkat == "SD" || sekolah.tingkat == "MI") {
       tingkatRombel = ["I", "II", "III", "IV", "V", "VI"];
-    } else if (sekolah.tingkat == "SLB") {
+    } else if (sekolah.tingkat == "SLB" || sekolah.tingkat == "SUPER") {
       tingkatRombel = [
         "I",
         "II",
@@ -13184,13 +13184,13 @@ class MainController {
 
     let tingkatData = [];
 
-    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA") {
+    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA" || sekolah.tingkat == "MA" || sekolah.tingkat == "MAK") {
       tingkatData = ["X", "XI", "XII", "XIII"];
-    } else if (sekolah.tingkat == "SMP") {
+    } else if (sekolah.tingkat == "SMP" || sekolah.tingkat == "MTS") {
       tingkatData = ["VII", "VIII", "IX"];
-    } else if (sekolah.tingkat == "SD") {
+    } else if (sekolah.tingkat == "SD" || sekolah.tingkat == "MI") {
       tingkatData = ["I", "II", "III", "IV", "V", "VI"];
-    } else if (sekolah.tingkat == "SLB") {
+    } else if (sekolah.tingkat == "SLB" || sekolah.tingkat == "SUPER") {
       tingkatData = [
         "I",
         "II",
@@ -13377,13 +13377,13 @@ class MainController {
 
     let tingkatData;
 
-    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA") {
+    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA" || sekolah.tingkat == "MA" || sekolah.tingkat == "MAK") {
       tingkatData = ["X", "XI", "XII", "XIII"];
-    } else if (sekolah.tingkat == "SMP") {
+    } else if (sekolah.tingkat == "SMP" || sekolah.tingkat == "MTS") {
       tingkatData = ["VII", "VIII", "IX"];
-    } else if (sekolah.tingkat == "SD") {
+    } else if (sekolah.tingkat == "SD" || sekolah.tingkat == "MI") {
       tingkatData = ["I", "II", "III", "IV", "V", "VI"];
-    } else if (sekolah.tingkat == "SLB") {
+    } else if (sekolah.tingkat == "SLB" || sekolah.tingkat == "SUPER") {
       tingkatData = [
         "I",
         "II",
@@ -13626,13 +13626,13 @@ class MainController {
 
     let tingkat = [];
 
-    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA") {
+    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA" || sekolah.tingkat == "MA" || sekolah.tingkat == "MAK") {
       tingkat = ["X", "XI", "XII", "XIII"];
-    } else if (sekolah.tingkat == "SMP") {
+    } else if (sekolah.tingkat == "SMP" || sekolah.tingkat == "MTS") {
       tingkat = ["VII", "VIII", "IX"];
-    } else if (sekolah.tingkat == "SD") {
+    } else if (sekolah.tingkat == "SD" || sekolah.tingkat == "MI") {
       tingkat = ["I", "II", "III", "IV", "V", "VI"];
-    } else if (sekolah.tingkat == "SLB") {
+    } else if (sekolah.tingkat == "SLB" || sekolah.tingkat == "SUPER") {
       tingkat = [
         "I",
         "II",
@@ -19535,13 +19535,13 @@ class MainController {
 
     let tingkatData = [];
 
-    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA") {
+    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA" || sekolah.tingkat == "MA" || sekolah.tingkat == "MAK") {
       tingkatData = ["X", "XI", "XII", "XIII"];
-    } else if (sekolah.tingkat == "SMP") {
+    } else if (sekolah.tingkat == "SMP" || sekolah.tingkat == "MTS") {
       tingkatData = ["VII", "VIII", "IX"];
-    } else if (sekolah.tingkat == "SD") {
+    } else if (sekolah.tingkat == "SD" || sekolah.tingkat == "MI") {
       tingkatData = ["I", "II", "III", "IV", "V", "VI"];
-    } else if (sekolah.tingkat == "SLB") {
+    } else if (sekolah.tingkat == "SLB" || sekolah.tingkat == "SUPER") {
       tingkatData = [
         "I",
         "II",
@@ -52598,13 +52598,13 @@ class MainController {
     rombel = await rombel.fetch();
     let tingkatData = [];
 
-    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA") {
+    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA" || sekolah.tingkat == "MA" || sekolah.tingkat == "MAK") {
       tingkatData = ["X", "XI", "XII", "XIII"];
-    } else if (sekolah.tingkat == "SMP") {
+    } else if (sekolah.tingkat == "SMP" || sekolah.tingkat == "MTS") {
       tingkatData = ["VII", "VIII", "IX"];
-    } else if (sekolah.tingkat == "SD") {
+    } else if (sekolah.tingkat == "SD" || sekolah.tingkat == "MI") {
       tingkatData = ["I", "II", "III", "IV", "V", "VI"];
-    } else if (sekolah.tingkat == "SLB") {
+    } else if (sekolah.tingkat == "SLB" || sekolah.tingkat == "SUPER") {
       tingkatData = [
         "I",
         "II",
