@@ -958,6 +958,9 @@ class SecondController {
       .with("rencanaJurnal", (builder) => {
         builder.whereIn("id", jurnalIds);
       })
+      .with("rumusAkun", (builder) => {
+        builder.where({ m_rencana_keuangan_id: perencanaan_id });
+      })
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .fetch();
@@ -1317,17 +1320,34 @@ class SecondController {
       m_rek_sekolah_id: null,
     });
 
-    const checkRumusAkun = await MRumusKeuAkun.query().where({m_keu_akun_id:keu_akun_id}).first()
-    if(checkRumusAkun){
-      await MRumusKeuAkun.query().where({id:checkRumusAkun.id}).update({
+    let checkRumusAkun = MRumusKeuAkun.query().where({
+      m_keu_akun_id: keu_akun_id,
+    });
+    if (m_rencana_keuangan_id) {
+      checkRumusAkun = checkRumusAkun.andWhere({ m_rencana_keuangan_id });
+    }
+    checkRumusAkun = await checkRumusAkun.first();
+    if (checkRumusAkun) {
+      await MRumusKeuAkun.query().where({ id: checkRumusAkun.id }).update({
         rumus,
-      })
-    }else{
-      await MRumusKeuAkun.create({
-        m_keu_akun_id:keu_akun_id,
-        rumus,
-        tipe:nama
-      })
+      });
+    } else {
+      if (rumus) {
+        if (m_rencana_keuangan_id) {
+          await MRumusKeuAkun.create({
+            m_keu_akun_id: keu_akun_id,
+            rumus,
+            tipe: nama,
+            m_rencana_keuangan_id,
+          });
+        } else {
+          await MRumusKeuAkun.create({
+            m_keu_akun_id: keu_akun_id,
+            rumus,
+            tipe: nama,
+          });
+        }
+      }
     }
 
     if (nama != akun.nama) {
@@ -1928,13 +1948,13 @@ class SecondController {
     let transaksi = MKeuTransaksi.query()
       .with("jurnal", (builder) => {
         builder.where({ dihapus: 0 }).with("akun", (builder) => {
-          builder.select("nama", "id","kode");
+          builder.select("nama", "id", "kode");
         });
       })
       .with("rencana", (builder) => {
         builder.with("jurnal", (builder) => {
           builder.where({ dihapus: 0 }).with("akun", (builder) => {
-            builder.select("id", "nama","kode");
+            builder.select("id", "nama", "kode");
           });
         });
       })
@@ -2493,7 +2513,9 @@ class SecondController {
             // Add row using key mapping to columns
             if (e.jenis == "debit") {
               let row = worksheet.addRow({
-                akun: `${e.akun ? e.akun.kode : "-"} - ${e.akun ? e.akun.nama : "-"}`,
+                akun: `${e.akun ? e.akun.kode : "-"} - ${
+                  e.akun ? e.akun.nama : "-"
+                }`,
                 debit: `${(e ? e.saldo : "0").toLocaleString("id-ID", {
                   style: "currency",
                   currency: "IDR",
@@ -2503,7 +2525,9 @@ class SecondController {
               nilaiDebit = nilaiDebit + e.saldo;
             } else if (e.jenis == "kredit") {
               let row = worksheet.addRow({
-                akun: `${e.akun ? e.akun.kode : "-"} - ${e.akun ? e.akun.nama : "-"}`,
+                akun: `${e.akun ? e.akun.kode : "-"} - ${
+                  e.akun ? e.akun.nama : "-"
+                }`,
                 kredit: `${(e ? e.saldo : "0").toLocaleString("id-ID", {
                   style: "currency",
                   currency: "IDR",
@@ -2867,7 +2891,9 @@ class SecondController {
             // Add row using key mapping to columns
             if (e.jenis == "debit") {
               let row = worksheet.addRow({
-                akun: `${e.akun ? e.akun.kode : "-"} - ${e.akun ? e.akun.nama : "-"}`,
+                akun: `${e.akun ? e.akun.kode : "-"} - ${
+                  e.akun ? e.akun.nama : "-"
+                }`,
                 debit: `${(e ? e.saldo : "0").toLocaleString("id-ID", {
                   style: "currency",
                   currency: "IDR",
@@ -2877,7 +2903,9 @@ class SecondController {
               nilaiDebit = nilaiDebit + e.saldo;
             } else if (e.jenis == "kredit") {
               let row = worksheet.addRow({
-                akun: `${e.akun ? e.akun.kode : "-"} - ${e.akun ? e.akun.nama : "-"}`,
+                akun: `${e.akun ? e.akun.kode : "-"} - ${
+                  e.akun ? e.akun.nama : "-"
+                }`,
                 kredit: `${(e ? e.saldo : "0").toLocaleString("id-ID", {
                   style: "currency",
                   currency: "IDR",
@@ -6344,8 +6372,8 @@ ${jamPerubahan}`;
     kategori = MKeuKategoriNeraca.query()
       .with("akunNeraca", (builder) => {
         builder
-          .with("akun",(builder)=>{
-            builder.with("rumusAkun")
+          .with("akun", (builder) => {
+            builder.with("rumusAkun");
           })
           .whereIn(
             "m_keu_akun_id",
@@ -6363,12 +6391,11 @@ ${jamPerubahan}`;
 
     kategori = await kategori.fetch();
 
-
-   const kategoriLabaRugi = await MKeuKategoriLabaRugi.query()
+    const kategoriLabaRugi = await MKeuKategoriLabaRugi.query()
       .with("akunLabaRugi", (builder) => {
         builder
-          .with("akun",(builder)=>{
-            builder.with("rumusAkun")
+          .with("akun", (builder) => {
+            builder.with("rumusAkun");
           })
           .whereIn(
             "m_keu_akun_id",
@@ -6378,7 +6405,8 @@ ${jamPerubahan}`;
           .orderBy("urutan", "asc");
       })
       .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id }).fetch();
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
 
     const keuangan = await MKeuTemplateAkun.query()
       .andWhere({
@@ -6391,7 +6419,7 @@ ${jamPerubahan}`;
       akun,
       keuangan,
       rencana,
-      kategoriLabaRugi
+      kategoriLabaRugi,
     });
   }
 
@@ -6802,8 +6830,8 @@ ${jamPerubahan}`;
     kategori = MKeuKategoriLabaRugi.query()
       .with("akunLabaRugi", (builder) => {
         builder
-          .with("akun",(builder)=>{
-            builder.with("rumusAkun")
+          .with("akun", (builder) => {
+            builder.with("rumusAkun");
           })
           .whereIn(
             "m_keu_akun_id",
@@ -6852,7 +6880,7 @@ ${jamPerubahan}`;
 
     const user = await auth.getUser();
 
-    let { nama, warna,kategori } = request.post();
+    let { nama, warna, kategori } = request.post();
 
     const rules = {
       nama: "required",
