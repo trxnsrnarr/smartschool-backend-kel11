@@ -125,6 +125,7 @@ const MBuktiPelaksanaanSanksi = use("App/Models/MBuktiPelaksanaanSanksi");
 const MBobotNilai = use("App/Models/MBobotNilai");
 const MRegistrasiAkun = use("App/Models/MRegistrasiAkun");
 const MKeuAkun = use("App/Models/MKeuAkun");
+const MRumusKeuAkun = use("App/Models/MRumusKeuAkun");
 const MKeuTemplateAkun = use("App/Models/MKeuTemplateAkun");
 const MKeuJurnal = use("App/Models/MKeuJurnal");
 const MKeuTransaksi = use("App/Models/MKeuTransaksi");
@@ -1138,6 +1139,7 @@ class SecondController {
       saldo,
       rek,
       struktur,
+      rumus,
       m_rencana_keuangan_id,
     } = request.post();
 
@@ -1313,6 +1315,20 @@ class SecondController {
       dihapus: 0,
       m_rek_sekolah_id: null,
     });
+
+    const checkRumusAkun = await MRumusKeuAkun.query().where({m_keu_akun_id:keu_akun_id}).first()
+    if(checkRumusAkun){
+      await MRumusKeuAkun.query().where({id:checkRumusAkun.id}).update({
+        rumus,
+      })
+    }else{
+      await MRumusKeuAkun.create({
+        m_keu_akun_id:keu_akun_id,
+        rumus,
+        tipe:nama
+      })
+    }
+
     if (nama != akun.nama) {
       await MHistoriAktivitas.create({
         jenis: "Ubah Akun",
@@ -6327,7 +6343,9 @@ ${jamPerubahan}`;
     kategori = MKeuKategoriNeraca.query()
       .with("akunNeraca", (builder) => {
         builder
-          .with("akun")
+          .with("akun",(builder)=>{
+            builder.with("rumusAkun")
+          })
           .whereIn(
             "m_keu_akun_id",
             akun.toJSON().map((d) => d.id)
@@ -6344,6 +6362,23 @@ ${jamPerubahan}`;
 
     kategori = await kategori.fetch();
 
+
+   const kategoriLabaRugi = await MKeuKategoriLabaRugi.query()
+      .with("akunLabaRugi", (builder) => {
+        builder
+          .with("akun",(builder)=>{
+            builder.with("rumusAkun")
+          })
+          .whereIn(
+            "m_keu_akun_id",
+            akun.toJSON().map((d) => d.id)
+          )
+          .where({ dihapus: 0 })
+          .orderBy("urutan", "asc");
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id }).fetch();
+
     const keuangan = await MKeuTemplateAkun.query()
       .andWhere({
         m_sekolah_id: sekolah.id,
@@ -6355,6 +6390,7 @@ ${jamPerubahan}`;
       akun,
       keuangan,
       rencana,
+      kategoriLabaRugi
     });
   }
 
@@ -6765,7 +6801,9 @@ ${jamPerubahan}`;
     kategori = MKeuKategoriLabaRugi.query()
       .with("akunLabaRugi", (builder) => {
         builder
-          .with("akun")
+          .with("akun",(builder)=>{
+            builder.with("rumusAkun")
+          })
           .whereIn(
             "m_keu_akun_id",
             akun.toJSON().map((d) => d.id)

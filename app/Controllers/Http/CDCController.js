@@ -2731,10 +2731,11 @@ class CDCController {
 
     const user = await auth.getUser();
 
-    const { verifikasi } = request.post();
+    const { verifikasi, dihapus } = request.post();
 
     const alumni = await MAlumni.query().where({ id: alumni_id }).update({
       verifikasi,
+      dihapus,
     });
 
     if (!alumni) {
