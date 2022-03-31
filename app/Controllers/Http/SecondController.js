@@ -897,6 +897,7 @@ class SecondController {
           })
           .where({ dihapus: 0 });
       })
+      .with("rumusAkun")
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .fetch();

@@ -980,7 +980,9 @@ class KeuanganController {
     kategori = MRencanaKategoriNeraca.query()
       .with("akunNeraca", (builder) => {
         builder
-          .with("akun")
+          .with("akun",(builder)=>{
+            builder.with("rumusAkun")
+          })
           .whereIn(
             "m_keu_akun_id",
             akun.toJSON().map((d) => d.id)
@@ -1055,6 +1057,7 @@ class KeuanganController {
                   builder.whereIn("m_rencana_transaksi_id", transaksiIds);
                 }
               })
+              .with("rumusAkun")
               .where({ dihapus: 0 });
           })
           .where({ dihapus: 0 })
