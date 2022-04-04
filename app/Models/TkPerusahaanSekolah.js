@@ -14,6 +14,10 @@ class TkPerusahaanSekolah extends Model {
   sekolah() {
     return this.belongsTo("App/Models/Sekolah");
   }
+
+  mou1() {
+    return this.belongsTo("App/Models/MMouPerusahaan","id","tk_perusahaan_sekolah");
+  }
   
   penerimaan() {
     return this.hasMany("App/Models/MPenerimaanPerusahaan");
