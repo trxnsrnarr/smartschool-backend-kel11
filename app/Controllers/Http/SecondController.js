@@ -1328,6 +1328,8 @@ class SecondController {
     });
     if (m_rencana_keuangan_id) {
       checkRumusAkun = checkRumusAkun.andWhere({ m_rencana_keuangan_id });
+    }else {
+      checkRumusAkun = checkRumusAkun.whereNull(" m_rencana_keuangan_id ");
     }
     checkRumusAkun = await checkRumusAkun.first();
     if (checkRumusAkun) {
