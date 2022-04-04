@@ -95,6 +95,8 @@ const MInformasiPekerjaan = use("App/Models/MInformasiPekerjaan");
 const MPekerjaanPengumuman = use("App/Models/MPekerjaanPengumuman");
 const MAcaraPerusahaan = use("App/Models/MAcaraPerusahaan");
 const TkStatusPekerjaan = use("App/Models/TkStatusPekerjaan");
+const MMouPerusahaan = use("App/Models/MMouPerusahaan");
+const MSuratPerusahaan = use("App/Models/MSuratPerusahaan");
 
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
@@ -589,14 +591,82 @@ class CDCController {
       .with("pekerjaan", (builder) => {
         builder.where({ dihapus: 0 });
       })
-      .with("informasi", (builder) => {
-        builder.where({ dihapus: 0 });
-      })
+      .with("informasi")
       .where({ id: perusahaan_id })
       .first();
 
     return response.ok({
       perusahaan,
+    });
+  }
+
+  async detailMouPerusahaan({
+    response,
+    request,
+    auth,
+    params: { perusahaan_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const perusahaanSekolah = await TkPerusahaanSekolah.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_perusahaan_id: perusahaan_id });
+
+    const perusahaan = await MPerusahaan.query()
+      .where({ id: perusahaan_id })
+      .first();
+
+    const mou = await MMouPerusahaan.query()
+      .where({ dihapus: 0 })
+      .andWhere({ tk_perusahaan_sekolah_id: perusahaanSekolah.id })
+      .fetch();
+
+    return response.ok({
+      perusahaan,
+      mou
+    });
+  }
+
+  async detailSuratPerusahaan({
+    response,
+    request,
+    auth,
+    params: { perusahaan_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const perusahaanSekolah = await TkPerusahaanSekolah.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_perusahaan_id: perusahaan_id });
+
+    const perusahaan = await MPerusahaan.query()
+      .where({ id: perusahaan_id })
+      .first();
+
+    const surat = await MSuratPerusahaan.query()
+      .where({ dihapus: 0 })
+      .andWhere({ tk_perusahaan_sekolah_id: perusahaanSekolah.id })
+      .fetch();
+
+    return response.ok({
+      perusahaan,
+      surat
     });
   }
 
@@ -951,6 +1021,113 @@ class CDCController {
     });
   }
 
+  async putInformasiPerusahaan({
+    response,
+    request,
+    auth,
+    params: { perusahaan_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      nama,
+      logo,
+      bidang,
+      province_id,
+      regency_id,
+      district_id,
+      village_id,
+      didirikan,
+      alamat,
+      telepon,
+      situs,
+      jumlah_pekerja,
+      tentang,
+      budaya,
+      benefit_karyawan,
+      lingkungan_kerja,
+      busana,
+      budaya_kerja,
+      jam_kerja,
+      nama_pj,
+      telepon_pj,
+      email_pj,
+      registrasi_pj,
+      youtube,
+      twitter,
+      instagram,
+      facebook,
+      github,
+      linkedin,
+      behace,
+      dribble,
+      kodepos,
+      sampul,
+    } = request.post();
+
+    const perusahaan = await MPerusahaaan.query()
+      .where({ id: perusahaan_id })
+      .update({
+        nama,
+        logo,
+        bidang,
+        province_id,
+        regency_id,
+        district_id,
+        village_id,
+        dihapus: 0,
+      });
+
+    // const informasi = await MInformasiPerusahaaan.query()
+    //   .where({ m_perusahaan_id: perusahaan_id })
+    //   .update({
+    //     didirikan,
+    //     alamat,
+    //     telepon,
+    //     situs,
+    //     jumlah_pekerja,
+    //     tentang,
+    //     budaya,
+    //     benefit_karyawan,
+    //     lingkungan_kerja,
+    //     busana,
+    //     budaya_kerja,
+    //     jam_kerja,
+    //     nama_pj,
+    //     telepon_pj,
+    //     email_pj,
+    //     registrasi_pj,
+    //     youtube,
+    //     twitter,
+    //     instagram,
+    //     facebook,
+    //     github,
+    //     linkedin,
+    //     behace,
+    //     dribble,
+    //     kodepos,
+    //     sampul,
+    //   });
+
+    if (!perusahaan) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
   async getPerusahaanSekolah({ response, request, auth }) {
     const domain = request.headers().origin;
 
@@ -982,6 +1159,78 @@ class CDCController {
             builder.where({ dihapus: 0 });
           })
           .where({ dihapus: 0 });
+      })
+      .with("perusahaan", (builder) => {
+        // builder.where({ dihapus: 0 });
+        // if (search) {
+        //   builder.andWhere("nama", "like", `%${search}%`);
+        // }
+      })
+      .whereIn(
+        "m_perusahaan_id",
+        perusahaan.toJSON().map((d) => d.id)
+      )
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    let totalSiswa = 0;
+
+    await Promise.all(
+      perusahaanSekolah.toJSON().map(async (d) => {
+        await Promise.all(
+          d.penerimaan.map(async (e) => {
+            totalSiswa = totalSiswa + e.__meta__.total;
+          })
+        );
+      })
+    );
+
+    const semuaPerusahaan = MPerusahaan.query().fetch();
+
+    return response.ok({
+      perusahaan,
+      perusahaanSekolah,
+      semuaPerusahaan,
+      totalSiswa,
+    });
+  }
+
+  async getPerusahaanSekolah31({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let { search } = request.get();
+    const user = await auth.getUser();
+    let perusahaan;
+    // const { rombel_id } = request.post();
+    const perusahaanIds = await TkPerusahaanSekolah.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .pluck("m_perusahaan_id");
+
+    perusahaan = MPerusahaan.query().whereIn("id", perusahaanIds);
+    if (search) {
+      perusahaan.andWhere("nama", "like", `%${search}%`);
+    }
+    perusahaan = await perusahaan.fetch();
+
+    const perusahaanSekolah = await TkPerusahaanSekolah.query()
+      .with("penerimaan", (builder) => {
+        builder
+          .withCount("siswa as total", (builder) => {
+            builder.where({ dihapus: 0 });
+          })
+          .where({ dihapus: 0 });
+      })
+      .with("mou1",(builder)=>{
+        builder.where("mulai_kontrak", ">=", moment().format("YYYY-MM-DD"))
+        .where("akhir_kontrak", "<=", moment().format("YYYY-MM-DD"));
       })
       .with("perusahaan", (builder) => {
         // builder.where({ dihapus: 0 });
@@ -1880,6 +2129,44 @@ class CDCController {
     });
   }
 
+  async putPenanggungJawabPerusahaan({
+    response,
+    request,
+    auth,
+    params: { perusahaan_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { nama_pj, telepon_pj, email_pj, registrasi_pj } = request.post();
+
+    const informasi = await MInformasiPerusahaaan.query()
+      .where({ m_perusahaan_id: perusahaan_id })
+      .update({
+        nama_pj,
+        telepon_pj,
+        email_pj,
+        registrasi_pj,
+      });
+
+    if (!informasi) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
   async putInformasiPerusahaan({
     response,
     request,
@@ -2763,6 +3050,200 @@ class CDCController {
     });
 
     if (!alumni) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async postBerkasMou({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      nama,
+      mulai_kontrak,
+      akhir_kontrak,
+      kerjasama,
+      fasilitas,
+      lampiran,
+      tk_perusahaan_sekolah_id,
+    } = request.post();
+
+    const mou = await MMouPerusahaan.create({
+      nama,
+      mulai_kontrak,
+      akhir_kontrak,
+      kerjasama,
+      fasilitas,
+      lampiran,
+      tk_perusahaan_sekolah_id,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putBerkasMou({ response, request, auth, params: { mou_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      nama,
+      mulai_kontrak,
+      akhir_kontrak,
+      kerjasama,
+      fasilitas,
+      lampiran,
+      tk_perusahaan_sekolah_id,
+    } = request.post();
+
+    const mou = await MMouPerusahaan.query().where({ id: mou_id }).update({
+      nama,
+      mulai_kontrak,
+      akhir_kontrak,
+      kerjasama,
+      fasilitas,
+      lampiran,
+      tk_perusahaan_sekolah_id,
+      dihapus: 0,
+    });
+
+    if (!mou) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteBerkasMou({ response, request, auth, params: { mou_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    // mengambil data user
+    const user = await auth.getUser();
+
+    const mou = await MMouPerusahaan.query().where({ id: mou_id }).update({
+      dihapus: 1,
+    });
+
+    if (!mou) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async postBerkasSurat({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { nama, lampiran, tk_perusahaan_sekolah_id } = request.post();
+
+    const surat = await MSuratPerusahaan.create({
+      nama,
+      lampiran,
+      tk_perusahaan_sekolah_id,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putBerkasSurat({ response, request, auth, params: { surat_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { nama, lampiran, tk_perusahaan_sekolah_id } = request.post();
+
+    const surat = await MSuratPerusahaan.query()
+      .where({ id: surat_id })
+      .update({
+        nama,
+        lampiran,
+        tk_perusahaan_sekolah_id,
+        dihapus: 0,
+      });
+
+    if (!surat) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deleteBerkasSurat({ response, request, auth, params: { surat_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    // mengambil data user
+    const user = await auth.getUser();
+
+    const surat = await MSuratPerusahaan.query()
+      .where({ id: surat_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!surat) {
       return response.notFound({
         message: messageNotFound,
       });
