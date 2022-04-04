@@ -5,6 +5,7 @@ const Province = use("App/Models/Province");
 const Regency = use("App/Models/Regency");
 const District = use("App/Models/District");
 const Village = use("App/Models/Village");
+const Leaderboard = use("App/Models/Leaderboard");
 const Sekolah = use("App/Models/Sekolah");
 const MSekolah = use("App/Models/MSekolah");
 const MSekolahIndustri = use("App/Models/MSekolahIndustri");
@@ -543,6 +544,32 @@ class MainController {
 
     return response.ok(res);
   }
+
+  async getKcdLeaderboard({ response, request }) {
+    const kcdLeaderboard = await User.query().select('kabupaten_ids', 'whatsapp', 'nama', 'id').where({role: 'kcd'}).fetch()
+
+    await Promise.all(kcdLeaderboard.toJSON().map(async (d) => {
+      const kabupatenIds = d.kabupaten_ids.split(',')
+
+      const check = await Leaderboard.query().where({m_user_id: d.id}).first()
+
+      if(!check) {
+        await Leaderboard.create({
+          m_user_id: d.id, 
+          kcd: d.nama, 
+          total: await Sekolah.query().whereIn('kode_kab_kota',kabupatenIds).whereNotNull("m_sekolah_id").getCount()
+        })
+      } else {
+        await Leaderboard.query().where({id: check.id}).update({
+          kcd: d.nama, 
+          total: await Sekolah.query().whereIn('kode_kab_kota',kabupatenIds).whereNotNull("m_sekolah_id").getCount()
+        })
+      }
+    }))
+
+    return await Leaderboard.query().orderBy('total', 'desc').fetch()
+  }
+
 
   async getMasterSekolahDinasSummary({ response, request }) {
     let { page, propinsi, kabupaten } = request.get();
