@@ -1082,9 +1082,9 @@ Route.delete(
   "/rapor/kelulusan/:user_id",
   "MainController.deleteKeteranganRapor"
 );
-Route.post("/rapor/pkl/:user_id", "MainController.postKeteranganPkl");
-Route.put("/rapor/pkl/:pkl_id", "MainController.putKeteranganPkl");
-Route.delete("/rapor/pkl/:pkl_id", "MainController.deleteKeteranganPkl");
+Route.post("/rapor/pkl/:user_id", "CDCController.postKeteranganPkl");
+Route.put("/rapor/pkl/:pkl_id", "CDCController.putKeteranganPkl");
+Route.delete("/rapor/pkl/:pkl_id", "CDCController.deleteKeteranganPkl");
 
 //Buku Induk Service
 Route.get("/buku-induk", "MainController.getBukuInduk");
@@ -1181,13 +1181,13 @@ Route.put(
   "CDCController.putPerusahaanSekolah"
 );
 
-Route.post("/cdc/surat", "CDCControler.postBerkasSurat");
-Route.put("/cdc/surat/:surat_id", "CDCControler.putBerkasSurat");
-Route.delete("/cdc/surat/:surat_id", "CDCControler.deleteBerkasSurat");
+Route.post("/cdc/surat", "CDCController.postBerkasSurat");
+Route.put("/cdc/surat/:surat_id", "CDCController.putBerkasSurat");
+Route.delete("/cdc/surat/:surat_id", "CDCController.deleteBerkasSurat");
 
-Route.post("/cdc/mou", "CDCControler.postBerkasMou");
-Route.put("/cdc/mou/:mou_id", "CDCControler.putBerkasMou");
-Route.delete("/cdc/mou/:mou_id", "CDCControler.deleteBerkasMou");
+Route.post("/cdc/mou", "CDCController.postBerkasMou");
+Route.put("/cdc/mou/:mou_id", "CDCController.putBerkasMou");
+Route.delete("/cdc/mou/:mou_id", "CDCController.deleteBerkasMou");
 
 Route.put(
   "/penerimaan-perusahaan/:penerimaan_id",
@@ -1220,31 +1220,35 @@ Route.get("/pkl/penerimaan", "CDCController.getPenerimaanPkl");
 Route.post("/penerimaan-perusahaan", "CDCController.postPenerimaanPerusahaan");
 
 Route.post("/cdc/perusahaan", "CDCController.postPerusahaan");
-Route.put("/cdc/perusahaan/:perusahaan_id", "CDCControler.putPerusahaan");
+Route.put("/cdc/perusahaan/:perusahaan_id", "CDCController.putPerusahaan");
 Route.put(
   "/cdc/profil-perusahaan/:perusahaan_id",
-  "CDCControler.putProfilPerusahaan"
+  "CDCController.putProfilPerusahaan"
 );
 Route.put(
   "/cdc/penanggung-jawab-perusahaan/:perusahaan_id",
-  "CDCControler.putPenanggungJawabPerusahaan"
+  "CDCController.putPenanggungJawabPerusahaan"
 );
 Route.put(
   "/cdc/budaya-perusahaan/:perusahaan_id",
-  "CDCControler.putBudayaPerusahaan"
+  "CDCController.putBudayaPerusahaan"
+);
+Route.put(
+  "/cdc/informasi-perusahaan-lite/:perusahaan_id",
+  "CDCController.putInformasiPerusahaanLite"
 );
 Route.put(
   "/cdc/informasi-perusahaan/:perusahaan_id",
-  "CDCControler.putInformasiPerusahaan"
+  "CDCController.putInformasiPerusahaan"
 );
 Route.put(
   "/cdc/tautan-perusahaan/:perusahaan_id",
-  "CDCControler.putTautanPerusahaan"
+  "CDCController.putTautanPerusahaan"
 );
 
 Route.delete(
   "/cdc/perusahaan/:perusahaan_id",
-  "CDCControler.deletePerusahaan"
+  "CDCController.deletePerusahaan"
 );
 
 //Surel Service
