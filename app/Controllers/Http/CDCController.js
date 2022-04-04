@@ -97,6 +97,7 @@ const MAcaraPerusahaan = use("App/Models/MAcaraPerusahaan");
 const TkStatusPekerjaan = use("App/Models/TkStatusPekerjaan");
 const MMouPerusahaan = use("App/Models/MMouPerusahaan");
 const MSuratPerusahaan = use("App/Models/MSuratPerusahaan");
+const MInformasiPerusahaan = use("App/Models/MInformasiPerusahaan");
 
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
@@ -631,7 +632,7 @@ class CDCController {
 
     return response.ok({
       perusahaan,
-      mou
+      mou,
     });
   }
 
@@ -666,7 +667,7 @@ class CDCController {
 
     return response.ok({
       perusahaan,
-      surat
+      surat,
     });
   }
 
@@ -1228,9 +1229,10 @@ class CDCController {
           })
           .where({ dihapus: 0 });
       })
-      .with("mou1",(builder)=>{
-        builder.where("mulai_kontrak", ">=", moment().format("YYYY-MM-DD"))
-        .where("akhir_kontrak", "<=", moment().format("YYYY-MM-DD"));
+      .with("mou1", (builder) => {
+        builder
+          .where("mulai_kontrak", ">=", moment().format("YYYY-MM-DD"))
+          .where("akhir_kontrak", "<=", moment().format("YYYY-MM-DD"));
       })
       .with("perusahaan", (builder) => {
         // builder.where({ dihapus: 0 });
@@ -2147,7 +2149,7 @@ class CDCController {
 
     const { nama_pj, telepon_pj, email_pj, registrasi_pj } = request.post();
 
-    const informasi = await MInformasiPerusahaaan.query()
+    const informasi = await MInformasiPerusahaan.query()
       .where({ m_perusahaan_id: perusahaan_id })
       .update({
         nama_pj,
@@ -2167,7 +2169,7 @@ class CDCController {
     });
   }
 
-  async putInformasiPerusahaan({
+  async putInformasiPerusahaanLite({
     response,
     request,
     auth,
@@ -2188,16 +2190,18 @@ class CDCController {
       bidang,
       email,
       jumlah_karyawan,
+      situs,
+      telepon,
       province_id,
       regency_id,
       kode_pos,
       alamat,
+      keselarasan,
+      istd,
       didirikan,
-      situs,
-      telepon,
     } = request.post();
 
-    const perusahaan = await MPerusahaaan.query()
+    const perusahaan = await MPerusahaan.query()
       .where({ id: perusahaan_id })
       .update({
         nama,
@@ -2207,9 +2211,26 @@ class CDCController {
         dihapus: 0,
       });
 
-    const informasi = await MInformasiPerusahaaan.query()
+    const check = await MInformasiPerusahaan.query()
       .where({ m_perusahaan_id: perusahaan_id })
-      .update({
+      .first();
+      let informasi
+    if (check) {
+       informasi = await MInformasiPerusahaan.query()
+        .where({ m_perusahaan_id: perusahaan_id })
+        .update({
+          email,
+          jumlah_karyawan,
+          kode_pos,
+          alamat,
+          keselarasan,
+          istd,
+          didirikan,
+          situs,
+          telepon,
+        });
+    } else {
+       informasi = await MInformasiPerusahaan.create({
         email,
         jumlah_karyawan,
         kode_pos,
@@ -2218,6 +2239,7 @@ class CDCController {
         situs,
         telepon,
       });
+    }
 
     if (!informasi) {
       return response.notFound({
