@@ -1160,7 +1160,7 @@ class RombelController {
       .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .ids();
-
+    let DataBelum = [];
     const semuaMateri = await MMateri.query()
       .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
       .andWhere({ dihapus: 0 })
@@ -1390,71 +1390,75 @@ class RombelController {
                   });
               }
             }
-            jadwalMengajar = await MJadwalMengajar.query()
-              .where({ m_rombel_id: rombel.id })
-              .andWhere({ m_jam_mengajar_id: jam.id })
-              .andWhere({ m_ta_id: ta.id })
-              .update({
-                m_mata_pelajaran_id: d.mapel,
-                diubah: 1,
-              });
-          }
-          const mataPelajaran = await MMataPelajaran.query()
-            .where({ id: d.mapel })
-            .first();
+            try {
+              jadwalMengajar = await MJadwalMengajar.query()
+                .where({ m_rombel_id: rombel.id })
+                .andWhere({ m_jam_mengajar_id: jam.id })
+                .andWhere({ m_ta_id: ta.id })
+                .update({
+                  m_mata_pelajaran_id: d.mapel,
+                  diubah: 1,
+                });
+            } catch (err) {
+              DataBelum.push({ rombel, jam, ta });
+            }
+            const mataPelajaran = await MMataPelajaran.query()
+              .where({ id: d.mapel })
+              .first();
 
-          if (mataPelajaran) {
+            // if (mataPelajaran) {
             const check = await MMateri.query()
               .where({ m_mata_pelajaran_id: mataPelajaran.id })
               .andWhere({ tingkat: rombel.tingkat })
               .first();
-            if (
-              !janganUlangMateri.find(
-                (e) =>
-                  e.tingkat == rombel.tingkat &&
-                  e.m_mata_pelajaran_id == mataPelajaran.id &&
-                  e.dihapus == 0
-              )
-            ) {
-              if (check) {
-                if (check.dihapus) {
-                  await MMateri.query()
-                    .where({ id: check.id })
-                    .update({ dihapus: 0 });
-                }
+            // if (
+            //   !janganUlangMateri.find(
+            //     (e) =>
+            //       e.tingkat == rombel.tingkat &&
+            //       e.m_mata_pelajaran_id == mataPelajaran.id &&
+            //       e.dihapus == 0
+            //   )
+            // ) {
+            if (check) {
+              if (check.dihapus) {
+                await MMateri.query()
+                  .where({ id: check.id })
+                  .update({ dihapus: 0 });
               }
+            }
 
-              if (!check) {
-                const materi = await MMateri.create({
-                  tingkat: rombel.tingkat,
-                  m_mata_pelajaran_id: mataPelajaran.id,
-                });
+            if (!check) {
+              const materi = await MMateri.create({
+                tingkat: rombel.tingkat,
+                m_mata_pelajaran_id: mataPelajaran.id,
+              });
 
+              await TkMateriRombel.create({
+                m_materi_id: materi.id,
+                m_rombel_id: rombel.id,
+              });
+            } else {
+              const checkTk = await TkMateriRombel.query()
+                .where({ m_materi_id: check.id })
+                .andWhere({ m_rombel_id: rombel.id })
+                .first();
+              if (!checkTk) {
                 await TkMateriRombel.create({
-                  m_materi_id: materi.id,
+                  m_materi_id: check.id,
                   m_rombel_id: rombel.id,
                 });
-              } else {
-                const checkTk = await TkMateriRombel.query()
-                  .where({ m_materi_id: check.id })
-                  .andWhere({ m_rombel_id: rombel.id })
-                  .first();
-                if (!checkTk) {
-                  await TkMateriRombel.create({
-                    m_materi_id: check.id,
-                    m_rombel_id: rombel.id,
-                  });
-                }
               }
-
-              janganUlangMateri.push({
-                m_mata_pelajaran_id: mataPelajaran.id,
-                tingkat: rombel.tingkat,
-                dihapus: 0,
-                // data: d,
-              });
-              return true;
             }
+
+            janganUlangMateri.push({
+              m_mata_pelajaran_id: mataPelajaran.id,
+              tingkat: rombel.tingkat,
+              dihapus: 0,
+              // data: d,
+            });
+            return;
+            // }
+            // }
           }
 
           return;
@@ -1462,7 +1466,7 @@ class RombelController {
       );
       // return result;
     }
-    return "selesai";
+    return DataBelum;
   }
 
   async importJadwalMengajar({ request, response, auth }) {
