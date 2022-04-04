@@ -1032,7 +1032,7 @@ class SecondController {
 
     const user = await auth.getUser();
 
-    let { nama, kode, bank, norek, saldo, rek, struktur } = request.post();
+    let { nama, kode, bank, norek, saldo, rek, struktur,saldo_normal } = request.post();
 
     const rules = {
       nama: "required",
@@ -1052,6 +1052,7 @@ class SecondController {
       nama,
       kode,
       dihapus: 0,
+      saldo_normal
     });
 
     if (rek) {
@@ -1144,6 +1145,7 @@ class SecondController {
       rek,
       struktur,
       rumus,
+      saldo_normal,
       m_rencana_keuangan_id,
     } = request.post();
 
@@ -1317,6 +1319,7 @@ class SecondController {
       nama,
       kode,
       dihapus: 0,
+      saldo_normal,
       m_rek_sekolah_id: null,
     });
 
