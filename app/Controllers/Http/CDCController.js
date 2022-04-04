@@ -2194,7 +2194,7 @@ class CDCController {
       telepon,
       province_id,
       regency_id,
-      kode_pos,
+      kodepos,
       alamat,
       keselarasan,
       istd,
@@ -2221,7 +2221,7 @@ class CDCController {
         .update({
           email,
           jumlah_karyawan,
-          kode_pos,
+          kodepos,
           alamat,
           keselarasan,
           istd,
@@ -2233,7 +2233,7 @@ class CDCController {
        informasi = await MInformasiPerusahaan.create({
         email,
         jumlah_karyawan,
-        kode_pos,
+        kodepos,
         alamat,
         didirikan,
         situs,
