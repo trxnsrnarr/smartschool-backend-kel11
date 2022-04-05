@@ -2189,11 +2189,13 @@ class CDCController {
       nama,
       bidang,
       email,
-      jumlah_karyawan,
+      jumlah_pekerja,
       situs,
       telepon,
       province_id,
       regency_id,
+      district_id,
+      village_id,
       kodepos,
       alamat,
       keselarasan,
@@ -2208,6 +2210,8 @@ class CDCController {
         bidang,
         province_id,
         regency_id,
+        district_id,
+        village_id,
         dihapus: 0,
       });
 
@@ -2220,7 +2224,7 @@ class CDCController {
         .where({ m_perusahaan_id: perusahaan_id })
         .update({
           email,
-          jumlah_karyawan,
+          jumlah_pekerja,
           kodepos,
           alamat,
           keselarasan,
@@ -2232,7 +2236,7 @@ class CDCController {
     } else {
       informasi = await MInformasiPerusahaan.create({
         email,
-        jumlah_karyawan,
+        jumlah_pekerja,
         kodepos,
         alamat,
         didirikan,
