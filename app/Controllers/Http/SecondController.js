@@ -31,6 +31,7 @@ const MAnggotaProyek = use("App/Models/MAnggotaProyek");
 const MAnggotaProyekRole = use("App/Models/MAnggotaProyekRole");
 const MKeuRencanaJurnal = use("App/Models/MKeuRencanaJurnal");
 const MRencanaTransaksi = use("App/Models/MRencanaTransaksi");
+const MRencanaKategoriLabaRugi = use("App/Models/MRencanaKategoriLabaRugi");
 const MKategoriPekerjaan = use("App/Models/MKategoriPekerjaan");
 const MPekerjaanProyek = use("App/Models/MPekerjaanProyek");
 const MDitugaskanPekerjaan = use("App/Models/MDitugaskanPekerjaan");
@@ -453,6 +454,8 @@ class SecondController {
         "XI",
         "XII",
       ];
+    } else if (sekolah.tingkat == "TK") {
+      tingkat = ["A", "B"];
     }
 
     return { rombel, totalTingkat, tingkat };
@@ -881,7 +884,7 @@ class SecondController {
     if (!keuangan) {
       await otomatisAkun(sekolah);
     }
-    const akun = await MKeuAkun.query()
+    let akun = MKeuAkun.query()
       .with("rek", (builder) => {
         builder
           .where({
@@ -899,8 +902,11 @@ class SecondController {
       })
       .with("rumusAkun")
       .andWhere({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .fetch();
+      .andWhere({ m_sekolah_id: sekolah.id });
+    if (search) {
+      akun.where("nama", "like", `%${search}%`);
+    }
+    akun = await akun.fetch();
     const rekening = await MRekSekolah.query()
       .where({ dihapus: 0 })
       .whereNull("m_rencana_keuangan_id")
@@ -951,7 +957,7 @@ class SecondController {
       .ids();
 
     const keuangan = await query.first();
-    const akun = await MKeuAkun.query()
+    let akun = MKeuAkun.query()
       .with("rek", (builder) => {
         builder.where({ m_rencana_keuangan_id: perencanaan_id });
       })
@@ -962,8 +968,11 @@ class SecondController {
         builder.where({ m_rencana_keuangan_id: perencanaan_id });
       })
       .andWhere({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .fetch();
+      .andWhere({ m_sekolah_id: sekolah.id });
+    if (search) {
+      akun = akun.where("nama", "like", `%${search}%`);
+    }
+    akun = await akun.fetch();
     const rekening = await MRekSekolah.query()
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
@@ -1032,7 +1041,8 @@ class SecondController {
 
     const user = await auth.getUser();
 
-    let { nama, kode, bank, norek, saldo, rek, struktur,saldo_normal } = request.post();
+    let { nama, kode, bank, norek, saldo, rek, struktur, saldo_normal } =
+      request.post();
 
     const rules = {
       nama: "required",
@@ -1052,7 +1062,7 @@ class SecondController {
       nama,
       kode,
       dihapus: 0,
-      saldo_normal
+      saldo_normal,
     });
 
     if (rek) {
@@ -1149,6 +1159,7 @@ class SecondController {
       m_rencana_keuangan_id,
     } = request.post();
 
+    const rumus12 = JSON.parse(rumus || "[]");
     const rules = {
       nama: "required",
       kode: "required",
@@ -1162,7 +1173,16 @@ class SecondController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const akun = await MKeuAkun.query().where({ id: keu_akun_id }).first();
+    const akun = await MKeuAkun.query()
+      .with("rumusAkun", (builder) => {
+        if (m_rencana_keuangan_id) {
+          builder.where({ m_rencana_keuangan_id });
+        } else {
+          builder.whereNull("m_rencana_keuangan_id");
+        }
+      })
+      .where({ id: keu_akun_id })
+      .first();
     let update;
 
     let check = MRekSekolah.query().where({ m_keu_akun_id: akun.id });
@@ -1328,7 +1348,7 @@ class SecondController {
     });
     if (m_rencana_keuangan_id) {
       checkRumusAkun = checkRumusAkun.andWhere({ m_rencana_keuangan_id });
-    }else {
+    } else {
       checkRumusAkun = checkRumusAkun.whereNull(" m_rencana_keuangan_id ");
     }
     checkRumusAkun = await checkRumusAkun.first();
@@ -1354,7 +1374,7 @@ class SecondController {
         }
       }
     }
-
+    const rumusSebelum12 = JSON.parse(akun.toJSON().rumusAkun.rumus || "[]");
     if (nama != akun.nama) {
       await MHistoriAktivitas.create({
         jenis: "Ubah Akun",
@@ -1377,6 +1397,130 @@ class SecondController {
         tipe: "Realisasi",
       });
     }
+    // return akun;
+    if (akun.toJSON().rumusAkun.rumus != rumus) {
+      let kategoriAkun;
+      let rumusSebelum2 = ``;
+      let rumusFix = ``;
+      if (akun.nama == "MODAL" || akun.nama == "LABA DITAHAN") {
+        if (m_rencana_keuangan_id) {
+          for (let i = 0; i < rumusSebelum12.length; i++) {
+            const d = rumusSebelum12[i];
+            if (d.id) {
+              kategoriAkun = await MRencanaKategoriLabaRugi.query()
+                .where({ id: d.id })
+                .first();
+              rumusSebelum2 = rumusSebelum2 + kategoriAkun.nama;
+            } else {
+              if (d.operator == "minus") {
+                rumusSebelum2 = `${rumusSebelum2} - `;
+              } else if (d.operator == "plus") {
+                rumusSebelum2 = `${rumusSebelum2} + `;
+              }
+            }
+          }
+
+          for (let i = 0; i < rumus12.length; i++) {
+            const d = rumus12[i];
+            if (d.id) {
+              kategoriAkun = await MRencanaKategoriLabaRugi.query()
+                .where({ id: d.id })
+                .first();
+              rumusFix = rumusFix + kategoriAkun.nama;
+            } else {
+              if (d.operator == "minus") {
+                rumusFix = `${rumusFix} - `;
+              } else if (d.operator == "plus") {
+                rumusFix = `${rumusFix} + `;
+              }
+            }
+          }
+        } else {
+          for (let i = 0; i < rumusSebelum12.length; i++) {
+            const d = rumusSebelum12[i];
+            if (d.id) {
+              kategoriAkun = await MKeuKategoriLabaRugi.query()
+                .where({ id: d.id })
+                .first();
+              rumusSebelum2 = rumusSebelum2 + kategoriAkun.nama;
+            } else {
+              if (d.operator == "minus") {
+                rumusSebelum2 = `${rumusSebelum2} - `;
+              } else if (d.operator == "plus") {
+                rumusSebelum2 = `${rumusSebelum2} + `;
+              }
+            }
+          }
+
+          for (let i = 0; i < rumus12.length; i++) {
+            const d = rumus12[i];
+            if (d.id) {
+              kategoriAkun = await MKeuKategoriLabaRugi.query()
+                .where({ id: d.id })
+                .first();
+              rumusFix = rumusFix + kategoriAkun.nama;
+            } else {
+              if (d.operator == "minus") {
+                rumusFix = `${rumusFix} - `;
+              } else if (d.operator == "plus") {
+                rumusFix = `${rumusFix} + `;
+              }
+            }
+          }
+        }
+      } else {
+        for (let i = 0; i < rumusSebelum12.length; i++) {
+          const d = rumusSebelum12[i];
+          if (d.id) {
+            kategoriAkun = await MKeuAkun.query().where({ id: d.id }).first();
+            rumusSebelum2 = rumusSebelum2 + kategoriAkun.nama;
+          } else {
+            if (d.operator == "minus") {
+              rumusSebelum2 = `${rumusSebelum2} - `;
+            } else if (d.operator == "plus") {
+              rumusSebelum2 = `${rumusSebelum2} + `;
+            }
+          }
+        }
+
+        for (let i = 0; i < rumus12.length; i++) {
+          const d = rumus12[i];
+          if (d.id) {
+            kategoriAkun = await MKeuAkun.query().where({ id: d.id }).first();
+            rumusFix = rumusFix + kategoriAkun.nama;
+          } else {
+            if (d.operator == "minus") {
+              rumusFix = `${rumusFix} - `;
+            } else if (d.operator == "plus") {
+              rumusFix = `${rumusFix} + `;
+            }
+          }
+        }
+      }
+
+      if (m_rencana_keuangan_id) {
+        await MHistoriAktivitas.create({
+          jenis: "Ubah Rencana Akun",
+          tipe: "Realisasi",
+          m_user_id: user.id,
+          awal: `Rumus : ${rumusSebelum2} menjadi `,
+          akhir: `"${rumusFix}"`,
+          bawah: nama,
+          m_sekolah_id: sekolah.id,
+        });
+      } else {
+        await MHistoriAktivitas.create({
+          jenis: "Ubah Akun",
+          tipe: "Realisasi",
+          m_user_id: user.id,
+          awal: `Rumus : ${rumusSebelum2} menjadi `,
+          akhir: `"${rumusFix}"`,
+          bawah: nama,
+          m_sekolah_id: sekolah.id,
+        });
+      }
+    }
+
     if (!update) {
       return response.notFound({
         message: messageNotFound,
