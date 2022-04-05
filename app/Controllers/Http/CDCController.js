@@ -833,6 +833,8 @@ class CDCController {
       nama,
       logo,
       bidang,
+      keselarasan,
+      istd,
       province_id,
       regency_id,
       district_id,
@@ -880,43 +882,46 @@ class CDCController {
       dihapus: 0,
     });
 
-    // const informasi = await MInformasiPerusahaan.create({
-    //   m_perusahaan_id: perusahaan.id,
-    //   sampul,
-    //   email,
-    //   didirikan,
-    //   alamat,
-    //   telepon,
-    //   motto,
-    //   visi,
-    //   misi,
-    //   situs,
-    //   jumlah_pekerja,
-    //   tentang,
-    //   budaya,
-    //   benefit_karyawan,
-    //   lingkungan_kerja,
-    //   busana,
-    //   budaya_kerja,
-    //   jam_kerja,
-    //   nama_pj,
-    //   telepon_pj,
-    //   email_pj,
-    //   registrasi_pj,
-    //   youtube,
-    //   twitter,
-    //   instagram,
-    //   facebook,
-    //   github,
-    //   linkedin,
-    //   behace,
-    //   dribble,
-    //   kodepos,
-    // });
+    const informasi = await MInformasiPerusahaan.create({
+      m_perusahaan_id: perusahaan.id,
+      sampul,
+      email,
+      didirikan,
+      alamat,
+      telepon,
+      motto,
+      visi,
+      misi,
+      situs,
+      jumlah_pekerja,
+      keselarasan,
+      istd,
+      tentang,
+      budaya,
+      benefit_karyawan,
+      lingkungan_kerja,
+      busana,
+      budaya_kerja,
+      jam_kerja,
+      nama_pj,
+      telepon_pj,
+      email_pj,
+      registrasi_pj,
+      youtube,
+      twitter,
+      instagram,
+      facebook,
+      github,
+      linkedin,
+      behace,
+      dribble,
+      kodepos,
+    });
 
     return response.ok({
       message: messagePostSuccess,
       perusahaan,
+      informasi,
     });
   }
 
@@ -3490,13 +3495,7 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const {
-      keterangan,
-      id_card,
-      kontrak,
-      sertifikat,
-      nilai,
-    } = request.post();
+    const { keterangan, id_card, kontrak, sertifikat, nilai } = request.post();
     const rules = {
       namamitra: "required",
       tanggal_mulai: "required",
@@ -3514,7 +3513,6 @@ class CDCController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    
     const keteranganPkl = await MKeteranganPkl.query()
       .where({ id: pkl_id })
       .update({
