@@ -903,10 +903,30 @@ class SecondController {
       .with("rumusAkun")
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id });
-    if (search) {
-      akun.where("nama", "like", `%${search}%`);
-    }
     akun = await akun.fetch();
+    let akunSearch = MKeuAkun.query()
+      .with("rek", (builder) => {
+        builder
+          .where({
+            m_sekolah_id: sekolah.id,
+          })
+          .whereNull("m_rencana_keuangan_id");
+      })
+      .with("jurnal", (builder) => {
+        builder
+          .select("id", "m_keu_transaksi_id", "m_keu_akun_id")
+          .with("transaksi", (builder) => {
+            builder.select("id", "nama");
+          })
+          .where({ dihapus: 0 });
+      })
+      .with("rumusAkun")
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id });
+    if (search) {
+      akunSearch.where("nama", "like", `%${search}%`);
+    }
+    akunSearch = await akunSearch.fetch();
     const rekening = await MRekSekolah.query()
       .where({ dihapus: 0 })
       .whereNull("m_rencana_keuangan_id")
@@ -917,6 +937,7 @@ class SecondController {
       keuangan,
       rekening,
       akun,
+      akunSearch
     });
   }
 
@@ -969,9 +990,7 @@ class SecondController {
       })
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id });
-    if (search) {
-      akun = akun.where("nama", "like", `%${search}%`);
-    }
+   
     akun = await akun.fetch();
     const rekening = await MRekSekolah.query()
       .where({ dihapus: 0 })
@@ -979,10 +998,28 @@ class SecondController {
       .where({ m_rencana_keuangan_id: perencanaan_id })
       .fetch();
 
+      let akunSearch = MKeuAkun.query()
+      .with("rek", (builder) => {
+        builder.where({ m_rencana_keuangan_id: perencanaan_id });
+      })
+      .with("rencanaJurnal", (builder) => {
+        builder.whereIn("id", jurnalIds);
+      })
+      .with("rumusAkun", (builder) => {
+        builder.where({ m_rencana_keuangan_id: perencanaan_id });
+      })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id });
+    if (search) {
+     akunSearch.where("nama", "like", `%${search}%`);
+    }
+    akunSearch = await akunSearch.fetch();
+
     return response.ok({
       keuangan,
       rekening,
       akun,
+      akunSearch
     });
   }
 
