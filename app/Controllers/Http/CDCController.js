@@ -1065,6 +1065,8 @@ class CDCController {
       nama,
       logo,
       bidang,
+      keselarasan,
+      istd,
       province_id,
       regency_id,
       district_id,
@@ -1110,36 +1112,38 @@ class CDCController {
         dihapus: 0,
       });
 
-    // const informasi = await MInformasiPerusahaaan.query()
-    //   .where({ m_perusahaan_id: perusahaan_id })
-    //   .update({
-    //     didirikan,
-    //     alamat,
-    //     telepon,
-    //     situs,
-    //     jumlah_pekerja,
-    //     tentang,
-    //     budaya,
-    //     benefit_karyawan,
-    //     lingkungan_kerja,
-    //     busana,
-    //     budaya_kerja,
-    //     jam_kerja,
-    //     nama_pj,
-    //     telepon_pj,
-    //     email_pj,
-    //     registrasi_pj,
-    //     youtube,
-    //     twitter,
-    //     instagram,
-    //     facebook,
-    //     github,
-    //     linkedin,
-    //     behace,
-    //     dribble,
-    //     kodepos,
-    //     sampul,
-    //   });
+    const informasi = await MInformasiPerusahaaan.query()
+      .where({ m_perusahaan_id: perusahaan_id })
+      .update({
+        didirikan,
+        alamat,
+        telepon,
+        situs,
+        jumlah_pekerja,
+        keselarasan,
+        istd,
+        tentang,
+        budaya,
+        benefit_karyawan,
+        lingkungan_kerja,
+        busana,
+        budaya_kerja,
+        jam_kerja,
+        nama_pj,
+        telepon_pj,
+        email_pj,
+        registrasi_pj,
+        youtube,
+        twitter,
+        instagram,
+        facebook,
+        github,
+        linkedin,
+        behace,
+        dribble,
+        kodepos,
+        sampul,
+      });
 
     if (!perusahaan) {
       return response.notFound({
