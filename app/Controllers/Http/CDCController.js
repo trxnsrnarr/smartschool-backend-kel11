@@ -833,6 +833,7 @@ class CDCController {
       nama,
       logo,
       bidang,
+      perusahaan_id,
       keselarasan,
       istd,
       province_id,
@@ -871,6 +872,17 @@ class CDCController {
       sampul,
     } = request.post();
 
+    if (perusahaan_id) {
+      await TkPerusahaanSekolah.create({
+        m_sekolah_id: sekolah.id,
+        m_perusahaan_id: perusahaan_id,
+        dihapus: 0,
+      });
+      return response.ok({
+        message: messagePostSuccess,
+      });
+    }
+
     const perusahaan = await MPerusahaan.create({
       nama,
       logo,
@@ -882,16 +894,22 @@ class CDCController {
       dihapus: 0,
     });
 
+    await TkPerusahaanSekolah.create({
+      m_sekolah_id: sekolah.id,
+      m_perusahaan_id: perusahaan.id,
+      dihapus: 0,
+    });
+
     const informasi = await MInformasiPerusahaan.create({
       m_perusahaan_id: perusahaan.id,
       sampul,
-      email,
+      // email,
       didirikan,
       alamat,
       telepon,
-      motto,
-      visi,
-      misi,
+      // motto,
+      // visi,
+      // misi,
       situs,
       jumlah_pekerja,
       keselarasan,
