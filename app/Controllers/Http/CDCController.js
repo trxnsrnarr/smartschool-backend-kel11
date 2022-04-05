@@ -833,6 +833,9 @@ class CDCController {
       nama,
       logo,
       bidang,
+      perusahaan_id,
+      keselarasan,
+      istd,
       province_id,
       regency_id,
       district_id,
@@ -869,6 +872,17 @@ class CDCController {
       sampul,
     } = request.post();
 
+    if (perusahaan_id) {
+      await TkPerusahaanSekolah.create({
+        m_sekolah_id: sekolah.id,
+        m_perusahaan_id: perusahaan_id,
+        dihapus: 0,
+      });
+      return response.ok({
+        message: messagePostSuccess,
+      });
+    }
+
     const perusahaan = await MPerusahaan.create({
       nama,
       logo,
@@ -880,43 +894,52 @@ class CDCController {
       dihapus: 0,
     });
 
-    // const informasi = await MInformasiPerusahaan.create({
-    //   m_perusahaan_id: perusahaan.id,
-    //   sampul,
-    //   email,
-    //   didirikan,
-    //   alamat,
-    //   telepon,
-    //   motto,
-    //   visi,
-    //   misi,
-    //   situs,
-    //   jumlah_pekerja,
-    //   tentang,
-    //   budaya,
-    //   benefit_karyawan,
-    //   lingkungan_kerja,
-    //   busana,
-    //   budaya_kerja,
-    //   jam_kerja,
-    //   nama_pj,
-    //   telepon_pj,
-    //   email_pj,
-    //   registrasi_pj,
-    //   youtube,
-    //   twitter,
-    //   instagram,
-    //   facebook,
-    //   github,
-    //   linkedin,
-    //   behace,
-    //   dribble,
-    //   kodepos,
-    // });
+    await TkPerusahaanSekolah.create({
+      m_sekolah_id: sekolah.id,
+      m_perusahaan_id: perusahaan.id,
+      dihapus: 0,
+    });
+
+    const informasi = await MInformasiPerusahaan.create({
+      m_perusahaan_id: perusahaan.id,
+      sampul,
+      // email,
+      didirikan,
+      alamat,
+      telepon,
+      // motto,
+      // visi,
+      // misi,
+      situs,
+      jumlah_pekerja,
+      keselarasan,
+      istd,
+      tentang,
+      budaya,
+      benefit_karyawan,
+      lingkungan_kerja,
+      busana,
+      budaya_kerja,
+      jam_kerja,
+      nama_pj,
+      telepon_pj,
+      email_pj,
+      registrasi_pj,
+      youtube,
+      twitter,
+      instagram,
+      facebook,
+      github,
+      linkedin,
+      behace,
+      dribble,
+      kodepos,
+    });
 
     return response.ok({
       message: messagePostSuccess,
       perusahaan,
+      informasi,
     });
   }
 
@@ -1042,6 +1065,8 @@ class CDCController {
       nama,
       logo,
       bidang,
+      keselarasan,
+      istd,
       province_id,
       regency_id,
       district_id,
@@ -1087,36 +1112,38 @@ class CDCController {
         dihapus: 0,
       });
 
-    // const informasi = await MInformasiPerusahaaan.query()
-    //   .where({ m_perusahaan_id: perusahaan_id })
-    //   .update({
-    //     didirikan,
-    //     alamat,
-    //     telepon,
-    //     situs,
-    //     jumlah_pekerja,
-    //     tentang,
-    //     budaya,
-    //     benefit_karyawan,
-    //     lingkungan_kerja,
-    //     busana,
-    //     budaya_kerja,
-    //     jam_kerja,
-    //     nama_pj,
-    //     telepon_pj,
-    //     email_pj,
-    //     registrasi_pj,
-    //     youtube,
-    //     twitter,
-    //     instagram,
-    //     facebook,
-    //     github,
-    //     linkedin,
-    //     behace,
-    //     dribble,
-    //     kodepos,
-    //     sampul,
-    //   });
+    const informasi = await MInformasiPerusahaaan.query()
+      .where({ m_perusahaan_id: perusahaan_id })
+      .update({
+        didirikan,
+        alamat,
+        telepon,
+        situs,
+        jumlah_pekerja,
+        keselarasan,
+        istd,
+        tentang,
+        budaya,
+        benefit_karyawan,
+        lingkungan_kerja,
+        busana,
+        budaya_kerja,
+        jam_kerja,
+        nama_pj,
+        telepon_pj,
+        email_pj,
+        registrasi_pj,
+        youtube,
+        twitter,
+        instagram,
+        facebook,
+        github,
+        linkedin,
+        behace,
+        dribble,
+        kodepos,
+        sampul,
+      });
 
     if (!perusahaan) {
       return response.notFound({
@@ -2189,11 +2216,13 @@ class CDCController {
       nama,
       bidang,
       email,
-      jumlah_karyawan,
+      jumlah_pekerja,
       situs,
       telepon,
       province_id,
       regency_id,
+      district_id,
+      village_id,
       kodepos,
       alamat,
       keselarasan,
@@ -2208,6 +2237,8 @@ class CDCController {
         bidang,
         province_id,
         regency_id,
+        district_id,
+        village_id,
         dihapus: 0,
       });
 
@@ -2220,7 +2251,7 @@ class CDCController {
         .where({ m_perusahaan_id: perusahaan_id })
         .update({
           email,
-          jumlah_karyawan,
+          jumlah_pekerja,
           kodepos,
           alamat,
           keselarasan,
@@ -2232,7 +2263,7 @@ class CDCController {
     } else {
       informasi = await MInformasiPerusahaan.create({
         email,
-        jumlah_karyawan,
+        jumlah_pekerja,
         kodepos,
         alamat,
         didirikan,
@@ -3486,13 +3517,7 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const {
-      keterangan,
-      id_card,
-      kontrak,
-      sertifikat,
-      nilai,
-    } = request.post();
+    const { keterangan, id_card, kontrak, sertifikat, nilai } = request.post();
     const rules = {
       namamitra: "required",
       tanggal_mulai: "required",
@@ -3510,7 +3535,6 @@ class CDCController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    
     const keteranganPkl = await MKeteranganPkl.query()
       .where({ id: pkl_id })
       .update({
