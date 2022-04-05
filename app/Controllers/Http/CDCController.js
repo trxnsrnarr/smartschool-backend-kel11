@@ -1099,7 +1099,7 @@ class CDCController {
       sampul,
     } = request.post();
 
-    const perusahaan = await MPerusahaaan.query()
+    const perusahaan = await MPerusahaan.query()
       .where({ id: perusahaan_id })
       .update({
         nama,
@@ -1112,7 +1112,7 @@ class CDCController {
         dihapus: 0,
       });
 
-    const informasi = await MInformasiPerusahaaan.query()
+    const informasi = await MInformasiPerusahaan.query()
       .where({ m_perusahaan_id: perusahaan_id })
       .update({
         didirikan,
@@ -1266,6 +1266,7 @@ class CDCController {
         // if (search) {
         //   builder.andWhere("nama", "like", `%${search}%`);
         // }
+        builder.with("informasi")
       })
       .whereIn(
         "m_perusahaan_id",
