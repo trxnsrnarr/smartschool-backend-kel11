@@ -617,6 +617,8 @@ class CDCController {
 
     const user = await auth.getUser();
 
+    const { search } = request.get();
+
     const perusahaanSekolah = await TkPerusahaanSekolah.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ m_perusahaan_id: perusahaan_id })
@@ -630,11 +632,14 @@ class CDCController {
       .where({ dihapus: 0 })
       .andWhere({ tk_perusahaan_sekolah_id: perusahaanSekolah.id })
       .fetch();
-
-    const surat = await MSuratPerusahaan.query()
+    let surat = MSuratPerusahaan.query()
       .where({ dihapus: 0 })
-      .andWhere({ tk_perusahaan_sekolah_id: perusahaanSekolah.id })
-      .fetch();
+      .andWhere({ tk_perusahaan_sekolah_id: perusahaanSekolah.id });
+
+    if (search) {
+      surat.where("nama", "like", `%${search}%`);
+    }
+    surat = await surat.fetch();
 
     return response.ok({
       perusahaan,
@@ -1959,6 +1964,12 @@ class CDCController {
     }
     userData = await userData.paginate(page, 25);
 
+    const semuaPenerimaan = await MPenerimaanPerusahaan.query()
+      .select("id", "nama")
+      .where({ id: penerimaan_id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
     return response.ok({
       penerimaan,
       perusahaan,
@@ -1966,6 +1977,7 @@ class CDCController {
       jurusan,
       rombel,
       userData,
+      semuaPenerimaan
     });
   }
 
@@ -3177,6 +3189,50 @@ class CDCController {
       tk_perusahaan_sekolah_id,
     } = request.post();
 
+    const checkTanggalawal = await MMouPerusahaan.query()
+      .where({ tk_perusahaan_sekolah_id })
+      .where({ dihapus: 0 })
+      .where("mulai_kontrak", "<=", mulai_kontrak)
+      .where("akhir_kontrak", ">=", mulai_kontrak)
+      .first();
+
+    const checkTanggalakhir = await MMouPerusahaan.query()
+      .where({ tk_perusahaan_sekolah_id })
+      .where({ dihapus: 0 })
+      .where("mulai_kontrak", "<=", akhir_kontrak)
+      .where("akhir_kontrak", ">=", akhir_kontrak)
+      .first();
+
+    const checkRange1 = await MMouPerusahaan.query()
+      .where({ tk_perusahaan_sekolah_id })
+      .where({ dihapus: 0 })
+      .where("mulai_kontrak", "<=", akhir_kontrak)
+      .where("mulai_kontrak", ">=", mulai_kontrak)
+      .first();
+    const checkRange2 = await MMouPerusahaan.query()
+      .where({ tk_perusahaan_sekolah_id })
+      .where({ dihapus: 0 })
+      .where("akhir_kontrak", "<=", akhir_kontrak)
+      .where("akhir_kontrak", ">=", mulai_kontrak)
+      .first();
+    if (checkTanggalawal) {
+      return response.expectationFailed({
+        message: `Mulai Kontrak berada dalam jangkauan MoU ${checkTanggalawal.nama}`,
+      });
+    }
+    if (checkTanggalakhir) {
+      return response.expectationFailed({
+        message: `Akhir Kontrak berada dalam jangkauan MoU ${checkTanggalakhir.nama}`,
+      });
+    }
+    if (checkRange1 || checkRange2) {
+      return response.expectationFailed({
+        message: `Kontrak MoU bergesekan dengan MoU ${
+          (checkRange1 || checkRange2).nama
+        }`,
+      });
+    }
+
     const mou = await MMouPerusahaan.create({
       nama,
       mulai_kontrak,
@@ -3221,28 +3277,54 @@ class CDCController {
       lampiran,
       tk_perusahaan_sekolah_id,
     } = request.post();
+    const checkTanggalawal = await MMouPerusahaan.query()
+      .where({ tk_perusahaan_sekolah_id })
+      .where({ dihapus: 0 })
+      .where("mulai_kontrak", "<=", mulai_kontrak)
+      .where("akhir_kontrak", ">=", mulai_kontrak)
+      .whereNot("id", mou_id)
+      .first();
+
+   
+    const checkTanggalakhir = await MMouPerusahaan.query()
+      .where({ tk_perusahaan_sekolah_id })
+      .where({ dihapus: 0 })
+      .where("mulai_kontrak", "<=", akhir_kontrak)
+      .where("akhir_kontrak", ">=", akhir_kontrak)
+      .whereNot("id", mou_id)
+      .first();
+    if (checkTanggalawal) {
+      return response.expectationFailed({
+        message: `Mulai Kontrak berada dalam jangkauan MoU ${checkTanggalawal.nama}`,
+      });
+    }
+    if (checkTanggalakhir) {
+      return response.expectationFailed({
+        message: `Akhir Kontrak berada dalam jangkauan MoU ${checkTanggalakhir.nama}`,
+      });
+    }
 
     const mou = await MMouPerusahaan.query()
-      .where({ id: mou_id })
-      .update({
-        nama,
-        mulai_kontrak,
-        akhir_kontrak,
-        kerjasama: kerjasama
-          ? kerjasama.length
-            ? kerjasama.toString()
-            : null
-          : null,
-        fasilitas: fasilitas
-          ? fasilitas.length
-            ? fasilitas.toString()
-            : null
-          : null,
-        lampiran,
-        tk_perusahaan_sekolah_id,
-        dihapus: 0,
-      });
-
+    .where({ id: mou_id })
+    .update({
+      nama,
+      mulai_kontrak,
+      akhir_kontrak,
+      kerjasama: kerjasama
+        ? kerjasama.length
+          ? kerjasama.toString()
+          : null
+        : null,
+      fasilitas: fasilitas
+        ? fasilitas.length
+          ? fasilitas.toString()
+          : null
+        : null,
+      lampiran,
+      tk_perusahaan_sekolah_id,
+      dihapus: 0,
+    });
+    
     if (!mou) {
       return response.notFound({
         message: messageNotFound,
@@ -3829,6 +3911,121 @@ class CDCController {
     return response.ok({
       semuaPenerimaan,
       semuaPerusahaan,
+      jurusan,
+      rombel,
+      userData,
+    });
+  }
+
+  async getPenerimaanSiswa31({
+    response,
+    request,
+    auth,
+    params: { penerimaan_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    let { search, jurusan_id, rombel_id, searchSiswa, page } = request.get();
+    page = page ? parseInt(page) : 1;
+    const user = await auth.getUser();
+    let penerimaan;
+    // const { rombel_id } = request.post();
+
+    penerimaan = await MPenerimaanPerusahaan.query()
+      .withCount("siswa", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .where({ id: penerimaan_id })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    const perusahaanTk = await TkPerusahaanSekolah.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ id: penerimaan.tk_perusahaan_sekolah_id })
+      .first();
+    // return perusahaanTk
+
+    const perusahaan = await MPerusahaan.query()
+      .where({ id: perusahaanTk.m_perusahaan_id })
+      .first();
+
+    let userIds;
+
+    userIds = User.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ role: "siswa" });
+    if (search) {
+      userIds.where("nama", "like", `%${search}%`);
+    }
+
+    userIds = await userIds.ids();
+
+    const siswa = await MPenerimaanSiswa.query()
+      .with("user", (builder) => {
+        builder.select("id", "nama");
+      })
+      .whereIn("m_user_id", userIds)
+      .where({ m_penerimaan_perusahaan_id: penerimaan_id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    let jurusan = await MJurusan.query()
+      .select("id", "nama")
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+    const rombel = await MRombel.query()
+      .select("id", "nama")
+      .where({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+    let rombelIds;
+
+    rombelIds = MRombel.query()
+      .where({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id });
+
+    if (jurusan_id) {
+      rombelIds = rombelIds.andWhere({ m_jurusan_id: jurusan_id });
+    }
+    if (rombel_id) {
+      rombelIds = rombelIds.andWhere({ id: rombel_id });
+    }
+
+    rombelIds = await rombelIds.ids();
+
+    let userData;
+
+    const anggotaRombelIds = await MAnggotaRombel.query()
+      .whereIn("m_rombel_id", rombelIds)
+      .pluck("m_user_id");
+
+    userData = User.query()
+      .select("id", "nama")
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .whereIn("id", anggotaRombelIds);
+
+    if (searchSiswa) {
+      userData = userData.andWhere("nama", "like", `%${searchSiswa}%`);
+    }
+    userData = await userData.paginate(page, 25);
+
+    return response.ok({
+      penerimaan,
+      perusahaan,
+      siswa,
       jurusan,
       rombel,
       userData,
