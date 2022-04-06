@@ -3237,8 +3237,16 @@ class CDCController {
       nama,
       mulai_kontrak,
       akhir_kontrak,
-      kerjasama,
-      fasilitas,
+      kerjasama: kerjasama
+        ? kerjasama.length
+          ? kerjasama.toString()
+          : null
+        : null,
+      fasilitas: fasilitas
+        ? fasilitas.length
+          ? fasilitas.toString()
+          : null
+        : null,
       lampiran,
       tk_perusahaan_sekolah_id,
       dihapus: 0,
@@ -3277,6 +3285,7 @@ class CDCController {
       .whereNot("id", mou_id)
       .first();
 
+   
     const checkTanggalakhir = await MMouPerusahaan.query()
       .where({ tk_perusahaan_sekolah_id })
       .where({ dihapus: 0 })
@@ -3294,17 +3303,28 @@ class CDCController {
         message: `Akhir Kontrak berada dalam jangkauan MoU ${checkTanggalakhir.nama}`,
       });
     }
-    const mou = await MMouPerusahaan.query().where({ id: mou_id }).update({
+
+    const mou = await MMouPerusahaan.query()
+    .where({ id: mou_id })
+    .update({
       nama,
       mulai_kontrak,
       akhir_kontrak,
-      kerjasama,
-      fasilitas,
+      kerjasama: kerjasama
+        ? kerjasama.length
+          ? kerjasama.toString()
+          : null
+        : null,
+      fasilitas: fasilitas
+        ? fasilitas.length
+          ? fasilitas.toString()
+          : null
+        : null,
       lampiran,
       tk_perusahaan_sekolah_id,
       dihapus: 0,
     });
-
+    
     if (!mou) {
       return response.notFound({
         message: messageNotFound,
