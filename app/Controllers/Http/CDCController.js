@@ -601,6 +601,48 @@ class CDCController {
     });
   }
 
+  async detailBerkasPerusahaan({
+    response,
+    request,
+    auth,
+    params: { perusahaan_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const perusahaanSekolah = await TkPerusahaanSekolah.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_perusahaan_id: perusahaan_id })
+      .first();
+
+    const perusahaan = await MPerusahaan.query()
+      .where({ id: perusahaan_id })
+      .first();
+
+    const mou = await MMouPerusahaan.query()
+      .where({ dihapus: 0 })
+      .andWhere({ tk_perusahaan_sekolah_id: perusahaanSekolah.id })
+      .fetch();
+
+    const surat = await MSuratPerusahaan.query()
+      .where({ dihapus: 0 })
+      .andWhere({ tk_perusahaan_sekolah_id: perusahaanSekolah.id })
+      .fetch();
+
+    return response.ok({
+      perusahaan,
+      mou,
+      surat,
+    });
+  }
+
   async detailMouPerusahaan({
     response,
     request,
@@ -1266,7 +1308,7 @@ class CDCController {
         // if (search) {
         //   builder.andWhere("nama", "like", `%${search}%`);
         // }
-        builder.with("informasi")
+        builder.with("informasi");
       })
       .whereIn(
         "m_perusahaan_id",
@@ -3139,8 +3181,16 @@ class CDCController {
       nama,
       mulai_kontrak,
       akhir_kontrak,
-      kerjasama,
-      fasilitas,
+      kerjasama: kerjasama
+        ? kerjasama.length
+          ? kerjasama.toString()
+          : null
+        : null,
+      fasilitas: fasilitas
+        ? fasilitas.length
+          ? fasilitas.toString()
+          : null
+        : null,
       lampiran,
       tk_perusahaan_sekolah_id,
       dihapus: 0,
@@ -3172,16 +3222,26 @@ class CDCController {
       tk_perusahaan_sekolah_id,
     } = request.post();
 
-    const mou = await MMouPerusahaan.query().where({ id: mou_id }).update({
-      nama,
-      mulai_kontrak,
-      akhir_kontrak,
-      kerjasama,
-      fasilitas,
-      lampiran,
-      tk_perusahaan_sekolah_id,
-      dihapus: 0,
-    });
+    const mou = await MMouPerusahaan.query()
+      .where({ id: mou_id })
+      .update({
+        nama,
+        mulai_kontrak,
+        akhir_kontrak,
+        kerjasama: kerjasama
+          ? kerjasama.length
+            ? kerjasama.toString()
+            : null
+          : null,
+        fasilitas: fasilitas
+          ? fasilitas.length
+            ? fasilitas.toString()
+            : null
+          : null,
+        lampiran,
+        tk_perusahaan_sekolah_id,
+        dihapus: 0,
+      });
 
     if (!mou) {
       return response.notFound({
