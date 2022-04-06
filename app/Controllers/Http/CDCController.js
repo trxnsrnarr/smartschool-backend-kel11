@@ -601,6 +601,47 @@ class CDCController {
     });
   }
 
+  async detailBerkasPerusahaan({
+    response,
+    request,
+    auth,
+    params: { perusahaan_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const perusahaanSekolah = await TkPerusahaanSekolah.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_perusahaan_id: perusahaan_id })
+      .first();
+
+    const perusahaan = await MPerusahaan.query()
+      .where({ id: perusahaan_id })
+      .first();
+
+    const mou = await MMouPerusahaan.query()
+      .where({ dihapus: 0 })
+      .andWhere({ tk_perusahaan_sekolah_id: perusahaanSekolah.id })
+      .fetch();
+    const surat = await MSuratPerusahaan.query()
+      .where({ dihapus: 0 })
+      .andWhere({ tk_perusahaan_sekolah_id: perusahaanSekolah.id })
+      .fetch();
+
+    return response.ok({
+      perusahaan,
+      mou,
+      surat,
+    });
+  }
+
   async detailMouPerusahaan({
     response,
     request,
@@ -1099,7 +1140,7 @@ class CDCController {
       sampul,
     } = request.post();
 
-    const perusahaan = await MPerusahaaan.query()
+    const perusahaan = await MPerusahaan.query()
       .where({ id: perusahaan_id })
       .update({
         nama,
@@ -1112,7 +1153,7 @@ class CDCController {
         dihapus: 0,
       });
 
-    const informasi = await MInformasiPerusahaaan.query()
+    const informasi = await MInformasiPerusahaan.query()
       .where({ m_perusahaan_id: perusahaan_id })
       .update({
         didirikan,
@@ -1266,6 +1307,7 @@ class CDCController {
         // if (search) {
         //   builder.andWhere("nama", "like", `%${search}%`);
         // }
+        builder.with("informasi")
       })
       .whereIn(
         "m_perusahaan_id",
@@ -3134,6 +3176,50 @@ class CDCController {
       tk_perusahaan_sekolah_id,
     } = request.post();
 
+    const checkTanggalawal = await MMouPerusahaan.query()
+      .where({ tk_perusahaan_sekolah_id })
+      .where({ dihapus: 0 })
+      .where("mulai_kontrak", "<=", mulai_kontrak)
+      .where("akhir_kontrak", ">=", mulai_kontrak)
+      .first();
+
+    const checkTanggalakhir = await MMouPerusahaan.query()
+      .where({ tk_perusahaan_sekolah_id })
+      .where({ dihapus: 0 })
+      .where("mulai_kontrak", "<=", akhir_kontrak)
+      .where("akhir_kontrak", ">=", akhir_kontrak)
+      .first();
+
+    const checkRange1 = await MMouPerusahaan.query()
+      .where({ tk_perusahaan_sekolah_id })
+      .where({ dihapus: 0 })
+      .where("mulai_kontrak", "<=", akhir_kontrak)
+      .where("mulai_kontrak", ">=", mulai_kontrak)
+      .first();
+    const checkRange2 = await MMouPerusahaan.query()
+      .where({ tk_perusahaan_sekolah_id })
+      .where({ dihapus: 0 })
+      .where("akhir_kontrak", "<=", akhir_kontrak)
+      .where("akhir_kontrak", ">=", mulai_kontrak)
+      .first();
+    if (checkTanggalawal) {
+      return response.expectationFailed({
+        message: `Mulai Kontrak berada dalam jangkauan MoU ${checkTanggalawal.nama}`,
+      });
+    }
+    if (checkTanggalakhir) {
+      return response.expectationFailed({
+        message: `Akhir Kontrak berada dalam jangkauan MoU ${checkTanggalakhir.nama}`,
+      });
+    }
+    if (checkRange1 || checkRange2) {
+      return response.expectationFailed({
+        message: `Kontrak MoU bergesekan dengan MoU ${
+          (checkRange1 || checkRange2).nama
+        }`,
+      });
+    }
+
     const mou = await MMouPerusahaan.create({
       nama,
       mulai_kontrak,
@@ -3170,7 +3256,31 @@ class CDCController {
       lampiran,
       tk_perusahaan_sekolah_id,
     } = request.post();
+    const checkTanggalawal = await MMouPerusahaan.query()
+      .where({ tk_perusahaan_sekolah_id })
+      .where({ dihapus: 0 })
+      .where("mulai_kontrak", "<=", mulai_kontrak)
+      .where("akhir_kontrak", ">=", mulai_kontrak)
+      .whereNot("id", mou_id)
+      .first();
 
+    const checkTanggalakhir = await MMouPerusahaan.query()
+      .where({ tk_perusahaan_sekolah_id })
+      .where({ dihapus: 0 })
+      .where("mulai_kontrak", "<=", akhir_kontrak)
+      .where("akhir_kontrak", ">=", akhir_kontrak)
+      .whereNot("id", mou_id)
+      .first();
+    if (checkTanggalawal) {
+      return response.expectationFailed({
+        message: `Mulai Kontrak berada dalam jangkauan MoU ${checkTanggalawal.nama}`,
+      });
+    }
+    if (checkTanggalakhir) {
+      return response.expectationFailed({
+        message: `Akhir Kontrak berada dalam jangkauan MoU ${checkTanggalakhir.nama}`,
+      });
+    }
     const mou = await MMouPerusahaan.query().where({ id: mou_id }).update({
       nama,
       mulai_kontrak,
