@@ -937,7 +937,7 @@ class SecondController {
       keuangan,
       rekening,
       akun,
-      akunSearch
+      akunSearch,
     });
   }
 
@@ -990,7 +990,7 @@ class SecondController {
       })
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id });
-   
+
     akun = await akun.fetch();
     const rekening = await MRekSekolah.query()
       .where({ dihapus: 0 })
@@ -998,7 +998,7 @@ class SecondController {
       .where({ m_rencana_keuangan_id: perencanaan_id })
       .fetch();
 
-      let akunSearch = MKeuAkun.query()
+    let akunSearch = MKeuAkun.query()
       .with("rek", (builder) => {
         builder.where({ m_rencana_keuangan_id: perencanaan_id });
       })
@@ -1011,7 +1011,7 @@ class SecondController {
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id });
     if (search) {
-     akunSearch.where("nama", "like", `%${search}%`);
+      akunSearch.where("nama", "like", `%${search}%`);
     }
     akunSearch = await akunSearch.fetch();
 
@@ -1019,7 +1019,7 @@ class SecondController {
       keuangan,
       rekening,
       akun,
-      akunSearch
+      akunSearch,
     });
   }
 
@@ -1356,20 +1356,20 @@ class SecondController {
         });
       }
     } else if (!rek) {
-      if (check) {
+      if (checkDihapus) {
         await MRekSekolah.query().where({ m_keu_akun_id: akun.id }).update({
           dihapus: 1,
         });
+        await MHistoriAktivitas.create({
+          jenis: "Ubah Akun",
+          m_user_id: user.id,
+          awal: `Terhubung dengan Akun Rekening? : Ya menjadi `,
+          akhir: `"Tidak"`,
+          bawah: `${akun.nama}`,
+          m_sekolah_id: sekolah.id,
+          tipe: "Realisasi",
+        });
       }
-      await MHistoriAktivitas.create({
-        jenis: "Ubah Akun",
-        m_user_id: user.id,
-        awal: `Terhubung dengan Akun Rekening? : Ya menjadi `,
-        akhir: `"Tidak"`,
-        bawah: `${akun.nama}`,
-        m_sekolah_id: sekolah.id,
-        tipe: "Realisasi",
-      });
     }
 
     update = await MKeuAkun.query().where({ id: keu_akun_id }).update({
@@ -1439,6 +1439,10 @@ class SecondController {
       let kategoriAkun;
       let rumusSebelum2 = ``;
       let rumusFix = ``;
+      if (akun.nama == "MODAL") {
+        rumusSebelum2 = `TOTAL AKTIVA - `;
+        rumusFix = `TOTAL AKTIVA - `;
+      }
       if (akun.nama == "MODAL" || akun.nama == "LABA DITAHAN") {
         if (m_rencana_keuangan_id) {
           for (let i = 0; i < rumusSebelum12.length; i++) {
@@ -1537,8 +1541,8 @@ class SecondController {
 
       if (m_rencana_keuangan_id) {
         await MHistoriAktivitas.create({
-          jenis: "Ubah Rencana Akun",
-          tipe: "Realisasi",
+          jenis: "Ubah Akun Perencanaan",
+          tipe: "Perencanaan",
           m_user_id: user.id,
           awal: `Rumus : ${rumusSebelum2} menjadi `,
           akhir: `"${rumusFix}"`,
