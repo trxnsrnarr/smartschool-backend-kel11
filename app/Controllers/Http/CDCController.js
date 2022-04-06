@@ -634,12 +634,12 @@ class CDCController {
       .fetch();
     let surat = MSuratPerusahaan.query()
       .where({ dihapus: 0 })
-      .andWhere({ tk_perusahaan_sekolah_id: perusahaanSekolah.id })
+      .andWhere({ tk_perusahaan_sekolah_id: perusahaanSekolah.id });
 
-      if(search){
-        surat.where("nama","like",`%${search}%`)
-      }
-      surat = await surat.fetch();
+    if (search) {
+      surat.where("nama", "like", `%${search}%`);
+    }
+    surat = await surat.fetch();
 
     return response.ok({
       perusahaan,
@@ -1964,6 +1964,12 @@ class CDCController {
     }
     userData = await userData.paginate(page, 25);
 
+    const semuaPenerimaan = await MPenerimaanPerusahaan.query()
+      .select("id", "nama")
+      .where({ id: penerimaan_id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
     return response.ok({
       penerimaan,
       perusahaan,
@@ -1971,6 +1977,7 @@ class CDCController {
       jurusan,
       rombel,
       userData,
+      semuaPenerimaan
     });
   }
 
@@ -3884,6 +3891,121 @@ class CDCController {
     return response.ok({
       semuaPenerimaan,
       semuaPerusahaan,
+      jurusan,
+      rombel,
+      userData,
+    });
+  }
+
+  async getPenerimaanSiswa31({
+    response,
+    request,
+    auth,
+    params: { penerimaan_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    let { search, jurusan_id, rombel_id, searchSiswa, page } = request.get();
+    page = page ? parseInt(page) : 1;
+    const user = await auth.getUser();
+    let penerimaan;
+    // const { rombel_id } = request.post();
+
+    penerimaan = await MPenerimaanPerusahaan.query()
+      .withCount("siswa", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .where({ id: penerimaan_id })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    const perusahaanTk = await TkPerusahaanSekolah.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ id: penerimaan.tk_perusahaan_sekolah_id })
+      .first();
+    // return perusahaanTk
+
+    const perusahaan = await MPerusahaan.query()
+      .where({ id: perusahaanTk.m_perusahaan_id })
+      .first();
+
+    let userIds;
+
+    userIds = User.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ role: "siswa" });
+    if (search) {
+      userIds.where("nama", "like", `%${search}%`);
+    }
+
+    userIds = await userIds.ids();
+
+    const siswa = await MPenerimaanSiswa.query()
+      .with("user", (builder) => {
+        builder.select("id", "nama");
+      })
+      .whereIn("m_user_id", userIds)
+      .where({ m_penerimaan_perusahaan_id: penerimaan_id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    let jurusan = await MJurusan.query()
+      .select("id", "nama")
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+    const rombel = await MRombel.query()
+      .select("id", "nama")
+      .where({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+    let rombelIds;
+
+    rombelIds = MRombel.query()
+      .where({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id });
+
+    if (jurusan_id) {
+      rombelIds = rombelIds.andWhere({ m_jurusan_id: jurusan_id });
+    }
+    if (rombel_id) {
+      rombelIds = rombelIds.andWhere({ id: rombel_id });
+    }
+
+    rombelIds = await rombelIds.ids();
+
+    let userData;
+
+    const anggotaRombelIds = await MAnggotaRombel.query()
+      .whereIn("m_rombel_id", rombelIds)
+      .pluck("m_user_id");
+
+    userData = User.query()
+      .select("id", "nama")
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .whereIn("id", anggotaRombelIds);
+
+    if (searchSiswa) {
+      userData = userData.andWhere("nama", "like", `%${searchSiswa}%`);
+    }
+    userData = await userData.paginate(page, 25);
+
+    return response.ok({
+      penerimaan,
+      perusahaan,
+      siswa,
       jurusan,
       rombel,
       userData,
