@@ -617,6 +617,8 @@ class CDCController {
 
     const user = await auth.getUser();
 
+    const { search } = request.get();
+
     const perusahaanSekolah = await TkPerusahaanSekolah.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ m_perusahaan_id: perusahaan_id })
@@ -630,10 +632,14 @@ class CDCController {
       .where({ dihapus: 0 })
       .andWhere({ tk_perusahaan_sekolah_id: perusahaanSekolah.id })
       .fetch();
-    const surat = await MSuratPerusahaan.query()
+    let surat = MSuratPerusahaan.query()
       .where({ dihapus: 0 })
       .andWhere({ tk_perusahaan_sekolah_id: perusahaanSekolah.id })
-      .fetch();
+
+      if(search){
+        surat.where("nama","like",`%${search}%`)
+      }
+      surat = await surat.fetch();
 
     return response.ok({
       perusahaan,
@@ -1307,7 +1313,7 @@ class CDCController {
         // if (search) {
         //   builder.andWhere("nama", "like", `%${search}%`);
         // }
-        builder.with("informasi")
+        builder.with("informasi");
       })
       .whereIn(
         "m_perusahaan_id",
