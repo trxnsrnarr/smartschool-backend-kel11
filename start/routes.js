@@ -1151,6 +1151,10 @@ Route.get(
   "CDCController.detailPerusahaan"
 );
 Route.get(
+  "/cdc/berkas-perusahaan/:perusahaan_id",
+  "CDCController.detailBerkasPerusahaan"
+);
+Route.get(
   "/cdc/mou-perusahaan/:perusahaan_id",
   "CDCController.detailMouPerusahaan"
 );
