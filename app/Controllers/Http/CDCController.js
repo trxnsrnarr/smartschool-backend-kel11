@@ -1711,9 +1711,11 @@ class CDCController {
     // const { rombel_id } = request.post();
     const perusahaanTk = await TkPerusahaanSekolah.query()
       .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ id: perusahaan_id })
+      .andWhere({ m_perusahaan_id: perusahaan_id })
       .first();
 
+
+      
     const perusahaan = await MPerusahaan.query()
       .where({ id: perusahaanTk.m_perusahaan_id })
       .first();
@@ -1726,7 +1728,7 @@ class CDCController {
         builder.select("id", "tahun");
       })
       .where({ dihapus: 0 })
-      .andWhere({ tk_perusahaan_sekolah_id: perusahaan_id });
+      .andWhere({ tk_perusahaan_sekolah_id: perusahaanTk.id });
     if (search) {
       penerimaan.andWhere("nama", "like", `%${search}%`);
     }
@@ -1742,7 +1744,7 @@ class CDCController {
 
     const status = await MPenerimaanPerusahaan.query()
       .where({ dihapus: 0 })
-      .where({ tk_perusahaan_sekolah_id: perusahaan_id })
+      .where({ tk_perusahaan_sekolah_id: perusahaanTk.id })
       .where({ m_ta_id: ta.id })
       .first();
 
@@ -3326,25 +3328,25 @@ class CDCController {
     }
 
     const mou = await MMouPerusahaan.query()
-      .where({ id: mou_id })
-      .update({
-        nama,
-        mulai_kontrak,
-        akhir_kontrak,
-        kerjasama: kerjasama
-          ? kerjasama.length
-            ? kerjasama.toString()
-            : null
-          : null,
-        fasilitas: fasilitas
-          ? fasilitas.length
-            ? fasilitas.toString()
-            : null
-          : null,
-        lampiran,
-        tk_perusahaan_sekolah_id,
-        dihapus: 0,
-      });
+    .where({ id: mou_id })
+    .update({
+      nama,
+      mulai_kontrak,
+      akhir_kontrak,
+      kerjasama: kerjasama
+        ? kerjasama.length
+          ? kerjasama.toString()
+          : null
+        : null,
+      fasilitas: fasilitas
+        ? fasilitas.length
+          ? fasilitas.toString()
+          : null
+        : null,
+      lampiran,
+      tk_perusahaan_sekolah_id,
+      dihapus: 0,
+    });
 
     if (!mou) {
       return response.notFound({
