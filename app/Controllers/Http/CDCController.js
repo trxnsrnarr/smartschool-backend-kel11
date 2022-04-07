@@ -596,8 +596,8 @@ class CDCController {
       .with("tkPerusahaanSekolah", (builder) => {
         builder.with("mou1", (builder) => {
           builder
-            .where("mulai_kontrak", ">=", moment())
-            .where("akhir_kontrak", "<=", moment());
+            .where("mulai_kontrak", ">=", moment().format("YYYY-MM-DD"))
+            .where("akhir_kontrak", "<=", moment().format("YYYY-MM-DD"));
         }).where({m_sekolah_id:sekolah.id});
       })
       .where({ id: perusahaan_id })
