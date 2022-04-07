@@ -3539,6 +3539,16 @@ class CDCController {
     }
 
     userIds = await userIds.ids();
+    const tkPerusahaanIds = await TkPerusahaanSekolah.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .ids();
+
+    const penerimaanIds = await MPenerimaanPerusahaan.query()
+      .whereIn("tk_perusahaan_sekolah_id", tkPerusahaanIds)
+      .where({ dihapus: 0 })
+      .ids();
+
     penerimaanSiswa = MPenerimaanSiswa.query()
       .with("user", (builder) => {
         builder.with("keteranganPkl").select("id", "nama");
@@ -3551,6 +3561,7 @@ class CDCController {
           builder.with("perusahaan");
         });
       })
+      .whereIn("m_penerimaan_perusahaan_id", penerimaanIds)
       .where({ dihapus: 0 })
       .whereIn("m_user_id", userIds);
     if (jurusan_id) {
@@ -3929,7 +3940,7 @@ class CDCController {
         .first();
       semuaPenerimaan = await MPenerimaanPerusahaan.query().where({
         tk_perusahaan_sekolah_id: perusahaanTk1.id,
-      });
+      }).fetch();
     }
 
     let jurusan = await MJurusan.query()
@@ -3985,8 +3996,8 @@ class CDCController {
     userData = await userData.paginate(page, 25);
 
     return response.ok({
+      semuaPerusahaan,
       semuaPenerimaan,
-      semuaPerusahaan,semuaPenerimaan,
       jurusan,
       rombel,
       userData,
