@@ -593,6 +593,11 @@ class CDCController {
         builder.where({ dihapus: 0 });
       })
       .with("informasi")
+      .with("mou1", (builder) => {
+        builder
+          .where("mulai_kontrak", ">=", moment().format("YYYY-MM-DD"))
+          .where("akhir_kontrak", "<=", moment().format("YYYY-MM-DD"));
+      })
       .where({ id: perusahaan_id })
       .first();
 
