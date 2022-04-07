@@ -20,10 +20,8 @@ class MPerusahaan extends Model {
   acara() {
     return this.hasMany("App/Models/MAcaraPerusahaan", "id", "m_perusahaan_id");
   }
-  tkPerusahaanSekolah(){
-    "App/Models/TkPerusahaanSekolah",
-      "id",
-      "m_perusahaan_id"
+  tkPerusahaanSekolah() {
+    return this.belongsTo("App/Models/TkPerusahaanSekolah", "id", "m_perusahaan_id");
   }
 
   getMulaiKontrak(mulai_kontrak) {
