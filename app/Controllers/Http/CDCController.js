@@ -1785,9 +1785,12 @@ class CDCController {
         m_ta_id: ta.id,
         dihapus: 0,
       });
-      return response.ok({
-        message: messagePostSuccess,
-      });
+      if(sekolah){
+
+        return response.ok({
+          message: messagePostSuccess,
+        });
+      }
     }
     return response.ok({
       message: `penerimaan dengan tahun akademik ${ta.tahun}-${ta.semester} sudah ada`,
