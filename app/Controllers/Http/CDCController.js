@@ -330,7 +330,7 @@ class CDCController {
 
   async getTAAktif(sekolah) {
     const ta = await Mta.query()
-      .select("id", "tahun","semester")
+      .select("id", "tahun", "semester")
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ aktif: 1 })
       .andWhere({ dihapus: 0 })
@@ -593,10 +593,12 @@ class CDCController {
         builder.where({ dihapus: 0 });
       })
       .with("informasi")
-      .with("mou1", (builder) => {
-        builder
-          .where("mulai_kontrak", ">=", moment().format("YYYY-MM-DD"))
-          .where("akhir_kontrak", "<=", moment().format("YYYY-MM-DD"));
+      .with("tkPerusahaanSekolah", (builder) => {
+        builder.with("mou1", (builder) => {
+          builder
+            .where("mulai_kontrak", ">=", moment().format("YYYY-MM-DD"))
+            .where("akhir_kontrak", "<=", moment().format("YYYY-MM-DD"));
+        });
       })
       .where({ id: perusahaan_id })
       .first();
@@ -1765,10 +1767,16 @@ class CDCController {
 
     const ta = await this.getTAAktif(sekolah);
 
-    const { nama, data_siswa, surat_tugas, mou, tk_perusahaan_sekolah_id, m_perusahaan_id } =
-      request.post();
+    const {
+      nama,
+      data_siswa,
+      surat_tugas,
+      mou,
+      tk_perusahaan_sekolah_id,
+      m_perusahaan_id,
+    } = request.post();
 
-      const perusahaanTk = await TkPerusahaanSekolah.query()
+    const perusahaanTk = await TkPerusahaanSekolah.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ m_perusahaan_id })
       .first();
@@ -1786,12 +1794,11 @@ class CDCController {
         data_siswa,
         surat_tugas,
         mou,
-        tk_perusahaan_sekolah_id:perusahaanTk.id,
+        tk_perusahaan_sekolah_id: perusahaanTk.id,
         m_ta_id: ta.id,
         dihapus: 0,
       });
-      if(sekolah){
-
+      if (sekolah) {
         return response.ok({
           message: messagePostSuccess,
         });
@@ -1800,7 +1807,6 @@ class CDCController {
     return response.ok({
       message: `penerimaan dengan tahun akademik ${ta.tahun}-${ta.semester} sudah ada`,
     });
-
   }
 
   async putPenerimaanPerusahaan({
@@ -1993,7 +1999,7 @@ class CDCController {
       jurusan,
       rombel,
       userData,
-      semuaPenerimaan
+      semuaPenerimaan,
     });
   }
 
@@ -3301,7 +3307,6 @@ class CDCController {
       .whereNot("id", mou_id)
       .first();
 
-   
     const checkTanggalakhir = await MMouPerusahaan.query()
       .where({ tk_perusahaan_sekolah_id })
       .where({ dihapus: 0 })
@@ -3321,26 +3326,26 @@ class CDCController {
     }
 
     const mou = await MMouPerusahaan.query()
-    .where({ id: mou_id })
-    .update({
-      nama,
-      mulai_kontrak,
-      akhir_kontrak,
-      kerjasama: kerjasama
-        ? kerjasama.length
-          ? kerjasama.toString()
-          : null
-        : null,
-      fasilitas: fasilitas
-        ? fasilitas.length
-          ? fasilitas.toString()
-          : null
-        : null,
-      lampiran,
-      tk_perusahaan_sekolah_id,
-      dihapus: 0,
-    });
-    
+      .where({ id: mou_id })
+      .update({
+        nama,
+        mulai_kontrak,
+        akhir_kontrak,
+        kerjasama: kerjasama
+          ? kerjasama.length
+            ? kerjasama.toString()
+            : null
+          : null,
+        fasilitas: fasilitas
+          ? fasilitas.length
+            ? fasilitas.toString()
+            : null
+          : null,
+        lampiran,
+        tk_perusahaan_sekolah_id,
+        dihapus: 0,
+      });
+
     if (!mou) {
       return response.notFound({
         message: messageNotFound,

@@ -20,6 +20,11 @@ class MPerusahaan extends Model {
   acara() {
     return this.hasMany("App/Models/MAcaraPerusahaan", "id", "m_perusahaan_id");
   }
+  tkPerusahaanSekolah(){
+    "App/Models/TkPerusahaanSekolah",
+      "id",
+      "m_perusahaan_id"
+  }
 }
 
 module.exports = MPerusahaan;
