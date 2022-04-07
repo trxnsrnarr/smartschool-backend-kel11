@@ -1206,6 +1206,10 @@ Route.get(
   "/penerimaan-siswa/:penerimaan_id",
   "CDCController.getPenerimaanSiswa"
 );
+Route.get(
+  "/penerimaan-siswa-31/:penerimaan_id",
+  "CDCController.getPenerimaanSiswa31"
+);
 Route.get("/pkl/penerimaan", "CDCController.getPenerimaanPkl");
 Route.post(
   "/penerimaan-siswa/:penerimaan_id",
