@@ -1781,7 +1781,7 @@ class CDCController {
         data_siswa,
         surat_tugas,
         mou,
-        tk_perusahaan_sekolah_id,
+        tk_perusahaan_sekolah_id:perusahanTk.id,
         m_ta_id: ta.id,
         dihapus: 0,
       });
