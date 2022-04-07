@@ -3925,7 +3925,7 @@ class CDCController {
     if (perusahaan_id) {
       const perusahaanTk1 = await TkPerusahaanSekolah.query()
         .where({ m_sekolah_id: sekolah.id })
-        .andWhere({ id: penerimaan.perusahaan_id })
+        .andWhere({ id: perusahaan_id })
         .first();
       semuaPenerimaan = await MPenerimaanPerusahaan.query().where({
         tk_perusahaan_sekolah_id: perusahaanTk1.id,
@@ -3986,7 +3986,7 @@ class CDCController {
 
     return response.ok({
       semuaPenerimaan,
-      semuaPerusahaan,
+      semuaPerusahaan,semuaPenerimaan,
       jurusan,
       rombel,
       userData,
