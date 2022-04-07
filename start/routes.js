@@ -1843,6 +1843,9 @@ Route.get("/alumniv2", "CDCController.getAlumniData");
 Route.get("/alumniv2/:alumni_id", "CDCController.detailAlumniData");
 Route.put("/alumniv2/:alumni_id", "CDCController.putTerimaAlumni");
 
+//danger rapor
+Route.get("/danger/rapor-rombel", "RombelController.updateSemuaBukuIndukRapor");
+
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
