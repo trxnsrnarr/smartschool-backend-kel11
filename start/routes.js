@@ -1211,7 +1211,7 @@ Route.get(
   "CDCController.getPenerimaanSiswa31"
 );
 Route.get(
-  "/tambah-penerimaan-siswa-31/:penerimaan_id",
+  "/tambah-penerimaan-siswa-31",
   "CDCController.getTambahPenerimaanSiswa"
 );
 Route.get("/pkl/penerimaan", "CDCController.getPenerimaanPkl");
