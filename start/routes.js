@@ -1210,10 +1210,22 @@ Route.get(
   "/penerimaan-siswa-31/:penerimaan_id",
   "CDCController.getPenerimaanSiswa31"
 );
+Route.get(
+  "/tambah-penerimaan-siswa-31/:penerimaan_id",
+  "CDCController.getTambahPenerimaanSiswa"
+);
 Route.get("/pkl/penerimaan", "CDCController.getPenerimaanPkl");
 Route.post(
   "/penerimaan-siswa/:penerimaan_id",
   "CDCController.postPenerimaanSiswa"
+);
+Route.post(
+  "/penerimaan-siswa-31/:penerimaan_id",
+  "CDCController.postPenerimaanSiswa31"
+);
+Route.post(
+  "/penerimaan-siswa-31/:penerimaan_id",
+  "CDCController.putPenerimaanSiswa31"
 );
 Route.put("/penerimaan-siswa/:siswa_id", "CDCController.putPenerimaanSiswa");
 Route.delete(
