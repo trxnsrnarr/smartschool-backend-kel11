@@ -330,7 +330,7 @@ class CDCController {
 
   async getTAAktif(sekolah) {
     const ta = await Mta.query()
-      .select("id", "tahun")
+      .select("id", "tahun","semester")
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ aktif: 1 })
       .andWhere({ dihapus: 0 })
@@ -1760,13 +1760,18 @@ class CDCController {
 
     const ta = await this.getTAAktif(sekolah);
 
-    const { nama, data_siswa, surat_tugas, mou, tk_perusahaan_sekolah_id } =
+    const { nama, data_siswa, surat_tugas, mou, tk_perusahaan_sekolah_id, m_perusahaan_id } =
       request.post();
+
+      const perusahaanTk = await TkPerusahaanSekolah.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_perusahaan_id })
+      .first();
 
     const check = await MPenerimaanPerusahaan.query()
       .where({ tahun: ta.tahun })
       .andWhere({ dihapus: 0 })
-      .andWhere({ tk_perusahaan_sekolah_id: tk_perusahaan_sekolah_id })
+      .andWhere({ tk_perusahaan_sekolah_id: perusahaanTk.id })
       .first();
 
     if (!check) {
@@ -1780,11 +1785,14 @@ class CDCController {
         m_ta_id: ta.id,
         dihapus: 0,
       });
+      return response.ok({
+        message: messagePostSuccess,
+      });
     }
-
     return response.ok({
-      message: messagePostSuccess,
+      message: `penerimaan dengan tahun akademik ${ta.tahun}-${ta.semester} sudah ada`,
     });
+
   }
 
   async putPenerimaanPerusahaan({
