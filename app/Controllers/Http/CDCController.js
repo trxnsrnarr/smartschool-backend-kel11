@@ -594,12 +594,14 @@ class CDCController {
       })
       .with("informasi")
       .with("tkPerusahaanSekolah", (builder) => {
-        builder.with("mou1", (builder) => {
-          builder
-            .where("mulai_kontrak", "<=", moment().format("YYYY-MM-DD"))
-            .where("akhir_kontrak", ">=", moment().format("YYYY-MM-DD"))
-            .where({dihapus:0});
-        }).where({m_sekolah_id:sekolah.id});
+        builder
+          .with("mou1", (builder) => {
+            builder
+              .where("mulai_kontrak", "<=", moment().format("YYYY-MM-DD"))
+              .where("akhir_kontrak", ">=", moment().format("YYYY-MM-DD"))
+              .where({ dihapus: 0 });
+          })
+          .where({ m_sekolah_id: sekolah.id });
       })
       .where({ id: perusahaan_id })
       .first();
@@ -1715,8 +1717,6 @@ class CDCController {
       .andWhere({ m_perusahaan_id: perusahaan_id })
       .first();
 
-
-      
     const perusahaan = await MPerusahaan.query()
       .where({ id: perusahaanTk.m_perusahaan_id })
       .first();
@@ -3329,25 +3329,25 @@ class CDCController {
     }
 
     const mou = await MMouPerusahaan.query()
-    .where({ id: mou_id })
-    .update({
-      nama,
-      mulai_kontrak,
-      akhir_kontrak,
-      kerjasama: kerjasama
-        ? kerjasama.length
-          ? kerjasama.toString()
-          : null
-        : null,
-      fasilitas: fasilitas
-        ? fasilitas.length
-          ? fasilitas.toString()
-          : null
-        : null,
-      lampiran,
-      tk_perusahaan_sekolah_id,
-      dihapus: 0,
-    });
+      .where({ id: mou_id })
+      .update({
+        nama,
+        mulai_kontrak,
+        akhir_kontrak,
+        kerjasama: kerjasama
+          ? kerjasama.length
+            ? kerjasama.toString()
+            : null
+          : null,
+        fasilitas: fasilitas
+          ? fasilitas.length
+            ? fasilitas.toString()
+            : null
+          : null,
+        lampiran,
+        tk_perusahaan_sekolah_id,
+        dihapus: 0,
+      });
 
     if (!mou) {
       return response.notFound({
@@ -3818,7 +3818,6 @@ class CDCController {
             dihapus: 0,
           });
           await MKeteranganPkl.create({
-            namamitra,
             tanggal_mulai,
             tanggal_selesai,
             lamanya: lama,
@@ -3829,6 +3828,59 @@ class CDCController {
         })
       );
     }
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putPenerimaanSiswa31({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const ta = await this.getTAAktif(sekolah);
+
+    let {
+      m_perusahaan_id,
+      m_user_id,
+      tanggal_mulai,
+      tanggal_selesai,
+      m_penerimaan_perusahaan_id,
+      m_penerimaan_siswa_id,
+    } = request.post();
+
+    const date1 = moment(`${tanggal_mulai}`);
+    const date2 = moment(`${tanggal_selesai}`);
+    const diff = date2.diff(date1);
+
+    // return diff
+    const lama = moment(diff).format(`MM`);
+
+    // return lama;
+
+    await MPenerimaanSiswa.query().where({ id: m_penerimaan_siswa_id }).update({
+      tanggal_mulai,
+      tanggal_selesai,
+      lama_pkl: lama,
+      m_penerimaan_perusahaan_id,
+      dihapus: 0,
+    });
+    await MKeteranganPkl.query()
+      .where({ m_user_id })
+      .andWhere({ m_ta_id: ta.id })
+      .update({
+        tanggal_mulai,
+        tanggal_selesai,
+        lamanya: lama,
+        dihapus: 0,
+      });
 
     return response.ok({
       message: messagePostSuccess,
