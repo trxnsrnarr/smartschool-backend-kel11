@@ -3986,7 +3986,7 @@ class CDCController {
 
     return response.ok({
       semuaPenerimaan,
-      semuaPerusahaan,
+      semuaPerusahaan,semuaPenerimaan,
       jurusan,
       rombel,
       userData,
