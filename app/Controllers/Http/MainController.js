@@ -546,30 +546,44 @@ class MainController {
   }
 
   async getKcdLeaderboard({ response, request }) {
-    const kcdLeaderboard = await User.query().select('kabupaten_ids', 'whatsapp', 'nama', 'id').where({role: 'kcd'}).fetch()
+    const kcdLeaderboard = await User.query()
+      .select("kabupaten_ids", "whatsapp", "nama", "id")
+      .where({ role: "kcd" })
+      .fetch();
 
-    await Promise.all(kcdLeaderboard.toJSON().map(async (d) => {
-      const kabupatenIds = d.kabupaten_ids.split(',')
+    await Promise.all(
+      kcdLeaderboard.toJSON().map(async (d) => {
+        const kabupatenIds = d.kabupaten_ids.split(",");
 
-      const check = await Leaderboard.query().where({m_user_id: d.id}).first()
+        const check = await Leaderboard.query()
+          .where({ m_user_id: d.id })
+          .first();
 
-      if(!check) {
-        await Leaderboard.create({
-          m_user_id: d.id, 
-          kcd: d.nama, 
-          total: await Sekolah.query().whereIn('kode_kab_kota',kabupatenIds).whereNotNull("m_sekolah_id").getCount()
-        })
-      } else {
-        await Leaderboard.query().where({id: check.id}).update({
-          kcd: d.nama, 
-          total: await Sekolah.query().whereIn('kode_kab_kota',kabupatenIds).whereNotNull("m_sekolah_id").getCount()
-        })
-      }
-    }))
+        if (!check) {
+          await Leaderboard.create({
+            m_user_id: d.id,
+            kcd: d.nama,
+            total: await Sekolah.query()
+              .whereIn("kode_kab_kota", kabupatenIds)
+              .whereNotNull("m_sekolah_id")
+              .getCount(),
+          });
+        } else {
+          await Leaderboard.query()
+            .where({ id: check.id })
+            .update({
+              kcd: d.nama,
+              total: await Sekolah.query()
+                .whereIn("kode_kab_kota", kabupatenIds)
+                .whereNotNull("m_sekolah_id")
+                .getCount(),
+            });
+        }
+      })
+    );
 
-    return await Leaderboard.query().orderBy('total', 'desc').fetch()
+    return await Leaderboard.query().orderBy("total", "desc").fetch();
   }
-
 
   async getMasterSekolahDinasSummary({ response, request }) {
     let { page, propinsi, kabupaten } = request.get();
@@ -4180,7 +4194,12 @@ class MainController {
 
     let tingkatData = [];
 
-    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA" || sekolah.tingkat == "MA" || sekolah.tingkat == "MAK") {
+    if (
+      sekolah.tingkat == "SMK" ||
+      sekolah.tingkat == "SMA" ||
+      sekolah.tingkat == "MA" ||
+      sekolah.tingkat == "MAK"
+    ) {
       tingkatData = ["X", "XI", "XII", "XIII"];
     } else if (sekolah.tingkat == "SMP" || sekolah.tingkat == "MTS") {
       tingkatData = ["VII", "VIII", "IX"];
@@ -5561,7 +5580,12 @@ class MainController {
 
     let tingkat = [];
 
-    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA" || sekolah.tingkat == "MA" || sekolah.tingkat == "MAK") {
+    if (
+      sekolah.tingkat == "SMK" ||
+      sekolah.tingkat == "SMA" ||
+      sekolah.tingkat == "MA" ||
+      sekolah.tingkat == "MAK"
+    ) {
       tingkat = ["X", "XI", "XII", "XIII"];
     } else if (sekolah.tingkat == "SMP" || sekolah.tingkat == "MTS") {
       tingkat = ["VII", "VIII", "IX"];
@@ -6669,7 +6693,12 @@ class MainController {
 
     let tingkatRombel = [];
 
-    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA" || sekolah.tingkat == "MA" || sekolah.tingkat == "MAK") {
+    if (
+      sekolah.tingkat == "SMK" ||
+      sekolah.tingkat == "SMA" ||
+      sekolah.tingkat == "MA" ||
+      sekolah.tingkat == "MAK"
+    ) {
       tingkatRombel = ["X", "XI", "XII"];
     } else if (sekolah.tingkat == "SMP" || sekolah.tingkat == "MTS") {
       tingkatRombel = ["VII", "VIII", "IX"];
@@ -8157,7 +8186,18 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
+    
+    const ta = await this.getTAAktif(sekolah);
 
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const tahunPelajaranIds = await Mta.query()
+      .where({ tahun: ta.tahun })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .ids();
     const materi = await MMateri.query()
       .with("jurusan")
       .with("mataPelajaran")
@@ -8165,6 +8205,23 @@ class MainController {
       .with("sekolah")
       .where({ id: materi_id })
       .first();
+
+    const mapelIds = await MMataPelajaran.query()
+      .whereIn("m_ta_id", tahunPelajaranIds)
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_user_id: materi.toJSON().mataPelajaran.m_user_id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ nama: materi.toJSON().mataPelajaran.nama })
+      .andWhere({ kode: materi.toJSON().mataPelajaran.kode })
+      .andWhere({ kelompok: materi.toJSON().mataPelajaran.kelompok })
+      .andWhere({ kkm: materi.toJSON().mataPelajaran.kkm })
+      .ids();
+
+    const materiIds = await MMateri.query()
+      .whereIn("m_mata_pelajaran_id", mapelIds)
+      .andWhere({ dihapus: 0 })
+      .andWhere({ tingkat: materi.tingkat })
+      .ids();
 
     const bab = await MBab.query()
       .with("topik", (builder) => {
@@ -8175,7 +8232,7 @@ class MainController {
           .where({ dihapus: 0 });
       })
       .where({ dihapus: 0 })
-      .andWhere({ m_materi_id: materi_id })
+      .whereIn("m_materi_id", materiIds)
       .fetch();
 
     let looping = true;
@@ -13211,7 +13268,12 @@ class MainController {
 
     let tingkatData = [];
 
-    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA" || sekolah.tingkat == "MA" || sekolah.tingkat == "MAK") {
+    if (
+      sekolah.tingkat == "SMK" ||
+      sekolah.tingkat == "SMA" ||
+      sekolah.tingkat == "MA" ||
+      sekolah.tingkat == "MAK"
+    ) {
       tingkatData = ["X", "XI", "XII", "XIII"];
     } else if (sekolah.tingkat == "SMP" || sekolah.tingkat == "MTS") {
       tingkatData = ["VII", "VIII", "IX"];
@@ -13404,7 +13466,12 @@ class MainController {
 
     let tingkatData;
 
-    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA" || sekolah.tingkat == "MA" || sekolah.tingkat == "MAK") {
+    if (
+      sekolah.tingkat == "SMK" ||
+      sekolah.tingkat == "SMA" ||
+      sekolah.tingkat == "MA" ||
+      sekolah.tingkat == "MAK"
+    ) {
       tingkatData = ["X", "XI", "XII", "XIII"];
     } else if (sekolah.tingkat == "SMP" || sekolah.tingkat == "MTS") {
       tingkatData = ["VII", "VIII", "IX"];
@@ -13653,7 +13720,12 @@ class MainController {
 
     let tingkat = [];
 
-    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA" || sekolah.tingkat == "MA" || sekolah.tingkat == "MAK") {
+    if (
+      sekolah.tingkat == "SMK" ||
+      sekolah.tingkat == "SMA" ||
+      sekolah.tingkat == "MA" ||
+      sekolah.tingkat == "MAK"
+    ) {
       tingkat = ["X", "XI", "XII", "XIII"];
     } else if (sekolah.tingkat == "SMP" || sekolah.tingkat == "MTS") {
       tingkat = ["VII", "VIII", "IX"];
@@ -19562,7 +19634,12 @@ class MainController {
 
     let tingkatData = [];
 
-    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA" || sekolah.tingkat == "MA" || sekolah.tingkat == "MAK") {
+    if (
+      sekolah.tingkat == "SMK" ||
+      sekolah.tingkat == "SMA" ||
+      sekolah.tingkat == "MA" ||
+      sekolah.tingkat == "MAK"
+    ) {
       tingkatData = ["X", "XI", "XII", "XIII"];
     } else if (sekolah.tingkat == "SMP" || sekolah.tingkat == "MTS") {
       tingkatData = ["VII", "VIII", "IX"];
@@ -31105,8 +31182,6 @@ class MainController {
       message: messageDeleteSuccess,
     });
   }
-
- 
 
   async downloadGelombangPPDB({ response, request, auth }) {
     const domain = request.headers().origin;
@@ -52489,7 +52564,12 @@ class MainController {
     rombel = await rombel.fetch();
     let tingkatData = [];
 
-    if (sekolah.tingkat == "SMK" || sekolah.tingkat == "SMA" || sekolah.tingkat == "MA" || sekolah.tingkat == "MAK") {
+    if (
+      sekolah.tingkat == "SMK" ||
+      sekolah.tingkat == "SMA" ||
+      sekolah.tingkat == "MA" ||
+      sekolah.tingkat == "MAK"
+    ) {
       tingkatData = ["X", "XI", "XII", "XIII"];
     } else if (sekolah.tingkat == "SMP" || sekolah.tingkat == "MTS") {
       tingkatData = ["VII", "VIII", "IX"];

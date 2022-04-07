@@ -1151,6 +1151,10 @@ Route.get(
   "CDCController.detailPerusahaan"
 );
 Route.get(
+  "/cdc/berkas-perusahaan/:perusahaan_id",
+  "CDCController.detailBerkasPerusahaan"
+);
+Route.get(
   "/cdc/mou-perusahaan/:perusahaan_id",
   "CDCController.detailMouPerusahaan"
 );
@@ -1202,10 +1206,27 @@ Route.get(
   "/penerimaan-siswa/:penerimaan_id",
   "CDCController.getPenerimaanSiswa"
 );
+Route.get(
+  "/penerimaan-siswa-31/:penerimaan_id",
+  "CDCController.getPenerimaanSiswa31"
+);
+Route.get(
+  "/tambah-penerimaan-siswa-31/:penerimaan_id",
+  "CDCController.getTambahPenerimaanSiswa"
+);
 Route.get("/pkl/penerimaan", "CDCController.getPenerimaanPkl");
+Route.get("/pkl/penerimaan-31", "CDCController.getPenerimaanPkl31");
 Route.post(
   "/penerimaan-siswa/:penerimaan_id",
   "CDCController.postPenerimaanSiswa"
+);
+Route.post(
+  "/penerimaan-siswa-31/:penerimaan_id",
+  "CDCController.postPenerimaanSiswa31"
+);
+Route.post(
+  "/penerimaan-siswa-31/:penerimaan_id",
+  "CDCController.putPenerimaanSiswa31"
 );
 Route.put("/penerimaan-siswa/:siswa_id", "CDCController.putPenerimaanSiswa");
 Route.delete(
@@ -1838,6 +1859,9 @@ Route.delete("/template-kesukaran/:template_id", "UjianController.deleteTemplate
 Route.get("/alumniv2", "CDCController.getAlumniData");
 Route.get("/alumniv2/:alumni_id", "CDCController.detailAlumniData");
 Route.put("/alumniv2/:alumni_id", "CDCController.putTerimaAlumni");
+
+//danger rapor
+Route.get("/danger/rapor-rombel", "RombelController.updateSemuaBukuIndukRapor");
 
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
