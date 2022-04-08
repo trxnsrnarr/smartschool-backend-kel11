@@ -3832,7 +3832,7 @@ class CDCController {
             tanggal_mulai,
             tanggal_selesai,
             lamanya: lama,
-            m_user_id: user_id,
+            m_user_id: d,
             m_ta_id: ta.id,
             dihapus: 0,
           });
@@ -3924,6 +3924,7 @@ class CDCController {
     // return perusahaanTk
     const perusahaanTkIds = await TkPerusahaanSekolah.query()
       .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
       .pluck("m_perusahaan_id");
 
     const semuaPerusahaan = await MPerusahaan.query()
@@ -3938,9 +3939,12 @@ class CDCController {
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ id: perusahaan_id })
         .first();
-      semuaPenerimaan = await MPenerimaanPerusahaan.query().where({
-        tk_perusahaan_sekolah_id: perusahaanTk1.id,
-      }).fetch();
+      semuaPenerimaan = await MPenerimaanPerusahaan.query()
+        .where({
+          tk_perusahaan_sekolah_id: perusahaanTk1.id,
+        })
+        .andWhere({ dihapus: 0 })
+        .fetch();
     }
 
     let jurusan = await MJurusan.query()
@@ -4116,6 +4120,41 @@ class CDCController {
       jurusan,
       rombel,
       userData,
+    });
+  }
+
+  async putKeteranganPkl31({ response, request, auth}) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const ta = await this.getTAAktif(sekolah);
+
+    const { keterangan, id_card, kontrak, sertifikat, nilai,m_user_id } = request.post();
+   
+    const keteranganPkl = await MKeteranganPkl.query()
+    .where({ m_user_id })
+    .andWhere({ m_ta_id: ta.id })
+      .update({
+        keterangan,
+        id_card,
+        kontrak,
+        sertifikat,
+        nilai,
+        dihapus: 0,
+      });
+
+    if (!keteranganPkl) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
     });
   }
 
