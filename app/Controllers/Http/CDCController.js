@@ -3939,9 +3939,12 @@ class CDCController {
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ m_perusahaan_id: perusahaan_id })
         .first();
-      semuaPenerimaan = await MPenerimaanPerusahaan.query().where({
-        tk_perusahaan_sekolah_id: perusahaanTk1.id,
-      }).andWhere({dihapus: 0}).fetch();
+      semuaPenerimaan = await MPenerimaanPerusahaan.query()
+        .where({
+          tk_perusahaan_sekolah_id: perusahaanTk1.id,
+        })
+        .andWhere({ dihapus: 0 })
+        .fetch();
     }
 
     let jurusan = await MJurusan.query()
@@ -4120,7 +4123,7 @@ class CDCController {
     });
   }
 
-  async putKeteranganPkl31({ response, request, auth}) {
+  async putKeteranganPkl31({ response, request, auth }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -4130,20 +4133,38 @@ class CDCController {
     }
     const ta = await this.getTAAktif(sekolah);
 
-    const { keterangan, id_card, kontrak, sertifikat, nilai,m_user_id } = request.post();
-   
-    const keteranganPkl = await MKeteranganPkl.query()
-    .where({ m_user_id })
-    .andWhere({ m_ta_id: ta.id })
-      .update({
+    const { keterangan, id_card, kontrak, sertifikat, nilai, m_user_id } =
+      request.post();
+
+    const check = await MKeteranganPkl.query()
+      .where({ m_user_id })
+      .andWhere({ m_ta_id: ta.id })
+      .first();
+    let keteranganPkl;
+    if (check) {
+      keteranganPkl = await MKeteranganPkl.query()
+        .where({ m_user_id })
+        .andWhere({ m_ta_id: ta.id })
+        .update({
+          keterangan,
+          id_card,
+          kontrak,
+          sertifikat,
+          nilai,
+          dihapus: 0,
+        });
+    } else {
+      keteranganPkl = await MKeteranganPkl.create({
         keterangan,
         id_card,
         kontrak,
         sertifikat,
         nilai,
+        m_user_id,
+        m_ta_id:ta.id,
         dihapus: 0,
       });
-
+    }
     if (!keteranganPkl) {
       return response.notFound({
         message: messageNotFound,
