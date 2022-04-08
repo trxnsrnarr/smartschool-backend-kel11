@@ -1085,6 +1085,7 @@ Route.delete(
 );
 Route.post("/rapor/pkl/:user_id", "CDCController.postKeteranganPkl");
 Route.put("/rapor/pkl/:pkl_id", "CDCController.putKeteranganPkl");
+Route.put("/rapor/pkl-31", "CDCController.putKeteranganPkl31");
 Route.delete("/rapor/pkl/:pkl_id", "CDCController.deleteKeteranganPkl");
 
 //Buku Induk Service
