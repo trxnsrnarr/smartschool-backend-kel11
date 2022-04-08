@@ -3551,7 +3551,9 @@ class CDCController {
 
     penerimaanSiswa = MPenerimaanSiswa.query()
       .with("user", (builder) => {
-        builder.with("keteranganPkl").select("id", "nama");
+        builder.with("keteranganPkl1",(builder)=>{
+          builder.where({m_ta_id: ta.id})
+        }).select("id", "nama");
       })
       .with("rombel", (builder) => {
         builder.select("id", "nama");
