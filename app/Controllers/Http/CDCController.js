@@ -3939,18 +3939,9 @@ class CDCController {
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ m_perusahaan_id: perusahaan_id })
         .first();
-<<<<<<< HEAD
       semuaPenerimaan = await MPenerimaanPerusahaan.query().where({
         tk_perusahaan_sekolah_id: perusahaanTk1.id,
       }).andWhere({dihapus: 0}).fetch();
-=======
-      semuaPenerimaan = await MPenerimaanPerusahaan.query()
-        .where({
-          tk_perusahaan_sekolah_id: perusahaanTk1.id,
-        })
-        .andWhere({ dihapus: 0 })
-        .fetch();
->>>>>>> 3b3f6ae8fe97dbcbdfb55c144590ef00cf5239cc
     }
 
     let jurusan = await MJurusan.query()
