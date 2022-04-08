@@ -3832,7 +3832,7 @@ class CDCController {
             tanggal_mulai,
             tanggal_selesai,
             lamanya: lama,
-            m_user_id: user_id,
+            m_user_id: d,
             m_ta_id: ta.id,
             dihapus: 0,
           });
@@ -3936,11 +3936,11 @@ class CDCController {
     if (perusahaan_id) {
       const perusahaanTk1 = await TkPerusahaanSekolah.query()
         .where({ m_sekolah_id: sekolah.id })
-        .andWhere({ id: perusahaan_id })
+        .andWhere({ m_perusahaan_id: perusahaan_id })
         .first();
       semuaPenerimaan = await MPenerimaanPerusahaan.query().where({
         tk_perusahaan_sekolah_id: perusahaanTk1.id,
-      }).fetch();
+      }).andWhere({dihapus: 0}).fetch();
     }
 
     let jurusan = await MJurusan.query()

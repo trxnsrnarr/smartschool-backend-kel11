@@ -1224,8 +1224,8 @@ Route.post(
   "/penerimaan-siswa-31/:penerimaan_id",
   "CDCController.postPenerimaanSiswa31"
 );
-Route.post(
-  "/penerimaan-siswa-31/:penerimaan_id",
+Route.put(
+  "/penerimaan-siswa-31",
   "CDCController.putPenerimaanSiswa31"
 );
 Route.put("/penerimaan-siswa/:siswa_id", "CDCController.putPenerimaanSiswa");
