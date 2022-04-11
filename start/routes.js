@@ -1085,6 +1085,7 @@ Route.delete(
 );
 Route.post("/rapor/pkl/:user_id", "CDCController.postKeteranganPkl");
 Route.put("/rapor/pkl/:pkl_id", "CDCController.putKeteranganPkl");
+Route.put("/rapor/pkl-31", "CDCController.putKeteranganPkl31");
 Route.delete("/rapor/pkl/:pkl_id", "CDCController.deleteKeteranganPkl");
 
 //Buku Induk Service
@@ -1211,11 +1212,12 @@ Route.get(
   "CDCController.getPenerimaanSiswa31"
 );
 Route.get(
-  "/tambah-penerimaan-siswa-31/:penerimaan_id",
+  "/tambah-penerimaan-siswa-31",
   "CDCController.getTambahPenerimaanSiswa"
 );
 Route.get("/pkl/penerimaan", "CDCController.getPenerimaanPkl");
 Route.get("/pkl/penerimaan-31", "CDCController.getPenerimaanPkl31");
+Route.get("/rekrutmen/penerimaan-31", "CDCController.getPenerimaanRekrutmen31");
 Route.post(
   "/penerimaan-siswa/:penerimaan_id",
   "CDCController.postPenerimaanSiswa"
@@ -1224,8 +1226,8 @@ Route.post(
   "/penerimaan-siswa-31/:penerimaan_id",
   "CDCController.postPenerimaanSiswa31"
 );
-Route.post(
-  "/penerimaan-siswa-31/:penerimaan_id",
+Route.put(
+  "/penerimaan-siswa-31",
   "CDCController.putPenerimaanSiswa31"
 );
 Route.put("/penerimaan-siswa/:siswa_id", "CDCController.putPenerimaanSiswa");
