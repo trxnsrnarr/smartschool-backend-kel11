@@ -4176,6 +4176,87 @@ class CDCController {
     });
   }
 
+  async getPenerimaanRekrutmen31({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    let {
+      search,
+      page,
+      jurusan,
+    } = request.get();
+
+    page = page ? parseInt(page) : 1;
+
+    let userIds = User.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 });
+
+    if (search) {
+      userIds = userIds.where("nama", "like", `%${search}%`);
+    }
+    userIds = await userIds.ids();
+
+    let alumni = MAlumni.query()
+      .with("user", (builder) => {
+        builder.select("id", "nama");
+      })
+      .where({ dihapus: 0 })
+      .where({ verifikasi:1 })
+      .andWhere({ status:"bekerja"})
+      .whereIn("m_user_id", userIds);
+
+    if (jurusan) {
+      alumni = alumni.where({ jurusan });
+    }
+    alumni = await alumni.fetch();
+
+    const statusAlumni = ["Bekerja", "Kuliah", "Berwirausaha", "Mencari Kerja"];
+    let jurusanData = [];
+    alumni.toJSON().filter((d) => {
+      if (!jurusanData.find((e) => e.nama == d.jurusan)) {
+        jurusanData.push({ nama: d.jurusan });
+        return true;
+      } else {
+        return false;
+      }
+    });
+
+    let tahunData = [];
+    alumni.toJSON().filter((d) => {
+      if (!tahunData.find((e) => e.nama == d.tahun_masuk)) {
+        tahunData.push({ nama: d.tahun_masuk });
+        return true;
+      } else {
+        return false;
+      }
+    });
+    return response.ok({
+      jumlahTotal,
+      jumlahLaki: jumlahLaki,
+      jumlahPerempuan: jumlahPerempuan,
+      jumlahBekerja,
+      jumlahBerwirausaha,
+      jumlahKuliah,
+      jumlahMencariKerja,
+      statusAlumni,
+      alumni,
+      jurusanData,
+      tahunData,
+    });
+  }
+
   async ip({ response, request }) {
     return response.ok({ ip: [request.ip(), request.ips()] });
   }
