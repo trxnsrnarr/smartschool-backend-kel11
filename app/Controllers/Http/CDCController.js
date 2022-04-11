@@ -4201,6 +4201,10 @@ class CDCController {
 
     page = page ? parseInt(page) : 1;
 
+    let userIds1 = await User.query()
+    .where({ m_sekolah_id: sekolah.id })
+    .andWhere({ dihapus: 0 }).ids();
+
     let userIds = User.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 });
@@ -4209,6 +4213,25 @@ class CDCController {
       userIds = userIds.where("nama", "like", `%${search}%`);
     }
     userIds = await userIds.ids();
+    
+    let jumlahAlumni = await MAlumni.query()
+      .with("user", (builder) => {
+        builder.select("id", "nama");
+      })
+      .where({ dihapus: 0 })
+      .where({ verifikasi:1 })
+      .whereIn("m_user_id", userIds1)
+      .getCount();
+      let jumlahAlumniBekerja = await MAlumni.query()
+      .with("user", (builder) => {
+        builder.select("id", "nama");
+      })
+      .where({ dihapus: 0 })
+      .where({ verifikasi:1 })
+      .andWhere({ status:"bekerja"})
+      .whereIn("m_user_id", userIds1)
+      .getCount();
+
 
     let alumni = MAlumni.query()
       .with("user", (builder) => {
@@ -4245,15 +4268,10 @@ class CDCController {
       }
     });
     return response.ok({
-      jumlahTotal,
-      jumlahLaki: jumlahLaki,
-      jumlahPerempuan: jumlahPerempuan,
-      jumlahBekerja,
-      jumlahBerwirausaha,
-      jumlahKuliah,
-      jumlahMencariKerja,
       statusAlumni,
       alumni,
+      jumlahAlumni,
+      jumlahAlumniBekerja,
       jurusanData,
       tahunData,
     });
