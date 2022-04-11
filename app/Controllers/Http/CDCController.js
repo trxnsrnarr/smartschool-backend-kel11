@@ -4262,7 +4262,7 @@ class CDCController {
     let jurusanTotal = []
 
     await Promise.all(
-      jurusanData.toJSON().map(async (d) => {
+      jurusanData.map(async (d) => {
         const jumlahBekerja = await MAlumni.query()
         .where({ dihapus: 0 })
         .where({ verifikasi:1 })
@@ -4274,7 +4274,7 @@ class CDCController {
         .where({ verifikasi:1 })
         .whereIn("m_user_id", userIds1).getCount();
   
-        jurusanTotal.push({jurusan:d.jurusan, jumlahBekerja, jumlahSemua})
+        jurusanTotal.push({jurusan:d.nama, jumlahBekerja, jumlahSemua})
       })
     );
 
