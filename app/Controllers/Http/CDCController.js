@@ -4232,6 +4232,7 @@ class CDCController {
       .whereIn("m_user_id", userIds1)
       .getCount();
 
+      
 
     let alumni = MAlumni.query()
       .with("user", (builder) => {
@@ -4258,6 +4259,26 @@ class CDCController {
       }
     });
 
+    let jurusanTotal = []
+
+    await Promise.all(
+      jurusanData.toJSON().map(async (d) => {
+        const jumlahBekerja = await MAlumni.query()
+        .where({ dihapus: 0 })
+        .where({ verifikasi:1 })
+        .andWhere({ status:"bekerja"})
+        .whereIn("m_user_id", userIds1).getCount();
+
+        const jumlahSemua = await MAlumni.query()
+        .where({ dihapus: 0 })
+        .where({ verifikasi:1 })
+        .whereIn("m_user_id", userIds1).getCount();
+  
+        jurusanTotal.push({jurusan:d.jurusan, jumlahBekerja, jumlahSemua})
+      })
+    );
+
+
     let tahunData = [];
     alumni.toJSON().filter((d) => {
       if (!tahunData.find((e) => e.nama == d.tahun_masuk)) {
@@ -4268,6 +4289,7 @@ class CDCController {
       }
     });
     return response.ok({
+      jurusanTotal,
       statusAlumni,
       alumni,
       jumlahAlumni,
