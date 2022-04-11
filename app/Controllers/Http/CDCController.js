@@ -4245,13 +4245,6 @@ class CDCController {
       }
     });
     return response.ok({
-      jumlahTotal,
-      jumlahLaki: jumlahLaki,
-      jumlahPerempuan: jumlahPerempuan,
-      jumlahBekerja,
-      jumlahBerwirausaha,
-      jumlahKuliah,
-      jumlahMencariKerja,
       statusAlumni,
       alumni,
       jurusanData,
