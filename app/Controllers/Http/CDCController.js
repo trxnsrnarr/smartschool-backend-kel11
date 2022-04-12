@@ -3962,12 +3962,15 @@ class CDCController {
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .fetch();
-    const rombel = await MRombel.query()
+    let rombel =  MRombel.query()
       .select("id", "nama")
       .where({ m_ta_id: ta.id })
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
-      .fetch();
+      if(jurusan_id){
+        rombel.where({m_jurusan_id:jurusan_id})
+      }
+     rombel = await  rombel.fetch();
     let rombelIds;
 
     rombelIds = MRombel.query()
