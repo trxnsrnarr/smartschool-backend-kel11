@@ -1223,7 +1223,7 @@ Route.post(
   "CDCController.postPenerimaanSiswa"
 );
 Route.post(
-  "/penerimaan-siswa-31/:penerimaan_id",
+  "/penerimaan-siswa-31",
   "CDCController.postPenerimaanSiswa31"
 );
 Route.put(
