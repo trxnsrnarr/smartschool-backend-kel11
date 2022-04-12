@@ -3401,7 +3401,7 @@ class CDCController {
 
     const user = await auth.getUser();
 
-    const { nama, lampiran, tk_perusahaan_sekolah_id } = request.post();
+    const { nama, lampiran, tk_perusahaan_sekolah_id,m_perusahaan_id } = request.post();
 
     const tkPerusahaan = await TkPerusahaanSekolah.query().where({m_perusahaan_id}).andWhere({m_sekolah_id:sekolah.id}).first()
 
