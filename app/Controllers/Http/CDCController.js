@@ -3212,30 +3212,33 @@ class CDCController {
       fasilitas,
       lampiran,
       tk_perusahaan_sekolah_id,
+      m_perusahaan_id
     } = request.post();
 
+    const tkPerusahaan = await TkPerusahaanSekolah.query().where({m_perusahaan_id}).andWhere({m_sekolah_id:sekolah.id}).first()
+
     const checkTanggalawal = await MMouPerusahaan.query()
-      .where({ tk_perusahaan_sekolah_id })
+      .where({ tk_perusahaan_sekolah_id:tkPerusahaan.id })
       .where({ dihapus: 0 })
       .where("mulai_kontrak", "<=", mulai_kontrak)
       .where("akhir_kontrak", ">=", mulai_kontrak)
       .first();
 
     const checkTanggalakhir = await MMouPerusahaan.query()
-      .where({ tk_perusahaan_sekolah_id })
+      .where({ tk_perusahaan_sekolah_id:tkPerusahaan.id })
       .where({ dihapus: 0 })
       .where("mulai_kontrak", "<=", akhir_kontrak)
       .where("akhir_kontrak", ">=", akhir_kontrak)
       .first();
 
     const checkRange1 = await MMouPerusahaan.query()
-      .where({ tk_perusahaan_sekolah_id })
+      .where({ tk_perusahaan_sekolah_id:tkPerusahaan.id })
       .where({ dihapus: 0 })
       .where("mulai_kontrak", "<=", akhir_kontrak)
       .where("mulai_kontrak", ">=", mulai_kontrak)
       .first();
     const checkRange2 = await MMouPerusahaan.query()
-      .where({ tk_perusahaan_sekolah_id })
+      .where({ tk_perusahaan_sekolah_id:tkPerusahaan.id })
       .where({ dihapus: 0 })
       .where("akhir_kontrak", "<=", akhir_kontrak)
       .where("akhir_kontrak", ">=", mulai_kontrak)
@@ -3273,7 +3276,7 @@ class CDCController {
           : null
         : null,
       lampiran,
-      tk_perusahaan_sekolah_id,
+      tk_perusahaan_sekolah_id:tkPerusahaan.id,
       dihapus: 0,
     });
 
@@ -3400,10 +3403,12 @@ class CDCController {
 
     const { nama, lampiran, tk_perusahaan_sekolah_id } = request.post();
 
+    const tkPerusahaan = await TkPerusahaanSekolah.query().where({m_perusahaan_id}).andWhere({m_sekolah_id:sekolah.id}).first()
+
     const surat = await MSuratPerusahaan.create({
       nama,
       lampiran,
-      tk_perusahaan_sekolah_id,
+      tk_perusahaan_sekolah_id:tkPerusahaan.id,
       dihapus: 0,
     });
 
