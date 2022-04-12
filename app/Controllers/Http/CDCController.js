@@ -3923,7 +3923,6 @@ class CDCController {
       search,
       jurusan_id,
       rombel_id,
-      searchSiswa,
       page,
       perusahaan_id,
       penerimaan_id,
@@ -4007,8 +4006,8 @@ class CDCController {
 
       userData = userData.whereNotIn("id", penerimaan);
     }
-    if (searchSiswa) {
-      userData = userData.andWhere("nama", "like", `%${searchSiswa}%`);
+    if (search) {
+      userData = userData.andWhere("nama", "like", `%${search}%`);
     }
     userData = await userData.paginate(page, 25);
 
