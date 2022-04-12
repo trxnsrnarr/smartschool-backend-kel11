@@ -15311,7 +15311,7 @@ class MainController {
                         benar_pg_kompleks: metaHasil.benarPgKompleks,
                         benar_uraian: metaHasil.benarUraian,
                         benar_menjodohkan: metaHasil.benarMenjodohkan,
-                        benar_total: metaHasil.benarTotal,
+                        benar_total: metaHasil.benar,
                       });
                     }
                   })
