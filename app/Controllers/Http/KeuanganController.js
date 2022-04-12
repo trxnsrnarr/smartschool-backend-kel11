@@ -3987,6 +3987,14 @@ class KeuanganController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
+    const user = await auth.getUser();
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
+      return response.forbidden({ message: messageForbidden });
+    }
     let { search, tanggal_awal, tanggal_akhir, jenis, tipe, m_user_id } =
       request.get();
 
@@ -4019,6 +4027,21 @@ class KeuanganController {
     if (m_user_id) {
       histori.andWhere({ m_user_id: m_user_id });
     }
+    if (user.bagian == "keuangan" || user.bagian == "aproval") {
+      histori.whereIn("jenis", [
+        "Buat Transaksi",
+        "Ubah Transaksi",
+        "Hapus Transaksi",
+        "Buat Rencana Anggaran",
+        "Ubah Rencana Anggaran",
+        "Hapus Rencana Anggaran",
+        "Buat Perencanaan",
+        "Ubah Perencanaan",
+        "Hapus Perencanaan",
+        "Proses Inventaris",
+        "Proses Transaksi",
+      ]);
+    }
 
     histori = await histori.orderBy("id", "desc").fetch();
 
@@ -4046,7 +4069,14 @@ class KeuanganController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
-
+    const user = await auth.getUser();
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
+      return response.forbidden({ message: messageForbidden });
+    }
     let { search, tanggal_awal, tanggal_akhir, jenis, tipe, m_user_id } =
       request.get();
 

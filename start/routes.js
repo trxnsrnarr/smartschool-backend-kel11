@@ -608,6 +608,7 @@ Route.get("/v2/mutasi", "SecondController.getTransaksi");
 Route.post("/v2/mutasi", "SecondController.postTransaksi");
 Route.put("/v2/mutasi/:transaksi_id", "SecondController.putTransaksi");
 Route.delete("/v2/mutasi/:transaksi_id", "SecondController.deleteTransaksi");
+Route.put("/aproval-transaksi/:transaksi_id", "SecondController.aprovalTransaksi");
 
 Route.post("/download/akun", "SecondController.downloadAkun");
 Route.post("/download/neraca", "SecondController.downloadNeraca");
@@ -1223,7 +1224,7 @@ Route.post(
   "CDCController.postPenerimaanSiswa"
 );
 Route.post(
-  "/penerimaan-siswa-31/:penerimaan_id",
+  "/penerimaan-siswa-31",
   "CDCController.postPenerimaanSiswa31"
 );
 Route.put(
