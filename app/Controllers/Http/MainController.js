@@ -15032,7 +15032,7 @@ class MainController {
           `${jadwalUjian.toJSON().rombel.nama}`
         );
         worksheet.addConditionalFormatting({
-          ref: "A10:G10",
+          ref: "A10:M10",
           rules: [
             {
               type: "expression",
@@ -15091,6 +15091,11 @@ class MainController {
                         nilaiUraian: 0,
                         nilaiMenjodohkan: 0,
                         nilaiTotal: 0,
+                        benarPg: 0,
+                        benarEsai: 0,
+                        benarPgKompleks: 0,
+                        benarUraian: 0,
+                        benarMenjodohkan: 0,
                         benar: 0,
                       };
                       let analisisBenar = {};
@@ -15103,6 +15108,7 @@ class MainController {
                               metaHasil.nilaiPg =
                                 metaHasil.nilaiPg + d.soal.nilai_soal;
                               metaHasil.benar = metaHasil.benar + 1;
+                              metaHasil.benarPg = metaHasil.benarPg + 1;
                               analisisBenar[d.soal.kd] = analisisBenar[
                                 d.soal.kd
                               ]
@@ -15126,6 +15132,7 @@ class MainController {
                                   d.jawaban_rubrik_esai.indexOf("true") != -1
                                 ) {
                                   metaHasil.benar = metaHasil.benar + 1;
+                                  metaHasil.benarEsai = metaHasil.benarEsai + 1;
                                 }
                               }
                             }
@@ -15142,6 +15149,7 @@ class MainController {
                               metaHasil.nilaiPgKompleks =
                                 metaHasil.nilaiPgKompleks + d.soal.nilai_soal;
                               metaHasil.benar = metaHasil.benar + 1;
+                              metaHasil.benarPgKompleks = metaHasil.benarPgKompleks + 1;
                               analisisBenar[d.soal.kd] = analisisBenar[
                                 d.soal.kd
                               ]
@@ -15156,6 +15164,7 @@ class MainController {
                               metaHasil.nilaiUraian =
                                 metaHasil.nilaiUraian + d.soal.nilai_soal;
                               metaHasil.benar = metaHasil.benar + 1;
+                              metaHasil.benarUraian = metaHasil.benarUraian + 1;
                               analisisBenar[d.soal.kd] = analisisBenar[
                                 d.soal.kd
                               ]
@@ -15181,13 +15190,12 @@ class MainController {
                                       metaHasil.nilaiMenjodohkan =
                                         metaHasil.nilaiMenjodohkan +
                                         parseInt(check1.poin);
+                                        metaHasil.benar = metaHasil.benar + 1;
+                                        metaHasil.benarMenjodohkan = d.jawaban_menjodohkan.length;
                                     }
                                   }
                                 });
 
-                                // if (d.jawaban_rubrik_esai.indexOf("true") != -1) {
-                                //   metaHasil.benar = metaHasil.benar + 1;
-                                // }
                               }
                             }
                           }
@@ -15210,6 +15218,13 @@ class MainController {
                         "Nilai Uraian",
                         "Nilai Menjodohkan",
                         "Nilai Total",
+                        
+                        "Total Benar PG",
+                        "Total Benar Esai",
+                        "Total Benar PG Kompleks",
+                        "Total Benar Uraian",
+                        "Total Benar Menjodohkan",
+                        "Total Benar",
                       ];
 
                       worksheet.columns = [
@@ -15220,9 +15235,16 @@ class MainController {
                         { key: "nilai_uraian" },
                         { key: "nilai_menjodohkan" },
                         { key: "nilai_total" },
+                        
+                        { key: "benar_pg" },
+                        { key: "benar_esai" },
+                        { key: "benar_pg_kompleks" },
+                        { key: "benar_uraian" },
+                        { key: "benar_menjodohkan" },
+                        { key: "benar_total" },
                       ];
                       worksheet.addConditionalFormatting({
-                        ref: `B${(idx + 1) * 1 + 10}:G${(idx + 1) * 1 + 10}`,
+                        ref: `B${(idx + 1) * 1 + 10}:M${(idx + 1) * 1 + 10}`,
                         rules: [
                           {
                             type: "expression",
@@ -15284,6 +15306,12 @@ class MainController {
                         nilai_uraian: metaHasil.nilaiUraian,
                         nilai_menjodohkan: metaHasil.nilaiMenjodohkan,
                         nilai_total: metaHasil.nilaiTotal,
+                        benar_pg: metaHasil.benarPg,
+                        benar_esai: metaHasil.benarEsai,
+                        benar_pg_kompleks: metaHasil.benarPgKompleks,
+                        benar_uraian: metaHasil.benarUraian,
+                        benar_menjodohkan: metaHasil.benarMenjodohkan,
+                        benar_total: metaHasil.benarTotal,
                       });
                     }
                   })

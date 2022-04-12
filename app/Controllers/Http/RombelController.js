@@ -2075,6 +2075,206 @@ class RombelController {
 
     return namaFile;
   }
+
+  async updateBukuIndukRapor({
+    response,
+    request,
+    auth,
+    params: { rombel_id },
+  }) {
+
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    const tahunPelajaranIds = await Mta.query()
+      .where({ tahun: ta.tahun })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .ids();
+
+    const semuaMapel = await MMataPelajaran.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .whereIn("m_ta_id", tahunPelajaranIds)
+      .fetch();
+
+    const rombelAktif = await MRombel.query().where({ id: rombel_id }).first();
+
+    const dataRombelIds = await MRombel.query()
+      .where({ nama: rombelAktif.nama })
+      .andWhere({ tingkat: rombelAktif.tingkat })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .whereIn("m_ta_id", tahunPelajaranIds)
+      .whereNot("id",rombel_id)
+      .ids();
+
+    await MKategoriMapel.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_rombel_id: rombel_id })
+      .update({ dihapus: 1 });
+
+    const dataKategori = await MKategoriMapel.query()
+      .with("mapelRapor", (builder) => {
+        builder
+          .with("mataPelajaran")
+          // .where({ dihapus: 0 })
+          .orderBy("urutan", "asc");
+      })
+      .where({ dihapus: 0 })
+      .whereIn("m_rombel_id", dataRombelIds)
+      .fetch();
+
+    await Promise.all(
+      dataKategori.toJSON().map(async (d, idx) => {
+        const kategoriBaru = await MKategoriMapel.create({
+          nama: d.nama,
+          warna: d.warna,
+          m_rombel_id: rombel_id,
+          dihapus: 0,
+        });
+        await Promise.all(
+          d.mapelRapor.map(async (e) => {
+            const mapelBaru = semuaMapel.toJSON().find((s) => {
+              return (
+                s.nama == e.mataPelajaran.nama &&
+                s.kelompok == e.mataPelajaran.kelompok &&
+                s.kkm == e.mataPelajaran.kkm &&
+                s.dihapus == e.mataPelajaran.dihapus &&
+                s.m_user_id == e.mataPelajaran.m_user_id &&
+                s.m_ta_id == ta.id &&
+                s.m_sekolah_id == sekolah.id
+              );
+            });
+
+            await TkMapelRapor.create({
+              nama: mapelBaru ? mapelBaru.nama : "-",
+              kkm2: e.kkm2 ? e.kkm2 : "0",
+              m_mata_pelajaran_id: mapelBaru ? mapelBaru.id : null,
+              m_kategori_mapel_id: kategoriBaru.id,
+              m_predikat_nilai_id: e.m_predikat_nilai_id
+                ? e.m_predikat_nilai_id
+                : null,
+              dihapus: 0,
+              urutan: e.urutan ? e.urutan : "0",
+            });
+          })
+        );
+      })
+    );
+
+    return `sukses`;
+  }
+
+  async updateSemuaBukuIndukRapor({
+    response,
+    request,
+    auth,
+  }) { 
+
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    const tahunPelajaranIds = await Mta.query()
+      .where({ tahun: ta.tahun })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .ids();
+
+    const semuaMapel = await MMataPelajaran.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .whereIn("m_ta_id", tahunPelajaranIds)
+      .fetch();
+
+    const rombelAktifIds = await MRombel.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_ta_id: ta.id })
+      .ids();
+
+    await Promise.all(
+      rombelAktifIds.map(async (rombel_id) => {
+        const rombelAktif = await MRombel.query().where({ id: rombel_id }).first();
+
+        const dataRombelIds = await MRombel.query()
+          .where({ nama: rombelAktif.nama })
+          .andWhere({ tingkat: rombelAktif.tingkat })
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .whereIn("m_ta_id", tahunPelajaranIds)
+          .whereNot("id", rombel_id)
+          .ids();
+
+        await MKategoriMapel.query()
+          .where({ dihapus: 0 })
+          .andWhere({ m_rombel_id: rombel_id })
+          .update({ dihapus: 1 });
+
+        const dataKategori = await MKategoriMapel.query()
+          .with("mapelRapor", (builder) => {
+            builder
+              .with("mataPelajaran")
+              // .where({ dihapus: 0 })
+              .orderBy("urutan", "asc");
+          })
+          .where({ dihapus: 0 })
+          .whereIn("m_rombel_id", dataRombelIds)
+          .fetch();
+
+        await Promise.all(
+          dataKategori.toJSON().map(async (d, idx) => {
+            const kategoriBaru = await MKategoriMapel.create({
+              nama: d.nama,
+              warna: d.warna,
+              m_rombel_id: rombel_id,
+              dihapus: 0,
+            });
+            await Promise.all(
+              d.mapelRapor.map(async (e) => {
+                const mapelBaru = semuaMapel.toJSON().find((s) => {
+                  return (
+                    s.nama == e.mataPelajaran.nama &&
+                    s.kelompok == e.mataPelajaran.kelompok &&
+                    s.kkm == e.mataPelajaran.kkm &&
+                    s.dihapus == e.mataPelajaran.dihapus &&
+                    s.m_user_id == e.mataPelajaran.m_user_id &&
+                    s.m_ta_id == ta.id &&
+                    s.m_sekolah_id == sekolah.id
+                  );
+                });
+
+                await TkMapelRapor.create({
+                  nama: mapelBaru ? mapelBaru.nama : "-",
+                  kkm2: e.kkm2 ? e.kkm2 : "0",
+                  m_mata_pelajaran_id: mapelBaru ? mapelBaru.id : null,
+                  m_kategori_mapel_id: kategoriBaru.id,
+                  m_predikat_nilai_id: e.m_predikat_nilai_id
+                    ? e.m_predikat_nilai_id
+                    : null,
+                  dihapus: 0,
+                  urutan: e.urutan ? e.urutan : "0",
+                });
+              })
+            );
+          })
+        );
+      })
+    );
+    return `sukses`;
+  }
 }
 
 module.exports = RombelController;
