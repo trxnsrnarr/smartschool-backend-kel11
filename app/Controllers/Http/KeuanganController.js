@@ -549,7 +549,7 @@ class KeuanganController {
     }
     const user = await auth.getUser();
 
-    const { page, search, dari_tanggal, sampai_tanggal, tipe_akun } =
+    const { page, search, dari_tanggal, sampai_tanggal, tipe_akun, status } =
       request.get();
 
     let transaksiIds;
@@ -578,7 +578,17 @@ class KeuanganController {
     if (dari_tanggal && sampai_tanggal) {
       transaksi.whereBetween("tanggal", [dari_tanggal, sampai_tanggal]);
     }
-
+    if (user.bagian == "aproval") {
+      if (!status) {
+        transaksi.whereNull("status");
+      }
+    } 
+    if (status == 3) {
+      transaksi.whereNull("status");
+    }
+    else if (status) {
+      transaksi.where({ status });
+    }
     transaksi = await transaksi.orderBy("tanggal", "desc").paginate(page, 25);
 
     const akun = await MKeuAkun.query()
@@ -614,7 +624,10 @@ class KeuanganController {
     }
     const user = await auth.getUser();
 
-    let { nama, nomor, tanggal, jurnal = [] } = request.post();
+    let { nama, nomor, tanggal, jurnal = [],status } = request.post();
+    if (!user.bagian) {
+      status = 1;
+    }
 
     const rules = {
       nama: "required",
@@ -640,6 +653,7 @@ class KeuanganController {
       dihapus: 0,
       m_sekolah_id: sekolah.id,
       m_rencana_keuangan_id: rencana.id,
+      status
     });
 
     await Promise.all(
@@ -650,6 +664,7 @@ class KeuanganController {
           m_keu_akun_id: d.m_keu_akun_id,
           saldo: d.saldo,
           dihapus: 0,
+          status
         });
       })
     );
@@ -729,6 +744,7 @@ class KeuanganController {
         .map(async (d) => {
           await MKeuRencanaJurnal.query().where({ id: d }).update({
             dihapus: 1,
+            status: 0,
           });
           const jurnalLama = semuaJurnal.toJSON().find((e) => e.id == d);
           const akunLama = semuaAkun
@@ -761,6 +777,7 @@ class KeuanganController {
           m_keu_akun_id: d.m_keu_akun_id,
           saldo: d.saldo,
           dihapus: 0,
+          status: null,
         });
         if (akunLama.id != akunBaru.id) {
           await MHistoriAktivitas.create({
@@ -801,6 +818,7 @@ class KeuanganController {
           m_keu_akun_id: d.m_keu_akun_id,
           saldo: d.saldo,
           dihapus: 0,
+          status: null,
         });
         await MHistoriAktivitas.create({
           jenis: "Ubah Rencana Anggaran",
@@ -821,6 +839,7 @@ class KeuanganController {
         nama,
         nomor,
         tanggal,
+        status: null,
       });
     if (!update) {
       return response.notFound({
@@ -894,11 +913,13 @@ class KeuanganController {
       .where({ id: transaksi_id })
       .update({
         dihapus: 1,
+        status: 0,
       });
     await MKeuRencanaJurnal.query()
       .where({ m_rencana_transaksi_id: transaksi_id })
       .update({
         dihapus: 1,
+        status: 0,
       });
     if (!update) {
       return response.notFound({
