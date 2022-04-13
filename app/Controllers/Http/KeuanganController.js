@@ -582,11 +582,10 @@ class KeuanganController {
       if (!status) {
         transaksi.whereNull("status");
       }
-    } 
+    }
     if (status == 3) {
       transaksi.whereNull("status");
-    }
-    else if (status) {
+    } else if (status) {
       transaksi.where({ status });
     }
     transaksi = await transaksi.orderBy("tanggal", "desc").paginate(page, 25);
@@ -624,7 +623,7 @@ class KeuanganController {
     }
     const user = await auth.getUser();
 
-    let { nama, nomor, tanggal, jurnal = [],status } = request.post();
+    let { nama, nomor, tanggal, jurnal = [], status } = request.post();
     if (!user.bagian) {
       status = 1;
     }
@@ -653,7 +652,7 @@ class KeuanganController {
       dihapus: 0,
       m_sekolah_id: sekolah.id,
       m_rencana_keuangan_id: rencana.id,
-      status
+      status,
     });
 
     await Promise.all(
@@ -664,7 +663,7 @@ class KeuanganController {
           m_keu_akun_id: d.m_keu_akun_id,
           saldo: d.saldo,
           dihapus: 0,
-          status
+          status,
         });
       })
     );
@@ -970,19 +969,21 @@ class KeuanganController {
         .whereBetween("tanggal", [tanggal_awal, tanggal_akhir])
         .where({ m_sekolah_id: sekolah.id })
         .where({ dihapus: 0 })
+        .andWhere({ status: 1 })
         .andWhere({ m_rencana_keuangan_id: perencanaan_id })
         .ids();
     } else {
       transaksiIds = await MRencanaTransaksi.query()
         .where({ m_sekolah_id: sekolah.id })
         .where({ dihapus: 0 })
+        .andWhere({ status: 1 })
         .andWhere({ m_rencana_keuangan_id: perencanaan_id })
         .ids();
     }
 
     const akun = await MKeuAkun.query()
       .with("rencanaJurnal", (builder) => {
-        builder.where({ dihapus: 0 });
+        builder.where({ dihapus: 0 }).andWhere({ status: 1 });
         if (transaksiIds) {
           builder.whereIn("m_rencana_transaksi_id", transaksiIds);
         }
@@ -1077,12 +1078,14 @@ class KeuanganController {
         .whereBetween("tanggal", [tanggal_awal, tanggal_akhir])
         .where({ m_sekolah_id: sekolah.id })
         .where({ dihapus: 0 })
+        .andWhere({ status: 1 })
         .andWhere({ m_rencana_keuangan_id: perencanaan_id })
         .ids();
     } else {
       transaksiIds = await MRencanaTransaksi.query()
         .where({ m_sekolah_id: sekolah.id })
         .where({ dihapus: 0 })
+        .andWhere({ status: 1 })
         .andWhere({ m_rencana_keuangan_id: perencanaan_id })
         .ids();
     }
@@ -1126,7 +1129,7 @@ class KeuanganController {
 
     const akun = await MKeuAkun.query()
       .with("rencanaJurnal", (builder) => {
-        builder.where({ dihapus: 0 });
+        builder.where({ dihapus: 0 }).andWhere({ status: 1 });
         if (transaksiIds) {
           builder.whereIn("m_rencana_transaksi_id", transaksiIds);
         }
@@ -1805,12 +1808,14 @@ class KeuanganController {
         .whereBetween("tanggal", [tanggal_awal1, tanggal_akhir1])
         .where({ m_sekolah_id: sekolah.id })
         .where({ dihapus: 0 })
+        .andWhere({ status: 1 })
         .andWhere({ m_rencana_keuangan_id: perencanaan_id })
         .ids();
       transaksiIds2 = await MRencanaTransaksi.query()
         .whereBetween("tanggal", [tanggal_awal2, tanggal_akhir2])
         .where({ m_sekolah_id: sekolah.id })
         .where({ dihapus: 0 })
+        .andWhere({ status: 1 })
         .andWhere({ m_rencana_keuangan_id: perencanaan_id })
         .ids();
     } else {
@@ -1912,12 +1917,14 @@ class KeuanganController {
       .with("rencanaJurnal1", (builder) => {
         builder
           .whereIn("m_rencana_transaksi_id", transaksiIds1)
-          .where({ dihapus: 0 });
+          .where({ dihapus: 0 })
+          .andWhere({ status: 1 });
       })
       .with("rencanaJurnal2", (builder) => {
         builder
           .whereIn("m_rencana_transaksi_id", transaksiIds2)
-          .where({ dihapus: 0 });
+          .where({ dihapus: 0 })
+          .andWhere({ status: 1 });
       })
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
@@ -7392,7 +7399,7 @@ ${jamPerubahan}`;
     return namaFile;
   }
 
-   async aprovalPerencanaan({
+  async aprovalPerencanaan({
     response,
     request,
     auth,
