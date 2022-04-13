@@ -284,6 +284,7 @@ Route.delete(
   "rencana-transaksi/:transaksi_id",
   "KeuanganController.deleteRencanaTransaksi"
 );
+Route.put("/aproval-perencanaan/:transaksi_id", "KeuanganController.aprovalPerencanaan");
 
 // Laporan neraca
 Route.get(
