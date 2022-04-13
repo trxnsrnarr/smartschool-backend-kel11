@@ -1034,6 +1034,9 @@ class SecondController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
+    if (user.bagian){
+      return response.notFound({ message: "Anda tidak memiliki akses" });
+    }
     let template = await MKeuTemplateAkun.query()
       .where({ m_sekolah_id: sekolah.id })
       .first();

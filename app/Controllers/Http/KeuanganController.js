@@ -7370,6 +7370,71 @@ ${jamPerubahan}`;
 
     return namaFile;
   }
+
+   async aprovalPerencanaan({
+    response,
+    request,
+    auth,
+    params: { transaksi_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const user = await auth.getUser();
+
+    let { status } = request.post();
+
+    const transaksi = await MRencanaTransaksi.query()
+      .with("jurnal", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .where({ id: transaksi_id })
+      .first();
+    await MRencanaTransaksi.query().where({ id: transaksi_id }).update({
+      status,
+    });
+    if (status == 1) {
+      await MHistoriAktivitas.create({
+        jenis: "Proses Perencanaan",
+        m_user_id: user.id,
+        awal: `Verifikasi Diterima : `,
+        akhir: `"${transaksi.nama}"`,
+        bawah: `Transaksi`,
+        m_sekolah_id: sekolah.id,
+        tipe: "Perencanaan",
+      });
+    } else if (status == 0) {
+      await MHistoriAktivitas.create({
+        jenis: "Proses Perencanaan",
+        m_user_id: user.id,
+        awal: `Verifikasi Ditolak : `,
+        akhir: `"${transaksi.nama}"`,
+        bawah: `Transaksi`,
+        m_sekolah_id: sekolah.id,
+        tipe: "Perencanaan",
+      });
+    }
+    const jurnalIds = await MKeuRencanaJurnal.query()
+      .where({ m_rencana_transaksi_id: transaksi_id })
+      .where({ dihapus: 0 })
+      .ids();
+
+    await Promise.all(
+      jurnalIds.map(async (d) => {
+        await MKeuRencanaJurnal.query().where({ id: d }).update({
+          status,
+        });
+      })
+    );
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
 }
 
 module.exports = KeuanganController;
