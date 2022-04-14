@@ -176,6 +176,13 @@ class User extends Model {
   rpp() {
     return this.hasMany("App/Models/MRpp", "id", "m_user_id");
   }
+  prakerinSiswa() {
+    return this.hasMany("App/Models/MPrakerinSiswa", "id", "m_user_id");
+  }
+
+  ukkSiswa() {
+    return this.belongsTo("App/Models/MUkkSiswa", "id", "m_user_id");
+  }
 }
 
 module.exports = User;
