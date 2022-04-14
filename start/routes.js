@@ -1867,6 +1867,18 @@ Route.put("/alumniv2/:alumni_id", "CDCController.putTerimaAlumni");
 //danger rapor
 Route.get("/danger/rapor-rombel", "RombelController.updateSemuaBukuIndukRapor");
 
+//Fitur Kakomli
+// Informasi Gelombang
+Route.get("/prakerin", "CDCController.getPrakerinSiswa");
+Route.get("/prakerin/:prakerin_id", "CDCController.detailPrakerinSiswa");
+Route.post("/prakerin", "CDCController.postPrakerinSiswa");
+Route.put("/prakerin/:prakerin_id", "CDCController.putPrakerinSiswa");
+Route.delete("/prakerin/:prakerin_id", "CDCController.deletePrakerinSiswa");
+
+Route.get("/ukk-siswa", "CDCController.getUKKSiswa");
+Route.get("/ukk-siswa/:siswa_id", "CDCController.detailUKKSiswa");
+Route.put("/ukk-siswa/:siswa_id", "CDCController.putUKKSiswa");
+
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");

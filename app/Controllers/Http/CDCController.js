@@ -98,6 +98,8 @@ const TkStatusPekerjaan = use("App/Models/TkStatusPekerjaan");
 const MMouPerusahaan = use("App/Models/MMouPerusahaan");
 const MSuratPerusahaan = use("App/Models/MSuratPerusahaan");
 const MInformasiPerusahaan = use("App/Models/MInformasiPerusahaan");
+const MPrakerinSiswa = use("App/Models/MPrakerinSiswa");
+const MUkkSiswa = use("App/Models/MUkkSiswa");
 
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
@@ -3212,33 +3214,36 @@ class CDCController {
       fasilitas,
       lampiran,
       tk_perusahaan_sekolah_id,
-      m_perusahaan_id
+      m_perusahaan_id,
     } = request.post();
 
-    const tkPerusahaan = await TkPerusahaanSekolah.query().where({m_perusahaan_id}).andWhere({m_sekolah_id:sekolah.id}).first()
+    const tkPerusahaan = await TkPerusahaanSekolah.query()
+      .where({ m_perusahaan_id })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .first();
 
     const checkTanggalawal = await MMouPerusahaan.query()
-      .where({ tk_perusahaan_sekolah_id:tkPerusahaan.id })
+      .where({ tk_perusahaan_sekolah_id: tkPerusahaan.id })
       .where({ dihapus: 0 })
       .where("mulai_kontrak", "<=", mulai_kontrak)
       .where("akhir_kontrak", ">=", mulai_kontrak)
       .first();
 
     const checkTanggalakhir = await MMouPerusahaan.query()
-      .where({ tk_perusahaan_sekolah_id:tkPerusahaan.id })
+      .where({ tk_perusahaan_sekolah_id: tkPerusahaan.id })
       .where({ dihapus: 0 })
       .where("mulai_kontrak", "<=", akhir_kontrak)
       .where("akhir_kontrak", ">=", akhir_kontrak)
       .first();
 
     const checkRange1 = await MMouPerusahaan.query()
-      .where({ tk_perusahaan_sekolah_id:tkPerusahaan.id })
+      .where({ tk_perusahaan_sekolah_id: tkPerusahaan.id })
       .where({ dihapus: 0 })
       .where("mulai_kontrak", "<=", akhir_kontrak)
       .where("mulai_kontrak", ">=", mulai_kontrak)
       .first();
     const checkRange2 = await MMouPerusahaan.query()
-      .where({ tk_perusahaan_sekolah_id:tkPerusahaan.id })
+      .where({ tk_perusahaan_sekolah_id: tkPerusahaan.id })
       .where({ dihapus: 0 })
       .where("akhir_kontrak", "<=", akhir_kontrak)
       .where("akhir_kontrak", ">=", mulai_kontrak)
@@ -3276,7 +3281,7 @@ class CDCController {
           : null
         : null,
       lampiran,
-      tk_perusahaan_sekolah_id:tkPerusahaan.id,
+      tk_perusahaan_sekolah_id: tkPerusahaan.id,
       dihapus: 0,
     });
 
@@ -3401,14 +3406,18 @@ class CDCController {
 
     const user = await auth.getUser();
 
-    const { nama, lampiran, tk_perusahaan_sekolah_id,m_perusahaan_id } = request.post();
+    const { nama, lampiran, tk_perusahaan_sekolah_id, m_perusahaan_id } =
+      request.post();
 
-    const tkPerusahaan = await TkPerusahaanSekolah.query().where({m_perusahaan_id}).andWhere({m_sekolah_id:sekolah.id}).first()
+    const tkPerusahaan = await TkPerusahaanSekolah.query()
+      .where({ m_perusahaan_id })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .first();
 
     const surat = await MSuratPerusahaan.create({
       nama,
       lampiran,
-      tk_perusahaan_sekolah_id:tkPerusahaan.id,
+      tk_perusahaan_sekolah_id: tkPerusahaan.id,
       dihapus: 0,
     });
 
@@ -3492,7 +3501,7 @@ class CDCController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
-    let { search, jurusan_id, page , m_ta_id = ta.id } = request.get();
+    let { search, jurusan_id, page, m_ta_id = ta.id } = request.get();
     const user = await auth.getUser();
 
     const semuaTA = await Mta.query()
@@ -3514,13 +3523,13 @@ class CDCController {
       })
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id})
+      .andWhere({ m_ta_id })
       .fetch();
 
     const rombelIds = await MRombel.query()
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id})
+      .andWhere({ m_ta_id })
       .ids();
 
     const jurusan = await MJurusan.query()
@@ -3563,9 +3572,11 @@ class CDCController {
 
     penerimaanSiswa = MPenerimaanSiswa.query()
       .with("user", (builder) => {
-        builder.with("keteranganPkl1",(builder)=>{
-          builder.where({m_ta_id: ta.id})
-        }).select("id", "nama");
+        builder
+          .with("keteranganPkl1", (builder) => {
+            builder.where({ m_ta_id: ta.id });
+          })
+          .select("id", "nama");
       })
       .with("rombel", (builder) => {
         builder.select("id", "nama");
@@ -3627,7 +3638,7 @@ class CDCController {
       rombel,
       jurusan,
       penerimaanSiswa,
-      semuaTA
+      semuaTA,
     });
   }
 
@@ -3924,14 +3935,8 @@ class CDCController {
 
     const ta = await this.getTAAktif(sekolah);
 
-    let {
-      search,
-      jurusan_id,
-      rombel_id,
-      page,
-      perusahaan_id,
-      penerimaan_id,
-    } = request.get();
+    let { search, jurusan_id, rombel_id, page, perusahaan_id, penerimaan_id } =
+      request.get();
     page = page ? parseInt(page) : 1;
     const user = await auth.getUser();
 
@@ -3966,15 +3971,15 @@ class CDCController {
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .fetch();
-    let rombel =  MRombel.query()
+    let rombel = MRombel.query()
       .select("id", "nama")
       .where({ m_ta_id: ta.id })
       .andWhere({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      if(jurusan_id){
-        rombel.where({m_jurusan_id:jurusan_id})
-      }
-     rombel = await  rombel.fetch();
+      .andWhere({ m_sekolah_id: sekolah.id });
+    if (jurusan_id) {
+      rombel.where({ m_jurusan_id: jurusan_id });
+    }
+    rombel = await rombel.fetch();
     let rombelIds;
 
     rombelIds = MRombel.query()
@@ -4178,7 +4183,7 @@ class CDCController {
         sertifikat,
         nilai,
         m_user_id,
-        m_ta_id:ta.id,
+        m_ta_id: ta.id,
         dihapus: 0,
       });
     }
@@ -4208,17 +4213,14 @@ class CDCController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    let {
-      search,
-      page,
-      jurusan,
-    } = request.get();
+    let { search, page, jurusan } = request.get();
 
     page = page ? parseInt(page) : 1;
 
     let userIds1 = await User.query()
-    .where({ m_sekolah_id: sekolah.id })
-    .andWhere({ dihapus: 0 }).ids();
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .ids();
 
     let userIds = User.query()
       .where({ m_sekolah_id: sekolah.id })
@@ -4228,34 +4230,32 @@ class CDCController {
       userIds = userIds.where("nama", "like", `%${search}%`);
     }
     userIds = await userIds.ids();
-    
+
     let jumlahAlumni = await MAlumni.query()
       .with("user", (builder) => {
         builder.select("id", "nama");
       })
       .where({ dihapus: 0 })
-      .where({ verifikasi:1 })
+      .where({ verifikasi: 1 })
       .whereIn("m_user_id", userIds1)
       .getCount();
-      let jumlahAlumniBekerja = await MAlumni.query()
+    let jumlahAlumniBekerja = await MAlumni.query()
       .with("user", (builder) => {
         builder.select("id", "nama");
       })
       .where({ dihapus: 0 })
-      .where({ verifikasi:1 })
-      .andWhere({ status:"bekerja"})
+      .where({ verifikasi: 1 })
+      .andWhere({ status: "bekerja" })
       .whereIn("m_user_id", userIds1)
       .getCount();
-
-      
 
     let alumni = MAlumni.query()
       .with("user", (builder) => {
         builder.select("id", "nama");
       })
       .where({ dihapus: 0 })
-      .where({ verifikasi:1 })
-      .andWhere({ status:"bekerja"})
+      .where({ verifikasi: 1 })
+      .andWhere({ status: "bekerja" })
       .whereIn("m_user_id", userIds);
 
     if (jurusan) {
@@ -4274,25 +4274,26 @@ class CDCController {
       }
     });
 
-    let jurusanTotal = []
+    let jurusanTotal = [];
 
     await Promise.all(
       jurusanData.map(async (d) => {
         const jumlahBekerja = await MAlumni.query()
-        .where({ dihapus: 0 })
-        .where({ verifikasi:1 })
-        .andWhere({ status:"bekerja"})
-        .whereIn("m_user_id", userIds1).getCount();
+          .where({ dihapus: 0 })
+          .where({ verifikasi: 1 })
+          .andWhere({ status: "bekerja" })
+          .whereIn("m_user_id", userIds1)
+          .getCount();
 
         const jumlahSemua = await MAlumni.query()
-        .where({ dihapus: 0 })
-        .where({ verifikasi:1 })
-        .whereIn("m_user_id", userIds1).getCount();
-  
-        jurusanTotal.push({jurusan:d.nama, jumlahBekerja, jumlahSemua})
+          .where({ dihapus: 0 })
+          .where({ verifikasi: 1 })
+          .whereIn("m_user_id", userIds1)
+          .getCount();
+
+        jurusanTotal.push({ jurusan: d.nama, jumlahBekerja, jumlahSemua });
       })
     );
-
 
     let tahunData = [];
     alumni.toJSON().filter((d) => {
@@ -4311,6 +4312,558 @@ class CDCController {
       jumlahAlumniBekerja,
       jurusanData,
       tahunData,
+    });
+  }
+
+  async getUKKSiswa({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    let {
+      search,
+      page,
+      tingkat,
+      jurusan_id,
+      rombel_id,
+      m_ta_id = ta.id,
+    } = request.get();
+    const semuaTA = await Mta.query()
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .orderBy("id", "desc")
+      .fetch();
+
+    const jurusan = await MJurusan.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    page = page ? parseInt(page) : 1;
+    let siswa;
+    let jurusanDataIds = MJurusan.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 });
+    if (jurusan_id) {
+      jurusanDataIds.where({ id: jurusan_id });
+    }
+
+    jurusanDataIds = await jurusanDataIds.ids();
+
+    let rombelIds;
+    rombelIds = MRombel.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ tingkat: "XII" })
+      .whereIn("m_jurusan_id", jurusanDataIds);
+
+    if (rombel_id) {
+      rombelIds.where({ id: rombel_id });
+    }
+    if (tingkat) {
+      rombelIds.where({ tingkat });
+    }
+    rombelIds = await rombelIds.ids();
+
+    if (search) {
+      siswa = await User.query()
+        .with("anggotaRombel", (builder) => {
+          builder
+            .with("rombel", (builder) => {
+              builder.select("id", "nama");
+            })
+            .whereIn("m_rombel_id", rombelIds)
+            .andWhere({ dihapus: 0 });
+        })
+        .with("ukkSiswa", (builder) => {
+          builder.where({ m_ta_id });
+        })
+        .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ dihapus: 0 })
+        .andWhere({ role: "siswa" })
+        .andWhere("nama", "like", `%${search}%`)
+        .paginate(page, 25);
+    } else {
+      siswa = await User.query()
+        .with("anggotaRombel", (builder) => {
+          builder
+            .with("rombel", (builder) => {
+              builder.select("id", "nama");
+            })
+            .whereIn("m_rombel_id", rombelIds)
+            .andWhere({ dihapus: 0 });
+        })
+        .with("ukkSiswa", (builder) => {
+          builder.where({ m_ta_id });
+        })
+        .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ dihapus: 0 })
+        .andWhere({ role: "siswa" })
+        .paginate(page, 25);
+    }
+
+    return response.ok({
+      siswa: siswa,
+      integrasi: sekolah.integrasi,
+      jurusan,
+      semuaTA,
+    });
+  }
+
+  async detailUKKSiswa({
+    response,
+    request,
+    auth,
+    params: { siswa_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    let siswa;
+    let jurusanDataIds = MJurusan.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 });
+    jurusanDataIds = await jurusanDataIds.ids();
+
+    let rombelIds;
+    rombelIds = MRombel.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ tingkat: "XII" })
+      .whereIn("m_jurusan_id", jurusanDataIds);
+
+    rombelIds = await rombelIds.ids();
+
+    siswa = await User.query()
+      .with("anggotaRombel", (builder) => {
+        builder
+          .with("rombel", (builder) => {
+            builder.select("id", "nama");
+          })
+          .whereIn("m_rombel_id", rombelIds)
+          .andWhere({ dihapus: 0 });
+      })
+      .with("ukkSiswa", (builder) => {
+        builder.where({ m_ta_id });
+      })
+      .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
+      .where({ id: siswa_id })
+      .first();
+
+    return response.ok({
+      siswa: siswa,
+    });
+  }
+
+
+  async getPrakerinSiswa({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    let {
+      search,
+      page,
+      tingkat,
+      jurusan_id,
+      rombel_id,
+      tingkat2,
+      m_ta_id = ta.id,
+    } = request.get();
+    const semuaTA = await Mta.query()
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .orderBy("id", "desc")
+      .fetch();
+
+    const prakerinIds = await MPrakerinSiswa.query()
+      .where({ m_ta_id })
+      .amdWhere({ dihapus: 0 })
+      .pluck("m_user_id");
+
+    const jurusan = await MJurusan.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    page = page ? parseInt(page) : 1;
+    let siswa;
+    let jurusanDataIds = MJurusan.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 });
+    if (jurusan_id) {
+      jurusanDataIds.where({ id: jurusan_id });
+    }
+
+    jurusanDataIds = await jurusanDataIds.ids();
+
+    let rombelIds;
+    rombelIds = MRombel.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ tingkat: "XII" })
+      .whereIn("m_jurusan_id", jurusanDataIds);
+
+    if (rombel_id) {
+      rombelIds.where({ id: rombel_id });
+    }
+    if (tingkat) {
+      rombelIds.where({ tingkat });
+    }
+    rombelIds = await rombelIds.ids();
+
+    if (search) {
+      siswa = await User.query()
+        .with("anggotaRombel", (builder) => {
+          builder
+            .with("rombel", (builder) => {
+              builder.select("id", "nama");
+            })
+            .whereIn("m_rombel_id", rombelIds)
+            .andWhere({ dihapus: 0 });
+        })
+        .with("prakerinSiswa", (builder) => {
+          builder.where({ m_ta_id });
+        })
+        .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ dihapus: 0 })
+        .andWhere({ role: "siswa" })
+        .andWhere("nama", "like", `%${search}%`)
+        .whereIn("id", prakerinIds)
+        .paginate(page, 25);
+    } else {
+      siswa = await User.query()
+        .with("anggotaRombel", (builder) => {
+          builder
+            .with("rombel", (builder) => {
+              builder.select("id", "nama");
+            })
+            .whereIn("m_rombel_id", rombelIds)
+            .andWhere({ dihapus: 0 });
+        })
+        .with("prakerinSiswa", (builder) => {
+          builder.where({ m_ta_id });
+        })
+        .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ dihapus: 0 })
+        .andWhere({ role: "siswa" })
+        .whereIn("id", prakerinIds)
+        .paginate(page, 25);
+    }
+
+    return response.ok({
+      siswa: siswa,
+      integrasi: sekolah.integrasi,
+      jurusan,
+      semuaTA,
+    });
+  }
+
+  async detailPrakerinSiswa({
+    response,
+    request,
+    auth,
+    params: { prakerin_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const prakerinIds = await MPrakerinSiswa.query()
+      .where({ id: prakerin_id })
+      .where({ m_ta_id })
+      .amdWhere({ dihapus: 0 })
+      .pluck("m_user_id");
+
+    let siswa;
+    let jurusanDataIds = MJurusan.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 });
+    jurusanDataIds = await jurusanDataIds.ids();
+
+    let rombelIds;
+    rombelIds = MRombel.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ tingkat: "XII" })
+      .whereIn("m_jurusan_id", jurusanDataIds);
+
+    rombelIds = await rombelIds.ids();
+
+    siswa = await User.query()
+      .with("anggotaRombel", (builder) => {
+        builder
+          .with("rombel", (builder) => {
+            builder.select("id", "nama");
+          })
+          .whereIn("m_rombel_id", rombelIds)
+          .andWhere({ dihapus: 0 });
+      })
+      .with("prakerinSiswa", (builder) => {
+        builder.where({ m_ta_id });
+      })
+      .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ role: "siswa" })
+      .whereIn("id", prakerinIds)
+      .first();
+
+    return response.ok({
+      siswa: siswa,
+    });
+  }
+
+  async postPrakerinSiswa({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const ta = await this.getTAAktif(sekolah);
+
+    let {
+      m_user_id,
+      tanggal_berangkat,
+      tanggal_jemput,
+      pembimbing,
+      telepon_perusahaan,
+      kontak_narahubung,
+      alamat_perusahaan,
+      m_ta_id,
+      province_id,
+      regency_id,
+      district_id,
+      village_id,
+    } = request.post();
+
+    // let validation = await validate(
+    //   request.post(),
+    //   rulesUserPost,
+    //   messagesUser
+    // );
+
+    // if (validation.fails()) {
+    //   return response.unprocessableEntity(validation.messages());
+    // }
+
+    m_user_id = m_user_id.length ? m_user_id : [];
+    // return lama;
+
+    if (m_user_id.length) {
+      await Promise.all(
+        m_user_id.map(async (d) => {
+          await MPrakerinSiswa.create({
+            tanggal_berangkat,
+            tanggal_jemput,
+            pembimbing,
+            telepon_perusahaan,
+            kontak_narahubung,
+            alamat_perusahaan,
+            province_id,
+            regency_id,
+            district_id,
+            village_id,
+            m_user_id: d,
+            m_ta_id,
+            dihapus: 0,
+          });
+        })
+      );
+    }
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putPrakerinSiswa({ response, request, auth, params: { prakerin_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      m_user_id,
+      tanggal_berangkat,
+      tanggal_jemput,
+      pembimbing,
+      telepon_perusahaan,
+      kontak_narahubung,
+      alamat_perusahaan,
+      province_id,
+      regency_id,
+      district_id,
+      village_id,
+    } = request.post();
+
+    const perusahaan = await MPrakerinSiswa.query()
+      .where({ id: prakerin_id })
+      .update({
+        tanggal_berangkat,
+        tanggal_jemput,
+        pembimbing,
+        telepon_perusahaan,
+        kontak_narahubung,
+        alamat_perusahaan,
+        province_id,
+        regency_id,
+        district_id,
+        village_id,
+        dihapus: 0,
+      });
+
+    if (!perusahaan) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deletePrakerinSiswa({
+    response,
+    request,
+    auth,
+    params: { prakerin_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const perusahaan = await MPrakerinSiswa.query()
+      .where({ id: prakerin_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!perusahaan) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+  async putUkkSiswa({ response, request, auth, params: { siswa_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { tanggal, pembimbing, m_ta_id, keterangan, catatan } =
+      request.post();
+
+    const check = await MUkkSiswa.query()
+      .where({ m_user_id: siswa_id })
+      .andWhere({ m_ta_id })
+      .first();
+
+    let perusahaan;
+    if (check) {
+      perusahaan = await MUkkSiswa.query().where({ id: check.id }).update({
+        tanggal,
+        pembimbing,
+        telepon_perusahaan,
+        keterangan,
+        catatan,
+      });
+    } else {
+      perusahaan = await MUkkSiswa.create({
+        tanggal,
+        pembimbing,
+        telepon_perusahaan,
+        keterangan,
+        catatan,
+        m_user_id: siswa_id,
+        m_ta_id,
+      });
+    }
+
+    if (!perusahaan) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
     });
   }
 
