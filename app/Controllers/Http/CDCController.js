@@ -4502,7 +4502,6 @@ class CDCController {
       tingkat,
       jurusan_id,
       rombel_id,
-      tingkat2,
       m_ta_id = ta.id,
     } = request.get();
     const semuaTA = await Mta.query()
@@ -4840,7 +4839,6 @@ class CDCController {
       perusahaan = await MUkkSiswa.query().where({ id: check.id }).update({
         tanggal,
         pembimbing,
-        telepon_perusahaan,
         keterangan,
         catatan,
       });
@@ -4848,7 +4846,6 @@ class CDCController {
       perusahaan = await MUkkSiswa.create({
         tanggal,
         pembimbing,
-        telepon_perusahaan,
         keterangan,
         catatan,
         m_user_id: siswa_id,
