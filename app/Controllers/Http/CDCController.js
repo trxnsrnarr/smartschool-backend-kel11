@@ -4512,7 +4512,7 @@ class CDCController {
 
     const prakerinIds = await MPrakerinSiswa.query()
       .where({ m_ta_id })
-      .amdWhere({ dihapus: 0 })
+      .andWhere({ dihapus: 0 })
       .pluck("m_user_id");
 
     const jurusan = await MJurusan.query()
