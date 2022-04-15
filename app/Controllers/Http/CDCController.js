@@ -4689,6 +4689,7 @@ class CDCController {
       regency_id,
       district_id,
       village_id,
+      kodepos,
     } = request.post();
 
     // let validation = await validate(
@@ -4719,6 +4720,7 @@ class CDCController {
             regency_id,
             district_id,
             village_id,
+            kodepos,
             m_user_id: d,
             m_ta_id,
             dihapus: 0,
@@ -4756,6 +4758,7 @@ class CDCController {
       regency_id,
       district_id,
       village_id,
+      kodepos,
     } = request.post();
 
     const perusahaan = await MPrakerinSiswa.query()
@@ -4772,6 +4775,7 @@ class CDCController {
         regency_id,
         district_id,
         village_id,
+        kodepos,
         dihapus: 0,
       });
 
