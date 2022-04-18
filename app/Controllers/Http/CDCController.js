@@ -4423,12 +4423,7 @@ class CDCController {
     });
   }
 
-  async detailUKKSiswa({
-    response,
-    request,
-    auth,
-    params: { siswa_id },
-  }) {
+  async detailUKKSiswa({ response, request, auth, params: { siswa_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -4479,7 +4474,6 @@ class CDCController {
       siswa: siswa,
     });
   }
-
 
   async getPrakerinSiswa({ response, request, auth }) {
     const domain = request.headers().origin;
@@ -4615,6 +4609,7 @@ class CDCController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
+    let { m_ta_id } = request.get();
 
     const prakerinIds = await MPrakerinSiswa.query()
       .where({ id: prakerin_id })
