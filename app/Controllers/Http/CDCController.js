@@ -4916,8 +4916,15 @@ class CDCController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    let { search, page, tingkat, jurusan_id, rombel_id, tingkat2 } =
-      request.get();
+    let {
+      search,
+      page,
+      tingkat,
+      jurusan_id,
+      rombel_id,
+      tingkat2,
+      m_ta_id = ta.id,
+    } = request.get();
 
     const jurusan = await MJurusan.query()
       .with("rombel", (builder) => {
@@ -4926,7 +4933,7 @@ class CDCController {
             builder.where({ dihapus: 0 });
           })
           .where({ dihapus: 0 })
-          .andWhere({ m_ta_id: ta.id });
+          .andWhere({ m_ta_id });
         if (tingkat2) {
           builder.where({ tingkat: tingkat2 });
         }
@@ -4938,9 +4945,8 @@ class CDCController {
     const rombel = await MRombel.query()
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ m_ta_id })
       .fetch();
-
 
     page = page ? parseInt(page) : 1;
     let siswa;
@@ -4956,8 +4962,9 @@ class CDCController {
     let rombelIds;
     rombelIds = MRombel.query()
       .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ m_ta_id })
       .andWhere({ dihapus: 0 })
+      .andWhere({ tingakat: "12" })
       .whereIn("m_jurusan_id", jurusanDataIds);
 
     if (rombel_id) {

@@ -4159,11 +4159,6 @@ class MainController {
     }
     rombelIds = await rombelIds.ids();
 
-    const anggotaRombelIds = await MAnggotaRombel.query()
-    .whereIn("m_rombel_id", rombelIds)
-    .where({ dihapus: 0 })
-    .pluck("m_user_id");
-
     if (search) {
       siswa = await User.query()
         .with("anggotaRombel", (builder) => {
@@ -4178,7 +4173,6 @@ class MainController {
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ dihapus: 0 })
         .andWhere({ role: "siswa" })
-        .whereIn("id", anggotaRombelIds)
         .andWhere("nama", "like", `%${search}%`)
         .paginate(page, 25);
     } else {
@@ -4194,7 +4188,6 @@ class MainController {
         .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ dihapus: 0 })
-        .whereIn("id", anggotaRombelIds)
         .andWhere({ role: "siswa" })
         .paginate(page, 25);
     }
