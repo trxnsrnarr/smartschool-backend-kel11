@@ -3019,9 +3019,21 @@ class CDCController {
     }
     alumni = await alumni.fetch();
 
+    let alumniDatas = MAlumni.query()
+      .select("id", "jurusan", "tahun_masuk", "status", "m_user_id")
+      .with("user", (builder) => {
+        builder.select("id", "nama");
+      })
+      .where({ dihapus: 0 })
+      .where({ verifikasi })
+      .whereIn("m_user_id", userIds);
+
+   
+    alumniDatas = await alumniDatas.fetch();
+
     const statusAlumni = ["Bekerja", "Kuliah", "Berwirausaha", "Mencari Kerja"];
     let jurusanData = [];
-    alumni.toJSON().filter((d) => {
+    alumniDatas.toJSON().filter((d) => {
       if (!jurusanData.find((e) => e.nama == d.jurusan)) {
         jurusanData.push({ nama: d.jurusan });
         return true;
@@ -3031,7 +3043,7 @@ class CDCController {
     });
 
     let tahunData = [];
-    alumni.toJSON().filter((d) => {
+    alumniDatas.toJSON().filter((d) => {
       if (!tahunData.find((e) => e.nama == d.tahun_masuk)) {
         tahunData.push({ nama: d.tahun_masuk });
         return true;
