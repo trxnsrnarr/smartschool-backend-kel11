@@ -4964,7 +4964,7 @@ class CDCController {
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ m_ta_id })
       .andWhere({ dihapus: 0 })
-      .andWhere({ tingakat: "12" })
+      .andWhere({ tingkat: "XII" })
       .whereIn("m_jurusan_id", jurusanDataIds);
 
     if (rombel_id) {
@@ -4975,7 +4975,7 @@ class CDCController {
     }
     rombelIds = await rombelIds.ids();
 
-    const anggotaRombelIds = MAnggotaRombel.query()
+    const anggotaRombelIds = await MAnggotaRombel.query()
       .whereIn("m_rombel_id", rombelIds)
       .where({ dihapus: 0 })
       .pluck("m_user_id");
