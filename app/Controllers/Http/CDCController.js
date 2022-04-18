@@ -4376,6 +4376,9 @@ class CDCController {
     }
     rombelIds = await rombelIds.ids();
 
+    const anggotaRombelIds = MAnggotaRombel.query()
+    .whereIn("m_rombel_id", rombelIds).where({dihapus:0}).pluck("m_user_id")
+
     if (search) {
       siswa = await User.query()
         .with("anggotaRombel", (builder) => {
@@ -4394,6 +4397,7 @@ class CDCController {
         .andWhere({ dihapus: 0 })
         .andWhere({ role: "siswa" })
         .andWhere("nama", "like", `%${search}%`)
+        .whereIn("id", anggotaRombelIds)
         .paginate(page, 25);
     } else {
       siswa = await User.query()
@@ -4412,6 +4416,7 @@ class CDCController {
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ dihapus: 0 })
         .andWhere({ role: "siswa" })
+        .whereIn("id", anggotaRombelIds)
         .paginate(page, 25);
     }
 
