@@ -7044,40 +7044,40 @@ class MainController {
       .where({ id: m_mata_pelajaran_id })
       .first();
 
-    if (mataPelajaran.kelompok == "C") {
-      const check = await MMateri.query()
-        .where({ m_mata_pelajaran_id })
-        .andWhere({ tingkat })
-        .andWhere({ m_jurusan_id })
-        .first();
-      if (check) {
-        if (check.dihapus) {
-          await MMateri.query().where({ id: check.id }).update({ dihapus: 0 });
-        }
-      }
+    // if (mataPelajaran.kelompok == "C") {
+    //   const check = await MMateri.query()
+    //     .where({ m_mata_pelajaran_id })
+    //     .andWhere({ tingkat })
+    //     .andWhere({ m_jurusan_id })
+    //     .first();
+    //   if (check) {
+    //     if (check.dihapus) {
+    //       await MMateri.query().where({ id: check.id }).update({ dihapus: 0 });
+    //     }
+    //   }
 
-      if (!check) {
-        const materi = await MMateri.create({
-          tingkat,
-          m_jurusan_id,
-          m_mata_pelajaran_id,
-        });
+    //   if (!check) {
+    //     const materi = await MMateri.create({
+    //       tingkat,
+    //       m_jurusan_id,
+    //       m_mata_pelajaran_id,
+    //     });
 
-        await TkMateriRombel.create({
-          m_materi_id: materi.id,
-          m_rombel_id,
-        });
-      } else {
-        const checkTk = await TkMateriRombel.query()
-          .where({ m_materi_id: check.id })
-          .andWhere({ m_rombel_id })
-          .first();
-        await TkMateriRombel.create({
-          m_materi_id: check.id,
-          m_rombel_id,
-        });
-      }
-    } else {
+    //     await TkMateriRombel.create({
+    //       m_materi_id: materi.id,
+    //       m_rombel_id,
+    //     });
+    //   } else {
+    //     const checkTk = await TkMateriRombel.query()
+    //       .where({ m_materi_id: check.id })
+    //       .andWhere({ m_rombel_id })
+    //       .first();
+    //     await TkMateriRombel.create({
+    //       m_materi_id: check.id,
+    //       m_rombel_id,
+    //     });
+    //   }
+    // } else {
       const check = await MMateri.query()
         .where({ m_mata_pelajaran_id })
         .andWhere({ tingkat })
@@ -7110,7 +7110,7 @@ class MainController {
           });
         }
       }
-    }
+    // }
 
     return response.ok({
       message: messagePutSuccess,
