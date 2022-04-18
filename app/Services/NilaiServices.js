@@ -102,6 +102,24 @@ const HitungNilaiAkhir = async ({
       nilaiUASA = (nilaiUAS * bobot.uas_pas) / 100;
     }
     nilaiAkhir = nilaiUASA + nilaiUTSA + nilaiUjian + nilaiTugas;
+
+    if (ujian) {
+      await MUjianSiswa.query().where({ id: ujian.id }).update({
+        nilai: nilaiAkhir,
+      });
+    } else {
+      // const listNilai = [rataUjian, rata];
+      // nilaiAkhir = listNilai.filter((nilai) => nilai).length
+      //   ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) /
+      //     listNilai.filter((nilai) => nilai).length
+      //   : 0;
+      await MUjianSiswa.create({
+        m_ta_id: ta.id,
+        m_user_id: user_id,
+        m_mata_pelajaran_id: mapel.id,
+        nilai: nilaiAkhir,
+      });
+    }
   } else if (nilaiUTS) {
     if (rataUjian && rata) {
       nilaiUjian = (rataUjian * bobot.uh_pts) / 100;
@@ -118,25 +136,31 @@ const HitungNilaiAkhir = async ({
       nilaiUTSA = (nilaiUTS * bobot.uts_pts) / 100;
     }
     nilaiAkhir = nilaiUTSA + nilaiUjian + nilaiTugas;
+    if (ujian) {
+      await MUjianSiswa.query().where({ id: ujian.id }).update({
+        nilai: nilaiAkhir,
+        nilai_uts: nilaiAkhir,
+        avg_nilai_tugas: nilaiTugas,
+        avg_nilai_ujian: nilaiUjian,
+      });
+    } else {
+      // const listNilai = [rataUjian, rata];
+      // nilaiAkhir = listNilai.filter((nilai) => nilai).length
+      //   ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) /
+      //     listNilai.filter((nilai) => nilai).length
+      //   : 0;
+      await MUjianSiswa.create({
+        m_ta_id: ta.id,
+        m_user_id: user_id,
+        m_mata_pelajaran_id: mapel.id,
+        nilai: nilaiAkhir,
+        nilai_uts: nilaiAkhir,
+        avg_nilai_tugas: nilaiTugas,
+        avg_nilai_ujian: nilaiUjian,
+      });
+    }
   }
 
-  if (ujian) {
-    await MUjianSiswa.query().where({ id: ujian.id }).update({
-      nilai: nilaiAkhir,
-    });
-  } else {
-    // const listNilai = [rataUjian, rata];
-    // nilaiAkhir = listNilai.filter((nilai) => nilai).length
-    //   ? listNilai.filter((nilai) => nilai).reduce((a, b) => a + b, 0) /
-    //     listNilai.filter((nilai) => nilai).length
-    //   : 0;
-    await MUjianSiswa.create({
-      m_ta_id: ta.id,
-      m_user_id: user_id,
-      m_mata_pelajaran_id: mapel.id,
-      nilai: nilaiAkhir,
-    });
-  }
   //   console.log(nilaiAkhir,ujian,rata,rataUjian,data,dataUjian)
   return { nilaiAkhir, ujian, rata, rataUjian, data, dataUjian };
 };

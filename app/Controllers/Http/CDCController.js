@@ -4412,7 +4412,7 @@ class CDCController {
             .andWhere({ dihapus: 0 });
         })
         .with("ukkSiswa", (builder) => {
-          builder.where({ m_ta_id });
+          builder.where({ m_ta_id }).andWhere({ dihapus: 0 });
         })
         .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
         .where({ m_sekolah_id: sekolah.id })
