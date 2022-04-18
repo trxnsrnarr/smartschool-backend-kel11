@@ -4363,7 +4363,7 @@ class CDCController {
     let rombelIds;
     rombelIds = MRombel.query()
       .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ m_ta_id })
       .andWhere({ dihapus: 0 })
       .andWhere({ tingkat: "XII" })
       .whereIn("m_jurusan_id", jurusanDataIds);
