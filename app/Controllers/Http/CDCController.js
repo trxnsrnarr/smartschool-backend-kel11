@@ -4678,11 +4678,13 @@ class CDCController {
       telepon_perusahaan,
       kontak_narahubung,
       alamat_perusahaan,
+      nama_perusahaan,
       m_ta_id,
       province_id,
       regency_id,
       district_id,
       village_id,
+      kodepos,
     } = request.post();
 
     // let validation = await validate(
@@ -4708,10 +4710,12 @@ class CDCController {
             telepon_perusahaan,
             kontak_narahubung,
             alamat_perusahaan,
+            nama_perusahaan,
             province_id,
             regency_id,
             district_id,
             village_id,
+            kodepos,
             m_user_id: d,
             m_ta_id,
             dihapus: 0,
@@ -4744,10 +4748,12 @@ class CDCController {
       telepon_perusahaan,
       kontak_narahubung,
       alamat_perusahaan,
+      nama_perusahaan,
       province_id,
       regency_id,
       district_id,
       village_id,
+      kodepos,
     } = request.post();
 
     const perusahaan = await MPrakerinSiswa.query()
@@ -4759,10 +4765,12 @@ class CDCController {
         telepon_perusahaan,
         kontak_narahubung,
         alamat_perusahaan,
+        nama_perusahaan,
         province_id,
         regency_id,
         district_id,
         village_id,
+        kodepos,
         dihapus: 0,
       });
 
