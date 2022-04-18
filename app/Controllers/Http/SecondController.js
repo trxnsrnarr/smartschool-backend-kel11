@@ -355,11 +355,17 @@ class SecondController {
 
     if (withTransaksi) {
       rencana.with("transaksi", (builder) => {
-        builder.where({ dihapus: 0 }).with("jurnal", (builder) => {
-          builder.where({ dihapus: 0 }).with("akun", (builder) => {
-            builder.select("id", "nama");
+        builder
+          .where({ dihapus: 0 })
+          .where({ status: 1 })
+          .with("jurnal", (builder) => {
+            builder
+              .where({ dihapus: 0 })
+              .where({ status: 1 })
+              .with("akun", (builder) => {
+                builder.select("id", "nama");
+              });
           });
-        });
       });
     }
 
