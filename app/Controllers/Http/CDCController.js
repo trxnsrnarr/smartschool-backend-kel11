@@ -4617,7 +4617,7 @@ class CDCController {
     const prakerinIds = await MPrakerinSiswa.query()
       .where({ id: prakerin_id })
       .where({ m_ta_id })
-      .amdWhere({ dihapus: 0 })
+      .andWhere({ dihapus: 0 })
       .pluck("m_user_id");
 
     let siswa;
@@ -4821,7 +4821,7 @@ class CDCController {
     });
   }
 
-  async putUkkSiswa({ response, request, auth, params: { siswa_id } }) {
+  async putUKKSiswa({ response, request, auth, params: { siswa_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
