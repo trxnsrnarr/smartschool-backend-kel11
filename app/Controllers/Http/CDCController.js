@@ -4437,6 +4437,9 @@ class CDCController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
+    let {
+      m_ta_id 
+    } = request.get();
 
     let siswa;
     let jurusanDataIds = MJurusan.query()

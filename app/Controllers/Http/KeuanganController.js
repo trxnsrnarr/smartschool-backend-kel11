@@ -782,7 +782,7 @@ class KeuanganController {
           await MHistoriAktivitas.create({
             jenis: "Ubah Rencana Anggaran",
             m_user_id: user.id,
-            awal: `Jurnal Umum - Nama Akun : ${akunLama.nama} menjadi`,
+            awal: `Jurnal Umum - Nama Akun : ${akunLama.nama} menjadi `,
             akhir: `"${akunBaru.nama}"`,
             bawah: `${rencana.nama} - ${transaksi.nama}`,
             m_sekolah_id: sekolah.id,
@@ -801,7 +801,7 @@ class KeuanganController {
             m_user_id: user.id,
             awal: `Jurnal Umum - Nama Akun - ${akunBaru.nama} : ${titleCase(
               jurnalLama.jenis
-            )} Rp${saldoLama} menjadi`,
+            )} Rp${saldoLama} menjadi `,
             akhir: `"${titleCas(d.jenis)} Rp${saldoBaru}"`,
             bawah: `${rencana.nama} - ${transaksi.nama}`,
             m_sekolah_id: sekolah.id,
@@ -849,7 +849,7 @@ class KeuanganController {
       await MHistoriAktivitas.create({
         jenis: "Ubah Rencana Anggaran",
         m_user_id: user.id,
-        awal: `Nomor : ${transaksi.nomor} menjadi`,
+        awal: `Nomor : ${transaksi.nomor} menjadi `,
         akhir: `"${nomor}"`,
         m_sekolah_id: sekolah.id,
         tipe: "Perencanaan",
@@ -866,7 +866,7 @@ class KeuanganController {
         m_user_id: user.id,
         awal: `Tanggal : ${moment(transaksi.tanggal).format(
           "MMMM YYYY"
-        )} menjadi`,
+        )} menjadi `,
         akhir: `"${moment(tanggal).format("MMMM YYYY")}"`,
         m_sekolah_id: sekolah.id,
         tipe: "Perencanaan",
@@ -878,7 +878,7 @@ class KeuanganController {
       await MHistoriAktivitas.create({
         jenis: "Ubah Rencana Anggaran",
         m_user_id: user.id,
-        awal: `Judul : ${transaksi.nama} menjadi`,
+        awal: `Judul : ${transaksi.nama} menjadi `,
         akhir: `"${nama}"`,
         m_sekolah_id: sekolah.id,
         tipe: "Perencanaan",
