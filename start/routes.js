@@ -1878,6 +1878,7 @@ Route.delete("/prakerin/:prakerin_id", "CDCController.deletePrakerinSiswa");
 Route.get("/ukk-siswa", "CDCController.getUKKSiswa");
 Route.get("/ukk-siswa/:siswa_id", "CDCController.detailUKKSiswa");
 Route.put("/ukk-siswa/:siswa_id", "CDCController.putUKKSiswa");
+Route.delete("/ukk-siswa/:ukk_id", "CDCController.deleteUkkSiswa");
 
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)

@@ -4870,6 +4870,41 @@ class CDCController {
     });
   }
 
+  async deleteUkkSiswa({
+    response,
+    request,
+    auth,
+    params: { ukk_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const perusahaan = await MUkkSiswa.query()
+      .where({ id: ukk_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!perusahaan) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
+
+
   async ip({ response, request }) {
     return response.ok({ ip: [request.ip(), request.ips()] });
   }
