@@ -4377,7 +4377,9 @@ class CDCController {
     rombelIds = await rombelIds.ids();
 
     const anggotaRombelIds = MAnggotaRombel.query()
-    .whereIn("m_rombel_id", rombelIds).where({dihapus:0}).pluck("m_user_id")
+      .whereIn("m_rombel_id", rombelIds)
+      .where({ dihapus: 0 })
+      .pluck("m_user_id");
 
     if (search) {
       siswa = await User.query()
@@ -4442,9 +4444,7 @@ class CDCController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
-    let {
-      m_ta_id 
-    } = request.get();
+    let { m_ta_id } = request.get();
 
     let siswa;
     let jurusanDataIds = MJurusan.query()
@@ -4875,12 +4875,7 @@ class CDCController {
     });
   }
 
-  async deleteUkkSiswa({
-    response,
-    request,
-    auth,
-    params: { ukk_id },
-  }) {
+  async deleteUkkSiswa({ response, request, auth, params: { ukk_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -4891,11 +4886,9 @@ class CDCController {
 
     const user = await auth.getUser();
 
-    const perusahaan = await MUkkSiswa.query()
-      .where({ id: ukk_id })
-      .update({
-        dihapus: 1,
-      });
+    const perusahaan = await MUkkSiswa.query().where({ id: ukk_id }).update({
+      dihapus: 1,
+    });
 
     if (!perusahaan) {
       return response.notFound({
@@ -4907,8 +4900,6 @@ class CDCController {
       message: messageDeleteSuccess,
     });
   }
-
-
 
   async ip({ response, request }) {
     return response.ok({ ip: [request.ip(), request.ips()] });
