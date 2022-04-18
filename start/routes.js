@@ -1870,6 +1870,7 @@ Route.get("/danger/rapor-rombel", "RombelController.updateSemuaBukuIndukRapor");
 //Fitur Kakomli
 // Informasi Gelombang
 Route.get("/prakerin", "CDCController.getPrakerinSiswa");
+Route.get("/tambah-prakerin", "CDCController.getTambahPrakerinSiswa");
 Route.get("/prakerin/:prakerin_id", "CDCController.detailPrakerinSiswa");
 Route.post("/prakerin", "CDCController.postPrakerinSiswa");
 Route.put("/prakerin/:prakerin_id", "CDCController.putPrakerinSiswa");

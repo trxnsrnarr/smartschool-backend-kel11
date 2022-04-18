@@ -4901,6 +4901,152 @@ class CDCController {
     });
   }
 
+  async getTambahPrakerinSiswa({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    let { search, page, tingkat, jurusan_id, rombel_id, tingkat2 } =
+      request.get();
+
+    const jurusan = await MJurusan.query()
+      .with("rombel", (builder) => {
+        builder
+          .withCount("anggotaRombel as jumlahAnggota", (builder) => {
+            builder.where({ dihapus: 0 });
+          })
+          .where({ dihapus: 0 })
+          .andWhere({ m_ta_id: ta.id });
+        if (tingkat2) {
+          builder.where({ tingkat: tingkat2 });
+        }
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    const rombel = await MRombel.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .fetch();
+
+
+    page = page ? parseInt(page) : 1;
+    let siswa;
+    let jurusanDataIds = MJurusan.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 });
+    if (jurusan_id) {
+      jurusanDataIds.where({ id: jurusan_id });
+    }
+
+    jurusanDataIds = await jurusanDataIds.ids();
+
+    let rombelIds;
+    rombelIds = MRombel.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .whereIn("m_jurusan_id", jurusanDataIds);
+
+    if (rombel_id) {
+      rombelIds.where({ id: rombel_id });
+    }
+    if (tingkat) {
+      rombelIds.where({ tingkat });
+    }
+    rombelIds = await rombelIds.ids();
+
+    const anggotaRombelIds = MAnggotaRombel.query()
+      .whereIn("m_rombel_id", rombelIds)
+      .where({ dihapus: 0 })
+      .pluck("m_user_id");
+
+    if (search) {
+      siswa = await User.query()
+        .with("anggotaRombel", (builder) => {
+          builder
+            .with("rombel", (builder) => {
+              builder.select("id", "nama");
+            })
+            .whereIn("m_rombel_id", rombelIds)
+            .andWhere({ dihapus: 0 });
+        })
+        .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ dihapus: 0 })
+        .andWhere({ role: "siswa" })
+        .andWhere("nama", "like", `%${search}%`)
+        .whereIn("id", anggotaRombelIds)
+        .paginate(page, 25);
+    } else {
+      siswa = await User.query()
+        .with("anggotaRombel", (builder) => {
+          builder
+            .with("rombel", (builder) => {
+              builder.select("id", "nama");
+            })
+            .whereIn("m_rombel_id", rombelIds)
+            .andWhere({ dihapus: 0 });
+        })
+        .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ dihapus: 0 })
+        .andWhere({ role: "siswa" })
+        .whereIn("id", anggotaRombelIds)
+        .paginate(page, 25);
+    }
+
+    let tingkatData = [];
+
+    if (
+      sekolah.tingkat == "SMK" ||
+      sekolah.tingkat == "SMA" ||
+      sekolah.tingkat == "MA" ||
+      sekolah.tingkat == "MAK"
+    ) {
+      tingkatData = ["X", "XI", "XII", "XIII"];
+    } else if (sekolah.tingkat == "SMP" || sekolah.tingkat == "MTS") {
+      tingkatData = ["VII", "VIII", "IX"];
+    } else if (sekolah.tingkat == "SD" || sekolah.tingkat == "MI") {
+      tingkatData = ["I", "II", "III", "IV", "V", "VI"];
+    } else if (sekolah.tingkat == "SLB" || sekolah.tingkat == "SUPER") {
+      tingkatData = [
+        "I",
+        "II",
+        "III",
+        "IV",
+        "V",
+        "VI",
+        "VII",
+        "VIII",
+        "IX",
+        "X",
+        "XI",
+        "XII",
+      ];
+    }
+
+    return response.ok({
+      siswa: siswa,
+      integrasi: sekolah.integrasi,
+      jurusan,
+      rombel,
+      tingkatData,
+    });
+  }
+
   async ip({ response, request }) {
     return response.ok({ ip: [request.ip(), request.ips()] });
   }
