@@ -2264,15 +2264,6 @@ class SecondController {
         m_sekolah_id: sekolah.id,
         tipe: "SarPras",
       });
-      await MHistoriAktivitas.create({
-        jenis: "Proses Inventaris",
-        m_user_id: user.id,
-        awal: `Verifikasi Diterima : `,
-        akhir: `"${barang.nama}"`,
-        bawah: `Aset Tertunda`,
-        m_sekolah_id: sekolah.id,
-        tipe: "Realisasi",
-      });
     }
 
     await Promise.all(
