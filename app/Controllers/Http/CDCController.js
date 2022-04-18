@@ -3019,21 +3019,9 @@ class CDCController {
     }
     alumni = await alumni.fetch();
 
-    let alumniDatas = MAlumni.query()
-      .select("id", "jurusan", "tahun_masuk", "status", "m_user_id")
-      .with("user", (builder) => {
-        builder.select("id", "nama");
-      })
-      .where({ dihapus: 0 })
-      .where({ verifikasi })
-      .whereIn("m_user_id", userIds);
-
-   
-    alumniDatas = await alumniDatas.fetch();
-
     const statusAlumni = ["Bekerja", "Kuliah", "Berwirausaha", "Mencari Kerja"];
     let jurusanData = [];
-    alumniDatas.toJSON().filter((d) => {
+    alumni.toJSON().filter((d) => {
       if (!jurusanData.find((e) => e.nama == d.jurusan)) {
         jurusanData.push({ nama: d.jurusan });
         return true;
@@ -3043,7 +3031,7 @@ class CDCController {
     });
 
     let tahunData = [];
-    alumniDatas.toJSON().filter((d) => {
+    alumni.toJSON().filter((d) => {
       if (!tahunData.find((e) => e.nama == d.tahun_masuk)) {
         tahunData.push({ nama: d.tahun_masuk });
         return true;
@@ -4976,7 +4964,7 @@ class CDCController {
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ m_ta_id })
       .andWhere({ dihapus: 0 })
-      .andWhere({ tingkat: "XII" })
+      .andWhere({ tingakat: "12" })
       .whereIn("m_jurusan_id", jurusanDataIds);
 
     if (rombel_id) {
@@ -4987,7 +4975,7 @@ class CDCController {
     }
     rombelIds = await rombelIds.ids();
 
-    const anggotaRombelIds = await MAnggotaRombel.query()
+    const anggotaRombelIds = MAnggotaRombel.query()
       .whereIn("m_rombel_id", rombelIds)
       .where({ dihapus: 0 })
       .pluck("m_user_id");
