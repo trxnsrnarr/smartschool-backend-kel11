@@ -4376,7 +4376,7 @@ class CDCController {
     }
     rombelIds = await rombelIds.ids();
 
-    const anggotaRombelIds = MAnggotaRombel.query()
+    const anggotaRombelIds = await MAnggotaRombel.query()
       .whereIn("m_rombel_id", rombelIds)
       .where({ dihapus: 0 })
       .pluck("m_user_id");
