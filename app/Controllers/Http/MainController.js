@@ -7078,38 +7078,38 @@ class MainController {
     //     });
     //   }
     // } else {
-      const check = await MMateri.query()
-        .where({ m_mata_pelajaran_id })
-        .andWhere({ tingkat })
-        .first();
-      if (check) {
-        if (check.dihapus) {
-          await MMateri.query().where({ id: check.id }).update({ dihapus: 0 });
-        }
+    const check = await MMateri.query()
+      .where({ m_mata_pelajaran_id })
+      .andWhere({ tingkat })
+      .first();
+    if (check) {
+      if (check.dihapus) {
+        await MMateri.query().where({ id: check.id }).update({ dihapus: 0 });
       }
+    }
 
-      if (!check) {
-        const materi = await MMateri.create({
-          tingkat,
-          m_mata_pelajaran_id,
-        });
+    if (!check) {
+      const materi = await MMateri.create({
+        tingkat,
+        m_mata_pelajaran_id,
+      });
 
+      await TkMateriRombel.create({
+        m_materi_id: materi.id,
+        m_rombel_id,
+      });
+    } else {
+      const checkTk = await TkMateriRombel.query()
+        .where({ m_materi_id: check.id })
+        .andWhere({ m_rombel_id })
+        .first();
+      if (!checkTk) {
         await TkMateriRombel.create({
-          m_materi_id: materi.id,
+          m_materi_id: check.id,
           m_rombel_id,
         });
-      } else {
-        const checkTk = await TkMateriRombel.query()
-          .where({ m_materi_id: check.id })
-          .andWhere({ m_rombel_id })
-          .first();
-        if (!checkTk) {
-          await TkMateriRombel.create({
-            m_materi_id: check.id,
-            m_rombel_id,
-          });
-        }
       }
+    }
     // }
 
     return response.ok({
@@ -8186,7 +8186,7 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
-    
+
     const ta = await this.getTAAktif(sekolah);
 
     if (ta == "404") {
@@ -15149,7 +15149,8 @@ class MainController {
                               metaHasil.nilaiPgKompleks =
                                 metaHasil.nilaiPgKompleks + d.soal.nilai_soal;
                               metaHasil.benar = metaHasil.benar + 1;
-                              metaHasil.benarPgKompleks = metaHasil.benarPgKompleks + 1;
+                              metaHasil.benarPgKompleks =
+                                metaHasil.benarPgKompleks + 1;
                               analisisBenar[d.soal.kd] = analisisBenar[
                                 d.soal.kd
                               ]
@@ -15190,12 +15191,12 @@ class MainController {
                                       metaHasil.nilaiMenjodohkan =
                                         metaHasil.nilaiMenjodohkan +
                                         parseInt(check1.poin);
-                                        metaHasil.benar = metaHasil.benar + 1;
-                                        metaHasil.benarMenjodohkan = d.jawaban_menjodohkan.length;
+                                      metaHasil.benar = metaHasil.benar + 1;
+                                      metaHasil.benarMenjodohkan =
+                                        d.jawaban_menjodohkan.length;
                                     }
                                   }
                                 });
-
                               }
                             }
                           }
@@ -15218,7 +15219,7 @@ class MainController {
                         "Nilai Uraian",
                         "Nilai Menjodohkan",
                         "Nilai Total",
-                        
+
                         "Total Benar PG",
                         "Total Benar Esai",
                         "Total Benar PG Kompleks",
@@ -15235,7 +15236,7 @@ class MainController {
                         { key: "nilai_uraian" },
                         { key: "nilai_menjodohkan" },
                         { key: "nilai_total" },
-                        
+
                         { key: "benar_pg" },
                         { key: "benar_esai" },
                         { key: "benar_pg_kompleks" },
@@ -33701,7 +33702,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const {
+    let {
       foto,
       nama,
       merk,
@@ -33823,7 +33824,12 @@ class MainController {
         jenis: "Ubah Barang",
         m_user_id: user.id,
         awal: `Nota Barang : File nota barang telah diubah`,
-        akhir: `"${nota}"`,
+        akhir: `"${nota
+          .split("?")[0]
+          .replace(
+            "https://firebasestorage.googleapis.com/v0/b/smart-school-300211.appspot.com/o/",
+            ""
+          )}"`,
         bawah: `${barangSebelum.nama}`,
         m_sekolah_id: sekolah.id,
         tipe: "SarPras",
@@ -33998,7 +34004,12 @@ class MainController {
         jenis: "Ubah Barang",
         m_user_id: user.id,
         awal: `Foto Barang : File foto barang telah diubah`,
-        akhir: `"${foto}"`,
+        akhir: `"${foto
+          .split("?")[0]
+          .replace(
+            "https://firebasestorage.googleapis.com/v0/b/smart-school-300211.appspot.com/o/",
+            ""
+          )}"`,
         bawah: `${barangSebelum.nama}`,
         m_sekolah_id: sekolah.id,
         tipe: "SarPras",
