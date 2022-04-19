@@ -640,7 +640,7 @@ class CDCController {
       .where({ id: perusahaan_id })
       .first();
 
-    const mou = await MMouPerusahaan.query()
+    const mou1 = await MMouPerusahaan.query()
       .where({ dihapus: 0 })
       .andWhere({ tk_perusahaan_sekolah_id: perusahaanSekolah.id })
       .fetch();
@@ -652,6 +652,28 @@ class CDCController {
       surat.where("nama", "like", `%${search}%`);
     }
     surat = await surat.fetch();
+
+    await Promise.all(
+      mou1.toJSON().map(async (d) => {
+        let status;
+        if (
+          d.mulai_kontrak <= moment().format("YYYY-MM-DD") &&
+          d.akhir_kontrak >= moment().format("YYYY-MM-DD")
+        ) {
+          status = 1;
+        } else {
+          status = 0;
+        }
+
+        await MMouPerusahaan.query().where({ id: d.id }).update({
+          status,
+        });
+      })
+    );
+    const mou = await MMouPerusahaan.query()
+      .where({ dihapus: 0 })
+      .andWhere({ tk_perusahaan_sekolah_id: perusahaanSekolah.id })
+      .fetch();
 
     return response.ok({
       perusahaan,
@@ -3100,6 +3122,7 @@ class CDCController {
         builder.select("id", "nama");
       })
       .where({ dihapus: 0 })
+      .andWhere({ verifikasi: alumni1.verifikasi })
       .whereIn("m_user_id", userIds);
 
     if (status) {
@@ -3266,6 +3289,16 @@ class CDCController {
       });
     }
 
+    let status;
+    if (
+      mulai_kontrak <= moment().format("YYYY-MM-DD") &&
+      akhir_kontrak >= moment().format("YYYY-MM-DD")
+    ) {
+      status = 1;
+    } else {
+      status = 0;
+    }
+
     const mou = await MMouPerusahaan.create({
       nama,
       mulai_kontrak,
@@ -3283,6 +3316,7 @@ class CDCController {
       lampiran,
       tk_perusahaan_sekolah_id: tkPerusahaan.id,
       dihapus: 0,
+      status,
     });
 
     return response.ok({
@@ -3336,6 +3370,16 @@ class CDCController {
       });
     }
 
+    let status;
+    if (
+      mulai_kontrak <= moment().format("YYYY-MM-DD") &&
+      akhir_kontrak >= moment().format("YYYY-MM-DD")
+    ) {
+      status = 1;
+    } else {
+      status = 0;
+    }
+
     const mou = await MMouPerusahaan.query()
       .where({ id: mou_id })
       .update({
@@ -3355,6 +3399,7 @@ class CDCController {
         lampiran,
         tk_perusahaan_sekolah_id,
         dihapus: 0,
+        status,
       });
 
     if (!mou) {
@@ -4651,7 +4696,7 @@ class CDCController {
           .andWhere({ dihapus: 0 });
       })
       .with("prakerinSiswa", (builder) => {
-        builder.where({ m_ta_id });
+        builder.where({ m_ta_id }).andWhere({id: prakerin_id});
       })
       .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
       .where({ m_sekolah_id: sekolah.id })
