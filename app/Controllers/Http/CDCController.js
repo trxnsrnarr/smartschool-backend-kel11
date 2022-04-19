@@ -3591,9 +3591,6 @@ class CDCController {
       .where({ dihapus: 0 })
       .fetch();
 
-    const userTotal = await User.query()
-      .andWhere({ role: "siswa" })
-      .count("* as total");
     let userIds;
 
     userIds = User.query()
@@ -3613,13 +3610,14 @@ class CDCController {
     const penerimaanIds = await MPenerimaanPerusahaan.query()
       .whereIn("tk_perusahaan_sekolah_id", tkPerusahaanIds)
       .where({ dihapus: 0 })
+      .andWhere({ m_ta_id })
       .ids();
 
     penerimaanSiswa = MPenerimaanSiswa.query()
       .with("user", (builder) => {
         builder
           .with("keteranganPkl1", (builder) => {
-            builder.where({ m_ta_id: ta.id });
+            builder.where({ m_ta_id });
           })
           .select("id", "nama");
       })
@@ -3647,7 +3645,8 @@ class CDCController {
           .withCount("siswa as total", (builder) => {
             builder.where({ dihapus: 0 });
           })
-          .where({ dihapus: 0 });
+          .where({ dihapus: 0 })
+          .andWhere({ m_ta_id });
       })
       .with("perusahaan")
       .where({ m_sekolah_id: sekolah.id })
@@ -4696,7 +4695,7 @@ class CDCController {
           .andWhere({ dihapus: 0 });
       })
       .with("prakerinSiswa", (builder) => {
-        builder.where({ m_ta_id }).andWhere({id: prakerin_id});
+        builder.where({ m_ta_id }).andWhere({ id: prakerin_id });
       })
       .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
       .where({ m_sekolah_id: sekolah.id })
