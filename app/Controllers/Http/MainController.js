@@ -30605,12 +30605,6 @@ class MainController {
         builder.where({
           tingkat: siswaKeterampilan.toJSON().anggotaRombel.rombel.tingkat,
         });
-        if (mapelSingkat.kelompok == "C") {
-          builder.andWhere({
-            m_jurusan_id:
-              siswaKeterampilan.toJSON().anggotaRombel.rombel.m_jurusan_id,
-          });
-        }
       })
       .where({ id: mata_pelajaran_id })
       .first();
