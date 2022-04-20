@@ -7999,6 +7999,22 @@ ${jamPerubahan}`;
     }
 
     const akun = await MKeuAkun.query()
+      .with("jurnal", (builder) => {
+        builder.where({ dihapus: 0 }).andWhere({ status: 1 })
+        .whereIn("m_keu_transaksi_id", transaksiIds1);
+      })
+      .with("rencanaJurnal", (builder) => {
+        builder.where({ dihapus: 0 }).andWhere({ status: 1 })
+        .whereIn("m_rencana_transaksi_id", rencanaTransaksiIds1);
+      })
+      .with("rek", (builder) => {
+        builder.where({ dihapus: 0 }).whereNull("m_rencana_keuangan_id");
+      })
+      .with("rekRencana", (builder) => {
+        builder
+          .where({ dihapus: 0 })
+          .where({ m_rencana_keuangan_id: rencana.id });
+      })
       .with("jurnal1", (builder) => {
         builder
           .whereIn("m_keu_transaksi_id", transaksiIds1)
@@ -8079,32 +8095,23 @@ ${jamPerubahan}`;
     let labaRugi;
 
     labaRugi = MKeuKategoriLabaRugi.query()
-      .with("akunLabaRugi", (builder) => {
-        builder
-          .with("akun", (builder) => {
-            builder
-              // .with("jurnal", (builder) => {
-              //   builder.where({ dihapus: 0 });
-              //   if (transaksiIds1) {
-              //     builder.whereIn("m_keu_transaksi_id", [
-              //       ...transaksiIds1,
-              //       ...transaksiIds2,
-              //     ]);
-              //   }
-              // })
-              .where({ dihapus: 0 });
-          })
-          .where({ dihapus: 0 })
-          .orderBy("urutan", "asc");
-      })
+    .with("akunLabaRugi", (builder) => {
+      builder
+        .with("akun", (builder) => {
+          builder.with("rumusAkun");
+        })
+        .whereIn(
+          "m_keu_akun_id",
+          akun.toJSON().map((d) => d.id)
+        )
+        .where({ dihapus: 0 })
+        .orderBy("urutan", "asc");
+    })
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id });
 
-    if (search) {
-      labaRugi.andWhere("nama", "like", `%${search}%`);
-    }
-
     labaRugi = await labaRugi.fetch();
+
 
     const rumuslabaRugi = await MRumusLabaRugi.query()
       .where({ m_sekolah_id: sekolah.id })
@@ -8227,7 +8234,35 @@ ${jamPerubahan}`;
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .fetch();
+    let labaRugi;
 
+    labaRugi = MKeuKategoriLabaRugi.query()
+      .with("akunLabaRugi", (builder) => {
+        builder
+          .with("akun", (builder) => {
+            builder
+              // .with("jurnal", (builder) => {
+              //   builder.where({ dihapus: 0 });
+              //   if (transaksiIds1) {
+              //     builder.whereIn("m_keu_transaksi_id", [
+              //       ...transaksiIds1,
+              //       ...transaksiIds2,
+              //     ]);
+              //   }
+              // })
+              .where({ dihapus: 0 });
+          })
+          .where({ dihapus: 0 })
+          .orderBy("urutan", "asc");
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id });
+
+    if (search) {
+      labaRugi.andWhere("nama", "like", `%${search}%`);
+    }
+
+    labaRugi = await labaRugi.fetch();
     return response.ok({
       kategori,
       rumus: {
@@ -8236,6 +8271,7 @@ ${jamPerubahan}`;
         rumusAkhir,
       },
       tipeAkun,
+      labaRugi,
     });
   }
 
@@ -9163,7 +9199,9 @@ ${jamPerubahan}`;
     for (let i = 0; i < rumus12.length; i++) {
       const d = rumus12[i];
       if (d.id) {
-        kategoriAkun = await MKeuAkun.query().where({ id: d.id }).first();
+        kategoriAkun = await MKeuKategoriLabaRugi.query()
+          .where({ id: d.id })
+          .first();
         rumusFix = rumusFix + kategoriAkun.nama;
       } else {
         if (d.operator == "minus") {
@@ -9243,7 +9281,9 @@ ${jamPerubahan}`;
       for (let i = 0; i < rumusSebelum.rumus.length; i++) {
         const d = rumusSebelum.rumus[i];
         if (d.id) {
-          kategoriAkun = await MKeuAkun.query().where({ id: d.id }).first();
+          kategoriAkun = await MKeuKategoriLabaRugi.query()
+            .where({ id: d.id })
+            .first();
           rumusSebelum2 = rumusSebelum2 + kategoriAkun.nama;
         } else {
           if (d.operator == "minus") {
@@ -9258,7 +9298,9 @@ ${jamPerubahan}`;
       for (let i = 0; i < rumus12.length; i++) {
         const d = rumus12[i];
         if (d.id) {
-          kategoriAkun = await MKeuAkun.query().where({ id: d.id }).first();
+          kategoriAkun = await MKeuKategoriLabaRugi.query()
+            .where({ id: d.id })
+            .first();
           // return kategoriAkun;
           rumusFix = rumusFix + kategoriAkun.nama;
         } else {
@@ -10090,7 +10132,7 @@ ${jamPerubahan}`;
       });
 
       const beban = await MKeuKategoriLabaRugi.create({
-        nama: "BEBAN",
+        nama: "BEBAN TIDAK LANGSUNG",
         warna: "#00D084",
         dihapus: 0,
         m_sekolah_id: sekolah.id,
@@ -10104,60 +10146,87 @@ ${jamPerubahan}`;
         urutan: 1,
       });
 
-      const BEBANLISTRIK = semuaAkun
+      // const BEBANLISTRIK = semuaAkun
+      //   .toJSON()
+      //   .find((d) => d.nama == "BEBAN LISTRIK, AIR, TELEPON");
+      // await TkKategoriAkunLabaRugi.create({
+      //   m_keu_kategori_laba_rugi_id: beban.id,
+      //   m_keu_akun_id: BEBANLISTRIK.id,
+      //   dihapus: 0,
+      //   urutan: 1,
+      // });
+
+      // const BEBANPERLENGKAPAN = semuaAkun
+      //   .toJSON()
+      //   .find((d) => d.nama == "BEBAN PERLENGKAPAN KANTOR");
+      // await TkKategoriAkunLabaRugi.create({
+      //   m_keu_kategori_laba_rugi_id: beban.id,
+      //   m_keu_akun_id: BEBANPERLENGKAPAN.id,
+      //   dihapus: 0,
+      //   urutan: 1,
+      // });
+
+      // const BEBANSEWA = semuaAkun.toJSON().find((d) => d.nama == "BEBAN SEWA");
+      // await TkKategoriAkunLabaRugi.create({
+      //   m_keu_kategori_laba_rugi_id: beban.id,
+      //   m_keu_akun_id: BEBANSEWA.id,
+      //   dihapus: 0,
+      //   urutan: 1,
+      // });
+
+      // const BEBANPERAWATAN = semuaAkun
+      //   .toJSON()
+      //   .find((d) => d.nama == "BEBAN PERAWATAN PERALATAN");
+      // await TkKategoriAkunLabaRugi.create({
+      //   m_keu_kategori_laba_rugi_id: beban.id,
+      //   m_keu_akun_id: BEBANPERAWATAN.id,
+      //   dihapus: 0,
+      //   urutan: 1,
+      // });
+
+      // const BEBANASURANSI = semuaAkun
+      //   .toJSON()
+      //   .find((d) => d.nama == "BEBAN ASURANSI");
+      // await TkKategoriAkunLabaRugi.create({
+      //   m_keu_kategori_laba_rugi_id: beban.id,
+      //   m_keu_akun_id: BEBANASURANSI.id,
+      //   dihapus: 0,
+      //   urutan: 1,
+      // });
+
+      // const BEBANLAIN = semuaAkun
+      //   .toJSON()
+      //   .find((d) => d.nama == "BEBAN LAINNYA");
+      // await TkKategoriAkunLabaRugi.create({
+      //   m_keu_kategori_laba_rugi_id: beban.id,
+      //   m_keu_akun_id: BEBANLAIN.id,
+      //   dihapus: 0,
+      //   urutan: 1,
+      // });
+
+      const bebanLangsung = await MKeuKategoriLabaRugi.create({
+        nama: "BEBAN LANGSUNG",
+        warna: "#00D084",
+        dihapus: 0,
+        m_sekolah_id: sekolah.id,
+      });
+
+      const BEBANADMINISTRASI = semuaAkun
         .toJSON()
-        .find((d) => d.nama == "BEBAN LISTRIK, AIR, TELEPON");
+        .find((d) => d.nama == "BEBAN ADMINISTRASI");
       await TkKategoriAkunLabaRugi.create({
-        m_keu_kategori_laba_rugi_id: beban.id,
-        m_keu_akun_id: BEBANLISTRIK.id,
+        m_keu_kategori_laba_rugi_id: bebanLangsung.id,
+        m_keu_akun_id: BEBANADMINISTRASI.id,
         dihapus: 0,
         urutan: 1,
       });
 
-      const BEBANPERLENGKAPAN = semuaAkun
+      const BEBANINVENTARIS = semuaAkun
         .toJSON()
-        .find((d) => d.nama == "BEBAN PERLENGKAPAN KANTOR");
+        .find((d) => d.nama == "BEBAN INVENTARIS");
       await TkKategoriAkunLabaRugi.create({
-        m_keu_kategori_laba_rugi_id: beban.id,
-        m_keu_akun_id: BEBANPERLENGKAPAN.id,
-        dihapus: 0,
-        urutan: 1,
-      });
-
-      const BEBANSEWA = semuaAkun.toJSON().find((d) => d.nama == "BEBAN SEWA");
-      await TkKategoriAkunLabaRugi.create({
-        m_keu_kategori_laba_rugi_id: beban.id,
-        m_keu_akun_id: BEBANSEWA.id,
-        dihapus: 0,
-        urutan: 1,
-      });
-
-      const BEBANPERAWATAN = semuaAkun
-        .toJSON()
-        .find((d) => d.nama == "BEBAN PERAWATAN PERALATAN");
-      await TkKategoriAkunLabaRugi.create({
-        m_keu_kategori_laba_rugi_id: beban.id,
-        m_keu_akun_id: BEBANPERAWATAN.id,
-        dihapus: 0,
-        urutan: 1,
-      });
-
-      const BEBANASURANSI = semuaAkun
-        .toJSON()
-        .find((d) => d.nama == "BEBAN ASURANSI");
-      await TkKategoriAkunLabaRugi.create({
-        m_keu_kategori_laba_rugi_id: beban.id,
-        m_keu_akun_id: BEBANASURANSI.id,
-        dihapus: 0,
-        urutan: 1,
-      });
-
-      const BEBANLAIN = semuaAkun
-        .toJSON()
-        .find((d) => d.nama == "BEBAN LAINNYA");
-      await TkKategoriAkunLabaRugi.create({
-        m_keu_kategori_laba_rugi_id: beban.id,
-        m_keu_akun_id: BEBANLAIN.id,
+        m_keu_kategori_laba_rugi_id: bebanLangsung.id,
+        m_keu_akun_id: BEBANINVENTARIS.id,
         dihapus: 0,
         urutan: 1,
       });
@@ -10173,11 +10242,50 @@ ${jamPerubahan}`;
           id: beban.id,
         },
       ];
+
+      const rumus2 = [
+        {
+          id: pendapatan.id,
+        },
+        {
+          operator: "minus",
+        },
+        {
+          id: beban.id,
+        },
+        {
+          operator: "minus",
+        },
+        {
+          id: bebanLangsung.id,
+        },
+      ];
       await MRumusLabaRugi.create({
-        nama: "Laba/Rugi",
+        nama: "LABA OPERASIONAL",
         rumus: JSON.stringify(rumus),
         dihapus: 0,
         m_sekolah_id: sekolah.id,
+      });
+      await MRumusLabaRugi.create({
+        nama: "LABA/RUGI",
+        rumus: JSON.stringify(rumus2),
+        dihapus: 0,
+        m_sekolah_id: sekolah.id,
+      });
+
+      const modal = semuaAkun.toJSON().find((d) => d.nama == "MODAL");
+      await MRumusKeuAkun.create({
+        tipe: "MODAL",
+        rumus: JSON.stringify(rumus2),
+        m_keu_akun_id: modal.id,
+      });
+      const labaDitahan = semuaAkun
+        .toJSON()
+        .find((d) => d.nama == "LABA DITAHAN");
+      await MRumusKeuAkun.create({
+        tipe: "LABA DITAHAN",
+        rumus: JSON.stringify(rumus2),
+        m_keu_akun_id: labaDitahan.id,
       });
     }
   }
@@ -10380,59 +10488,59 @@ ${jamPerubahan}`;
 
       // Aktivitas Penyusutan
 
-      const Penyusutan = await MKeuKategoriTipeAkun.create({
-        nama: "Penyusutan & Amortisasi",
-        dihapus: 0,
-        m_sekolah_id: sekolah.id,
-      });
+      // const Penyusutan = await MKeuKategoriTipeAkun.create({
+      //   nama: "Penyusutan & Amortisasi",
+      //   dihapus: 0,
+      //   m_sekolah_id: sekolah.id,
+      // });
 
-      const BEBANPPK = semuaAkun
-        .toJSON()
-        .find((d) => d.nama == "BEBAN PENYUSUTAN PERALATAN KANTOR");
-      const BEBANPPB = semuaAkun
-        .toJSON()
-        .find((d) => d.nama == "BEBAN PENYUSUTAN PERALATAN BENGKEL");
-      const BEBANPK = semuaAkun
-        .toJSON()
-        .find((d) => d.nama == "BEBAN PENYUSUTAN KENDARAAN");
-      const BEBANPG = semuaAkun
-        .toJSON()
-        .find((d) => d.nama == "BEBAN PENYUSUTAN GEDUNG");
+      // const BEBANPPK = semuaAkun
+      //   .toJSON()
+      //   .find((d) => d.nama == "BEBAN PENYUSUTAN PERALATAN KANTOR");
+      // const BEBANPPB = semuaAkun
+      //   .toJSON()
+      //   .find((d) => d.nama == "BEBAN PENYUSUTAN PERALATAN BENGKEL");
+      // const BEBANPK = semuaAkun
+      //   .toJSON()
+      //   .find((d) => d.nama == "BEBAN PENYUSUTAN KENDARAAN");
+      // const BEBANPG = semuaAkun
+      //   .toJSON()
+      //   .find((d) => d.nama == "BEBAN PENYUSUTAN GEDUNG");
 
-      await TkKategoriTipeAkun.create({
-        m_keu_kategori_tipe_akun_id: Penyusutan.id,
-        m_keu_akun_id: BEBANPPK.id,
-        dihapus: 0,
-        urutan: 1,
-      });
-      await TkKategoriTipeAkun.create({
-        m_keu_kategori_tipe_akun_id: Penyusutan.id,
-        m_keu_akun_id: BEBANPPB.id,
-        dihapus: 0,
-        urutan: 1,
-      });
-      await TkKategoriTipeAkun.create({
-        m_keu_kategori_tipe_akun_id: Penyusutan.id,
-        m_keu_akun_id: BEBANPK.id,
-        dihapus: 0,
-        urutan: 1,
-      });
-      await TkKategoriTipeAkun.create({
-        m_keu_kategori_tipe_akun_id: Penyusutan.id,
-        m_keu_akun_id: BEBANPG.id,
-        dihapus: 0,
-        urutan: 1,
-      });
+      // await TkKategoriTipeAkun.create({
+      //   m_keu_kategori_tipe_akun_id: Penyusutan.id,
+      //   m_keu_akun_id: BEBANPPK.id,
+      //   dihapus: 0,
+      //   urutan: 1,
+      // });
+      // await TkKategoriTipeAkun.create({
+      //   m_keu_kategori_tipe_akun_id: Penyusutan.id,
+      //   m_keu_akun_id: BEBANPPB.id,
+      //   dihapus: 0,
+      //   urutan: 1,
+      // });
+      // await TkKategoriTipeAkun.create({
+      //   m_keu_kategori_tipe_akun_id: Penyusutan.id,
+      //   m_keu_akun_id: BEBANPK.id,
+      //   dihapus: 0,
+      //   urutan: 1,
+      // });
+      // await TkKategoriTipeAkun.create({
+      //   m_keu_kategori_tipe_akun_id: Penyusutan.id,
+      //   m_keu_akun_id: BEBANPG.id,
+      //   dihapus: 0,
+      //   urutan: 1,
+      // });
 
-      await MKeuAktivitasTransaksi.create({
-        judul: "Penyusutan & Amortisasi",
-        dihapus: 0,
-        m_sekolah_id: sekolah.id,
-        m_keu_kategori_tipe_akun_id: Penyusutan.id,
-        m_keu_kategori_arus_kas_id: operasi.id,
-        urutan: 1,
-        laba: 1,
-      });
+      // await MKeuAktivitasTransaksi.create({
+      //   judul: "Penyusutan & Amortisasi",
+      //   dihapus: 0,
+      //   m_sekolah_id: sekolah.id,
+      //   m_keu_kategori_tipe_akun_id: Penyusutan.id,
+      //   m_keu_kategori_arus_kas_id: operasi.id,
+      //   urutan: 1,
+      //   laba: 1,
+      // });
 
       // Kategori Investasi
       const Investasi = await MKeuKategoriArusKas.create({
