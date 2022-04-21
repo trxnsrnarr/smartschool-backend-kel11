@@ -2134,8 +2134,14 @@ class SecondController {
 
     const rencana = await this.getRencanaAktif(sekolah, 1);
 
-    const { page, search, dari_tanggal, sampai_tanggal, tipe_akun, status=null } =
-      request.get();
+    const {
+      page,
+      search,
+      dari_tanggal,
+      sampai_tanggal,
+      tipe_akun,
+      status = null,
+    } = request.get();
 
     let transaksiIds;
     if (tipe_akun) {
@@ -2176,7 +2182,7 @@ class SecondController {
     }
     if (status == 3) {
       transaksi.whereNull("status");
-    }  else if (status) {
+    } else if (status) {
       transaksi.where({ status });
     }
 
@@ -2229,6 +2235,8 @@ class SecondController {
 
     if (!user.bagian) {
       status = 1;
+    }else {
+      status = 0 
     }
 
     const rules = {
@@ -2251,7 +2259,7 @@ class SecondController {
       m_rencana_transaksi_id,
       m_barang_id,
       dihapus: 0,
-      status: 0,
+      status,
       m_sekolah_id: sekolah.id,
     });
 
@@ -9899,6 +9907,8 @@ ${jamPerubahan}`;
       return response.ok({
         message: messagePostSuccess,
       });
+    } else {
+      return `sudah ada`;
     }
   }
 
@@ -10092,6 +10102,8 @@ ${jamPerubahan}`;
         dihapus: 0,
         urutan: 1,
       });
+    } else {
+      return `sudah ada`;
     }
   }
   async otomatisLabaRugi({ response, request, auth }) {
@@ -10302,6 +10314,8 @@ ${jamPerubahan}`;
         rumus: JSON.stringify(rumus2),
         m_keu_akun_id: labaDitahan.id,
       });
+    } else {
+      return `sudah`;
     }
   }
   async otomatisArusKas({ response, request, auth }) {
@@ -10721,6 +10735,8 @@ ${jamPerubahan}`;
         dihapus: 0,
         m_sekolah_id: sekolah.id,
       });
+    } else {
+      return "sudah ada";
     }
   }
   async postRaporSikapUAS({ response, request, auth, params: { rombel_id } }) {

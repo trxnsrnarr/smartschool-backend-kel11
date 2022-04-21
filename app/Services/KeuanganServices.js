@@ -1,5 +1,6 @@
 const MKeuTemplateAkun = use("App/Models/MKeuTemplateAkun");
 const MKeuAkun = use("App/Models/MKeuAkun");
+const MRumusKeuAkun = use("App/Models/MRumusKeuAkun");
 const MRekSekolah = use("App/Models/MRekSekolah");
 
 const otomatisAkun = async (sekolah) => {
@@ -266,7 +267,7 @@ const otomatisAkun = async (sekolah) => {
     saldo_normal: "Kredit",
   });
   data[30] = await MKeuAkun.create({
-    nama: "MODAL SAHAM",
+    nama: "MODAL",
     kode: 31000,
     dihapus: 0,
     m_sekolah_id: sekolah.id,
@@ -293,6 +294,40 @@ const otomatisAkun = async (sekolah) => {
     m_sekolah_id: sekolah.id,
     saldo_normal: "Kredit",
   });
+  const rumusPendapatan = [
+    {
+      id: data[3].id,
+    },
+    {
+      operator: "plus",
+    },
+    {
+      id: data[4].id,
+    },
+    {
+      operator: "plus",
+    },
+    {
+      id: data[5].id,
+    },
+    {
+      operator: "plus",
+    },
+    {
+      id: data[6].id,
+    },
+    {
+      operator: "plus",
+    },
+    {
+      id: data[7].id,
+    },
+  ];
+  await MRumusKeuAkun.create({
+    tipe: "PENDAPATAN JASA",
+    rumus: JSON.stringify(rumusPendapatan),
+    m_keu_akun_id: data[33].id,
+  });
   data[34] = await MKeuAkun.create({
     nama: "PENDAPATAN LAINNYA",
     kode: 42000,
@@ -308,118 +343,84 @@ const otomatisAkun = async (sekolah) => {
     saldo_normal: "Debit",
   });
   data[36] = await MKeuAkun.create({
-    nama: "BEBAN GAJI",
+    nama: "BEBAN LANGSUNG",
     kode: 51000,
     dihapus: 0,
     m_sekolah_id: sekolah.id,
     saldo_normal: "Debit",
   });
   data[37] = await MKeuAkun.create({
-    nama: "BEBAN LISTRIK, AIR, TELEPON",
-    kode: 52000,
+    nama: "BEBAN GAJI",
+    kode: 51100,
     dihapus: 0,
     m_sekolah_id: sekolah.id,
     saldo_normal: "Debit",
   });
   data[38] = await MKeuAkun.create({
-    nama: "BEBAN INTERNET",
-    kode: 53000,
+    nama: "BEBAN TIDAK LANGSUNG",
+    kode: 52000,
     dihapus: 0,
     m_sekolah_id: sekolah.id,
     saldo_normal: "Debit",
   });
   data[39] = await MKeuAkun.create({
-    nama: "BEBAN PERLENGKAPAN KANTOR",
-    kode: 54000,
+    nama: "BEBAN ADMINISTRASI",
+    kode: 52100,
     dihapus: 0,
     m_sekolah_id: sekolah.id,
     saldo_normal: "Debit",
   });
   data[40] = await MKeuAkun.create({
-    nama: "BEBAN SEWA",
-    kode: 55000,
+    nama: "BEBAN INVENTARIS",
+    kode: 52200,
     dihapus: 0,
     m_sekolah_id: sekolah.id,
     saldo_normal: "Debit",
+  });
+  const rumusBebanInventaris = [
+    {
+      id: data[16].id,
+    },
+    {
+      operator: "plus",
+    },
+    {
+      id: data[17].id,
+    },
+    {
+      operator: "plus",
+    },
+    {
+      id: data[18].id,
+    },
+  ];
+  await MRumusKeuAkun.create({
+    tipe: "BEBAN INVENTARIS",
+    rumus: JSON.stringify(rumusBebanInventaris),
+    m_keu_akun_id: data[40].id,
   });
   data[41] = await MKeuAkun.create({
-    nama: "BEBAN PERAWATAN PERALATAN",
-    kode: 56000,
-    dihapus: 0,
-    m_sekolah_id: sekolah.id,
-    saldo_normal: "Debit",
-  });
-  data[42] = await MKeuAkun.create({
-    nama: "BEBAN ASURANSI",
-    kode: 57000,
-    dihapus: 0,
-    m_sekolah_id: sekolah.id,
-    saldo_normal: "Debit",
-  });
-  data[43] = await MKeuAkun.create({
-    nama: "BEBAN LAINNYA",
-    kode: 58000,
-    dihapus: 0,
-    m_sekolah_id: sekolah.id,
-    saldo_normal: "Debit",
-  });
-  data[44] = await MKeuAkun.create({
-    nama: "BEBAN PENYUSUTAN PELARATAN KANTOR",
-    kode: 58100,
-    dihapus: 0,
-    m_sekolah_id: sekolah.id,
-    saldo_normal: "Debit",
-  });
-  data[45] = await MKeuAkun.create({
-    nama: "BEBAN PENYUSUTAN PERALATAN BENGKEL",
-    kode: 58200,
-    dihapus: 0,
-    m_sekolah_id: sekolah.id,
-    saldo_normal: "Debit",
-  });
-  data[46] = await MKeuAkun.create({
-    nama: "BEBAN PENYUSUTAN KENDARAAN",
-    kode: 58300,
-    dihapus: 0,
-    m_sekolah_id: sekolah.id,
-    saldo_normal: "Debit",
-  });
-  data[47] = await MKeuAkun.create({
-    nama: "BEBAN PENYUSUTAN GEDUNG",
-    kode: 58400,
-    dihapus: 0,
-    m_sekolah_id: sekolah.id,
-    saldo_normal: "Debit",
-  });
-  data[48] = await MKeuAkun.create({
-    nama: "LABA BERSIH",
-    kode: 59000,
-    dihapus: 0,
-    m_sekolah_id: sekolah.id,
-    saldo_normal: "Debit",
-  });
-  data[49] = await MKeuAkun.create({
     nama: "PAJAK",
     kode: 80000,
     dihapus: 0,
     m_sekolah_id: sekolah.id,
     saldo_normal: "Debit",
   });
-  data[50] = await MKeuAkun.create({
+  data[42] = await MKeuAkun.create({
     nama: "DIVIDEN",
     kode: 90000,
     dihapus: 0,
     m_sekolah_id: sekolah.id,
     saldo_normal: "Debit",
   });
-  data[51] = await MKeuAkun.create({
+  data[43] = await MKeuAkun.create({
     nama: "DIVIDEN",
     kode: 91000,
     dihapus: 0,
     m_sekolah_id: sekolah.id,
     saldo_normal: "Debit",
   });
-  data[52] = await MKeuAkun.create({
+  data[44] = await MKeuAkun.create({
     nama: "UTANG DIVIDEN",
     kode: 92000,
     dihapus: 0,
@@ -594,31 +595,37 @@ const otomatisAkun = async (sekolah) => {
         {
           id: data[36].id,
           text: data[36].nama,
-        },
-        {
-          id: data[37].id,
-          text: data[37].nama,
+          children: [
+            {
+              id: data[37].id,
+              text: data[37].nama,
+            },
+          ],
         },
         {
           id: data[38].id,
           text: data[38].nama,
+          children: [
+            {
+              id: data[39].id,
+              text: data[39].nama,
+            },
+            {
+              id: data[40].id,
+              text: data[40].nama,
+            },
+          ],
         },
-        {
-          id: data[39].id,
-          text: data[39].nama,
-        },
-        {
-          id: data[40].id,
-          text: data[40].nama,
-        },
-        {
-          id: data[41].id,
-          text: data[41].nama,
-        },
-        {
-          id: data[42].id,
-          text: data[42].nama,
-        },
+      ],
+    },
+    {
+      id: data[41].id,
+      text: data[41].nama,
+    },
+    {
+      id: data[42].id,
+      text: data[42].nama,
+      children: [
         {
           id: data[43].id,
           text: data[43].nama,
@@ -626,40 +633,6 @@ const otomatisAkun = async (sekolah) => {
         {
           id: data[44].id,
           text: data[44].nama,
-        },
-        {
-          id: data[45].id,
-          text: data[45].nama,
-        },
-        {
-          id: data[46].id,
-          text: data[46].nama,
-        },
-        {
-          id: data[47].id,
-          text: data[47].nama,
-        },
-        {
-          id: data[48].id,
-          text: data[48].nama,
-        },
-      ],
-    },
-    {
-      id: data[49].id,
-      text: data[49].nama,
-    },
-    {
-      id: data[50].id,
-      text: data[50].nama,
-      children: [
-        {
-          id: data[51].id,
-          text: data[51].nama,
-        },
-        {
-          id: data[52].id,
-          text: data[52].nama,
         },
       ],
     },
@@ -670,9 +643,9 @@ const otomatisAkun = async (sekolah) => {
     template: JSON.stringify(template),
   });
 
-  return 1
+  return 1;
 };
 
 module.exports = {
-    otomatisAkun
-}
+  otomatisAkun,
+};

@@ -30859,7 +30859,8 @@ class MainController {
 
     if (sekolah.id == 33) {
       builder.with("sikapYadika", (builder) => {
-        builder.where({ dihapus: 0 });
+        builder.where({ dihapus: 0 })
+        .andWhere({ m_ta_id: ta.id })
       });
     } else {
       builder

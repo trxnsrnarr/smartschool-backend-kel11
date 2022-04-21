@@ -626,6 +626,8 @@ class KeuanganController {
     let { nama, nomor, tanggal, jurnal = [], status } = request.post();
     if (!user.bagian) {
       status = 1;
+    }else{
+      status =0
     }
 
     const rules = {
@@ -652,7 +654,7 @@ class KeuanganController {
       dihapus: 0,
       m_sekolah_id: sekolah.id,
       m_rencana_keuangan_id: rencana.id,
-      status: 0,
+      status,
     });
 
     await Promise.all(
@@ -4105,7 +4107,7 @@ class KeuanganController {
         "Hapus Perencanaan",
         "Proses Inventaris",
         "Proses Transaksi",
-        "Proses Perencanaan",
+        "Proses Rencana Anggaran",
       ]);
     }
 
@@ -7465,7 +7467,7 @@ ${jamPerubahan}`;
     });
     if (status == 1) {
       await MHistoriAktivitas.create({
-        jenis: "Proses Perencanaan",
+        jenis: "Proses Rencana Anggaran",
         m_user_id: user.id,
         awal: `Verifikasi Diterima : `,
         akhir: `"${transaksi.nama}"`,
@@ -7475,7 +7477,7 @@ ${jamPerubahan}`;
       });
     } else if (status == null) {
       await MHistoriAktivitas.create({
-        jenis: "Proses Perencanaan",
+        jenis: "Proses Rencana Anggaran",
         m_user_id: user.id,
         awal: `Verifikasi Ditolak : `,
         akhir: `"${transaksi.nama}"`,
