@@ -10696,15 +10696,31 @@ ${jamPerubahan}`;
       const PENDAPATANLAINNYA = semuaAkun
         .toJSON()
         .find((d) => d.nama == "PENDAPATAN LAINNYA");
+        const kategoriLabaRugi = await MKeuKategoriLabaRugi.query().where({m_sekolah_id:sekolah.id}).andWhere({dihapus:0}).fetch()
+        const PENDAPATAN = kategoriLabaRugi
+        .toJSON()
+        .find((d) => d.nama == "PENDAPATAN");
+        const BEBANTIDAKLANGSUNG = kategoriLabaRugi
+        .toJSON()
+        .find((d) => d.nama == "BEBAN TIDAK LANGSUNG");
+        const BEBANLANGSUNG = kategoriLabaRugi
+        .toJSON()
+        .find((d) => d.nama == "BEBAN LANGSUNG");
       const rumusAwal = [
         {
-          id: PENDAPATANJASA.id,
+          id: PENDAPATAN.id,
         },
         {
-          operator: "plus",
+          operator: "minus",
         },
         {
-          id: PENDAPATANLAINNYA.id,
+          id: BEBANTIDAKLANGSUNG.id,
+        },
+        {
+          operator: "minus",
+        },
+        {
+          id: BEBANLANGSUNG.id,
         },
       ];
       await MKeuRumusSaldoKasAwal.create({
