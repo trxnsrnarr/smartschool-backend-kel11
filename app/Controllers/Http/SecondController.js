@@ -2134,7 +2134,7 @@ class SecondController {
 
     const rencana = await this.getRencanaAktif(sekolah, 1);
 
-    const { page, search, dari_tanggal, sampai_tanggal, tipe_akun, status } =
+    const { page, search, dari_tanggal, sampai_tanggal, tipe_akun, status=null } =
       request.get();
 
     let transaksiIds;
@@ -2171,16 +2171,21 @@ class SecondController {
     }
     if (user.bagian == "aproval") {
       if (!status) {
-        transaksi.whereNull("status");
+        transaksi.where({ status: 0 });
       }
     }
     if (status == 3) {
       transaksi.whereNull("status");
-    } else if (status) {
+    }  else if (status) {
       transaksi.where({ status });
     }
 
-    transaksi = await transaksi.orderBy("tanggal", "desc").paginate(page, 25);
+    transaksi = await transaksi.orderBy("status", "asc").paginate(page, 25);
+
+    // return ` ini nilai${status}`
+    // transaksi = transaksi
+    //   .toJSON()
+    //   .data.sort((a, b) => ("" + a.status).localeCompare("" + b.status));
 
     const akun = await MKeuAkun.query()
       .with("rek")
@@ -2246,7 +2251,7 @@ class SecondController {
       m_rencana_transaksi_id,
       m_barang_id,
       dihapus: 0,
-      status,
+      status: 0,
       m_sekolah_id: sekolah.id,
     });
 
@@ -2308,7 +2313,14 @@ class SecondController {
       tanggal,
       jurnal = [],
       m_rencana_transaksi_id,
+      status,
     } = request.post();
+
+    if (!user.bagian) {
+      status = 1;
+    } else {
+      status = 0;
+    }
 
     const rules = {
       nama: "required",
@@ -2351,7 +2363,7 @@ class SecondController {
         .map(async (d) => {
           await MKeuJurnal.query().where({ id: d }).update({
             dihapus: 1,
-            status: 0,
+            status: null,
           });
 
           const jurnalLama = semuaJurnal.toJSON().find((e) => e.id == d);
@@ -2382,7 +2394,7 @@ class SecondController {
           m_keu_akun_id: d.m_keu_akun_id,
           saldo: d.saldo,
           dihapus: 0,
-          status: null,
+          status,
         });
         if (akunLama.id != akunBaru.id) {
           await MHistoriAktivitas.create({
@@ -2421,7 +2433,7 @@ class SecondController {
           m_keu_akun_id: d.m_keu_akun_id,
           saldo: d.saldo,
           dihapus: 0,
-          status: null,
+          status,
         });
         await MHistoriAktivitas.create({
           jenis: "Ubah Transaksi",
@@ -2442,7 +2454,7 @@ class SecondController {
         nomor,
         tanggal,
         m_rencana_transaksi_id,
-        status: null,
+        status,
       });
     if (!update) {
       return response.notFound({
@@ -2526,14 +2538,14 @@ class SecondController {
       .where({ id: transaksi_id })
       .update({
         dihapus: 1,
-        status: 0,
+        status: null,
       });
 
     await MKeuJurnal.query()
       .where({ m_keu_transaksi_id: transaksi_id })
       .update({
         dihapus: 1,
-        status: 0,
+        status: null,
       });
     const transaksi = await MKeuTransaksi.query()
       .where({ id: transaksi_id })
@@ -8000,12 +8012,16 @@ ${jamPerubahan}`;
 
     const akun = await MKeuAkun.query()
       .with("jurnal", (builder) => {
-        builder.where({ dihapus: 0 }).andWhere({ status: 1 })
-        .whereIn("m_keu_transaksi_id", transaksiIds1);
+        builder
+          .where({ dihapus: 0 })
+          .andWhere({ status: 1 })
+          .whereIn("m_keu_transaksi_id", transaksiIds1);
       })
       .with("rencanaJurnal", (builder) => {
-        builder.where({ dihapus: 0 }).andWhere({ status: 1 })
-        .whereIn("m_rencana_transaksi_id", rencanaTransaksiIds1);
+        builder
+          .where({ dihapus: 0 })
+          .andWhere({ status: 1 })
+          .whereIn("m_rencana_transaksi_id", rencanaTransaksiIds1);
       })
       .with("rek", (builder) => {
         builder.where({ dihapus: 0 }).whereNull("m_rencana_keuangan_id");
@@ -8095,23 +8111,22 @@ ${jamPerubahan}`;
     let labaRugi;
 
     labaRugi = MKeuKategoriLabaRugi.query()
-    .with("akunLabaRugi", (builder) => {
-      builder
-        .with("akun", (builder) => {
-          builder.with("rumusAkun");
-        })
-        .whereIn(
-          "m_keu_akun_id",
-          akun.toJSON().map((d) => d.id)
-        )
-        .where({ dihapus: 0 })
-        .orderBy("urutan", "asc");
-    })
+      .with("akunLabaRugi", (builder) => {
+        builder
+          .with("akun", (builder) => {
+            builder.with("rumusAkun");
+          })
+          .whereIn(
+            "m_keu_akun_id",
+            akun.toJSON().map((d) => d.id)
+          )
+          .where({ dihapus: 0 })
+          .orderBy("urutan", "asc");
+      })
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id });
 
     labaRugi = await labaRugi.fetch();
-
 
     const rumuslabaRugi = await MRumusLabaRugi.query()
       .where({ m_sekolah_id: sekolah.id })
@@ -11772,7 +11787,7 @@ ${jamPerubahan}`;
         m_sekolah_id: sekolah.id,
         tipe: "Realisasi",
       });
-    } else if (status == 0) {
+    } else if (status == null) {
       await MHistoriAktivitas.create({
         jenis: "Proses Transaksi",
         m_user_id: user.id,

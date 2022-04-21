@@ -567,7 +567,7 @@ class KeuanganController {
       })
       .where({ m_sekolah_id: sekolah.id })
       .where({ dihapus: 0 })
-      .andWhere({ m_rencana_keuangan_id: rencana_id });
+      .andWhere({ m_rencana_keuangan_id: rencana_id }).orderBy("status","asc");
 
     if (transaksiIds) {
       transaksi.whereIn("id", transaksiIds);
@@ -580,7 +580,7 @@ class KeuanganController {
     }
     if (user.bagian == "aproval") {
       if (!status) {
-        transaksi.whereNull("status");
+        transaksi.where("status",0);
       }
     }
     if (status == 3) {
@@ -652,7 +652,7 @@ class KeuanganController {
       dihapus: 0,
       m_sekolah_id: sekolah.id,
       m_rencana_keuangan_id: rencana.id,
-      status,
+      status: 0,
     });
 
     await Promise.all(
@@ -663,7 +663,7 @@ class KeuanganController {
           m_keu_akun_id: d.m_keu_akun_id,
           saldo: d.saldo,
           dihapus: 0,
-          status,
+          status: 0,
         });
       })
     );
@@ -698,7 +698,7 @@ class KeuanganController {
 
     const user = await auth.getUser();
 
-    let { nama, nomor, tanggal, jurnal = [] } = request.post();
+    let { nama, nomor, tanggal, jurnal = [], status } = request.post();
 
     const rules = {
       nama: "required",
@@ -709,6 +709,11 @@ class KeuanganController {
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
       return response.unprocessableEntity(validation.messages());
+    }
+    if (!user.bagian) {
+      status = 1;
+    } else {
+      status = 0;
     }
 
     const transaksi = await MRencanaTransaksi.query()
@@ -743,7 +748,7 @@ class KeuanganController {
         .map(async (d) => {
           await MKeuRencanaJurnal.query().where({ id: d }).update({
             dihapus: 1,
-            status: 0,
+            status: null,
           });
           const jurnalLama = semuaJurnal.toJSON().find((e) => e.id == d);
           const akunLama = semuaAkun
@@ -776,7 +781,7 @@ class KeuanganController {
           m_keu_akun_id: d.m_keu_akun_id,
           saldo: d.saldo,
           dihapus: 0,
-          status: null,
+          status,
         });
         if (akunLama.id != akunBaru.id) {
           await MHistoriAktivitas.create({
@@ -817,7 +822,7 @@ class KeuanganController {
           m_keu_akun_id: d.m_keu_akun_id,
           saldo: d.saldo,
           dihapus: 0,
-          status: null,
+          status,
         });
         await MHistoriAktivitas.create({
           jenis: "Ubah Rencana Anggaran",
@@ -838,7 +843,7 @@ class KeuanganController {
         nama,
         nomor,
         tanggal,
-        status: null,
+        status,
       });
     if (!update) {
       return response.notFound({
@@ -912,13 +917,13 @@ class KeuanganController {
       .where({ id: transaksi_id })
       .update({
         dihapus: 1,
-        status: 0,
+        status: null,
       });
     await MKeuRencanaJurnal.query()
       .where({ m_rencana_transaksi_id: transaksi_id })
       .update({
         dihapus: 1,
-        status: 0,
+        status: null,
       });
     if (!update) {
       return response.notFound({
@@ -2050,32 +2055,32 @@ class KeuanganController {
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .fetch();
-      let labaRugi;
+    let labaRugi;
 
-      labaRugi = MRencanaKategoriLabaRugi.query()
-        .with("akunLabaRugi", (builder) => {
-          builder
-            .with("akun", (builder) => {
-              builder
-                // .with("jurnal", (builder) => {
-                //   builder.where({ dihapus: 0 });
-                //   if (transaksiIds1) {
-                //     builder.whereIn("m_keu_transaksi_id", [
-                //       ...transaksiIds1,
-                //       ...transaksiIds2,
-                //     ]);
-                //   }
-                // })
-                .where({ dihapus: 0 });
-            })
-            .where({ dihapus: 0 })
-            .orderBy("urutan", "asc");
-        })
-        .where({ dihapus: 0 })
-        .andWhere({ m_sekolah_id: sekolah.id })
-        .andWhere({m_rencana_keuangan_id: perencanaan_id});
-  
-      labaRugi = await labaRugi.fetch();
+    labaRugi = MRencanaKategoriLabaRugi.query()
+      .with("akunLabaRugi", (builder) => {
+        builder
+          .with("akun", (builder) => {
+            builder
+              // .with("jurnal", (builder) => {
+              //   builder.where({ dihapus: 0 });
+              //   if (transaksiIds1) {
+              //     builder.whereIn("m_keu_transaksi_id", [
+              //       ...transaksiIds1,
+              //       ...transaksiIds2,
+              //     ]);
+              //   }
+              // })
+              .where({ dihapus: 0 });
+          })
+          .where({ dihapus: 0 })
+          .orderBy("urutan", "asc");
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_rencana_keuangan_id: perencanaan_id });
+
+    labaRugi = await labaRugi.fetch();
 
     return response.ok({
       kategori,
@@ -2085,7 +2090,7 @@ class KeuanganController {
         rumusAkhir,
       },
       tipeAkun,
-      labaRugi
+      labaRugi,
     });
   }
 
@@ -3729,7 +3734,9 @@ class KeuanganController {
     for (let i = 0; i < rumus12.length; i++) {
       const d = rumus12[i];
       if (d.id) {
-        kategoriAkun = await MRencanaKategoriLabaRugi.query().where({ id: d.id }).first();
+        kategoriAkun = await MRencanaKategoriLabaRugi.query()
+          .where({ id: d.id })
+          .first();
         rumusFix = rumusFix + kategoriAkun.nama;
       } else {
         if (d.operator == "minus") {
@@ -3814,7 +3821,9 @@ class KeuanganController {
       for (let i = 0; i < rumusSebelum.rumus.length; i++) {
         const d = rumusSebelum.rumus[i];
         if (d.id) {
-          kategoriAkun = await MRencanaKategoriLabaRugi.query().where({ id: d.id }).first();
+          kategoriAkun = await MRencanaKategoriLabaRugi.query()
+            .where({ id: d.id })
+            .first();
           rumusSebelum2 = rumusSebelum2 + kategoriAkun.nama;
         } else {
           if (d.operator == "minus") {
@@ -3829,7 +3838,9 @@ class KeuanganController {
       for (let i = 0; i < rumus12.length; i++) {
         const d = rumus12[i];
         if (d.id) {
-          kategoriAkun = await MRencanaKategoriLabaRugi.query().where({ id: d.id }).first();
+          kategoriAkun = await MRencanaKategoriLabaRugi.query()
+            .where({ id: d.id })
+            .first();
           rumusFix = rumusFix + kategoriAkun.nama;
         } else {
           if (d.operator == "minus") {
@@ -4094,6 +4105,7 @@ class KeuanganController {
         "Hapus Perencanaan",
         "Proses Inventaris",
         "Proses Transaksi",
+        "Proses Perencanaan",
       ]);
     }
 
@@ -7461,7 +7473,7 @@ ${jamPerubahan}`;
         m_sekolah_id: sekolah.id,
         tipe: "Perencanaan",
       });
-    } else if (status == 0) {
+    } else if (status == null) {
       await MHistoriAktivitas.create({
         jenis: "Proses Perencanaan",
         m_user_id: user.id,
