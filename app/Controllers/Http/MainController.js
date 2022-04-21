@@ -30603,8 +30603,8 @@ class MainController {
       .with("user")
       .with("materi", (builder) => {
         builder.where({
-          tingkat: siswaKeterampilan.toJSON().anggotaRombel.rombel.tingkat,
-        });
+          tingkat: siswaKeterampilan.toJSON().anggotaRombel.rombel.tingkat
+        }).where({dihapus:0});
       })
       .where({ id: mata_pelajaran_id })
       .first();
