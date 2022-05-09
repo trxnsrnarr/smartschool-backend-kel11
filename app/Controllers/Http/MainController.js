@@ -14584,20 +14584,20 @@ class MainController {
 
       const ujian = await MUjian.query()
         .select("id", "nama", "tipe")
-        .withCount("soal as soal_pg", (builder) => {
-          builder.where({ bentuk: "pg" });
+        .withCount("tkSoal as soal_pg", (builder) => {
+          builder.where({ bentuk: "pg" }).andWhere({ dihapus: 0 });
         })
-        .withCount("soal as soal_esai", (builder) => {
-          builder.where({ bentuk: "esai" });
+        .withCount("tkSoal as soal_esai", (builder) => {
+          builder.where({ bentuk: "esai" }).andWhere({ dihapus: 0 });
         })
-        .withCount("soal as soal_pg_kompleks", (builder) => {
-          builder.where({ bentuk: "pg_kompleks" });
+        .withCount("tkSoal as soal_pg_kompleks", (builder) => {
+          builder.where({ bentuk: "pg_kompleks" }).andWhere({ dihapus: 0 });
         })
-        .withCount("soal as soal_uraian", (builder) => {
-          builder.where({ bentuk: "uraian" });
+        .withCount("tkSoal as soal_uraian", (builder) => {
+          builder.where({ bentuk: "uraian" }).andWhere({ dihapus: 0 });
         })
-        .withCount("soal as soal_menjodohkan", (builder) => {
-          builder.where({ bentuk: "menjodohkan" });
+        .withCount("tkSoal as soal_menjodohkan", (builder) => {
+          builder.where({ bentuk: "menjodohkan" }).andWhere({ dihapus: 0 });
         })
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
@@ -14732,20 +14732,20 @@ class MainController {
 
       let ujian = MUjian.query()
         .select("id", "nama", "tipe")
-        .withCount("soal as soal_pg", (builder) => {
-          builder.where({ bentuk: "pg" });
+        .withCount("tkSoal as soal_pg", (builder) => {
+          builder.where({ bentuk: "pg" }).andWhere({ dihapus: 0 });
         })
-        .withCount("soal as soal_esai", (builder) => {
-          builder.where({ bentuk: "esai" });
+        .withCount("tkSoal as soal_esai", (builder) => {
+          builder.where({ bentuk: "esai" }).andWhere({ dihapus: 0 });
         })
-        .withCount("soal as soal_pg_kompleks", (builder) => {
-          builder.where({ bentuk: "pg_kompleks" });
+        .withCount("tkSoal as soal_pg_kompleks", (builder) => {
+          builder.where({ bentuk: "pg_kompleks" }).andWhere({ dihapus: 0 });
         })
-        .withCount("soal as soal_uraian", (builder) => {
-          builder.where({ bentuk: "uraian" });
+        .withCount("tkSoal as soal_uraian", (builder) => {
+          builder.where({ bentuk: "uraian" }).andWhere({ dihapus: 0 });
         })
-        .withCount("soal as soal_menjodohkan", (builder) => {
-          builder.where({ bentuk: "menjodohkan" });
+        .withCount("tkSoal as soal_menjodohkan", (builder) => {
+          builder.where({ bentuk: "menjodohkan" }).andWhere({ dihapus: 0 });
         })
         .whereIn("m_user_id", userIds)
         .andWhere({ dihapus: 0 });
