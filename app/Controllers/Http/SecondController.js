@@ -8798,6 +8798,7 @@ ${jamPerubahan}`;
 
     const kategori = await MKeuKategoriTipeAkun.create({
       nama,
+      pengaturan,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
     });
@@ -8844,7 +8845,7 @@ ${jamPerubahan}`;
 
     const user = await auth.getUser();
 
-    let { nama, m_keu_akun_id } = request.post();
+    let { nama, m_keu_akun_id, pengaturan } = request.post();
 
     m_keu_akun_id = m_keu_akun_id.length ? m_keu_akun_id : [];
 
@@ -8867,6 +8868,7 @@ ${jamPerubahan}`;
       .where({ id: kategori_id })
       .update({
         nama,
+        pengaturan,
       });
 
     const kategori1 = await MKeuKategoriTipeAkun.query()
@@ -8967,6 +8969,17 @@ ${jamPerubahan}`;
         m_user_id: user.id,
         awal: `Tipe Akun - Nama : ${kategoriSebelum.nama} menjadi `,
         akhir: `"${nama}"`,
+        bawah: `Laporan Arus Kas`,
+        m_sekolah_id: sekolah.id,
+      });
+    }
+    if (pengaturan != kategoriSebelum.pengaturan) {
+      await MHistoriAktivitas.create({
+        jenis: "Ubah Template Laporan",
+        tipe: "Realisasi",
+        m_user_id: user.id,
+        awal: `Tipe Akun - Pengaturan : ${kategoriSebelum.pengaturan} menjadi `,
+        akhir: `"${pengaturan}"`,
         bawah: `Laporan Arus Kas`,
         m_sekolah_id: sekolah.id,
       });
