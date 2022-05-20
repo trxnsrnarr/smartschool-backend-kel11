@@ -8150,6 +8150,7 @@ ${jamPerubahan}`;
     const rumuslabaRugi = await MRumusLabaRugi.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
+      .where("nama", "like", `%laba/rugi%`)
       // .limit(1)
       .first();
 
