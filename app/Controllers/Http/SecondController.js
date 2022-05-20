@@ -2205,11 +2205,22 @@ class SecondController {
       })
       .first();
 
+    const max = await MKeuTransaksi.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
+      .getMax("tanggal");
+    const min = await MKeuTransaksi.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
+      .getMin("tanggal");
+
     return response.ok({
       transaksi,
       akun,
       keuangan,
       rencana,
+      max,
+      min,
     });
   }
 
@@ -2235,8 +2246,8 @@ class SecondController {
 
     if (!user.bagian) {
       status = 1;
-    }else {
-      status = 0 
+    } else {
+      status = 0;
     }
 
     const rules = {
@@ -10709,14 +10720,17 @@ ${jamPerubahan}`;
       const PENDAPATANLAINNYA = semuaAkun
         .toJSON()
         .find((d) => d.nama == "PENDAPATAN LAINNYA");
-        const kategoriLabaRugi = await MKeuKategoriLabaRugi.query().where({m_sekolah_id:sekolah.id}).andWhere({dihapus:0}).fetch()
-        const PENDAPATAN = kategoriLabaRugi
+      const kategoriLabaRugi = await MKeuKategoriLabaRugi.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ dihapus: 0 })
+        .fetch();
+      const PENDAPATAN = kategoriLabaRugi
         .toJSON()
         .find((d) => d.nama == "PENDAPATAN");
-        const BEBANTIDAKLANGSUNG = kategoriLabaRugi
+      const BEBANTIDAKLANGSUNG = kategoriLabaRugi
         .toJSON()
         .find((d) => d.nama == "BEBAN TIDAK LANGSUNG");
-        const BEBANLANGSUNG = kategoriLabaRugi
+      const BEBANLANGSUNG = kategoriLabaRugi
         .toJSON()
         .find((d) => d.nama == "BEBAN LANGSUNG");
       const rumusAwal = [
