@@ -8792,7 +8792,7 @@ ${jamPerubahan}`;
 
     const user = await auth.getUser();
 
-    let { nama, m_keu_akun_id } = request.post();
+    let { nama, m_keu_akun_id, pengaturan } = request.post();
 
     m_keu_akun_id = m_keu_akun_id.length ? m_keu_akun_id : [];
 
