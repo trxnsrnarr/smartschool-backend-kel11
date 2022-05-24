@@ -16,8 +16,18 @@ class MUjian extends Model {
     return this.hasMany("App/Models/TkSoalUjian");
   }
 
+  user() {
+    return this.belongsTo("App/Models/User");
+  }
+
   soal() {
-    return this.belongsToMany("App/Models/MSoalUjian").pivotTable("tk_soal_ujian")
+    return this.belongsToMany("App/Models/MSoalUjian").pivotTable(
+      "tk_soal_ujian"
+    );
+  }
+
+  tkSoal() {
+    return this.hasMany("App/Models/TkSoalUjian");
   }
 
   static get computed() {

@@ -106,6 +106,56 @@ class UserController {
     });
   }
 
+  async hapusAkunRole({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { role,  m_rombel_id, user_id } = request.post();
+
+    if (user.role != "admin") {
+      return response.forbidden({ message: messageForbidden });
+    }
+
+    let userIds;
+    if (user_id) {
+      userIds = user_id;
+    } else if (m_rombel_id) {
+      userIds = await MAnggotaRombel.query()
+        .where({ m_rombel_id: m_rombel_id })
+        .pluck("m_user_id");
+    } else if (role) {
+      userIds = await User.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ role })
+        .ids();
+    } else {
+      return response.ok({
+        message: messageDeleteSuccess,
+      });
+    }
+
+    await User.query()
+      .whereIn("id", userIds)
+      .update({dihapus:1 });
+
+    return response.ok({
+      message: messageDeleteSuccess,
+    });
+  }
+
   async getBroadcast({ response, request, auth }) {
     const domain = request.headers().origin;
 

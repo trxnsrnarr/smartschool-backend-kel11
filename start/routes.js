@@ -84,6 +84,7 @@ Route.get("/user/:user_id", "MainController.detailUser");
 Route.post("/reset-password", "MainController.resetPassword");
 Route.post("/reset-password-role", "UserController.updatePasswordRole");
 Route.post("/reset-password-request", "MainController.requestResetPassword");
+Route.post("/hapus-akun-role", "UserController.hapusAkunRole");
 
 // sekolah
 Route.get("/sekolah", "MainController.getSekolah");
@@ -1584,7 +1585,7 @@ Route.post(
 );
 Route.post(
   "/download/ledger-nilai-yadika/:rombel_id",
-  "MainController.downloadLedgerNilaiYadika"
+  "SecondController.downloadLedgerNilai2"
 );
 Route.get("/ledger-nilai", "MainController.getLedgerNilai");
 Route.get("/ledger-nilai/:rombel_id", "MainController.detailLedgerNilai");
@@ -1866,6 +1867,7 @@ Route.put("/alumniv2/:alumni_id", "CDCController.putTerimaAlumni");
 
 //danger rapor
 Route.get("/danger/rapor-rombel", "RombelController.updateSemuaBukuIndukRapor");
+Route.get("/danger/ujian-update", "UjianController.otomatisUtamaToTk");
 
 //Fitur Kakomli
 // Informasi Gelombang
