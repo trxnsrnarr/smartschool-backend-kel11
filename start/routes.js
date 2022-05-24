@@ -1585,7 +1585,7 @@ Route.post(
 );
 Route.post(
   "/download/ledger-nilai-yadika/:rombel_id",
-  "MainController.downloadLedgerNilaiYadika"
+  "SecondController.downloadLedgerNilai2"
 );
 Route.get("/ledger-nilai", "MainController.getLedgerNilai");
 Route.get("/ledger-nilai/:rombel_id", "MainController.detailLedgerNilai");
