@@ -11899,6 +11899,8 @@ ${jamPerubahan}`;
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
+      // const userData1 = await User.query().where("nama","like",`%Elisabeth Yolanda Witin%`).first()
+
     const rombel = await MRombel.query()
       .with("anggotaRombel", (builder) => {
         builder
@@ -11912,7 +11914,8 @@ ${jamPerubahan}`;
               })
               .select("id", "nama", "gender");
           })
-          .where({ dihapus: 0 });
+          .where({ dihapus: 0 })
+          // .where({m_user_id:userData1.id});
       })
       .with("user", (builder) => {
         builder.select("id", "nama");
@@ -11995,6 +11998,7 @@ ${jamPerubahan}`;
             .where({ dihapus: 0 })
             .andWhere({ m_rombel_id: rombel_id })
             .fetch();
+            // return muatan
           // const row = worksheet.getRow(8);
           let total = 0;
           let muatanTotal = 0;
@@ -12037,10 +12041,6 @@ ${jamPerubahan}`;
                   ];
                   // worksheet.mergeCells(`${(total + 1) * 2 + 3}:${(total + 1) * 2 + 4}`);
 
-                  if (!r.mataPelajaran.nilaiIndividu) {
-                    dataaa = dataaa + 1;
-                    return;
-                  }
                   row.getCell([`${(total + 1) * 3 + 2}`]).value = `${
                     r.mataPelajaran.nilaiIndividu
                       ? r.mataPelajaran.nilaiIndividu.nilai
@@ -12052,8 +12052,12 @@ ${jamPerubahan}`;
                       : "-"
                   }`;
                   const nilaiA = Math.round(
-                    r.mataPelajaran.nilaiIndividu.nilai * 0.3 +
-                      r.mataPelajaran.nilaiIndividu.nilai_keterampilan * 0.7
+                    r.mataPelajaran.nilaiIndividu
+                    ? r.mataPelajaran.nilaiIndividu.nilai
+                    : "0" * 0.3 +
+                    r.mataPelajaran.nilaiIndividu
+                    ? r.mataPelajaran.nilaiIndividu.nilai_keterampilan
+                    : "0" * 0.7
                   );
 
                   row.getCell([`${(total + 1) * 3 + 4}`]).value = `${nilaiA}`;
@@ -12088,6 +12092,10 @@ ${jamPerubahan}`;
                     right: { style: "thin" },
                   };
 
+                  // if (!r.mataPelajaran.nilaiIndividu) {
+                  //   dataaa = dataaa + 1;
+                  //   return;
+                  // }
                   if (
                     muatanRombel[0].total == muatanTotal &&
                     maPor ==
@@ -12190,11 +12198,10 @@ ${jamPerubahan}`;
           });
         })
     );
-    if (sekolah.id != 33) {
-      if (dataaa > 10) {
-        return "Data untuk Leger Nilai Belum Lengkap";
-      }
-    }
+      // if (dataaa > 10) {
+      //   return "Data untuk Leger Nilai Belum Lengkap";
+      // }
+    
     // return result;
     worksheet.getCell(
       "A1"
