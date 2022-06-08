@@ -1587,6 +1587,11 @@ Route.post(
   "/download/ledger-nilai-yadika/:rombel_id",
   "SecondController.downloadLedgerNilai2"
 );
+
+Route.post(
+  "/download/ledger-nilai-yadika-tahun/:rombel_id",
+  "SecondController.downloadLedgerNilai2Tahun"
+);
 Route.get("/ledger-nilai", "MainController.getLedgerNilai");
 Route.get("/ledger-nilai/:rombel_id", "MainController.detailLedgerNilai");
 
