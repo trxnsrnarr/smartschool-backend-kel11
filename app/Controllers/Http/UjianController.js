@@ -8,6 +8,7 @@ const MMataPelajaran = use("App/Models/MMataPelajaran");
 const MMateri = use("App/Models/MMateri");
 const MUjian = use("App/Models/MUjian");
 const TkSoalUjian = use("App/Models/TkSoalUjian");
+const MSoalUjian = use("App/Models/MSoalUjian");
 const MTemplateKesukaranMapel = use("App/Models/MTemplateKesukaranMapel");
 
 const Firestore = use("App/Models/Firestore");
@@ -997,6 +998,31 @@ class UjianController {
     return response.ok({
       message: messageDeleteSuccess,
     });
+  }
+
+  async otomatisUtamaToTk({
+    response,
+    request,
+    auth,
+  }) {
+    const ujian = await MUjian.query().where({dihapus: 0}).where("created_at",">","2022-03-01").fetch()
+
+    return ujian;
+
+    await Promise.all(
+      ujian.toJSON().map((d)=>{
+        const tkSoal = await TkSoalUjian.query().where({dihapus:0}).andWhere({m_ujian_id:d.id}).fetch()
+
+        await Promise.all(
+          tkSoal.toJSON().map((e)=>{
+            const soal = await MSoalUjian.query().where({id:e.m_soal_ujian_id}).first()
+
+            await TkSoalUjian.query().where({id:e.id}).update({bentuk: soal.bentuk})
+          })
+        )
+      })
+    )
+    
   }
 }
 
