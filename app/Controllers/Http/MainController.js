@@ -14361,8 +14361,8 @@ class MainController {
       })
       .andWhere({ dihapus: 0 })
       .andWhere("waktu_dibuka", ">", moment()
-      .subtract(3, "hour").format("YYYY-MM-DD HH:mm:ss"))
-      .where("waktu_ditutup",">", moment().format("YYYY-MM-DD HH:mm:ss"))
+      .subtract(1, "day").format("YYYY-MM-DD HH:mm:ss"))
+      .andWhere("waktu_ditutup",">=", moment().format("YYYY-MM-DD"))
       .orderBy("waktu_dibuka", "asc")
       .paginate(page, 1000);
 
