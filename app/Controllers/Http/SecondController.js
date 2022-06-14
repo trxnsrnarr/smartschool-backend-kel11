@@ -12781,6 +12781,270 @@ ${jamPerubahan}`;
 
     return namaFile;
   }
+
+  async naikTAJam({ response, request }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+    const taa = await Mta.query()
+      .where({ aktif: 1 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    const check = await Mta.query()
+      .where({ tahun: "2021 / 2022" })
+      .andWhere({ semester: "Genap" })
+      .andWhere({ nama_kepsek: taa.nama_kepsek })
+      .andWhere({ nip_kepsek: taa.nip_kepsek })
+      .andWhere({ aktif: taa.aktif })
+      .andWhere({ dihapus: taa.dihapus })
+      .andWhere({ m_sekolah_id: taa.m_sekolah_id })
+      .andWhere({ jam_sinkron: 0 })
+      .andWhere({ mapel_sinkron: 0 })
+      .andWhere({ rombel_sinkron: 0 })
+      .andWhere({ jadwal_sinkron: 0 })
+      .first();
+
+    const check2 = await Mta.query()
+      .where({ tahun: "2022 / 2023" })
+      .andWhere({ semester: "Ganjil" })
+      .andWhere({ nama_kepsek: taa.nama_kepsek })
+      .andWhere({ nip_kepsek: taa.nip_kepsek })
+      .andWhere({ aktif: taa.aktif })
+      .andWhere({ dihapus: taa.dihapus })
+      .andWhere({ m_sekolah_id: taa.m_sekolah_id })
+      .andWhere({ jam_sinkron: 1 })
+      .andWhere({ mapel_sinkron: 0 })
+      .andWhere({ rombel_sinkron: 0 })
+      .andWhere({ jadwal_sinkron: 0 })
+      .first();
+
+    if (!check) {
+      if (!check2) {
+        await Mta.create({
+          tahun: "2022 / 2023",
+          semester: "Ganjil",
+          nama_kepsek: taa.nama_kepsek,
+          nip_kepsek: taa.nip_kepsek,
+          aktif: taa.aktif,
+          dihapus: taa.dihapus,
+          m_sekolah_id: taa.m_sekolah_id,
+          jam_sinkron: 0,
+          mapel_sinkron: 0,
+          rombel_sinkron: 0,
+          jadwal_sinkron: 0,
+        });
+      }
+    }
+
+    const jam = await MJamMengajar.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .fetch();
+
+    const taBaru = await Mta.query()
+      .where({ aktif: 1 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .orderBy("id", "desc")
+      .first();
+
+    if (taBaru.jam_sinkron == 0) {
+      const all = await Promise.all(
+        jam.toJSON().map(async (d) => {
+          await MJamMengajar.create({
+            kode_hari: d.kode_hari,
+            hari: d.hari,
+            jam_ke: d.jam_ke,
+            jam_mulai: d.jam_mulai,
+            jam_selesai: d.jam_selesai,
+            istirahat: d.istirahat,
+            m_sekolah_id: d.m_sekolah_id,
+            m_ta_id: taBaru.id,
+          });
+        })
+      );
+    }
+
+    await Mta.query().where({ id: taBaru.id }).update({
+      dihapus: 0,
+      jam_sinkron: 1,
+    });
+
+    // return all;
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async naikTAMapel({ response, request }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    const mapel = await MMataPelajaran.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_ta_id: ta.id })
+      .fetch();
+
+    const taBaru = await Mta.query()
+      .where({ aktif: 1 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .orderBy("id", "desc")
+      .first();
+
+    if (taBaru.mapel_sinkron == 0) {
+      const all = await Promise.all(
+        mapel.toJSON().map(async (d, nox) => {
+          await MMataPelajaran.create({
+            nama: d.nama,
+            kode: d.kode,
+            kelompok: d.kelompok,
+            kkm: d.kkm,
+            dihapus: 0,
+            m_user_id: d.m_user_id,
+            m_sekolah_id: d.m_sekolah_id,
+            m_ta_id: taBaru.id,
+          });
+        })
+      );
+    }
+
+    await Mta.query().where({ id: taBaru.id }).update({
+      dihapus: 0,
+      mapel_sinkron: 1,
+    });
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async naikTARombel({ response, request }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    const rombel = await MRombel.query()
+      .with("anggotaRombel", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_ta_id: ta.id })
+      .fetch();
+
+    const taBaru = await Mta.query()
+      .where({ aktif: 1 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .orderBy("id", "desc")
+      .first();
+
+    if (taBaru.rombel_sinkron == 0) {
+      const all = await Promise.all(
+        rombel.toJSON().map(async (d) => {
+          const rombelBaru = await MRombel.create({
+            tingkat: d.tingkat,
+            nama: d.nama,
+            kelompok: d.kelompok,
+            dihapus: 0,
+            m_user_id: d.m_user_id,
+            m_jurusan_id: d.m_jurusan_id,
+            m_sekolah_id: d.m_sekolah_id,
+            m_ta_id: taBaru.id,
+          });
+
+          const checkKategoriMapel = await MKategoriMapel.query()
+            .where({ m_rombel_id: rombelBaru.id })
+            .first();
+
+          if (!checkKategoriMapel) {
+            await MKategoriMapel.create({
+              nama: "Muatan Nasional",
+              dihapus: 0,
+              m_rombel_id: rombelBaru.id,
+            });
+            await MKategoriMapel.create({
+              nama: "Muatan Kewilayahan",
+              dihapus: 0,
+              m_rombel_id: rombelBaru.id,
+            });
+            await MKategoriMapel.create({
+              nama: "Muatan Peminatan Kejurusan",
+              dihapus: 0,
+              m_rombel_id: rombelBaru.id,
+            });
+          }
+
+          const jamMengajar = await MJamMengajar.query()
+            .select("id")
+            .where({ m_sekolah_id: sekolah.id })
+            .andWhere({ m_ta_id: taBaru.id })
+            .fetch();
+
+          const jadwalMengajarData = await Promise.all(
+            jamMengajar.toJSON().map(async (data) => {
+              data.m_mata_pelajaran_id = null;
+              data.m_rombel_id = rombelBaru.id;
+              data.m_jam_mengajar_id = data.id;
+              data.m_sekolah_id = sekolah.id;
+              data.m_ta_id = taBaru.id;
+              delete data.id;
+              delete data.jamFormat;
+
+              return data;
+            })
+          );
+
+          await MJadwalMengajar.createMany(jadwalMengajarData);
+          const data = await Promise.all(
+            d.anggotaRombel.map(async (e, nox) => {
+              await MAnggotaRombel.create({
+                role: e.role,
+                dihapus: 0,
+                m_user_id: e.m_user_id,
+                m_rombel_id: rombelBaru.id,
+              });
+            })
+          );
+          // return data;
+        })
+      );
+    }
+    await Mta.query().where({ id: taBaru.id }).update({
+      rombel_sinkron: 1,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+ 
+
 }
 
 module.exports = SecondController;

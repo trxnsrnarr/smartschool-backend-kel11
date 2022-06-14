@@ -1888,6 +1888,17 @@ Route.get("/ukk-siswa/:siswa_id", "CDCController.detailUKKSiswa");
 Route.put("/ukk-siswa/:siswa_id", "CDCController.putUKKSiswa");
 Route.delete("/ukk-siswa/:ukk_id", "CDCController.deleteUkkSiswa");
 
+Route.post("/peringatan-ujian", "UjianController.postPeringatanUjian");
+Route.put("/peringatan-ujian/:peringatan_id", "UjianController.putPeringatanUjian");
+Route.delete("/peringatan-ujian/:peringatan_id", "UjianController.deletePeringatanUjian");
+
+Route.post("/jawaban-peringatan-ujian/peringatan_id", "UjianController.postJawabanPeringatanUjian");
+Route.put("/jawaban-peringatan-ujian/:peringatan_id", "UjianController.putJawabanPeringatanUjian");
+
+Route.post("/dibaca-peringatan-ujian-guru/:peserta_ujian_id", "UjianController.postDibacaPeringatanUjianGuru");
+
+Route.post("/dibaca-peringatan-ujian/:peserta_ujian_id", "UjianController.postDibacaPeringatanUjian");
+
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
