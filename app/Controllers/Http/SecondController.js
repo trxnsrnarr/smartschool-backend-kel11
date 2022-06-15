@@ -12205,7 +12205,7 @@ ${jamPerubahan}`;
     // return result;
     worksheet.getCell(
       "A1"
-    ).value = `LEGER PERNILAIAN TENGAH SEMESTER GENAP DARING`;
+    ).value = `LEGER PERNILAIAN AKHIR SEMESTER ${ta?.semester == 1 ? "GANJIL" : "GENAP"} DARING`;
     worksheet.getCell("A2").value = rombel.nama;
     worksheet.getCell("A3").value = sekolah.nama;
     worksheet.getCell("A4").value = `TAHUN PELAJARAN ${ta.tahun}`;
@@ -12661,7 +12661,7 @@ ${jamPerubahan}`;
     // return result;
     worksheet.getCell(
       "A1"
-    ).value = `LEGER PERNILAIAN TENGAH SEMESTER ${ta?.semester == 1 ? "GANJIL" : "GENAP"} DARING`;
+    ).value = `LEGER PERNILAIAN AKHIR SEMESTER ${ta?.semester == 1 ? "GANJIL" : "GENAP"} DARING`;
     worksheet.getCell("A2").value = rombel.nama;
     worksheet.getCell("A3").value = sekolah.nama;
     worksheet.getCell("A4").value = `TAHUN PELAJARAN ${ta.tahun}`;
