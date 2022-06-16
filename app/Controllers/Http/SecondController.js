@@ -12051,14 +12051,21 @@ ${jamPerubahan}`;
                       ? r.mataPelajaran.nilaiIndividu.nilai_keterampilan
                       : "-"
                   }`;
-                  const nilaiA = Math.round(
-                    r.mataPelajaran.nilaiIndividu
-                    ? r.mataPelajaran.nilaiIndividu.nilai
-                    : "0" * 0.3 +
-                    r.mataPelajaran.nilaiIndividu
-                    ? r.mataPelajaran.nilaiIndividu.nilai_keterampilan
-                    : "0" * 0.7
-                  );
+                  // const nilaiA = Math.round(
+                  //   r.mataPelajaran.nilaiIndividu
+                  //   ? r.mataPelajaran.nilaiIndividu.nilai
+                  //   : "0" * 0.3 +
+                  //   r.mataPelajaran.nilaiIndividu
+                  //   ? r.mataPelajaran.nilaiIndividu.nilai_keterampilan
+                  //   : "0" * 0.7
+                  // );
+                  
+                  const nilaiA = `${Math.round((((r.mataPelajaran.nilaiIndividu
+                      ? r.mataPelajaran.nilaiIndividu.nilai
+                      : "0" )* 3) / 10 ) + (((r.mataPelajaran.nilaiIndividu
+                        ? r.mataPelajaran.nilaiIndividu.nilai_keterampilan
+                        : "0") * 7)/10 ))
+                      }`;
 
                   row.getCell([`${(total + 1) * 3 + 4}`]).value = `${nilaiA}`;
                   row.getCell([`${(total + 1) * 3 + 2}`]).border = {
@@ -12507,14 +12514,12 @@ ${jamPerubahan}`;
                       ? r.mataPelajaran.nilaiIndividu.nilai_keterampilan
                       : "-"
                   }`;
-                  const nilaiA = Math.round(
-                    r.mataPelajaran.nilaiIndividu
+                  const nilaiA = `${Math.round((((r.mataPelajaran.nilaiIndividu
                     ? r.mataPelajaran.nilaiIndividu.nilai
-                    : "0" * 0.3 +
-                    r.mataPelajaran.nilaiIndividu
-                    ? r.mataPelajaran.nilaiIndividu.nilai_keterampilan
-                    : "0" * 0.7
-                  );
+                    : "0" )* 3) / 10 ) + (((r.mataPelajaran.nilaiIndividu
+                      ? r.mataPelajaran.nilaiIndividu.nilai_keterampilan
+                      : "0") * 7)/10 ))
+                    }`;
 
                   row.getCell([`${(total + 1) * 3 + 4}`]).value = `${nilaiA}`;
                   row.getCell([`${(total + 1) * 3 + 2}`]).border = {
