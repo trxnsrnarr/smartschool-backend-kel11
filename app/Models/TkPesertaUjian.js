@@ -45,6 +45,10 @@ class TkJadwalUjianSiswa extends Model {
   pesertaPPDB() {
     return this.hasOne("App/Models/TkPesertaUjianPpdb", "id", "tk_peserta_ujian_id");
   }
+
+  peringatan() {
+    return this.hasMany("App/Models/MPeringatanUjianSiswa", "id", "tk_peserta_ujian_id");
+  }
 }
 
 module.exports = TkJadwalUjianSiswa;

@@ -14361,7 +14361,9 @@ class MainController {
           });
       })
       .andWhere({ dihapus: 0 })
-      .andWhere("waktu_dibuka", ">", moment().format("YYYY-MM-DD HH:mm:ss"))
+      .andWhere("waktu_dibuka", ">", moment()
+      .subtract(1, "day").format("YYYY-MM-DD HH:mm:ss"))
+      .andWhere("waktu_ditutup",">=", moment().format("YYYY-MM-DD"))
       .orderBy("waktu_dibuka", "asc")
       .paginate(page, 1000);
 
@@ -14969,6 +14971,10 @@ class MainController {
       pesertaUjianData = await User.query()
         .with("pesertaUjian", (builder) => {
           builder
+            .with("peringatan")
+            .withCount("peringatan as belumDibaca", (builder) => {
+              builder.where({ dibaca_guru: 0 }).whereNotNull("jawaban");
+            })
             .where({ tk_jadwal_ujian_id: tk_jadwal_ujian_id })
             .andWhere({ dihapus: 0 });
         })
@@ -16326,6 +16332,7 @@ class MainController {
           builder.with("soal");
         })
         .with("user")
+        .with("peringatan")
         .where({ id: peserta_ujian_id })
         .first();
 
@@ -16498,6 +16505,12 @@ class MainController {
           });
         })
         .with("tugas")
+        .with("peringatan", (builder) => {
+          builder.orderBy("id", "desc");
+        })
+        .withCount("peringatan as belumDibaca", (builder) => {
+          builder.where({ dibaca: 0 });
+        })
         .withCount("jawabanSiswa as totalSoal")
         .withCount("jawabanSiswa as totalDijawab", (builder) => {
           builder.where({ dijawab: 1 });
@@ -30603,9 +30616,11 @@ class MainController {
     const mapel = await MMataPelajaran.query()
       .with("user")
       .with("materi", (builder) => {
-        builder.where({
-          tingkat: siswaKeterampilan.toJSON().anggotaRombel.rombel.tingkat
-        }).where({dihapus:0});
+        builder
+          .where({
+            tingkat: siswaKeterampilan.toJSON().anggotaRombel.rombel.tingkat,
+          })
+          .where({ dihapus: 0 });
       })
       .where({ id: mata_pelajaran_id })
       .first();
@@ -30860,8 +30875,7 @@ class MainController {
 
     if (sekolah.id == 33) {
       builder.with("sikapYadika", (builder) => {
-        builder.where({ dihapus: 0 })
-        .andWhere({ m_ta_id: ta.id })
+        builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id });
       });
     } else {
       builder
@@ -47459,9 +47473,9 @@ class MainController {
         })
     );
 
-    worksheet.getCell(
-      "A1"
-    ).value = `LEGER PERNILAIAN TENGAH SEMESTER ${ta.semester == 1 ? 'GANJIL' : 'GENAP'} DARING`;
+    worksheet.getCell("A1").value = `LEGER PERNILAIAN TENGAH SEMESTER ${
+      ta.semester == 1 ? "GANJIL" : "GENAP"
+    } DARING`;
     worksheet.getCell("A2").value = rombel.nama;
     worksheet.getCell("A3").value = sekolah.nama;
     worksheet.getCell("A4").value = `TAHUN PELAJARAN ${ta.tahun}`;
@@ -47852,9 +47866,9 @@ class MainController {
         })
     );
 
-    worksheet.getCell(
-      "A1"
-    ).value = `LEGER PERNILAIAN AKHIR SEMESTER ${ta.semester == 1 ? 'GANJIL' : 'GENAP'}  DARING`;
+    worksheet.getCell("A1").value = `LEGER PERNILAIAN AKHIR SEMESTER ${
+      ta.semester == 1 ? "GANJIL" : "GENAP"
+    }  DARING`;
     worksheet.getCell("A2").value = rombel.nama;
     worksheet.getCell("A3").value = sekolah.nama;
     worksheet.getCell("A4").value = `TAHUN PELAJARAN ${ta.tahun}`;
@@ -48269,9 +48283,9 @@ class MainController {
       return "Data untuk Leger Nilai Belum Lengkap";
     }
     // return result;
-    worksheet.getCell(
-      "A1"
-    ).value = `LEGER PERNILAIAN AKHIR SEMESTER ${ta.semester == 1 ? 'GANJIL' : 'GENAP'} DARING`;
+    worksheet.getCell("A1").value = `LEGER PERNILAIAN AKHIR SEMESTER ${
+      ta.semester == 1 ? "GANJIL" : "GENAP"
+    } DARING`;
     worksheet.getCell("A2").value = rombel.nama;
     worksheet.getCell("A3").value = sekolah.nama;
     worksheet.getCell("A4").value = `TAHUN PELAJARAN ${ta.tahun}`;
@@ -50851,13 +50865,13 @@ class MainController {
       .where({ dihapus: 0 })
       // .andWhere({ m_sekolah_id: 33 })n
       .andWhere({ role: "siswa" })
-      .andWhere({ m_sekolah_id: 578 })
+      .andWhere({ m_sekolah_id: 33 })
       .offset(0)
-      .limit(8000)
+      .limit(100)
       .ids();
 
     const ta = await Mta.query()
-      .where({ m_sekolah_id: 578 })
+      .where({ m_sekolah_id: 33 })
       .andWhere({ aktif: 1 })
       .andWhere({ dihapus: 0 })
       .first();
@@ -50875,7 +50889,7 @@ class MainController {
     // return {awal,akhir}
     const dataRombelIds = await MRombel.query()
       .where({ m_ta_id: ta.id })
-      .andWhere({ m_sekolah_id: 578 })
+      .andWhere({ m_sekolah_id: 33 })
       .ids();
 
     const semua = await Promise.all(

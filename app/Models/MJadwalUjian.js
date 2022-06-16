@@ -41,8 +41,8 @@ class MJadwalUjian extends Model {
     return moment(waktu_dibuka).format("dddd DD MMMM YYYY");
   }
 
-  getWaktuUjian({ waktu_dibuka, durasi }) {
-    return `${moment(waktu_dibuka).format("HH:mm")} - ${moment(waktu_dibuka)
+  getWaktuUjian({ waktu_dibuka, durasi,waktu_ditutup }) {
+    return `${moment(waktu_dibuka).format("HH:mm")} - ${moment(waktu_ditutup)
       .add("minutes", durasi)
       .format("HH:mm")}`;
   }

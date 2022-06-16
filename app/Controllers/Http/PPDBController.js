@@ -1092,7 +1092,7 @@ class PPDBController {
                   .where({ dihapus: 0 });
               })
               .with("informasi", (builder) => {
-                builder.where({ tipe: "ujian" }).with("ujian");
+                builder.where({ tipe: "ujian" }).with("ujian").andWhere({dihapus:0});
               });
           })
           .where({ dihapus: 0 })
