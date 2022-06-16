@@ -2770,6 +2770,7 @@ class MainController {
     const res = await User.query()
       .where({ whatsapp })
       .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
       .first();
 
     if (!res) {
