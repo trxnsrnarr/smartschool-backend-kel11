@@ -2173,7 +2173,7 @@ class SecondController {
       transaksi.where("nama", "like", `%${search}%`);
     }
     if (dari_tanggal && sampai_tanggal) {
-      transaksi.whereBetween("tanggal", [dari_tanggal, sampai_tanggal]);
+      transaksi.where("tanggal", ">=",dari_tanggal).andWhere("tanggal", "<=",sampai_tanggal);
     }
     if (user.bagian == "aproval") {
       if (!status) {
