@@ -796,6 +796,7 @@ class MainController {
       number = parseInt(search.match(/\d/g).join(""));
       search = search.replace(/\d/g, "");
     }
+
     if (
       !search.toLowerCase().includes(bentuk.toLowerCase()) &&
       (search.toLowerCase().includes("negeri") ||
@@ -828,9 +829,12 @@ class MainController {
     if (number) {
       if (`${number}`.length > 3) {
         res.orWhere("npsn", "like", `%${number}%`);
-      } else {
-        res.whereRaw("ExtractNumber(TRIM(sekolah)) >= ?", [number]);
       }
+      //  else {
+
+
+      //   res.whereRaw("ExtractNumber(TRIM(sekolah)) >= ?", [number]);
+      // }
     }
 
     if (bentuk) {
@@ -849,7 +853,7 @@ class MainController {
       res.andWhere("kode_kec", kecamatan);
     }
 
-    res.orderByRaw("ExtractNumber(TRIM(sekolah))");
+    // res.orderByRaw("ExtractNusmber(TRIM(sekolah))");
     res.orderBy("status");
 
     return response.ok({
