@@ -30854,7 +30854,7 @@ class MainController {
         builder
           .where({ dihapus: 0 })
           .andWhere({ m_ta_id: ta.id })
-          .where({ tipe: "uts" });
+          .where({ tipe: "uas" });
       })
       .with("keteranganPkl", (builder) => {
         builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id });
