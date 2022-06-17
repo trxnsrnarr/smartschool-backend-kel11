@@ -105,7 +105,7 @@ const HitungNilaiAkhir = async ({
 
     if (ujian) {
       await MUjianSiswa.query().where({ id: ujian.id }).update({
-        nilai: nilaiAkhir,
+        nilai: `${nilaiAkhir ? nilaiAkhir :0}`,
       });
     } else {
       // const listNilai = [rataUjian, rata];
@@ -117,7 +117,7 @@ const HitungNilaiAkhir = async ({
         m_ta_id: ta.id,
         m_user_id: user_id,
         m_mata_pelajaran_id: mapel.id,
-        nilai: nilaiAkhir,
+        nilai: `${nilaiAkhir ? nilaiAkhir :0}`,
       });
     }
   } else if (nilaiUTS) {
@@ -129,7 +129,6 @@ const HitungNilaiAkhir = async ({
       nilaiUjian = 0;
       nilaiTugas = (rata * (bobot.uh_pts + bobot.tugas_pts)) / 100;
       nilaiUTSA = (nilaiUTS * bobot.uts_pts) / 100;
-      coba = nilaiTugas + nilaiUTSA;
     } else if (rataUjian != null) {
       nilaiUjian = (rataUjian * (bobot.uh_pts + bobot.tugas_pts)) / 100;
       nilaiTugas = 0;
@@ -138,8 +137,8 @@ const HitungNilaiAkhir = async ({
     nilaiAkhir = nilaiUTSA + nilaiUjian + nilaiTugas;
     if (ujian) {
       await MUjianSiswa.query().where({ id: ujian.id }).update({
-        nilai: nilaiAkhir,
-        nilai_uts: nilaiAkhir,
+        nilai: `${nilaiAkhir ? nilaiAkhir :0}`,
+        nilai_uts: `${nilaiAkhir ? nilaiAkhir :0}`,
         avg_nilai_tugas: nilaiTugas,
         avg_nilai_ujian: nilaiUjian,
       });
