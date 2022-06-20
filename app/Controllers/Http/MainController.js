@@ -832,7 +832,6 @@ class MainController {
       }
       //  else {
 
-
       //   res.whereRaw("ExtractNumber(TRIM(sekolah)) >= ?", [number]);
       // }
     }
@@ -6124,7 +6123,10 @@ class MainController {
               .with("sikapSiswa", (builder) => {
                 builder.with("predikat").where({ m_user_id: user_id });
               })
-              .with("templateDeskripsi");
+              .with("templateDeskripsi")
+              .with("user", (builder) => {
+                builder.select("id", "nama", "whatsapp");
+              });
           })
           .where({ dihapus: 0 })
           .orderBy("urutan", "asc");
@@ -14365,9 +14367,12 @@ class MainController {
           });
       })
       .andWhere({ dihapus: 0 })
-      .andWhere("waktu_dibuka", ">", moment()
-      .subtract(1, "day").format("YYYY-MM-DD HH:mm:ss"))
-      .andWhere("waktu_ditutup",">=", moment().format("YYYY-MM-DD"))
+      .andWhere(
+        "waktu_dibuka",
+        ">",
+        moment().subtract(1, "day").format("YYYY-MM-DD HH:mm:ss")
+      )
+      .andWhere("waktu_ditutup", ">=", moment().format("YYYY-MM-DD"))
       .orderBy("waktu_dibuka", "asc")
       .paginate(page, 1000);
 
@@ -30005,7 +30010,11 @@ class MainController {
     const kategoriMapel = await MKategoriMapel.query()
       .with("mapelRapor", (builder) => {
         builder
-          .with("mataPelajaran")
+          .with("mataPelajaran", (builder) => {
+            builder.with("user", (builder) => {
+              builder.select("id", "nama", "whatsapp");
+            });
+          })
           // .where({ dihapus: 0 })
           .orderBy("urutan", "asc");
       })
@@ -47243,11 +47252,18 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const ta = await this.getTAAktif(sekolah);
+    const ta1 = await this.getTAAktif(sekolah);
 
     const user = await auth.getUser();
 
-    let { ranking = [] } = request.post();
+    let { ranking = [], m_ta_id = ta1.id } = request.post();
+
+    const ta = await Mta.query()
+      .select("id", "tahun", "semester")
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ id: m_ta_id })
+      .andWhere({ dihapus: 0 })
+      .first();
 
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
