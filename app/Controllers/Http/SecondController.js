@@ -2173,7 +2173,9 @@ class SecondController {
       transaksi.where("nama", "like", `%${search}%`);
     }
     if (dari_tanggal && sampai_tanggal) {
-      transaksi.where("tanggal", ">=",dari_tanggal).andWhere("tanggal", "<=",sampai_tanggal);
+      transaksi
+        .where("tanggal", ">=", dari_tanggal)
+        .andWhere("tanggal", "<=", sampai_tanggal);
     }
     if (user.bagian == "aproval") {
       if (!status) {
@@ -11899,7 +11901,7 @@ ${jamPerubahan}`;
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
-      // const userData1 = await User.query().where("nama","like",`%Elisabeth Yolanda Witin%`).first()
+    // const userData1 = await User.query().where("nama","like",`%Elisabeth Yolanda Witin%`).first()
 
     const rombel = await MRombel.query()
       .with("anggotaRombel", (builder) => {
@@ -11914,8 +11916,8 @@ ${jamPerubahan}`;
               })
               .select("id", "nama", "gender");
           })
-          .where({ dihapus: 0 })
-          // .where({m_user_id:userData1.id});
+          .where({ dihapus: 0 });
+        // .where({m_user_id:userData1.id});
       })
       .with("user", (builder) => {
         builder.select("id", "nama");
@@ -11998,7 +12000,7 @@ ${jamPerubahan}`;
             .where({ dihapus: 0 })
             .andWhere({ m_rombel_id: rombel_id })
             .fetch();
-            // return muatan
+          // return muatan
           // const row = worksheet.getRow(8);
           let total = 0;
           let muatanTotal = 0;
@@ -12059,13 +12061,19 @@ ${jamPerubahan}`;
                   //   ? r.mataPelajaran.nilaiIndividu.nilai_keterampilan
                   //   : "0" * 0.7
                   // );
-                  
-                  const nilaiA = `${Math.round((((r.mataPelajaran.nilaiIndividu
+
+                  const nilaiA = `${Math.round(
+                    ((r.mataPelajaran.nilaiIndividu
                       ? r.mataPelajaran.nilaiIndividu.nilai
-                      : "0" )* 3) / 10 ) + (((r.mataPelajaran.nilaiIndividu
+                      : "0") *
+                      3) /
+                      10 +
+                      ((r.mataPelajaran.nilaiIndividu
                         ? r.mataPelajaran.nilaiIndividu.nilai_keterampilan
-                        : "0") * 7)/10 ))
-                      }`;
+                        : "0") *
+                        7) /
+                        10
+                  )}`;
 
                   row.getCell([`${(total + 1) * 3 + 4}`]).value = `${nilaiA}`;
                   row.getCell([`${(total + 1) * 3 + 2}`]).border = {
@@ -12205,14 +12213,14 @@ ${jamPerubahan}`;
           });
         })
     );
-      // if (dataaa > 10) {
-      //   return "Data untuk Leger Nilai Belum Lengkap";
-      // }
-    
+    // if (dataaa > 10) {
+    //   return "Data untuk Leger Nilai Belum Lengkap";
+    // }
+
     // return result;
-    worksheet.getCell(
-      "A1"
-    ).value = `LEGER PERNILAIAN AKHIR SEMESTER ${ta?.semester == 1 ? "GANJIL" : "GENAP"} DARING`;
+    worksheet.getCell("A1").value = `LEGER PERNILAIAN AKHIR SEMESTER ${
+      ta?.semester == 1 ? "GANJIL" : "GENAP"
+    } DARING`;
     worksheet.getCell("A2").value = rombel.nama;
     worksheet.getCell("A3").value = sekolah.nama;
     worksheet.getCell("A4").value = `TAHUN PELAJARAN ${ta.tahun}`;
@@ -12347,22 +12355,23 @@ ${jamPerubahan}`;
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { ranking = [],m_ta_id } = request.post();
+    const ta1 = await this.getTAAktif(sekolah);
+
+    let { ranking = [], m_ta_id = ta1.id } = request.post();
 
     const ta = await Mta.query()
-      .select("id", "tahun","semester")
+      .select("id", "tahun", "semester")
       .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ id:m_ta_id })
+      .andWhere({ id: m_ta_id })
       .andWhere({ dihapus: 0 })
       .first();
 
     const user = await auth.getUser();
 
-
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
-      // const userData1 = await User.query().where("nama","like",`%Elisabeth Yolanda Witin%`).first()
+    // const userData1 = await User.query().where("nama","like",`%Elisabeth Yolanda Witin%`).first()
 
     const rombel = await MRombel.query()
       .with("anggotaRombel", (builder) => {
@@ -12377,8 +12386,8 @@ ${jamPerubahan}`;
               })
               .select("id", "nama", "gender");
           })
-          .where({ dihapus: 0 })
-          // .where({m_user_id:userData1.id});
+          .where({ dihapus: 0 });
+        // .where({m_user_id:userData1.id});
       })
       .with("user", (builder) => {
         builder.select("id", "nama");
@@ -12461,7 +12470,7 @@ ${jamPerubahan}`;
             .where({ dihapus: 0 })
             .andWhere({ m_rombel_id: rombel_id })
             .fetch();
-            // return muatan
+          // return muatan
           // const row = worksheet.getRow(8);
           let total = 0;
           let muatanTotal = 0;
@@ -12514,12 +12523,18 @@ ${jamPerubahan}`;
                       ? r.mataPelajaran.nilaiIndividu.nilai_keterampilan
                       : "-"
                   }`;
-                  const nilaiA = `${Math.round((((r.mataPelajaran.nilaiIndividu
-                    ? r.mataPelajaran.nilaiIndividu.nilai
-                    : "0" )* 3) / 10 ) + (((r.mataPelajaran.nilaiIndividu
-                      ? r.mataPelajaran.nilaiIndividu.nilai_keterampilan
-                      : "0") * 7)/10 ))
-                    }`;
+                  const nilaiA = `${Math.round(
+                    ((r.mataPelajaran.nilaiIndividu
+                      ? r.mataPelajaran.nilaiIndividu.nilai
+                      : "0") *
+                      3) /
+                      10 +
+                      ((r.mataPelajaran.nilaiIndividu
+                        ? r.mataPelajaran.nilaiIndividu.nilai_keterampilan
+                        : "0") *
+                        7) /
+                        10
+                  )}`;
 
                   row.getCell([`${(total + 1) * 3 + 4}`]).value = `${nilaiA}`;
                   row.getCell([`${(total + 1) * 3 + 2}`]).border = {
@@ -12659,14 +12674,14 @@ ${jamPerubahan}`;
           });
         })
     );
-      // if (dataaa > 10) {
-      //   return "Data untuk Leger Nilai Belum Lengkap";
-      // }
-    
+    // if (dataaa > 10) {
+    //   return "Data untuk Leger Nilai Belum Lengkap";
+    // }
+
     // return result;
-    worksheet.getCell(
-      "A1"
-    ).value = `LEGER PERNILAIAN AKHIR SEMESTER ${ta?.semester == 1 ? "GANJIL" : "GENAP"} DARING`;
+    worksheet.getCell("A1").value = `LEGER PERNILAIAN AKHIR SEMESTER ${
+      ta?.semester == 1 ? "GANJIL" : "GENAP"
+    } DARING`;
     worksheet.getCell("A2").value = rombel.nama;
     worksheet.getCell("A3").value = sekolah.nama;
     worksheet.getCell("A4").value = `TAHUN PELAJARAN ${ta.tahun}`;
@@ -13047,9 +13062,6 @@ ${jamPerubahan}`;
       message: messagePostSuccess,
     });
   }
-
- 
-
 }
 
 module.exports = SecondController;
