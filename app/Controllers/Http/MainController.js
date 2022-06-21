@@ -31084,7 +31084,7 @@ class MainController {
     });
   }
 
-  async putRaporEkskul({ response, request, auth, params: { ekskul_id } }) {
+  async putRaporEkskul({ response, request, auth, params: { ekskul_id,rombel_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -31106,7 +31106,8 @@ class MainController {
     }
 
     const raporEksul = await MRaporEkskul.query()
-      .where({ id: ekskul_id })
+      .where({ m_user_id: ekskul_id })
+      .andWhere({ m_ekstrakurikuler_id : rombel_id})
       .update({
         keterangan,
         dihapus: 0,
