@@ -20,6 +20,7 @@ const MRencanaRumusSaldoKasAwal = use("App/Models/MRencanaRumusSaldoKasAwal");
 const MRencanaRumusSaldoKasAkhir = use("App/Models/MRencanaRumusSaldoKasAkhir");
 const MRencanaKategoriTipeAkun = use("App/Models/MRencanaKategoriTipeAkun");
 const MRencanaKategoriArusKas = use("App/Models/MRencanaKategoriArusKas");
+const MKeuRumusPenyusutan = use("App/Models/MKeuRumusPenyusutan");
 
 const MRumusKeuAkun = use("App/Models/MRumusKeuAkun");
 const MKeuTemplateAnalisis = use("App/Models/MKeuTemplateAnalisis");
@@ -7678,6 +7679,78 @@ ${jamPerubahan}`;
 
     return response.ok({
       message: messagePostSuccess,
+    });
+  }
+  async getGeneratePenyusutan({
+    response,
+    request,
+    auth,
+    params: { m_keu_akun_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const penyusutan = await MKeuRumusPenyusutan.query().where({m_keu_akun_id}).first()
+
+    let transaksiIds;
+   
+      transaksiIds = await MKeuTransaksi.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ dihapus: 0 })
+        .andWhere({ status: 1 })
+        .ids();
+
+    const akun1 = await MKeuAkun.query()
+      .with("jurnal", (builder) => {
+        builder.where({ dihapus: 0 }).andWhere({ status: 1 });
+        if (transaksiIds) {
+          builder.whereIn("m_keu_transaksi_id", transaksiIds);
+        }
+      })
+      .with("rekRencana", (builder) => {
+        builder`x`
+          .where({ dihapus: 0 })
+          .where({ m_rencana_keuangan_id: null });
+      })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ id: m_keu_akun_id })
+      .first();
+
+      const transaksi = await MKeuTransaksi.create({
+        nama: penyusutan.nama,
+        // nomor,
+        tanggal:moment().format("YYYY-MM-DD"),
+        dihapus: 0,
+        status:1,
+        m_sekolah_id: sekolah.id,
+      });
+  
+          await MKeuJurnal.create({
+            jenis: "debit",
+            m_keu_transaksi_id: transaksi.id,
+            m_keu_akun_id: m_keu_akun_id,
+            saldo: d.saldo,
+            status:1,
+            dihapus: 0,
+          });
+    
+          await MKeuJurnal.create({
+            jenis: "kredit",
+            m_keu_transaksi_id: transaksi.id,
+            m_keu_akun_id: penyusutan.m_keu_akun_akumulasi_id,
+            saldo: d.saldo,
+            status:1,
+            dihapus: 0,
+          });
+
+    return response.ok({
+      akun,
+      keuangan,
     });
   }
 }

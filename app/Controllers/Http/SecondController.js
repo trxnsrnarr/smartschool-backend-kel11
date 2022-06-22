@@ -145,6 +145,7 @@ const MKeuRumusSaldoKasAkhir = use("App/Models/MKeuRumusSaldoKasAkhir");
 const MKeuRumusSaldoKasAwal = use("App/Models/MKeuRumusSaldoKasAwal");
 const MKeuAktivitasTransaksi = use("App/Models/MKeuAktivitasTransaksi");
 const MFiturSekolah = use("App/Models/MFiturSekolah");
+const MKeuRumusPenyusutan = use("App/Models/MKeuRumusPenyusutan");
 
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
@@ -1087,8 +1088,21 @@ class SecondController {
 
     const user = await auth.getUser();
 
-    let { nama, kode, bank, norek, saldo, rek, struktur, saldo_normal } =
-      request.post();
+    let {
+      nama,
+      kode,
+      bank,
+      norek,
+      saldo,
+      rek,
+      struktur,
+      saldo_normal,
+      nama_penyusutan,
+      m_keu_akun_penyusutan_id,
+      m_keu_akun_akumulasi_id,
+      rumus,
+      penyusutan,
+    } = request.post();
 
     const rules = {
       nama: "required",
@@ -1102,6 +1116,7 @@ class SecondController {
     if (validation.fails()) {
       return response.unprocessableEntity(validation.messages());
     }
+    const rumus_penyusutan = JSON.parse(rumus || "[]");
 
     const akun = await MKeuAkun.create({
       m_sekolah_id: sekolah.id,
@@ -1110,6 +1125,16 @@ class SecondController {
       dihapus: 0,
       saldo_normal,
     });
+    if (penyusutan) {
+       await MKeuRumusPenyusutan.create({
+        rumus:rumus_penyusutan,
+        m_keu_akun_id: akun.id,
+        m_keu_akun_penyusutan_id,
+        m_keu_akun_akumulasi_id,
+        dihapus: 0,
+        update_selanjutnya:moment().add(1, "M").format("YYYY-MM-DD")
+      });
+    }
 
     if (rek) {
       await MRekSekolah.create({
@@ -1203,7 +1228,16 @@ class SecondController {
       rumus,
       saldo_normal,
       m_rencana_keuangan_id,
+      
+      m_keu_akun_penyusutan_id,
+      m_keu_akun_akumulasi_id,
+      // rumus232,
+      rumus_penyusutan,
+      penyusutan,
+      nama_penyusutan
     } = request.post();
+
+    // const rumus_penyusutan = JSON.parse(rumus232 || "[]");
 
     const rumus12 = JSON.parse(rumus || "[]");
     const rules = {
@@ -1244,6 +1278,9 @@ class SecondController {
 
     check = await check.first();
     checkDihapus = await checkDihapus.first();
+
+    const checkPenyusutan = await MKeuRumusPenyusutan.query().where({m_keu_akun_id: akun.id}).first()
+     const checkPenyusutanDihapus = await MKeuRumusPenyusutan.query().where({m_keu_akun_id: akun.id}).andWhere({dihapus:0}).first()
 
     if (rek) {
       if (check) {
@@ -1380,6 +1417,140 @@ class SecondController {
         });
       }
     }
+
+    if (penyusutan) {
+      if (checkPenyusutan) {
+        await MKeuRumusPenyusutan.query().where({ id: checkPenyusutan.id }).update({
+          rumus:rumus_penyusutan,
+      // m_keu_akun_penyusutan_id,
+      m_keu_akun_akumulasi_id,
+          dihapus: 0,
+          nama:nama_penyusutan
+        });
+
+        // if (!m_rencana_keuangan_id) {
+        //   const rencanas = await MRencanaKeuangan.query()
+        //     .where({ m_sekolah_id: sekolah.id })
+        //     .where({ dihapus: 0 })
+        //     .fetch();
+        //   await Promise.all(
+        //     rencanas.toJSON().map(async (d) => {
+        //       const check = await MRekSekolah.query()
+        //         .where({ m_rencana_keuangan_id: d.id })
+        //         .where({ m_keu_akun_id: akun.id })
+        //         .first();
+        //       if (check) {
+        //         await MRekSekolah.query().where({ id: check.id }).update({
+        //           bank,
+        //           norek,
+        //           jenis: nama,
+        //           dihapus: 0,
+        //           m_sekolah_id: sekolah.id,
+        //           m_keu_akun_id: akun.id,
+        //           m_rencana_keuangan_id: d.id,
+        //         });
+        //       } else {
+        //         await MRekSekolah.create({
+        //           bank,
+        //           norek,
+        //           saldo: 0,
+        //           jenis: nama,
+        //           dihapus: 0,
+        //           m_keu_akun_id: akun.id,
+        //           m_sekolah_id: sekolah.id,
+        //           m_rencana_keuangan_id: d.id,
+        //         });
+        //       }
+        //     })
+        //   );
+        // }
+
+        // if (m_keu_akun_penyusutan_id != checkPenyusutan.m_keu_akun_penyusutan_id) {
+        //   await MHistoriAktivitas.create({
+        //     jenis: "Ubah Akun",
+        //     m_user_id: user.id,
+        //     awal: `Pilih Bank : ${check.bank} menjadi `,
+        //     akhir: `"${bank}"`,
+        //     bawah: `${akun.nama}`,
+        //     m_sekolah_id: sekolah.id,
+        //     tipe: "Realisasi",
+        //   });
+        // }
+        // if (m_keu_akun_akumulasi_id != check.m_keu_akun_akumulasi_id) {
+        //   await MHistoriAktivitas.create({
+        //     jenis: "Ubah Akun",
+        //     m_user_id: user.id,
+        //     awal: `Nomor Rekening : ${check.norek} menjadi `,
+        //     akhir: `"${norek}"`,
+        //     bawah: `${akun.nama}`,
+        //     m_sekolah_id: sekolah.id,
+        //     tipe: "Realisasi",
+        //   });
+        // }
+        // if (saldo != check.saldo) {
+        //   const saldoLama = `${check.saldo}`.replace(
+        //     /\B(?=(\d{3})+(?!\d))/g,
+        //     "."
+        //   );
+        //   const saldoBaru = `${saldo}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        //   await MHistoriAktivitas.create({
+        //     jenis: "Ubah Akun",
+        //     m_user_id: user.id,
+        //     awal: `Saldo : Rp${saldoLama} menjadi `,
+        //     akhir: `"Rp${saldoBaru}"`,
+        //     bawah: `${akun.nama}`,
+        //     m_sekolah_id: sekolah.id,
+        //     tipe: "Realisasi",
+        //   });
+        // }
+        // if (!checkDihapus) {
+        //   await MHistoriAktivitas.create({
+        //     jenis: "Ubah Akun",
+        //     m_user_id: user.id,
+        //     awal: `Terhubung dengan Akun Rekening? : Tidak menjadi `,
+        //     akhir: `"Ya"`,
+        //     bawah: `${akun.nama}`,
+        //     m_sekolah_id: sekolah.id,
+        //     tipe: "Realisasi",
+        //   });
+        // }
+      } else {
+        await MKeuRumusPenyusutan.create({
+          rumus:rumus_penyusutan,
+          m_keu_akun_id: akun.id,
+          // m_keu_akun_penyusutan_id,
+          m_keu_akun_akumulasi_id,
+          dihapus: 0,
+          update_selanjutnya:moment().add(1, "M").format("YYYY-MM-DD"),
+          nama:nama_penyusutan
+        });
+        // await MHistoriAktivitas.create({
+        //   jenis: "Ubah Akun",
+        //   m_user_id: user.id,
+        //   awal: `Terhubung dengan Akun Rekening? : Tidak menjadi `,
+        //   akhir: `"Ya"`,
+        //   bawah: `${akun.nama}`,
+        //   m_sekolah_id: sekolah.id,
+        //   tipe: "Realisasi",
+        // });
+      }
+    } else if (!penyusutan) {
+      if (checkPenyusutanDihapus) {
+        await MKeuRumusPenyusutan.query().where({ m_keu_akun_id: akun.id }).update({
+          dihapus: 1,
+        });
+        // await MHistoriAktivitas.create({
+        //   jenis: "Ubah Akun",
+        //   m_user_id: user.id,
+        //   awal: `Terhubung dengan Akun Rekening? : Ya menjadi `,
+        //   akhir: `"Tidak"`,
+        //   bawah: `${akun.nama}`,
+        //   m_sekolah_id: sekolah.id,
+        //   tipe: "Realisasi",
+        // });
+      }
+    }
+
 
     update = await MKeuAkun.query().where({ id: keu_akun_id }).update({
       nama,
