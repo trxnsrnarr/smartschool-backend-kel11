@@ -30538,13 +30538,15 @@ class MainController {
         builder
           .where({ tingkat: siswa.toJSON().anggotaRombel.rombel.tingkat })
           .andWhere({ dihapus: 0 });
-        // if (mapelSingkat.kelompok == "C") {
-        //   if (siswa.toJSON().anggotaRombel.rombel.m_jurusan_id != null) {
-        //     builder.andWhere({
-        //       m_jurusan_id: siswa.toJSON().anggotaRombel.rombel.m_jurusan_id,
-        //     });
-        //   }
-        // }
+        if (sekolah.id == 578) {
+          if (mapelSingkat.kelompok == "C") {
+            if (siswa.toJSON().anggotaRombel.rombel.m_jurusan_id != null) {
+              builder.andWhere({
+                m_jurusan_id: siswa.toJSON().anggotaRombel.rombel.m_jurusan_id,
+              });
+            }
+          }
+        }
       })
       .where({ id: mata_pelajaran_id })
       .first();
@@ -30633,7 +30635,16 @@ class MainController {
           .where({
             tingkat: siswaKeterampilan.toJSON().anggotaRombel.rombel.tingkat,
           })
-          .where({ dihapus: 0 });
+          .where({ dihapus: 0 })
+          if (sekolah.id == 578) {
+            if (mapelSingkat.kelompok == "C") {
+              if (siswa.toJSON().anggotaRombel.rombel.m_jurusan_id != null) {
+                builder.andWhere({
+                  m_jurusan_id: siswa.toJSON().anggotaRombel.rombel.m_jurusan_id,
+                });
+              }
+            }
+          };
       })
       .where({ id: mata_pelajaran_id })
       .first();
@@ -31084,7 +31095,12 @@ class MainController {
     });
   }
 
-  async putRaporEkskul({ response, request, auth, params: { ekskul_id,rombel_id } }) {
+  async putRaporEkskul({
+    response,
+    request,
+    auth,
+    params: { ekskul_id, rombel_id },
+  }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -31107,7 +31123,7 @@ class MainController {
 
     const raporEksul = await MRaporEkskul.query()
       .where({ m_user_id: ekskul_id })
-      .andWhere({ m_ekstrakurikuler_id : rombel_id})
+      .andWhere({ m_ekstrakurikuler_id: rombel_id })
       .update({
         keterangan,
         dihapus: 0,
