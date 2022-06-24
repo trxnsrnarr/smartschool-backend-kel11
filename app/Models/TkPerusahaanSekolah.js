@@ -11,6 +11,9 @@ class TkPerusahaanSekolah extends Model {
   perusahaan() {
     return this.belongsTo("App/Models/MPerusahaan");
   }
+  industri() {
+    return this.belongsTo("App/Models/MPerusahaan");
+  }
   sekolah() {
     return this.belongsTo("App/Models/Sekolah");
   }

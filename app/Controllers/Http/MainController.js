@@ -5650,7 +5650,7 @@ class MainController {
       .andWhere({ m_sekolah_id: sekolah.id })
       .ids();
 
-    const industri = await MSekolahIndustri.query()
+    const industri = await TkPerusahaanSekolah.query()
       .with("industri")
       .where({ m_sekolah_id: sekolah.id })
       .fetch();
