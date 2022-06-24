@@ -2713,8 +2713,8 @@ class RombelController {
             // .andWhere({ m_perusahaan_id:d.id_perusahaan})
             .update(
               {
-                tanggal_mulai: d.tanggal_mulai ? d.tanggal_mulai : "-",
-                tanggal_selesai: d.tanggal_selesai ? d.tanggal_selesai : "",
+                tanggal_mulai: d.tanggal_mulai ? moment(`${d.tanggal_mulai}`).format("YYYY-MM-DD") : "-",
+                tanggal_selesai: d.tanggal_selesai ? moment(`${d.tanggal_selesai}`).format("YYYY-MM-DD") : "",
                 keterangan: d.keterangan ? d.keterangan : "",
                 lokasi_perusahaan: d.lokasi_perusahaan ? d.lokasi_perusahaan : "-",
                 namamitra: d.nama_perusahaan ? d.nama_perusahaan : "",
