@@ -1899,6 +1899,10 @@ Route.post("/dibaca-peringatan-ujian-guru/:peserta_ujian_id", "UjianController.p
 
 Route.post("/dibaca-peringatan-ujian/:peserta_ujian_id", "UjianController.postDibacaPeringatanUjian");
 
+Route.post("/download-keterangan-pkl/:rombel_id", "RombelController.downloadKeteranganPkl");
+
+Route.post("/import-keterangan-pkl/", "RombelController.importKeteranganPkl");
+
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
