@@ -2495,7 +2495,7 @@ class RombelController {
             nama: user ? user.nama : "-",
             whatsapp: user ? user.whatsapp : "-",
             id_perusahaan: keterangan ? keterangan.namamitra : "",
-            lokaksi_perusahaan: keterangan ? keterangan.lokasi_perusahaan:"",
+            lokaksi_perusahaan: keterangan ? keterangan.lokasi_perusahaan : "",
             tanggal_mulai: keterangan
               ? moment(keterangan.tanggal_mulai).format("YYYY-MM-DD")
               : "",
@@ -2637,7 +2637,7 @@ class RombelController {
           nama: explanation.getCell("B" + rowNumber).value,
           whatsapp: explanation.getCell("C" + rowNumber).value,
           nama_perusahaan: explanation.getCell("D" + rowNumber).value,
-          lokasi_perusahaan:explanation.getCell("E" + rowNumber).value,
+          lokasi_perusahaan: explanation.getCell("E" + rowNumber).value,
           tanggal_mulai: explanation.getCell("F" + rowNumber).value,
           tanggal_selesai: explanation.getCell("G" + rowNumber).value,
           keterangan: explanation.getCell("H" + rowNumber).value,
@@ -2658,77 +2658,84 @@ class RombelController {
         .first();
       // result.push(userSiswa);
       // return;
-      if(userSiswa){
-      const checkData = await MKeteranganPkl.query()
-        .where({ m_user_id: userSiswa.id })
-        .andWhere({ m_ta_id: ta.id })
-        .first();
+      if (userSiswa) {
+        const checkData = await MKeteranganPkl.query()
+          .where({ m_user_id: userSiswa.id })
+          .andWhere({ m_ta_id: ta.id })
+          .first();
 
-      let keterangan;
+        let keterangan;
 
-      // const perusahaan1 = await MPerusahaan.query()
-      //   .where({ id: d.id_perusahaan })
-      //   .first();
+        // const perusahaan1 = await MPerusahaan.query()
+        //   .where({ id: d.id_perusahaan })
+        //   .first();
 
-      let lama;
+        let lama;
 
-      if (d.tanggal_mulai && d.tanggal_selesai) {
-        const date1 = moment(`${d.tanggal_mulai}`);
-        const date2 = moment(`${d.tanggal_selesai}`);
-        const diff = date2.diff(date1);
+        if (d.tanggal_mulai && d.tanggal_selesai) {
+          const date1 = moment(`${d.tanggal_mulai}`);
+          const date2 = moment(`${d.tanggal_selesai}`);
+          const diff = date2.diff(date1);
 
-        // return diff
-        lama = moment(diff).format(`MM`);
-      }
-      // return lama;
-      if (!checkData) {
-        if (d.keterangan) {
-          await MKeteranganPkl.create(
-            {
-              dihapus: 0,
-              m_ta_id: ta.id,
-              m_user_id: userSiswa.id,
-              namamitra: d.nama_perusahaan ? d.nama_perusahaan : "",
-              lokasi_perusahaan: d.lokasi_perusahaan ? d.lokasi_perusahaan : "-",
-              tanggal_mulai: d.tanggal_mulai
-                ? moment(`${d.tanggal_mulai}`).format("YYYY-MM-DD")
-                : "",
-              tanggal_selesai: d.tanggal_selesai
-                ? moment(`${d.tanggal_selesai}`).format("YYYY-MM-DD")
-                : "",
-              keterangan: d.keterangan ? d.keterangan : "-",
-              lamanya: lama ? lama : null,
-              // m_perusahaan_id: d.id_perusahaan ? d.id_perusahaan : "-",
-            },
-            trx
-          );
+          // return diff
+          lama = moment(diff).format(`MM`);
         }
-
-        // return;
-      } else {
-        if (d.keterangan) {
-          const update = await MKeteranganPkl.query()
-            .andWhere({ m_user_id: userSiswa.id })
-            .andWhere({ m_ta_id: ta.id })
-            // .andWhere({ m_perusahaan_id:d.id_perusahaan})
-            .update(
+        // return lama;
+        if (!checkData) {
+          if (d.keterangan) {
+            await MKeteranganPkl.create(
               {
-                tanggal_mulai: d.tanggal_mulai ? moment(`${d.tanggal_mulai}`).format("YYYY-MM-DD") : "-",
-                tanggal_selesai: d.tanggal_selesai ? moment(`${d.tanggal_selesai}`).format("YYYY-MM-DD") : "",
-                keterangan: d.keterangan ? d.keterangan : "",
-                lokasi_perusahaan: d.lokasi_perusahaan ? d.lokasi_perusahaan : "-",
-                namamitra: d.nama_perusahaan ? d.nama_perusahaan : "",
                 dihapus: 0,
+                m_ta_id: ta.id,
+                m_user_id: userSiswa.id,
+                namamitra: d.nama_perusahaan ? d.nama_perusahaan : "",
+                lokasi_perusahaan: d.lokasi_perusahaan
+                  ? d.lokasi_perusahaan
+                  : "-",
+                tanggal_mulai: d.tanggal_mulai
+                  ? moment(`${d.tanggal_mulai}`).format("YYYY-MM-DD")
+                  : "",
+                tanggal_selesai: d.tanggal_selesai
+                  ? moment(`${d.tanggal_selesai}`).format("YYYY-MM-DD")
+                  : "",
+                keterangan: d.keterangan ? d.keterangan : "-",
                 lamanya: lama ? lama : null,
                 // m_perusahaan_id: d.id_perusahaan ? d.id_perusahaan : "-",
               },
               trx
             );
-        }
-      }
-      result.push(1);
-    }
+          }
 
+          // return;
+        } else {
+          if (d.keterangan) {
+            const update = await MKeteranganPkl.query()
+              .andWhere({ m_user_id: userSiswa.id })
+              .andWhere({ m_ta_id: ta.id })
+              // .andWhere({ m_perusahaan_id:d.id_perusahaan})
+              .update(
+                {
+                  tanggal_mulai: d.tanggal_mulai
+                    ? moment(`${d.tanggal_mulai}`).format("YYYY-MM-DD")
+                    : "",
+                  tanggal_selesai: d.tanggal_selesai
+                    ? moment(`${d.tanggal_selesai}`).format("YYYY-MM-DD")
+                    : "",
+                  keterangan: d.keterangan ? d.keterangan : "",
+                  lokasi_perusahaan: d.lokasi_perusahaan
+                    ? d.lokasi_perusahaan
+                    : "-",
+                  namamitra: d.nama_perusahaan ? d.nama_perusahaan : "",
+                  dihapus: 0,
+                  lamanya: lama ? lama : null,
+                  // m_perusahaan_id: d.id_perusahaan ? d.id_perusahaan : "-",
+                },
+                trx
+              );
+          }
+        }
+        result.push(1);
+      }
     }
     await trx.commit();
 
