@@ -146,6 +146,7 @@ const MKeuRumusSaldoKasAwal = use("App/Models/MKeuRumusSaldoKasAwal");
 const MKeuAktivitasTransaksi = use("App/Models/MKeuAktivitasTransaksi");
 const MFiturSekolah = use("App/Models/MFiturSekolah");
 const MKeuRumusPenyusutan = use("App/Models/MKeuRumusPenyusutan");
+const MKeuPenyusutanTransaksi = use("App/Models/MKeuPenyusutanTransaksi");
 
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
@@ -7491,7 +7492,8 @@ ${jamPerubahan}`;
 
     const user = await auth.getUser();
 
-    let { m_keu_kategori_laba_rugi_id, m_keu_akun_id, urutan,pengaturan } = request.post();
+    let { m_keu_kategori_laba_rugi_id, m_keu_akun_id, urutan, pengaturan } =
+      request.post();
 
     const rules = {
       m_keu_akun_id: "required",
@@ -7508,7 +7510,7 @@ ${jamPerubahan}`;
       m_keu_akun_id,
       m_keu_kategori_laba_rugi_id,
       urutan,
-      pengaturan
+      pengaturan,
     });
 
     const kategoriLaba = await MKeuKategoriLabaRugi.query()
@@ -7679,12 +7681,12 @@ ${jamPerubahan}`;
 
     let labarugi;
     if (tipe == "rumus") {
-       labarugi = await MRumusLabaRugi.query()
+      labarugi = await MRumusLabaRugi.query()
         .where({ id: labarugi_id })
         .update({ urutan });
     }
     if (tipe == "kategori") {
-       labarugi = await MKeuKategoriLabaRugi.query()
+      labarugi = await MKeuKategoriLabaRugi.query()
         .where({ id: labarugi_id })
         .update({ urutan });
     }
@@ -13295,6 +13297,299 @@ ${jamPerubahan}`;
 
     return response.ok({
       message: messagePostSuccess,
+    });
+  }
+
+  async getPenyusutan({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const rencana = await this.getRencanaAktif(sekolah);
+
+    let { search, tanggal_awal, tanggal_akhir } = request.get();
+
+    let transaksiIds, rencanaTransaksiIds;
+
+    rencanaTransaksiIds = MRencanaTransaksi.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ m_rencana_keuangan_id: rencana.id })
+      .where({ dihapus: 0 })
+      .andWhere({ status: 1 });
+
+    transaksiIds = MKeuTransaksi.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
+      .andWhere({ status: 1 });
+    if (tanggal_awal && tanggal_akhir) {
+      transaksiIds.whereBetween("tanggal", [tanggal_awal, tanggal_akhir]);
+      rencanaTransaksiIds.whereBetween("tanggal", [
+        moment(tanggal_awal).startOf("month").format("YYYY-MM-DD HH:mm:ss"),
+        moment(tanggal_akhir).endOf("month").format("YYYY-MM-DD HH:mm:ss"),
+      ]);
+    }
+    if (search) {
+      transaksiIds.andWhere("nama", "like", search);
+    }
+
+    rencanaTransaksiIds = await rencanaTransaksiIds.ids();
+    transaksiIds = await transaksiIds.ids();
+
+    const akun = await MKeuAkun.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
+    let penyusutan = await MKeuPenyusutanTransaksi.query()
+      .with("transaksi", (builder) => {
+        builder.with("jurnalDebet", (builder) => {
+          builder.where({ jenis: "debit" });
+        });
+      })
+      .with("akunDebet", (builder) => {
+        builder.with("jurnal", (builder) => {
+          builder.where({ dihapus: 0 });
+        });
+      })
+      .with("akunKredit", (builder) => {
+        builder.with("jurnal", (builder) => {
+          builder.where({ dihapus: 0 });
+        });
+      })
+      .where({ dihapus: 0 })
+      .whereIn("m_keu_transaksi_id", transaksiIds)
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
+    const data = await Promise.all(
+      penyusutan.toJSON().map(async (d, idx) => {
+        let akumulasiPenyusutan = 0;
+        await Promise.all(
+          d.akunKredit.jurnal.map((e) => {
+            akumulasiPenyusutan += e.saldo;
+          })
+        );
+        return {
+          tanggal_pembelian: moment(d.transaksi.tanggal).format("DD/MM/YYYY"),
+          nama: d.transaksi.nama,
+          nilaiPerolehan: d.transaksi.jurnalDebet.saldo,
+          masa_pakai: d.masa_pakai,
+          satuan: d.satuan,
+          akumulasiPenyusutan,
+          nilai_residu: d.nilai_residu,
+          persentase: d.persentase,
+          m_keu_akun_debet_id: d.m_keu_akun_debet_id,
+          m_keu_akun_kredit_id: d.m_keu_akun_kredit_id,
+          m_keu_transaksi_id: d.m_keu_transaksi_id
+        };
+      })
+    );
+
+    return response.ok({
+      data,
+      akun,
+      // penyusutan,
+    });
+  }
+
+  async postPenyusutan({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let {
+      nama_transaksi,
+      m_keu_transaksi_id,
+      nilai_residu,
+      persentase,
+      masa_pakai,
+      satuan,
+      m_keu_akun_debet_id,
+      m_keu_akun_kredit_id,
+    } = request.post();
+
+    const rules = {
+      nama: "required",
+      kategori: "required",
+    };
+    const message = {
+      "kategori.required": "Kategori harus dipilih",
+      "nama.required": "Nama harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const penyusutan = await MKeuPenyusutanTransaksi.create({
+      nama_transaksi,
+      m_keu_transaksi_id,
+      nilai_residu,
+      persentase,
+      masa_pakai,
+      satuan,
+      m_keu_akun_debet_id,
+      m_keu_akun_kredit_id,
+      dihapus: 0,
+      update_selanjutnya: moment().add(1, "M").format("YYYY-MM-DD"),
+      m_sekolah_id: sekolah.id,
+    });
+
+    const checkTransaksi = await MKeuTransaksi.query().where({id:m_keu_transaksi_id}).first()
+
+    if(moment().format("YYYY-MM-DD")>=checkTransaksi.tanggal){
+      
+    const date1 = moment(`${tanggal_mulai}`);
+    const date2 = moment(`${tanggal_selesai}`);
+    const diff = date2.diff(date1);
+
+    // return diff
+    const lama = moment(diff).format(`MM`);
+return lama
+    }
+
+    // await MHistoriAktivitas.create({
+    //   jenis: "Buat Template Laporan",
+    //   tipe: "Realisasi",
+    //   m_user_id: user.id,
+    //   awal: `Kategori : `,
+    //   akhir: `${nama}`,
+    //   bawah: `Laporan Laba/Rugi`,
+    //   m_sekolah_id: sekolah.id,
+    // });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async putPenyusutan({ response, request, auth, params: { penyusutan_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let {
+      nama_transaksi,
+      m_keu_transaksi_id,
+      nilai_residu,
+      persentase,
+      masa_pakai,
+      satuan,
+      m_keu_akun_debet_id,
+      m_keu_akun_kredit_id,
+    } = request.post();
+
+    const rules = {
+      nama_transaksi: "required",
+      nilai_residu: "required",
+    };
+    const message = {
+      "nama_transaksi.required": "Nama Transaksi Penyusutan harus diisi",
+      "nilai_residu.required": "Nilai Residu harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    // const kategoriLaba = await MKeuKategoriLabaRugi.query()
+    //   .where({ id: penyusutan_id })
+    //   .first();
+
+    const penyusutan = await MKeuPenyusutanTransaksi.query()
+      .where({ id: penyusutan_id })
+      .update({
+        nama_transaksi,
+        m_keu_transaksi_id,
+        nilai_residu,
+        persentase,
+        masa_pakai,
+        satuan,
+        m_keu_akun_debet_id,
+        m_keu_akun_kredit_id,
+        dihapus: 0,
+      });
+
+    if (!penyusutan) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    // if (warna != kategoriLaba.warna) {
+    //   await MHistoriAktivitas.create({
+    //     jenis: "Ubah Template Laporan",
+    //     tipe: "Realisasi",
+    //     m_user_id: user.id,
+    //     awal: `Kategori - Warna : ${kategoriLaba.warna} menjadi `,
+    //     akhir: `"${warna}"`,
+    //     bawah: `Laporan Laba/Rugi`,
+    //     m_sekolah_id: sekolah.id,
+    //   });
+    // }
+    // if (nama != kategoriLaba.nama) {
+    //   await MHistoriAktivitas.create({
+    //     jenis: "Ubah Template Laporan",
+    //     tipe: "Realisasi",
+    //     m_user_id: user.id,
+    //     awal: `Kategori - Nama : ${kategoriLaba.nama} menjadi `,
+    //     akhir: `"${nama}"`,
+    //     bawah: `Laporan Laba/Rugi`,
+    //     m_sekolah_id: sekolah.id,
+    //   });
+    // }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+  async deletePenyusutan({
+    response,
+    request,
+    auth,
+    params: { penyusutan_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const penyusutan = await MKeuPenyusutanTransaksi.query()
+      .where({ id: penyusutan_id })
+      .update({
+        dihapus: 1,
+      });
+
+    if (!penyusutan) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
     });
   }
 }

@@ -543,6 +543,7 @@ Route.delete("/rumus-laba/:rumus_id", "SecondController.deleteRumusLabaRugi");
 Route.post("/akun-laba", "SecondController.postLabaRugi");
 Route.put("/akun-laba/:labarugi_id", "SecondController.putLabaRugi");
 Route.delete("/akun-laba/:labarugi_id", "SecondController.deleteLabaRugi");
+Route.put("/laba-template/:labarugi_id", "SecondController.putLabaRugiTemplate");
 
 // Arus Kas
 Route.get("/arus-keuangan", "SecondController.getArusKas");
@@ -1902,6 +1903,16 @@ Route.post("/dibaca-peringatan-ujian/:peserta_ujian_id", "UjianController.postDi
 Route.post("/download-keterangan-pkl/:rombel_id", "RombelController.downloadKeteranganPkl");
 
 Route.post("/import-keterangan-pkl/", "RombelController.importKeteranganPkl");
+
+
+// Keuangan Penyusutan
+Route.get(
+  "/penyusutan",
+  "SecondController.getPenyusutan"
+);
+Route.post("/penyusutan", "SecondController.postPenyusutan");
+Route.put("/penyusutan/:penyusutan_id", "SecondController.putPenyusutan");
+Route.delete("/penyusutan/:penyusutan_id", "SecondController.deletePenyusutan");
 
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
