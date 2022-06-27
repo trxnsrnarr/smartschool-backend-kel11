@@ -5,14 +5,14 @@ const Schema = use('Schema')
 
 class UpdateTkKategoriLabarugiSchema extends Schema {
   up () {
-    this.table('update_tk_kategori_labarugi', (table) => {
+    this.table('tk_kategori_akun_laba_rugi', (table) => {
       // alter table
       table.text("pengaturan");
     })
   }
 
   down () {
-    this.table('update_tk_kategori_labarugi', (table) => {
+    this.table('tk_kategori_akun_laba_rugi', (table) => {
       // reverse alternations
     })
   }
