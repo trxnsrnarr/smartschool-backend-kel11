@@ -17,6 +17,10 @@ class MKeuAkun extends Model {
   rek2() {
     return this.hasOne("App/Models/MRekSekolah");
   }
+
+  penyusutan() {
+    return this.hasOne("App/Models/MKeuRumusPenyusutan");
+  }
   
   rekRencana() {
     return this.hasOne("App/Models/MRekSekolah");

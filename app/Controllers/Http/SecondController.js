@@ -899,6 +899,9 @@ class SecondController {
           })
           .whereNull("m_rencana_keuangan_id");
       })
+      .with("penyusutan", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
       .with("jurnal", (builder) => {
         builder
           .select("id", "m_keu_transaksi_id", "m_keu_akun_id")
@@ -1126,13 +1129,13 @@ class SecondController {
       saldo_normal,
     });
     if (penyusutan) {
-       await MKeuRumusPenyusutan.create({
-        rumus:rumus_penyusutan,
+      await MKeuRumusPenyusutan.create({
+        rumus: rumus_penyusutan,
         m_keu_akun_id: akun.id,
         m_keu_akun_penyusutan_id,
         m_keu_akun_akumulasi_id,
         dihapus: 0,
-        update_selanjutnya:moment().add(1, "M").format("YYYY-MM-DD")
+        update_selanjutnya: moment().add(1, "M").format("YYYY-MM-DD"),
       });
     }
 
@@ -1228,13 +1231,13 @@ class SecondController {
       rumus,
       saldo_normal,
       m_rencana_keuangan_id,
-      
+
       m_keu_akun_penyusutan_id,
       m_keu_akun_akumulasi_id,
       // rumus232,
       rumus_penyusutan,
       penyusutan,
-      nama_penyusutan
+      nama_penyusutan,
     } = request.post();
 
     // const rumus_penyusutan = JSON.parse(rumus232 || "[]");
@@ -1279,8 +1282,13 @@ class SecondController {
     check = await check.first();
     checkDihapus = await checkDihapus.first();
 
-    const checkPenyusutan = await MKeuRumusPenyusutan.query().where({m_keu_akun_id: akun.id}).first()
-     const checkPenyusutanDihapus = await MKeuRumusPenyusutan.query().where({m_keu_akun_id: akun.id}).andWhere({dihapus:0}).first()
+    const checkPenyusutan = await MKeuRumusPenyusutan.query()
+      .where({ m_keu_akun_id: akun.id })
+      .first();
+    const checkPenyusutanDihapus = await MKeuRumusPenyusutan.query()
+      .where({ m_keu_akun_id: akun.id })
+      .andWhere({ dihapus: 0 })
+      .first();
 
     if (rek) {
       if (check) {
@@ -1420,13 +1428,15 @@ class SecondController {
 
     if (penyusutan) {
       if (checkPenyusutan) {
-        await MKeuRumusPenyusutan.query().where({ id: checkPenyusutan.id }).update({
-          rumus:rumus_penyusutan,
-      // m_keu_akun_penyusutan_id,
-      m_keu_akun_akumulasi_id,
-          dihapus: 0,
-          nama:nama_penyusutan
-        });
+        await MKeuRumusPenyusutan.query()
+          .where({ id: checkPenyusutan.id })
+          .update({
+            rumus: rumus_penyusutan,
+            // m_keu_akun_penyusutan_id,
+            m_keu_akun_akumulasi_id,
+            dihapus: 0,
+            nama: nama_penyusutan,
+          });
 
         // if (!m_rencana_keuangan_id) {
         //   const rencanas = await MRencanaKeuangan.query()
@@ -1516,13 +1526,13 @@ class SecondController {
         // }
       } else {
         await MKeuRumusPenyusutan.create({
-          rumus:rumus_penyusutan,
+          rumus: rumus_penyusutan,
           m_keu_akun_id: akun.id,
           // m_keu_akun_penyusutan_id,
           m_keu_akun_akumulasi_id,
           dihapus: 0,
-          update_selanjutnya:moment().add(1, "M").format("YYYY-MM-DD"),
-          nama:nama_penyusutan
+          update_selanjutnya: moment().add(1, "M").format("YYYY-MM-DD"),
+          nama: nama_penyusut,
         });
         // await MHistoriAktivitas.create({
         //   jenis: "Ubah Akun",
@@ -1536,9 +1546,11 @@ class SecondController {
       }
     } else if (!penyusutan) {
       if (checkPenyusutanDihapus) {
-        await MKeuRumusPenyusutan.query().where({ m_keu_akun_id: akun.id }).update({
-          dihapus: 1,
-        });
+        await MKeuRumusPenyusutan.query()
+          .where({ m_keu_akun_id: akun.id })
+          .update({
+            dihapus: 1,
+          });
         // await MHistoriAktivitas.create({
         //   jenis: "Ubah Akun",
         //   m_user_id: user.id,
@@ -1550,7 +1562,6 @@ class SecondController {
         // });
       }
     }
-
 
     update = await MKeuAkun.query().where({ id: keu_akun_id }).update({
       nama,
@@ -7480,7 +7491,7 @@ ${jamPerubahan}`;
 
     const user = await auth.getUser();
 
-    let { m_keu_kategori_laba_rugi_id, m_keu_akun_id, urutan } = request.post();
+    let { m_keu_kategori_laba_rugi_id, m_keu_akun_id, urutan,pengaturan } = request.post();
 
     const rules = {
       m_keu_akun_id: "required",
@@ -7497,6 +7508,7 @@ ${jamPerubahan}`;
       m_keu_akun_id,
       m_keu_kategori_laba_rugi_id,
       urutan,
+      pengaturan
     });
 
     const kategoriLaba = await MKeuKategoriLabaRugi.query()
@@ -7633,6 +7645,58 @@ ${jamPerubahan}`;
 
     return response.ok({
       message: messageDeleteSuccess,
+    });
+  }
+
+  async putLabaRugiTemplate({
+    response,
+    request,
+    auth,
+    params: { labarugi_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { tipe, urutan } = request.post();
+
+    // const rules = {
+    //   m_keu_akun_id: "required",
+    // };
+    // const message = {
+    //   "m_keu_akun_id.required": "Akun harus diisi",
+    // };
+    // const validation = await validate(request.all(), rules, message);
+    // if (validation.fails()) {
+    //   return response.unprocessableEntity(validation.messages());
+    // }
+
+    let labarugi;
+    if (tipe == "rumus") {
+       labarugi = await MRumusLabaRugi.query()
+        .where({ id: labarugi_id })
+        .update({ urutan });
+    }
+    if (tipe == "kategori") {
+       labarugi = await MKeuKategoriLabaRugi.query()
+        .where({ id: labarugi_id })
+        .update({ urutan });
+    }
+
+    if (!labarugi) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      // message: messagePutSuccess,
     });
   }
 
