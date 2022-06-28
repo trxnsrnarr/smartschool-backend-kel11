@@ -608,6 +608,7 @@ Route.get("/inventaris-aktif", "KeuanganController.getTransaksiBarang");
 
 // mutasi v2
 Route.get("/v2/mutasi", "SecondController.getTransaksi");
+Route.get("/v2/mutasi/:transaksi_id", "SecondController.detailTransaksi");
 Route.post("/v2/mutasi", "SecondController.postTransaksi");
 Route.put("/v2/mutasi/:transaksi_id", "SecondController.putTransaksi");
 Route.delete("/v2/mutasi/:transaksi_id", "SecondController.deleteTransaksi");
@@ -1913,6 +1914,10 @@ Route.get(
 Route.post("/penyusutan", "SecondController.postPenyusutan");
 Route.put("/penyusutan/:penyusutan_id", "SecondController.putPenyusutan");
 Route.delete("/penyusutan/:penyusutan_id", "SecondController.deletePenyusutan");
+Route.get(
+  "/penyusutan-generate",
+  "SecondController.getGeneratePenyusutan"
+);
 
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
