@@ -7046,7 +7046,7 @@ ${jamPerubahan}`;
 
     const user = await auth.getUser();
 
-    let { m_keu_kategori_neraca_id, m_keu_akun_id, urutan } = request.post();
+    let { m_keu_kategori_neraca_id, m_keu_akun_id, urutan,pengaturan } = request.post();
 
     const rules = {
       m_keu_akun_id: "required",
@@ -7063,6 +7063,7 @@ ${jamPerubahan}`;
       m_keu_akun_id,
       m_keu_kategori_neraca_id,
       urutan,
+      pengaturan
     });
 
     const kategoriNeraca = await MKeuKategoriNeraca.query()
@@ -7097,7 +7098,7 @@ ${jamPerubahan}`;
 
     const user = await auth.getUser();
 
-    let { m_keu_akun_id, urutan } = request.post();
+    let { m_keu_akun_id, urutan,pengaturan } = request.post();
 
     const rules = {
       m_keu_akun_id: "required",
@@ -7119,6 +7120,7 @@ ${jamPerubahan}`;
       .update({
         m_keu_akun_id,
         urutan,
+        pengaturan
       });
 
     if (!neraca) {
@@ -7545,7 +7547,7 @@ ${jamPerubahan}`;
 
     const user = await auth.getUser();
 
-    let { m_keu_akun_id, urutan } = request.post();
+    let { m_keu_akun_id, urutan ,pengaturan} = request.post();
 
     const rules = {
       m_keu_akun_id: "required",
@@ -7565,7 +7567,7 @@ ${jamPerubahan}`;
       .where({ id: labarugi_id })
       .update({
         m_keu_akun_id,
-        urutan,
+        urutan,pengaturan
       });
 
     if (!labarugi) {
@@ -13333,7 +13335,7 @@ ${jamPerubahan}`;
       ]);
     }
     if (search) {
-      transaksiIds.andWhere("nama", "like", search);
+      transaksiIds.andWhere("nama", "like",`%${search}%`);
     }
 
     rencanaTransaksiIds = await rencanaTransaksiIds.ids();
@@ -13384,14 +13386,20 @@ ${jamPerubahan}`;
           persentase: d.persentase,
           m_keu_akun_debet_id: d.m_keu_akun_debet_id,
           m_keu_akun_kredit_id: d.m_keu_akun_kredit_id,
-          m_keu_transaksi_id: d.m_keu_transaksi_id
+          m_keu_transaksi_id: d.m_keu_transaksi_id,
+          id:d.id
         };
       })
     );
+    const transaksi = await MKeuTransaksi.query()
+    .where({ m_sekolah_id: sekolah.id })
+    .where({ dihapus: 0 })
+    .andWhere({ status: 1 }).fetch();
 
     return response.ok({
       data,
       akun,
+      transaksi
       // penyusutan,
     });
   }
@@ -13418,18 +13426,78 @@ ${jamPerubahan}`;
       m_keu_akun_kredit_id,
     } = request.post();
 
-    const rules = {
-      nama: "required",
-      kategori: "required",
-    };
-    const message = {
-      "kategori.required": "Kategori harus dipilih",
-      "nama.required": "Nama harus diisi",
-    };
-    const validation = await validate(request.all(), rules, message);
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
+    // const rules = {
+    //   nama: "required",
+    //   kategori: "required",
+    // };
+    // const message = {
+    //   "kategori.required": "Kategori harus dipilih",
+    //   "nama.required": "Nama harus diisi",
+    // };
+    // const validation = await validate(request.all(), rules, message);
+    // if (validation.fails()) {
+    //   return response.unprocessableEntity(validation.messages());
+    // }l
+    let saldo = 0
+    const checkTransaksi = await MKeuTransaksi.query()
+    .with("jurnalDebet", (builder) => {
+      builder.where({ jenis: "debit" });
+    })
+      .where({ id: m_keu_transaksi_id })
+      .first();
+    if (
+      moment().format("YYYY-MM-DD") >=
+      moment(checkTransaksi.tanggal).format("YYYY-MM-DD")
+    ) {
+      const date1 = moment();
+      const date2 = moment(`${checkTransaksi.tanggal}`);
+      const diff = date2.diff(date1);
+
+      // return diff
+      const lama = moment(diff).format(`MM`);
+      let masaPakai;
+      if(satuan == "Bulan"){
+        masaPakai = masa_pakai
+      }else if(satuan == "Tahun"){
+        masaPakai = masa_pakai * 12
+      }
+
+      saldo = ((checkTransaksi.toJSON().jurnalDebet.saldo - nilai_residu) * (persentase/100)) / masaPakai
+      // return {saldo,nilai_residu,persen:persentase/100,masaPakai,duit:checkTransaksi.toJSON().jurnalDebet.saldo}
+      
+      for (let i = 1; i < lama - 1; i++) {
+        const transaksi = await MKeuTransaksi.create({
+          nama: nama_transaksi,
+          // nomor,
+          tanggal: moment(checkTransaksi.tanggal)
+            .add(i, "M")
+            .format("YYYY-MM-DD"),
+          dihapus: 0,
+          status: 1,
+          m_sekolah_id: sekolah.id,
+        });
+
+        await MKeuJurnal.create({
+          jenis: "debit",
+          m_keu_transaksi_id: transaksi.id,
+          m_keu_akun_id: m_keu_akun_debet_id,
+          saldo,
+          status: 1,
+          dihapus: 0,
+        });
+
+        await MKeuJurnal.create({
+          jenis: "kredit",
+          m_keu_transaksi_id: transaksi.id,
+          m_keu_akun_id: m_keu_akun_kredit_id,
+          saldo,
+          status: 1,
+          dihapus: 0,
+        });
+      }
+      //  return datass
     }
+    // return checkTransaksi
 
     const penyusutan = await MKeuPenyusutanTransaksi.create({
       nama_transaksi,
@@ -13443,20 +13511,10 @@ ${jamPerubahan}`;
       dihapus: 0,
       update_selanjutnya: moment().add(1, "M").format("YYYY-MM-DD"),
       m_sekolah_id: sekolah.id,
+      saldo
     });
 
-    const checkTransaksi = await MKeuTransaksi.query().where({id:m_keu_transaksi_id}).first()
-
-    if(moment().format("YYYY-MM-DD")>=checkTransaksi.tanggal){
-      
-    const date1 = moment(`${tanggal_mulai}`);
-    const date2 = moment(`${tanggal_selesai}`);
-    const diff = date2.diff(date1);
-
-    // return diff
-    const lama = moment(diff).format(`MM`);
-return lama
-    }
+    
 
     // await MHistoriAktivitas.create({
     //   jenis: "Buat Template Laporan",
@@ -13506,6 +13564,82 @@ return lama
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
       return response.unprocessableEntity(validation.messages());
+    }
+
+    const dataSebelum = await MKeuPenyusutanTransaksi.query().where({id:penyusutan_id}).first()
+
+    if(dataSebelum.nama_transaksi != nama_transaksi || dataSebelum.m_keu_akun_debet_id != m_keu_akun_debet_id || dataSebelum.m_keu_akun_kredit_id != m_keu_akun_kredit_id){
+
+      const checkTransaksiSebelum = await MKeuTransaksi.query()
+      .with("jurnalDebet", (builder) => {
+        builder.where({ jenis: "debit" });
+      })
+      .where({ id: dataSebelum.m_keu_transaksi_id })
+      .first();
+      
+
+      const deletee = await MKeuTransaksi.query().where({nama : dataSebelum.nama_transaksi}).update({dihapus:1})
+
+    let saldo = 0
+    const checkTransaksi = await MKeuTransaksi.query()
+    .with("jurnalDebet", (builder) => {
+      builder.where({ jenis: "debit" });
+    })
+      .where({ id: m_keu_transaksi_id })
+      .first();
+
+    if (
+      moment().format("YYYY-MM-DD") >=
+      moment(checkTransaksi.tanggal).format("YYYY-MM-DD")
+    ) {
+      const date1 = moment();
+      const date2 = moment(`${checkTransaksi.tanggal}`);
+      const diff = date2.diff(date1);
+
+      // return diff
+      const lama = moment(diff).format(`MM`);
+      let masaPakai;
+      if(satuan == "Bulan"){
+        masaPakai = masa_pakai
+      }else if(satuan == "Tahun"){
+        masaPakai = masa_pakai * 12
+      }
+
+      saldo = ((checkTransaksi.toJSON().jurnalDebet.saldo - nilai_residu) * (persentase/100)) / masaPakai
+      // return {saldo,nilai_residu,persen:persentase/100,masaPakai,duit:checkTransaksi.toJSON().jurnalDebet.saldo}
+      
+      for (let i = 1; i < lama - 1; i++) {
+        const transaksi = await MKeuTransaksi.create({
+          nama: nama_transaksi,
+          // nomor,
+          tanggal: moment(checkTransaksi.tanggal)
+            .add(i, "M")
+            .format("YYYY-MM-DD"),
+          dihapus: 0,
+          status: 1,
+          m_sekolah_id: sekolah.id,
+        });
+
+        await MKeuJurnal.create({
+          jenis: "debit",
+          m_keu_transaksi_id: transaksi.id,
+          m_keu_akun_id: m_keu_akun_debet_id,
+          saldo,
+          status: 1,
+          dihapus: 0,
+        });
+
+        await MKeuJurnal.create({
+          jenis: "kredit",
+          m_keu_transaksi_id: transaksi.id,
+          m_keu_akun_id: m_keu_akun_kredit_id,
+          saldo,
+          status: 1,
+          dihapus: 0,
+        });
+      }
+      //  return datass
+    }
     }
 
     // const kategoriLaba = await MKeuKategoriLabaRugi.query()
