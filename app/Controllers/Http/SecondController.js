@@ -13376,7 +13376,7 @@ ${jamPerubahan}`;
         let akumulasiPenyusutan = 0;
         await Promise.all(
           d.akunKredit.jurnal.map((e) => {
-            akumulasiPenyusutan += e.saldo;
+            akumulasiPenyusutan = akumulasiPenyusutan + e.saldo;
           })
         );
         return {
