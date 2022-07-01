@@ -13533,7 +13533,7 @@ ${jamPerubahan}`;
       m_keu_akun_kredit_id,
       dihapus: 0,
       update_selanjutnya: moment().add(1, "M").format("YYYY-MM-DD hh:mm:ss"),
-      terakhir_updates: moment(`${checkTransaksi.tanggal}`).add(masaPakai, "M"),
+      terakhir_updates: moment(`${checkTransaksi.tanggal}`).add(masaPakai, "M").format("YYYY-MM-DD hh:mm:ss"),
       m_sekolah_id: sekolah.id,
       saldo,
     });
