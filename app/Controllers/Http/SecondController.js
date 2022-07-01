@@ -13476,16 +13476,16 @@ ${jamPerubahan}`;
       // return diff
       const lama = moment(diff).format(`MM`);
 
-      if (persentase != 0 || persentase == null) {
-        saldo =
-          ((checkTransaksi.toJSON().jurnalDebet.saldo - nilai_residu) *
-            (persentase / 100)) /
-          masaPakai;
-      } else {
+      // if (persentase != 0 || persentase == null) {
+      //   saldo =
+      //     ((checkTransaksi.toJSON().jurnalDebet.saldo - nilai_residu) *
+      //       (persentase / 100)) /
+      //     masaPakai;
+      // } else {
         saldo =
           (checkTransaksi.toJSON().jurnalDebet.saldo - nilai_residu) /
           masaPakai;
-      }
+      // }
       // return {saldo,nilai_residu,persen:persentase/100,masaPakai,duit:checkTransaksi.toJSON().jurnalDebet.saldo}
 
       for (let i = 1; i < lama - 1; i++) {
@@ -13637,16 +13637,16 @@ ${jamPerubahan}`;
       // return diff
       const lama = moment(diff).format(`MM`);
 
-      if (persentase != 0 || persentase == null) {
-        saldo =
-          ((checkTransaksi.toJSON().jurnalDebet.saldo - nilai_residu) *
-            (persentase / 100)) /
-          masaPakai;
-      } else {
+      // if (persentase != 0 || persentase == null) {
+      //   saldo =
+      //     ((checkTransaksi.toJSON().jurnalDebet.saldo - nilai_residu) *
+      //       (persentase / 100)) /
+      //     masaPakai;
+      // } else {
         saldo =
           (checkTransaksi.toJSON().jurnalDebet.saldo - nilai_residu) /
           masaPakai;
-      }
+      // }
 
       for (let i = 1; i < lama - 1; i++) {
         const transaksi = await MKeuTransaksi.create({
