@@ -13698,7 +13698,7 @@ ${jamPerubahan}`;
         m_keu_akun_debet_id,
         m_keu_akun_kredit_id,
         update_selanjutnya: `${moment().add(1, "M").format("YYYY-MM-DD")} ${jam}`,
-        terakhir_updates: moment(`${checkTransaksi.tanggal}`).add(masaPakai, "M"),
+        terakhir_updates: moment(`${checkTransaksi.tanggal}`).add(masaPakai, "M").format("YYYY-MM-dd"),
         dihapus: 0,
       });
 
