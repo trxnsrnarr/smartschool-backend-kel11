@@ -13363,7 +13363,7 @@ ${jamPerubahan}`;
       })
       .with("akunKredit", (builder) => {
         builder.with("jurnal", (builder) => {
-          builder.where({ dihapus: 0 });
+          builder.with("transaksi").where({ dihapus: 0 }).where({jenis:"kredit"})
         });
       })
       .where({ dihapus: 0 })
@@ -13374,12 +13374,17 @@ ${jamPerubahan}`;
     const data = await Promise.all(
       penyusutan.toJSON().map(async (d, idx) => {
         let akumulasiPenyusutan = 0;
-        await Promise.all(
+        const test = await Promise.all(
           d.akunKredit.jurnal.map((e) => {
-            akumulasiPenyusutan = akumulasiPenyusutan + e.saldo;
+            if(e.transaksi.nama == d.nama_transaksi){
+
+              akumulasiPenyusutan = akumulasiPenyusutan + e.saldo;
+            }
+            // return e
           })
         );
         return {
+          // test,
           tanggal_pembelian: moment(d.transaksi.tanggal).format("DD/MM/YYYY"),
           nama: d.transaksi.nama,
           nilaiPerolehan: d.transaksi.jurnalDebet.saldo,
