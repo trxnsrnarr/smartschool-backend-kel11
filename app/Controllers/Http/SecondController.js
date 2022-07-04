@@ -7221,7 +7221,7 @@ ${jamPerubahan}`;
 
     let { search, tanggal_awal, tanggal_akhir } = request.get();
 
-    let transaksiIds, rencanaTransaksiIds;
+    let transaksiIds, rencanaTransaksiIds, transaksiAkumulasiIds;
 
     rencanaTransaksiIds = MRencanaTransaksi.query()
       .where({ m_sekolah_id: sekolah.id })
@@ -7232,6 +7232,13 @@ ${jamPerubahan}`;
     if (tanggal_awal && tanggal_akhir) {
       transaksiIds = await MKeuTransaksi.query()
         .whereBetween("tanggal", [tanggal_awal, tanggal_akhir])
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ dihapus: 0 })
+        .andWhere({ status: 1 })
+        .ids();
+
+      transaksiIds = await MKeuTransaksi.query()
+        .where("tanggal", "<=", tanggal_akhir)
         .where({ m_sekolah_id: sekolah.id })
         .where({ dihapus: 0 })
         .andWhere({ status: 1 })
@@ -13363,7 +13370,10 @@ ${jamPerubahan}`;
       })
       .with("akunKredit", (builder) => {
         builder.with("jurnal", (builder) => {
-          builder.with("transaksi").where({ dihapus: 0 }).where({jenis:"kredit"})
+          builder
+            .with("transaksi")
+            .where({ dihapus: 0 })
+            .where({ jenis: "kredit" });
         });
       })
       .where({ dihapus: 0 })
@@ -13376,8 +13386,7 @@ ${jamPerubahan}`;
         let akumulasiPenyusutan = 0;
         const test = await Promise.all(
           d.akunKredit.jurnal.map((e) => {
-            if(e.transaksi.nama == d.nama_transaksi){
-
+            if (e.transaksi.m_keu_penyusutan_transaksi_id == d.id) {
               akumulasiPenyusutan = akumulasiPenyusutan + e.saldo;
             }
             // return e
@@ -13428,7 +13437,7 @@ ${jamPerubahan}`;
     let {
       nama_transaksi,
       m_keu_transaksi_id,
-      nilai_residu,
+      nilai_residu = 0,
       persentase,
       masa_pakai,
       satuan,
@@ -13449,7 +13458,7 @@ ${jamPerubahan}`;
     //   return response.unprocessableEntity(validation.messages());
     // }l
     let saldo = 0;
-    
+
     const checkTransaksi = await MKeuTransaksi.query()
       .with("jurnalDebet", (builder) => {
         builder.where({ jenis: "debit" });
@@ -13463,6 +13472,26 @@ ${jamPerubahan}`;
     } else if (satuan == "Tahun") {
       masaPakai = masa_pakai * 12;
     }
+    saldo =
+      (checkTransaksi.toJSON().jurnalDebet.saldo - nilai_residu) / masaPakai;
+
+    const penyusutan = await MKeuPenyusutanTransaksi.create({
+      nama_transaksi,
+      m_keu_transaksi_id,
+      nilai_residu,
+      persentase,
+      masa_pakai,
+      satuan,
+      m_keu_akun_debet_id,
+      m_keu_akun_kredit_id,
+      dihapus: 0,
+      update_selanjutnya: moment().add(1, "M").format("YYYY-MM-DD hh:mm:ss"),
+      terakhir_updates: moment(`${checkTransaksi.tanggal}`)
+        .add(masaPakai, "M")
+        .format("YYYY-MM-DD hh:mm:ss"),
+      m_sekolah_id: sekolah.id,
+      saldo,
+    });
 
     if (
       moment().format("YYYY-MM-DD") >=
@@ -13487,9 +13516,6 @@ ${jamPerubahan}`;
       //       (persentase / 100)) /
       //     masaPakai;
       // } else {
-        saldo =
-          (checkTransaksi.toJSON().jurnalDebet.saldo - nilai_residu) /
-          masaPakai;
       // }
       // return {saldo,nilai_residu,persen:persentase/100,masaPakai,duit:checkTransaksi.toJSON().jurnalDebet.saldo}
 
@@ -13503,6 +13529,7 @@ ${jamPerubahan}`;
           dihapus: 0,
           status: 1,
           m_sekolah_id: sekolah.id,
+          m_keu_penyusutan_transaksi_id: penyusutan.id,
         });
 
         await MKeuJurnal.create({
@@ -13526,22 +13553,6 @@ ${jamPerubahan}`;
       //  return datass
     }
     // return checkTransaksi
-
-    const penyusutan = await MKeuPenyusutanTransaksi.create({
-      nama_transaksi,
-      m_keu_transaksi_id,
-      nilai_residu,
-      persentase,
-      masa_pakai,
-      satuan,
-      m_keu_akun_debet_id,
-      m_keu_akun_kredit_id,
-      dihapus: 0,
-      update_selanjutnya: moment().add(1, "M").format("YYYY-MM-DD hh:mm:ss"),
-      terakhir_updates: moment(`${checkTransaksi.tanggal}`).add(masaPakai, "M").format("YYYY-MM-DD hh:mm:ss"),
-      m_sekolah_id: sekolah.id,
-      saldo,
-    });
 
     // await MHistoriAktivitas.create({
     //   jenis: "Buat Template Laporan",
@@ -13572,7 +13583,7 @@ ${jamPerubahan}`;
     let {
       nama_transaksi,
       m_keu_transaksi_id,
-      nilai_residu,
+      nilai_residu = 0,
       persentase,
       masa_pakai,
       satuan,
@@ -13616,8 +13627,6 @@ ${jamPerubahan}`;
       .where({ id: m_keu_transaksi_id })
       .first();
 
-
-      
     let masaPakai;
     if (satuan == "Bulan") {
       masaPakai = masa_pakai;
@@ -13648,9 +13657,8 @@ ${jamPerubahan}`;
       //       (persentase / 100)) /
       //     masaPakai;
       // } else {
-        saldo =
-          (checkTransaksi.toJSON().jurnalDebet.saldo - nilai_residu) /
-          masaPakai;
+      saldo =
+        (checkTransaksi.toJSON().jurnalDebet.saldo - nilai_residu) / masaPakai;
       // }
 
       for (let i = 1; i < lama - 1; i++) {
@@ -13663,6 +13671,7 @@ ${jamPerubahan}`;
           dihapus: 0,
           status: 1,
           m_sekolah_id: sekolah.id,
+          m_keu_penyusutan_transaksi_id: penyusutan_id,
         });
 
         await MKeuJurnal.create({
@@ -13702,8 +13711,12 @@ ${jamPerubahan}`;
         satuan,
         m_keu_akun_debet_id,
         m_keu_akun_kredit_id,
-        update_selanjutnya: `${moment().add(1, "M").format("YYYY-MM-DD")} ${jam}`,
-        terakhir_updates: moment(`${checkTransaksi.tanggal}`).add(masaPakai, "M").format("YYYY-MM-dd"),
+        update_selanjutnya: `${moment()
+          .add(1, "M")
+          .format("YYYY-MM-DD")} ${jam}`,
+        terakhir_updates: moment(`${checkTransaksi.tanggal}`)
+          .add(masaPakai, "M")
+          .format("YYYY-MM-dd"),
         dihapus: 0,
       });
 
@@ -13761,6 +13774,21 @@ ${jamPerubahan}`;
       .where({ id: penyusutan_id })
       .update({
         dihapus: 1,
+      });
+
+    await MKeuTransaksi.query()
+      .where({ m_keu_penyusutan_transaksi_id: penyusutan_id })
+      .update({ dihapus: 1 });
+
+    const transaksiIds = await MKeuTransaksi.query()
+      .where({ m_keu_penyusutan_transaksi: penyusutasn_id })
+      .ids();
+
+    await MKeuJurnal.query()
+      .whereIn("m_keu_transaksi_id", transaksiIds)
+      .update({
+        dihapus: 1,
+        status: null,
       });
 
     if (!penyusutan) {
@@ -13841,6 +13869,7 @@ ${jamPerubahan}`;
           dihapus: 0,
           status: 1,
           m_sekolah_id: sekolah.id,
+          m_keu_penyusutan_transaksi_id: d.id,
         });
 
         await MKeuJurnal.create({
