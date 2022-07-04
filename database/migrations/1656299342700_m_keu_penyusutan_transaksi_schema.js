@@ -18,7 +18,7 @@ class MKeuPenyusutanTransaksiSchema extends Schema {
         .onUpdate("cascade");
       table.integer("nilai_residu");
       table.integer("persentase");
-      table.integer("masa_pekai");
+      table.integer("masa_pakai");
       table.string("satuan");
       table.string("nama_transaksi");
       table
@@ -27,7 +27,7 @@ class MKeuPenyusutanTransaksiSchema extends Schema {
         .index("m_keu_akun_debet_id");
       table
         .foreign("m_keu_akun_debet_id")
-        .references("m_keu_transaksi.id")
+        .references("m_keu_akun.id")
         .onDelete("cascade")
         .onUpdate("cascade");
       table
@@ -36,12 +36,18 @@ class MKeuPenyusutanTransaksiSchema extends Schema {
         .index("m_keu_akun_kredit_id");
       table
         .foreign("m_keu_akun_kredit_id")
-        .references("m_keu_transaksi.id")
+        .references("m_keu_akun.id")
         .onDelete("cascade")
         .onUpdate("cascade");
-
-      table.date("terakhir_updates");
-      table.date("update_selanjutnya");
+      table.integer("m_sekolah_id").unsigned().index("m_sekolah_id");
+      table
+        .foreign("m_sekolah_id")
+        .references("m_sekolah.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
+      table.integer("saldo");
+      table.datetime("terakhir_updates");
+      table.datetime("update_selanjutnya");
       table.integer("dihapus").defaultTo(0);
       table.timestamps();
     });
