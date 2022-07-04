@@ -7237,7 +7237,7 @@ ${jamPerubahan}`;
         .andWhere({ status: 1 })
         .ids();
 
-      transaksiIds = await MKeuTransaksi.query()
+      transaksiAkumulasiIds = await MKeuTransaksi.query()
         .where("tanggal", "<=", tanggal_akhir)
         .where({ m_sekolah_id: sekolah.id })
         .where({ dihapus: 0 })
@@ -7256,6 +7256,12 @@ ${jamPerubahan}`;
         builder.where({ dihapus: 0 }).andWhere({ status: 1 });
         if (transaksiIds) {
           builder.whereIn("m_keu_transaksi_id", transaksiIds);
+        }
+      })
+      .with("jurnal1", (builder) => {
+        builder.where({ dihapus: 0 }).andWhere({ status: 1 });
+        if (transaksiAkumulasiIds) {
+          builder.whereIn("m_keu_transaksi_id", transaksiAkumulasiIds);
         }
       })
       .with("rencanaJurnal", (builder) => {
@@ -7352,6 +7358,7 @@ ${jamPerubahan}`;
       kategori,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
+      urutan: 101,
     });
 
     await MHistoriAktivitas.create({
@@ -7744,6 +7751,7 @@ ${jamPerubahan}`;
       rumus,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
+      urutan: 100,
     });
 
     const rumus12 = JSON.parse(rumus || "[]");
