@@ -1243,7 +1243,14 @@ class SecondController {
 
     // const rumus_penyusutan = JSON.parse(rumus232 || "[]");
 
-    const rumus12 = JSON.parse(rumus || "[]");
+    let rumus12 
+    if(nama == "KUMULATIF LABA (RUGI)" || kode == "00000"){
+      rumus12 = rumus
+    }else{
+
+     rumus12 = JSON.parse(rumus || "[]");
+    }
+
     const rules = {
       nama: "required",
       kode: "required",
@@ -6758,7 +6765,7 @@ ${jamPerubahan}`;
 
     let { search, tanggal_awal, tanggal_akhir } = request.get();
 
-    let transaksiIds, rencanaTransaksiIds;
+    let transaksiIds, rencanaTransaksiIds,transaksiKumulatifIds;
 
     rencanaTransaksiIds = MRencanaTransaksi.query()
       .where({ m_sekolah_id: sekolah.id })
@@ -6773,6 +6780,12 @@ ${jamPerubahan}`;
         .where({ dihapus: 0 })
         .andWhere({ status: 1 })
         .ids();
+        transaksiKumulatifIds = await MKeuTransaksi.query()
+          .where("tanggal", "<=", tanggal_akhir)
+          .where({ m_sekolah_id: sekolah.id })
+          .where({ dihapus: 0 })
+          .andWhere({ status: 1 })
+          .ids();
       rencanaTransaksiIds.whereBetween("tanggal", [
         moment(tanggal_awal).startOf("month").format("YYYY-MM-DD HH:mm:ss"),
         moment(tanggal_akhir).endOf("month").format("YYYY-MM-DD HH:mm:ss"),
@@ -6786,6 +6799,12 @@ ${jamPerubahan}`;
         builder.where({ dihapus: 0 }).andWhere({ status: 1 });
         if (transaksiIds) {
           builder.whereIn("m_keu_transaksi_id", transaksiIds);
+        }
+      })
+      .with("jurnal1", (builder) => {
+        builder.where({ dihapus: 0 }).andWhere({ status: 1 });
+        if (transaksiIds) {
+          builder.whereIn("m_keu_transaksi_id", transaksiKumulatifIds);
         }
       })
       .with("rencanaJurnal", (builder) => {
@@ -6804,6 +6823,7 @@ ${jamPerubahan}`;
       })
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
+      .orderBy("kode","asc")
       .fetch();
 
     let kategori;
@@ -6853,12 +6873,18 @@ ${jamPerubahan}`;
       })
       .first();
 
+      const rumusLaba = await MRumusLabaRugi.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
     return response.ok({
       kategori,
       akun,
       keuangan,
       rencana,
       kategoriLabaRugi,
+      rumusLaba
     });
   }
 
@@ -7309,6 +7335,7 @@ ${jamPerubahan}`;
     const rumus = await MRumusLabaRugi.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
+      .orderBy("urutan","asc")
       .fetch();
 
     const keuangan = await MKeuTemplateAkun.query()
