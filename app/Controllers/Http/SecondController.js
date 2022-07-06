@@ -1229,7 +1229,7 @@ class SecondController {
       saldo,
       rek,
       struktur,
-      rumus,
+      rumus =[],
       saldo_normal,
       m_rencana_keuangan_id,
 
