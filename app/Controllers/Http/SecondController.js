@@ -7304,6 +7304,7 @@ ${jamPerubahan}`;
           .where({ dihapus: 0 })
           .where({ m_rencana_keuangan_id: rencana.id });
       })
+      .with("rumusAkun")
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .fetch();
@@ -13816,7 +13817,7 @@ ${jamPerubahan}`;
       .update({ dihapus: 1 });
 
     const transaksiIds = await MKeuTransaksi.query()
-      .where({ m_keu_penyusutan_transaksi: penyusutasn_id })
+      .where({ m_keu_penyusutan_transaksi: penyusutan_id })
       .ids();
 
     await MKeuJurnal.query()
