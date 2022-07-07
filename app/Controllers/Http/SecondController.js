@@ -13817,7 +13817,7 @@ ${jamPerubahan}`;
       .update({ dihapus: 1 });
 
     const transaksiIds = await MKeuTransaksi.query()
-      .where({ m_keu_penyusutan_transaksi: penyusutan_id })
+      .where({ m_keu_penyusutan_transaksi_id: penyusutan_id })
       .ids();
 
     await MKeuJurnal.query()
