@@ -13552,7 +13552,7 @@ ${jamPerubahan}`;
         );
         return {
           // test,
-          tanggal_pembelian: moment(d.transaksi.tanggal).format("DD/MM/YYYY"),
+          tanggal_pembelian: d.transaksi.tanggal,
           nama: d.transaksi.nama,
           nilaiPerolehan: d.transaksi.jurnalDebet.saldo,
           masa_pakai: d.masa_pakai,
