@@ -19,6 +19,10 @@ class MKeuTransaksi extends Model {
   rencana() {
     return this.belongsTo("App/Models/MRencanaTransaksi")
   }
+  
+  penyusutan() {
+    return this.belongsTo("App/Models/MKeuPenyusutanTransaksi","id", "m_keu_transaksi_id");
+  }
 }
 
 module.exports = MKeuTransaksi;
