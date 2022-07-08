@@ -2720,7 +2720,7 @@ class SecondController {
         m_sekolah_id: sekolah.id,
         tipe: "Realisasi",
       });
-      if (transaksi.penyusutan) {
+      if (transaksi.penyusutan.id ) {
         const dataSebelum = await MKeuPenyusutanTransaksi.query()
           .where({ id: transaksi.penyusutan.id })
           .first();
