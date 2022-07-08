@@ -13668,7 +13668,7 @@ ${jamPerubahan}`;
       // return diff
       let lama = moment(diff).format(`M`);
       if (
-        moment().format("DD") >= moment(checkTransaksi.tanggal).format("DD")
+        moment().format("DD") <= moment(checkTransaksi.tanggal).format("DD")
       ) {
         lama = lama - 1;
       }
@@ -13814,7 +13814,7 @@ ${jamPerubahan}`;
       // return diff
       const lama = moment(diff).format(`M`);
       if (
-        moment().format("DD") >= moment(checkTransaksi.tanggal).format("DD")
+        moment().format("DD") <= moment(checkTransaksi.tanggal).format("DD")
       ) {
         lama = lama - 1;
       }
