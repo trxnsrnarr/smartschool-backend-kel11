@@ -943,9 +943,9 @@ class SecondController {
       .andWhere({ m_sekolah_id: sekolah.id })
       .fetch();
 
-    if (!akun[0] || !akun || akun == "[]") {
-      await otomatisAkun(sekolah);
-    }
+    // if (!akun[0] || !akun || akun == "[]") {
+    //   await otomatisAkun(sekolah);
+    // }
 
     return response.ok({
       keuangan,
