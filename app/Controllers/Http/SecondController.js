@@ -13884,7 +13884,7 @@ ${jamPerubahan}`;
           .format("YYYY-MM-DD")} ${jam}`,
         terakhir_updates: moment(`${checkTransaksi.tanggal}`)
           .add(masaPakai, "M")
-          .format("YYYY-MM-dd"),
+          .format("YYYY-MM-DD"),
         dihapus: 0,
       });
 
