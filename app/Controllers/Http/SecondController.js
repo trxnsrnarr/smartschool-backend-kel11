@@ -911,7 +911,8 @@ class SecondController {
       })
       .with("rumusAkun")
       .andWhere({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id });
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .orderBy("kode", "asc");
     akun = await akun.fetch();
     let akunSearch = MKeuAkun.query()
       .with("rek", (builder) => {
