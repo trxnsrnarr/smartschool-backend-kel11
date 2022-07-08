@@ -13667,10 +13667,11 @@ ${jamPerubahan}`;
 
       // return diff
       let lama = moment(diff).format(`M`);
-if(moment().format("DD") >=
-moment(checkTransaksi.tanggal).format("DD")){
-  lama = lama - 1
-}
+      if (
+        moment().format("DD") >= moment(checkTransaksi.tanggal).format("DD")
+      ) {
+        lama = lama - 1;
+      }
 
       // if (persentase != 0 || persentase == null) {
       //   saldo =
@@ -13680,10 +13681,8 @@ moment(checkTransaksi.tanggal).format("DD")){
       // } else {
       // }
       // return {saldo,nilai_residu,persen:persentase/100,masaPakai,duit:checkTransaksi.toJSON().jurnalDebet.saldo}
-    
-      
 
-      for (let i = 1; i <= lama ; i++) {
+      for (let i = 1; i <= lama; i++) {
         const transaksi = await MKeuTransaksi.create({
           nama: nama_transaksi,
           // nomor,
@@ -13813,7 +13812,12 @@ moment(checkTransaksi.tanggal).format("DD")){
       const diff = date2.diff(date1);
 
       // return diff
-      const lama = moment(diff).format(`MM`);
+      const lama = moment(diff).format(`M`);
+      if (
+        moment().format("DD") >= moment(checkTransaksi.tanggal).format("DD")
+      ) {
+        lama = lama - 1;
+      }
 
       // if (persentase != 0 || persentase == null) {
       //   saldo =
@@ -13825,7 +13829,7 @@ moment(checkTransaksi.tanggal).format("DD")){
         (checkTransaksi.toJSON().jurnalDebet.saldo - nilai_residu) / masaPakai;
       // }
 
-      for (let i = 1; i < lama - 1; i++) {
+      for (let i = 1; i <= lama; i++) {
         const transaksi = await MKeuTransaksi.create({
           nama: nama_transaksi,
           // nomor,
