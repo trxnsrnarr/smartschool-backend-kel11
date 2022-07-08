@@ -2549,6 +2549,7 @@ class SecondController {
 
     const transaksi = await MKeuTransaksi.query()
       .with("jurnal")
+      .with("penyusutan")
       .where({ id: transaksi_id })
       .first();
 
@@ -2719,125 +2720,82 @@ class SecondController {
         m_sekolah_id: sekolah.id,
         tipe: "Realisasi",
       });
+      if (transaksi.penyusutan) {
+        const dataSebelum = await MKeuPenyusutanTransaksi.query()
+          .where({ id: transaksi.penyusutan.id })
+          .first();
 
-      // const dataSebelum = await MKeuPenyusutanTransaksi.query()
-      //   .where({ id: penyusutan_id })
-      //   .first();
+        const checkTransaksiSebelum = await MKeuTransaksi.query()
+          .with("jurnalDebet", (builder) => {
+            builder.where({ jenis: "debit" });
+          })
+          .where({ id: dataSebelum.m_keu_transaksi_id })
+          .first();
 
-      // const checkTransaksiSebelum = await MKeuTransaksi.query()
-      //   .with("jurnalDebet", (builder) => {
-      //     builder.where({ jenis: "debit" });
-      //   })
-      //   .where({ id: dataSebelum.m_keu_transaksi_id })
-      //   .first();
+        const deletee = await MKeuTransaksi.query()
+          .where({ m_keu_penyusutan_transaksi_id: dataSebelum.id })
+          .delete();
 
-      // const deletee = await MKeuTransaksi.query()
-      //   .where({ nama: dataSebelum.nama_transaksi })
-      //   .delete();
+        let saldo = dataSebelum.saldo;
 
-      // let saldo = 0;
-      // const checkTransaksi = await MKeuTransaksi.query()
-      //   .with("jurnalDebet", (builder) => {
-      //     builder.where({ jenis: "debit" });
-      //   })
-      //   .where({ id: m_keu_transaksi_id })
-      //   .first();
+        let masaPakai;
+        if (dataSebelum.satuan == "Bulan") {
+          masaPakai = dataSebelum.masa_pakai;
+        } else if (dataSebelum.satuan == "Tahun") {
+          masaPakai = dataSebelum.masa_pakai * 12;
+        }
 
-      // let masaPakai;
-      // if (satuan == "Bulan") {
-      //   masaPakai = masa_pakai;
-      // } else if (satuan == "Tahun") {
-      //   masaPakai = masa_pakai * 12;
-      // }
+        if (
+          moment().format("YYYY-MM-DD") >= moment(tanggal).format("YYYY-MM-DD")
+        ) {
+          const date1 = moment(`${tanggal}`);
 
-      // if (
-      //   moment().format("YYYY-MM-DD") >=
-      //   moment(checkTransaksi.tanggal).format("YYYY-MM-DD")
-      // ) {
-      //   const date1 = moment(`${checkTransaksi.tanggal}`);
+          let date2;
+          if (moment(`${tanggal}`).add(masaPakai, "M") >= moment()) {
+            date2 = moment();
+          } else {
+            date2 = moment(`${tanggal}`).add(masaPakai, "M");
+          }
+          const diff = date2.diff(date1);
 
-      //   let date2;
-      //   if (
-      //     moment(`${checkTransaksi.tanggal}`).add(masaPakai, "M") >= moment()
-      //   ) {
-      //     date2 = moment();
-      //   } else {
-      //     date2 = moment(`${checkTransaksi.tanggal}`).add(masaPakai, "M");
-      //   }
-      //   const diff = date2.diff(date1);
+          // return diff
+          let lama = moment(diff).format(`M`);
+          if (moment().format("DD") >= moment(transaksi.tanggal).format("DD")) {
+            lama = lama - 1;
+          }
 
-      //   // return diff
-      //   const lama = moment(diff).format(`MM`);
+          for (let i = 1; i <= lama; i++) {
+            const transaksi = await MKeuTransaksi.create({
+              nama: dataSebelum.nama_transaksi,
+              // nomor,
+              tanggal: moment(tanggal).add(i, "M").format("YYYY-MM-DD"),
+              dihapus: 0,
+              status: 1,
+              m_sekolah_id: sekolah.id,
+              m_keu_penyusutan_transaksi_id: dataSebelum.id,
+            });
 
-      //   // if (persentase != 0 || persentase == null) {
-      //   //   saldo =
-      //   //     ((checkTransaksi.toJSON().jurnalDebet.saldo - nilai_residu) *
-      //   //       (persentase / 100)) /
-      //   //     masaPakai;
-      //   // } else {
-      //   saldo =
-      //     (checkTransaksi.toJSON().jurnalDebet.saldo - nilai_residu) /
-      //     masaPakai;
-      //   // }
+            await MKeuJurnal.create({
+              jenis: "debit",
+              m_keu_transaksi_id: transaksi.id,
+              m_keu_akun_id: dataSebelum.m_keu_akun_debet_id,
+              saldo,
+              status: 1,
+              dihapus: 0,
+            });
 
-      //   for (let i = 1; i < lama - 1; i++) {
-      //     const transaksi = await MKeuTransaksi.create({
-      //       nama: nama_transaksi,
-      //       // nomor,
-      //       tanggal: moment(checkTransaksi.tanggal)
-      //         .add(i, "M")
-      //         .format("YYYY-MM-DD"),
-      //       dihapus: 0,
-      //       status: 1,
-      //       m_sekolah_id: sekolah.id,
-      //       m_keu_penyusutan_transaksi_id: penyusutan_id,
-      //     });
-
-      //     await MKeuJurnal.create({
-      //       jenis: "debit",
-      //       m_keu_transaksi_id: transaksi.id,
-      //       m_keu_akun_id: m_keu_akun_debet_id,
-      //       saldo,
-      //       status: 1,
-      //       dihapus: 0,
-      //     });
-
-      //     await MKeuJurnal.create({
-      //       jenis: "kredit",
-      //       m_keu_transaksi_id: transaksi.id,
-      //       m_keu_akun_id: m_keu_akun_kredit_id,
-      //       saldo,
-      //       status: 1,
-      //       dihapus: 0,
-      //     });
-      //   }
-      //   //  return datass
-      // }
-
-      // // const kategoriLaba = await MKeuKategoriLabaRugi.query()
-      // //   .where({ id: penyusutan_id })
-      // //   .first();
-      // const jam = moment(checkTransaksi.tanggal).format("hh:mm:ss");
-
-      // const penyusutan = await MKeuPenyusutanTransaksi.query()
-      //   .where({ id: penyusutan_id })
-      //   .update({
-      //     nama_transaksi,
-      //     m_keu_transaksi_id,
-      //     nilai_residu,
-      //     persentase,
-      //     masa_pakai,
-      //     satuan,
-      //     m_keu_akun_debet_id,
-      //     m_keu_akun_kredit_id,
-      //     update_selanjutnya: `${moment()
-      //       .add(1, "M")
-      //       .format("YYYY-MM-DD")} ${jam}`,
-      //     terakhir_updates: moment(`${checkTransaksi.tanggal}`)
-      //       .add(masaPakai, "M")
-      //       .format("YYYY-MM-dd"),
-      //     dihapus: 0,
-      //   });
+            await MKeuJurnal.create({
+              jenis: "kredit",
+              m_keu_transaksi_id: transaksi.id,
+              m_keu_akun_id: dataSebelum.m_keu_akun_kredit_id,
+              saldo,
+              status: 1,
+              dihapus: 0,
+            });
+          }
+          //  return datass
+        }
+      }
     }
     if (nama != transaksi.nama) {
       await MHistoriAktivitas.create({
@@ -13779,7 +13737,7 @@ ${jamPerubahan}`;
       .first();
 
     const deletee = await MKeuTransaksi.query()
-      .where({ nama: dataSebelum.nama_transaksi })
+      .where({ m_keu_penyusutan_transaksi_id: dataSebelum.id })
       .delete();
 
     let saldo = 0;
