@@ -13756,11 +13756,11 @@ ${jamPerubahan}`;
 
     const rules = {
       nama_transaksi: "required",
-      nilai_residu: "required",
+      // nilai_residu: "required",
     };
     const message = {
       "nama_transaksi.required": "Nama Transaksi Penyusutan harus diisi",
-      "nilai_residu.required": "Nilai Residu harus diisi",
+      // "nilai_residu.required": "Nilai Residu harus diisi",
     };
     const validation = await validate(request.all(), rules, message);
     if (validation.fails()) {
