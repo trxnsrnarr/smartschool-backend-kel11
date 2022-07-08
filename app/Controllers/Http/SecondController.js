@@ -13812,7 +13812,7 @@ ${jamPerubahan}`;
       const diff = date2.diff(date1);
 
       // return diff
-      const lama = moment(diff).format(`M`);
+      let lama = moment(diff).format(`M`);
       if (
         moment().format("DD") >= moment(checkTransaksi.tanggal).format("DD")
       ) {
