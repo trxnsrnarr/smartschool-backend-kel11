@@ -3999,9 +3999,9 @@ if(check){
   } 
 }
     if(!check){
-      if(whatsapp == guruSebelum.whatsapp){
+      
         guru = await User.query().where({ id: guru_id }).update(payload);
-      } 
+      
     }
 
     if (!guru) {
