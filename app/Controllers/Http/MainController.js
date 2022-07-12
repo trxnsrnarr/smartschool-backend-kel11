@@ -3989,16 +3989,19 @@ class MainController {
       .where({ m_sekolah_id: sekolah.id })
       .where({ role })
       .first();
-
-    if (check.id == guruSebelum.id) {
-      guru = await User.query().where({ id: guru_id }).update(payload);
-    } else if(whatsapp == guruSebelum.whatsapp){
-      guru = await User.query().where({ id: guru_id }).update(payload);
-    }  else if(check.id != guruSebelum.id) {
-      
-      return response.notFound({
-        message: "Nomor Whatsapp Sudah Terdaftar",
-      });
+if(check){
+  if(check.id != guruSebelum.id) {   
+    return response.notFound({
+      message: "Nomor Whatsapp Sudah Terdaftar",
+    });
+  }else if (check.id == guruSebelum.id) {
+    guru = await User.query().where({ id: guru_id }).update(payload);
+  } 
+}
+    if(!check){
+      if(whatsapp == guruSebelum.whatsapp){
+        guru = await User.query().where({ id: guru_id }).update(payload);
+      } 
     }
 
     if (!guru) {
