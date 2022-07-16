@@ -548,6 +548,7 @@ Route.put("/laba-template/:labarugi_id", "SecondController.putLabaRugiTemplate")
 // Arus Kas
 Route.get("/arus-keuangan", "SecondController.getArusKas");
 Route.get("/arus-keuangan-laporan", "SecondController.getArusKasLaporan");
+Route.get("/arus-keuangan-laporan-neraca", "SecondController.getArusKasLaporanNeraca");
 Route.post("/kategori-arus", "SecondController.postKategoriArusKas");
 Route.put("/kategori-arus/:kategori_id", "SecondController.putKategoriArusKas");
 Route.delete(
