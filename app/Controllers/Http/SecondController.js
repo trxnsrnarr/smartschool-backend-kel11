@@ -13885,8 +13885,8 @@ ${jamPerubahan}`;
     } else if (satuan == "Tahun") {
       masaPakai = masa_pakai * 12;
     }
-    saldo =
-      (checkTransaksi.toJSON().jurnalDebet.saldo - nilai_residu) / masaPakai;
+    saldo = Math.round(
+      (checkTransaksi.toJSON().jurnalDebet.saldo - nilai_residu) / masaPakai);
 
     const penyusutan = await MKeuPenyusutanTransaksi.create({
       nama_transaksi,
@@ -14080,8 +14080,8 @@ ${jamPerubahan}`;
       //       (persentase / 100)) /
       //     masaPakai;
       // } else {
-      saldo =
-        (checkTransaksi.toJSON().jurnalDebet.saldo - nilai_residu) / masaPakai;
+      saldo = Math.round(
+        (checkTransaksi.toJSON().jurnalDebet.saldo - nilai_residu) / masaPakai);
       // }
 
       for (let i = 1; i <= lama; i++) {
