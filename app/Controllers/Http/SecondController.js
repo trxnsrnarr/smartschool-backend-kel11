@@ -2356,6 +2356,7 @@ class SecondController {
         });
       })
       .where({ m_sekolah_id: sekolah.id })
+      .orderBy("tanggal","desc")
       .where({ dihapus: 0 });
 
     if (transaksiIds) {
