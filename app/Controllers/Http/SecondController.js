@@ -6903,7 +6903,6 @@ ${jamPerubahan}`;
           .where({ dihapus: 0 })
           .where({ m_rencana_keuangan_id: rencana.id });
       })
-      .whereNot({ nama: "KAS" })
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .orderBy("kode", "asc")
