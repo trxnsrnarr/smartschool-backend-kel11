@@ -30559,7 +30559,7 @@ if(check){
         builder
           .where({ tingkat: siswa.toJSON().anggotaRombel.rombel.tingkat })
           .andWhere({ dihapus: 0 });
-        if (sekolah.id == 578) {
+        if (sekolah.id == 578 ||ta.id ==121) {
           if (mapelSingkat.kelompok == "C") {
             if (siswa.toJSON().anggotaRombel.rombel.m_jurusan_id != null) {
               builder.andWhere({
@@ -30657,7 +30657,7 @@ if(check){
             tingkat: siswaKeterampilan.toJSON().anggotaRombel.rombel.tingkat,
           })
           .where({ dihapus: 0 })
-          if (sekolah.id == 578) {
+          if (sekolah.id == 578 || ta.id == 121) {
             if (mapelSingkat.kelompok == "C") {
               if (siswa.toJSON().anggotaRombel.rombel.m_jurusan_id != null) {
                 builder.andWhere({
