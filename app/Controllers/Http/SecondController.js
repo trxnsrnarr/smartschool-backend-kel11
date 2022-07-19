@@ -7428,7 +7428,6 @@ ${jamPerubahan}`;
           .where({ m_rencana_keuangan_id: rencana.id });
       })
       .with("rumusAkun")
-      .whereNot({ nama: "KAS" })
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .fetch();
@@ -8485,7 +8484,6 @@ ${jamPerubahan}`;
           .where({ dihapus: 0 })
           .andWhere({ status: 1 });
       })
-      .whereNot({ nama: "KAS" })
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .orderBy("kode", "asc")
@@ -8868,7 +8866,7 @@ ${jamPerubahan}`;
           .where({ dihapus: 0 })
           .andWhere({ status: 1 });
       })
-      .whereNot({ nama: "KAS" })
+      
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .orderBy("kode", "asc")
