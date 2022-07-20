@@ -139,7 +139,7 @@ const HitungNilaiAkhir = async ({
       await MUjianSiswa.query().where({ id: ujian.id }).update({
         nilai: `${nilaiAkhir ? nilaiAkhir :0}`,
         nilai_uts: `${nilaiAkhir ? nilaiAkhir :0}`,
-        avg_nilai_tugas: nilaiTugas,
+        avg_nilai_tugas: nilaiTugas ? nilaiTugas :0,
         avg_nilai_ujian: nilaiUjian,
       });
     } else {
