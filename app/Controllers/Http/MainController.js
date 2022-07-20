@@ -5581,7 +5581,7 @@ if(check){
 
     const rombel = await MRombel.query()
       .with("user", (builder) => {
-        builder.select("id", "nama");
+        builder.select("id", "nama","whatsapp");
       })
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ m_ta_id: ta.id })
@@ -6481,7 +6481,7 @@ if(check){
 
     const mataPelajaran = await MMataPelajaran.query()
       .with("user", (builder) => {
-        builder.select("id", "nama");
+        builder.select("id", "nama","whatsapp");
       })
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ m_ta_id: ta.id })
@@ -30659,9 +30659,9 @@ if(check){
           .where({ dihapus: 0 })
           if (sekolah.id == 578 || ta.id == 121) {
             if (mapelSingkat.kelompok == "C") {
-              if (siswa.toJSON().anggotaRombel.rombel.m_jurusan_id != null) {
+              if (siswaKeterampilan.toJSON().anggotaRombel.rombel.m_jurusan_id != null) {
                 builder.andWhere({
-                  m_jurusan_id: siswa.toJSON().anggotaRombel.rombel.m_jurusan_id,
+                  m_jurusan_id: siswaKeterampilan.toJSON().anggotaRombel.rombel.m_jurusan_id,
                 });
               }
             }
