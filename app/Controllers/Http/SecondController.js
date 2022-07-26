@@ -13951,37 +13951,41 @@ ${jamPerubahan}`;
       } else {
         date2 = moment(`${checkTransaksi.tanggal}`).add(masaPakai, "M");
       }
-     //Initiate date object
-     const dt_date1 = new Date(date1);
-     const dt_date2 = new Date(date2);
-     //Get the Timestamp
-     date1 = dt_date1.getTime();
-     date2 = dt_date2.getTime();
+      //Initiate date object
+      const dt_date1 = new Date(date1);
+      const dt_date2 = new Date(date2);
+      //Get the Timestamp
+      date1 = dt_date1.getTime();
+      date2 = dt_date2.getTime();
 
-     let calc;
-     //Check which timestamp is greater
-     if (date1 > date2) {
-       calc = new Date(date1 - date2);
-     } else {
-       calc = new Date(date2 - date1);
-     }
-     //Retrieve the date, month and year
-     const calcFormatTmp =
-       calc.getDate() + "-" + (calc.getMonth() + 1) + "-" + calc.getFullYear();
-     //Convert to an array and store
-     const calcFormat = calcFormatTmp.split("-");
-     //Subtract each member of our array from the default date
-     const months_passed = parseInt(Math.abs(calcFormat[1]) - 1);
-     const years_passed = parseInt(Math.abs(calcFormat[2] - 1970));
+      let calc;
+      //Check which timestamp is greater
+      if (date1 > date2) {
+        calc = new Date(date1 - date2);
+      } else {
+        calc = new Date(date2 - date1);
+      }
+      //Retrieve the date, month and year
+      const calcFormatTmp =
+        calc.getDate() + "-" + (calc.getMonth() + 1) + "-" + calc.getFullYear();
+      //Convert to an array and store
+      const calcFormat = calcFormatTmp.split("-");
+      //Subtract each member of our array from the default date
+      const months_passed = parseInt(Math.abs(calcFormat[1]) - 1);
+      const years_passed = parseInt(Math.abs(calcFormat[2] - 1970));
 
-     // return diff
-     let lama = months_passed + years_passed ? years_passed * 12 : 0;
-     if (
-       moment().format("DD") >= moment(checkTransaksi.tanggal).format("DD")
-     ) {
-       lama = lama - 1;
-     }
-
+      // return diff
+      let lama =
+        parseInt(months_passed) +
+        parseInt(years_passed ? years_passed * 12 : 0);
+      if (
+        moment().format("DD") >= moment(checkTransaksi.tanggal).format("DD")
+      ) {
+        lama = lama - 1;
+      }
+      if (lama > masaPakai) {
+        lama = masaPakai;
+      }
 
       // if (persentase != 0 || persentase == null) {
       //   saldo =
@@ -14145,11 +14149,16 @@ ${jamPerubahan}`;
       const years_passed = parseInt(Math.abs(calcFormat[2] - 1970));
 
       // return diff
-      let lama = months_passed + years_passed ? years_passed * 12 : 0;
+      let lama =
+        parseInt(months_passed) +
+        parseInt(years_passed ? years_passed * 12 : 0);
       if (
         moment().format("DD") >= moment(checkTransaksi.tanggal).format("DD")
       ) {
         lama = lama - 1;
+      }
+      if (lama > masaPakai) {
+        lama = masaPakai;
       }
 
       // if (persentase != 0 || persentase == null) {
