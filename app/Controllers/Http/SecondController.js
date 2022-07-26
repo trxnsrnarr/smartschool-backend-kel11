@@ -14130,7 +14130,6 @@ ${jamPerubahan}`;
       ) {
         lama = lama - 1;
       }
-      return { date2, date1, lama };
 
       // if (persentase != 0 || persentase == null) {
       //   saldo =
