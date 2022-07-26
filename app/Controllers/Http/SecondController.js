@@ -13951,15 +13951,37 @@ ${jamPerubahan}`;
       } else {
         date2 = moment(`${checkTransaksi.tanggal}`).add(masaPakai, "M");
       }
-      const diff = date2.diff(date1);
+     //Initiate date object
+     const dt_date1 = new Date(date1);
+     const dt_date2 = new Date(date2);
+     //Get the Timestamp
+     date1 = dt_date1.getTime();
+     date2 = dt_date2.getTime();
 
-      // return diff
-      let lama = moment(diff).format(`M`);
-      if (
-        moment().format("DD") >= moment(checkTransaksi.tanggal).format("DD")
-      ) {
-        lama = lama - 1;
-      }
+     let calc;
+     //Check which timestamp is greater
+     if (date1 > date2) {
+       calc = new Date(date1 - date2);
+     } else {
+       calc = new Date(date2 - date1);
+     }
+     //Retrieve the date, month and year
+     const calcFormatTmp =
+       calc.getDate() + "-" + (calc.getMonth() + 1) + "-" + calc.getFullYear();
+     //Convert to an array and store
+     const calcFormat = calcFormatTmp.split("-");
+     //Subtract each member of our array from the default date
+     const months_passed = parseInt(Math.abs(calcFormat[1]) - 1);
+     const years_passed = parseInt(Math.abs(calcFormat[2] - 1970));
+
+     // return diff
+     let lama = months_passed + years_passed ? years_passed * 12 : 0;
+     if (
+       moment().format("DD") >= moment(checkTransaksi.tanggal).format("DD")
+     ) {
+       lama = lama - 1;
+     }
+
 
       // if (persentase != 0 || persentase == null) {
       //   saldo =
@@ -14119,7 +14141,6 @@ ${jamPerubahan}`;
       //Convert to an array and store
       const calcFormat = calcFormatTmp.split("-");
       //Subtract each member of our array from the default date
-      const days_passed = parseInt(Math.abs(calcFormat[0]) - 1);
       const months_passed = parseInt(Math.abs(calcFormat[1]) - 1);
       const years_passed = parseInt(Math.abs(calcFormat[2] - 1970));
 
