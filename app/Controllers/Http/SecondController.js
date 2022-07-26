@@ -13943,7 +13943,7 @@ ${jamPerubahan}`;
       moment().format("YYYY-MM-DD") >=
       moment(checkTransaksi.tanggal).format("YYYY-MM-DD")
     ) {
-      const date1 = moment(`${checkTransaksi.tanggal}`);
+      let date1 = moment(`${checkTransaksi.tanggal}`);
 
       let date2;
       if (moment(`${checkTransaksi.tanggal}`).add(masaPakai, "M") >= moment()) {
