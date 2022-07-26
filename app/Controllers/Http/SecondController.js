@@ -392,20 +392,20 @@ class SecondController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    // const { tingkat, hari = 1 } = request.get();
+    const { ta_id = ta.id } = request.get();
 
     const mataPelajaran = await MMataPelajaran.query()
       .with("user", (builder) => {
         builder.select("id", "nama").where({ dihapus: 0 });
       })
       .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ m_ta_id: ta_id })
       .andWhere({ dihapus: 0 })
       .ids();
 
     const rombelIds = await MRombel.query()
       .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ m_ta_id: ta_id })
       .andWhere({ dihapus: 0 })
       .ids();
 
@@ -418,7 +418,7 @@ class SecondController {
       })
       .where({ m_sekolah_id: sekolah.id })
       // .andWhere({ kode_hari: hari })
-      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ m_ta_id: ta_id })
       .fetch();
 
     let rombel = {};
@@ -8866,7 +8866,7 @@ ${jamPerubahan}`;
           .where({ dihapus: 0 })
           .andWhere({ status: 1 });
       })
-      
+
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .orderBy("kode", "asc")
@@ -13472,7 +13472,8 @@ ${jamPerubahan}`;
   }
 
   async naikTAJam({ response, request }) {
-    const domain = request.headers().origin;
+    // const domain = request.headers().origin;
+    let { domain } = request.get();
 
     const sekolah = await this.getSekolahByDomain(domain);
 
@@ -13490,8 +13491,6 @@ ${jamPerubahan}`;
     const check = await Mta.query()
       .where({ tahun: "2021 / 2022" })
       .andWhere({ semester: "Genap" })
-      .andWhere({ nama_kepsek: taa.nama_kepsek })
-      .andWhere({ nip_kepsek: taa.nip_kepsek })
       .andWhere({ aktif: taa.aktif })
       .andWhere({ dihapus: taa.dihapus })
       .andWhere({ m_sekolah_id: taa.m_sekolah_id })
@@ -13503,9 +13502,7 @@ ${jamPerubahan}`;
 
     const check2 = await Mta.query()
       .where({ tahun: "2022 / 2023" })
-      .andWhere({ semester: "Ganjil" })
-      .andWhere({ nama_kepsek: taa.nama_kepsek })
-      .andWhere({ nip_kepsek: taa.nip_kepsek })
+      .whereIn("semester", ["Ganjil", 1])
       .andWhere({ aktif: taa.aktif })
       .andWhere({ dihapus: taa.dihapus })
       .andWhere({ m_sekolah_id: taa.m_sekolah_id })
@@ -13575,7 +13572,8 @@ ${jamPerubahan}`;
   }
 
   async naikTAMapel({ response, request }) {
-    const domain = request.headers().origin;
+    // const domain = request.headers().origin;
+    let { domain } = request.get();
 
     const sekolah = await this.getSekolahByDomain(domain);
 
@@ -13625,7 +13623,8 @@ ${jamPerubahan}`;
   }
 
   async naikTARombel({ response, request }) {
-    const domain = request.headers().origin;
+    // const domain = request.headers().origin;
+    let { domain } = request.get();
 
     const sekolah = await this.getSekolahByDomain(domain);
 
@@ -13654,77 +13653,102 @@ ${jamPerubahan}`;
     if (taBaru.rombel_sinkron == 0) {
       const all = await Promise.all(
         rombel.toJSON().map(async (d) => {
-          const rombelBaru = await MRombel.create({
-            tingkat: d.tingkat,
-            nama: d.nama,
-            kelompok: d.kelompok,
-            dihapus: 0,
-            m_user_id: d.m_user_id,
-            m_jurusan_id: d.m_jurusan_id,
-            m_sekolah_id: d.m_sekolah_id,
-            m_ta_id: taBaru.id,
-          });
+          if (d?.tingkat != "XII") {
+            // return {nama : d?.nama?.split(" ")[0] + "I" + " " + d?.nama?.split(" ")[1]+ " " + d?.nama?.split(" ")[2]}
+            const jurusan = await MJurusan.query()
+              .select("id", "kode")
+              .where({ id: d.m_jurusan_id })
+              .first();
+            // return{nama  :  d?.nama?.split(" ")[0] +
+            //     "I" +
+            //     " " +
+            //     jurusan.kode +
+            //     " " +
+            //     d?.nama?.split(" ")[d?.nama?.split(" ").length - 1]}
 
-          const checkKategoriMapel = await MKategoriMapel.query()
-            .where({ m_rombel_id: rombelBaru.id })
-            .first();
-
-          if (!checkKategoriMapel) {
-            await MKategoriMapel.create({
-              nama: "Muatan Nasional",
+            const rombelBaru = await MRombel.create({
+              tingkat: d.tingkat + "I",
+              nama:
+                d?.nama?.split(" ")[0] +
+                "I" +
+                " " +
+                jurusan.kode +
+                " " +
+                d?.nama?.split(" ")[d?.nama?.split(" ").length - 1],
+              kelompok: d.kelompok,
               dihapus: 0,
-              m_rombel_id: rombelBaru.id,
+              m_user_id: d.m_user_id,
+              m_jurusan_id: d.m_jurusan_id,
+              m_sekolah_id: d.m_sekolah_id,
+              m_ta_id: taBaru.id,
             });
-            await MKategoriMapel.create({
-              nama: "Muatan Kewilayahan",
-              dihapus: 0,
-              m_rombel_id: rombelBaru.id,
-            });
-            await MKategoriMapel.create({
-              nama: "Muatan Peminatan Kejurusan",
-              dihapus: 0,
-              m_rombel_id: rombelBaru.id,
-            });
-          }
 
-          const jamMengajar = await MJamMengajar.query()
-            .select("id")
-            .where({ m_sekolah_id: sekolah.id })
-            .andWhere({ m_ta_id: taBaru.id })
-            .fetch();
+            const checkKategoriMapel = await MKategoriMapel.query()
+              .where({ m_rombel_id: rombelBaru.id })
+              .first();
 
-          const jadwalMengajarData = await Promise.all(
-            jamMengajar.toJSON().map(async (data) => {
-              data.m_mata_pelajaran_id = null;
-              data.m_rombel_id = rombelBaru.id;
-              data.m_jam_mengajar_id = data.id;
-              data.m_sekolah_id = sekolah.id;
-              data.m_ta_id = taBaru.id;
-              delete data.id;
-              delete data.jamFormat;
-
-              return data;
-            })
-          );
-
-          await MJadwalMengajar.createMany(jadwalMengajarData);
-          const data = await Promise.all(
-            d.anggotaRombel.map(async (e, nox) => {
-              await MAnggotaRombel.create({
-                role: e.role,
+            if (!checkKategoriMapel) {
+              await MKategoriMapel.create({
+                nama: "Muatan Nasional",
                 dihapus: 0,
-                m_user_id: e.m_user_id,
                 m_rombel_id: rombelBaru.id,
               });
-            })
-          );
+              await MKategoriMapel.create({
+                nama: "Muatan Kewilayahan",
+                dihapus: 0,
+                m_rombel_id: rombelBaru.id,
+              });
+              await MKategoriMapel.create({
+                nama: "Muatan Peminatan Kejurusan",
+                dihapus: 0,
+                m_rombel_id: rombelBaru.id,
+              });
+            }
+
+            const jamMengajar = await MJamMengajar.query()
+              .select("id")
+              .where({ m_sekolah_id: sekolah.id })
+              .andWhere({ m_ta_id: taBaru.id })
+              .fetch();
+
+            const jadwalMengajarData = await Promise.all(
+              jamMengajar.toJSON().map(async (data) => {
+                data.m_mata_pelajaran_id = null;
+                data.m_rombel_id = rombelBaru.id;
+                data.m_jam_mengajar_id = data.id;
+                data.m_sekolah_id = sekolah.id;
+                data.m_ta_id = taBaru.id;
+                delete data.id;
+                delete data.jamFormat;
+
+                return data;
+              })
+            );
+
+            await MJadwalMengajar.createMany(jadwalMengajarData);
+            const data = await Promise.all(
+              d.anggotaRombel.map(async (e, nox) => {
+                await MAnggotaRombel.create({
+                  role: e.role,
+                  dihapus: 0,
+                  m_user_id: e.m_user_id,
+                  m_rombel_id: rombelBaru.id,
+                });
+              })
+            );
+          }
           // return data;
         })
       );
+      // return all
     }
     await Mta.query().where({ id: taBaru.id }).update({
       rombel_sinkron: 1,
+      jadwal_sinkron: 1,
       dihapus: 0,
+    });
+    await Mta.query().where({ id: ta.id }).update({
+      aktif: 0,
     });
 
     return response.ok({
@@ -14065,7 +14089,7 @@ ${jamPerubahan}`;
       moment().format("YYYY-MM-DD") >=
       moment(checkTransaksi.tanggal).format("YYYY-MM-DD")
     ) {
-      const date1 = moment(`${checkTransaksi.tanggal}`);
+      let date1 = moment(`${checkTransaksi.tanggal}`);
 
       let date2;
       if (moment(`${checkTransaksi.tanggal}`).add(masaPakai, "M") >= moment()) {
@@ -14073,15 +14097,40 @@ ${jamPerubahan}`;
       } else {
         date2 = moment(`${checkTransaksi.tanggal}`).add(masaPakai, "M");
       }
-      const diff = date2.diff(date1);
+      // const diff = date2.diff(date1);
+
+      //Initiate date object
+      const dt_date1 = new Date(date1);
+      const dt_date2 = new Date(date2);
+      //Get the Timestamp
+      date1 = dt_date1.getTime();
+      date2 = dt_date2.getTime();
+
+      let calc;
+      //Check which timestamp is greater
+      if (date1 > date2) {
+        calc = new Date(date1 - date2);
+      } else {
+        calc = new Date(date2 - date1);
+      }
+      //Retrieve the date, month and year
+      const calcFormatTmp =
+        calc.getDate() + "-" + (calc.getMonth() + 1) + "-" + calc.getFullYear();
+      //Convert to an array and store
+      const calcFormat = calcFormatTmp.split("-");
+      //Subtract each member of our array from the default date
+      const days_passed = parseInt(Math.abs(calcFormat[0]) - 1);
+      const months_passed = parseInt(Math.abs(calcFormat[1]) - 1);
+      const years_passed = parseInt(Math.abs(calcFormat[2] - 1970));
 
       // return diff
-      let lama = moment(diff).format(`M`);
+      let lama = months_passed + years_passed ? years_passed * 12 : 0;
       if (
         moment().format("DD") >= moment(checkTransaksi.tanggal).format("DD")
       ) {
         lama = lama - 1;
       }
+      return { date2, date1, lama };
 
       // if (persentase != 0 || persentase == null) {
       //   saldo =
@@ -14345,6 +14394,46 @@ ${jamPerubahan}`;
       .where({ dihapus: 0 })
       .where({ id: transaksi_id })
       .first();
+
+    // return ` ini nilai${status}`
+    // transaksi = transaksi
+    //   .toJSON()
+    //   .data.sort((a, b) => ("" + a.status).localeCompare("" + b.status));
+
+    return response.ok({
+      transaksi,
+    });
+  }
+  async hackTanggalTransaksi({
+    response,
+    request,
+    auth,
+    params: { transaksi_id },
+  }) {
+    // const domain = request.headers().origin;
+    const { domain } = request.get();
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let transaksi = await MKeuTransaksi.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
+      .fetch();
+
+    const check = await Promise.all(
+      transaksi.toJSON().map(async (d) => {
+        const tanggalAktif = `2021${moment(d.tanggal).format("-MM-DD")}`;
+        let update = await MKeuTransaksi.query().where({ id: d.id }).update({
+          tanggal: tanggalAktif,
+        });
+        return tanggalAktif;
+      })
+    );
+    return check;
 
     // return ` ini nilai${status}`
     // transaksi = transaksi
