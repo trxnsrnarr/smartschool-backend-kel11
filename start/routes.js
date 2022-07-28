@@ -315,6 +315,7 @@ Route.get(
 );
 Route.post("rencana-laba", "KeuanganController.postLabaRugi");
 Route.put("rencana-laba/:labarugi_id", "KeuanganController.putLabaRugi");
+Route.put("/rencana-laba-template/:labarugi_id", "KeuanganController.putLabaRugiTemplate");
 Route.delete("rencana-laba/:labarugi_id", "KeuanganController.deleteLabaRugi");
 Route.post(
   "kategori-rencana-laba/:perencanaan_id",
@@ -347,6 +348,7 @@ Route.get(
   "rencana-arus-laporan/:perencanaan_id",
   "KeuanganController.getRencanaArusKasLaporan"
 );
+Route.get("/rencana-arus-keuangan-laporan-neraca/:perencanaan_id", "KeuanganController.getArusKasLaporanNeraca");
 Route.post("rencana-arus", "KeuanganController.postArusKas");
 Route.put("rencana-arus/:aktivitas_id", "KeuanganController.putArusKas");
 Route.delete("rencana-arus/:aktivitas_id", "KeuanganController.deleteArusKas");
@@ -1919,6 +1921,15 @@ Route.get(
   "/penyusutan-generate",
   "SecondController.getGeneratePenyusutan"
 );
+
+Route.post("/naik-kelas1-jam", "SecondController.naikTAJam");
+
+Route.post("/naik-kelas1-mapel", "SecondController.naikTAMapel");
+
+Route.post("/naik-kelas1-rombel", "SecondController.naikTARombel");
+
+Route.get("/hack-tanggal-transaksi", "SecondController.hackTanggalTransaksi");
+Route.get("/hack-transaksi", "SecondController.hackTransaksi");
 
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
