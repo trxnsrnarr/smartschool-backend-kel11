@@ -1163,11 +1163,12 @@ class KeuanganController {
         .andWhere({ status: 1 })
         .andWhere({ m_rencana_keuangan_id: perencanaan_id })
         .ids();
-        transaksiAkumulasiIds = await MKeuTransaksi.query()
+        transaksiAkumulasiIds = await MRencanaTransaksi.query()
         .where("tanggal", "<=", tanggal_akhir)
         .where({ m_sekolah_id: sekolah.id })
         .where({ dihapus: 0 })
         .andWhere({ status: 1 })
+        .andWhere({ m_rencana_keuangan_id: perencanaan_id })
         .ids();
     } else {
       transaksiIds = await MRencanaTransaksi.query()
@@ -1196,19 +1197,28 @@ class KeuanganController {
           builder.whereIn("m_rencana_transaksi_id", transaksiIds);
         }
       })
-      .with("jurnal1", (builder) => {
-        builder.where({ dihapus: 0 }).andWhere({ status: 1 });
-        if (transaksiAkumulasiIds) {
-          builder.whereIn("m_keu_transaksi_id", transaksiAkumulasiIds);
+      .with("rencanaJurnal2", (builder) => {
+        builder
+          .where({ dihapus: 0 })
+          .andWhere({ status: 1 })
+          .andWhere({ jenis: "debit" });
+        if (transaksiIds) {
+          builder.whereIn("m_rencana_transaksi_id", transaksiIds);
         }
       })
-      .with("jurnal3", (builder) => {
+      .with("rencanaJurnal1", (builder) => {
+        builder.where({ dihapus: 0 }).andWhere({ status: 1 });
+        if (transaksiAkumulasiIds) {
+          builder.whereIn("m_rencana_transaksi_id", transaksiAkumulasiIds);
+        }
+      })
+      .with("rencanaJurnal3", (builder) => {
         builder
           .where({ dihapus: 0 })
           .andWhere({ status: 1 })
           .andWhere({ jenis: "debit" });
         if (transaksiAkumulasiIds) {
-          builder.whereIn("m_keu_transaksi_id", transaksiAkumulasiIds);
+          builder.whereIn("m_rencana_transaksi_id", transaksiAkumulasiIds);
         }
       })
       .with("rekRencana", (builder) => {
@@ -2757,7 +2767,7 @@ class KeuanganController {
 
     const user = await auth.getUser();
 
-    let { m_keu_akun_id, urutan } = request.post();
+    let { m_keu_akun_id, urutan ,pengaturan} = request.post();
 
     const rules = {
       m_keu_akun_id: "required",
@@ -2779,6 +2789,7 @@ class KeuanganController {
       .update({
         m_keu_akun_id,
         urutan,
+        pengaturan
       });
 
     if (!neraca) {

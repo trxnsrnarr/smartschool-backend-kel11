@@ -6874,7 +6874,10 @@ ${jamPerubahan}`;
 
     const rencana = await this.getRencanaAktif(sekolah, 0, tanggal_awal);
 
-    let transaksiIds, rencanaTransaksiIds, transaksiKumulatifIds;
+    let transaksiIds,
+      rencanaTransaksiIds,
+      transaksiKumulatifIds,
+      rencanaTransaksiKumulatifIds;
 
     rencanaTransaksiIds = MRencanaTransaksi.query()
       .where({ m_sekolah_id: sekolah.id })
@@ -6899,6 +6902,13 @@ ${jamPerubahan}`;
         moment(tanggal_awal).startOf("month").format("YYYY-MM-DD HH:mm:ss"),
         moment(tanggal_akhir).endOf("month").format("YYYY-MM-DD HH:mm:ss"),
       ]);
+      rencanaTransaksiKumulatifIds = await MRencanaTransaksi.query()
+        .where("tanggal", "<=", tanggal_akhir)
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ dihapus: 0 })
+        .andWhere({ status: 1 })
+        .andWhere({ m_rencana_keuangan_id: rencana.id })
+        .ids();
     }
 
     rencanaTransaksiIds = await rencanaTransaksiIds.ids();
@@ -6920,6 +6930,15 @@ ${jamPerubahan}`;
         builder.where({ dihapus: 0 }).andWhere({ status: 1 });
         if (rencanaTransaksiIds) {
           builder.whereIn("m_rencana_transaksi_id", rencanaTransaksiIds);
+        }
+      })
+      .with("rencanaJurnal1", (builder) => {
+        builder.where({ dihapus: 0 }).andWhere({ status: 1 });
+        if (rencanaTransaksiKumulatifIds) {
+          builder.whereIn(
+            "m_rencana_transaksi_id",
+            rencanaTransaksiKumulatifIds
+          );
         }
       })
       .with("rek", (builder) => {
@@ -7363,11 +7382,13 @@ ${jamPerubahan}`;
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    
     let { search, tanggal_awal, tanggal_akhir } = request.get();
-    const rencana = await this.getRencanaAktif(sekolah,0,tanggal_awal);
+    const rencana = await this.getRencanaAktif(sekolah, 0, tanggal_awal);
 
-    let transaksiIds, rencanaTransaksiIds, transaksiAkumulasiIds;
+    let transaksiIds,
+      rencanaTransaksiIds,
+      transaksiAkumulasiIds,
+      rencanaTransaksiAkumulasiIds;
 
     rencanaTransaksiIds = MRencanaTransaksi.query()
       .where({ m_sekolah_id: sekolah.id })
@@ -7393,6 +7414,13 @@ ${jamPerubahan}`;
         moment(tanggal_awal).startOf("month").format("YYYY-MM-DD HH:mm:ss"),
         moment(tanggal_akhir).endOf("month").format("YYYY-MM-DD HH:mm:ss"),
       ]);
+      rencanaTransaksiAkumulasiIds = await MRencanaTransaksi.query()
+        .where("tanggal", "<=", tanggal_akhir)
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ dihapus: 0 })
+        .andWhere({ status: 1 })
+        .where({ m_rencana_keuangan_id: rencana.id })
+        .ids();
     }
 
     rencanaTransaksiIds = await rencanaTransaksiIds.ids();
@@ -7446,6 +7474,36 @@ ${jamPerubahan}`;
           builder.whereIn("m_rencana_transaksi_id", rencanaTransaksiIds);
         }
       })
+      .with("rencanaJurnal2", (builder) => {
+        builder
+          .where({ dihapus: 0 })
+          .andWhere({ status: 1 })
+          .andWhere({ jenis: "debit" });
+        if (rencanaTransaksiIds) {
+          builder.whereIn("m_rencana_transaksi_id", rencanaTransaksiIds);
+        }
+      })
+      .with("rencanaJurnal1", (builder) => {
+        builder.where({ dihapus: 0 }).andWhere({ status: 1 });
+        if (rencanaTransaksiAkumulasiIds) {
+          builder.whereIn(
+            "m_rencana_transaksi_id",
+            rencanaTransaksiAkumulasiIds
+          );
+        }
+      })
+      .with("rencanaJurnal3", (builder) => {
+        builder
+          .where({ dihapus: 0 })
+          .andWhere({ status: 1 })
+          .andWhere({ jenis: "debit" });
+        if (rencanaTransaksiAkumulasiIds) {
+          builder.whereIn(
+            "m_rencana_transaksi_id",
+            rencanaTransaksiAkumulasiIds
+          );
+        }
+      })
       .with("rek", (builder) => {
         builder.where({ dihapus: 0 }).whereNull("m_rencana_keuangan_id");
       })
@@ -7455,7 +7513,7 @@ ${jamPerubahan}`;
           .where({ m_rencana_keuangan_id: rencana.id });
       })
       .with("rumusAkun", (builder) => {
-        builder.whereNull( "m_rencana_keuangan_id");
+        builder.whereNull("m_rencana_keuangan_id");
       })
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
@@ -7468,7 +7526,7 @@ ${jamPerubahan}`;
         builder
           .with("akun", (builder) => {
             builder.with("rumusAkun", (builder) => {
-              builder.whereNull( "m_rencana_keuangan_id");
+              builder.whereNull("m_rencana_keuangan_id");
             });
           })
           .whereIn(
@@ -7598,7 +7656,7 @@ ${jamPerubahan}`;
       .update({
         nama,
         warna,
-        kategori
+        kategori,
       });
 
     if (!kategoris) {
@@ -8418,7 +8476,6 @@ ${jamPerubahan}`;
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    
     let {
       tanggal_awal1,
       tanggal_awal2,
@@ -8426,8 +8483,8 @@ ${jamPerubahan}`;
       tanggal_akhir2,
       search,
     } = request.get();
-    
-    const rencana = await this.getRencanaAktif(sekolah,0,tanggal_awal2);
+
+    const rencana = await this.getRencanaAktif(sekolah, 0, tanggal_awal2);
     let transaksiIds1,
       transaksiIds2,
       rencanaTransaksiIds1,
@@ -8773,9 +8830,8 @@ ${jamPerubahan}`;
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    
     let { tanggal_awal, tanggal_akhir, search } = request.get();
-    const rencana = await this.getRencanaAktif(sekolah,0,tanggal_awal);
+    const rencana = await this.getRencanaAktif(sekolah, 0, tanggal_awal);
 
     let transaksiIds1,
       transaksiIds2,
@@ -8799,20 +8855,18 @@ ${jamPerubahan}`;
         .where({ dihapus: 0 })
         .ids();
       rencanaTransaksiIds1 = await MRencanaTransaksi.query()
-        .whereBetween("tanggal", [
-          moment(tanggal_awal).startOf("month").format("YYYY-MM-DD HH:mm:ss"),
-          moment(tanggal_akhir).endOf("month").format("YYYY-MM-DD HH:mm:ss"),
-        ])
+        .where(
+          "tanggal",
+          "<=",
+          moment(tanggal_awal).subtract(1, "days").format("YYYY-MM-DD")
+        )
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ status: 1 })
         .where({ m_rencana_keuangan_id: rencana.id })
         .where({ dihapus: 0 })
         .ids();
       rencanaTransaksiIds2 = await MRencanaTransaksi.query()
-        .whereBetween("tanggal", [
-          moment(tanggal_awal).startOf("month").format("YYYY-MM-DD HH:mm:ss"),
-          moment(tanggal_akhir).endOf("month").format("YYYY-MM-DD HH:mm:ss"),
-        ])
+        .whereBetween("tanggal", [tanggal_awal, tanggal_akhir])
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ status: 1 })
         .where({ m_rencana_keuangan_id: rencana.id })
@@ -8832,20 +8886,14 @@ ${jamPerubahan}`;
         .where({ dihapus: 0 })
         .ids();
       rencanaTransaksiIds1 = await MRencanaTransaksi.query()
-        .whereBetween("tanggal", [
-          moment(tanggal_awal).startOf("month").format("YYYY-MM-DD HH:mm:ss"),
-          moment(tanggal_akhir).endOf("month").format("YYYY-MM-DD HH:mm:ss"),
-        ])
+        .whereBetween("tanggal", [1111 - 11 - 11, 1111 - 11 - 11])
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ status: 1 })
         .where({ m_rencana_keuangan_id: rencana.id })
         .where({ dihapus: 0 })
         .ids();
       rencanaTransaksiIds2 = await MRencanaTransaksi.query()
-        .whereBetween("tanggal", [
-          moment(tanggal_awal).startOf("month").format("YYYY-MM-DD HH:mm:ss"),
-          moment(tanggal_akhir).endOf("month").format("YYYY-MM-DD HH:mm:ss"),
-        ])
+        .where("tanggal", "<=", moment(tanggal_awal).format("YYYY-MM-DD"))
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ status: 1 })
         .where({ m_rencana_keuangan_id: rencana.id })
@@ -9010,6 +9058,7 @@ ${jamPerubahan}`;
       akun,
       keuangan,
       dataAkunPendapatan,
+      rencana
     });
   }
 
@@ -13797,12 +13846,9 @@ ${jamPerubahan}`;
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-
     let { search, tanggal_awal, tanggal_akhir } = request.get();
 
     let transaksiIds;
-
-
 
     transaksiIds = MKeuTransaksi.query()
       .where({ m_sekolah_id: sekolah.id })
@@ -13810,7 +13856,6 @@ ${jamPerubahan}`;
       .andWhere({ status: 1 });
     if (tanggal_awal && tanggal_akhir) {
       transaksiIds.whereBetween("tanggal", [tanggal_awal, tanggal_akhir]);
-    
     }
     if (search) {
       transaksiIds.andWhere("nama", "like", `%${search}%`);
