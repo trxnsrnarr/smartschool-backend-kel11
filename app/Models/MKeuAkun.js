@@ -53,6 +53,9 @@ class MKeuAkun extends Model {
   rencanaJurnal2() {
     return this.hasMany("App/Models/MKeuRencanaJurnal");
   }
+  rencanaJurnal3() {
+    return this.hasMany("App/Models/MKeuRencanaJurnal");
+  }
   rumusAkun() {
     return this.belongsTo("App/Models/MRumusKeuAkun","id","m_keu_akun_id");
   }
