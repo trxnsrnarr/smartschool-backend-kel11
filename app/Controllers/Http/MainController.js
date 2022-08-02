@@ -4479,11 +4479,20 @@ class MainController {
       const anggotaRombel = await MAnggotaRombel.query()
         .where({ m_user_id: siswa_id })
         .andWhere({ m_rombel_id: m_rombel_id })
-        .update({ dihapus: 1 });
+        .update({ dihapus: 1, tanggal_keluar: moment().format("YYYY-MM-DD") });
     } else {
+      let rombelIds;
+      rombelIds = MRombel.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ m_ta_id: ta.id })
+        .andWhere({ dihapus: 0 });
+
+      rombelIds = await rombelIds.ids();
+
       const anggotaRombel = await MAnggotaRombel.query()
         .where({ m_user_id: siswa_id })
-        .update({ dihapus: 1 });
+        .whereIn("m_rombel_id", rombelIds)
+        .update({ dihapus: 1, tanggal_keluar: moment().format("YYYY-MM-DD") });
     }
 
     if (!siswa) {
@@ -6386,7 +6395,7 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    let { hari, taId = ta.id } = request.get();
+    let { hari, ta_id = ta.id } = request.get();
 
     hari = hari ? hari : 1;
 
@@ -8010,9 +8019,60 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    const rombel = await MRombel.query().where({ id: rombel_id }).update({
-      dihapus: 1,
+    const rombel = await MRombel.query()
+      .where({ id: rombel_id })
+      .update({
+        dihapus: 1,
+        tanggal_keluar: moment().format("YYYY-MM-DD"),
+      });
+
+    if (!rombel) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messageDeleteSuccess,
     });
+  }
+
+  async keluarAnggotaRombel({
+    response,
+    request,
+    auth,
+    params: { rombel_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
+      return response.forbidden({ message: messageForbidden });
+    }
+
+    const rombel = await MRombel.query()
+      .where({ id: rombel_id })
+      .update({
+        dihapus: 1,
+        tanggal_keluar: moment().format("YYYY-MM-DD"),
+      });
 
     if (!rombel) {
       return response.notFound({
@@ -21330,28 +21390,30 @@ class MainController {
             parseInt(rekSekolah.pemasukan) + parseInt(pembayaranSiswa.nominal),
         });
     }
-    if(riwayat.toJSON().rombelPembayaran?.pembayaran?.nama_transaksi){
+    if (riwayat.toJSON().rombelPembayaran?.pembayaran?.nama_transaksi) {
       const transaksi = await MKeuTransaksi.create({
-        nama: `Pembayaran ${riwayat.toJSON().rombelPembayaran.pembayaran.nama} ${
+        nama: `Pembayaran ${
+          riwayat.toJSON().rombelPembayaran.pembayaran.nama
+        } ${
           riwayat.toJSON().rombelPembayaran.pembayaran.jenis == "spp"
             ? riwayat.toJSON().rombelPembayaran.pembayaran.bulan
             : ""
         }-${riwayat.toJSON().user.nama}`,
         // nomor,
-        tanggal: moment()
-          .format("YYYY-MM-DD"),
+        tanggal: moment().format("YYYY-MM-DD"),
         dihapus: 0,
         status: 1,
         m_sekolah_id: sekolah.id,
         m_pembayaran_id: riwayat.toJSON().rombelPembayaran?.m_pembayaran_id,
-        m_riwayat_pembayaran_id: riwayat_pembayaran_siswa_id
+        m_riwayat_pembayaran_id: riwayat_pembayaran_siswa_id,
       });
 
       await MKeuJurnal.create({
         jenis: "kredit",
         m_keu_transaksi_id: transaksi.id,
-        m_keu_akun_id: riwayat.toJSON().rombelPembayaran?.pembayaran?.m_keu_akun_debet_id,
-        saldo:pembayaranSiswa.nominal                                                                                                                                                                                                                        ,
+        m_keu_akun_id:
+          riwayat.toJSON().rombelPembayaran?.pembayaran?.m_keu_akun_debet_id,
+        saldo: pembayaranSiswa.nominal,
         status: 1,
         dihapus: 0,
       });
@@ -21359,8 +21421,9 @@ class MainController {
       await MKeuJurnal.create({
         jenis: "debit",
         m_keu_transaksi_id: transaksi.id,
-        m_keu_akun_id:riwayat.toJSON().rombelPembayaran?.pembayaran?.m_keu_akun_kredit_id,
-        saldo:pembayaranSiswa.nominal                                                                                                                                                                                                                        ,
+        m_keu_akun_id:
+          riwayat.toJSON().rombelPembayaran?.pembayaran?.m_keu_akun_kredit_id,
+        saldo: pembayaranSiswa.nominal,
         status: 1,
         dihapus: 0,
       });
