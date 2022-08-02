@@ -509,6 +509,17 @@ class SecondController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
+    
+    const {
+      page = 1,
+      search_nama,
+      tingkat,
+      pembayaran_id,
+      rombel_id,
+      jenis,
+      
+      ta_id=ta.id
+    } = request.get();
     const pembayaran = await MPembayaran.query()
       .select("id", "nama", "bulan")
       .where({ dihapus: 0 })
@@ -523,22 +534,14 @@ class SecondController {
     const tingkatRombel = await MRombel.query()
       .distinct("tingkat")
       .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ m_ta_id: ta_id })
       .andWhere({ dihapus: 0 })
       .pluck("tingkat");
 
-    const {
-      page = 1,
-      search_nama,
-      tingkat,
-      pembayaran_id,
-      rombel_id,
-      jenis,
-    } = request.get();
 
     let rombelIds = MRombel.query()
       .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ m_ta_id: ta_id })
       .andWhere({ dihapus: 0 });
 
     if (tingkat) {
@@ -573,20 +576,31 @@ class SecondController {
             builder
               .select("id", "m_pembayaran_id")
               .with("pembayaran", (builder) => {
-                builder.select("id", "jenis", "nominal", "tipe_ujian", "nama");
+                builder.select("id", "jenis", "nominal", "tipe_ujian", "nama","dihapus");
               });
-          });
+          })
+          .with("riwayat",(builder)=>{builder.where({dikonfirmasi:1})})
       });
     if (search_nama) {
       tunggakan.where("nama", "like", `%${search_nama}%`);
     }
     tunggakan = await tunggakan.paginate(page, 20);
+    const semuaTA = await Mta.query()
+    .select("id", "tahun", "semester")
+    .where({ m_sekolah_id: sekolah.id })
+    .andWhere({ dihapus: 0 })
+    .fetch();
+
+    let rombelData = MRombel.query()
+    .where({ m_sekolah_id: sekolah.id })
+    .andWhere({ m_ta_id: ta_id })
+    .andWhere({ dihapus: 0 }).fetch();
 
     return {
       pembayaran,
       jenisPembayaran,
       tingkatRombel,
-      tunggakan,
+      tunggakan,semuaTA,rombelIds,pembayaranIds,pembayaranRombelIds,rombelData
     };
   }
 
@@ -13734,7 +13748,7 @@ ${jamPerubahan}`;
     if (taBaru.rombel_sinkron == 0) {
       const all = await Promise.all(
         rombel.toJSON().map(async (d) => {
-          if (d?.tingkat != "XII") {
+          if (d?.tingkat == "XII") {
             // return {nama : d?.nama?.split(" ")[0] + "I" + " " + d?.nama?.split(" ")[1]+ " " + d?.nama?.split(" ")[2]}
             const jurusan = await MJurusan.query()
               .select("id", "kode")
@@ -13748,12 +13762,11 @@ ${jamPerubahan}`;
             //     d?.nama?.split(" ")[d?.nama?.split(" ").length - 1]}
 
             const rombelBaru = await MRombel.create({
-              tingkat: d.tingkat + "I",
+              tingkat: d.tingkat,
               nama:
                 d?.nama?.split(" ")[0] +
-                "I" +
                 " " +
-                jurusan.kode +
+                jurusan?.kode +
                 " " +
                 d?.nama?.split(" ")[d?.nama?.split(" ").length - 1],
               kelompok: d.kelompok,
