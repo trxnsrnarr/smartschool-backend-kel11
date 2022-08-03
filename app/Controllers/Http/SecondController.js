@@ -357,6 +357,7 @@ class SecondController {
         .where({ m_sekolah_id: sekolah.id })
         .where("tanggal_akhir", ">=", moment(tanggalAktif).format("YYYY-MM-DD"))
         .where("tanggal_awal", "<=", moment(tanggalAktif).format("YYYY-MM-DD"))
+        .andWhere({ dihapus: 0 })
         .first();
       if (check) {
         rencana
@@ -399,6 +400,47 @@ class SecondController {
 
     rencana = await rencana.first();
     return rencana;
+  }
+
+  async getTAHPSAktif(sekolah, tanggalAktif) {
+    let ta = Mta.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 });
+    if (tanggalAktif) {
+      const check = await Mta.query()
+        .select("id")
+        .where({ m_sekolah_id: sekolah.id })
+        .where("tanggal_akhir", ">=", moment(tanggalAktif).format("YYYY-MM-DD"))
+        .where("tanggal_awal", "<=", moment(tanggalAktif).format("YYYY-MM-DD"))
+        .andWhere({ dihapus: 0 })
+        .first();
+      if (check) {
+        ta.where(
+          "tanggal_akhir",
+          ">=",
+          moment(tanggalAktif).format("YYYY-MM-DD")
+        ).where(
+          "tanggal_awal",
+          "<=",
+          moment(tanggalAktif).format("YYYY-MM-DD")
+        );
+      } else {
+        ta.where("tanggal_akhir", ">=", moment().format("YYYY-MM-DD")).where(
+          "tanggal_awal",
+          "<=",
+          moment().format("YYYY-MM-DD")
+        );
+      }
+    } else {
+      ta.where("tanggal_akhir", ">=", moment().format("YYYY-MM-DD")).where(
+        "tanggal_awal",
+        "<=",
+        moment().format("YYYY-MM-DD")
+      );
+    }
+
+    ta = await ta.first();
+    return ta;
   }
 
   async getJadwalMengajarAll({ response, request, auth }) {
@@ -509,7 +551,7 @@ class SecondController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
-    
+
     const {
       page = 1,
       search_nama,
@@ -517,8 +559,8 @@ class SecondController {
       pembayaran_id,
       rombel_id,
       jenis,
-      
-      ta_id=ta.id
+
+      ta_id = ta.id,
     } = request.get();
     const pembayaran = await MPembayaran.query()
       .select("id", "nama", "bulan")
@@ -537,7 +579,6 @@ class SecondController {
       .andWhere({ m_ta_id: ta_id })
       .andWhere({ dihapus: 0 })
       .pluck("tingkat");
-
 
     let rombelIds = MRombel.query()
       .where({ m_sekolah_id: sekolah.id })
@@ -576,31 +617,46 @@ class SecondController {
             builder
               .select("id", "m_pembayaran_id")
               .with("pembayaran", (builder) => {
-                builder.select("id", "jenis", "nominal", "tipe_ujian", "nama","dihapus");
+                builder.select(
+                  "id",
+                  "jenis",
+                  "nominal",
+                  "tipe_ujian",
+                  "nama",
+                  "dihapus"
+                );
               });
           })
-          .with("riwayat",(builder)=>{builder.where({dikonfirmasi:1})})
+          .with("riwayat", (builder) => {
+            builder.where({ dikonfirmasi: 1 });
+          });
       });
     if (search_nama) {
       tunggakan.where("nama", "like", `%${search_nama}%`);
     }
     tunggakan = await tunggakan.paginate(page, 20);
     const semuaTA = await Mta.query()
-    .select("id", "tahun", "semester")
-    .where({ m_sekolah_id: sekolah.id })
-    .andWhere({ dihapus: 0 })
-    .fetch();
+      .select("id", "tahun", "semester")
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
 
     let rombelData = MRombel.query()
-    .where({ m_sekolah_id: sekolah.id })
-    .andWhere({ m_ta_id: ta_id })
-    .andWhere({ dihapus: 0 }).fetch();
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta_id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
 
     return {
       pembayaran,
       jenisPembayaran,
       tingkatRombel,
-      tunggakan,semuaTA,rombelIds,pembayaranIds,pembayaranRombelIds,rombelData
+      tunggakan,
+      semuaTA,
+      rombelIds,
+      pembayaranIds,
+      pembayaranRombelIds,
+      rombelData,
     };
   }
 
@@ -7396,8 +7452,15 @@ ${jamPerubahan}`;
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
     let { search, tanggal_awal, tanggal_akhir } = request.get();
     const rencana = await this.getRencanaAktif(sekolah, 0, tanggal_awal);
+    const taaktif = await this.getTAHPSAktif(sekolah, tanggal_awal);
 
     let transaksiIds,
       rencanaTransaksiIds,
@@ -7571,6 +7634,24 @@ ${jamPerubahan}`;
       })
       .first();
 
+    let rombelIds;
+    rombelIds = MRombel.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: taaktif.id })
+      .andWhere({ dihapus: 0 });
+
+    rombelIds = await rombelIds.ids();
+
+    let totalSiswa;
+    totalSiswa = MAnggotaRombel.query().whereIn("m_rombel_id", rombelIds);
+    if (tanggal_awal) {
+      totalSiswa.andWhere("tanggal_keluar", ">=", tanggal_awal);
+    } else {
+      totalSiswa.andWhere({ dihapus: 0 });
+    }
+
+    totalSiswa = await totalSiswa.count("* as total");
+
     return response.ok({
       kategori,
       rumus,
@@ -7578,6 +7659,8 @@ ${jamPerubahan}`;
       keuangan,
       rencana,
       dataAkunPendapatan,
+      totalSiswa: totalSiswa[0].total,
+      taaktif,
     });
   }
 
@@ -8021,7 +8104,11 @@ ${jamPerubahan}`;
         kategoriAkun = await MKeuKategoriLabaRugi.query()
           .where({ id: d.id })
           .first();
-        rumusFix = rumusFix + kategoriAkun.nama;
+        if (d?.id == "siswa") {
+          rumusFix = "Menggunakan Rumus HPS";
+        } else {
+          rumusFix = rumusFix + kategoriAkun.nama;
+        }
       } else {
         if (d.operator == "minus") {
           rumusFix = `${rumusFix} - `;
@@ -9072,7 +9159,7 @@ ${jamPerubahan}`;
       akun,
       keuangan,
       dataAkunPendapatan,
-      rencana
+      rencana,
     });
   }
 
