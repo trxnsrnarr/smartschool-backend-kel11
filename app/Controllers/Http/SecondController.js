@@ -13835,7 +13835,7 @@ ${jamPerubahan}`;
     if (taBaru.rombel_sinkron == 0) {
       const all = await Promise.all(
         rombel.toJSON().map(async (d) => {
-          if (d?.tingkat == "XII") {
+          if (d?.tingkat != "XII") {
             // return {nama : d?.nama?.split(" ")[0] + "I" + " " + d?.nama?.split(" ")[1]+ " " + d?.nama?.split(" ")[2]}
             const jurusan = await MJurusan.query()
               .select("id", "kode")
@@ -13849,9 +13849,9 @@ ${jamPerubahan}`;
             //     d?.nama?.split(" ")[d?.nama?.split(" ").length - 1]}
 
             const rombelBaru = await MRombel.create({
-              tingkat: d.tingkat,
+              tingkat: d.tingkat+"I",
               nama:
-                d?.nama?.split(" ")[0] +
+                d?.nama?.split(" ")[0]+"I" +
                 " " +
                 jurusan?.kode +
                 " " +

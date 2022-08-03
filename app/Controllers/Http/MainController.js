@@ -20707,7 +20707,6 @@ class MainController {
         nominal: "required",
         tanggal_dibuat: "required",
         rombel_id: "required",
-        m_rek_sekolah_id: "required",
       };
       const message = {
         "nama.required": "Nama harus diisi",
@@ -20715,7 +20714,6 @@ class MainController {
         "nominal.required": "Nominal harus diisi",
         "tanggal_dibuat.required": "Tanggal dibuat harus diisi",
         "rombel_id.required": "Bagikan harus dipilih",
-        "m_rek_sekolah_id.required": "Rekening harus dipilih",
       };
       const validation = await validate(request.all(), rules, message);
       if (validation.fails()) {
@@ -20728,7 +20726,6 @@ class MainController {
         nominal: "required",
         tanggal_dibuat: "required",
         rombel_id: "required",
-        m_rek_sekolah_id: "required",
       };
       const message = {
         "nama.required": "Nama harus diisi",
@@ -20736,7 +20733,6 @@ class MainController {
         "nominal.required": "Nominal harus diisi",
         "tanggal_dibuat.required": "Tanggal dibuat harus diisi",
         "rombel_id.required": "Bagikan harus dipilih",
-        "m_rek_sekolah_id.required": "Rekening harus dipilih",
       };
       const validation = await validate(request.all(), rules, message);
       if (validation.fails()) {

@@ -1928,6 +1928,8 @@ Route.post("/naik-kelas1-mapel", "SecondController.naikTAMapel");
 
 Route.post("/naik-kelas1-rombel", "SecondController.naikTARombel");
 
+Route.post("/user-to-alumni", "CDCController.userToAlumni");
+
 Route.get("/hack-tanggal-transaksi", "SecondController.hackTanggalTransaksi");
 Route.get("/hack-transaksi", "SecondController.hackTransaksi");
 

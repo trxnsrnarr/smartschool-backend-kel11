@@ -5098,12 +5098,63 @@ class CDCController {
     });
   }
 
-  async ip({ response, request }) {
-    return response.ok({ ip: [request.ip(), request.ips()] });
+
+  async userToAlumni({ response, request }) {
+    // const domain = request.headers().origin;
+    let { domain } = request.get();
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    const rombel = await MRombel.query()
+      .with("anggotaRombel", (builder) => {
+        builder.with("user").where({ dihapus: 0 });
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_ta_id: 7907})
+      .fetch();
+
+  
+
+      const all = await Promise.all(
+        rombel.toJSON().map(async (d) => {
+          if (d?.tingkat == "XII") {
+            const jurusan = await MJurusan.query().where({id:d?.m_jurusan_id}).first()
+           
+            const data = await Promise.all(
+              d.anggotaRombel.map(async (e, nox) => {
+                await User.query().where({id:e.m_user_id}).update({role:"alumni"})
+              
+                await MAlumni.create({
+                  jurusan:jurusan?.nama,
+                  tahun_masuk:2019,
+                  dihapus:0,
+                  m_user_id:e.m_user_id,
+                  verifikasi:1,
+
+                })
+              })
+            );
+          }
+          // return data;
+        })
+      );
+      // return all
+    
+   
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
   }
 
-  async notFoundPage({ response, request, auth }) {
-    return `<p>Data tidak ditemukan, silahkan kembali ke <a href="http://getsmartschool.id">Smart School</a></p>`;
-  }
+
+
 }
 module.exports = CDCController;
