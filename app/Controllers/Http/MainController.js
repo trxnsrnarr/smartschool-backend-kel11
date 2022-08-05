@@ -21408,7 +21408,7 @@ class MainController {
     }
     if (riwayat.toJSON().rombelPembayaran?.pembayaran?.nama_transaksi) {
       const transaksi = await MKeuTransaksi.create({
-        nama: `${riwayat.toJSON().rombelPembayaran?.pembayaran?.nama_transaksi_siswa}-${riwayat.toJSON().user.nama}`,
+        nama: `${riwayat.toJSON().rombelPembayaran?.pembayaran?.nama_transaksi_siswa} - ${riwayat.toJSON().user.nama}`,
         // nomor,
         tanggal: moment().format("YYYY-MM-DD"),
         dihapus: 0,
@@ -21618,7 +21618,7 @@ class MainController {
 
       if (pembayaranUtama.nama_transaksi) {
         const transaksi = await MKeuTransaksi.create({
-          nama: `${pembayaranUtama.nama_transaksi_siswa}-${riwayat.toJSON().user.nama}`,
+          nama: `${pembayaranUtama.nama_transaksi_siswa} - ${riwayat.toJSON().user.nama}`,
           // nomor,
           tanggal: moment().format("YYYY-MM-DD"),
           dihapus: 0,
