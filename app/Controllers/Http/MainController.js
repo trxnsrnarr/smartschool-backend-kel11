@@ -20449,6 +20449,7 @@ class MainController {
       nama_transaksi,
       m_keu_akun_debet_id,
       m_keu_akun_kredit_id,
+      nama_transaksi_siswa
     } = request.post();
     if (bulan) {
       const rules = {
@@ -20510,6 +20511,7 @@ class MainController {
       nama_transaksi,
       m_keu_akun_debet_id,
       m_keu_akun_kredit_id,
+      nama_transaksi_siswa
     });
 
     //   // email Service
@@ -20698,6 +20700,10 @@ class MainController {
       tag,
       m_rek_sekolah_id,
       ta_id,
+      nama_transaksi,
+      m_keu_akun_debet_id,
+      m_keu_akun_kredit_id,
+      nama_transaksi_siswa,transaksi
     } = request.post();
 
     if (bulan) {
@@ -20756,6 +20762,11 @@ class MainController {
         nominal,
         m_rek_sekolah_id,
         m_ta_id: ta_id,
+        
+      nama_transaksi,
+      m_keu_akun_debet_id,
+      m_keu_akun_kredit_id,
+      nama_transaksi_siswa
       });
 
     if (!pembayaran) {
@@ -20846,6 +20857,15 @@ class MainController {
       .first();
 
     if (transaksi) {
+      const jumlahSiswa = await MAnggotaRombel.query()
+      .with("user", (builder) => {
+        builder
+          .select("id", "email", "nama", "whatsapp", "wa_real")
+          .where({ dihapus: 0 });
+      })
+      .whereIn("m_rombel_id", rombel_id)
+      .andWhere({ dihapus: 0 })
+      .count("* as total");
       if (!checkTransaksi) {
         const transaksi = await MKeuTransaksi.create({
           nama: nama_transaksi,
@@ -20861,7 +20881,7 @@ class MainController {
           jenis: "debit",
           m_keu_transaksi_id: transaksi.id,
           m_keu_akun_id: m_keu_akun_debet_id,
-          saldo: nominal,
+          saldo: nominal * jumlahSiswa[0].total,
           status: 1,
           dihapus: 0,
         });
@@ -20870,7 +20890,7 @@ class MainController {
           jenis: "kredit",
           m_keu_transaksi_id: transaksi.id,
           m_keu_akun_id: m_keu_akun_kredit_id,
-          saldo: nominal,
+          saldo: nominal * jumlahSiswa[0].total,
           status: 1,
           dihapus: 0,
         });
@@ -20890,7 +20910,7 @@ class MainController {
             jenis: "debit",
             m_keu_transaksi_id: checkTransaksi.id,
             m_keu_akun_id: m_keu_akun_debet_id,
-            saldo: nominal,
+            saldo: nominal * jumlahSiswa[0].total,
             status: 1,
             dihapus: 0,
           });
@@ -20902,7 +20922,7 @@ class MainController {
             jenis: "kredit",
             m_keu_transaksi_id: checkTransaksi.id,
             m_keu_akun_id: m_keu_akun_kredit_id,
-            saldo: nominal,
+            saldo: nominal * jumlahSiswa[0].total,
             status: 1,
             dihapus: 0,
           });
@@ -21388,13 +21408,7 @@ class MainController {
     }
     if (riwayat.toJSON().rombelPembayaran?.pembayaran?.nama_transaksi) {
       const transaksi = await MKeuTransaksi.create({
-        nama: `Pembayaran ${
-          riwayat.toJSON().rombelPembayaran.pembayaran.nama
-        } ${
-          riwayat.toJSON().rombelPembayaran.pembayaran.jenis == "spp"
-            ? riwayat.toJSON().rombelPembayaran.pembayaran.bulan
-            : ""
-        }-${riwayat.toJSON().user.nama}`,
+        nama: `${riwayat.toJSON().rombelPembayaran?.pembayaran?.nama_transaksi_siswa}-${riwayat.toJSON().user.nama}`,
         // nomor,
         tanggal: moment().format("YYYY-MM-DD"),
         dihapus: 0,
@@ -21580,6 +21594,8 @@ class MainController {
       dihapus: 0,
     });
 
+    const pembayaranSiswa = await MPembayaranSiswa.query().where({id:m_pembayaran_siswa_id}).first()
+
     const mutasi = await MMutasi.create({
       tipe: "kredit",
       nama: `Pembayaran ${pembayaranUtama.nama} ${
@@ -21599,6 +21615,39 @@ class MainController {
     await MRekSekolah.query()
       .where({ m_sekolah_id: sekolah.id })
       .update({ pemasukan: rekSekolah.pemasukan + pembayaranSiswa.nominal });
+
+      if (pembayaranUtama.nama_transaksi) {
+        const transaksi = await MKeuTransaksi.create({
+          nama: `${pembayaranUtama.nama_transaksi_siswa}-${riwayat.toJSON().user.nama}`,
+          // nomor,
+          tanggal: moment().format("YYYY-MM-DD"),
+          dihapus: 0,
+          status: 1,
+          m_sekolah_id: sekolah.id,
+          m_pembayaran_id: m_pembayaran_id,
+          m_riwayat_pembayaran_id: pembayaran?.id,
+        });
+  
+        await MKeuJurnal.create({
+          jenis: "kredit",
+          m_keu_transaksi_id: transaksi.id,
+          m_keu_akun_id:
+            pembayaranUtama.m_keu_akun_debet_id,
+          saldo: pembayaranSiswa.nominal,
+          status: 1,
+          dihapus: 0,
+        });
+  
+        await MKeuJurnal.create({
+          jenis: "debit",
+          m_keu_transaksi_id: transaksi.id,
+          m_keu_akun_id:
+            pembayaranUtama.m_keu_akun_kredit_id,
+          saldo: pembayaranSiswa.nominal,
+          status: 1,
+          dihapus: 0,
+        });
+      }
 
     return response.ok(pembayaran);
   }

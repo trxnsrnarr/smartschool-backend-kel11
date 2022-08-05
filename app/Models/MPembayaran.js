@@ -11,6 +11,9 @@ class MPembayaran extends Model {
   rombel() {
     return this.hasMany("App/Models/TkPembayaranRombel");
   }
+  transaksi() {
+    return this.belongsTo("App/Models/MKeuTransaksi", "id", "m_pembayaran_id");
+  }
 }
 
 module.exports = MPembayaran;
