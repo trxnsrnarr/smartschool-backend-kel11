@@ -7645,7 +7645,7 @@ ${jamPerubahan}`;
     let totalSiswa;
     totalSiswa = MAnggotaRombel.query().whereIn("m_rombel_id", rombelIds);
     if (tanggal_awal) {
-      totalSiswa.andWhere("tanggal_keluar", ">=", tanggal_awal);
+      totalSiswa.whereNull("tanggal_keluar").orWhere("tanggal_keluar", ">=", tanggal_awal);
     } else {
       totalSiswa.andWhere({ dihapus: 0 });
     }
