@@ -1315,6 +1315,9 @@ class MainController {
     if (role == "warga-sekolah" || res.role == "admin") {
       return response.ok(res);
     }
+    if(res.role == "ppdb") {
+      return response.ok(res);
+    }
 
     if (res.role != role) {
       return response.forbidden({
