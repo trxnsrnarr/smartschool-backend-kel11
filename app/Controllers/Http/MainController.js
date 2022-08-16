@@ -6793,6 +6793,7 @@ class MainController {
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ kode_hari: hari })
       .andWhere({ m_ta_id: ta.id })
+      .orderBy("jam_mulai","asc")
       .fetch();
 
     return response.ok({
