@@ -458,6 +458,7 @@ Route.post("/rek-sekolah/download", "MainController.downloadRekening");
 
 // tunggakan
 Route.get("/tunggakan", "SecondController.getTunggakan");
+Route.get("/total-tunggakan", "SecondController.getTotalTunggakan");
 Route.post("/download/tunggakan", "SecondController.downloadTunggakan");
 
 // pembayaran

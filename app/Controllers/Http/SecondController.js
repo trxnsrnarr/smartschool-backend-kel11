@@ -660,6 +660,95 @@ class SecondController {
     };
   }
 
+  async getTotalTunggakan({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    let pembayaran;
+
+    pembayaran = await MPembayaran.query()
+      .with("rombel", (builder) => {
+        builder
+          .with("rombel")
+          .withCount("siswa as totalLunas", (builder) => {
+            builder.where({ status: "lunas" });
+          })
+          .withCount("siswa as total");
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
+    let totalTunggakan = 0;
+    await Promise.all(
+      pembayaran.toJSON().map(async (d) => {
+        const tkPembayaranIds1 = await TkPembayaranRombel.query()
+          .where({ m_pembayaran_id: d.id })
+          .andWhere({ dihapus: 0 })
+          .ids();
+
+        const pembayaranSiswaIds1 = await MPembayaranSiswa.query()
+          .whereIn("tk_pembayaran_rombel_id", tkPembayaranIds1)
+          .ids();
+        totalTunggakan =
+          totalTunggakan + (d.nominal * pembayaranSiswaIds1.length);
+      })
+    );
+
+    const pembayaranIds = await MPembayaran.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .ids();
+
+    const tkPembayaranIds = await TkPembayaranRombel.query()
+      .whereIn("m_pembayaran_id", pembayaranIds)
+      .andWhere({ dihapus: 0 })
+      .ids();
+
+    const totalPelunasan = pembayaran.toJSON().map((item) => {
+      return {
+        id: item.id,
+        total: item.rombel.reduce((a, b) => a + b.__meta__.total, 0),
+        totalLunas: item.rombel.reduce((a, b) => a + b.__meta__.totalLunas, 0),
+      };
+    });
+
+    const pembayaranSiswaIds = await MPembayaranSiswa.query()
+      .whereIn("tk_pembayaran_rombel_id", tkPembayaranIds)
+      .ids();
+
+    const dibayar = await MRiwayatPembayaranSiswa.query()
+      .whereIn("m_pembayaran_siswa_id", pembayaranSiswaIds)
+      .andWhere({ dihapus: 0 })
+      .andWhere({ dikonfirmasi: 1 })
+      .fetch();
+
+    let totalDibayar = 0;
+    await Promise.all(
+      dibayar.toJSON().map((d) => {
+        totalDibayar = totalDibayar + parseInt(d.nominal);
+      })
+    );
+
+    return response.ok({
+      // pembayaran: pembayaran,
+      totalDibayar,
+      totalTunggakan,
+      // totalPelunasan
+    });
+  }
+
   async downloadTunggakan({ response, request, auth }) {
     const domain = request.headers().origin;
 
@@ -7645,7 +7734,9 @@ ${jamPerubahan}`;
     let totalSiswa;
     totalSiswa = MAnggotaRombel.query().whereIn("m_rombel_id", rombelIds);
     if (tanggal_awal) {
-      totalSiswa.whereNull("tanggal_keluar").orWhere("tanggal_keluar", ">=", tanggal_awal);
+      totalSiswa
+        .whereNull("tanggal_keluar")
+        .orWhere("tanggal_keluar", ">=", tanggal_awal);
     } else {
       totalSiswa.andWhere({ dihapus: 0 });
     }
@@ -13849,9 +13940,10 @@ ${jamPerubahan}`;
             //     d?.nama?.split(" ")[d?.nama?.split(" ").length - 1]}
 
             const rombelBaru = await MRombel.create({
-              tingkat: d.tingkat+"I",
+              tingkat: d.tingkat + "I",
               nama:
-                d?.nama?.split(" ")[0]+"I" +
+                d?.nama?.split(" ")[0] +
+                "I" +
                 " " +
                 jurusan?.kode +
                 " " +
@@ -14694,6 +14786,129 @@ ${jamPerubahan}`;
 
     return response.ok({
       transaksi,
+    });
+  }
+  async getPembayaran({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const semuaTa = await Mta.query()
+      .select(
+        "tahun",
+        "semester",
+        "nama_kepsek",
+        "nip_kepsek",
+        "aktif",
+        "id",
+        "tanggal_awal",
+        "tanggal_akhir",
+        "tanggal_rapor"
+      )
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .orderBy("id", "desc")
+      .fetch();
+
+    let { tipe, search, ta_id = ta.id } = request.get();
+
+    tipe = tipe ? tipe : "spp";
+
+    let pembayaran;
+
+    if (search) {
+      pembayaran = await MPembayaran.query()
+        .with("rombel", (builder) => {
+          builder
+            .with("rombel")
+            .withCount("siswa as totalLunas", (builder) => {
+              builder.where({ status: "lunas" });
+            })
+            .withCount("siswa as total");
+        })
+        .where({ dihapus: 0 })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .andWhere({ jenis: tipe })
+        .andWhere({ m_ta_id: ta_id })
+        .andWhere("nama", "like", `%${search}%`)
+        .fetch();
+    } else {
+      pembayaran = await MPembayaran.query()
+        .with("rombel", (builder) => {
+          builder
+            .with("rombel")
+            .withCount("siswa as totalLunas", (builder) => {
+              builder.where({ status: "lunas" });
+            })
+            .withCount("siswa as total");
+        })
+        .where({ dihapus: 0 })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .andWhere({ jenis: tipe })
+        .andWhere({ m_ta_id: ta_id })
+        .fetch();
+    }
+
+    const totalPelunasan = pembayaran.toJSON().map((item) => {
+      return {
+        id: item.id,
+        total: item.rombel.reduce((a, b) => a + b.__meta__.total, 0),
+        totalLunas: item.rombel.reduce((a, b) => a + b.__meta__.totalLunas, 0),
+      };
+    });
+
+    const rombel = await MRombel.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta_id })
+      .fetch();
+
+    let jenisData = [
+      { label: "SPP", value: "spp" },
+      { label: "Ujian", value: "ujian" },
+      { label: "Lainnya", values: "lainnya" },
+    ];
+
+    let tipeUjian = [
+      { value: "pts1", label: "Penilaian Tengah Semester 1" },
+      { value: "pts2", label: "Penilaian Tengah Semester 2" },
+      { value: "pas1", label: "Penilaian Akhir Semester 1" },
+      { value: "pas2", label: "Penilaian Akhir Semester 2" },
+      { value: "to", label: "Try Out" },
+      { value: "us", label: "Ujian Sekolah" },
+    ];
+
+    const pembayaranKategori = await MPembayaranKategori.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .fetch();
+
+    const akun = await MKeuAkun.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .whereNot({ nama: "KAS" })
+      .orderBy("kode", "asc")
+      .fetch();
+
+    return response.ok({
+      pembayaran: pembayaran,
+      jenisData: jenisData,
+      rombel: rombel,
+      tipeUjian: tipeUjian,
+      pembayaran_kategori: pembayaranKategori,
+      ta: semuaTa,
+      totalPelunasan,
+      akun,
     });
   }
 }
