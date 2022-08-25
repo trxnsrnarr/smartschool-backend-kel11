@@ -205,7 +205,7 @@ Route.delete(
   "/mata-pelajaran/:mata_pelajaran_id",
   "MainController.deleteMataPelajaran"
 );
-Route.post("/mata-pelajaran/import", "MainController.importMapel");
+Route.post("/mata-pelajaran/import/:ta_id", "MainController.importMapel");
 Route.post("/mata-pelajaran/download", "MainController.downloadMapel");
 // MATA PELAJARAN SERVICE - END
 

@@ -6225,7 +6225,7 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    const { tingkat, kode, m_jurusan_id, m_user_id, kelompok } = request.post();
+    const { tingkat, kode, m_jurusan_id, m_user_id, kelompok,ta_id=ta.id } = request.post();
     const rules = {
       kode: "required",
     };
@@ -6247,7 +6247,7 @@ class MainController {
       nama: m_jurusan_id ? `${tingkat} ${jurusan.kode} ${kode}` : kode,
       m_jurusan_id,
       m_sekolah_id: sekolah.id,
-      m_ta_id: ta.id,
+      m_ta_id: ta_id,
       m_user_id,
       kelompok,
       dihapus: 0,
@@ -6256,7 +6256,7 @@ class MainController {
     const jamMengajar = await MJamMengajar.query()
       .select("id")
       .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ m_ta_id: ta_id })
       .fetch();
 
     const jadwalMengajarData = await Promise.all(
@@ -6265,7 +6265,7 @@ class MainController {
         data.m_rombel_id = rombel.id;
         data.m_jam_mengajar_id = data.id;
         data.m_sekolah_id = sekolah.id;
-        data.m_ta_id = ta.id;
+        data.m_ta_id = ta_id;
         delete data.id;
         delete data.jamFormat;
 
@@ -6560,7 +6560,7 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    const { nama, kode, kelompok, m_user_id, kkm } = request.post();
+    const { nama, kode, kelompok, m_user_id, kkm,ta_id=ta.id } = request.post();
     const rules = {
       nama: "required",
       kode: "required",
@@ -6586,7 +6586,7 @@ class MainController {
       kelompok,
       m_user_id,
       kkm,
-      m_ta_id: ta.id,
+      m_ta_id: ta_id,
       m_sekolah_id: sekolah.id,
       dihapus: 0,
     });
@@ -6725,12 +6725,14 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
+    const{ta_id = ta.id}= request.get()
+
     const mataPelajaran = await MMataPelajaran.query()
       .with("user", (builder) => {
         builder.select("id", "nama").where({ dihapus: 0 });
       })
       .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ m_ta_id: ta_id })
       .andWhere({ dihapus: 0 })
       .fetch();
 
@@ -6777,7 +6779,7 @@ class MainController {
     const rombelIds = await MRombel.query()
       .where({ tingkat: tingkatGet })
       .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ m_ta_id: ta_id })
       .andWhere({ dihapus: 0 })
       .ids();
 
@@ -6792,7 +6794,7 @@ class MainController {
       })
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ kode_hari: hari })
-      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ m_ta_id: ta_id })
       .orderBy("jam_mulai","asc")
       .fetch();
 
@@ -26679,7 +26681,7 @@ class MainController {
   }
 
   // =========== IMPORT GTK SERVICE ================
-  async importMapelServices(filelocation, sekolah, ta) {
+  async importMapelServices(filelocation, sekolah, ta_id) {
     var workbook = new Excel.Workbook();
 
     workbook = await workbook.xlsx.readFile(filelocation);
@@ -26733,7 +26735,7 @@ class MainController {
             kkm: d.kkm,
             m_user_id: newUser.id,
             m_sekolah_id: sekolah.id,
-            m_ta_id: ta.id,
+            m_ta_id: ta_id,
             dihapus: 0,
           });
           return;
@@ -26746,7 +26748,7 @@ class MainController {
           kkm: d.kkm,
           m_user_id: user.id,
           m_sekolah_id: sekolah.id,
-          m_ta_id: ta.id,
+          m_ta_id: ta_id,
           dihapus: 0,
         });
 
@@ -26757,7 +26759,7 @@ class MainController {
     return result;
   }
 
-  async importMapel({ request, response, auth }) {
+  async importMapel({ request, response, auth ,params:{ta_id}}) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -26771,6 +26773,7 @@ class MainController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
+    // const {ta_id=ta.id}=request.get()
 
     let file = request.file("file");
     let fname = `import-excel.xlsx`;
@@ -26785,7 +26788,7 @@ class MainController {
       return fileUpload.error();
     }
 
-    return await this.importMapelServices(`tmp/uploads/${fname}`, sekolah, ta);
+    return await this.importMapelServices(`tmp/uploads/${fname}`, sekolah, ta_id);
   }
 
   async downloadMapel({ response, request, auth }) {
@@ -26804,13 +26807,20 @@ class MainController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
+
+    const {ta_id = ta.id} = request.get()
+
+    const taData = await Mta.query()
+      .select("id", "tahun", "semester")
+      .where({ id: ta_id })
+      .first();
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
     const mapel = await MMataPelajaran.query()
       .with("user")
       .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ m_ta_id: ta_id })
       .andWhere({ dihapus: 0 })
       .fetch();
 
@@ -26818,7 +26828,7 @@ class MainController {
     let worksheet = workbook.addWorksheet(`Rekap Mata Pelajaran`);
     worksheet.getCell("A1").value = "Rekap Mata Pelajaran";
     worksheet.getCell("A2").value = sekolah.nama;
-    worksheet.getCell("A3").value = ta.tahun;
+    worksheet.getCell("A3").value = taData.tahun;
     worksheet.getCell(
       "A4"
     ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
@@ -27502,7 +27512,7 @@ class MainController {
     return namaFile;
   }
 
-  async importRombelServices(filelocation, sekolah, ta) {
+  async importRombelServices(filelocation, sekolah, ta_id) {
     var workbook = new Excel.Workbook();
 
     workbook = await workbook.xlsx.readFile(filelocation);
@@ -27526,7 +27536,7 @@ class MainController {
         const checkRombel = await MRombel.query()
           .where({ nama: d.rombel })
           // .andWhere({ tingkat: tingkatromawi })
-          .andWhere({ m_ta_id: ta.id })
+          .andWhere({ m_ta_id: ta_id })
           .andWhere({ m_sekolah_id: sekolah.id })
           .first();
 
