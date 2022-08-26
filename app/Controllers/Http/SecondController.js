@@ -462,6 +462,18 @@ class SecondController {
 
     const { ta_id = ta.id } = request.get();
 
+    const semuaTA = await Mta.query()
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .orderBy("id", "desc")
+      .fetch();
+
+    const dataTA = await Mta.query()
+      .where({ id: ta_id })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .first();
+
     const mataPelajaran = await MMataPelajaran.query()
       .with("user", (builder) => {
         builder.select("id", "nama").where({ dihapus: 0 });
@@ -534,7 +546,7 @@ class SecondController {
       tingkat = ["A", "B"];
     }
 
-    return { rombel, totalTingkat, tingkat };
+    return { rombel, totalTingkat, tingkat, semuaTA, dataTA };
   }
 
   async getTunggakan({ response, request, auth }) {
@@ -702,7 +714,7 @@ class SecondController {
           .whereIn("tk_pembayaran_rombel_id", tkPembayaranIds1)
           .ids();
         totalTunggakan =
-          totalTunggakan + (d.nominal * pembayaranSiswaIds1.length);
+          totalTunggakan + d.nominal * pembayaranSiswaIds1.length;
       })
     );
 

@@ -1315,7 +1315,7 @@ class MainController {
     if (role == "warga-sekolah" || res.role == "admin") {
       return response.ok(res);
     }
-    if(res.role == "ppdb") {
+    if (res.role == "ppdb") {
       return response.ok(res);
     }
 
@@ -5422,6 +5422,18 @@ class MainController {
 
     const { kode_hari, jam_saat_ini, ta_id = ta.id } = request.get();
 
+    const semuaTA = await Mta.query()
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .orderBy("id", "desc")
+      .fetch();
+
+    const dataTA = await Mta.query()
+      .where({ id: ta_id })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .first();
+
     if (user.role == "guru") {
       const mataPelajaranIds = await MMataPelajaran.query()
         .where({ m_user_id: user.id })
@@ -5491,6 +5503,8 @@ class MainController {
         rombelMengajar: rombelMengajar,
         rombel,
         userRole: user.role,
+        semuaTA,
+        dataTA,
       });
     } else if (user.role == "siswa") {
       const rombelIds = await MRombel.query()
@@ -5576,6 +5590,7 @@ class MainController {
         absen: absenHariIni,
         rombel,
         userRole: user.role,
+        dataTA,
       });
     }
 
@@ -5653,6 +5668,8 @@ class MainController {
       tingkat: tingkat,
       userRole: user.role,
       kelompok: kelompokData,
+      semuaTA,
+      dataTA,
     });
   }
 
@@ -6225,7 +6242,14 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    const { tingkat, kode, m_jurusan_id, m_user_id, kelompok,ta_id=ta.id } = request.post();
+    const {
+      tingkat,
+      kode,
+      m_jurusan_id,
+      m_user_id,
+      kelompok,
+      ta_id = ta.id,
+    } = request.post();
     const rules = {
       kode: "required",
     };
@@ -6400,17 +6424,30 @@ class MainController {
 
     let { hari, ta_id = ta.id } = request.get();
 
+    const semuaTA = await Mta.query()
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .orderBy("id", "desc")
+      .fetch();
+    const dataTA = await Mta.query()
+      .where({ id: ta_id })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .first();
+
     hari = hari ? hari : 1;
 
     const jamMengajar = await MJamMengajar.query()
       .where({ kode_hari: hari })
       .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ m_ta_id: ta_id })
-      .orderBy("jam_mulai",'asc')
+      .orderBy("jam_mulai", "asc")
       .fetch();
 
     return {
       jamMengajar: jamMengajar,
+      semuaTA,
+      dataTA,
     };
   }
 
@@ -6494,6 +6531,18 @@ class MainController {
     }
     const { ta_id = ta.id } = request.get();
 
+    const semuaTA = await Mta.query()
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .orderBy("id", "desc")
+      .fetch();
+
+    const dataTA = await Mta.query()
+      .where({ id: ta_id })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .first();
+
     const mataPelajaran = await MMataPelajaran.query()
       .with("user", (builder) => {
         builder.select("id", "nama", "whatsapp");
@@ -6532,6 +6581,8 @@ class MainController {
       mataPelajaranKelompokB,
       mataPelajaranKelompokC,
       guru: guru,
+      semuaTA,
+      dataTA,
     });
   }
 
@@ -6560,7 +6611,14 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    const { nama, kode, kelompok, m_user_id, kkm,ta_id=ta.id } = request.post();
+    const {
+      nama,
+      kode,
+      kelompok,
+      m_user_id,
+      kkm,
+      ta_id = ta.id,
+    } = request.post();
     const rules = {
       nama: "required",
       kode: "required",
@@ -6725,7 +6783,7 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    const{ta_id = ta.id}= request.get()
+    const { ta_id = ta.id } = request.get();
 
     const mataPelajaran = await MMataPelajaran.query()
       .with("user", (builder) => {
@@ -6795,7 +6853,7 @@ class MainController {
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ kode_hari: hari })
       .andWhere({ m_ta_id: ta_id })
-      .orderBy("jam_mulai","asc")
+      .orderBy("jam_mulai", "asc")
       .fetch();
 
     return response.ok({
@@ -20456,7 +20514,7 @@ class MainController {
       nama_transaksi,
       m_keu_akun_debet_id,
       m_keu_akun_kredit_id,
-      nama_transaksi_siswa
+      nama_transaksi_siswa,
     } = request.post();
     if (bulan) {
       const rules = {
@@ -20518,7 +20576,7 @@ class MainController {
       nama_transaksi,
       m_keu_akun_debet_id,
       m_keu_akun_kredit_id,
-      nama_transaksi_siswa
+      nama_transaksi_siswa,
     });
 
     //   // email Service
@@ -20710,7 +20768,8 @@ class MainController {
       nama_transaksi,
       m_keu_akun_debet_id,
       m_keu_akun_kredit_id,
-      nama_transaksi_siswa,transaksi
+      nama_transaksi_siswa,
+      transaksi,
     } = request.post();
 
     if (bulan) {
@@ -20769,11 +20828,11 @@ class MainController {
         nominal,
         m_rek_sekolah_id,
         m_ta_id: ta_id,
-        
-      nama_transaksi,
-      m_keu_akun_debet_id,
-      m_keu_akun_kredit_id,
-      nama_transaksi_siswa
+
+        nama_transaksi,
+        m_keu_akun_debet_id,
+        m_keu_akun_kredit_id,
+        nama_transaksi_siswa,
       });
 
     if (!pembayaran) {
@@ -20865,14 +20924,14 @@ class MainController {
 
     if (transaksi) {
       const jumlahSiswa = await MAnggotaRombel.query()
-      .with("user", (builder) => {
-        builder
-          .select("id", "email", "nama", "whatsapp", "wa_real")
-          .where({ dihapus: 0 });
-      })
-      .whereIn("m_rombel_id", rombel_id)
-      .andWhere({ dihapus: 0 })
-      .count("* as total");
+        .with("user", (builder) => {
+          builder
+            .select("id", "email", "nama", "whatsapp", "wa_real")
+            .where({ dihapus: 0 });
+        })
+        .whereIn("m_rombel_id", rombel_id)
+        .andWhere({ dihapus: 0 })
+        .count("* as total");
       if (!checkTransaksi) {
         const transaksi = await MKeuTransaksi.create({
           nama: nama_transaksi,
@@ -21415,7 +21474,9 @@ class MainController {
     }
     if (riwayat.toJSON().rombelPembayaran?.pembayaran?.nama_transaksi) {
       const transaksi = await MKeuTransaksi.create({
-        nama: `${riwayat.toJSON().rombelPembayaran?.pembayaran?.nama_transaksi_siswa} - ${riwayat.toJSON().user.nama}`,
+        nama: `${
+          riwayat.toJSON().rombelPembayaran?.pembayaran?.nama_transaksi_siswa
+        } - ${riwayat.toJSON().user.nama}`,
         // nomor,
         tanggal: moment().format("YYYY-MM-DD"),
         dihapus: 0,
@@ -21601,7 +21662,9 @@ class MainController {
       dihapus: 0,
     });
 
-    const pembayaranSiswa = await MPembayaranSiswa.query().where({id:m_pembayaran_siswa_id}).first()
+    const pembayaranSiswa = await MPembayaranSiswa.query()
+      .where({ id: m_pembayaran_siswa_id })
+      .first();
 
     const mutasi = await MMutasi.create({
       tipe: "kredit",
@@ -21623,38 +21686,38 @@ class MainController {
       .where({ m_sekolah_id: sekolah.id })
       .update({ pemasukan: rekSekolah.pemasukan + pembayaranSiswa.nominal });
 
-      if (pembayaranUtama.nama_transaksi) {
-        const transaksi = await MKeuTransaksi.create({
-          nama: `${pembayaranUtama.nama_transaksi_siswa} - ${riwayat.toJSON().user.nama}`,
-          // nomor,
-          tanggal: moment().format("YYYY-MM-DD"),
-          dihapus: 0,
-          status: 1,
-          m_sekolah_id: sekolah.id,
-          m_pembayaran_id: m_pembayaran_id,
-          m_riwayat_pembayaran_id: pembayaran?.id,
-        });
-  
-        await MKeuJurnal.create({
-          jenis: "kredit",
-          m_keu_transaksi_id: transaksi.id,
-          m_keu_akun_id:
-            pembayaranUtama.m_keu_akun_debet_id,
-          saldo: pembayaranSiswa.nominal,
-          status: 1,
-          dihapus: 0,
-        });
-  
-        await MKeuJurnal.create({
-          jenis: "debit",
-          m_keu_transaksi_id: transaksi.id,
-          m_keu_akun_id:
-            pembayaranUtama.m_keu_akun_kredit_id,
-          saldo: pembayaranSiswa.nominal,
-          status: 1,
-          dihapus: 0,
-        });
-      }
+    if (pembayaranUtama.nama_transaksi) {
+      const transaksi = await MKeuTransaksi.create({
+        nama: `${pembayaranUtama.nama_transaksi_siswa} - ${
+          riwayat.toJSON().user.nama
+        }`,
+        // nomor,
+        tanggal: moment().format("YYYY-MM-DD"),
+        dihapus: 0,
+        status: 1,
+        m_sekolah_id: sekolah.id,
+        m_pembayaran_id: m_pembayaran_id,
+        m_riwayat_pembayaran_id: pembayaran?.id,
+      });
+
+      await MKeuJurnal.create({
+        jenis: "kredit",
+        m_keu_transaksi_id: transaksi.id,
+        m_keu_akun_id: pembayaranUtama.m_keu_akun_debet_id,
+        saldo: pembayaranSiswa.nominal,
+        status: 1,
+        dihapus: 0,
+      });
+
+      await MKeuJurnal.create({
+        jenis: "debit",
+        m_keu_transaksi_id: transaksi.id,
+        m_keu_akun_id: pembayaranUtama.m_keu_akun_kredit_id,
+        saldo: pembayaranSiswa.nominal,
+        status: 1,
+        dihapus: 0,
+      });
+    }
 
     return response.ok(pembayaran);
   }
@@ -26759,7 +26822,7 @@ class MainController {
     return result;
   }
 
-  async importMapel({ request, response, auth ,params:{ta_id}}) {
+  async importMapel({ request, response, auth, params: { ta_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -26788,7 +26851,11 @@ class MainController {
       return fileUpload.error();
     }
 
-    return await this.importMapelServices(`tmp/uploads/${fname}`, sekolah, ta_id);
+    return await this.importMapelServices(
+      `tmp/uploads/${fname}`,
+      sekolah,
+      ta_id
+    );
   }
 
   async downloadMapel({ response, request, auth }) {
@@ -26808,7 +26875,7 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    const {ta_id = ta.id} = request.get()
+    const { ta_id = ta.id } = request.get();
 
     const taData = await Mta.query()
       .select("id", "tahun", "semester")
