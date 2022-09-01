@@ -28394,7 +28394,7 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    const { rombel_id } = request.post();
+    const { rombel_id,ta_id =ta.id } = request.post();
 
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
@@ -28406,7 +28406,7 @@ class MainController {
       })
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta.id });
+      .andWhere({ m_ta_id: ta_id });
 
     const rombel = rombel_id
       ? await query.where({ id: rombel_id }).fetch()
