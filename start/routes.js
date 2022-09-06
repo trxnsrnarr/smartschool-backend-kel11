@@ -1934,6 +1934,8 @@ Route.post("/user-to-alumni", "CDCController.userToAlumni");
 Route.get("/hack-tanggal-transaksi", "SecondController.hackTanggalTransaksi");
 Route.get("/hack-transaksi", "SecondController.hackTransaksi");
 
+Route.put("/ganti-ta-user", "UserController.putTaUser");
+
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");

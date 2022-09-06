@@ -74,10 +74,10 @@ const HitungNilaiAkhir = async ({
     .first();
 
   const nilaiUTS =
-    ujian.toJSON().nilaiUTS != 0 ? ujian.toJSON().nilaiUTS?.nilai : 0;
+    ujian?.toJSON().nilaiUTS?.nilai != 0 ? ujian?.toJSON().nilaiUTS?.nilai : 0;
 
   const nilaiUAS =
-    ujian.toJSON().nilaiUAS != 0 ? ujian.toJSON().nilaiUAS?.nilai : 0;
+    ujian?.toJSON().nilaiUAS?.nilai != 0 ? ujian?.toJSON().nilaiUAS?.nilai : 0;
 
   let nilaiUjian;
   let nilaiTugas;

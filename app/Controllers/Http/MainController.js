@@ -5420,7 +5420,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { kode_hari, jam_saat_ini, ta_id = ta.id } = request.get();
+    const { kode_hari, jam_saat_ini, ta_id = user?.m_ta_id || ta.id } = request.get();
 
     const semuaTA = await Mta.query()
       .andWhere({ m_sekolah_id: sekolah.id })
@@ -5695,8 +5695,22 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
+    let { rombel_id, kode_hari, ta_id } = request.get();
+
+    if(!ta_id ){
+      ta_id = user.m_ta_id || ta.id
+    }
+    
+    const dataTA = await Mta.query()
+      .where({ id: ta_id })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .first();
+      // return {user,ta_id}
+
+
     const tahunPelajaranIds = await Mta.query()
-      .where({ tahun: ta.tahun })
+      .where({ tahun: dataTA.tahun })
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .ids();
@@ -5712,7 +5726,6 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .fetch();
 
-    const { rombel_id, kode_hari, ta_id } = request.get();
 
     let materi;
     let jadwalMengajar;
@@ -5806,7 +5819,8 @@ class MainController {
                         .where({ tipe: "uas" });
                     })
                     .with("keteranganPkl", (builder) => {
-                      builder.where({ dihapus: 0 });
+                      builder.where({ dihapus: 0 })
+                      .andWhere({ m_ta_id: data.m_ta_id });
                     })
                     .with("raporEkskul", (builder) => {
                       builder.with("ekskul").where({ dihapus: 0 });
@@ -6124,6 +6138,7 @@ class MainController {
       ekskul,
       mapelKelas,
       semuaTA,
+      dataTA
     });
   }
 
@@ -6143,16 +6158,27 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
+    const ta = await this.getTAAktif(sekolah);
 
-    const ta = await Mta.query()
-      .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ aktif: 1 })
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    let ta_id;
+
+    if(!ta_id ){
+      ta_id = user.m_ta_id || ta.id
+    }
+    
+    const dataTA = await Mta.query()
+      .where({ id: ta_id })
+      .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .first();
 
     const tanggalDistinct = await Database.raw(
       "SELECT DISTINCT DATE_FORMAT(created_at, '%Y-%m-%d') as tanggalDistinct from m_absen WHERE created_at BETWEEN ? AND  ?",
-      [`${ta.tanggal_awal}`, `${ta.tanggal_akhir}`]
+      [`${dataTA.tanggal_awal}`, `${dataTA.tanggal_akhir}`]
     );
 
     const sikapsosial = await MSikapSosial.query().fetch();
@@ -6205,7 +6231,7 @@ class MainController {
 
     return response.ok({
       siswa: siswa,
-      ta: ta,
+      ta: dataTA,
       sekolah: sekolah,
       materiRombel: materiRombel,
       predikat: predikat,
@@ -9525,8 +9551,16 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
+
+ let ta_id = user?.m_ta_id || ta.id
+    
+    const dataTA = await Mta.query()
+      .where({ id: ta_id })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .first();
     const tahunPelajaranIds = await Mta.query()
-      .where({ tahun: ta.tahun })
+      .where({ tahun: dataTA.tahun })
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .ids();
@@ -10631,8 +10665,17 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
+    let ta_id = user?.m_ta_id || ta.id
+    
+    const dataTA = await Mta.query()
+      .where({ id: ta_id })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+
     const tahunPelajaranIds = await Mta.query()
-      .where({ tahun: ta.tahun })
+      .where({ tahun: dataTA.tahun })
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .ids();
@@ -31259,13 +31302,24 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
-    const sikapsosial = await MSikapSosial.query().fetch();
-    const sikapspiritual = await MSikapSpiritual.query().fetch();
+    const taS = await this.getTAAktif(sekolah);
+
+    const { ta_id = user?.m_ta_id || taS.id } = request.get();
+
     const ta = await Mta.query()
-      .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ aktif: 1 })
+      .where({ id: ta_id })
+      .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .first();
+
+
+    const sikapsosial = await MSikapSosial.query().fetch();
+    const sikapspiritual = await MSikapSpiritual.query().fetch();
+    // const ta = await Mta.query()
+    //   .where({ m_sekolah_id: sekolah.id })
+    //   .andWhere({ aktif: 1 })
+    //   .andWhere({ dihapus: 0 })
+    //   .first();
 
     const tanggalDistinct = await Database.raw(
       "SELECT DISTINCT DATE_FORMAT(created_at, '%Y-%m-%d') as tanggalDistinct from m_absen WHERE created_at BETWEEN ? AND  ?",
@@ -31557,7 +31611,7 @@ class MainController {
     const ta = await this.getTAAktif(sekolah);
     const user = await auth.getUser();
 
-    const { catatan, kelulusan, tipe } = request.post();
+    const { catatan, kelulusan, tipe,ta_id=ta.id } = request.post();
     const rules = {
       kelulusan: "required",
     };
@@ -31573,7 +31627,7 @@ class MainController {
       catatan,
       kelulusan,
       tipe,
-      m_ta_id: ta.id,
+      m_ta_id: ta_id,
       m_user_id: user_id,
       dihapus: 0,
     });
@@ -52379,17 +52433,21 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
+    const taS = await this.getTAAktif(sekolah);
+
+    const user = await auth.getUser();
+    const { ta_id = user?.m_ta_id || taS.id } = request.get();
 
     const ta = await Mta.query()
-      .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ aktif: 1 })
+      .where({ id: ta_id })
+      .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .first();
+
 
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
-    const user = await auth.getUser();
     const { role, tanggal_awal, tanggal_akhir, rombel_id } = request.post();
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
@@ -54042,7 +54100,7 @@ class MainController {
     return namaFile;
   }
 
-  async importAbsensiSiswaServices(filelocation, sekolah, ta, tipe = "uts") {
+  async importAbsensiSiswaServices(filelocation, sekolah, ta_id, tipe = "uts") {
     var workbook = new Excel.Workbook();
 
     workbook = await workbook.xlsx.readFile(filelocation);
@@ -54080,14 +54138,14 @@ class MainController {
       const checkData = await MKeteranganRapor.query()
         .where({ m_user_id: userSiswa.id })
         .andWhere({ tipe: tipe })
-        .andWhere({ m_ta_id: ta.id })
+        .andWhere({ m_ta_id: ta_id })
         .first();
 
       if (checkData) {
         await MKeteranganRapor.query()
           .where({ tipe: tipe })
           .andWhere({ m_user_id: userSiswa.id })
-          .andWhere({ m_ta_id: ta.id })
+          .andWhere({ m_ta_id: ta_id })
           .update(
             {
               sakit: d.sakit ? d.sakit : "0",
@@ -54102,7 +54160,7 @@ class MainController {
             m_user_id: userSiswa.id,
             tipe: tipe,
             dihapus: 0,
-            m_ta_id: ta.id,
+            m_ta_id: ta_id,
             sakit: d.sakit ? d.sakit : "0",
             izin: d.izin ? d.izin : "0",
             alpa: d.alpa ? d.alpa : "0",
@@ -54128,7 +54186,7 @@ class MainController {
 
     const ta = await this.getTAAktif(sekolah);
 
-    let { tipe } = request.post();
+    let { tipe,ta_id } = request.post();
 
     let file = request.file("file");
     let fname = `import-excel.xlsx`;
@@ -54146,12 +54204,12 @@ class MainController {
     return await this.importAbsensiSiswaServices(
       `tmp/uploads/${fname}`,
       sekolah,
-      ta,
+      ta_id,
       tipe
     );
   }
 
-  async importKeteranganKelulusanServices(filelocation, sekolah, ta, tipe) {
+  async importKeteranganKelulusanServices(filelocation, sekolah, ta_id, tipe) {
     var workbook = new Excel.Workbook();
 
     workbook = await workbook.xlsx.readFile(filelocation);
@@ -54187,7 +54245,7 @@ class MainController {
       const checkData = await MKeteranganRapor.query()
         .where({ m_user_id: userSiswa.id })
         .andWhere({ tipe: tipe })
-        .andWhere({ m_ta_id: ta.id })
+        .andWhere({ m_ta_id: ta_id })
         .first();
 
       let keterangan;
@@ -54213,7 +54271,7 @@ class MainController {
             {
               tipe: tipe,
               dihapus: 0,
-              m_ta_id: ta.id,
+              m_ta_id: ta_id,
               m_user_id: userSiswa.id,
               catatan: d.catatan ? d.catatan : "-",
               kelulusan: keterangan,
@@ -54228,7 +54286,7 @@ class MainController {
           const update = await MKeteranganRapor.query()
             .where({ tipe: tipe })
             .andWhere({ m_user_id: userSiswa.id })
-            .andWhere({ m_ta_id: ta.id })
+            .andWhere({ m_ta_id: ta_id })
             .update(
               {
                 catatan: d.catatan ? d.catatan : "-",
@@ -54259,7 +54317,7 @@ class MainController {
 
     const ta = await this.getTAAktif(sekolah);
 
-    let { tipe } = request.post();
+    let { tipe,ta_id } = request.post();
 
     let file = request.file("file");
     let fname = `import-excel.xlsx`;
@@ -54277,7 +54335,7 @@ class MainController {
     return await this.importKeteranganKelulusanServices(
       `tmp/uploads/${fname}`,
       sekolah,
-      ta,
+      ta_id,
       tipe
     );
   }
@@ -54300,7 +54358,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    let { tipe } = request.post();
+    let { tipe,ta_id=ta.id } = request.post();
 
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
@@ -54397,7 +54455,7 @@ class MainController {
           const keterangan = await MKeteranganRapor.query()
             .where({ dihapus: 0 })
             .andWhere({ tipe: tipe })
-            .andWhere({ m_ta_id: ta.id })
+            .andWhere({ m_ta_id: ta_id })
             .andWhere({ m_user_id: d.m_user_id })
             .first();
 

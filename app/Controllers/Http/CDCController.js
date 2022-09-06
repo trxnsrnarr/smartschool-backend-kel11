@@ -3711,6 +3711,7 @@ class CDCController {
       kontrak,
       sertifikat,
       nilai,
+      ta_id=ta.id,
     } = request.post();
 
     const rules = {
@@ -3747,7 +3748,7 @@ class CDCController {
       sertifikat,
       nilai,
       m_user_id: user_id,
-      m_ta_id: ta.id,
+      m_ta_id: ta_id,
       dihapus: 0,
     });
 

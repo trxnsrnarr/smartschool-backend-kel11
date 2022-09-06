@@ -653,6 +653,33 @@ class UserController {
       token,
     });
   }
+  async putTaUser({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { m_ta_id } =
+      request.post();
+
+       const guru = await User.query().where({ id: user.id }).update({m_ta_id});
+
+
+    if (!guru) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
 }
 
 module.exports = UserController;
