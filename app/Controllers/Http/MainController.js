@@ -8193,12 +8193,18 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    let { m_ta_id = ta.id } = request.get();
+    // let { m_ta_id = user?.m_ta_id || ta.id } = request.get();
+    const m_ta_id = user?.m_ta_id || ta.id
     const semuaTA = await Mta.query()
       .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .orderBy("id", "desc")
       .fetch();
+      const dataTA = await Mta.query()
+      .andWhere({ id: m_ta_id })
+      .andWhere({ dihapus: 0 })
+      .orderBy("id", "desc")
+      .first();
     if (sekolah.id == 40) {
       if (user.role == "siswa") {
         const rombelIds = await MRombel.query()
@@ -8352,7 +8358,7 @@ class MainController {
 
     return response.ok({
       materi,
-      semuaTA,
+      semuaTA,dataTA
       // materiLainnya,
     });
   }
