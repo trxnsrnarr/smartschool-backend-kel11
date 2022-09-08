@@ -1134,10 +1134,13 @@ class SecondController {
       akunSearch.where("nama", "like", `%${search}%`);
     }
     akunSearch = await akunSearch.fetch();
+
+    const akunIds = await MKeuAkun.query().where({dihapus:0}).andWhere({m_sekolah_id:sekolah.id}).ids()
     const rekening = await MRekSekolah.query()
       .where({ dihapus: 0 })
       .whereNull("m_rencana_keuangan_id")
       .andWhere({ m_sekolah_id: sekolah.id })
+      .whereIn("m_keu_akun_id",akunIds)
       .fetch();
 
     // if (!akun[0] || !akun || akun == "[]") {

@@ -225,7 +225,7 @@ class KeuanganController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
     const user = await auth.getUser();
-
+    const akunIds = await MKeuAkun.query().where({dihapus:0}).andWhere({m_sekolah_id:sekolah.id}).ids()
     let rekSekolah = await MRekSekolah.query()
       // .with("akun", (builder) => {
       //   builder.where({ dihapus: 0 }).with("rencanaJurnal", (builder) => {
@@ -237,6 +237,7 @@ class KeuanganController {
       .where({ m_rencana_keuangan_id: perencanaan_id })
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
+      .whereIn("m_keu_akun_id",akunIds)
       .fetch();
 
     const transaksiIds = await MRencanaTransaksi.query()
@@ -703,7 +704,7 @@ class KeuanganController {
           m_keu_akun_id: d.m_keu_akun_id,
           saldo: d.saldo,
           dihapus: 0,
-          status: 0,
+          status: status,
         });
       })
     );
