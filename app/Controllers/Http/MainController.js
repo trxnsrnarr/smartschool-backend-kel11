@@ -20549,6 +20549,12 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
+     
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
 
     let {
       nama,
@@ -20558,7 +20564,7 @@ class MainController {
       nominal,
       tanggal_dibuat,
       rombel_id,
-      ta_id,
+      ta_id=ta.id,
       tag,
       m_rek_sekolah_id,
       transaksi,
