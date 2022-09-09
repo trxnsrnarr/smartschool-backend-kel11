@@ -21587,9 +21587,15 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
+    
     const pembayaranSiswa = await MRiwayatPembayaranSiswa.query()
+    .where({ id: riwayat_pembayaran_siswa_id })
+    .first();
+
+    const deleteRiwayat = await MRiwayatPembayaranSiswa.query()
       .where({ id: riwayat_pembayaran_siswa_id })
-      .first();
+      .delete();
+    if (deleteRiwayat > 0) {
 
     const riwayat = await MPembayaranSiswa.query()
       .where({ id: pembayaranSiswa.m_pembayaran_siswa_id })
@@ -21664,11 +21670,6 @@ class MainController {
           });
       }
     }
-
-    const deleteRiwayat = await MRiwayatPembayaranSiswa.query()
-      .where({ id: riwayat_pembayaran_siswa_id })
-      .delete();
-    if (deleteRiwayat > 0) {
       return response.ok({ message: messageDeleteSuccess });
     } else {
       return response.notFound({ message: messageNotFound });
