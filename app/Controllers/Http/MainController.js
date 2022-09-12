@@ -20629,7 +20629,7 @@ class MainController {
       m_rek_sekolah_id,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
-      m_ta_id: ta_id,
+      m_ta_id: ta_id || ta.id,
       nama_transaksi,
       m_keu_akun_debet_id,
       m_keu_akun_kredit_id,
