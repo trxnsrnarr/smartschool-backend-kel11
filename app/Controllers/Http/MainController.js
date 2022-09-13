@@ -15247,7 +15247,7 @@ class MainController {
           `${jadwalUjian.toJSON().rombel.nama}`
         );
         worksheet.addConditionalFormatting({
-          ref: "A10:M10",
+          ref: "A10:N10",
           rules: [
             {
               type: "expression",
@@ -15441,6 +15441,7 @@ class MainController {
                         "Total Benar Uraian",
                         "Total Benar Menjodohkan",
                         "Total Benar",
+                        "Keluar Tab"
                       ];
 
                       worksheet.columns = [
@@ -15458,9 +15459,10 @@ class MainController {
                         { key: "benar_uraian" },
                         { key: "benar_menjodohkan" },
                         { key: "benar_total" },
+                        { key: "keluar_tab" },
                       ];
                       worksheet.addConditionalFormatting({
-                        ref: `B${(idx + 1) * 1 + 10}:M${(idx + 1) * 1 + 10}`,
+                        ref: `B${(idx + 1) * 1 + 10}:N${(idx + 1) * 1 + 10}`,
                         rules: [
                           {
                             type: "expression",
@@ -15528,6 +15530,7 @@ class MainController {
                         benar_uraian: metaHasil.benarUraian,
                         benar_menjodohkan: metaHasil.benarMenjodohkan,
                         benar_total: metaHasil.benar,
+                        keluar_tab: pesertaUjian?.warning
                       });
                     }
                   })
@@ -15559,7 +15562,7 @@ class MainController {
 
         worksheet.autoFilter = {
           from: "A10",
-          to: "G10",
+          to: "N10",
         };
 
         // worksheet.getCell("A4").value = "RPP";
@@ -20810,6 +20813,11 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
 
     let {
       nama,
@@ -20884,7 +20892,7 @@ class MainController {
         tanggal_dibuat,
         nominal,
         m_rek_sekolah_id,
-        m_ta_id: ta_id,
+        m_ta_id: ta_id || ta.id,
 
         nama_transaksi,
         m_keu_akun_debet_id,
