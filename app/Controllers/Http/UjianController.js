@@ -127,12 +127,23 @@ class UjianController {
 
     let { m_ta_id = ta.id } = request.get();
 
-    const mataPelajaranIds = await MMataPelajaran.query()
+    let mataPelajaranIds;
+    if(user?.role =="guru"){
+
+      mataPelajaranIds = await MMataPelajaran.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ m_user_id: user.id })
       .andWhere({ dihapus: 0 })
       .andWhere({ m_ta_id: m_ta_id })
       .ids();
+    }else{
+      mataPelajaranIds = await MMataPelajaran.query()
+      .where({ m_sekolah_id: sekolah.id })
+      
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_ta_id: m_ta_id })
+      .ids();
+    }
 
     const semuaTA = await Mta.query()
       .andWhere({ m_sekolah_id: sekolah.id })
@@ -161,7 +172,7 @@ class UjianController {
           .andWhere({ dihapus: 0 })
           .getCount();
 
-        return data.push({
+         data.push({
           id: d.id,
           nama: d.mataPelajaran.nama,
           tingkat: d.tingkat,
