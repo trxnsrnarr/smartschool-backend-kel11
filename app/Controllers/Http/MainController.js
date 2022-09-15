@@ -5985,6 +5985,7 @@ class MainController {
         .andWhere({
           m_user_id: jadwalMengajar.toJSON().mataPelajaran.m_user_id,
         })
+        .andWhere({m_mata_pelajaran_id:jadwalMengajar.m_mata_pelajaran_id})
         .ids();
       // .andWhere({ m_rombel_id: jadwalMengajar.toJSON().m_rombel_id })
 
