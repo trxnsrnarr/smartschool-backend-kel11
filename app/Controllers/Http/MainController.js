@@ -20504,11 +20504,13 @@ class MainController {
 
     let siswa;
 
-    let userIds = await User.query().where({ dihapus: 0 });
+    let userIds = User.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id });
     if (search) {
       userIds.andWhere("nama", "like", `%${search}%`);
     }
-    userIds = userIds.ids();
+    userIds = await userIds.ids();
 
     siswa = MPembayaranSiswa.query()
       .with("user")
