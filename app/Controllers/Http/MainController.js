@@ -24679,6 +24679,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
+    const user = await auth.getUser();
     const taS = await this.getTAAktif(sekolah);
 
     const { ta_id = user?.m_ta_id || taS.id } = request.get();
