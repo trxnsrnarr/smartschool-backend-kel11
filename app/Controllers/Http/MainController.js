@@ -24690,8 +24690,6 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .first();
 
-    const user = await auth.getUser();
-
     const {
       di_ss,
       judul,
