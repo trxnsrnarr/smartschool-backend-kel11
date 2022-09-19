@@ -25,8 +25,19 @@ class MSekolahSchema extends Schema {
       table.string("tingkat");
       table.string("status");
       table.string("alamat");
+      table.boolean("trial").defaultTo(0);
+      table.boolean("gpds").defaultTo(0);
       table.string("lintang");
       table.string("bujur");
+      table.integer("sekolah_id").unsigned().index("sekolah_id");
+      table
+        .foreign("sekolah_id")
+        .references("sekolah.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
+        table.string('gpds_event')
+        table.integer('jumlah_ujian')
+        table.integer('jumlah_topik')
       table.timestamps();
     });
   }

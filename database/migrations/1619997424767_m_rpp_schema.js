@@ -12,6 +12,7 @@ class MRppSchema extends Schema {
       table.text("deskripsi");
       table.text("lampiran");
       table.string("tingkat");
+      table.string("tipe");
       table.boolean("dihapus").defaultTo(0);
       table
         .integer("m_mata_pelajaran_id")

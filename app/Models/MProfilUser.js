@@ -12,6 +12,30 @@ class MProfilUser extends Model {
     return ["dataBiodata", "dataRapor"];
   }
 
+  getPendidikan(pendidikan) {
+    return pendidikan ? JSON.parse(pendidikan) : [];
+  }
+
+  getPengalaman(pengalaman) {
+    return pengalaman ? JSON.parse(pengalaman) : [];
+  }
+
+  getPrestasi(prestasi) {
+    return prestasi ? JSON.parse(prestasi) : [];
+  }
+
+  getPortofolio(portofolio) {
+    return portofolio ? JSON.parse(portofolio) : [];
+  }
+
+  getBahasa(bahasa) {
+    return bahasa ? JSON.parse(bahasa) : [];
+  }
+
+  getKeahlian(keahlian) {
+    return keahlian ? keahlian.split(',') : [];
+  }
+
   getDataBiodata({
     // identitas
     nama,

@@ -13,23 +13,25 @@ class MProfilUserSchema extends Schema {
       table.text("prestasi");
       table.text("portofolio");
       table.text("bahasa");
+      table.text("keahlian");
 
       // informasi
       table.string("nisn");
-      table.string("nipd");
+      table.string("nis");
+      table.string("nrk");
       table.string("nuptk");
       table.string("nip");
-      table.enu("gender", ["L", "P"]);
       table.string("status_kepegawaian");
       table.string("jenis_ptk");
       table.string("tugas_tambahan");
       table.string("tempat_lahir");
-      table.date("tanggal_lahir");
       table.string("agama");
       table.date("tanggal_masuk");
       table.string("kelas_diterima");
       table.date("telp_rumah");
       table.string("asal_sekolah");
+      table.string("status_keluarga");
+      table.integer("anak_ke");
 
       // alamat
       table.text("alamat");

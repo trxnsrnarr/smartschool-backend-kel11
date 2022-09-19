@@ -10,8 +10,12 @@ class MPrestasiSchema extends Schema {
       table.string("nama");
       table.string("tingkat");
       table.string("peringkat");
-      table.string("tempat");
-      table.string("tahun");
+      table.string("lembaga");
+      table.date("tanggal_terbit");
+      table.boolean("sertifikat_kadaluarsa").defaultTo(0);
+      table.date("tanggal_kadaluarsa");
+      table.string("id_sertifikat");
+      table.string("lampiran");
       table.boolean("dihapus").defaultTo(0);
       table.integer("m_user_id").unsigned().index("m_user_id");
       table

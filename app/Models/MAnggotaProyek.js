@@ -15,7 +15,7 @@ class MAnggotaProyek extends Model {
     return this.belongsTo("App/Models/MProyek");
   }
   role() {
-    return this.hasMany("App/Models/MAnggotaProyekRole");
+    return this.hasOne("App/Models/MAnggotaProyekRole");
   }
 }
 

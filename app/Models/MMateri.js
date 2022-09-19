@@ -35,6 +35,19 @@ class MMateri extends Model {
   rekap() {
     return this.hasMany("App/Models/MRekap");
   }
+
+  rekapMaxPengetahuan() {
+    return this.belongsTo("App/Models/MRekap", "id", "m_materi_id");
+  }
+  rekapMinPengetahuan() {
+    return this.belongsTo("App/Models/MRekap", "id", "m_materi_id");
+  }
+  rekapMaxKeterampilan() {
+    return this.belongsTo("App/Models/MRekap", "id", "m_materi_id");
+  }
+  rekapMinKeterampilan() {
+    return this.belongsTo("App/Models/MRekap", "id", "m_materi_id");
+  }
 }
 
 module.exports = MMateri;

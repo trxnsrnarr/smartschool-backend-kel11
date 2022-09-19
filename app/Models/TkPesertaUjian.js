@@ -27,6 +27,10 @@ class TkJadwalUjianSiswa extends Model {
     return this.belongsTo("App/Models/TkJadwalUjian");
   }
 
+  tugas() {
+    return this.belongsTo("App/Models/MTugas");
+  }
+
   getJamMulai({ waktu_mulai }) {
     return moment(waktu_mulai).format("HH:mm");
   }
@@ -37,6 +41,13 @@ class TkJadwalUjianSiswa extends Model {
 
   user() {
     return this.belongsTo("App/Models/User", "m_user_id");
+  }
+  pesertaPPDB() {
+    return this.hasOne("App/Models/TkPesertaUjianPpdb", "id", "tk_peserta_ujian_id");
+  }
+
+  peringatan() {
+    return this.hasMany("App/Models/MPeringatanUjianSiswa", "id", "tk_peserta_ujian_id");
   }
 }
 

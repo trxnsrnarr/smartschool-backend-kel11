@@ -21,16 +21,28 @@ class MJadwalUjian extends Model {
     ];
   }
 
-  getJumlahSoal({ jumlah_pg, jumlah_esai }) {
-    return jumlah_pg + jumlah_esai;
+  getJumlahSoal({
+    jumlah_pg,
+    jumlah_esai,
+    jumlah_menjodohkan,
+    jumlah_pg_kompleks,
+    jumlah_uraian,
+  }) {
+    return (
+      jumlah_pg +
+      jumlah_esai +
+      jumlah_menjodohkan +
+      jumlah_pg_kompleks +
+      jumlah_uraian
+    );
   }
 
   getTanggalUjian({ waktu_dibuka }) {
     return moment(waktu_dibuka).format("dddd DD MMMM YYYY");
   }
 
-  getWaktuUjian({ waktu_dibuka, durasi }) {
-    return `${moment(waktu_dibuka).format("HH:mm")} - ${moment(waktu_dibuka)
+  getWaktuUjian({ waktu_dibuka, durasi,waktu_ditutup }) {
+    return `${moment(waktu_dibuka).format("HH:mm")} - ${moment(waktu_ditutup)
       .add("minutes", durasi)
       .format("HH:mm")}`;
   }

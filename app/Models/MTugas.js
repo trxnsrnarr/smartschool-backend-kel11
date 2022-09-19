@@ -5,6 +5,8 @@ const Model = use("Model");
 const moment = require("moment");
 require("moment/locale/id");
 moment.locale("id");
+const htmlEscaper = require("html-escaper");
+
 
 class MTugas extends Model {
   static get table() {
@@ -29,6 +31,14 @@ class MTugas extends Model {
 
   getCreatedAt(created_at) {
     return moment(created_at).format("DD MMMM YYYY");
+  }
+
+  getInstruksi(instruksi) {
+    return instruksi ? htmlEscaper.unescape(instruksi) : "";
+  }
+
+  soal(){
+    return this.hasMany("App/Models/TkSoalTugas");
   }
 }
 

@@ -6,6 +6,8 @@ const moment = require("moment");
 require("moment/locale/id");
 moment.locale("id");
 
+const htmlEscaper = require("html-escaper");
+
 class MTimeline extends Model {
   // static castDates(field, value) {
   //   if (["created_at", "updated_at"].indexOf(field) > -1) {
@@ -18,12 +20,24 @@ class MTimeline extends Model {
     return "m_timeline";
   }
 
+  materi() {
+    return this.belongsToMany("App/Models/MTopik").pivotTable("tk_timeline_topik")
+  }
+
+  mataPelajaran() {
+    return this.belongsTo("App/Models/MMataPelajaran");
+  }
+
   rombel() {
     return this.belongsTo("App/Models/MRombel");
   }
 
   tkTimeline() {
     return this.hasMany("App/Models/TkTimeline");
+  }
+
+  mataPelajaran() {
+    return this.belongsTo("App/Models/MMataPelajaran");
   }
 
   ditugaskan() {
@@ -97,7 +111,7 @@ class MTimeline extends Model {
   }
 
   getDeskripsi(deskripsi) {
-    return deskripsi ? Buffer(deskripsi, "base64").toString("ascii") : "";
+    return deskripsi ? htmlEscaper.unescape(deskripsi) : "";
   }
 }
 

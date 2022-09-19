@@ -15,6 +15,10 @@ class MSikapRombel extends Model {
   ditingkatkan() {
     return this.belongsTo("App/Models/MSikap", "m_sikap_ditingkatkan_id");
   }
+
+  predikat() {
+    return this.belongsTo("App/Models/MPredikatNilai");
+  }
 }
 
 module.exports = MSikapRombel;

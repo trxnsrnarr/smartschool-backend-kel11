@@ -11,6 +11,39 @@ class MSekolah extends Model {
   informasi() {
     return this.hasOne("App/Models/MInformasiSekolah");
   }
+
+  ta() {
+    return this.hasMany("App/Models/Mta", "id", "m_sekolah_id");
+  }
+
+  jurusan() {
+    return this.hasMany("App/Models/MJurusan", "m_sekolah_id");
+  }
+
+  rombel() {
+    return this.hasMany("App/Models/MRombel", "id", "m_sekolah_id");
+  }
+
+  siswa() {
+    return this.hasMany("App/Models/User","id", "m_sekolah_id");
+  }
+
+  guru() {
+    return this.hasMany("App/Models/User");
+  }
+
+  fitur() {
+    return this.hasOne("App/Models/MFiturSekolah", "id", "m_sekolah_id");
+  }
+
+  tkServer() {
+    return this.belongsTo("App/Models/TkServerSekolah", "id", "m_sekolah_id");
+  }
+
+  pembayaranAktif(){
+    return this.belongsTo("App/Models/MPembayaranSekolah", "id", "m_sekolah_id");
+  }
+
   static get computed() {
     return ["tingkat_format"];
   }

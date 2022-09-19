@@ -12,6 +12,14 @@ class MRpp extends Model {
     return this.belongsTo("App/Models/MMataPelajaran");
   }
 
+  rombel() {
+    return this.belongsTo("App/Models/MRombel","m_rombel_id");
+  }
+
+  ta() {
+    return this.belongsTo("App/Models/Mta","m_ta_id");
+  }
+
   sekolah() {
     return this.belongsTo("App/Models/MSekolah");
   }

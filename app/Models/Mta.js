@@ -12,6 +12,14 @@ class Mta extends Model {
     return ["aktif_text"];
   }
 
+  sekolah() {
+    return this.belongsTo("App/Models/MSekolah");
+  }
+
+  rombel() {
+    return this.hasMany("App/Models/MRombel", 'id', "m_ta_id");
+  }
+
   getAktifText({ aktif }) {
     switch (aktif) {
       case 1:

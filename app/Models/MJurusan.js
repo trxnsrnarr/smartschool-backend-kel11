@@ -13,7 +13,11 @@ class MJurusan extends Model {
   }
 
   rombel() {
-    return this.hasMany('App/Models/MRombel')
+    return this.hasMany("App/Models/MRombel");
+  }
+
+  penerimaanSiswa() {
+    return this.hasMany("App/Models/MPenerimaanSiswa");
   }
 }
 

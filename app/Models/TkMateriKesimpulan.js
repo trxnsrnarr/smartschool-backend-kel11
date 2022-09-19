@@ -6,6 +6,8 @@ const moment = require("moment");
 require("moment/locale/id");
 moment.locale("id");
 
+const htmlEscaper = require("html-escaper");
+
 class TkMateriKesimpulan extends Model {
   static get table() {
     return "tk_materi_kesimpulan";
@@ -34,9 +36,8 @@ class TkMateriKesimpulan extends Model {
       ? `${moment(waktu_selesai).diff(waktu_mulai, "minutes")} menit`
       : null;
   }
-
   getKesimpulan(kesimpulan) {
-    return kesimpulan ? Buffer(kesimpulan, "base64").toString("ascii") : "";
+    return kesimpulan ? htmlEscaper.unescape(kesimpulan) : "";
   }
 }
 

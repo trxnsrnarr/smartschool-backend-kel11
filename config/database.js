@@ -62,6 +62,61 @@ module.exports = {
     debug: Env.get("DB_DEBUG", false),
   },
 
+  smkn26: {
+    client: "mysql",
+    connection: {
+      host: "128.199.65.6",
+      port: 3306,
+      user: "goent",
+      password: "server1goent26sukses",
+      database: "ss",
+    },
+    debug: Env.get("DB_DEBUG", false),
+  },
+  sman94: {
+    client: "mysql",
+    connection: {
+      host: "104.248.152.168",
+      port: 3306,
+      user: "goent",
+      password: "server1goent26sukses",
+      database: "ss",
+    },
+    debug: Env.get("DB_DEBUG", false),
+  },
+  sman96: {
+    client: "mysql",
+    connection: {
+      host: "104.248.152.155",
+      port: 3306,
+      user: "goent",
+      password: "server1goent26sukses",
+      database: "ss",
+    },
+    debug: Env.get("DB_DEBUG", false),
+  },
+  smkn6tangsel: {
+    client: "mysql",
+    connection: {
+      host: "128.199.237.64",
+      port: 3306,
+      user: "goent",
+      password: "server1goent26sukses",
+      database: "ss",
+    },
+    debug: Env.get("DB_DEBUG", false),
+  },
+  smkyadika13: {
+    client: "mysql",
+    connection: {
+      host: "159.223.90.200",
+      port: 3306,
+      user: "goent",
+      password: "server1goent26sukses",
+      database: "ss",
+    },
+    debug: Env.get("DB_DEBUG", false),
+  },
   /*
   |--------------------------------------------------------------------------
   | PostgreSQL

@@ -18,7 +18,7 @@ class TkTimelineKomen extends Model {
   getCreatedAt(created_at) {
     return moment(created_at).format("DD MMM");
   }
-
+  // ini masih buffer
   getKesimpulan(kesimpulan) {
     return kesimpulan ? Buffer(kesimpulan, "base64").toString("ascii") : "";
   }

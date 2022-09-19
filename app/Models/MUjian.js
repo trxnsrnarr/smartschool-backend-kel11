@@ -16,6 +16,20 @@ class MUjian extends Model {
     return this.hasMany("App/Models/TkSoalUjian");
   }
 
+  user() {
+    return this.belongsTo("App/Models/User");
+  }
+
+  soal() {
+    return this.belongsToMany("App/Models/MSoalUjian").pivotTable(
+      "tk_soal_ujian"
+    );
+  }
+
+  tkSoal() {
+    return this.hasMany("App/Models/TkSoalUjian");
+  }
+
   static get computed() {
     return ["tipe_format"];
   }
@@ -29,6 +43,7 @@ class MUjian extends Model {
     else if (tipe == "us") return "Ujian Sekolah";
     else if (tipe == "literasi") return "AKM - Literasi";
     else if (tipe == "numerasi") return "AKM - Numerasi";
+    else if (tipe == "kuis") return "Kuis";
   }
 }
 
