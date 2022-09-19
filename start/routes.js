@@ -205,7 +205,7 @@ Route.delete(
   "/mata-pelajaran/:mata_pelajaran_id",
   "MainController.deleteMataPelajaran"
 );
-Route.post("/mata-pelajaran/import", "MainController.importMapel");
+Route.post("/mata-pelajaran/import/:ta_id", "MainController.importMapel");
 Route.post("/mata-pelajaran/download", "MainController.downloadMapel");
 // MATA PELAJARAN SERVICE - END
 
@@ -315,6 +315,7 @@ Route.get(
 );
 Route.post("rencana-laba", "KeuanganController.postLabaRugi");
 Route.put("rencana-laba/:labarugi_id", "KeuanganController.putLabaRugi");
+Route.put("/rencana-laba-template/:labarugi_id", "KeuanganController.putLabaRugiTemplate");
 Route.delete("rencana-laba/:labarugi_id", "KeuanganController.deleteLabaRugi");
 Route.post(
   "kategori-rencana-laba/:perencanaan_id",
@@ -347,6 +348,7 @@ Route.get(
   "rencana-arus-laporan/:perencanaan_id",
   "KeuanganController.getRencanaArusKasLaporan"
 );
+Route.get("/rencana-arus-keuangan-laporan-neraca/:perencanaan_id", "KeuanganController.getArusKasLaporanNeraca");
 Route.post("rencana-arus", "KeuanganController.postArusKas");
 Route.put("rencana-arus/:aktivitas_id", "KeuanganController.putArusKas");
 Route.delete("rencana-arus/:aktivitas_id", "KeuanganController.deleteArusKas");
@@ -456,6 +458,7 @@ Route.post("/rek-sekolah/download", "MainController.downloadRekening");
 
 // tunggakan
 Route.get("/tunggakan", "SecondController.getTunggakan");
+Route.get("/total-tunggakan", "SecondController.getTotalTunggakan");
 Route.post("/download/tunggakan", "SecondController.downloadTunggakan");
 
 // pembayaran
@@ -543,10 +546,12 @@ Route.delete("/rumus-laba/:rumus_id", "SecondController.deleteRumusLabaRugi");
 Route.post("/akun-laba", "SecondController.postLabaRugi");
 Route.put("/akun-laba/:labarugi_id", "SecondController.putLabaRugi");
 Route.delete("/akun-laba/:labarugi_id", "SecondController.deleteLabaRugi");
+Route.put("/laba-template/:labarugi_id", "SecondController.putLabaRugiTemplate");
 
 // Arus Kas
 Route.get("/arus-keuangan", "SecondController.getArusKas");
 Route.get("/arus-keuangan-laporan", "SecondController.getArusKasLaporan");
+Route.get("/arus-keuangan-laporan-neraca", "SecondController.getArusKasLaporanNeraca");
 Route.post("/kategori-arus", "SecondController.postKategoriArusKas");
 Route.put("/kategori-arus/:kategori_id", "SecondController.putKategoriArusKas");
 Route.delete(
@@ -607,6 +612,7 @@ Route.get("/inventaris-aktif", "KeuanganController.getTransaksiBarang");
 
 // mutasi v2
 Route.get("/v2/mutasi", "SecondController.getTransaksi");
+Route.get("/v2/mutasi/:transaksi_id", "SecondController.detailTransaksi");
 Route.post("/v2/mutasi", "SecondController.postTransaksi");
 Route.put("/v2/mutasi/:transaksi_id", "SecondController.putTransaksi");
 Route.delete("/v2/mutasi/:transaksi_id", "SecondController.deleteTransaksi");
@@ -1898,6 +1904,37 @@ Route.put("/jawaban-peringatan-ujian/:peringatan_id", "UjianController.putJawaba
 Route.post("/dibaca-peringatan-ujian-guru/:peserta_ujian_id", "UjianController.postDibacaPeringatanUjianGuru");
 
 Route.post("/dibaca-peringatan-ujian/:peserta_ujian_id", "UjianController.postDibacaPeringatanUjian");
+
+Route.post("/download-keterangan-pkl/:rombel_id", "RombelController.downloadKeteranganPkl");
+
+Route.post("/import-keterangan-pkl/", "RombelController.importKeteranganPkl");
+
+
+// Keuangan Penyusutan
+Route.get(
+  "/penyusutan",
+  "SecondController.getPenyusutan"
+);
+Route.post("/penyusutan", "SecondController.postPenyusutan");
+Route.put("/penyusutan/:penyusutan_id", "SecondController.putPenyusutan");
+Route.delete("/penyusutan/:penyusutan_id", "SecondController.deletePenyusutan");
+Route.get(
+  "/penyusutan-generate",
+  "SecondController.getGeneratePenyusutan"
+);
+
+Route.post("/naik-kelas1-jam", "SecondController.naikTAJam");
+
+Route.post("/naik-kelas1-mapel", "SecondController.naikTAMapel");
+
+Route.post("/naik-kelas1-rombel", "SecondController.naikTARombel");
+
+Route.post("/user-to-alumni", "CDCController.userToAlumni");
+
+Route.get("/hack-tanggal-transaksi", "SecondController.hackTanggalTransaksi");
+Route.get("/hack-transaksi", "SecondController.hackTransaksi");
+
+Route.put("/ganti-ta-user", "UserController.putTaUser");
 
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)

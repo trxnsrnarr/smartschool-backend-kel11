@@ -7,6 +7,7 @@ class MKeuRumusPenyusutanSchema extends Schema {
   up() {
     this.create("m_keu_rumus_penyusutan", (table) => {
       table.increments();
+      table.string("nama")
       table.text("rumus");
       table.integer("m_keu_akun_id").unsigned().index("m_keu_akun_id");
       table

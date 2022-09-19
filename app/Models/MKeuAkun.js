@@ -17,6 +17,10 @@ class MKeuAkun extends Model {
   rek2() {
     return this.hasOne("App/Models/MRekSekolah");
   }
+
+  penyusutan() {
+    return this.hasOne("App/Models/MKeuRumusPenyusutan");
+  }
   
   rekRencana() {
     return this.hasOne("App/Models/MRekSekolah");
@@ -37,6 +41,9 @@ class MKeuAkun extends Model {
   jurnal2() {
     return this.hasMany("App/Models/MKeuJurnal");
   }
+  jurnal3() {
+    return this.hasMany("App/Models/MKeuJurnal");
+  }
   rencanaJurnal() {
     return this.hasMany("App/Models/MKeuRencanaJurnal");
   }
@@ -44,6 +51,9 @@ class MKeuAkun extends Model {
     return this.hasMany("App/Models/MKeuRencanaJurnal");
   }
   rencanaJurnal2() {
+    return this.hasMany("App/Models/MKeuRencanaJurnal");
+  }
+  rencanaJurnal3() {
     return this.hasMany("App/Models/MKeuRencanaJurnal");
   }
   rumusAkun() {
