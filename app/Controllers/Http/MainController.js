@@ -30452,6 +30452,97 @@ class MainController {
 
     const rombel = await MRombel.query()
       .with("jurusan")
+      .with("anggotaRombel", (builder) => {
+        builder
+          .with("user", async (builder) => {
+            builder
+              .select(
+                "id",
+                "nama",
+                "whatsapp",
+                "email",
+                "avatar",
+                "gender",
+                "agama",
+                "m_sekolah_id"
+              )
+              .with("keteranganRapor", (builder) => {
+                builder
+                  .where({ dihapus: 0 })
+                  .andWhere({ m_ta_id: ta.id })
+                  .where({ tipe: "uts" });
+              })
+              .with("keteranganRaporUas", (builder) => {
+                builder
+                  .where({ dihapus: 0 })
+                  .andWhere({ m_ta_id: ta.id })
+                  .where({ tipe: "uas" });
+              })
+              .with("keteranganPkl", (builder) => {
+                builder
+                  .where({ dihapus: 0 })
+                  .andWhere({ m_ta_id: ta.id });
+              })
+              .with("raporEkskul", (builder) => {
+                builder.with("ekskul").where({ dihapus: 0 });
+              })
+              .with("anggotaEkskul", (builder) => {
+                builder.with("ekskul").where({ dihapus: 0 });
+              })
+              .with("prestasi", (builder) => {
+                builder.where({ dihapus: 0 });
+              })
+              
+              .withCount(
+                "nilaiSemuaUjian as jumlahMapelDikerjakan",
+                (builder) => {
+                  builder.andWhere({ m_ta_id: ta.id });
+                }
+              )
+              .with("nilaiSemuaUjian", (builder) => {
+                builder
+                  .select(
+                    // "m_ta_id",
+                    "m_user_id",
+                    "m_mata_pelajaran_id",
+                    "nilai",
+                    "nilai_keterampilan",
+                    "nilai_uts",
+                    "nilai_keterampilan_uts"
+                  )
+                  // .where(
+                  //   "nilai",
+                  //   "<",
+                  //   `${kkm.toJSON().mataPelajaran.kkm}`
+                  // )
+                  .where({ m_ta_id: ta.id })
+                  .with("mapel", (builder) => {
+                    builder.select("id", "nama");
+                  });
+              });
+            if (sekolah.id == 33) {
+              builder.with("sikapYadika", (builder) => {
+                builder.where({ dihapus: 0 });
+              });
+            } else {
+              builder
+                .with("sikapUas", (builder) => {
+                  builder
+                    .where({ dihapus: 0 })
+                    .andWhere({ m_ta_id: ta.id })
+                    .where({ tipe: "uas" });
+                })
+                .with("sikap", (builder) => {
+                  builder
+                    .where({ dihapus: 0 })
+                    .andWhere({ m_ta_id: ta.id })
+                    .where({ tipe: "uts" });
+                });
+            }
+          })
+          .where({ dihapus: 0 });
+      })
+      .with("user")
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ m_ta_id: ta.id })
       .andWhere({ id: rombel_id })
@@ -30559,10 +30650,14 @@ class MainController {
     //     return false;
     //   }
     // });
+   const totalMapel = await TkMateriRombel.query()
+    .where({ m_rombel_id: rombel_id })
+    .countDistinct("m_materi_id as total");
 
     return response.ok({
       rombel: rombel,
       kategoriMapel: kategoriMapel,
+      totalMapel
     });
   }
 
