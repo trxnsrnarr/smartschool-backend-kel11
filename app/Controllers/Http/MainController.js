@@ -24480,7 +24480,7 @@ class MainController {
       const mapelIds = await MMataPelajaran.query()
         .where({ m_user_id: user.id })
         .where({ dihapus: 0 })
-        .whereIn("m_ta_id", tahunPelajaranIds)
+        // .whereIn("m_ta_id", tahunPelajaranIds)
         .ids();
       timelineTugas = await MTimeline.query()
         .where({ m_user_id: user.id })
@@ -28509,7 +28509,7 @@ class MainController {
           "A6"
         ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
         worksheet.addConditionalFormatting({
-          ref: `A1:F4`,
+          ref: `A1:I4`,
           rules: [
             {
               type: "expression",
@@ -28529,12 +28529,12 @@ class MainController {
             },
           ],
         });
-        worksheet.mergeCells(`A1:F1`);
-        worksheet.mergeCells(`A2:F2`);
-        worksheet.mergeCells(`A3:F3`);
-        worksheet.mergeCells(`A4:F4`);
+        worksheet.mergeCells(`A1:I1`);
+        worksheet.mergeCells(`A2:I2`);
+        worksheet.mergeCells(`A3:I3`);
+        worksheet.mergeCells(`A4:I4`);
         worksheet.addConditionalFormatting({
-          ref: `A7:F7`,
+          ref: `A7:I7`,
           rules: [
             {
               type: "expression",
@@ -28569,7 +28569,7 @@ class MainController {
         await Promise.all(
           d.anggotaRombel.map(async (anggota, idx) => {
             worksheet.addConditionalFormatting({
-              ref: `B${(idx + 1) * 1 + 7}:F${(idx + 1) * 1 + 7}`,
+              ref: `B${(idx + 1) * 1 + 7}:I${(idx + 1) * 1 + 7}`,
               rules: [
                 {
                   type: "expression",
@@ -28630,6 +28630,9 @@ class MainController {
               "Email",
               "Gender",
               "Jabatan",
+              "Password",
+              "WA Ortu/Wali",
+              "No Kartu"
             ];
 
             worksheet.columns = [
@@ -28639,6 +28642,10 @@ class MainController {
               { key: "email" },
               { key: "gender" },
               { key: "jabatan" },
+              { key: "password" },
+              
+              { key: "wa_ortu" },
+              { key: "no_kartu" },
             ];
 
             // Add row using key mapping to columns
@@ -28649,6 +28656,8 @@ class MainController {
               email: anggota.user ? anggota.user.email : "-",
               gender: anggota.user ? anggota.user.gender : "-",
               jabatan: anggota ? anggota.role : "-",
+              wa_ortu: anggota ? anggota.user.wa_ayah : "-",
+              no_kartu: anggota.user ? anggota.user.no_kartu : "-",
             });
           })
         );
