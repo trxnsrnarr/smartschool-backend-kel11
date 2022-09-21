@@ -1386,6 +1386,7 @@ Route.delete(
 );
 
 //Data Siswa
+Route.get("/tatatertib/data", "MainController.dataTataTertibSiswa");
 Route.get("/tatatertib/rombel", "MainController.getTataTertibRombel");
 Route.get(
   "/tatatertib/rombel/:rombel_id",

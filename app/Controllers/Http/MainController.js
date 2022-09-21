@@ -35889,6 +35889,69 @@ class MainController {
       rombel,
     });
   }
+   async dataTataTertibSiswa({ response, request, params: { rombel_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const ta = await this.getTAAktif(sekolah);
+
+    const { search, page } = request.get();
+
+    const rombel = await MRombel.query()
+      .select("id", "nama", "tingkat")
+      .withCount("anggotaRombel as total", (builder) => {
+        builder.where({ dihapus: 0 });
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .fetch();
+
+      const kategoriIds = await MKategoriPelanggaran.query().where({m_sekolah_id:sekolah.id}).andWhere({dihapus:0}).ids()
+      const pelanggaranIds = await MPelanggaran.query().whereIn("m_kategori_pelanggaran_id",kategoriIds).andWhere({dihapus:0}).ids()
+
+      const tkPelanggar = await TkSiswaPelanggaran.query().whereIn("m_pelanggaran_id",pelanggaranIds).pluck("m_user_id")
+
+      // return tkPelangga/r
+
+    let siswa;
+
+    siswa = User.query()
+      .with("pelanggaranSiswa")
+      .with("anggotaRombel", (builder) => {
+        builder
+          .where({ dihapus: 0 }).orderBy("id","desc")
+          .select("id", "m_rombel_id", "m_user_id")
+          .with("rombel", (builder) => {
+            builder
+              .select("id", "nama", "m_ta_id", "m_sekolah_id", "m_jurusan_id")
+              .with("jurusan", (builder) => {
+                builder.select("id", "nama");
+              })
+              .andWhere({ m_sekolah_id: sekolah.id });
+          });
+      })
+      .with("profil", (builder) => {
+        builder.select("m_user_id", "nisn");
+      })
+      .select("id", "nama", "whatsapp")
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ role: "siswa" })
+      .whereIn("id",tkPelanggar);
+    if (search) {
+      siswa.andWhere("nama", "like", `%${search}%`);
+    }
+
+    return response.ok({
+      rombel,
+      siswa: await siswa.paginate(page, 15),
+    });
+  }
 
   async detailTataTertibSiswa({ response, request, params: { user_id } }) {
     const domain = request.headers().origin;
