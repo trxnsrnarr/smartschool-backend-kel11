@@ -15343,7 +15343,7 @@ class MainController {
                                 JSON.parse(d.jawaban_rubrik_esai).map((e) => {
                                   if (e.benar) {
                                     metaHasil.nilaiEsai =
-                                      metaHasil.nilaiEsai + e.poin;
+                                      metaHasil.nilaiEsai + parseInt(e.poin ? e.poin :0);
                                   }
                                 });
 
