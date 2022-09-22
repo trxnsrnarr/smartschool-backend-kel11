@@ -16600,7 +16600,7 @@ class MainController {
               if (JSON.parse(d.jawaban_rubrik_esai).length) {
                 JSON.parse(d.jawaban_rubrik_esai).map((e) => {
                   if (e.benar) {
-                    metaHasil.nilaiEsai = metaHasil.nilaiEsai + e.poin;
+                    metaHasil.nilaiEsai = metaHasil.nilaiEsai + parseInt(e.poin);
                   }
                 });
 
@@ -16668,11 +16668,11 @@ class MainController {
       );
 
       metaHasil.nilaiTotal =
-        metaHasil.nilaiPg +
-        metaHasil.nilaiEsai +
-        metaHasil.nilaiPgKompleks +
-        metaHasil.nilaiUraian +
-        metaHasil.nilaiMenjodohkan;
+        metaHasil.nilaiPg ?metaHasil.nilaiPg : 0 +
+        metaHasil.nilaiEsai ?metaHasil.nilaiEsai : 0 +
+        metaHasil.nilaiPgKompleks ?metaHasil.nilaiPgKompleks : 0 +
+        metaHasil.nilaiUraian ?metaHasil.nilaiUraian : 0 +
+        metaHasil.nilaiMenjodohkan ?metaHasil.nilaiMenjodohkan : 0;
 
       analisisBenar = Object.entries(analisisBenar);
       analisisTotal = Object.entries(analisisTotal);
@@ -17547,7 +17547,7 @@ class MainController {
               if (JSON.parse(d.jawaban_rubrik_esai).length) {
                 JSON.parse(d.jawaban_rubrik_esai).map((e) => {
                   if (e.benar) {
-                    metaHasil.nilaiEsai = metaHasil.nilaiEsai + e.poin;
+                    metaHasil.nilaiEsai = metaHasil.nilaiEsai + parseInt(e.poin);
                   }
                 });
 
@@ -50944,7 +50944,7 @@ class MainController {
                             JSON.parse(d.jawaban_rubrik_esai).map((e) => {
                               if (e.benar) {
                                 metaHasil.nilaiEsai =
-                                  metaHasil.nilaiEsai + e.poin;
+                                  metaHasil.nilaiEsai + parseInt(e?.poin ? e?.poin :0);
                               }
                             });
 
@@ -51015,11 +51015,11 @@ class MainController {
                   );
 
                   metaHasil.nilaiTotal =
-                    metaHasil.nilaiPg +
-                    metaHasil.nilaiEsai +
-                    metaHasil.nilaiPgKompleks +
-                    metaHasil.nilaiUraian +
-                    metaHasil.nilaiMenjodohkan;
+                    metaHasil.nilaiPg ?metaHasil.nilaiPg:0 +
+                    metaHasil.nilaiEsai ?metaHasil.nilaiEsai:0 +
+                    metaHasil.nilaiPgKompleks ?metaHasil.nilaiPgKompleks:0 +
+                    metaHasil.nilaiUraian ?metaHasil.nilaiUraian:0 +
+                    metaHasil.nilaiMenjodohkan ?metaHasil.nilaiMenjodohkan:0;
                   // return pesertaUjian;
                   // return {
                   //   nilai_pg: metaHasil.nilaiPg,
