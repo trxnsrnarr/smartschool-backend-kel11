@@ -484,7 +484,7 @@ class MainController {
 
   async getTAAktif(sekolah) {
     const ta = await Mta.query()
-      .select("id", "tahun", "semester")
+      .select("id", "tahun", "semester","nama_kepsek")
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ aktif: 1 })
       .andWhere({ dihapus: 0 })
@@ -1473,6 +1473,7 @@ class MainController {
       .with("profil")
       .where({ id: user.id })
       .first();
+      
 
     return response.ok({
       profil: profil,
