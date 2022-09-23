@@ -4464,7 +4464,11 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
+    const ta = await this.getTAAktif(sekolah);
 
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
     const user = await auth.getUser();
 
     if (
@@ -17151,7 +17155,7 @@ class MainController {
         .where({ bentuk: "pg" })
         .andWhere({ dihapus: 0 })
         .whereIn("id", soalPGIds)
-        .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_pg)
+        // .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_pg)
         .ids();
 
       const soalPG = await TkSoalUjian.query()
@@ -17170,7 +17174,7 @@ class MainController {
         .where({ bentuk: "esai" })
         .andWhere({ dihapus: 0 })
         .whereIn("id", soalEsaiIds)
-        .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_esai)
+        // .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_esai)
         .ids();
 
       const soalEsai = await TkSoalUjian.query()
