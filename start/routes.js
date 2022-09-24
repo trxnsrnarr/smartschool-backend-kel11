@@ -610,6 +610,8 @@ Route.delete("/mutasi/:mutasi_id", "MainController.deleteMutasi");
 Route.get("/inventaris", "KeuanganController.getBarang");
 Route.get("/inventaris-aktif", "KeuanganController.getTransaksiBarang");
 
+
+Route.get("/akun-transaksi/:akun_id", "SecondController.getAkunTransaksi");
 // mutasi v2
 Route.get("/v2/mutasi", "SecondController.getTransaksi");
 Route.get("/v2/mutasi/:transaksi_id", "SecondController.detailTransaksi");
@@ -678,6 +680,7 @@ Route.put(
 // jadwal ujian
 Route.get("/jadwal-ujian-ss", "MainController.getJadwalUjianSS");
 Route.get("/jadwal-ujian", "MainController.getJadwalUjian");
+Route.get("/jadwal-ujian-check", "SecondController.getJadwalUjianCheck");
 Route.get("/jadwal-ujian/:jadwal_ujian_id", "MainController.detailJadwalUjian");
 Route.post(
   "/jadwal-ujian/download-hasil",

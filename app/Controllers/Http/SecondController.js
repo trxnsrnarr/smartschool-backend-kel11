@@ -14926,6 +14926,253 @@ ${jamPerubahan}`;
       akun,
     });
   }
+  async getJadwalUjianCheck({ response, request }) {
+    // const domain = request.headers().origin;
+    const { status, page, search, tipe_ujian,domain } = request.get();
+
+    // const sekolah = await this.getSekolahByDomain(domain);
+
+    // if (sekolah == "404") {
+    //   return response.notFound({ message: "Sekolah belum terdaftar" });
+    // }
+
+    // const ta = await this.getTAAktif(sekolah);
+
+    // if (ta == "404") {
+    //   return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    // }
+
+    // const hari_ini = moment().format("YYYY-MM-DD HH:mm");
+
+    // const user = await auth.getUser();
+
+    const count = await MJadwalUjian.query()
+      .where({ m_user_id: 2818221 })
+      .andWhere({ dihapus: 0 })
+      // .andWhere("waktu_ditutup", ">=", hari_ini)
+      .count("* as total");
+    const total = count[0].total;
+
+      // get tagihan
+
+      const rombelIds = await MRombel.query()
+        .where({ m_sekolah_id: 33 })
+        .andWhere({ dihapus: 0 })
+        .ids();
+
+      const anggotaRombel = await MAnggotaRombel.query()
+        .where({ m_user_id: 2818221 })
+        // .andWhere({ dihapus: 0 })
+        .whereIn("m_rombel_id", rombelIds)
+        .pluck("m_rombel_id");
+
+      let jadwalUjian;
+     
+        jadwalUjian = await TkJadwalUjian.query()
+          .with("jadwalUjian", (builder) => {
+            builder
+              .with("ujian", (builder) => {
+                if (search) {
+                  builder.where("nama", "like", `%${search}%`);
+                }
+              })
+              // .andWhere("waktu_ditutup", "<", hari_ini);
+          })
+          .with("peserta", (builder) => {
+            builder.where({ m_user_id: 2818221 }).where({ dihapus: 0 });
+          })
+          .whereIn("m_rombel_id",anggotaRombel)
+          .where({ dihapus: 0 })
+          .orderBy("created_at", "desc")
+          .fetch();
+      
+
+      let ujian;
+
+        ujian = jadwalUjian
+          .toJSON()
+          .filter((d) => d.jadwalUjian !== null && d.jadwalUjian.ujian);
+
+
+      if (ujian.length == 0) {
+        return response.notFound({
+          message: messageNotFound,
+        });
+      }
+      if (status == "sudah-selesai") {
+        return response.ok({
+          jadwalUjian: ujian,
+          total: ujian.length,
+          perPage: jadwalUjian.toJSON().perPage,
+          page: jadwalUjian.toJSON().page,
+          lastPage: jadwalUjian.toJSON().lastPage,
+          // pembayaran: pembayaran.toJSON().filter((item) => {
+          //   if (!item.rombelPembayaran.pembayaran) {
+          //     return false;
+          //   }
+          //   if (
+          //     item.ditangguhkan &&
+          //     moment(item.ditangguhkan).toDate() > moment().toDate()
+          //   ) {
+          //     return false;
+          //   } else {
+          //     return true;
+          //   }
+          // }),
+        });
+      } else {
+        return response.ok({
+          jadwalUjian: ujian,
+          pembayaran: pembayaran.toJSON().filter((item) => {
+            if (!item.rombelPembayaran.pembayaran) {
+              return false;
+            }
+            if (
+              item.ditangguhkan &&
+              moment(item.ditangguhkan).toDate() > moment().toDate()
+            ) {
+              return false;
+            } else {
+              return true;
+            }
+          }),
+        });
+      }
+    
+  }
+  async getJadwalUjianCheck1({ response, request }) {
+    // const domain = request.headers().origin;
+    const { status, page, search, tipe_ujian,domain } = request.get();
+
+    // const sekolah = await this.getSekolahByDomain(domain);
+
+    // if (sekolah == "404") {
+    //   return response.notFound({ message: "Sekolah belum terdaftar" });
+    // }
+
+    // const ta = await this.getTAAktif(sekolah);
+
+    // if (ta == "404") {
+    //   return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    // }
+
+    const hari_ini = moment().format("YYYY-MM-DD HH:mm");
+
+    // const user = await auth.getUser();
+
+    const count = await MJadwalUjian.query()
+      .where({ m_user_id: 2818221 })
+      .andWhere({ dihapus: 0 })
+      .andWhere("waktu_ditutup", ">=", hari_ini)
+      .count("* as total");
+    const total = count[0].total;
+
+      // get tagihan
+
+      const rombelIds = await MRombel.query()
+        .where({ m_sekolah_id: 33 })
+        .andWhere({ dihapus: 0 })
+        .ids();
+
+      const anggotaRombel = await MAnggotaRombel.query()
+        .where({ m_user_id: 2818221 })
+        .andWhere({ dihapus: 0 })
+        .whereIn("m_rombel_id", rombelIds)
+        .pluck("m_rombel_id");
+
+      let jadwalUjian;
+     
+        jadwalUjian = await TkJadwalUjian.query()
+          .with("jadwalUjian", (builder) => {
+            builder
+              .with("ujian", (builder) => {
+                if (search) {
+                  builder.where("nama", "like", `%${search}%`);
+                }
+              })
+              .andWhere("waktu_ditutup", "<", hari_ini);
+          })
+          .with("peserta", (builder) => {
+            builder.where({ m_user_id: 2818221 }).where({ dihapus: 0 });
+          })
+          .where({ dihapus: 0 })
+          .whereIn("m_rombel_id", anggotaRombel)
+          .orderBy("created_at", "desc")
+          .fetch();
+      
+
+      let ujian;
+
+        ujian = jadwalUjian
+          .toJSON()
+          .filter((d) => d.jadwalUjian !== null && d.jadwalUjian.ujian);
+
+
+      if (ujian.length == 0) {
+        return response.notFound({
+          message: messageNotFound,
+        });
+      }
+      if (status == "sudah-selesai") {
+        return response.ok({
+          jadwalUjian: ujian,
+          total: ujian.length,
+          perPage: jadwalUjian.toJSON().perPage,
+          page: jadwalUjian.toJSON().page,
+          lastPage: jadwalUjian.toJSON().lastPage,
+          // pembayaran: pembayaran.toJSON().filter((item) => {
+          //   if (!item.rombelPembayaran.pembayaran) {
+          //     return false;
+          //   }
+          //   if (
+          //     item.ditangguhkan &&
+          //     moment(item.ditangguhkan).toDate() > moment().toDate()
+          //   ) {
+          //     return false;
+          //   } else {
+          //     return true;
+          //   }
+          // }),
+        });
+      } else {
+        return response.ok({
+          jadwalUjian: ujian,
+          pembayaran: pembayaran.toJSON().filter((item) => {
+            if (!item.rombelPembayaran.pembayaran) {
+              return false;
+            }
+            if (
+              item.ditangguhkan &&
+              moment(item.ditangguhkan).toDate() > moment().toDate()
+            ) {
+              return false;
+            } else {
+              return true;
+            }
+          }),
+        });
+      }
+    
+  }
+
+  async getAkunTransaksi({ response, request, auth,params:{akun_id} }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const akunTransaksi = await MKeuJurnal.query().with("transaksi").where({m_keu_akun_id:akun_id}).andWhere({dihapus:0}).andWhere({status:1}).fetch()
+
+    const akun = await MKeuAkun.query().where({id:akun_id}).first()
+   
+    return response.ok({
+      akunTransaksi,
+      akun
+    });
+  }
 }
 
 module.exports = SecondController;
