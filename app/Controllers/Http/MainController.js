@@ -24403,9 +24403,12 @@ class MainController {
       .where({ id: materi_id })
       .first();
 
+      const rombelIds = await MRombel.query().where({m_sekolah_id:sekolah.id}).andWhere({dihapus:0}).andWhere({m_ta_id: ta.id}).ids()
+
     const materirombel = await TkMateriRombel.query()
       .with("rombel")
       .where({ m_materi_id: materi_id })
+      .whereIn("m_rombel_id",rombelIds)
       .fetch();
 
     let rekap;
