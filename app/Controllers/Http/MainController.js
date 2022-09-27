@@ -4274,7 +4274,7 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    const { nama, whatsapp, password, gender, avatar, m_rombel_id } =
+    const { nama, whatsapp, password, gender, avatar, m_rombel_id,no_ujian } =
       request.post();
 
     let validation = await validate(
@@ -4302,6 +4302,7 @@ class MainController {
         m_sekolah_id: sekolah.id,
         dihapus: 0,
         avatar,
+        no_ujian
       });
 
       // await WhatsAppService.sendMessage(
@@ -4367,7 +4368,7 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    let { nama, whatsapp, gender, password, avatar, photos } = request.post();
+    let { nama, whatsapp, gender, password, avatar, photos,no_ujian } = request.post();
     // const rules = {
     //   nama: "required",
     //   whatsapp: "required",
@@ -4393,6 +4394,7 @@ class MainController {
       gender,
       avatar,
       photos,
+      no_ujian
     };
 
     password ? (payload.password = await Hash.make(password)) : null;
@@ -28664,8 +28666,8 @@ class MainController {
               email: anggota.user ? anggota.user.email : "-",
               gender: anggota.user ? anggota.user.gender : "-",
               jabatan: anggota ? anggota.role : "-",
-              wa_ortu: anggota ? anggota.user.wa_ayah : "-",
-              no_kartu: anggota.user ? anggota.user.no_kartu : "-",
+              wa_ortu: anggota?.user?.wa_ayah ? anggota.user.wa_ayah : "-",
+              no_kartu: anggota?.user?.no_ujian ? anggota.user.no_ujian : "-",
             });
           })
         );
