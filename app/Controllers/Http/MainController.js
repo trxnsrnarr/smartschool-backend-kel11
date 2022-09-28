@@ -14563,7 +14563,7 @@ class MainController {
     page = page ? page : 1;
 
     const jadwalUjian = await MJadwalUjian.query()
-      .select("id", "waktu_dibuka", "waktu_ditutup")
+      .select("id", "waktu_dibuka", "waktu_ditutup","durasi")
       .with("rombelUjian", (builder) => {
         builder
           .select("id", "m_rombel_id", "m_jadwal_ujian_id")
