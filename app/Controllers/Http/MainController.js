@@ -15430,11 +15430,11 @@ class MainController {
                       );
 
                       metaHasil.nilaiTotal =
-                        metaHasil.nilaiPg +
-                        metaHasil.nilaiEsai +
-                        metaHasil.nilaiPgKompleks +
-                        metaHasil.nilaiUraian +
-                        metaHasil.nilaiMenjodohkan;
+                      (metaHasil.nilaiPg ?metaHasil.nilaiPg:0) +
+                      (metaHasil.nilaiEsai ?metaHasil.nilaiEsai:0) +
+                      (metaHasil.nilaiPgKompleks ?metaHasil.nilaiPgKompleks:0 )+
+                      (metaHasil.nilaiUraian ?metaHasil.nilaiUraian:0 )+
+                      (metaHasil.nilaiMenjodohkan ?metaHasil.nilaiMenjodohkan:0);
 
                       // add column headers
                       worksheet.getRow(10).values = [
@@ -16675,11 +16675,11 @@ class MainController {
       );
 
       metaHasil.nilaiTotal =
-        metaHasil.nilaiPg ?metaHasil.nilaiPg : 0 +
-        metaHasil.nilaiEsai ?metaHasil.nilaiEsai : 0 +
-        metaHasil.nilaiPgKompleks ?metaHasil.nilaiPgKompleks : 0 +
-        metaHasil.nilaiUraian ?metaHasil.nilaiUraian : 0 +
-        metaHasil.nilaiMenjodohkan ?metaHasil.nilaiMenjodohkan : 0;
+      (metaHasil.nilaiPg ?metaHasil.nilaiPg:0) +
+      (metaHasil.nilaiEsai ?metaHasil.nilaiEsai:0) +
+      (metaHasil.nilaiPgKompleks ?metaHasil.nilaiPgKompleks:0 )+
+      (metaHasil.nilaiUraian ?metaHasil.nilaiUraian:0 )+
+      (metaHasil.nilaiMenjodohkan ?metaHasil.nilaiMenjodohkan:0);
 
       analisisBenar = Object.entries(analisisBenar);
       analisisTotal = Object.entries(analisisTotal);
@@ -51025,11 +51025,11 @@ class MainController {
                   );
 
                   metaHasil.nilaiTotal =
-                    metaHasil.nilaiPg ?metaHasil.nilaiPg:0 +
-                    metaHasil.nilaiEsai ?metaHasil.nilaiEsai:0 +
-                    metaHasil.nilaiPgKompleks ?metaHasil.nilaiPgKompleks:0 +
-                    metaHasil.nilaiUraian ?metaHasil.nilaiUraian:0 +
-                    metaHasil.nilaiMenjodohkan ?metaHasil.nilaiMenjodohkan:0;
+                    (metaHasil.nilaiPg ?metaHasil.nilaiPg:0) +
+                    (metaHasil.nilaiEsai ?metaHasil.nilaiEsai:0) +
+                    (metaHasil.nilaiPgKompleks ?metaHasil.nilaiPgKompleks:0 )+
+                    (metaHasil.nilaiUraian ?metaHasil.nilaiUraian:0 )+
+                    (metaHasil.nilaiMenjodohkan ?metaHasil.nilaiMenjodohkan:0);
                   // return pesertaUjian;
                   // return {
                   //   nilai_pg: metaHasil.nilaiPg,
@@ -51039,6 +51039,7 @@ class MainController {
                   //   nilai_menjodohkan: metaHasil.nilaiMenjodohkan,
                   //   nilai: metaHasil.nilaiTotal,
                   // };
+                    // console.log(metaHasil.nilaiPgKompleks ?metaHasil.nilaiPgKompleks:0)
                   await TkPesertaUjian.query().where({ id: e.id }).update({
                     nilai_pg: metaHasil.nilaiPg,
                     nilai_esai: metaHasil.nilaiEsai,
