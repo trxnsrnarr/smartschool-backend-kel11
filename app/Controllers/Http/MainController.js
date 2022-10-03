@@ -29810,6 +29810,13 @@ class MainController {
     }
 
     const ta = await this.getTAAktif(sekolah);
+    const { ta_id = ta.id, search } = request.get();
+
+    const semuaTA = await Mta.query()
+      .select("id", "tahun", "semester")
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
 
     const checkPredikat = await MPredikatNilai.query()
       .where({ dihapus: 0 })
@@ -29894,13 +29901,13 @@ class MainController {
         builder.where({ dihapus: 0 });
       })
       .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ m_ta_id: ta_id })
       .andWhere({ dihapus: 0 })
       .fetch();
 
     const rombelIds = await MRombel.query()
       .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ m_ta_id: ta_id })
       .andWhere({ dihapus: 0 })
       .pluck("id");
 
@@ -29922,6 +29929,7 @@ class MainController {
       rombel: rombel,
       bobot,
       countMapel,
+      semuaTA
     });
   }
 
@@ -31121,9 +31129,12 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
     const ta = await this.getTAAktif(sekolah);
+
+    const rombelIds = await MRombel.query().where({m_sekolah_id:sekolah.id}).andWhere({dihapus:0}).andWhere({m_ta_id: ta.id}).ids()
+
     const siswa = await User.query()
       .with("anggotaRombel", (builder) => {
-        builder.with("rombel").where({ dihapus: 0 });
+        builder.with("rombel").where({ dihapus: 0 }).whereIn("m_rombel_id",rombelIds);
       })
       .where({ id: user_id })
       .first();
@@ -54365,6 +54376,7 @@ class MainController {
           .andWhere({ m_ta_id: ta_id })
           .update(
             {
+              telat: d.telat ? d.telat : "0",
               sakit: d.sakit ? d.sakit : "0",
               izin: d.izin ? d.izin : "0",
               alpa: d.alpa ? d.alpa : "0",
@@ -54378,6 +54390,7 @@ class MainController {
             tipe: tipe,
             dihapus: 0,
             m_ta_id: ta_id,
+            telat: d.telat ? d.telat : "0",
             sakit: d.sakit ? d.sakit : "0",
             izin: d.izin ? d.izin : "0",
             alpa: d.alpa ? d.alpa : "0",
