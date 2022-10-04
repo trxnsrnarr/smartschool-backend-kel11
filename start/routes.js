@@ -963,6 +963,10 @@ Route.post(
   "/rekap/:materi_id/:rekapnilai_id",
   "MainController.postRekapRombel"
 );
+Route.get(
+  "/rekap-refresh/:rekaprombel_id",
+  "MainController.refreshRekapRombel"
+);
 Route.put(
   "/rekap/:materi_id/:rekapnilai_id/:rekaprombel_id",
   "MainController.putRekapRombel"
