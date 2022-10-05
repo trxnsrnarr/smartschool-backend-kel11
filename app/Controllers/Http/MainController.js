@@ -4570,9 +4570,11 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { nama, nama_ibu, whatsapp, password } = request.post();
-    const rules = {
-      nama: "required",
+    const { nama, nama_ibu, whatsapp, password ,alamat,asal_sekolah} = request.post();
+    if(sekolah?.id != 13){
+
+      const rules = {
+        nama: "required",
       whatsapp: "required",
       nama_ibu: "required",
       password: "required",
@@ -4587,6 +4589,22 @@ class MainController {
     if (validation.fails()) {
       return response.unprocessableEntity(validation.messages());
     }
+  }else{
+    const rules = {
+      nama: "required",
+    whatsapp: "required",
+    password: "required",
+  };
+  const message = {
+    "nama.required": "Nama harus diisi",
+    "whatsapp.required": "Whatsapp harus diisi",
+    "password.required": "Password harus diisi",
+  };
+  const validation = await validate(request.all(), rules, message);
+  if (validation.fails()) {
+    return response.unprocessableEntity(validation.messages());
+  }
+  }
 
     const check = await User.query().where({ whatsapp: whatsapp }).first();
 
@@ -4605,6 +4623,14 @@ class MainController {
       m_sekolah_id: sekolah.id,
       dihapus: 0,
     });
+
+    if(alamat && asal_sekolah)
+    await MProfilUser.create({
+      m_user_id:res.id,
+      alamat:alamat,
+      asal_sekolah      
+    })
+
 
     const { token } = await auth.generate(res);
 
@@ -30480,7 +30506,13 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const ta = await this.getTAAktif(sekolah);
+    const tas = await this.getTAAktif(sekolah);
+    const rombelSebelum = await MRombel.query().select("id","m_ta_id").where({id:rombel_id}).first()
+
+    const ta = await Mta.query()
+    .select("id", "tahun", "semester","nama_kepsek","nip_kepsek")
+    .where({ id: rombelSebelum.m_ta_id })
+    .first();
 
     const check = await MKategoriMapel.query()
       .where({ dihapus: 0 })
