@@ -31270,13 +31270,7 @@ class MainController {
     auth,
     params: { user_id, mata_pelajaran_id },
   }) {
-    const siswaKeterampilan = await User.query()
-      .with("anggotaRombel", (builder) => {
-        builder.with("rombel").where({ dihapus: 0 });
-      })
-      .where({ id: user_id })
-      .first();
-
+    
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -31285,9 +31279,22 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
     const ta = await this.getTAAktif(sekolah);
-
+    
     const mapelSingkat = await MMataPelajaran.query()
-      .where({ id: mata_pelajaran_id })
+    .where({ id: mata_pelajaran_id })
+    .first();
+
+    const rombelIds = await MRombel.query()
+    .where({m_ta_id :mapelSingkat.m_ta_id})
+    .andwhere({dihapus:0})
+    .andWhere({m_sekolah_id:sekolah.id})
+    .ids()
+
+    const siswaKeterampilan = await User.query()
+      .with("anggotaRombel", (builder) => {
+        builder.with("rombel").where({ dihapus: 0 }).whereIn("m_rombel_id",rombelIds);
+      })
+      .where({ id: user_id })
       .first();
 
     const mapel = await MMataPelajaran.query()
