@@ -31286,7 +31286,7 @@ class MainController {
 
     const rombelIds = await MRombel.query()
     .where({m_ta_id :mapelSingkat.m_ta_id})
-    .andwhere({dihapus:0})
+    .andWhere({dihapus:0})
     .andWhere({m_sekolah_id:sekolah.id})
     .ids()
 
