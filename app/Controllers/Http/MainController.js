@@ -31491,6 +31491,9 @@ class MainController {
       .fetch();
     const result = await Promise.all(
       rekap.toJSON().map(async (d) => {
+        if (d.rekapRombel == null) {
+          return;
+        }
         if (d.rekapRombel.rekap == null) {
           return;
         }
@@ -31524,6 +31527,9 @@ class MainController {
       .fetch();
     const result1 = await Promise.all(
       rekapPraktik.toJSON().map(async (d) => {
+        if (d.rekapRombel == null) {
+          return;
+        }
         if (d.rekapRombel.rekap == null) {
           return;
         }
@@ -31555,6 +31561,9 @@ class MainController {
       .fetch();
     const result2 = await Promise.all(
       rekapProyek.toJSON().map(async (d) => {
+        if (d.rekapRombel == null) {
+          return;
+        }
         if (d.rekapRombel.rekap == null) {
           return;
         }
@@ -31585,6 +31594,9 @@ class MainController {
       .fetch();
     const result3 = await Promise.all(
       rekapPortofolio.toJSON().map(async (d) => {
+        if (d.rekapRombel == null) {
+          return;
+        }
         if (d.rekapRombel.rekap == null) {
           return;
         }
@@ -31615,6 +31627,9 @@ class MainController {
       .fetch();
     const result4 = await Promise.all(
       rekapProduk.toJSON().map(async (d) => {
+        if (d.rekapRombel == null) {
+          return;
+        }
         if (d.rekapRombel.rekap == null) {
           return;
         }
