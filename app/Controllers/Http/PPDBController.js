@@ -284,7 +284,7 @@ class PPDBController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    const { nama, dibuka, ditutup, biaya } = request.post();
+    const { nama, dibuka, ditutup, biaya, tipe } = request.post();
 
     const jalur = await MJalurPpdb.create({
       nama,
@@ -293,6 +293,7 @@ class PPDBController {
       biaya,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
+      tipe,
     });
 
     return response.ok({
@@ -315,7 +316,7 @@ class PPDBController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    const { nama, dibuka, ditutup, biaya } = request.post();
+    const { nama, dibuka, ditutup, biaya, tipe } = request.post();
 
     const update = await MJalurPpdb.query().where({ id }).update({
       nama,
@@ -324,6 +325,7 @@ class PPDBController {
       biaya,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
+      tipe,
     });
     if (!update) {
       return response.notFound({
@@ -1044,11 +1046,20 @@ class PPDBController {
         message: "Aktifkan tahun ajaran yg tersedia di menu kurikulum",
       });
     }
+    let jalurIds;
 
-    const jalurIds = await MJalurPpdb.query()
-      .where({ dihapus: 0 })
-      .where({ m_sekolah_id: sekolah.id })
-      .ids();
+    if (sekolah?.id == 13) {
+      jalurIds = await MJalurPpdb.query()
+        .where({ dihapus: 0 })
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ tipe: "Pengembalian" })
+        .ids();
+    } else {
+      jalurIds = await MJalurPpdb.query()
+        .where({ dihapus: 0 })
+        .where({ m_sekolah_id: sekolah.id })
+        .ids();
+    }
     const gelombangIds = await MGelombangPpdb.query()
       .where({ dihapus: 0 })
       .whereIn("m_jalur_ppdb_id", jalurIds)
@@ -1072,10 +1083,14 @@ class PPDBController {
 
     let gelombangAktif;
     let pendaftarIds;
+    let pendaftarIds1;
     let terdaftar;
+    let terdaftarPembelian
+    let gelombangPembelian;
+    let user;
+    let gelombang;
 
     if (checkIds.length && is_public == false) {
-      let user;
       try {
         user = await auth.getUser();
       } catch {
@@ -1092,7 +1107,10 @@ class PPDBController {
                   .where({ dihapus: 0 });
               })
               .with("informasi", (builder) => {
-                builder.where({ tipe: "ujian" }).with("ujian").andWhere({dihapus:0});
+                builder
+                  .where({ tipe: "ujian" })
+                  .with("ujian")
+                  .andWhere({ dihapus: 0 });
               });
           })
           .where({ dihapus: 0 })
@@ -1108,6 +1126,9 @@ class PPDBController {
           .pluck("m_gelombang_ppdb_id");
 
         terdaftar = await MGelombangPpdb.query()
+          .with("pendaftar1", (builder) => {
+            builder.where({ m_user_id: user.id });
+          })
           .with("jalur")
           .whereIn("id", pendaftarIds)
           .where({ dihapus: 0 })
@@ -1115,16 +1136,39 @@ class PPDBController {
       }
     }
 
-    const gelombang = await MGelombangPpdb.query()
-      .with("jalur")
-      .withCount("pendaftar as jumlahPendaftar", (builder) => {
-        builder.where({ dihapus: 0 });
-      })
-      .where({ m_sekolah_id: sekolah.id })
-      .whereIn("id", gelombangIds)
-      .andWhere({ m_ta_id: ta.id })
-      .andWhere({ dihapus: 0 })
-      .fetch();
+    if (sekolah?.id == 13) {
+      const jalurIds1 = await MJalurPpdb.query()
+        .where({ dihapus: 0 })
+        .where({ m_sekolah_id: sekolah.id })
+        .ids();
+
+      const gelombangIds1 = await MGelombangPpdb.query()
+        .where({ dihapus: 0 })
+        .whereIn("m_jalur_ppdb_id", jalurIds1)
+        .where({ m_ta_id: ta.id })
+        .ids();
+      gelombang = await MGelombangPpdb.query()
+        .with("jalur")
+        .withCount("pendaftar as jumlahPendaftar", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .where({ m_sekolah_id: sekolah.id })
+        .whereIn("id", gelombangIds1)
+        .andWhere({ m_ta_id: ta.id })
+        .andWhere({ dihapus: 0 })
+        .fetch();
+    } else {
+      gelombang = await MGelombangPpdb.query()
+        .with("jalur")
+        .withCount("pendaftar as jumlahPendaftar", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .where({ m_sekolah_id: sekolah.id })
+        .whereIn("id", gelombangIds)
+        .andWhere({ m_ta_id: ta.id })
+        .andWhere({ dihapus: 0 })
+        .fetch();
+    }
 
     const jumlahPeserta = await User.query()
       .where({ m_sekolah_id: sekolah.id })
@@ -1132,11 +1176,83 @@ class PPDBController {
       .andWhere({ role: "ppdb" })
       .count("* as total");
 
+    if (sekolah?.id == 13) {
+      const jalurIds1 = await MJalurPpdb.query()
+        .where({ dihapus: 0 })
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ tipe: "Pembelian" })
+        .ids();
+      const gelombangIds1 = await MGelombangPpdb.query()
+        .where({ dihapus: 0 })
+        .whereIn("m_jalur_ppdb_id", jalurIds1)
+        .where({ m_ta_id: ta.id })
+        .ids();
+
+      const checkIds1 = await MGelombangPpdb.query()
+        .where(
+          "dibuka",
+          "<=",
+          moment().endOf("day").format("YYYY-MM-DD HH:mm:ss")
+        )
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .whereIn("id", gelombangIds1)
+        .andWhere({ m_ta_id: ta.id })
+        .andWhere({ dihapus: 0 })
+        .ids();
+      if (checkIds1.length && is_public == false) {
+        try {
+          user = await auth.getUser();
+        } catch {
+          //
+        }
+        if (user) {
+          gelombangPembelian = await MPendaftarPpdb.query()
+            .with("gelombang", (builder) => {
+              builder
+                .with("jalur")
+                .with("pendaftar", (builder) => {
+                  builder
+                    .select("id", "m_gelombang_ppdb_id")
+                    .where({ dihapus: 0 });
+                })
+                .with("informasi", (builder) => {
+                  builder
+                    .where({ tipe: "ujian" })
+                    .with("ujian")
+                    .andWhere({ dihapus: 0 });
+                });
+            })
+            .where({ dihapus: 0 })
+            // .whereIn("m_gelombang_ppdb_id", gelombangIds)
+            .andWhere({ m_user_id: user.id })
+            .whereIn("m_gelombang_ppdb_id", checkIds1)
+            .first();
+
+          pendaftarIds1 = await MPendaftarPpdb.query()
+            .where({ dihapus: 0 })
+            .whereIn("m_gelombang_ppdb_id", gelombangIds1)
+            .andWhere({ m_user_id: user.id })
+            .pluck("m_gelombang_ppdb_id");
+
+          terdaftarPembelian = await MGelombangPpdb.query()
+            .with("pendaftar1", (builder) => {
+              builder.where({ m_user_id: user.id });
+            })
+            .with("jalur")
+            .whereIn("id", pendaftarIds1)
+            .where({ dihapus: 0 })
+            .fetch();
+        }
+      }
+    }
+
     return response.ok({
       gelombang: gelombang,
       terdaftar: terdaftar,
       gelombangAktif: gelombangAktif,
       jumlahPeserta: jumlahPeserta[0].total,
+      gelombangPembelian,
+      terdaftarPembelian
     });
   }
 
@@ -2724,11 +2840,21 @@ class PPDBController {
             nomorPeserta: nomorPeserta ? nomorPeserta : "-",
             tanggal: d ? d.created_at : "-",
             status: d ? status.text : "-",
-            jurusan1: jurusanData.find(e => e.id == d.m_jurusan_1_id) ? jurusanData.find(e => e.id == d.m_jurusan_1_id).nama : "-",
-            jurusan2: jurusanData.find(e => e.id == d.m_jurusan_2_id) ? jurusanData.find(e => e.id == d.m_jurusan_2_id).nama : "-",
-            jurusan3: jurusanData.find(e => e.id == d.m_jurusan_3_id) ? jurusanData.find(e => e.id == d.m_jurusan_3_id).nama : "-",
-            jurusan4: jurusanData.find(e => e.id == d.m_jurusan_4_id) ? jurusanData.find(e => e.id == d.m_jurusan_4_id).nama : "-",
-            jurusan5: jurusanData.find(e => e.id == d.m_jurusan_5_id) ? jurusanData.find(e => e.id == d.m_jurusan_5_id).nama : "-",
+            jurusan1: jurusanData.find((e) => e.id == d.m_jurusan_1_id)
+              ? jurusanData.find((e) => e.id == d.m_jurusan_1_id).nama
+              : "-",
+            jurusan2: jurusanData.find((e) => e.id == d.m_jurusan_2_id)
+              ? jurusanData.find((e) => e.id == d.m_jurusan_2_id).nama
+              : "-",
+            jurusan3: jurusanData.find((e) => e.id == d.m_jurusan_3_id)
+              ? jurusanData.find((e) => e.id == d.m_jurusan_3_id).nama
+              : "-",
+            jurusan4: jurusanData.find((e) => e.id == d.m_jurusan_4_id)
+              ? jurusanData.find((e) => e.id == d.m_jurusan_4_id).nama
+              : "-",
+            jurusan5: jurusanData.find((e) => e.id == d.m_jurusan_5_id)
+              ? jurusanData.find((e) => e.id == d.m_jurusan_5_id).nama
+              : "-",
             alpa1: d.user.profil
               ? dataAbsensi.alpa1
                 ? dataAbsensi.alpa1

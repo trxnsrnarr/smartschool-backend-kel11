@@ -24,6 +24,10 @@ class MGelombangPpdb extends Model {
     return this.hasMany("App/Models/MPendaftarPpdb");
   }
 
+  pendaftar1() {
+    return this.belongsTo("App/Models/MPendaftarPpdb","id","m_gelombang_ppdb_id");
+  }
+
   informasi() {
     return this.hasMany("App/Models/MInformasiGelombang");
   }
