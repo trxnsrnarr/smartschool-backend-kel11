@@ -42384,11 +42384,16 @@ class MainController {
       .where({ id: rekapRombel_id })
       .first();
 
+     const anggotaRombelIds = await MAnggotaRombel.query()
+        .where({ m_rombel_id: rekapan?.m_rombel_id })
+        .andWhere({ dihapus: 0 })
+        .pluck("m_user_id");
     const rekapData = await TkRekapNilai.query()
       .with("user", (builder) => {
         builder.select("id", "nama", "whatsapp");
       })
       .where({ m_rekap_rombel_id: rekapRombel_id })
+      .whereIn("m_user_id",anggotaRombelIds)
       .fetch();
 
     let workbook = new Excel.Workbook();
