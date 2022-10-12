@@ -24563,6 +24563,8 @@ class MainController {
       .andWhere({ m_ta_id: ta.id })
       .ids();
 
+    let anggotaRombelIds;
+
     const materirombel = await TkMateriRombel.query()
       .with("rombel")
       .where({ m_materi_id: materi_id })
@@ -24574,14 +24576,20 @@ class MainController {
     let tugas;
     let ujian;
     if (rombel_id) {
+      anggotaRombelIds = await MAnggotaRombel.query()
+        .where({ m_rombel_id: rombel_id })
+        .andWhere({ dihapus: 0 })
+        .pluck("m_user_id");
       rekap = await MRekap.query()
         .with("rekaprombel", (builder) => {
           builder
             .where({ m_rombel_id: rombel_id })
             .with("rekapnilai", (builder) => {
-              builder.with("user", (builder) => {
-                builder.select("id", "nama");
-              });
+              builder
+                .with("user", (builder) => {
+                  builder.select("id", "nama");
+                })
+                .whereIn("m_user_id", anggotaRombelIds);
             })
             .withCount("rekapnilai as total", (builder) => {
               builder.where(
