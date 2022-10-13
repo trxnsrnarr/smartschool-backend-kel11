@@ -1944,6 +1944,9 @@ Route.get("/hack-transaksi", "SecondController.hackTransaksi");
 
 Route.put("/ganti-ta-user", "UserController.putTaUser");
 
+Route.post("/download/sikap-siswa", "MainController.downloadSikapSiswa");
+Route.post("/import/sikap-siswa", "MainController.importSikapSiswa");
+
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");

@@ -42384,16 +42384,16 @@ class MainController {
       .where({ id: rekapRombel_id })
       .first();
 
-     const anggotaRombelIds = await MAnggotaRombel.query()
-        .where({ m_rombel_id: rekapan?.m_rombel_id })
-        .andWhere({ dihapus: 0 })
-        .pluck("m_user_id");
+    const anggotaRombelIds = await MAnggotaRombel.query()
+      .where({ m_rombel_id: rekapan?.m_rombel_id })
+      .andWhere({ dihapus: 0 })
+      .pluck("m_user_id");
     const rekapData = await TkRekapNilai.query()
       .with("user", (builder) => {
         builder.select("id", "nama", "whatsapp");
       })
       .where({ m_rekap_rombel_id: rekapRombel_id })
-      .whereIn("m_user_id",anggotaRombelIds)
+      .whereIn("m_user_id", anggotaRombelIds)
       .fetch();
 
     let workbook = new Excel.Workbook();
@@ -47611,7 +47611,7 @@ class MainController {
     );
   }
 
-  async downloadSikapSiswa({ response, request, auth, params: { rombel_id } }) {
+  async downloadSikapSiswa({ response, request, auth }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -47622,6 +47622,8 @@ class MainController {
 
     const user = await auth.getUser();
 
+    let { tipe= "uts", ta_id,rombel_id } = request.post();
+
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
@@ -47631,7 +47633,9 @@ class MainController {
           .with("user", (builder) => {
             builder
               .select("id", "nama", "whatsapp")
-              .with("sikap")
+              .with("sikap", (builder) => {
+                builder.where({ tipe: tipe }).andWhere({ m_ta_id :ta_id });
+              })
               .where({ dihapus: 0 });
           })
           .where({ dihapus: 0 });
@@ -47642,16 +47646,16 @@ class MainController {
     let workbook = new Excel.Workbook();
     let worksheet = workbook.addWorksheet(`Daftar Sikap Siswa`);
 
-    worksheet.mergeCells("A1:M1");
-    worksheet.mergeCells("A2:M2");
-    worksheet.mergeCells("A3:M3");
+    worksheet.mergeCells("A1:F1");
+    worksheet.mergeCells("A2:F2");
+    worksheet.mergeCells("A3:F3");
 
     worksheet.getCell(
       "A4"
     ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
 
     worksheet.addConditionalFormatting({
-      ref: "A1:M3",
+      ref: "A1:U3",
       rules: [
         {
           type: "expression",
@@ -47683,38 +47687,39 @@ class MainController {
       ],
     });
 
-    worksheet.addConditionalFormatting({
-      ref: "A11:M11",
-      rules: [
-        {
-          type: "expression",
-          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-          style: {
-            font: {
-              name: "Times New Roman",
-              family: 4,
-              size: 12,
-              bold: true,
-            },
-            fill: {
-              type: "pattern",
-              pattern: "solid",
-              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
-            },
-            alignment: {
-              vertical: "middle",
-              horizontal: "center",
-            },
-            border: {
-              top: { style: "thin" },
-              left: { style: "thin" },
-              bottom: { style: "thin" },
-              right: { style: "thin" },
-            },
-          },
-        },
-      ],
-    });
+    // worksheet.addConditionalFormatting({
+    //   ref: "A11:U11",
+    //   rules: [
+    //     {
+    //       type: "expression",
+    //       formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+    //       style: {
+    //         font: {
+    //           name: "Times New Roman",
+    //           family: 4,
+    //           size: 12,
+    //           bold: true,
+    //         },
+    //         fill: {
+    //           type: "pattern",
+    //           pattern: "solid",
+    //           bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+    //         },
+    //         alignment: {
+    //           vertical: "middle",
+    //           horizontal: "center",
+    //           wrapText: true,
+    //         },
+    //         border: {
+    //           top: { style: "thin" },
+    //           left: { style: "thin" },
+    //           bottom: { style: "thin" },
+    //           right: { style: "thin" },
+    //         },
+    //       },
+    //     },
+    //   ],
+    // });
 
     worksheet.getCell("A1").value = "Sikap Siswa";
 
@@ -47782,7 +47787,7 @@ class MainController {
             ],
           });
           worksheet.addConditionalFormatting({
-            ref: `D${(idx + 1) * 1 + 11}:M${(idx + 1) * 1 + 11}`,
+            ref: `D${(idx + 1) * 1 + 11}:U${(idx + 1) * 1 + 11}`,
             rules: [
               {
                 type: "expression",
@@ -47861,66 +47866,66 @@ class MainController {
             no: `${idx + 1}`,
             nama: d.user ? d.user.nama : "-",
             whatsapp: d.user ? d.user.whatsapp : "-",
-            Tekun: d.user.rekapSikap
-              ? d.user.rekapSikap.m_sikap_ditunjukkan_sosial_id.includes("1")
+            Tekun: d.user.sikap
+              ? d.user.sikap.m_sikap_sosial_ditunjukkan_id.includes("1")
                 ? 1
-                : d.user.rekapSikap.m_sikap_ditingkatkan_sosial_id.includes("1")
+                : d.user.sikap.m_sikap_sosial_ditingkatkan_id.includes("1")
                 ? 0
                 : ""
               : "",
-            Jujur: d.user.rekapSikap
-              ? d.user.rekapSikap.m_sikap_ditunjukkan_sosial_id.includes("2")
+            Jujur: d.user.sikap
+              ? d.user.sikap.m_sikap_sosial_ditunjukkan_id.includes("2")
                 ? 1
-                : d.user.rekapSikap.m_sikap_ditingkatkan_sosial_id.includes("2")
+                : d.user.sikap.m_sikap_sosial_ditingkatkan_id.includes("2")
                 ? 0
                 : ""
               : "",
-            SopanSantun: d.user.rekapSikap
-              ? d.user.rekapSikap.m_sikap_ditunjukkan_sosial_id.includes("3")
+            SopanSantun: d.user.sikap
+              ? d.user.sikap.m_sikap_sosial_ditunjukkan_id.includes("3")
                 ? 1
-                : d.user.rekapSikap.m_sikap_ditingkatkan_sosial_id.includes("3")
+                : d.user.sikap.m_sikap_sosial_ditingkatkan_id.includes("3")
                 ? 0
                 : ""
               : "",
-            Disiplin: d.user.rekapSikap
-              ? d.user.rekapSikap.m_sikap_ditunjukkan_sosial_id.includes("4")
+            Disiplin: d.user.sikap
+              ? d.user.sikap.m_sikap_sosial_ditunjukkan_id.includes("4")
                 ? 1
-                : d.user.rekapSikap.m_sikap_ditingkatkan_sosial_id.includes("4")
+                : d.user.sikap.m_sikap_sosial_ditingkatkan_id.includes("4")
                 ? 0
                 : ""
               : "",
-            PercayaDiri: d.user.rekapSikap
-              ? d.user.rekapSikap.m_sikap_ditunjukkan_sosial_id.includes("5")
+            PercayaDiri: d.user.sikap
+              ? d.user.sikap.m_sikap_sosial_ditunjukkan_id.includes("5")
                 ? 1
-                : d.user.rekapSikap.m_sikap_ditingkatkan_sosial_id.includes("5")
+                : d.user.sikap.m_sikap_sosial_ditingkatkan_id.includes("5")
                 ? 0
                 : ""
               : "",
-            TanggungJawab: d.user.rekapSikap
-              ? d.user.rekapSikap.m_sikap_ditunjukkan_sosial_id.includes("6")
+            TanggungJawab: d.user.sikap
+              ? d.user.sikap.m_sikap_sosial_ditunjukkan_id.includes("6")
                 ? 1
-                : d.user.rekapSikap.m_sikap_ditingkatkan_sosial_id.includes("6")
+                : d.user.sikap.m_sikap_sosial_ditingkatkan_id.includes("6")
                 ? 0
                 : ""
               : "",
-            Bersyukur: d.user.rekapSikap
-              ? d.user.rekapSikap.m_sikap_ditunjukkan_sosial_id.includes("7")
+            Bersyukur: d.user.sikap
+              ? d.user.sikap.m_sikap_sosial_ditunjukkan_id.includes("7")
                 ? 1
-                : d.user.rekapSikap.m_sikap_ditingkatkan_sosial_id.includes("7")
+                : d.user.sikap.m_sikap_sosial_ditingkatkan_id.includes("7")
                 ? 0
                 : ""
               : "",
-            BekerjaSama: d.user.rekapSikap
-              ? d.user.rekapSikap.m_sikap_ditunjukkan_sosial_id.includes("8")
+            BekerjaSama: d.user.sikap
+              ? d.user.sikap.m_sikap_sosial_ditunjukkan_id.includes("8")
                 ? 1
-                : d.user.rekapSikap.m_sikap_ditingkatkan_sosial_id.includes("8")
+                : d.user.sikap.m_sikap_sosial_ditingkatkan_id.includes("8")
                 ? 0
                 : ""
               : "",
-            GotongRoyong: d.user.rekapSikap
-              ? d.user.rekapSikap.m_sikap_ditunjukkan_sosial_id.includes("9")
+            GotongRoyong: d.user.sikap
+              ? d.user.sikap.m_sikap_sosial_ditunjukkan_id.includes("9")
                 ? 1
-                : d.user.rekapSikap.m_sikap_ditingkatkan_sosial_id.includes("9")
+                : d.user.sikap.m_sikap_sosial_ditingkatkan_id.includes("9")
                 ? 0
                 : ""
               : "",
@@ -48011,7 +48016,58 @@ class MainController {
     worksheet.getColumn("A").width = 6;
     worksheet.getColumn("B").width = 20;
     worksheet.getColumn("C").width = 23;
-    worksheet.getColumn("D").width = 6;
+    worksheet.getColumn("D").width = 7;
+    worksheet.getColumn("E").width = 11;
+    worksheet.getColumn("F").width = 11;
+    worksheet.getColumn("G").width = 11;
+    worksheet.getColumn("H").width = 11;
+    worksheet.getColumn("I").width = 11;
+    worksheet.getColumn("J").width = 11;
+    worksheet.getColumn("K").width = 11;
+    worksheet.getColumn("L").width = 11;
+    worksheet.getColumn("M").width = 13;
+    worksheet.getColumn("N").width = 13;
+    worksheet.getColumn("O").width = 13;
+    worksheet.getColumn("P").width = 13;
+    worksheet.getColumn("Q").width = 13;
+    worksheet.getColumn("R").width = 13;
+    worksheet.getColumn("S").width = 13;
+    worksheet.getColumn("T").width = 13;
+    worksheet.getColumn("U").width = 13;
+    worksheet.getRow(11).height = 160;
+    worksheet.addConditionalFormatting({
+      ref: "A11:U11",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+              wrapText: true,
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
 
     let namaFile = `/uploads/rekapan-sikap-siswa-${keluarantanggalseconds}.xlsx`;
 
@@ -48020,18 +48076,12 @@ class MainController {
 
     return namaFile;
   }
-  async importSikapSiswaServices(
-    filelocation,
-    sekolah,
-    rombel_id,
-    mata_pelajaran_id,
-    ta
-  ) {
+  async importSikapSiswaServices(filelocation, sekolah, rombel_id, ta, tipe) {
     var workbook = new Excel.Workbook();
 
     workbook = await workbook.xlsx.readFile(filelocation);
 
-    let explanation = workbook.getWorksheet("Daftar Rekap Sikap Siswa");
+    let explanation = workbook.getWorksheet("Daftar Sikap Siswa");
 
     let colComment = explanation.getColumn("A");
 
@@ -48042,16 +48092,24 @@ class MainController {
         data.push({
           nama: explanation.getCell("B" + rowNumber).value,
           whatsapp: explanation.getCell("C" + rowNumber).value,
-          predikat: explanation.getCell("D" + rowNumber).value,
-          Tekun: explanation.getCell("E" + rowNumber).value,
-          Jujur: explanation.getCell("F" + rowNumber).value,
-          SopanSantun: explanation.getCell("G" + rowNumber).value,
-          Disiplin: explanation.getCell("H" + rowNumber).value,
-          PercayaDiri: explanation.getCell("I" + rowNumber).value,
-          TanggungJawab: explanation.getCell("J" + rowNumber).value,
-          Bersyukur: explanation.getCell("K" + rowNumber).value,
-          BekerjaSama: explanation.getCell("L" + rowNumber).value,
-          GotongRoyong: explanation.getCell("M" + rowNumber).value,
+          Tekun: explanation.getCell("D" + rowNumber).value,
+          Jujur: explanation.getCell("E" + rowNumber).value,
+          SopanSantun: explanation.getCell("F" + rowNumber).value,
+          Disiplin: explanation.getCell("G" + rowNumber).value,
+          PercayaDiri: explanation.getCell("H" + rowNumber).value,
+          TanggungJawab: explanation.getCell("I" + rowNumber).value,
+          Bersyukur: explanation.getCell("J" + rowNumber).value,
+          BekerjaSama: explanation.getCell("K" + rowNumber).value,
+          GotongRoyong: explanation.getCell("L" + rowNumber).value,
+          Berdoa: explanation.getCell("M" + rowNumber).value,
+          Ibadah: explanation.getCell("N" + rowNumber).value,
+          Salam: explanation.getCell("O" + rowNumber).value,
+          BersyukurNikmat: explanation.getCell("P" + rowNumber).value,
+          Mensyukuri: explanation.getCell("Q" + rowNumber).value,
+          BersyukurBerhasil: explanation.getCell("R" + rowNumber).value,
+          BerserahDiri: explanation.getCell("S" + rowNumber).value,
+          Memelihara: explanation.getCell("T" + rowNumber).value,
+          Menghormati: explanation.getCell("U" + rowNumber).value,
         });
       }
     });
@@ -48065,86 +48123,159 @@ class MainController {
           .andWhere({ m_sekolah_id: sekolah.id })
           .first();
 
-        const predikatId = await MPredikatNilai.query()
-          .where({ predikat: `${d.predikat}` })
-          .andWhere({ m_sekolah_id: sekolah.id })
-          .first();
-
-        const check = await MSikapRombel.query()
+        const check = await MSikapSiswa.query()
           .where({ dihapus: 0 })
-          .andWhere({ m_mata_pelajaran_id: mata_pelajaran_id })
-          .andWhere({ m_rombel_id: rombel_id })
+          .andWhere({ m_ta_id: ta.id })
+          .andWhere({ tipe: tipe })
           .andWhere({ m_user_id: userSiswa.id })
           .first();
 
-        const m_sikap_ditunjukkan_id = [];
-        const m_sikap_ditingkatkan_id = [];
+        const m_sikap_sosial_ditunjukkan_id = [];
+        const m_sikap_sosial_ditingkatkan_id = [];
+        const m_sikap_spiritual_ditunjukkan_id = [];
+        const m_sikap_spiritual_ditingkatkan_id = [];
 
         if (d.Tekun || parseInt(d.Tekun) === 0) {
           d.Tekun == 1
-            ? m_sikap_ditunjukkan_id.push(1)
-            : m_sikap_ditingkatkan_id.push(1);
+            ? m_sikap_sosial_ditunjukkan_id.push(1)
+            : m_sikap_sosial_ditingkatkan_id.push(1);
         }
         if (d.Jujur || parseInt(d.Jujur) === 0) {
           d.Jujur == 1
-            ? m_sikap_ditunjukkan_id.push(2)
-            : m_sikap_ditingkatkan_id.push(2);
+            ? m_sikap_sosial_ditunjukkan_id.push(2)
+            : m_sikap_sosial_ditingkatkan_id.push(2);
         }
         if (d.SopanSantun || parseInt(d.SopanSantun) === 0) {
           d.SopanSantun == 1
-            ? m_sikap_ditunjukkan_id.push(3)
-            : m_sikap_ditingkatkan_id.push(3);
+            ? m_sikap_sosial_ditunjukkan_id.push(3)
+            : m_sikap_sosial_ditingkatkan_id.push(3);
         }
         if (d.Disiplin || parseInt(d.Disiplin) === 0) {
           d.Disiplin == 1
-            ? m_sikap_ditunjukkan_id.push(4)
-            : m_sikap_ditingkatkan_id.push(4);
+            ? m_sikap_sosial_ditunjukkan_id.push(4)
+            : m_sikap_sosial_ditingkatkan_id.push(4);
         }
         if (d.PercayaDiri || parseInt(d.PercayaDiri) === 0) {
           d.PercayaDiri == 1
-            ? m_sikap_ditunjukkan_id.push(5)
-            : m_sikap_ditingkatkan_id.push(5);
+            ? m_sikap_sosial_ditunjukkan_id.push(5)
+            : m_sikap_sosial_ditingkatkan_id.push(5);
         }
         if (d.TanggungJawab || parseInt(d.TanggungJawab) === 0) {
           d.TanggungJawab == 1
-            ? m_sikap_ditunjukkan_id.push(6)
-            : m_sikap_ditingkatkan_id.push(6);
+            ? m_sikap_sosial_ditunjukkan_id.push(6)
+            : m_sikap_sosial_ditingkatkan_id.push(6);
         }
         if (d.Bersyukur || parseInt(d.Bersyukur) === 0) {
           d.Bersyukur == 1
-            ? m_sikap_ditunjukkan_id.push(7)
-            : m_sikap_ditingkatkan_id.push(7);
+            ? m_sikap_sosial_ditunjukkan_id.push(7)
+            : m_sikap_sosial_ditingkatkan_id.push(7);
         }
         if (d.BekerjaSama || parseInt(d.BekerjaSama) === 0) {
           d.BekerjaSama == 1
-            ? m_sikap_ditunjukkan_id.push(8)
-            : m_sikap_ditingkatkan_id.push(8);
+            ? m_sikap_sosial_ditunjukkan_id.push(8)
+            : m_sikap_sosial_ditingkatkan_id.push(8);
         }
         if (d.GotongRoyong || parseInt(d.GotongRoyong) === 0) {
           d.GotongRoyong == 1
-            ? m_sikap_ditunjukkan_id.push(9)
-            : m_sikap_ditingkatkan_id.push(9);
+            ? m_sikap_sosial_ditunjukkan_id.push(9)
+            : m_sikap_sosial_ditingkatkan_id.push(9);
+        }
+
+        if (d.Berdoa || parseInt(d.Berdoa) === 0) {
+          d.Berdoa == 1
+            ? m_sikap_spiritual_ditunjukkan_id.push(1)
+            : m_sikap_spiritual_ditingkatkan_id.push(1);
+        }
+        if (d.Ibadah || parseInt(d.Ibadah) === 0) {
+          d.Ibadah == 1
+            ? m_sikap_spiritual_ditunjukkan_id.push(2)
+            : m_sikap_spiritual_ditingkatkan_id.push(2);
+        }
+        if (d.Salam || parseInt(d.Salam) === 0) {
+          d.Salam == 1
+            ? m_sikap_spiritual_ditunjukkan_id.push(3)
+            : m_sikap_spiritual_ditingkatkan_id.push(3);
+        }
+        if (d.BersyukurNikmat || parseInt(d.BersyukurNikmat) === 0) {
+          d.BersyukurNikmat == 1
+            ? m_sikap_spiritual_ditunjukkan_id.push(4)
+            : m_sikap_spiritual_ditingkatkan_id.push(4);
+        }
+        if (d.Mensyukuri || parseInt(d.Mensyukuri) === 0) {
+          d.Mensyukuri == 1
+            ? m_sikap_spiritual_ditunjukkan_id.push(5)
+            : m_sikap_spiritual_ditingkatkan_id.push(5);
+        }
+        if (d.BersyukurBerhasil || parseInt(d.BersyukurBerhasil) === 0) {
+          d.BersyukurBerhasil == 1
+            ? m_sikap_spiritual_ditunjukkan_id.push(6)
+            : m_sikap_spiritual_ditingkatkan_id.push(6);
+        }
+        if (d.BerserahDiri || parseInt(d.BerserahDiri) === 0) {
+          d.BerserahDiri == 1
+            ? m_sikap_spiritual_ditunjukkan_id.push(7)
+            : m_sikap_spiritual_ditingkatkan_id.push(7);
+        }
+        if (d.Memelihara || parseInt(d.Memelihara) === 0) {
+          d.Memelihara == 1
+            ? m_sikap_spiritual_ditunjukkan_id.push(8)
+            : m_sikap_spiritual_ditingkatkan_id.push(8);
+        }
+        if (d.Menghormati || parseInt(d.Menghormati) === 0) {
+          d.Menghormati == 1
+            ? m_sikap_spiritual_ditunjukkan_id.push(9)
+            : m_sikap_spiritual_ditingkatkan_id.push(9);
         }
 
         if (check) {
-          await MSikapRombel.query()
+          await MSikapSiswa.query()
             .where({ dihapus: 0 })
-            .andWhere({ m_mata_pelajaran_id: mata_pelajaran_id })
-            .andWhere({ m_rombel_id: rombel_id })
+            .andWhere({ m_ta_id: ta.id })
+            .andWhere({ tipe: tipe })
             .andWhere({ m_user_id: userSiswa.id })
             .update({
-              m_predikat_nilai_id: predikatId.id,
-              m_sikap_ditunjukkan_id: m_sikap_ditunjukkan_id.join(","),
-              m_sikap_ditingkatkan_id: m_sikap_ditingkatkan_id.join(","),
+              m_sikap_sosial_ditunjukkan_id:
+                m_sikap_sosial_ditunjukkan_id.length
+                  ? m_sikap_sosial_ditunjukkan_id.join(",")
+                  : null,
+              m_sikap_sosial_ditingkatkan_id:
+                m_sikap_sosial_ditingkatkan_id.length
+                  ? m_sikap_sosial_ditingkatkan_id.join(",")
+                  : null,
+              m_sikap_spiritual_ditunjukkan_id:
+                m_sikap_spiritual_ditunjukkan_id.length
+                  ? m_sikap_spiritual_ditunjukkan_id.join(",")
+                  : null,
+              m_sikap_spiritual_ditingkatkan_id:
+                m_sikap_spiritual_ditingkatkan_id.length
+                  ? m_sikap_spiritual_ditingkatkan_id.join(",")
+                  : null,
             });
-        } else if (predikatId) {
-          await MSikapRombel.create({
-            m_mata_pelajaran_id: mata_pelajaran_id,
+        } else if (
+          m_sikap_sosial_ditunjukkan_id.length ||
+          m_sikap_sosial_ditingkatkan_id.length ||
+          m_sikap_spiritual_ditunjukkan_id.length ||
+          m_sikap_spiritual_ditingkatkan_id.length
+        ) {
+          await MSikapSiswa.create({
+            m_ta_id: ta.id,
             m_user_id: userSiswa.id,
-            m_predikat_nilai_id: predikatId.id,
-            m_rombel_id: rombel_id,
-            m_sikap_ditunjukkan_id: m_sikap_ditunjukkan_id.join(","),
-            m_sikap_ditingkatkan_id: m_sikap_ditingkatkan_id.join(","),
+            tipe: tipe,
+            m_sikap_sosial_ditunjukkan_id: m_sikap_sosial_ditunjukkan_id.length
+              ? m_sikap_sosial_ditunjukkan_id.join(",")
+              : null,
+            m_sikap_sosial_ditingkatkan_id:
+              m_sikap_sosial_ditingkatkan_id.length
+                ? m_sikap_sosial_ditingkatkan_id.join(",")
+                : null,
+            m_sikap_spiritual_ditunjukkan_id:
+              m_sikap_spiritual_ditunjukkan_id.length
+                ? m_sikap_spiritual_ditunjukkan_id.join(",")
+                : null,
+            m_sikap_spiritual_ditingkatkan_id:
+              m_sikap_spiritual_ditingkatkan_id.length
+                ? m_sikap_spiritual_ditingkatkan_id.join(",")
+                : null,
             status: 1,
             dihapus: 0,
           });
@@ -48155,12 +48286,7 @@ class MainController {
     return result;
   }
 
-  async importSikapSiswa({
-    request,
-    response,
-    auth,
-    params: { rombel_id, mata_pelajaran_id },
-  }) {
+  async importSikapSiswa({ request, response, auth}) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -48168,8 +48294,13 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
+    const { ta_id = "uts", tipe,rombel_id } = request.post();
 
-    const ta = await this.getTAAktif(sekolah);
+    const ta = await Mta.query()
+      .select("id", "tahun")
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ id: ta_id })
+      .first();
 
     let file = request.file("file");
     let fname = `import-excel.xlsx`;
@@ -48188,8 +48319,8 @@ class MainController {
       `tmp/uploads/${fname}`,
       sekolah,
       rombel_id,
-      mata_pelajaran_id,
-      ta
+      ta,
+      tipe
     );
   }
 
