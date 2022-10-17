@@ -47622,7 +47622,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    let { tipe= "uts", ta_id,rombel_id } = request.post();
+    let { tipe = "uts", ta_id, rombel_id } = request.post();
 
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
@@ -47634,7 +47634,7 @@ class MainController {
             builder
               .select("id", "nama", "whatsapp")
               .with("sikap", (builder) => {
-                builder.where({ tipe: tipe }).andWhere({ m_ta_id :ta_id });
+                builder.where({ tipe: tipe }).andWhere({ m_ta_id: ta_id });
               })
               .where({ dihapus: 0 });
           })
@@ -48286,7 +48286,7 @@ class MainController {
     return result;
   }
 
-  async importSikapSiswa({ request, response, auth}) {
+  async importSikapSiswa({ request, response, auth }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -48294,7 +48294,7 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
-    const { ta_id = "uts", tipe,rombel_id } = request.post();
+    const { ta_id = "uts", tipe, rombel_id } = request.post();
 
     const ta = await Mta.query()
       .select("id", "tahun")
@@ -49386,7 +49386,7 @@ class MainController {
         })
     );
     if (dataaa > 10) {
-      return response.ok({message: "Data untuk Leger Nilai Belum Lengkap"});
+      return response.ok({ message: "Data untuk Leger Nilai Belum Lengkap" });
     }
     // return result;
     worksheet.getCell("A1").value = `LEGER PERNILAIAN AKHIR SEMESTER ${
@@ -49551,6 +49551,10 @@ class MainController {
       portofolio_pas,
     } = request.post();
 
+    const bobotNilai = await MBobotNilai.query()
+      .where({ id: bobot_id })
+      .first();
+
     // const rules = {
     //     tugas:"required",
     //     uh:"required",
@@ -49595,6 +49599,48 @@ class MainController {
       portofolio_pas,
     });
 
+    const bobotUpdate = await MBobotNilai.query()
+      .where({ id: bobot_id })
+      .first();
+    if (
+      bobotUpdate.tugas_pts + bobotUpdate.uh_pts + bobotUpdate.uts_pts !==
+      100
+    ) {
+      return response.notFound({
+        message:
+          "Bobot Rapor Pengetahuan UTS Tidak Mencapai 100%. Nilai Siswa Tidak Akan Mencapai 100",
+      });
+    }
+    if (
+        bobotUpdate.tugas_pas +
+        bobotUpdate.uh_pas +
+        bobotUpdate.uts_pas +
+        bobotUpdate.uas_pas !==
+        100
+    ) {
+      return response.notFound({
+        message:
+          "Bobot Rapor Pengetahuan UAS Tidak Mencapai 100%. Nilai Siswa Tidak Akan Mencapai 100",
+      });
+    }
+    if (
+      bobotUpdate.proyek_pts + bobotUpdate.produk_pts + bobotUpdate.praktik_pts + bobotUpdate.portofolio_pts !==
+      100
+    ) {
+      return response.notFound({
+        message:
+          "Bobot Rapor Keterampilan UTS Tidak Mencapai 100%. Nilai Siswa Tidak Akan Mencapai 100",
+      });
+    }
+    if (
+      bobotUpdate.proyek_pas + bobotUpdate.produk_pas + bobotUpdate.praktik_pas + bobotUpdate.portofolio_pas !==
+      100
+    ) {
+      return response.notFound({
+        message:
+          "Bobot Rapor Keterampilan UAS Tidak Mencapai 100%. Nilai Siswa Tidak Akan Mencapai 100",
+      });
+    }
     if (!bobot) {
       return response.notFound({
         message: messageNotFound,
