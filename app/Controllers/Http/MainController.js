@@ -49386,7 +49386,7 @@ class MainController {
         })
     );
     if (dataaa > 10) {
-      return "Data untuk Leger Nilai Belum Lengkap";
+      return response.ok({message: "Data untuk Leger Nilai Belum Lengkap"});
     }
     // return result;
     worksheet.getCell("A1").value = `LEGER PERNILAIAN AKHIR SEMESTER ${
