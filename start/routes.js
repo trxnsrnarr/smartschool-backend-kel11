@@ -1143,7 +1143,7 @@ Route.get(
 
 Route.post(
   "/rombel-download/:jadwal_mengajar_id/download-analisis-nilai",
-  "MainController.downloadAnalisisNilai"
+  "RombelController.downloadAnalisisNilai"
 );
 Route.post(
   "/rombel-download/:jadwal_mengajar_id/download-performa-tugas",
