@@ -18554,9 +18554,6 @@ class MainController {
           message: messagePostSuccess,
         });
       }
-      return response.abort({
-        message: "Harap Menyelesaikan Pembelian Formulir",
-      });
     }
 
     const check2 = await MPendaftarPpdb.query()
