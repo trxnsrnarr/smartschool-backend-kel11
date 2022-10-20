@@ -24543,9 +24543,11 @@ class MainController {
     const ta = await this.getTAAktif(sekolah);
     const user = await auth.getUser();
 
-    const { rombel_id, tipe } = request.get();
+    const { rombel_id, tipe, ta_id= user?.m_ta_id || ta.id} = request.get();
+    const taa = await Mta.query().where({id:ta_id}).first()
+
     const tahunPelajaranIds = await Mta.query()
-      .where({ tahun: ta.tahun })
+      .where({ tahun: taa.tahun })
       .andWhere({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .ids();
@@ -24557,7 +24559,7 @@ class MainController {
     const rombelIds = await MRombel.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
-      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ m_ta_id: taa.id })
       .ids();
 
     let anggotaRombelIds;
