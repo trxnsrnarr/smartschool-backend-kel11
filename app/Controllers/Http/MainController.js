@@ -10766,10 +10766,11 @@ class MainController {
       const timelineId1 = await MTimeline.query()
         .whereNull("m_mata_pelajaran_id")
         .whereIn("m_rombel_id", dataRombelIds)
-        .andWhere({
-          m_user_id: jadwalMengajar.toJSON().mataPelajaran.m_user_id,
-        })
-        .orWhere({ m_user_id: user.id })
+        // .andWhere({
+        //   m_user_id: jadwalMengajar.toJSON().mataPelajaran.m_user_id,
+        // })
+        // .orWhere({ m_user_id: user.id })
+        // .whereIn("m_user_id", userIds)
         .andWhere({ dihapus: 0 })
         .ids();
       // .andWhere({ m_rombel_id: jadwalMengajar.toJSON().rombel.id })
@@ -10778,10 +10779,10 @@ class MainController {
         .whereNotNull("m_mata_pelajaran_id")
         .whereIn("m_mata_pelajaran_id", dataMapelIds)
         .whereIn("m_rombel_id", dataRombelIds)
-        .andWhere({
-          m_user_id: jadwalMengajar.toJSON().mataPelajaran.m_user_id,
-        })
-        .orWhere({ m_user_id: user.id })
+        // .andWhere({
+        //   m_user_id: jadwalMengajar.toJSON().mataPelajaran.m_user_id,
+        // })
+        // .orWhere({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .ids();
 
@@ -11012,6 +11013,7 @@ class MainController {
 
     return response.ok({
       timeline: timeline,
+      role: user.role,
     });
   }
 
