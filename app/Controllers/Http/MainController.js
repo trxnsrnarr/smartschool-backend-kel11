@@ -10911,10 +10911,10 @@ class MainController {
         .pluck("m_user_id");
 
       const timelineLainnya = await MTimeline.query()
-        .whereNull("m_mata_pelajaran_id")
+        // .whereNull("m_mata_pelajaran_id")
         .andWhere({ dihapus: 0 })
         .whereIn("m_rombel_id", dataRombelIds)
-        .whereIn("m_user_id", userIds)
+        // .whereIn("m_user_id", userIds)
         .ids();
       // .andWhere("m_rombel_id", jadwalMengajar.toJSON().rombel.id)
 
@@ -10951,7 +10951,7 @@ class MainController {
         })
         .whereNull("m_mata_pelajaran_id")
         .whereIn("m_rombel_id", dataRombelIds)
-        .andWhere({ m_user_id: user.id })
+        // .andWhere({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         // .whereIn("m_tugas_id", tugasIds)
         .orWhereIn("id", timelineLainnya)
@@ -10993,7 +10993,6 @@ class MainController {
         .whereNotNull("m_mata_pelajaran_id")
         .whereIn("m_mata_pelajaran_id", dataMapelIds)
         .whereIn("m_rombel_id", dataRombelIds)
-        .andWhere({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         // .whereIn("m_tugas_id", tugasIds)
         .orderBy("id", "desc")
