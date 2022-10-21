@@ -775,8 +775,6 @@ class SecondController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    const { ta_id = ta.id } = request.get();
-
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
@@ -807,11 +805,12 @@ class SecondController {
       jenis,
       tanggal_awal,
       tanggal_akhir,
-    } = request.get();
+      ta_id = ta.id 
+    } = request.post();
 
     let rombelIds = MRombel.query()
       .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ m_ta_id: ta_id })
       .andWhere({ dihapus: 0 });
 
     if (tingkat) {
@@ -822,6 +821,7 @@ class SecondController {
     const pembayaranIds = await MPembayaran.query()
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id:ta_id})
       .ids();
 
     const pembayaranRombelIds = await TkPembayaranRombel.query()
@@ -844,7 +844,7 @@ class SecondController {
             builder
               .select("id", "m_pembayaran_id")
               .with("pembayaran", (builder) => {
-                builder.select("id", "jenis", "nominal", "tipe_ujian", "nama");
+                builder.select("id", "jenis", "nominal", "tipe_ujian", "nama","dihapus");
               });
           });
       })
@@ -852,9 +852,9 @@ class SecondController {
       .fetch();
 
     // return {
-    //   pembayaran,
-    //   jenisPembayaran,
-    //   tingkatRombel,
+      // pembayaran,
+      // jenisPembayaran,
+      // tingkatRombel,
     //   tunggakan,
     // };
     let workbook = new Excel.Workbook();
@@ -1046,7 +1046,7 @@ class SecondController {
               return `${e.rombelPembayaran.pembayaran.nama} : Rp${e.rombelPembayaran.pembayaran.nominal}
               `;
             })}`,
-          total: `Rp${d.pembayaran.reduce((a, b) => {
+          total: `Rp${d.pembayaran.filter((s) => s?.rombelPembayaran?.pembayaran?.dihapus == 0).reduce((a, b) => {
             return (
               parseInt(a) + parseInt(b.rombelPembayaran.pembayaran.nominal)
             );
