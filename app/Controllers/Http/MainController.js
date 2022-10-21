@@ -10766,11 +10766,11 @@ class MainController {
       const timelineId1 = await MTimeline.query()
         .whereNull("m_mata_pelajaran_id")
         .whereIn("m_rombel_id", dataRombelIds)
-        // .andWhere({
-        //   m_user_id: jadwalMengajar.toJSON().mataPelajaran.m_user_id,
-        // })
-        // .orWhere({ m_user_id: user.id })
-        .whereIn("m_user_id",userIds)
+        .andWhere({
+          m_user_id: jadwalMengajar.toJSON().mataPelajaran.m_user_id,
+        })
+        .orWhere({ m_user_id: user.id })
+        // .whereIn("m_user_id",userIds)
         .andWhere({ dihapus: 0 })
         .ids();
       // .andWhere({ m_rombel_id: jadwalMengajar.toJSON().rombel.id })
@@ -10779,11 +10779,11 @@ class MainController {
         .whereNotNull("m_mata_pelajaran_id")
         .whereIn("m_mata_pelajaran_id", dataMapelIds)
         .whereIn("m_rombel_id", dataRombelIds)
-        .whereIn("m_user_id",userIds)
-        // .andWhere({
-        //   m_user_id: jadwalMengajar.toJSON().mataPelajaran.m_user_id,
-        // })
-        // .orWhere({ m_user_id: user.id })
+        // .whereIn("m_user_id",userIds)
+        .andWhere({
+          m_user_id: jadwalMengajar.toJSON().mataPelajaran.m_user_id,
+        })
+        .orWhere({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .ids();
 
@@ -10820,7 +10820,7 @@ class MainController {
         .with("peserta", (builder) => {
           builder.where({ dihapus: 0 });
         })
-        .whereIn("m_user_id",userIds)
+        // .whereIn("m_user_id",userIds)
         .andWhere({ dihapus: 0 })
         .whereIn("m_timeline_id", timelineIds)
         .orderBy("id", "desc")
@@ -10895,7 +10895,7 @@ class MainController {
         .with("user")
         .withCount("tkTimeline as total_siswa")
         .whereIn("m_rombel_id", dataRombelIds)
-        .andWhere({ m_user_id: user.id })
+        .whereIn("m_user_id",userIds)
         .andWhere({ tipe: "absen" })
         .andWhere({ dihapus: 0 })
         .orderBy("id", "desc")
@@ -10956,7 +10956,7 @@ class MainController {
         // .andWhere({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         // .whereIn("m_tugas_id", tugasIds)
-        .whereIn("m_user_id",userIds)
+        // .whereIn("m_user_id",userIds)
         .orWhereIn("id", timelineLainnya)
         .orderBy("id", "desc")
         .fetch();
@@ -10999,7 +10999,7 @@ class MainController {
         // .andWhere({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         // .whereIn("m_tugas_id", tugasIds)
-        .whereIn("m_user_id",userIds)
+        // .whereIn("m_user_id",userIds)
         .orderBy("id", "desc")
         .fetch();
       // .andWhere({
