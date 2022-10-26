@@ -14122,6 +14122,30 @@ class MainController {
       // pilih dari bank soal
       daftar_soal_ujian_id,
     } = request.post();
+    
+    if(bentuk == "pg"){
+
+      const rules = {
+      kd: "required",
+      kd_konten_materi: "required",
+      kj_pg: "required",
+      level_kognitif: "required",
+      nilai_soal: "required",
+      pertanyaan: "required",
+    };
+    const message = {
+      "kg.required": "Nomor Kompetensi Dasar harus diisi",
+      "kd_konten_materi.required": "Isi Kompetensi Dasar harus diisi",
+      "level_kognitif.required": "Level Kognitif harus diisi",
+      "pertanyaan.required": "Pertanaan harus diisi",
+      "kj_pg.required": "Kunci Jawaban harus diisi",
+      "nilai_soal.required": "Nilai Soal harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+  }
 
     let totalSoalTambah = 0;
 
@@ -31335,10 +31359,14 @@ class MainController {
     }
     const ta = await this.getTAAktif(sekolah);
 
+    const user = await auth.getUser();
+
+    const ta_id = user?.m_ta_id ? user.m_ta_id:ta.id;
+
     const rombelIds = await MRombel.query()
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
-      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ m_ta_id: ta_id })
       .ids();
 
     const siswa = await User.query()
@@ -31361,7 +31389,7 @@ class MainController {
         builder
           .where({ tingkat: siswa.toJSON().anggotaRombel.rombel.tingkat })
           .andWhere({ dihapus: 0 });
-        if (sekolah.id == 578 || ta.id == 121) {
+        if (sekolah.id == 578 || ta_id == 121) {
           if (mapelSingkat.kelompok == "C") {
             if (siswa.toJSON().anggotaRombel.rombel.m_jurusan_id != null) {
               builder.andWhere({
@@ -31379,7 +31407,7 @@ class MainController {
         builder.with("rekap", (builder) => {
           builder
             .where({ tipe: "tugas" })
-            .andWhere({ m_ta_id: ta.id })
+            .andWhere({ m_ta_id: ta_id })
             .andWhere({ dihapus: 0 })
             .andWhere({ m_materi_id: mapel.toJSON().materi.id });
         });
@@ -31393,7 +31421,7 @@ class MainController {
           builder
             .where({ tipe: "ujian" })
             .andWhere({ teknik: "UH" })
-            .andWhere({ m_ta_id: ta.id })
+            .andWhere({ m_ta_id: ta_id })
             .andWhere({ dihapus: 0 })
             .andWhere({ m_materi_id: mapel.toJSON().materi.id });
         });
@@ -31439,6 +31467,10 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
     const ta = await this.getTAAktif(sekolah);
+    
+    const user = await auth.getUser();
+
+    const ta_id = user?.m_ta_id ? user.m_ta_id:ta.id;
 
     const mapelSingkat = await MMataPelajaran.query()
       .where({ id: mata_pelajaran_id })
@@ -31468,7 +31500,7 @@ class MainController {
             tingkat: siswaKeterampilan.toJSON().anggotaRombel.rombel.tingkat,
           })
           .where({ dihapus: 0 });
-        if (sekolah.id == 578 || ta.id == 121) {
+        if (sekolah.id == 578 || ta_id == 121) {
           if (mapelSingkat.kelompok == "C") {
             if (
               siswaKeterampilan.toJSON().anggotaRombel.rombel.m_jurusan_id !=
@@ -31490,7 +31522,7 @@ class MainController {
         builder.with("rekap", (builder) => {
           builder
             .where({ tipe: "keterampilan" })
-            .andWhere({ m_ta_id: ta.id })
+            .andWhere({ m_ta_id: ta_id })
             .andWhere({ dihapus: 0 })
             .andWhere({ m_materi_id: mapel.toJSON().materi.id });
         });
@@ -31526,7 +31558,7 @@ class MainController {
           builder
             .where({ tipe: "keterampilan" })
             .andWhere({ teknik: "praktik" })
-            .andWhere({ m_ta_id: ta.id })
+            .andWhere({ m_ta_id: ta_id })
             .andWhere({ dihapus: 0 })
             .andWhere({ m_materi_id: mapel.toJSON().materi.id });
         });
@@ -31560,7 +31592,7 @@ class MainController {
           builder
             .where({ tipe: "keterampilan" })
             .andWhere({ teknik: "proyek" })
-            .andWhere({ m_ta_id: ta.id })
+            .andWhere({ m_ta_id: ta_id })
             .andWhere({ dihapus: 0 })
             .andWhere({ m_materi_id: mapel.toJSON().materi.id });
         });
@@ -31593,7 +31625,7 @@ class MainController {
           builder
             .where({ tipe: "keterampilan" })
             .andWhere({ teknik: "portofolio" })
-            .andWhere({ m_ta_id: ta.id })
+            .andWhere({ m_ta_id: ta_id })
             .andWhere({ dihapus: 0 })
             .andWhere({ m_materi_id: mapel.toJSON().materi.id });
         });
@@ -31626,7 +31658,7 @@ class MainController {
           builder
             .where({ tipe: "keterampilan" })
             .andWhere({ teknik: "produk" })
-            .andWhere({ m_ta_id: ta.id })
+            .andWhere({ m_ta_id: ta_id })
             .andWhere({ dihapus: 0 })
             .andWhere({ m_materi_id: mapel.toJSON().materi.id });
         });
@@ -31668,7 +31700,7 @@ class MainController {
         });
     } else {
       await MUjianSiswa.create({
-        m_ta_id: ta.id,
+        m_ta_id: ta_id,
         m_user_id: user_id,
         m_mata_pelajaran_id: mapel.id,
         nilai_keterampilan: rataData,
