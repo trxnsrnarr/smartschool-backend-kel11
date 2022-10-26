@@ -4573,7 +4573,7 @@ class MainController {
 
     const { nama, nama_ibu, whatsapp, password, alamat, asal_sekolah } =
       request.post();
-    if (sekolah?.id != 13) {
+    if (sekolah?.id != 14|| sekolah?.id == 13) {
       const rules = {
         nama: "required",
         whatsapp: "required",
@@ -18493,7 +18493,7 @@ class MainController {
         message: "Kamu sudah terdaftar pada gelombang ini",
       });
     }
-    if (sekolah?.id == 13) {
+    if (sekolah?.id == 14 || sekolah?.id == 13) {
       const jalurIds1 = await MJalurPpdb.query()
         .where({ dihapus: 0 })
         .where({ m_sekolah_id: sekolah.id })

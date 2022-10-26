@@ -1048,7 +1048,7 @@ class PPDBController {
     }
     let jalurIds;
 
-    if (sekolah?.id == 13) {
+    if (sekolah?.id == 14 || sekolah?.id == 13) {
       jalurIds = await MJalurPpdb.query()
         .where({ dihapus: 0 })
         .where({ m_sekolah_id: sekolah.id })
@@ -1085,7 +1085,7 @@ class PPDBController {
     let pendaftarIds;
     let pendaftarIds1;
     let terdaftar;
-    let terdaftarPembelian
+    let terdaftarPembelian;
     let gelombangPembelian;
     let user;
     let gelombang;
@@ -1136,7 +1136,7 @@ class PPDBController {
       }
     }
 
-    if (sekolah?.id == 13) {
+    if (sekolah?.id == 14 || sekolah?.id == 13) {
       const jalurIds1 = await MJalurPpdb.query()
         .where({ dihapus: 0 })
         .where({ m_sekolah_id: sekolah.id })
@@ -1176,7 +1176,7 @@ class PPDBController {
       .andWhere({ role: "ppdb" })
       .count("* as total");
 
-    if (sekolah?.id == 13) {
+    if (sekolah?.id == 14 || sekolah?.id == 13) {
       const jalurIds1 = await MJalurPpdb.query()
         .where({ dihapus: 0 })
         .where({ m_sekolah_id: sekolah.id })
@@ -1252,7 +1252,7 @@ class PPDBController {
       gelombangAktif: gelombangAktif,
       jumlahPeserta: jumlahPeserta[0].total,
       gelombangPembelian,
-      terdaftarPembelian
+      terdaftarPembelian,
     });
   }
 
