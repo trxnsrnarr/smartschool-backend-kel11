@@ -4607,9 +4607,10 @@ class MainController {
       }
     }
 
-    const check = await User.query().where({ whatsapp: whatsapp }).first();
+    const check = await User.query().where({ whatsapp: whatsapp }).andWhere({m_sekolah_id: sekolah.id}).first();
 
     if (check) {
+      await User.query().where({id:check.id}).update({dihapus:0})
       return response.forbidden({
         message: "Akun sudah terdaftar",
       });
