@@ -777,7 +777,7 @@ class MainController {
       .orderBy("jumlah_topik", "desc");
 
     return response.ok({
-      sekolah: await res.paginate(page, 10),
+      sekolah: await res.paginate(page, 50),
     });
   }
 
