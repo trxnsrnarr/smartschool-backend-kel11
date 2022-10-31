@@ -48884,6 +48884,8 @@ class MainController {
       .where({ id: rombel_id })
       .first();
 
+      const mataPelajaranIds = await MMataPelajaran.query().where({m_ta_id: rombel.m_ta_id}).andWhere({m_sekolah_id :sekolah.id}).andWhere({dihapus:0}).ids()
+
     let dataaa = 0;
 
     let workbook = new Excel.Workbook();
@@ -48954,6 +48956,7 @@ class MainController {
                     .with("templateDeskripsi");
                 })
                 .where({ dihapus: 0 })
+                .whereIn("m_mata_pelajaran_id",mataPelajaranIds)
                 .orderBy("urutan", "asc");
             })
             .where({ dihapus: 0 })
@@ -49132,9 +49135,9 @@ class MainController {
           });
         })
     );
-    if (dataaa > 10) {
-      return response.ok({ message: "Data untuk Leger Nilai Belum Lengkap" });
-    }
+    // if (dataaa > 10) {
+    //   return response.ok({ message: "Data untuk Leger Nilai Belum Lengkap" });
+    // }
     // return result;
     worksheet.getCell("A1").value = `LEGER PERNILAIAN AKHIR SEMESTER ${
       ta.semester == 1 ? "GANJIL" : "GENAP"
