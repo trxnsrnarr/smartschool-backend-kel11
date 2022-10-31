@@ -4573,7 +4573,7 @@ class MainController {
 
     const { nama, nama_ibu, whatsapp, password, alamat, asal_sekolah } =
       request.post();
-    if (sekolah?.id != 14|| sekolah?.id == 13) {
+    if (sekolah?.id != 14 || sekolah?.id == 13) {
       const rules = {
         nama: "required",
         whatsapp: "required",
@@ -4607,10 +4607,13 @@ class MainController {
       }
     }
 
-    const check = await User.query().where({ whatsapp: whatsapp }).andWhere({m_sekolah_id: sekolah.id}).first();
+    const check = await User.query()
+      .where({ whatsapp: whatsapp })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .first();
 
     if (check) {
-      await User.query().where({id:check.id}).update({dihapus:0})
+      await User.query().where({ id: check.id }).update({ dihapus: 0 });
       return response.forbidden({
         message: "Akun sudah terdaftar",
       });
@@ -5961,7 +5964,7 @@ class MainController {
 
       let materiIds;
 
-      if (sekolah.id == 40 ) {
+      if (sekolah.id == 40) {
         if (ta_id) {
           const mataPelajaranGuru = await MMataPelajaran.query()
             .where(
@@ -14123,30 +14126,29 @@ class MainController {
       // pilih dari bank soal
       daftar_soal_ujian_id,
     } = request.post();
-    
-    if(bentuk == "pg"){
 
+    if (bentuk == "pg") {
       const rules = {
-      kd: "required",
-      kd_konten_materi: "required",
-      kj_pg: "required",
-      level_kognitif: "required",
-      nilai_soal: "required",
-      pertanyaan: "required",
-    };
-    const message = {
-      "kg.required": "Nomor Kompetensi Dasar harus diisi",
-      "kd_konten_materi.required": "Isi Kompetensi Dasar harus diisi",
-      "level_kognitif.required": "Level Kognitif harus diisi",
-      "pertanyaan.required": "Pertanaan harus diisi",
-      "kj_pg.required": "Kunci Jawaban harus diisi",
-      "nilai_soal.required": "Nilai Soal harus diisi",
-    };
-    const validation = await validate(request.all(), rules, message);
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
+        kd: "required",
+        kd_konten_materi: "required",
+        kj_pg: "required",
+        level_kognitif: "required",
+        nilai_soal: "required",
+        pertanyaan: "required",
+      };
+      const message = {
+        "kg.required": "Nomor Kompetensi Dasar harus diisi",
+        "kd_konten_materi.required": "Isi Kompetensi Dasar harus diisi",
+        "level_kognitif.required": "Level Kognitif harus diisi",
+        "pertanyaan.required": "Pertanaan harus diisi",
+        "kj_pg.required": "Kunci Jawaban harus diisi",
+        "nilai_soal.required": "Nilai Soal harus diisi",
+      };
+      const validation = await validate(request.all(), rules, message);
+      if (validation.fails()) {
+        return response.unprocessableEntity(validation.messages());
+      }
     }
-  }
 
     let totalSoalTambah = 0;
 
@@ -24569,8 +24571,8 @@ class MainController {
     const ta = await this.getTAAktif(sekolah);
     const user = await auth.getUser();
 
-    const { rombel_id, tipe, ta_id= user?.m_ta_id || ta.id} = request.get();
-    const taa = await Mta.query().where({id:ta_id}).first()
+    const { rombel_id, tipe, ta_id = user?.m_ta_id || ta.id } = request.get();
+    const taa = await Mta.query().where({ id: ta_id }).first();
 
     const tahunPelajaranIds = await Mta.query()
       .where({ tahun: taa.tahun })
@@ -31362,7 +31364,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const ta_id = user?.m_ta_id ? user.m_ta_id:ta.id;
+    const ta_id = user?.m_ta_id ? user.m_ta_id : ta.id;
 
     const rombelIds = await MRombel.query()
       .where({ m_sekolah_id: sekolah.id })
@@ -31468,10 +31470,10 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
     const ta = await this.getTAAktif(sekolah);
-    
+
     const user = await auth.getUser();
 
-    const ta_id = user?.m_ta_id ? user.m_ta_id:ta.id;
+    const ta_id = user?.m_ta_id ? user.m_ta_id : ta.id;
 
     const mapelSingkat = await MMataPelajaran.query()
       .where({ id: mata_pelajaran_id })
@@ -32738,8 +32740,6 @@ class MainController {
 
     return namaFile;
   }
-
-  
 
   async downloadPerformaTugas({
     response,
@@ -48863,6 +48863,11 @@ class MainController {
     const keluarantanggalseconds =
       moment().format("YYYY-MM-DD ") + new Date().getTime();
 
+    const userIds = await User.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .ids();
+
     const rombel = await MRombel.query()
       .with("anggotaRombel", (builder) => {
         builder
@@ -48876,7 +48881,8 @@ class MainController {
               })
               .select("id", "nama", "gender");
           })
-          .where({ dihapus: 0 });
+          .where({ dihapus: 0 })
+          .whereIn("m_user_id", userIds);
       })
       .with("user", (builder) => {
         builder.select("id", "nama");
@@ -48884,7 +48890,11 @@ class MainController {
       .where({ id: rombel_id })
       .first();
 
-      const mataPelajaranIds = await MMataPelajaran.query().where({m_ta_id: rombel.m_ta_id}).andWhere({m_sekolah_id :sekolah.id}).andWhere({dihapus:0}).ids()
+    const mataPelajaranIds = await MMataPelajaran.query()
+      .where({ m_ta_id: rombel.m_ta_id })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .ids();
 
     let dataaa = 0;
 
@@ -48956,7 +48966,7 @@ class MainController {
                     .with("templateDeskripsi");
                 })
                 .where({ dihapus: 0 })
-                .whereIn("m_mata_pelajaran_id",mataPelajaranIds)
+                .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
                 .orderBy("urutan", "asc");
             })
             .where({ dihapus: 0 })
@@ -48972,6 +48982,13 @@ class MainController {
               await Promise.all(
                 e.mapelRapor.map(async (r, nox) => {
                   maPor = maPor + 1;
+                  if (
+                    !muatan.toJSON()[`${muatanRombel[0].total - 1}`].mapelRapor
+                      .length
+                  ) {
+                    maPor = 0;
+                  }
+
                   worksheet.getColumn([`${(total + 1) * 2 + 3}`]).values = [
                     ``,
                     ``,
@@ -49034,10 +49051,10 @@ class MainController {
                   };
 
                   if (
-                    muatanRombel[0].total == muatanTotal &&
+                    // muatanRombel[0].total == muatanTotal &&
                     maPor ==
-                      muatan.toJSON()[`${muatanRombel[0].total - 1}`].mapelRapor
-                        .length
+                    muatan.toJSON()[`${muatanRombel[0].total - 1}`].mapelRapor
+                      .length
                   ) {
                     row.getCell([`${(total + 1) * 2 + 5}`]).value =
                       ranking.find(
@@ -49362,11 +49379,11 @@ class MainController {
       });
     }
     if (
-        bobotUpdate.tugas_pas +
+      bobotUpdate.tugas_pas +
         bobotUpdate.uh_pas +
         bobotUpdate.uts_pas +
         bobotUpdate.uas_pas !==
-        100
+      100
     ) {
       return response.notFound({
         message:
@@ -49374,7 +49391,10 @@ class MainController {
       });
     }
     if (
-      bobotUpdate.proyek_pts + bobotUpdate.produk_pts + bobotUpdate.praktik_pts + bobotUpdate.portofolio_pts !==
+      bobotUpdate.proyek_pts +
+        bobotUpdate.produk_pts +
+        bobotUpdate.praktik_pts +
+        bobotUpdate.portofolio_pts !==
       100
     ) {
       return response.notFound({
@@ -49383,7 +49403,10 @@ class MainController {
       });
     }
     if (
-      bobotUpdate.proyek_pas + bobotUpdate.produk_pas + bobotUpdate.praktik_pas + bobotUpdate.portofolio_pas !==
+      bobotUpdate.proyek_pas +
+        bobotUpdate.produk_pas +
+        bobotUpdate.praktik_pas +
+        bobotUpdate.portofolio_pas !==
       100
     ) {
       return response.notFound({
