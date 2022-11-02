@@ -748,6 +748,9 @@ class MainController {
     }
 
     const res = MSekolah.query()
+    .with("guru",(builder)=>{
+      builder.where({role: "admin"}).andWhere({dihapus: 0})
+    })
       .select(
         "id",
         "nama",
