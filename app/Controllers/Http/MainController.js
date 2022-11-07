@@ -997,7 +997,7 @@ class MainController {
       return {
         exist: check[idx] ? true : false,
         ...d,
-        nama_sekolah: check[idx] ? check[idx].sekolah : d.nama_sekolah,
+        nama_sekolah: check[idx] ,
       };
     });
     return data;
@@ -20621,36 +20621,45 @@ class MainController {
           .andWhere({ m_ta_id: ta_id })
           .fetch();
       }
-    }else{
-      pembayaran = await MPembayaran.query()
-      .with("rombel", (builder) => {
-        builder
-          .with("rombel")
-          .withCount("siswa as totalLunas", (builder) => {
-            builder.where({ status: "lunas" });
-          })
-          .withCount("siswa as total");
-      })
-      .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ jenis: tipe })
-      .andWhere({ m_ta_id: ta_id })
-      .fetch();
-     const pembayaran1 = await MPembayaran.query()
-      .with("rombel", (builder) => {
-        builder
-          .with("rombel")
-          .withCount("siswa as totalLunas", (builder) => {
-            builder.where({ status: "lunas" });
-          })
-          .withCount("siswa as total");
-      })
-      .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ jenis: tipe })
-      .andWhere({ m_ta_id: ta_id })
-      .fetch();
+    } else {
+      const pembayaranIds = await MPembayaran.query()
+        .with("rombel", (builder) => {
+          builder
+            .with("rombel")
+            .withCount("siswa as totalLunas", (builder) => {
+              builder.where({ status: "lunas" });
+            })
+            .withCount("siswa as total");
+        })
+        .where({ dihapus: 0 })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .andWhere({ jenis: tipe })
+        .andWhere({ m_ta_id: ta_id })
+        .ids();
 
+      const tkPembayaranRombelIds = await TkPembayaranRombel.query()
+        .whereIn("m_pembayaran_id", pembayaranIds)
+        .andWhere({ dihapus: 0 })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .ids();
+
+      pembayaran = await MPembayaranSiswa.query()
+        .with("rombelPembayaran", (builder) => {
+          builder.with("pembayaran", (builder) => {
+            builder.where({ dihapus: 0 }).andWhere({ jenis: "khusus" });
+          });
+        })
+        .with("riwayat", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .withCount("riwayat as totalJumlah", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .where({ dihapus: 0 })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .andWhere({ status: "belum lunas" })
+        .whereIn("tk_pembayaran_rombel_id", tkPembayaranRombelIds)
+        .fetch();
     }
 
     const totalPelunasan = pembayaran.toJSON().map((item) => {
@@ -20665,6 +20674,20 @@ class MainController {
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ m_ta_id: ta_id })
+      .fetch();
+
+    const userData = await User.query()
+      .with("anggotaRombel", (builder) => {
+        builder
+          .with("rombel")
+          .where({ dihapus: 0 })
+          .whereIn(
+            "m_rombel_id",
+            rombel.map((d) => d.id)
+          );
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
       .fetch();
 
     let jenisData = [
