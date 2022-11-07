@@ -10922,7 +10922,7 @@ class MainController {
         // .whereNull("m_mata_pelajaran_id")
         .andWhere({ dihapus: 0 })
         .whereIn("m_rombel_id", dataRombelIds)
-        // .whereIn("m_user_id", userIds)
+        .whereIn("m_user_id", [...userIds,jadwalMengajar.toJSON().mataPelajaran.m_user_id ])
         .ids();
       // .andWhere("m_rombel_id", jadwalMengajar.toJSON().rombel.id)
 
@@ -11010,12 +11010,18 @@ class MainController {
       // })
       // .andWhere({ m_rombel_id: jadwalMengajar.toJSON().rombel.id })
 
-      timeline = [
+      const timeline4 = [
         ...timeline2.toJSON().map((d) => {
           return { ...d, bab: d.materi.map((e) => e.bab) };
         }),
-        ...timeline1.toJSON(),
+        ...timeline1.toJSON().map((d) => {
+          return { ...d, bab: d.materi.map((e) => e.bab) };
+        }),
       ];
+
+      timeline = [...new Set(timeline4.map(JSON.stringify))].map(JSON.parse)
+      // console.log({timeline1,timeline2})
+      // timeline = 
     }
 
     return response.ok({
