@@ -748,9 +748,9 @@ class MainController {
     }
 
     const res = MSekolah.query()
-    .with("guru",(builder)=>{
-      builder.where({role: "admin"}).andWhere({dihapus: 0})
-    })
+      .with("guru", (builder) => {
+        builder.where({ role: "admin" }).andWhere({ dihapus: 0 });
+      })
       .select(
         "id",
         "nama",
@@ -10922,7 +10922,10 @@ class MainController {
         // .whereNull("m_mata_pelajaran_id")
         .andWhere({ dihapus: 0 })
         .whereIn("m_rombel_id", dataRombelIds)
-        .whereIn("m_user_id", [...userIds,jadwalMengajar.toJSON().mataPelajaran.m_user_id ])
+        .whereIn("m_user_id", [
+          ...userIds,
+          jadwalMengajar.toJSON().mataPelajaran.m_user_id,
+        ])
         .ids();
       // .andWhere("m_rombel_id", jadwalMengajar.toJSON().rombel.id)
 
@@ -11019,9 +11022,9 @@ class MainController {
         }),
       ];
 
-      timeline = [...new Set(timeline4.map(JSON.stringify))].map(JSON.parse)
+      timeline = [...new Set(timeline4.map(JSON.stringify))].map(JSON.parse);
       // console.log({timeline1,timeline2})
-      // timeline = 
+      // timeline =
     }
 
     return response.ok({
@@ -20585,37 +20588,69 @@ class MainController {
 
     let pembayaran;
 
-    if (search) {
+    if (tipe !== "khusus") {
+      if (search) {
+        pembayaran = await MPembayaran.query()
+          .with("rombel", (builder) => {
+            builder
+              .with("rombel")
+              .withCount("siswa as totalLunas", (builder) => {
+                builder.where({ status: "lunas" });
+              })
+              .withCount("siswa as total");
+          })
+          .where({ dihapus: 0 })
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .andWhere({ jenis: tipe })
+          .andWhere({ m_ta_id: ta_id })
+          .andWhere("nama", "like", `%${search}%`)
+          .fetch();
+      } else {
+        pembayaran = await MPembayaran.query()
+          .with("rombel", (builder) => {
+            builder
+              .with("rombel")
+              .withCount("siswa as totalLunas", (builder) => {
+                builder.where({ status: "lunas" });
+              })
+              .withCount("siswa as total");
+          })
+          .where({ dihapus: 0 })
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .andWhere({ jenis: tipe })
+          .andWhere({ m_ta_id: ta_id })
+          .fetch();
+      }
+    }else{
       pembayaran = await MPembayaran.query()
-        .with("rombel", (builder) => {
-          builder
-            .with("rombel")
-            .withCount("siswa as totalLunas", (builder) => {
-              builder.where({ status: "lunas" });
-            })
-            .withCount("siswa as total");
-        })
-        .where({ dihapus: 0 })
-        .andWhere({ m_sekolah_id: sekolah.id })
-        .andWhere({ jenis: tipe })
-        .andWhere({ m_ta_id: ta_id })
-        .andWhere("nama", "like", `%${search}%`)
-        .fetch();
-    } else {
-      pembayaran = await MPembayaran.query()
-        .with("rombel", (builder) => {
-          builder
-            .with("rombel")
-            .withCount("siswa as totalLunas", (builder) => {
-              builder.where({ status: "lunas" });
-            })
-            .withCount("siswa as total");
-        })
-        .where({ dihapus: 0 })
-        .andWhere({ m_sekolah_id: sekolah.id })
-        .andWhere({ jenis: tipe })
-        .andWhere({ m_ta_id: ta_id })
-        .fetch();
+      .with("rombel", (builder) => {
+        builder
+          .with("rombel")
+          .withCount("siswa as totalLunas", (builder) => {
+            builder.where({ status: "lunas" });
+          })
+          .withCount("siswa as total");
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ jenis: tipe })
+      .andWhere({ m_ta_id: ta_id })
+      .fetch();
+     const pembayaran1 = await MPembayaran.query()
+      .with("rombel", (builder) => {
+        builder
+          .with("rombel")
+          .withCount("siswa as totalLunas", (builder) => {
+            builder.where({ status: "lunas" });
+          })
+          .withCount("siswa as total");
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ jenis: tipe })
+      .andWhere({ m_ta_id: ta_id })
+      .fetch();
+
     }
 
     const totalPelunasan = pembayaran.toJSON().map((item) => {
