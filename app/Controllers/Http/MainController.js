@@ -997,7 +997,7 @@ class MainController {
       return {
         exist: check[idx] ? true : false,
         ...d,
-        nama_sekolah: check[idx] ,
+        nama_sekolah: check[idx],
       };
     });
     return data;
@@ -20588,6 +20588,39 @@ class MainController {
 
     let pembayaran;
 
+  
+  let jenisData = [
+    { label: "SPP", value: "spp" },
+    { label: "Ujian", value: "ujian" },
+    { label: "Lainnya", values: "lainnya" },
+  ];
+
+  let tipeUjian = [
+    { value: "pts1", label: "Penilaian Tengah Semester 1" },
+    { value: "pts2", label: "Penilaian Tengah Semester 2" },
+    { value: "pas1", label: "Penilaian Akhir Semester 1" },
+    { value: "pas2", label: "Penilaian Akhir Semester 2" },
+    { value: "to", label: "Try Out" },
+    { value: "us", label: "Ujian Sekolah" },
+  ];
+  const rombel = await MRombel.query()
+  .where({ dihapus: 0 })
+  .andWhere({ m_sekolah_id: sekolah.id })
+  .andWhere({ m_ta_id: ta_id })
+  .fetch();
+
+  const pembayaranKategori = await MPembayaranKategori.query()
+    .where({ dihapus: 0 })
+    .andWhere({ m_sekolah_id: sekolah.id })
+    .fetch();
+
+  const akun = await MKeuAkun.query()
+    .where({ dihapus: 0 })
+    .andWhere({ m_sekolah_id: sekolah.id })
+    .whereNot({ nama: "KAS" })
+    .orderBy("kode", "asc")
+    .fetch();
+
     if (tipe !== "khusus") {
       if (search) {
         pembayaran = await MPembayaran.query()
@@ -20655,11 +20688,46 @@ class MainController {
         .withCount("riwayat as totalJumlah", (builder) => {
           builder.where({ dihapus: 0 });
         })
+        .with("user")
         .where({ dihapus: 0 })
         .andWhere({ m_sekolah_id: sekolah.id })
         .andWhere({ status: "belum lunas" })
         .whereIn("tk_pembayaran_rombel_id", tkPembayaranRombelIds)
         .fetch();
+
+         
+  const anggotaRombelIds = await MAnggotaRombel.query()
+    .whereIn(
+      "m_rombel_id",
+      rombel.toJSON().map((d) => d.id)
+    )
+    .andWhere({ dihapus: 0 })
+    .pluck("m_user_id");
+
+  const userData = await User.query()
+    .with("anggotaRombel", (builder) => {
+      builder
+        .with("rombel")
+        .where({ dihapus: 0 })
+        .whereIn(
+          "m_rombel_id",
+          rombel.toJSON().map((d) => d.id)
+        );
+    })
+    .where({ m_sekolah_id: sekolah.id })
+    .whereIn("id", anggotaRombelIds)
+    .andWhere({ dihapus: 0 })
+    .fetch();
+    return response.ok({
+      pembayaran: pembayaran,
+      jenisData: jenisData,
+      rombel: rombel,
+      tipeUjian: tipeUjian,
+      pembayaran_kategori: pembayaranKategori,
+      ta: semuaTa,
+      akun,
+      userData,
+    });
     }
 
     const totalPelunasan = pembayaran.toJSON().map((item) => {
@@ -20670,52 +20738,7 @@ class MainController {
       };
     });
 
-    const rombel = await MRombel.query()
-      .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta_id })
-      .fetch();
-
-    const userData = await User.query()
-      .with("anggotaRombel", (builder) => {
-        builder
-          .with("rombel")
-          .where({ dihapus: 0 })
-          .whereIn(
-            "m_rombel_id",
-            rombel.map((d) => d.id)
-          );
-      })
-      .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ dihapus: 0 })
-      .fetch();
-
-    let jenisData = [
-      { label: "SPP", value: "spp" },
-      { label: "Ujian", value: "ujian" },
-      { label: "Lainnya", values: "lainnya" },
-    ];
-
-    let tipeUjian = [
-      { value: "pts1", label: "Penilaian Tengah Semester 1" },
-      { value: "pts2", label: "Penilaian Tengah Semester 2" },
-      { value: "pas1", label: "Penilaian Akhir Semester 1" },
-      { value: "pas2", label: "Penilaian Akhir Semester 2" },
-      { value: "to", label: "Try Out" },
-      { value: "us", label: "Ujian Sekolah" },
-    ];
-
-    const pembayaranKategori = await MPembayaranKategori.query()
-      .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .fetch();
-
-    const akun = await MKeuAkun.query()
-      .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .whereNot({ nama: "KAS" })
-      .orderBy("kode", "asc")
-      .fetch();
+  
 
     return response.ok({
       pembayaran: pembayaran,
@@ -20828,6 +20851,7 @@ class MainController {
       m_keu_akun_kredit_id,
       nama_transaksi_siswa,
     } = request.post();
+    ta_id = ta_id ? ta_id : ta.id;
     if (bulan) {
       const rules = {
         nama: "required",
@@ -20872,7 +20896,9 @@ class MainController {
       }
     }
 
-    rombel_id = rombel_id.length ? rombel_id : [];
+    if (jenis !== "khusus") {
+      rombel_id = rombel_id.length ? rombel_id : [];
+    }
 
     const pembayaran = await MPembayaran.create({
       nama,
@@ -20923,15 +20949,18 @@ class MainController {
     //      message: messageEmailSuccess,
     //    });
     //  }
-    const jumlahSiswa = await MAnggotaRombel.query()
-      .with("user", (builder) => {
-        builder
-          .select("id", "email", "nama", "whatsapp", "wa_real")
-          .where({ dihapus: 0 });
-      })
-      .whereIn("m_rombel_id", rombel_id)
-      .andWhere({ dihapus: 0 })
-      .count("* as total");
+    let jumlahSiswa;
+    if (rombel_id.length) {
+      jumlahSiswa = await MAnggotaRombel.query()
+        .with("user", (builder) => {
+          builder
+            .select("id", "email", "nama", "whatsapp", "wa_real")
+            .where({ dihapus: 0 });
+        })
+        .whereIn("m_rombel_id", rombel_id)
+        .andWhere({ dihapus: 0 })
+        .count("* as total");
+    }
 
     if (rombel_id.length) {
       await Promise.all(
@@ -21019,6 +21048,57 @@ class MainController {
           }
         })
       );
+    } else {
+      if (jenis == "khusus") {
+        const rombelIds = await MRombel.query()
+          .where({ m_ta_id: ta_id })
+          .andWhere({ dihapus: 0 })
+          .ids();
+        const userData = await MAnggotaRombel.query()
+          .with("user", (builder) => {
+            builder
+              .select("id", "email", "nama", "whatsapp", "wa_real")
+              .where({ dihapus: 0 });
+          })
+          .where({ m_user_id: rombel_id })
+          .whereIn("m_rombel_id", rombelIds)
+          .andWhere({ dihapus: 0 })
+          .first();
+
+        jumlahSiswa = await MAnggotaRombel.query()
+          .with("user", (builder) => {
+            builder
+              .select("id", "email", "nama", "whatsapp", "wa_real")
+              .where({ dihapus: 0 });
+          })
+          .whereIn("m_rombel_id", rombelIds)
+          .where({ m_user_id: rombel_id })
+          .andWhere({ dihapus: 0 })
+          .count("* as total");
+
+        const tkPembayaran = await TkPembayaranRombel.create({
+          dihapus: 0,
+          m_pembayaran_id: pembayaran.id,
+          m_rombel_id: userData.m_rombel_id,
+          m_sekolah_id: sekolah.id,
+        });
+
+        // jumlahSiswa = jumlahSiswa + userIds ? userIds?.toJSON().length :0
+
+        const bayarSiswa = await MPembayaranSiswa.create({
+          status: "belum lunas",
+          dihapus: 0,
+          m_user_id: rombel_id,
+          tk_pembayaran_rombel_id: tkPembayaran.id,
+          m_sekolah_id: sekolah.id,
+        });
+        if (userData.user.wa_real) {
+          await WhatsAppService.sendMessage(
+            `${userData.user.wa_real}`,
+            `Halo ${userData.user.nama}, ${nama} telah keluar, segera lunasi pembayaran. Tekan tautan link berikut untuk melakukan pembayaran \n \n${domain}/smartschool/tagihan/${bayarSiswa.id}`
+          );
+        }
+      }
     }
 
     if (transaksi) {
