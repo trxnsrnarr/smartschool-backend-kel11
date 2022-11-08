@@ -20582,7 +20582,7 @@ class MainController {
       .orderBy("id", "desc")
       .fetch();
 
-    let { tipe, search, ta_id = ta.id, rombel_id } = request.get();
+    let { tipe, search, ta_id = ta.id, rombel_id ,subnav} = request.get();
 
     tipe = tipe ? tipe : "spp";
 
@@ -20704,7 +20704,6 @@ class MainController {
         })
         .where({ dihapus: 0 })
         .andWhere({ m_sekolah_id: sekolah.id })
-        .andWhere({ status: "belum lunas" })
         .whereIn("tk_pembayaran_rombel_id", tkPembayaranRombelIds)
 
         if(search){
@@ -20712,6 +20711,10 @@ class MainController {
 
           pembayaran.whereIn("m_user_id",userIdss)
         }
+        if (subnav == "belum-lunas") {
+          pembayaran.where({ status: "belum lunas" });
+        }
+    
 
         pembayaran = await pembayaran.fetch();
 
