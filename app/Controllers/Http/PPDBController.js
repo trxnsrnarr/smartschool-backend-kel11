@@ -2467,6 +2467,7 @@ class PPDBController {
           })
           .where({ dihapus: 0 });
       })
+      .with("jalur")
       .where({ id: gelombang_ppdb_id })
       .andWhere({ dihapus: 0 })
       .first();
@@ -2525,7 +2526,7 @@ class PPDBController {
     });
 
     worksheet.addConditionalFormatting({
-      ref: "A5:BD6",
+      ref: "A5:BF6",
       rules: [
         {
           type: "expression",
@@ -2584,6 +2585,12 @@ class PPDBController {
               ? "02"
               : "03"
           } - ${padNumber(urutan + 1, `${gelombang.diterima}`.length)}`;
+
+          const pembayaran = JSON.parse(d?.pembayaran || "[]");
+          const totalPembayaran = pembayaran?.reduce(
+            (a, b) => a + parseInt(b.nominal),
+            0
+          );
           worksheet.addConditionalFormatting({
             ref: `A${(idx + 1) * 1 + 5}:A${(idx + 1) * 1 + 6}`,
             rules: [
@@ -2613,7 +2620,7 @@ class PPDBController {
           });
 
           worksheet.addConditionalFormatting({
-            ref: `B${(idx + 1) * 1 + 5}:BD${(idx + 1) * 1 + 6}`,
+            ref: `B${(idx + 1) * 1 + 5}:BF${(idx + 1) * 1 + 6}`,
             rules: [
               {
                 type: "expression",
@@ -2698,6 +2705,8 @@ class PPDBController {
             "",
             "",
             "",
+            "Pembayaran",
+            "Sisa",
           ];
           worksheet.getRow(6).values = [
             "No",
@@ -2756,6 +2765,8 @@ class PPDBController {
             "Matematika",
             "B.Indo",
             "B.Ing",
+            "Pembayaran",
+            "Sisa",
           ];
           worksheet.columns = [
             { key: "no" },
@@ -2814,6 +2825,8 @@ class PPDBController {
             { key: "matematika6" },
             { key: "bindo6" },
             { key: "bing6" },
+            { key: "pembayaran" },
+            { key: "sisa" },
           ];
 
           const checkBayar =
@@ -2969,9 +2982,24 @@ class PPDBController {
             matematika6: d.user.profil ? d.user.profil.matematika6 : "-",
             bindo6: d.user.profil ? d.user.profil.bindo6 : "-",
             bing6: d.user.profil ? d.user.profil.bing6 : "-",
+            pembayaran: totalPembayaran.toLocaleString("id-ID", {
+              style: "currency",
+              currency: "IDR",
+            }),
+            sisa: `${
+              parseInt(gelombang.toJSON().jalur.biaya) - parseInt(totalPembayaran) < 0
+                ? "+"
+                : ""
+            } ${Math.abs(
+              parseInt(gelombang.toJSON().jalur.biaya) - parseInt(totalPembayaran)
+            ).toLocaleString("id-ID", {
+              style: "currency",
+              currency: "IDR",
+            })}`,
           });
         })
     );
+    
     worksheet.mergeCells(`A5:A6`);
     worksheet.mergeCells(`B5:B6`);
     worksheet.mergeCells(`C5:C6`);
@@ -2992,6 +3020,8 @@ class PPDBController {
     worksheet.mergeCells(`AJ5:AP5`);
     worksheet.mergeCells(`AQ5:AW5`);
     worksheet.mergeCells(`AX5:BD5`);
+    worksheet.mergeCells(`BE5:BE6`);
+    worksheet.mergeCells(`BF5:BF6`);
     worksheet.getColumn("A").width = 6;
     worksheet.getColumn("B").width = 20;
     worksheet.getColumn("C").width = 20;
@@ -3006,9 +3036,11 @@ class PPDBController {
     worksheet.getColumn("L").width = 20;
     worksheet.getColumn("M").width = 20;
     worksheet.getColumn("N").width = 20;
+    worksheet.getColumn("BE").width = 20;
+    worksheet.getColumn("BF").width = 20;
     worksheet.autoFilter = {
       from: "A6",
-      to: "BD6",
+      to: "BF6",
     };
 
     let namaFile = `/uploads/rekapan-pendaftar-ppdb-${keluarantanggalseconds}.xlsx`;

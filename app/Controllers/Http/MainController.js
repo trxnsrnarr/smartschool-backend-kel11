@@ -13182,6 +13182,20 @@ class MainController {
         })
       );
 
+      worksheet.getColumn("A").width = 25;
+      worksheet.getColumn("B").width = 11;
+      worksheet.getColumn("C").width = 11;
+      worksheet.getColumn("D").width = 19;
+      worksheet.getColumn("E").width = 13;
+      worksheet.getColumn("F").width = 19;
+      worksheet.getColumn("G").width = 13;
+      worksheet.getColumn("H").width = 13;
+      worksheet.getColumn("I").width = 13;
+      worksheet.getColumn("J").width = 13;
+      worksheet.getColumn("K").width = 13;
+      worksheet.getColumn("L").width = 13;
+      
+      
       let namaFile = `/uploads/rekap-absen-siswa-${new Date().getTime()}.xlsx`;
 
       // save workbook to disk
@@ -13215,6 +13229,7 @@ class MainController {
         kepsek.toJSON().map(async (d) => {
           worksheet.getRow(10).values = [
             "Nama",
+            "Whatsapp",
             "Absen",
             "Keterangan",
             "Lampiran",
@@ -13226,6 +13241,7 @@ class MainController {
 
           worksheet.columns = [
             { key: "user" },
+            { key: "whatsapp" },
             { key: "absen" },
             { key: "keterangan" },
             { key: "lampiran" },
@@ -13237,6 +13253,7 @@ class MainController {
 
           let row = worksheet.addRow({
             user: d ? d.nama : "-",
+            whatsapp: d ? d.whatsapp : "-",
             kepsek: d
               ? d.kepsek
                 ? d.kepsek.length
@@ -13294,6 +13311,7 @@ class MainController {
         absen.toJSON().map(async (d) => {
           worksheet.getRow(12).values = [
             "Nama",
+            "Whatsapp",
             "Absen",
             "Keterangan",
             "Lampiran",
@@ -13305,6 +13323,7 @@ class MainController {
 
           worksheet.columns = [
             { key: "user" },
+            { key: "whatsapp" },
             { key: "absen" },
             { key: "keterangan" },
             { key: "lampiran" },
@@ -13316,6 +13335,7 @@ class MainController {
 
           let row = worksheet.addRow({
             user: d ? d.nama : "-",
+            whatsapp: d ? d.whatsapp : "-",
             absen: d
               ? d.absen
                 ? d.absen.length
@@ -13369,6 +13389,19 @@ class MainController {
         })
       );
 
+
+      worksheet.getColumn("A").width = 25;
+      worksheet.getColumn("B").width = 33;
+      worksheet.getColumn("C").width = 11;
+      worksheet.getColumn("D").width = 19;
+      worksheet.getColumn("E").width = 13;
+      worksheet.getColumn("F").width = 19;
+      worksheet.getColumn("G").width = 13;
+      worksheet.getColumn("H").width = 13;
+      worksheet.getColumn("I").width = 13;
+      worksheet.getColumn("J").width = 13;
+      worksheet.getColumn("K").width = 13;
+      worksheet.getColumn("L").width = 13;
       let namaFile = `/uploads/rekap-absen-guru-${keluarantanggalseconds}.xlsx`;
 
       // save workbook to disk
