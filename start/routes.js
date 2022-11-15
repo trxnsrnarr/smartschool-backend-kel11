@@ -610,6 +610,8 @@ Route.delete("/mutasi/:mutasi_id", "MainController.deleteMutasi");
 Route.get("/inventaris", "KeuanganController.getBarang");
 Route.get("/inventaris-aktif", "KeuanganController.getTransaksiBarang");
 
+
+Route.get("/akun-transaksi/:akun_id", "SecondController.getAkunTransaksi");
 // mutasi v2
 Route.get("/v2/mutasi", "SecondController.getTransaksi");
 Route.get("/v2/mutasi/:transaksi_id", "SecondController.detailTransaksi");
@@ -678,6 +680,7 @@ Route.put(
 // jadwal ujian
 Route.get("/jadwal-ujian-ss", "MainController.getJadwalUjianSS");
 Route.get("/jadwal-ujian", "MainController.getJadwalUjian");
+Route.get("/jadwal-ujian-check", "SecondController.getJadwalUjianCheck");
 Route.get("/jadwal-ujian/:jadwal_ujian_id", "MainController.detailJadwalUjian");
 Route.post(
   "/jadwal-ujian/download-hasil",
@@ -964,6 +967,10 @@ Route.post(
   "/rekap/:materi_id/:rekapnilai_id",
   "MainController.postRekapRombel"
 );
+Route.get(
+  "/rekap-refresh/:rekaprombel_id",
+  "MainController.refreshRekapRombel"
+);
 Route.put(
   "/rekap/:materi_id/:rekapnilai_id/:rekaprombel_id",
   "MainController.putRekapRombel"
@@ -1140,7 +1147,7 @@ Route.get(
 
 Route.post(
   "/rombel-download/:jadwal_mengajar_id/download-analisis-nilai",
-  "MainController.downloadAnalisisNilai"
+  "RombelController.downloadAnalisisNilai"
 );
 Route.post(
   "/rombel-download/:jadwal_mengajar_id/download-performa-tugas",
@@ -1390,6 +1397,7 @@ Route.delete(
 );
 
 //Data Siswa
+Route.get("/tatatertib/data", "MainController.dataTataTertibSiswa");
 Route.get("/tatatertib/rombel", "MainController.getTataTertibRombel");
 Route.get(
   "/tatatertib/rombel/:rombel_id",
@@ -1939,6 +1947,11 @@ Route.get("/hack-tanggal-transaksi", "SecondController.hackTanggalTransaksi");
 Route.get("/hack-transaksi", "SecondController.hackTransaksi");
 
 Route.put("/ganti-ta-user", "UserController.putTaUser");
+
+Route.post("/download/sikap-siswa", "MainController.downloadSikapSiswa");
+Route.post("/import/sikap-siswa", "MainController.importSikapSiswa");
+
+Route.put("/bobot-nilai/:bobot_id", "MainController.putBobotNilai");
 
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)

@@ -285,7 +285,7 @@ class PPDBController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    const { nama, dibuka, ditutup, biaya } = request.post();
+    const { nama, dibuka, ditutup, biaya, tipe } = request.post();
 
     const jalur = await MJalurPpdb.create({
       nama,
@@ -294,6 +294,7 @@ class PPDBController {
       biaya,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
+      tipe,
     });
 
     return response.ok({
@@ -316,7 +317,7 @@ class PPDBController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    const { nama, dibuka, ditutup, biaya } = request.post();
+    const { nama, dibuka, ditutup, biaya, tipe } = request.post();
 
     const update = await MJalurPpdb.query().where({ id }).update({
       nama,
@@ -325,6 +326,7 @@ class PPDBController {
       biaya,
       dihapus: 0,
       m_sekolah_id: sekolah.id,
+      tipe,
     });
     if (!update) {
       return response.notFound({
@@ -1045,11 +1047,20 @@ class PPDBController {
         message: "Aktifkan tahun ajaran yg tersedia di menu kurikulum",
       });
     }
+    let jalurIds;
 
-    const jalurIds = await MJalurPpdb.query()
-      .where({ dihapus: 0 })
-      .where({ m_sekolah_id: sekolah.id })
-      .ids();
+    if (sekolah?.id == 14 || sekolah?.id == 13) {
+      jalurIds = await MJalurPpdb.query()
+        .where({ dihapus: 0 })
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ tipe: "Pengembalian" })
+        .ids();
+    } else {
+      jalurIds = await MJalurPpdb.query()
+        .where({ dihapus: 0 })
+        .where({ m_sekolah_id: sekolah.id })
+        .ids();
+    }
     const gelombangIds = await MGelombangPpdb.query()
       .where({ dihapus: 0 })
       .whereIn("m_jalur_ppdb_id", jalurIds)
@@ -1073,10 +1084,14 @@ class PPDBController {
 
     let gelombangAktif;
     let pendaftarIds;
+    let pendaftarIds1;
     let terdaftar;
+    let terdaftarPembelian;
+    let gelombangPembelian;
+    let user;
+    let gelombang;
 
     if (checkIds.length && is_public == false) {
-      let user;
       try {
         user = await auth.getUser();
       } catch {
@@ -1112,6 +1127,9 @@ class PPDBController {
           .pluck("m_gelombang_ppdb_id");
 
         terdaftar = await MGelombangPpdb.query()
+          .with("pendaftar1", (builder) => {
+            builder.where({ m_user_id: user.id });
+          })
           .with("jalur")
           .whereIn("id", pendaftarIds)
           .where({ dihapus: 0 })
@@ -1119,16 +1137,39 @@ class PPDBController {
       }
     }
 
-    const gelombang = await MGelombangPpdb.query()
-      .with("jalur")
-      .withCount("pendaftar as jumlahPendaftar", (builder) => {
-        builder.where({ dihapus: 0 });
-      })
-      .where({ m_sekolah_id: sekolah.id })
-      .whereIn("id", gelombangIds)
-      .andWhere({ m_ta_id: ta.id })
-      .andWhere({ dihapus: 0 })
-      .fetch();
+    if (sekolah?.id == 14 || sekolah?.id == 13) {
+      const jalurIds1 = await MJalurPpdb.query()
+        .where({ dihapus: 0 })
+        .where({ m_sekolah_id: sekolah.id })
+        .ids();
+
+      const gelombangIds1 = await MGelombangPpdb.query()
+        .where({ dihapus: 0 })
+        .whereIn("m_jalur_ppdb_id", jalurIds1)
+        .where({ m_ta_id: ta.id })
+        .ids();
+      gelombang = await MGelombangPpdb.query()
+        .with("jalur")
+        .withCount("pendaftar as jumlahPendaftar", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .where({ m_sekolah_id: sekolah.id })
+        .whereIn("id", gelombangIds1)
+        .andWhere({ m_ta_id: ta.id })
+        .andWhere({ dihapus: 0 })
+        .fetch();
+    } else {
+      gelombang = await MGelombangPpdb.query()
+        .with("jalur")
+        .withCount("pendaftar as jumlahPendaftar", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .where({ m_sekolah_id: sekolah.id })
+        .whereIn("id", gelombangIds)
+        .andWhere({ m_ta_id: ta.id })
+        .andWhere({ dihapus: 0 })
+        .fetch();
+    }
 
     const jumlahPeserta = await User.query()
       .where({ m_sekolah_id: sekolah.id })
@@ -1136,11 +1177,83 @@ class PPDBController {
       .andWhere({ role: "ppdb" })
       .count("* as total");
 
+    if (sekolah?.id == 14 || sekolah?.id == 13) {
+      const jalurIds1 = await MJalurPpdb.query()
+        .where({ dihapus: 0 })
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ tipe: "Pembelian" })
+        .ids();
+      const gelombangIds1 = await MGelombangPpdb.query()
+        .where({ dihapus: 0 })
+        .whereIn("m_jalur_ppdb_id", jalurIds1)
+        .where({ m_ta_id: ta.id })
+        .ids();
+
+      const checkIds1 = await MGelombangPpdb.query()
+        .where(
+          "dibuka",
+          "<=",
+          moment().endOf("day").format("YYYY-MM-DD HH:mm:ss")
+        )
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .whereIn("id", gelombangIds1)
+        .andWhere({ m_ta_id: ta.id })
+        .andWhere({ dihapus: 0 })
+        .ids();
+      if (checkIds1.length && is_public == false) {
+        try {
+          user = await auth.getUser();
+        } catch {
+          //
+        }
+        if (user) {
+          gelombangPembelian = await MPendaftarPpdb.query()
+            .with("gelombang", (builder) => {
+              builder
+                .with("jalur")
+                .with("pendaftar", (builder) => {
+                  builder
+                    .select("id", "m_gelombang_ppdb_id")
+                    .where({ dihapus: 0 });
+                })
+                .with("informasi", (builder) => {
+                  builder
+                    .where({ tipe: "ujian" })
+                    .with("ujian")
+                    .andWhere({ dihapus: 0 });
+                });
+            })
+            .where({ dihapus: 0 })
+            // .whereIn("m_gelombang_ppdb_id", gelombangIds)
+            .andWhere({ m_user_id: user.id })
+            .whereIn("m_gelombang_ppdb_id", checkIds1)
+            .first();
+
+          pendaftarIds1 = await MPendaftarPpdb.query()
+            .where({ dihapus: 0 })
+            .whereIn("m_gelombang_ppdb_id", gelombangIds1)
+            .andWhere({ m_user_id: user.id })
+            .pluck("m_gelombang_ppdb_id");
+
+          terdaftarPembelian = await MGelombangPpdb.query()
+            .with("pendaftar1", (builder) => {
+              builder.where({ m_user_id: user.id });
+            })
+            .with("jalur")
+            .whereIn("id", pendaftarIds1)
+            .where({ dihapus: 0 })
+            .fetch();
+        }
+      }
+    }
+
     return response.ok({
       gelombang: gelombang,
       terdaftar: terdaftar,
       gelombangAktif: gelombangAktif,
       jumlahPeserta: jumlahPeserta[0].total,
+      gelombangPembelian,
+      terdaftarPembelian,
     });
   }
 
@@ -2355,6 +2468,7 @@ class PPDBController {
           })
           .where({ dihapus: 0 });
       })
+      .with("jalur")
       .where({ id: gelombang_ppdb_id })
       .andWhere({ dihapus: 0 })
       .first();
@@ -2413,7 +2527,7 @@ class PPDBController {
     });
 
     worksheet.addConditionalFormatting({
-      ref: "A5:BD6",
+      ref: "A5:BF6",
       rules: [
         {
           type: "expression",
@@ -2472,6 +2586,12 @@ class PPDBController {
               ? "02"
               : "03"
           } - ${padNumber(urutan + 1, `${gelombang.diterima}`.length)}`;
+
+          const pembayaran = JSON.parse(d?.pembayaran || "[]");
+          const totalPembayaran = pembayaran?.reduce(
+            (a, b) => a + parseInt(b.nominal),
+            0
+          );
           worksheet.addConditionalFormatting({
             ref: `A${(idx + 1) * 1 + 5}:A${(idx + 1) * 1 + 6}`,
             rules: [
@@ -2501,7 +2621,7 @@ class PPDBController {
           });
 
           worksheet.addConditionalFormatting({
-            ref: `B${(idx + 1) * 1 + 5}:BD${(idx + 1) * 1 + 6}`,
+            ref: `B${(idx + 1) * 1 + 5}:BF${(idx + 1) * 1 + 6}`,
             rules: [
               {
                 type: "expression",
@@ -2586,6 +2706,8 @@ class PPDBController {
             "",
             "",
             "",
+            "Pembayaran",
+            "Sisa",
           ];
           worksheet.getRow(6).values = [
             "No",
@@ -2644,6 +2766,8 @@ class PPDBController {
             "Matematika",
             "B.Indo",
             "B.Ing",
+            "Pembayaran",
+            "Sisa",
           ];
           worksheet.columns = [
             { key: "no" },
@@ -2702,6 +2826,8 @@ class PPDBController {
             { key: "matematika6" },
             { key: "bindo6" },
             { key: "bing6" },
+            { key: "pembayaran" },
+            { key: "sisa" },
           ];
 
           const checkBayar =
@@ -2857,9 +2983,24 @@ class PPDBController {
             matematika6: d.user.profil ? d.user.profil.matematika6 : "-",
             bindo6: d.user.profil ? d.user.profil.bindo6 : "-",
             bing6: d.user.profil ? d.user.profil.bing6 : "-",
+            pembayaran: totalPembayaran.toLocaleString("id-ID", {
+              style: "currency",
+              currency: "IDR",
+            }),
+            sisa: `${
+              parseInt(gelombang.toJSON().jalur.biaya) - parseInt(totalPembayaran) < 0
+                ? "+"
+                : ""
+            } ${Math.abs(
+              parseInt(gelombang.toJSON().jalur.biaya) - parseInt(totalPembayaran)
+            ).toLocaleString("id-ID", {
+              style: "currency",
+              currency: "IDR",
+            })}`,
           });
         })
     );
+    
     worksheet.mergeCells(`A5:A6`);
     worksheet.mergeCells(`B5:B6`);
     worksheet.mergeCells(`C5:C6`);
@@ -2880,6 +3021,8 @@ class PPDBController {
     worksheet.mergeCells(`AJ5:AP5`);
     worksheet.mergeCells(`AQ5:AW5`);
     worksheet.mergeCells(`AX5:BD5`);
+    worksheet.mergeCells(`BE5:BE6`);
+    worksheet.mergeCells(`BF5:BF6`);
     worksheet.getColumn("A").width = 6;
     worksheet.getColumn("B").width = 20;
     worksheet.getColumn("C").width = 20;
@@ -2894,9 +3037,11 @@ class PPDBController {
     worksheet.getColumn("L").width = 20;
     worksheet.getColumn("M").width = 20;
     worksheet.getColumn("N").width = 20;
+    worksheet.getColumn("BE").width = 20;
+    worksheet.getColumn("BF").width = 20;
     worksheet.autoFilter = {
       from: "A6",
-      to: "BD6",
+      to: "BF6",
     };
 
     let namaFile = `/uploads/rekapan-pendaftar-ppdb-${keluarantanggalseconds}.xlsx`;
