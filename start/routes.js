@@ -786,6 +786,10 @@ Route.delete(
   "/pendaftar-ppdb/:pendaftar_ppdb_id",
   "PPDBController.deletePendaftarPPDB"
 );
+Route.put(
+  "/diskon-pendaftar/:id",
+  "PPDBController.putDiskon"
+);
 
 // alur-ppdb
 Route.get("/alur-ppdb", "MainController.getAlurPPDB");

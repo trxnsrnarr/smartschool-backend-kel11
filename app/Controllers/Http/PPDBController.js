@@ -4,6 +4,7 @@ const MSekolah = use("App/Models/MSekolah");
 const MGelombangPpdb = use("App/Models/MGelombangPpdb");
 const MJurusan = use("App/Models/MJurusan");
 const MPendaftarPpdb = use("App/Models/MPendaftarPpdb");
+const MDiskonPendaftar = use("App/Models/MDiskonPendaftar");
 const Mta = use("App/Models/Mta");
 const MUjian = use("App/Models/MUjian");
 const MJalurPpdb = use("App/Models/MJalurPpdb");
@@ -3049,6 +3050,56 @@ class PPDBController {
     await workbook.xlsx.writeFile(`public${namaFile}`);
 
     return namaFile;
+  }
+
+  async putDiskon({ response, request, auth, params: { id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const { diskon } = request.post();
+
+    const pendaftar = await MPendaftarPpdb.query()
+      .with("gelombang", (builder) => {
+        builder.with("jalur");
+      })
+      .where({ id: id })
+      .first();
+
+    const diskonData = await MDiskonPendaftar.query()
+      .where({ m_pendaftar_ppdb_id: id })
+      .first();
+
+    const harga =
+      pendaftar.toJSON().gelombang.jalur.biaya -
+      (pendaftar.toJSON().gelombang.jalur.biaya * diskon) / 100;
+    if (diskonData) {
+      const datas = await MDiskonPendaftar.query()
+        .where({ m_pendaftar_ppdb_id: id })
+        .update({ diskon, harga });
+
+      if (!datas) {
+        return response.forbidden({
+          message: messageForbidden,
+        });
+      }
+    } else {
+      await MDiskonPendaftar.create({
+        m_pendaftar_ppdb_id: id,
+        diskon,
+        harga,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
   }
 }
 
