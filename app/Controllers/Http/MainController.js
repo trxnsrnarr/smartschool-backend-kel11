@@ -18504,6 +18504,7 @@ class MainController {
       .with("gelombang", (builder) => {
         builder.with("jalur");
       })
+      .with("diskon")
       .where({ id: pendaftar_ppdb_id })
       .first();
 

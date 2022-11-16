@@ -40,6 +40,10 @@ class MPendaftarPpdb extends Model {
     return this.belongsTo("App/Models/MGelombangPpdb");
   }
 
+  diskon() {
+    return this.belongsTo("App/Models/MDiskonPendaftar","id","m_pendaftar_ppdb_id");
+  }
+
   user() {
     return this.belongsTo("App/Models/User", "m_user_id");
   }
