@@ -1248,14 +1248,15 @@ class PPDBController {
       }
     }
 
-    let semuaGelombangPengembalian
-    if(gelombangAktif){
-
-       semuaGelombangPengembalian = await MGelombangPpdb.query()
-      .where({ dihapus: 0 })
-      .where({m_jalur_ppdb_id: gelombangAktif.toJSON().gelombang.m_jalur_ppdb_id})
-      .where({ m_ta_id: ta.id })
-      .ids();
+    let semuaGelombangPengembalian;
+    if (gelombangAktif) {
+      semuaGelombangPengembalian = await MGelombangPpdb.query()
+        .where({ dihapus: 0 })
+        .where({
+          m_jalur_ppdb_id: gelombangAktif.toJSON().gelombang.m_jalur_ppdb_id,
+        })
+        .where({ m_ta_id: ta.id })
+        .ids();
     }
 
     return response.ok({
@@ -1265,7 +1266,7 @@ class PPDBController {
       jumlahPeserta: jumlahPeserta[0].total,
       gelombangPembelian,
       terdaftarPembelian,
-      semuaGelombangPengembalian
+      semuaGelombangPengembalian,
     });
   }
 
@@ -3000,11 +3001,14 @@ class PPDBController {
               currency: "IDR",
             }),
             sisa: `${
-              parseInt(gelombang.toJSON().jalur.biaya) - parseInt(totalPembayaran) < 0
+              parseInt(gelombang.toJSON().jalur.biaya) -
+                parseInt(totalPembayaran) <
+              0
                 ? "+"
                 : ""
             } ${Math.abs(
-              parseInt(gelombang.toJSON().jalur.biaya) - parseInt(totalPembayaran)
+              parseInt(gelombang.toJSON().jalur.biaya) -
+                parseInt(totalPembayaran)
             ).toLocaleString("id-ID", {
               style: "currency",
               currency: "IDR",
@@ -3012,7 +3016,7 @@ class PPDBController {
           });
         })
     );
-    
+
     worksheet.mergeCells(`A5:A6`);
     worksheet.mergeCells(`B5:B6`);
     worksheet.mergeCells(`C5:C6`);
@@ -3089,8 +3093,12 @@ class PPDBController {
       .first();
 
     const harga =
-      pendaftar.toJSON().gelombang.jalur.biaya -
-      (pendaftar.toJSON().gelombang.jalur.biaya * diskon) / 100;
+      (pendaftar.toJSON().gelombang.biaya_pendaftaran ||
+        pendaftar.toJSON().gelombang.jalur.biaya) -
+      ((pendaftar.toJSON().gelombang.biaya_pendaftaran ||
+        pendaftar.toJSON().gelombang.jalur.biaya) *
+        diskon) /
+        100;
     if (diskonData) {
       const datas = await MDiskonPendaftar.query()
         .where({ m_pendaftar_ppdb_id: id })
