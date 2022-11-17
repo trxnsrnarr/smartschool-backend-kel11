@@ -1248,11 +1248,15 @@ class PPDBController {
       }
     }
 
-    const semuaGelombangPengembalian = await MGelombangPpdb.query()
-    .where({ dihapus: 0 })
-    .where({m_jalur_ppdb_id: gelombangAktif.toJSON().gelombang.m_jalur_ppdb_id})
-    .where({ m_ta_id: ta.id })
-    .ids();
+    let semuaGelombangPengembalian
+    if(gelombangAktif.id){
+
+       semuaGelombangPengembalian = await MGelombangPpdb.query()
+      .where({ dihapus: 0 })
+      .where({m_jalur_ppdb_id: gelombangAktif.toJSON().gelombang.m_jalur_ppdb_id})
+      .where({ m_ta_id: ta.id })
+      .ids();
+    }
 
     return response.ok({
       gelombang: gelombang,
