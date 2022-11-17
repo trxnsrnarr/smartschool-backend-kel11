@@ -1249,7 +1249,7 @@ class PPDBController {
     }
 
     let semuaGelombangPengembalian
-    if(gelombangAktif.id){
+    if(gelombangAktif){
 
        semuaGelombangPengembalian = await MGelombangPpdb.query()
       .where({ dihapus: 0 })
