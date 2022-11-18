@@ -13194,8 +13194,7 @@ class MainController {
       worksheet.getColumn("J").width = 13;
       worksheet.getColumn("K").width = 13;
       worksheet.getColumn("L").width = 13;
-      
-      
+
       let namaFile = `/uploads/rekap-absen-siswa-${new Date().getTime()}.xlsx`;
 
       // save workbook to disk
@@ -13388,7 +13387,6 @@ class MainController {
           });
         })
       );
-
 
       worksheet.getColumn("A").width = 25;
       worksheet.getColumn("B").width = 33;
@@ -20616,7 +20614,7 @@ class MainController {
       .orderBy("id", "desc")
       .fetch();
 
-    let { tipe, search, ta_id = ta.id, rombel_id ,subnav} = request.get();
+    let { tipe, search, ta_id = ta.id, rombel_id, subnav } = request.get();
 
     tipe = tipe ? tipe : "spp";
 
@@ -20703,17 +20701,15 @@ class MainController {
         .andWhere({ m_ta_id: ta_id })
         .ids();
 
-        
-
-        let tkPembayaranRombelIds;
-       tkPembayaranRombelIds =  TkPembayaranRombel.query()
+      let tkPembayaranRombelIds;
+      tkPembayaranRombelIds = TkPembayaranRombel.query()
         .whereIn("m_pembayaran_id", pembayaranIds)
         .andWhere({ dihapus: 0 })
-        .andWhere({ m_sekolah_id: sekolah.id })
-        if(rombel_id){
-          tkPembayaranRombelIds.where({m_rombel_id:rombel_id})
-        }
-        tkPembayaranRombelIds= await   tkPembayaranRombelIds.ids();
+        .andWhere({ m_sekolah_id: sekolah.id });
+      if (rombel_id) {
+        tkPembayaranRombelIds.where({ m_rombel_id: rombel_id });
+      }
+      tkPembayaranRombelIds = await tkPembayaranRombelIds.ids();
 
       pembayaran = MPembayaranSiswa.query()
         .with("rombelPembayaran", (builder) => {
@@ -20729,28 +20725,31 @@ class MainController {
         })
         .with("user", (builder) => {
           builder.select("id", "nama").with("anggotaRombel", (builder) =>
-            builder.with("rombel",(builder)=>
-            builder.select("id","nama")).whereIn(
-              "m_rombel_id",
-              rombel.toJSON().map((d) => d.id)
-            )
+            builder
+              .with("rombel", (builder) => builder.select("id", "nama"))
+              .whereIn(
+                "m_rombel_id",
+                rombel.toJSON().map((d) => d.id)
+              )
           );
         })
         .where({ dihapus: 0 })
         .andWhere({ m_sekolah_id: sekolah.id })
-        .whereIn("tk_pembayaran_rombel_id", tkPembayaranRombelIds)
+        .whereIn("tk_pembayaran_rombel_id", tkPembayaranRombelIds);
 
-        if(search){
-          const userIdss = await User.query().where({dihapus:0}).andWhere("nama","like",`%${search}%`).ids()
+      if (search) {
+        const userIdss = await User.query()
+          .where({ dihapus: 0 })
+          .andWhere("nama", "like", `%${search}%`)
+          .ids();
 
-          pembayaran.whereIn("m_user_id",userIdss)
-        }
-        if (subnav == "belum-lunas") {
-          pembayaran.where({ status: "belum lunas" });
-        }
-    
+        pembayaran.whereIn("m_user_id", userIdss);
+      }
+      if (subnav == "belum-lunas") {
+        pembayaran.where({ status: "belum lunas" });
+      }
 
-        pembayaran = await pembayaran.fetch();
+      pembayaran = await pembayaran.fetch();
 
       const anggotaRombelIds = await MAnggotaRombel.query()
         .whereIn(
@@ -26764,16 +26763,17 @@ class MainController {
 
           return dataUpdated++;
         }
-
-        await User.create({
-          nama: d.nama,
-          whatsapp: d.whatsapp,
-          gender: d.gender,
-          password: d.password + "" || "smarteschool",
-          role: "guru",
-          m_sekolah_id: sekolah.id,
-          dihapus: 0,
-        });
+        if (d.nama && d.whatsapp) {
+          await User.create({
+            nama: d.nama,
+            whatsapp: d.whatsapp,
+            gender: d.gender,
+            password: d.password + "" || "smarteschool",
+            role: "guru",
+            m_sekolah_id: sekolah.id,
+            dihapus: 0,
+          });
+        }
 
         // await WhatsAppService.sendMessage(
         //   d.whatsapp,
@@ -27302,6 +27302,9 @@ class MainController {
           .andWhere({ dihapus: 0 })
           .first();
         if (!user) {
+          if (!d.namaGuru || !d.whatsapp || d.whatsapp == "") {
+            return;
+          }
           const newUser = await User.create({
             nama: d.namaGuru,
             whatsapp: d.whatsapp,
