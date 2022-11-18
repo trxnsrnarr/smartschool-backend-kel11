@@ -14182,7 +14182,7 @@ class MainController {
         pertanyaan: "required",
       };
       const message = {
-        "kg.required": "Nomor Kompetensi Dasar harus diisi",
+        "kd.required": "Nomor Kompetensi Dasar harus diisi",
         "kd_konten_materi.required": "Isi Kompetensi Dasar harus diisi",
         "level_kognitif.required": "Level Kognitif harus diisi",
         "pertanyaan.required": "Pertanaan harus diisi",
