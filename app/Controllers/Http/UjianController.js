@@ -128,21 +128,20 @@ class UjianController {
     let { m_ta_id = ta.id } = request.get();
 
     let mataPelajaranIds;
-    if(user?.role =="guru"){
+    if (user?.role == "guru") {
+      mataPelajaranIds = await MMataPelajaran.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ m_user_id: user.id })
+        .andWhere({ dihapus: 0 })
+        .andWhere({ m_ta_id: m_ta_id })
+        .ids();
+    } else {
+      mataPelajaranIds = await MMataPelajaran.query()
+        .where({ m_sekolah_id: sekolah.id })
 
-      mataPelajaranIds = await MMataPelajaran.query()
-      .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_user_id: user.id })
-      .andWhere({ dihapus: 0 })
-      .andWhere({ m_ta_id: m_ta_id })
-      .ids();
-    }else{
-      mataPelajaranIds = await MMataPelajaran.query()
-      .where({ m_sekolah_id: sekolah.id })
-      
-      .andWhere({ dihapus: 0 })
-      .andWhere({ m_ta_id: m_ta_id })
-      .ids();
+        .andWhere({ dihapus: 0 })
+        .andWhere({ m_ta_id: m_ta_id })
+        .ids();
     }
 
     const semuaTA = await Mta.query()
@@ -172,7 +171,7 @@ class UjianController {
           .andWhere({ dihapus: 0 })
           .getCount();
 
-         data.push({
+        data.push({
           id: d.id,
           nama: d.mataPelajaran.nama,
           tingkat: d.tingkat,
@@ -389,6 +388,9 @@ class UjianController {
           id: d.soal.id,
           nama_bank: d.ujian.nama,
           soal: d.soal.pertanyaan,
+          jumlahSiswa: jumlahTotal,
+          jumlahSiswaBenar: d.soal.__meta__.totalSiswa,
+          jumlahSiswaSalah: jumlahTotal - d.soal.__meta__.totalSiswa,
           bentuk: bentuk,
           bentuk_soal: bentuk_soal,
           kesukaran: hitung,

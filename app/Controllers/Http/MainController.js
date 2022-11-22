@@ -3998,6 +3998,7 @@ class MainController {
       .where({ whatsapp: whatsapp })
       .where({ m_sekolah_id: sekolah.id })
       .where({ role })
+      .andWhere({dihapus : 0})
       .first();
     if (check) {
       if (check.id != guruSebelum.id) {
@@ -13599,6 +13600,22 @@ class MainController {
       { value: "literasi", label: "AKM - Literasi" },
       { value: "numerasi", label: "AKM - Numerasi" },
     ];
+    if(sekolah.id == 13){
+      tipeUjian = [
+        { value: "kuis", label: "Kuis" },
+        { value: "ph", label: "Penilaian Harian" },
+        { value: "pts1", label: "Penilaian Tengah Semester 1" },
+        { value: "pts2", label: "Penilaian Tengah Semester 2" },
+        { value: "pas1", label: "Penilaian Akhir Semester 1" },
+        { value: "pas2", label: "Penilaian Akhir Semester 2" },
+        { value: "sas1", label: "Sumatif Akhir Semester 1" },
+        { value: "sas2", label: "Sumatif Akhir Semester 2" },
+        { value: "us", label: "Ujian Sekolah" },
+        { value: "to", label: "Try out" },
+        { value: "literasi", label: "AKM - Literasi" },
+        { value: "numerasi", label: "AKM - Numerasi" },
+      ];
+    }
 
     return response.ok({
       ujian: ujian.toJSON().data,
