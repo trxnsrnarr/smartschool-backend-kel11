@@ -44,6 +44,10 @@ class MUjian extends Model {
     else if (tipe == "literasi") return "AKM - Literasi";
     else if (tipe == "numerasi") return "AKM - Numerasi";
     else if (tipe == "kuis") return "Kuis";
+    else if (tipe == "sts1") return "Sumatif Tengah Semester 1";
+    else if (tipe == "sts2") return "Sumatif Tengah Semester 2";
+    else if (tipe == "sas1") return "Sumatif Akhir Semester 1";
+    else if (tipe == "sas2") return "Sumatif Akhir Semester 2";
   }
 }
 

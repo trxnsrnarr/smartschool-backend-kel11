@@ -485,7 +485,17 @@ class MainController {
 
   async getTAAktif(sekolah) {
     const ta = await Mta.query()
-      .select("id", "tahun", "semester", "nama_kepsek", "nip_kepsek")
+      .select(
+        "id",
+        "tahun",
+        "semester",
+        "nama_kepsek",
+        "nip_kepsek",
+        "tingkat1",
+        "tingkat2",
+        "tingkat3",
+        "tingkat4"
+      )
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ aktif: 1 })
       .andWhere({ dihapus: 0 })
@@ -3998,7 +4008,7 @@ class MainController {
       .where({ whatsapp: whatsapp })
       .where({ m_sekolah_id: sekolah.id })
       .where({ role })
-      .andWhere({dihapus : 0})
+      .andWhere({ dihapus: 0 })
       .first();
     if (check) {
       if (check.id != guruSebelum.id) {
@@ -5362,6 +5372,12 @@ class MainController {
       tanggal_awal,
       tanggal_rapor,
       tanggal_akhir,
+      tingkat1,
+      tingkat2,
+      tingkat3,
+      tingkat4,
+      tingkat5,
+      tingkat6,
     } = request.post();
     const rules = {
       tahun: "required",
@@ -5400,6 +5416,12 @@ class MainController {
       tanggal_awal,
       tanggal_rapor,
       tanggal_akhir,
+      tingkat1,
+      tingkat2,
+      tingkat3,
+      tingkat4,
+      tingkat5,
+      tingkat6,
     });
 
     if (!ta) {
@@ -13600,7 +13622,7 @@ class MainController {
       { value: "literasi", label: "AKM - Literasi" },
       { value: "numerasi", label: "AKM - Numerasi" },
     ];
-    if(sekolah.id == 13){
+    if (sekolah.id == 8719) {
       tipeUjian = [
         { value: "kuis", label: "Kuis" },
         { value: "ph", label: "Penilaian Harian" },
@@ -13608,6 +13630,8 @@ class MainController {
         { value: "pts2", label: "Penilaian Tengah Semester 2" },
         { value: "pas1", label: "Penilaian Akhir Semester 1" },
         { value: "pas2", label: "Penilaian Akhir Semester 2" },
+        { value: "sts1", label: "Sumatif Tengah Semester 1" },
+        { value: "sts2", label: "Sumatif Tengah Semester 2" },
         { value: "sas1", label: "Sumatif Akhir Semester 1" },
         { value: "sas2", label: "Sumatif Akhir Semester 2" },
         { value: "us", label: "Ujian Sekolah" },
