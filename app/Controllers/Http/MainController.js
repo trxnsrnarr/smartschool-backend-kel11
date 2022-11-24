@@ -16250,6 +16250,7 @@ class MainController {
       diacak,
       rombel_id,
       m_ujian_id,
+      token,
     } = request.post();
     const tanggal = moment(waktu_dibuka).format(`DD`);
     const bulan = moment(waktu_dibuka).format(`M`);
@@ -16281,6 +16282,7 @@ class MainController {
       diacak,
       m_user_id: pembuatUjian.m_user_id,
       dihapus: 0,
+      token,
     });
 
     let tkJadwalUjianData = [];
@@ -16368,6 +16370,7 @@ class MainController {
       diacak,
       rombel_id,
       m_ujian_id,
+      token,
     } = request.post();
 
     const waktu_dibuka1 = moment(waktu_dibuka).format("YYYY-MM-DD HH:mm:ss");
@@ -16424,6 +16427,7 @@ class MainController {
         durasi,
         gmeet,
         diacak,
+        token,
       });
     if (!jadwalUjian) {
       return response.notFound({
