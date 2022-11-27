@@ -1953,6 +1953,8 @@ Route.post("/import/sikap-siswa", "MainController.importSikapSiswa");
 
 Route.put("/bobot-nilai/:bobot_id", "MainController.putBobotNilai");
 
+Route.get("/data-migrasi", "UserController.getDataMigrasi");
+
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");

@@ -6,8 +6,10 @@ const User = use("App/Models/User");
 const MAnggotaRombel = use("App/Models/MAnggotaRombel");
 const MBroadcast = use("App/Models/MBroadcast");
 const MNotifikasiTerjadwal = use("App/Models/MNotifikasiTerjadwal");
+const MMataPelajaran = use("App/Models/MMataPelajaran");
 const MRombel = use("App/Models/MRombel");
 const MJurusan = use("App/Models/MJurusan");
+const MJadwalMengajar = use("App/Models/MJadwalMengajar");
 
 const Hash = use("Hash");
 const moment = require("moment");
@@ -123,7 +125,7 @@ class UserController {
 
     const user = await auth.getUser();
 
-    const { role,  m_rombel_id, user_id } = request.post();
+    const { role, m_rombel_id, user_id } = request.post();
 
     if (user.role != "admin") {
       return response.forbidden({ message: messageForbidden });
@@ -147,9 +149,7 @@ class UserController {
       });
     }
 
-    await User.query()
-      .whereIn("id", userIds)
-      .update({dihapus:1 });
+    await User.query().whereIn("id", userIds).update({ dihapus: 1 });
 
     return response.ok({
       message: messageDeleteSuccess,
@@ -664,11 +664,9 @@ class UserController {
 
     const user = await auth.getUser();
 
-    let { m_ta_id } =
-      request.post();
+    let { m_ta_id } = request.post();
 
-       const guru = await User.query().where({ id: user.id }).update({m_ta_id});
-
+    const guru = await User.query().where({ id: user.id }).update({ m_ta_id });
 
     if (!guru) {
       return response.notFound({
@@ -678,6 +676,71 @@ class UserController {
 
     return response.ok({
       message: messagePutSuccess,
+    });
+  }
+
+  async getDataMigrasi({ response, request, auth }) {
+    const sekolahData = await MSekolah.query()
+      .with("informasi")
+      .where({ id: 8025 })
+      .first();
+
+    // const user = await auth.getUser();
+
+    let { m_ta_id = 8359 } = request.post();
+    m_ta_id = 8359;
+
+    const ta = await Mta.query().where({ id: m_ta_id }).first();
+    const user = await User.query()
+      .where({ dihapus: 0 })
+      .andWhere({ role: "guru" })
+      .fetch();
+
+    const rombel = await MRombel.query()
+      .with("user")
+      .with("anggotaRombel", (builder) =>
+        builder
+          .where({ dihapus: 0 })
+          .with("user", (builder) => builder.with("profil"))
+      )
+      .where({ dihapus: 0 })
+      .andWhere({ m_ta_id: m_ta_id })
+      .andWhere({ m_sekolah_id: sekolahData.id })
+      .fetch();
+
+    const jadwalMengajar = await MJadwalMengajar.query()
+      .with("rombel", (builder) => builder.with("user"))
+      .with("mataPelajaran", (builder) => builder.with("user"))
+      .where({ m_ta_id: m_ta_id })
+      .andWhere({ m_sekolah_id: 8025 })
+      .whereNotNull("m_mata_pelajaran_id")
+      .fetch();
+
+    let jadwalData = [];
+    const data = jadwalMengajar.toJSON().filter((d) => {
+      if (!d.m_mata_pelajaran_id) {
+        return false;
+      }
+      if (!jadwalData.includes(d.m_mata_pelajaran_id)) {
+        jadwalData.push(d.m_mata_pelajaran_id);
+        return true;
+      } else {
+        return false;
+      }
+
+      // jadwalData.push()
+    });
+
+    // const data = await User.query().where({ id: user.id }).update({ m_ta_id });
+
+    return response.ok({
+      sekolahData,
+      ta,
+      // jadwalMengajar,
+      rombel,
+      data,
+      panjang: data.length,
+      user
     });
   }
 }
