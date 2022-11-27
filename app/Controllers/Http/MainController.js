@@ -16876,7 +16876,7 @@ class MainController {
         })
         .with("tugas")
         .with("peringatan", (builder) => {
-          builder.orderBy("id", "desc");
+          builder.orderBy("created_at", "desc");
         })
         .withCount("peringatan as belumDibaca", (builder) => {
           builder.where({ dibaca: 0 });

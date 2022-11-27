@@ -1072,6 +1072,8 @@ class UjianController {
       m_user_id: user.id,
       tk_jadwal_ujian_id,
       dihapus: 0,
+      dibaca: 0,
+      dibaca_guru: 0,
     });
 
     return response.ok({
