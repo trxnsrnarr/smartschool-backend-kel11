@@ -14211,7 +14211,7 @@ class MainController {
       daftar_soal_ujian_id,
     } = request.post();
 
-    if (bentuk == "pg") {
+    if (bentuk == "pg" && !akm_konten_materi) {
       const rules = {
         kd: "required",
         kd_konten_materi: "required",
