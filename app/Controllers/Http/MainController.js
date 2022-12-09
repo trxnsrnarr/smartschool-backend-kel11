@@ -21307,7 +21307,7 @@ class MainController {
       }
     }
 
-    rombel_id = rombel_id.length ? rombel_id : [];
+    rombel_id = rombel_id?.length ? rombel_id : [];
 
     const pembayaran = await MPembayaran.query()
       .where({ id: pembayaran_id })
