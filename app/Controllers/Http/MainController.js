@@ -42577,7 +42577,7 @@ class MainController {
           // Add row using key mapping to columns
           let row = worksheet.addRow({
             no: `${idx + 1}`,
-            nama: d.user ? d.user.nama : "-",
+            nama: d.user ? d.user.nama.toUpperCase() : "-",
             whatsapp: d.user ? d.user.whatsapp : "-",
             nilai: d ? d.nilai : "-",
           });
@@ -54934,7 +54934,7 @@ class MainController {
 
       let keterangan;
 
-      if (d.kelulusan == "lulus" || d.kelulusan == "Lulus") {
+      if (d.kelulusan == "lulus" || d.kelulusan == "Lulus" || d.kelulusan == "LULUS") {
         keterangan = "lulus";
       } else if (
         d.kelulusan == "tidak Lulus" ||
