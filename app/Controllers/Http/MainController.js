@@ -48224,33 +48224,40 @@ class MainController {
         }
 
         if (check) {
-          await MSikapSiswa.query()
-            .where({ dihapus: 0 })
-            .andWhere({ m_ta_id: ta.id })
-            .andWhere({ tipe: tipe })
-            .andWhere({ m_user_id: userSiswa.id })
-            .update({
-              m_sikap_sosial_ditunjukkan_id:
-                m_sikap_sosial_ditunjukkan_id.length
-                  ? m_sikap_sosial_ditunjukkan_id.join(",")
-                  : null,
-              m_sikap_sosial_ditingkatkan_id:
-                m_sikap_sosial_ditingkatkan_id.length
-                  ? m_sikap_sosial_ditingkatkan_id.join(",")
-                  : null,
-              m_sikap_spiritual_ditunjukkan_id:
-                m_sikap_spiritual_ditunjukkan_id.length
-                  ? m_sikap_spiritual_ditunjukkan_id.join(",")
-                  : null,
-              m_sikap_spiritual_ditingkatkan_id:
-                m_sikap_spiritual_ditingkatkan_id.length
-                  ? m_sikap_spiritual_ditingkatkan_id.join(",")
-                  : null,
-            });
+          if (
+            m_sikap_sosial_ditunjukkan_id.length &&
+            m_sikap_sosial_ditingkatkan_id.length &&
+            m_sikap_spiritual_ditunjukkan_id.length &&
+            m_sikap_spiritual_ditingkatkan_id.length
+          ) {
+            await MSikapSiswa.query()
+              .where({ dihapus: 0 })
+              .andWhere({ m_ta_id: ta.id })
+              .andWhere({ tipe: tipe })
+              .andWhere({ m_user_id: userSiswa.id })
+              .update({
+                m_sikap_sosial_ditunjukkan_id:
+                  m_sikap_sosial_ditunjukkan_id.length
+                    ? m_sikap_sosial_ditunjukkan_id.join(",")
+                    : null,
+                m_sikap_sosial_ditingkatkan_id:
+                  m_sikap_sosial_ditingkatkan_id.length
+                    ? m_sikap_sosial_ditingkatkan_id.join(",")
+                    : null,
+                m_sikap_spiritual_ditunjukkan_id:
+                  m_sikap_spiritual_ditunjukkan_id.length
+                    ? m_sikap_spiritual_ditunjukkan_id.join(",")
+                    : null,
+                m_sikap_spiritual_ditingkatkan_id:
+                  m_sikap_spiritual_ditingkatkan_id.length
+                    ? m_sikap_spiritual_ditingkatkan_id.join(",")
+                    : null,
+              });
+          }
         } else if (
-          m_sikap_sosial_ditunjukkan_id.length ||
-          m_sikap_sosial_ditingkatkan_id.length ||
-          m_sikap_spiritual_ditunjukkan_id.length ||
+          m_sikap_sosial_ditunjukkan_id.length &&
+          m_sikap_sosial_ditingkatkan_id.length &&
+          m_sikap_spiritual_ditunjukkan_id.length &&
           m_sikap_spiritual_ditingkatkan_id.length
         ) {
           await MSikapSiswa.create({
@@ -54934,7 +54941,11 @@ class MainController {
 
       let keterangan;
 
-      if (d.kelulusan == "lulus" || d.kelulusan == "Lulus" || d.kelulusan == "LULUS") {
+      if (
+        d.kelulusan == "lulus" ||
+        d.kelulusan == "Lulus" ||
+        d.kelulusan == "LULUS"
+      ) {
         keterangan = "lulus";
       } else if (
         d.kelulusan == "tidak Lulus" ||
