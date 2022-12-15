@@ -48253,6 +48253,8 @@ class MainController {
                     ? m_sikap_spiritual_ditingkatkan_id.join(",")
                     : null,
               });
+          }else{
+            return `${userSiswa?.nama}, Sikap harus ada yang ditingkatkan dan ditunjukkan`
           }
         } else if (
           m_sikap_sosial_ditunjukkan_id.length &&
@@ -48282,6 +48284,8 @@ class MainController {
             status: 1,
             dihapus: 0,
           });
+        }else{
+          return `${userSiswa?.nama}, Sikap harus ada yang ditingkatkan dan ditunjukkan`
         }
       })
     );
