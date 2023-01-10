@@ -49702,7 +49702,7 @@ class MainController {
       .first();
 
     const check = await Mta.query()
-      .where({ tahun: "2021 / 2022" })
+      .where({ tahun: "2022 / 2023" })
       .andWhere({ semester: "Genap" })
       .andWhere({ nama_kepsek: taa.nama_kepsek })
       .andWhere({ nip_kepsek: taa.nip_kepsek })
@@ -49716,7 +49716,7 @@ class MainController {
       .first();
 
     const check2 = await Mta.query()
-      .where({ tahun: "2021 / 2022" })
+      .where({ tahun: "2022 / 2023" })
       .andWhere({ semester: "Genap" })
       .andWhere({ nama_kepsek: taa.nama_kepsek })
       .andWhere({ nip_kepsek: taa.nip_kepsek })
@@ -49732,7 +49732,7 @@ class MainController {
     if (!check) {
       if (!check2) {
         await Mta.create({
-          tahun: "2021 / 2022",
+          tahun: "2022 / 2023",
           semester: "Genap",
           nama_kepsek: taa.nama_kepsek,
           nip_kepsek: taa.nip_kepsek,
