@@ -105,6 +105,7 @@ Route.delete("/guru/:guru_id", "MainController.deleteGuru");
 
 // siswa
 Route.get("/siswa", "MainController.getSiswa");
+Route.get("/siswa-whatsapp", "SecondController.showSiswa");
 Route.post("/siswa", "MainController.postSiswa");
 Route.put("/siswa/:siswa_id", "MainController.putSiswa");
 Route.put("/avatar-siswa/:user_id", "MainController.putFotoSiswa");

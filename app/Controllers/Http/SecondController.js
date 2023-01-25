@@ -15504,6 +15504,26 @@ ${jamPerubahan}`;
       akun,
     });
   }
+   async showSiswa({ response, request, auth }) {
+  
+    let { whatsapp } =
+      request.get();
+
+    const siswa = await User.query()
+       .with("profil",(builder)=>{
+        builder.select("m_user_id","nisn","nis")
+       })
+        .select("nama", "id", "whatsapp", "email","role")
+        .andWhere({ dihapus: 0 })
+        .andWhere({ role: "siswa" })
+        .andWhere("whatsapp", whatsapp)
+        .first();
+  
+
+    return response.ok(
+      siswa,
+    );
+  }
 }
 
 module.exports = SecondController;
