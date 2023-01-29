@@ -682,18 +682,20 @@ class UserController {
   async getDataMigrasi({ response, request, auth }) {
     const sekolahData = await MSekolah.query()
       .with("informasi")
-      .where({ id: 8025 })
+      .where({ id: 578 })
       .first();
 
     // const user = await auth.getUser();
 
-    let { m_ta_id = 8359 } = request.post();
-    m_ta_id = 8359;
+    let { m_ta_id = 8362 } = request.post();
+    m_ta_id = 8362;
 
     const ta = await Mta.query().where({ id: m_ta_id }).first();
     const user = await User.query()
+      .with("profil")
       .where({ dihapus: 0 })
       .andWhere({ role: "guru" })
+      .andWhere({ m_sekolah_id: 578 })
       .fetch();
 
     const rombel = await MRombel.query()
@@ -706,14 +708,20 @@ class UserController {
       .where({ dihapus: 0 })
       .andWhere({ m_ta_id: m_ta_id })
       .andWhere({ m_sekolah_id: sekolahData.id })
-      .fetch();
+      .andWhere({ tingkat: "X" })
+      .ids();
 
     const jadwalMengajar = await MJadwalMengajar.query()
-      .with("rombel", (builder) => builder.with("user"))
-      .with("mataPelajaran", (builder) => builder.with("user"))
+      .with("rombel", (builder) => builder.select("id", "nama"))
+      .with("mataPelajaran", (builder) =>
+        builder.with("user", (builder) =>
+          builder.select("id", "nama", "whatsapp")
+        )
+      )
       .where({ m_ta_id: m_ta_id })
-      .andWhere({ m_sekolah_id: 8025 })
+      .andWhere({ m_sekolah_id: 578 })
       .whereNotNull("m_mata_pelajaran_id")
+      .whereIn("m_rombel_id", rombel)
       .fetch();
 
     let jadwalData = [];
@@ -721,26 +729,33 @@ class UserController {
       if (!d.m_mata_pelajaran_id) {
         return false;
       }
-      if (!jadwalData.includes(d.m_mata_pelajaran_id)) {
-        jadwalData.push(d.m_mata_pelajaran_id);
+      if (
+        !jadwalData.find(
+          (e) => e.mapel == d.m_mata_pelajaran_id && e.rombel == d.m_rombel_id
+        )
+      ) {
+        jadwalData.push({
+          mapel: d.m_mata_pelajaran_id,
+          rombel: d.m_rombel_id,
+        });
         return true;
       } else {
         return false;
       }
-
-      // jadwalData.push()
     });
 
     // const data = await User.query().where({ id: user.id }).update({ m_ta_id });
 
     return response.ok({
-      sekolahData,
-      ta,
+      // banyakuser:user.toJSON().length,
+      // sekolahData,
+      // ta,
       // jadwalMengajar,
       rombel,
       data,
-      panjang: data.length,
-      user
+
+      // panjang: data.length,
+      user,
     });
   }
 }
