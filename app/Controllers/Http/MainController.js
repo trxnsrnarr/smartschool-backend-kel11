@@ -15390,7 +15390,7 @@ class MainController {
     const workbook = new Excel.Workbook();
 
     await Promise.all(
-      [0].map(async (_, idx) => {
+      [0].map(async (_) => {
         // Create workbook & add worksheet
         const worksheet = workbook.addWorksheet(
           `${jadwalUjian.toJSON().rombel.nama}`
@@ -15431,14 +15431,14 @@ class MainController {
           pesertaUjianData
             .toJSON()
             .sort((a, b) => ("" + a.nama).localeCompare(b.nama))
-            .map(async (d) => {
+            .map(async (d,idx) => {
               await Promise.all(
                 jadwalUjian
                   .toJSON()
                   .peserta.sort((a, b) =>
                     ("" + a.user.nama).localeCompare(b.user.nama)
                   )
-                  .map(async (e, idx) => {
+                  .map(async (e) => {
                     if (d.id == e.m_user_id) {
                       const pesertaUjian = await TkPesertaUjian.query()
                         .with("jawabanSiswa", (builder) => {
@@ -15685,6 +15685,115 @@ class MainController {
                         benar_menjodohkan: metaHasil.benarMenjodohkan,
                         benar_total: metaHasil.benar,
                         keluar_tab: pesertaUjian?.warning,
+                      });
+                    }else{
+
+                      worksheet.getRow(10).values = [
+                        "Nama",
+                        "Nilai PG",
+                        "Nilai Esai",
+                        "Nilai PG Kompleks",
+                        "Nilai Uraian",
+                        "Nilai Menjodohkan",
+                        "Nilai Total",
+                        
+                        "Total Benar PG",
+                        "Total Benar Esai",
+                        "Total Benar PG Kompleks",
+                        "Total Benar Uraian",
+                        "Total Benar Menjodohkan",
+                        "Total Benar",
+                        "Keluar Tab",
+                      ];
+                      
+                      worksheet.columns = [
+                        { key: "user" },
+                        { key: "nilai_pg" },
+                        { key: "nilai_esai" },
+                        { key: "nilai_pg_kompleks" },
+                        { key: "nilai_uraian" },
+                        { key: "nilai_menjodohkan" },
+                        { key: "nilai_total" },
+                        
+                        { key: "benar_pg" },
+                        { key: "benar_esai" },
+                        { key: "benar_pg_kompleks" },
+                        { key: "benar_uraian" },
+                        { key: "benar_menjodohkan" },
+                        { key: "benar_total" },
+                        { key: "keluar_tab" },
+                      ];
+                      
+                      // Add row using key mapping to columns
+                      const row = worksheet.addRow({
+                        user: d.nama,
+                        nilai_pg: 0,
+                        nilai_esai: 0,
+                        nilai_pg_kompleks: 0,
+                        nilai_uraian: 0,
+                        nilai_menjodohkan: 0,
+                        nilai_total: 0,
+                        benar_pg: 0,
+                        benar_esai: 0,
+                        benar_pg_kompleks: 0,
+                        benar_uraian: 0,
+                        benar_menjodohkan: 0,
+                        benar_total: 0,
+                        keluar_tab: 0,
+                      });
+                      worksheet.addConditionalFormatting({
+                        ref: `B${(idx + 1) * 1 + 10}:N${(idx + 1) * 1 + 10}`,
+                        rules: [
+                          {
+                            type: "expression",
+                            formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                            style: {
+                              font: {
+                                name: "Times New Roman",
+                                family: 4,
+                                size: 11,
+                                // bold: true,
+                              },
+                              alignment: {
+                                vertical: "middle",
+                                horizontal: "center",
+                              },
+                              border: {
+                                top: { style: "thin" },
+                                left: { style: "thin" },
+                                bottom: { style: "thin" },
+                                right: { style: "thin" },
+                              },
+                            },
+                          },
+                        ],
+                      });
+                      worksheet.addConditionalFormatting({
+                        ref: `A${(idx + 1) * 1 + 10}`,
+                        rules: [
+                          {
+                            type: "expression",
+                            formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                            style: {
+                              font: {
+                                name: "Times New Roman",
+                                family: 4,
+                                size: 11,
+                                // bold: true,
+                              },
+                              alignment: {
+                                vertical: "middle",
+                                horizontal: "left",
+                              },
+                              border: {
+                                top: { style: "thin" },
+                                left: { style: "thin" },
+                                bottom: { style: "thin" },
+                                right: { style: "thin" },
+                              },
+                            },
+                          },
+                        ],
                       });
                     }
                   })
