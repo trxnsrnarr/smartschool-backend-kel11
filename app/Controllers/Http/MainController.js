@@ -15432,7 +15432,7 @@ class MainController {
             .toJSON()
             .sort((a, b) => ("" + a.nama).localeCompare(b.nama))
             .map(async (d, idx) => {
-              let row = 0;
+              let update = 0;
               await Promise.all(
                 jadwalUjian
                   .toJSON()
@@ -15441,7 +15441,7 @@ class MainController {
                   )
                   .map(async (e) => {
                     if (d.id == e.m_user_id) {
-                      row = 1;
+                      update = 1;
                       const pesertaUjian = await TkPesertaUjian.query()
                         .with("jawabanSiswa", (builder) => {
                           builder.with("soal");
@@ -15691,7 +15691,7 @@ class MainController {
                     }
                   })
               );
-              if (row == 0) {
+              if (update == 0) {
                 worksheet.getRow(10).values = [
                   "Nama",
                   "Nilai PG",
