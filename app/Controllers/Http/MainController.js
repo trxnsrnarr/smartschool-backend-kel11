@@ -15431,7 +15431,8 @@ class MainController {
           pesertaUjianData
             .toJSON()
             .sort((a, b) => ("" + a.nama).localeCompare(b.nama))
-            .map(async (d,idx) => {
+            .map(async (d, idx) => {
+              let row = 0;
               await Promise.all(
                 jadwalUjian
                   .toJSON()
@@ -15440,6 +15441,7 @@ class MainController {
                   )
                   .map(async (e) => {
                     if (d.id == e.m_user_id) {
+                      row = 1;
                       const pesertaUjian = await TkPesertaUjian.query()
                         .with("jawabanSiswa", (builder) => {
                           builder.with("soal");
@@ -15686,118 +15688,118 @@ class MainController {
                         benar_total: metaHasil.benar,
                         keluar_tab: pesertaUjian?.warning,
                       });
-                    }else{
-
-                      worksheet.getRow(10).values = [
-                        "Nama",
-                        "Nilai PG",
-                        "Nilai Esai",
-                        "Nilai PG Kompleks",
-                        "Nilai Uraian",
-                        "Nilai Menjodohkan",
-                        "Nilai Total",
-                        
-                        "Total Benar PG",
-                        "Total Benar Esai",
-                        "Total Benar PG Kompleks",
-                        "Total Benar Uraian",
-                        "Total Benar Menjodohkan",
-                        "Total Benar",
-                        "Keluar Tab",
-                      ];
-                      
-                      worksheet.columns = [
-                        { key: "user" },
-                        { key: "nilai_pg" },
-                        { key: "nilai_esai" },
-                        { key: "nilai_pg_kompleks" },
-                        { key: "nilai_uraian" },
-                        { key: "nilai_menjodohkan" },
-                        { key: "nilai_total" },
-                        
-                        { key: "benar_pg" },
-                        { key: "benar_esai" },
-                        { key: "benar_pg_kompleks" },
-                        { key: "benar_uraian" },
-                        { key: "benar_menjodohkan" },
-                        { key: "benar_total" },
-                        { key: "keluar_tab" },
-                      ];
-                      
-                      // Add row using key mapping to columns
-                      const row = worksheet.addRow({
-                        user: d.nama,
-                        nilai_pg: 0,
-                        nilai_esai: 0,
-                        nilai_pg_kompleks: 0,
-                        nilai_uraian: 0,
-                        nilai_menjodohkan: 0,
-                        nilai_total: 0,
-                        benar_pg: 0,
-                        benar_esai: 0,
-                        benar_pg_kompleks: 0,
-                        benar_uraian: 0,
-                        benar_menjodohkan: 0,
-                        benar_total: 0,
-                        keluar_tab: 0,
-                      });
-                      worksheet.addConditionalFormatting({
-                        ref: `B${(idx + 1) * 1 + 10}:N${(idx + 1) * 1 + 10}`,
-                        rules: [
-                          {
-                            type: "expression",
-                            formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-                            style: {
-                              font: {
-                                name: "Times New Roman",
-                                family: 4,
-                                size: 11,
-                                // bold: true,
-                              },
-                              alignment: {
-                                vertical: "middle",
-                                horizontal: "center",
-                              },
-                              border: {
-                                top: { style: "thin" },
-                                left: { style: "thin" },
-                                bottom: { style: "thin" },
-                                right: { style: "thin" },
-                              },
-                            },
-                          },
-                        ],
-                      });
-                      worksheet.addConditionalFormatting({
-                        ref: `A${(idx + 1) * 1 + 10}`,
-                        rules: [
-                          {
-                            type: "expression",
-                            formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-                            style: {
-                              font: {
-                                name: "Times New Roman",
-                                family: 4,
-                                size: 11,
-                                // bold: true,
-                              },
-                              alignment: {
-                                vertical: "middle",
-                                horizontal: "left",
-                              },
-                              border: {
-                                top: { style: "thin" },
-                                left: { style: "thin" },
-                                bottom: { style: "thin" },
-                                right: { style: "thin" },
-                              },
-                            },
-                          },
-                        ],
-                      });
                     }
                   })
               );
+              if (row == 0) {
+                worksheet.getRow(10).values = [
+                  "Nama",
+                  "Nilai PG",
+                  "Nilai Esai",
+                  "Nilai PG Kompleks",
+                  "Nilai Uraian",
+                  "Nilai Menjodohkan",
+                  "Nilai Total",
+
+                  "Total Benar PG",
+                  "Total Benar Esai",
+                  "Total Benar PG Kompleks",
+                  "Total Benar Uraian",
+                  "Total Benar Menjodohkan",
+                  "Total Benar",
+                  "Keluar Tab",
+                ];
+
+                worksheet.columns = [
+                  { key: "user" },
+                  { key: "nilai_pg" },
+                  { key: "nilai_esai" },
+                  { key: "nilai_pg_kompleks" },
+                  { key: "nilai_uraian" },
+                  { key: "nilai_menjodohkan" },
+                  { key: "nilai_total" },
+
+                  { key: "benar_pg" },
+                  { key: "benar_esai" },
+                  { key: "benar_pg_kompleks" },
+                  { key: "benar_uraian" },
+                  { key: "benar_menjodohkan" },
+                  { key: "benar_total" },
+                  { key: "keluar_tab" },
+                ];
+
+                // Add row using key mapping to columns
+                const row = worksheet.addRow({
+                  user: d.nama,
+                  nilai_pg: 0,
+                  nilai_esai: 0,
+                  nilai_pg_kompleks: 0,
+                  nilai_uraian: 0,
+                  nilai_menjodohkan: 0,
+                  nilai_total: 0,
+                  benar_pg: 0,
+                  benar_esai: 0,
+                  benar_pg_kompleks: 0,
+                  benar_uraian: 0,
+                  benar_menjodohkan: 0,
+                  benar_total: 0,
+                  keluar_tab: 0,
+                });
+                worksheet.addConditionalFormatting({
+                  ref: `B${(idx + 1) * 1 + 10}:N${(idx + 1) * 1 + 10}`,
+                  rules: [
+                    {
+                      type: "expression",
+                      formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                      style: {
+                        font: {
+                          name: "Times New Roman",
+                          family: 4,
+                          size: 11,
+                          // bold: true,
+                        },
+                        alignment: {
+                          vertical: "middle",
+                          horizontal: "center",
+                        },
+                        border: {
+                          top: { style: "thin" },
+                          left: { style: "thin" },
+                          bottom: { style: "thin" },
+                          right: { style: "thin" },
+                        },
+                      },
+                    },
+                  ],
+                });
+                worksheet.addConditionalFormatting({
+                  ref: `A${(idx + 1) * 1 + 10}`,
+                  rules: [
+                    {
+                      type: "expression",
+                      formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                      style: {
+                        font: {
+                          name: "Times New Roman",
+                          family: 4,
+                          size: 11,
+                          // bold: true,
+                        },
+                        alignment: {
+                          vertical: "middle",
+                          horizontal: "left",
+                        },
+                        border: {
+                          top: { style: "thin" },
+                          left: { style: "thin" },
+                          bottom: { style: "thin" },
+                          right: { style: "thin" },
+                        },
+                      },
+                    },
+                  ],
+                });
+              }
             })
         );
 
@@ -48362,8 +48364,8 @@ class MainController {
                     ? m_sikap_spiritual_ditingkatkan_id.join(",")
                     : null,
               });
-          }else{
-            return `${userSiswa?.nama}, Sikap harus ada yang ditingkatkan dan ditunjukkan`
+          } else {
+            return `${userSiswa?.nama}, Sikap harus ada yang ditingkatkan dan ditunjukkan`;
           }
         } else if (
           m_sikap_sosial_ditunjukkan_id.length &&
@@ -48393,8 +48395,8 @@ class MainController {
             status: 1,
             dihapus: 0,
           });
-        }else{
-          return `${userSiswa?.nama}, Sikap harus ada yang ditingkatkan dan ditunjukkan`
+        } else {
+          return `${userSiswa?.nama}, Sikap harus ada yang ditingkatkan dan ditunjukkan`;
         }
       })
     );
