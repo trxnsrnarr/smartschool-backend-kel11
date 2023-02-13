@@ -14184,6 +14184,7 @@ class MainController {
       akm_konteks_materi,
       akm_proses_kognitif,
       sumber_buku,
+      tingkat_kesukaran,
       // pg
       pertanyaan,
       audio,
@@ -14299,6 +14300,7 @@ class MainController {
       akm_konten_materi,
       akm_konteks_materi,
       akm_proses_kognitif,
+      tingkat_kesukaran,
       sumber_buku,
       audio,
       pertanyaan: htmlEscaper.escape(pertanyaan || "-"),
