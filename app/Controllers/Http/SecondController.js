@@ -14093,8 +14093,8 @@ ${jamPerubahan}`;
   }
 
   async naikTAJam({ response, request }) {
-    // const domain = request.headers().origin;
-    let { domain } = request.get();
+    const domain = request.headers().origin;
+    // let { domain } = request.get();
 
     const sekolah = await this.getSekolahByDomain(domain);
 
@@ -14110,7 +14110,7 @@ ${jamPerubahan}`;
       .first();
 
     const check = await Mta.query()
-      .where({ tahun: "2021 / 2022" })
+      .where({ tahun: taa.id })
       .andWhere({ semester: "Genap" })
       .andWhere({ aktif: taa.aktif })
       .andWhere({ dihapus: taa.dihapus })
@@ -14121,8 +14121,10 @@ ${jamPerubahan}`;
       .andWhere({ jadwal_sinkron: 0 })
       .first();
 
+    const tahun2 = `${taa?.tahun?.split(" / ")[0]} / ${taa?.tahun?.split(" / ")[1]}`
+
     const check2 = await Mta.query()
-      .where({ tahun: "2022 / 2023" })
+      .where({ tahun: tahun2 })
       .whereIn("semester", ["Ganjil", 1])
       .andWhere({ aktif: taa.aktif })
       .andWhere({ dihapus: taa.dihapus })
@@ -14136,7 +14138,7 @@ ${jamPerubahan}`;
     if (!check) {
       if (!check2) {
         await Mta.create({
-          tahun: "2022 / 2023",
+          tahun: tahun2,
           semester: "Ganjil",
           nama_kepsek: taa.nama_kepsek,
           nip_kepsek: taa.nip_kepsek,
@@ -14193,8 +14195,8 @@ ${jamPerubahan}`;
   }
 
   async naikTAMapel({ response, request }) {
-    // const domain = request.headers().origin;
-    let { domain } = request.get();
+    const domain = request.headers().origin;
+    // let { domain } = request.get();
 
     const sekolah = await this.getSekolahByDomain(domain);
 
@@ -14244,8 +14246,8 @@ ${jamPerubahan}`;
   }
 
   async naikTARombel({ response, request }) {
-    // const domain = request.headers().origin;
-    let { domain } = request.get();
+    const domain = request.headers().origin;
+    // let {  domain } = request.get();
 
     const sekolah = await this.getSekolahByDomain(domain);
 
