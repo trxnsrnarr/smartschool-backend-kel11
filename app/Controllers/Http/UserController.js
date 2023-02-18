@@ -680,6 +680,153 @@ class UserController {
       message: messagePutSuccess,
     });
   }
+
+  async getDataMigrasi({ response, request, auth }) {
+    const sekolahData = await MSekolah.query()
+      .with("informasi")
+      .where({ id: 578 })
+      .first();
+
+    // const user = await auth.getUser();
+
+    let { m_ta_id = 8362 } = request.post();
+    m_ta_id = 8362;
+
+    const ta = await Mta.query().where({ id: m_ta_id }).first();
+    const user = await User.query()
+      .with("profil")
+      .where({ dihapus: 0 })
+      .andWhere({ role: "guru" })
+      .andWhere({ m_sekolah_id: 578 })
+      .fetch();
+
+    const rombel = await MRombel.query()
+      .with("user")
+      .with("anggotaRombel", (builder) =>
+        builder
+          .where({ dihapus: 0 })
+          .with("user", (builder) => builder.with("profil"))
+      )
+      .where({ dihapus: 0 })
+      .andWhere({ m_ta_id: m_ta_id })
+      .andWhere({ m_sekolah_id: sekolahData.id })
+      .andWhere({ tingkat: "X" })
+      .ids();
+
+    const jadwalMengajar = await MJadwalMengajar.query()
+      .with("rombel", (builder) => builder.select("id", "nama"))
+      .with("mataPelajaran", (builder) =>
+        builder.with("user", (builder) =>
+          builder.select("id", "nama", "whatsapp")
+        )
+      )
+      .where({ m_ta_id: m_ta_id })
+      .andWhere({ m_sekolah_id: 578 })
+      .whereNotNull("m_mata_pelajaran_id")
+      .whereIn("m_rombel_id", rombel)
+      .fetch();
+
+    let jadwalData = [];
+    const data = jadwalMengajar.toJSON().filter((d) => {
+      if (!d.m_mata_pelajaran_id) {
+        return false;
+      }
+      if (
+        !jadwalData.find(
+          (e) => e.mapel == d.m_mata_pelajaran_id && e.rombel == d.m_rombel_id
+        )
+      ) {
+        jadwalData.push({
+          mapel: d.m_mata_pelajaran_id,
+          rombel: d.m_rombel_id,
+        });
+        return true;
+      } else {
+        return false;
+      }
+    });
+
+    // const data = await User.query().where({ id: user.id }).update({ m_ta_id });
+
+    return response.ok({
+      // banyakuser:user.toJSON().length,
+      // sekolahData,
+      // ta,
+      // jadwalMengajar,
+      rombel,
+      data,
+
+      // panjang: data.length,
+      user,
+    });
+  }
+
+  async getUserPerpus({ response, request, auth }) {
+
+    const { search, sekolah_id } = request.get()
+    let user
+    user = User.query()
+    .with("anggotaRombel", (builder)=>{
+      builder.with("rombel", (builder)=>{
+        builder.select("id", "nama")
+      }).select("m_rombel_id", "id", "m_user_id")
+    })
+    .where({ dihapus: 0 })
+    .whereIn("role", ["siswa", "guru"])
+    .andWhere({ m_sekolah_id: sekolah_id })
+    .select("id", "nama", "whatsapp", "role")
+
+    if (search) {
+      user.andWhere("nama", "like", `%${search}%`).orWhere("whatsapp", "like", `%${search}%`)
+    }
+
+    const data = await user.fetch()
+
+    return response.ok(data)
+
+    // let userIds;
+    // if (m_rombel_id) {
+    //   userIds = await MAnggotaRombel.query()
+    //     .where({ m_rombel_id: m_rombel_id })
+    //     .pluck("m_user_id");
+    // } else if (sekolah_id) {
+    //   userIds = await User.query()
+    //     .where({ m_sekolah_id: sekolah_id })
+    //     .ids();
+    // } 
+
+  }
+  
+  async showUserPerpus({ response, request, params:{id} }) {
+
+    let user
+    user = await User.query()
+    .with("anggotaRombel", (builder)=>{
+      builder.with("rombel", (builder)=>{
+        builder.select("id", "nama")
+      }).select("m_rombel_id", "id", "m_user_id")
+    })
+    .where({ dihapus: 0 })
+    .whereIn("role", ["siswa", "guru"])
+    .andWhere({ id })
+    .select("id", "nama", "whatsapp", "role")
+    .first()
+
+
+    return response.ok(user)
+
+    // let userIds;
+    // if (m_rombel_id) {
+    //   userIds = await MAnggotaRombel.query()
+    //     .where({ m_rombel_id: m_rombel_id })
+    //     .pluck("m_user_id");
+    // } else if (sekolah_id) {
+    //   userIds = await User.query()
+    //     .where({ m_sekolah_id: sekolah_id })
+    //     .ids();
+    // } 
+
+  }
 }
 
 module.exports = UserController;

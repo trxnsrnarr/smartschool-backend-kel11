@@ -18,6 +18,9 @@ const { route, RouteGroup } = require("@adonisjs/framework/src/Route/Manager");
 /** @type {typeof import('@adonisjs/framework/src/Route/Manager')} */
 const Route = use("Route");
 
+Route.get("/data-perpus", 'UserController.getUserPerpus')
+Route.get("/data-perpus/:id", 'UserController.showUserPerpus')
+
 Route.get('/master/kcd-leaderboard', 'MainController.getKcdLeaderboard')
 Route.get(
   "/master/sekolah-dinas-summary",
