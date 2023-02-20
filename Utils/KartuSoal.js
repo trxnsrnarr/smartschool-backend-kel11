@@ -1,7 +1,7 @@
 const htmlEscaper = require("html-escaper");
 const formattedHTML = (source) => {
     if(source.trim()){
-        return  `<div>${htmlEscaper.unescape(source)}</div>`
+        return  `<meta charset="UTF-8"><div>${htmlEscaper.unescape(source)}</div>`
     } else {
         return "<div>-</div>"
     }
