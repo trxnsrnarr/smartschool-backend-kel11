@@ -860,7 +860,15 @@ class UserController {
       .select("id", "nama", "whatsapp", "role")
       .first();
 
-    return response.ok(user);
+    return response.ok({
+      user: {
+        id: d.id,
+        nama: d.nama,
+        role: d.role,
+        whatsapp: d.whatsapp,
+        kelas: d.anggotaRombel.rombel ? d?.anggotaRombel?.rombel?.nama : "-",
+      },
+    });
 
     // let userIds;
     // if (m_rombel_id) {
