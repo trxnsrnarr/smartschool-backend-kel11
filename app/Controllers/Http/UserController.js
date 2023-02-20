@@ -123,7 +123,7 @@ class UserController {
 
     const user = await auth.getUser();
 
-    const { role,  m_rombel_id, user_id } = request.post();
+    const { role, m_rombel_id, user_id } = request.post();
 
     if (user.role != "admin") {
       return response.forbidden({ message: messageForbidden });
@@ -147,9 +147,7 @@ class UserController {
       });
     }
 
-    await User.query()
-      .whereIn("id", userIds)
-      .update({dihapus:1 });
+    await User.query().whereIn("id", userIds).update({ dihapus: 1 });
 
     return response.ok({
       message: messageDeleteSuccess,
@@ -664,11 +662,9 @@ class UserController {
 
     const user = await auth.getUser();
 
-    let { m_ta_id } =
-      request.post();
+    let { m_ta_id } = request.post();
 
-       const guru = await User.query().where({ id: user.id }).update({m_ta_id});
-
+    const guru = await User.query().where({ id: user.id }).update({ m_ta_id });
 
     if (!guru) {
       return response.notFound({
@@ -762,27 +758,79 @@ class UserController {
   }
 
   async getUserPerpus({ response, request, auth }) {
+    const { search, sekolah_id } = request.get();
 
-    const { search, sekolah_id } = request.get()
-    let user
+    const dataTA = await Mta.query()
+      .andWhere({ m_sekolah_id: sekolah_id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ aktif: 1 })
+      .first();
+    // return {user,ta_id}
+
+    const rombelDataIds = await MRombel.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah_id })
+      .where({ m_ta_id: dataTA?.id })
+      .ids();
+
+    const anggotaRombelIds = await MAnggotaRombel.query()
+      .where({ dihapus: 0 })
+      .whereIn("m_rombel_id", rombelDataIds)
+      .pluck("m_user_id");
+
+    const userGuru = await User.query()
+      .where({ role: "guru" })
+      .andWhere({ m_sekolah_id: sekolah_id })
+      .ids();
+
+    let user;
     user = User.query()
-    .with("anggotaRombel", (builder)=>{
-      builder.with("rombel", (builder)=>{
-        builder.select("id", "nama")
-      }).select("m_rombel_id", "id", "m_user_id")
-    })
-    .where({ dihapus: 0 })
-    .whereIn("role", ["siswa", "guru"])
-    .andWhere({ m_sekolah_id: sekolah_id })
-    .select("id", "nama", "whatsapp", "role")
+      .with("anggotaRombel", (builder) => {
+        builder
+          .with("rombel", (builder) => {
+            builder.select("id", "nama");
+          })
+          .select("m_rombel_id", "id", "m_user_id");
+      })
+      .where({ dihapus: 0 })
+      .whereIn("id", [...anggotaRombelIds, ...userGuru])
+      .whereIn("role", ["siswa", "guru"])
+      .andWhere({ m_sekolah_id: sekolah_id })
+      .select("id", "nama", "whatsapp", "role");
 
     if (search) {
-      user.andWhere("nama", "like", `%${search}%`).orWhere("whatsapp", "like", `%${search}%`)
+      user
+        .andWhere("nama", "like", `%${search}%`)
+        .orWhere("whatsapp", "like", `%${search}%`);
     }
 
-    const data = await user.fetch()
+    user = await user.fetch();
 
-    return response.ok(data)
+    const data = await Promise.all(
+      user?.toJSON().map((d) => {
+        if (d?.role == "guru") {
+          return {
+            id: d.id,
+            nama: d?.nama,
+            role: d?.role,
+            whatsapp: d?.whatsapp,
+          };
+        }
+        if (d?.role == "siswa") {
+          return {
+            id: d.id,
+            nama: d?.nama,
+            role: d?.role,
+            whatsapp: d?.whatsapp,
+            kelas: d?.anggotaRombel?.rombel
+              ? d?.anggotaRombel?.rombel?.nama
+              : "-",
+          };
+        }
+      })
+    );
+
+    return response.ok(data);
 
     // let userIds;
     // if (m_rombel_id) {
@@ -793,27 +841,26 @@ class UserController {
     //   userIds = await User.query()
     //     .where({ m_sekolah_id: sekolah_id })
     //     .ids();
-    // } 
-
+    // }
   }
-  
-  async showUserPerpus({ response, request, params:{id} }) {
 
-    let user
+  async showUserPerpus({ response, request, params: { id } }) {
+    let user;
     user = await User.query()
-    .with("anggotaRombel", (builder)=>{
-      builder.with("rombel", (builder)=>{
-        builder.select("id", "nama")
-      }).select("m_rombel_id", "id", "m_user_id")
-    })
-    .where({ dihapus: 0 })
-    .whereIn("role", ["siswa", "guru"])
-    .andWhere({ id })
-    .select("id", "nama", "whatsapp", "role")
-    .first()
+      .with("anggotaRombel", (builder) => {
+        builder
+          .with("rombel", (builder) => {
+            builder.select("id", "nama");
+          })
+          .select("m_rombel_id", "id", "m_user_id");
+      })
+      .where({ dihapus: 0 })
+      .whereIn("role", ["siswa", "guru"])
+      .andWhere({ id })
+      .select("id", "nama", "whatsapp", "role")
+      .first();
 
-
-    return response.ok(user)
+    return response.ok(user);
 
     // let userIds;
     // if (m_rombel_id) {
@@ -824,8 +871,7 @@ class UserController {
     //   userIds = await User.query()
     //     .where({ m_sekolah_id: sekolah_id })
     //     .ids();
-    // } 
-
+    // }
   }
 }
 
