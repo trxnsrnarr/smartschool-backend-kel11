@@ -864,11 +864,11 @@ class UserController {
 
     return response.ok({
       user: {
-        id: d.id,
-        nama: d.nama,
-        role: d.role,
-        whatsapp: d.whatsapp,
-        kelas: d.anggotaRombel.rombel ? d?.anggotaRombel?.rombel?.nama : "-",
+        id: user?.id,
+        nama: user?.nama,
+        role: user?.role,
+        whatsapp: user?.whatsapp,
+        kelas: user?.anggotaRombel.rombel ? user?.anggotaRombel?.rombel?.nama : "-",
       },
     });
 
