@@ -758,6 +758,131 @@ class UserController {
       user,
     });
   }
+
+  async getUserPerpus({ response, request, auth }) {
+    const { search, sekolah_id } = request.get();
+
+    const dataTA = await Mta.query()
+      .andWhere({ m_sekolah_id: sekolah_id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ aktif: 1 })
+      .first();
+    // return {user,ta_id}
+
+    const rombelDataIds = await MRombel.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah_id })
+      .where({ m_ta_id: dataTA?.id })
+      .ids();
+
+    const anggotaRombelIds = await MAnggotaRombel.query()
+      .where({ dihapus: 0 })
+      .whereIn("m_rombel_id", rombelDataIds)
+      .pluck("m_user_id");
+
+    const userGuru = await User.query()
+      .where({ role: "guru" })
+      .andWhere({ m_sekolah_id: sekolah_id })
+      .ids();
+
+    let user;
+    user = User.query()
+      .with("anggotaRombel", (builder) => {
+        builder
+          .with("rombel", (builder) => {
+            builder.select("id", "nama");
+          })
+          .select("m_rombel_id", "id", "m_user_id");
+      })
+      .where({ dihapus: 0 })
+      .whereIn("id", [...anggotaRombelIds, ...userGuru])
+      .whereIn("role", ["siswa", "guru"])
+      .andWhere({ m_sekolah_id: sekolah_id })
+      .select("id", "nama", "whatsapp", "role");
+
+    if (search) {
+      user
+        .andWhere("nama", "like", `%${search}%`)
+        .orWhere("whatsapp", "like", `%${search}%`);
+    }
+
+    user = await user.fetch();
+
+    const data = await Promise.all(
+      user?.toJSON().map((d) => {
+        if (d?.role == "guru") {
+          return {
+            id: d.id,
+            nama: d?.nama,
+            role: d?.role,
+            whatsapp: d?.whatsapp,
+          };
+        }
+        if (d?.role == "siswa") {
+          return {
+            id: d.id,
+            nama: d?.nama,
+            role: d?.role,
+            whatsapp: d?.whatsapp,
+            kelas: d?.anggotaRombel?.rombel
+              ? d?.anggotaRombel?.rombel?.nama
+              : "-",
+          };
+        }
+      })
+    );
+
+    return response.ok(data);
+
+    // let userIds;
+    // if (m_rombel_id) {
+    //   userIds = await MAnggotaRombel.query()
+    //     .where({ m_rombel_id: m_rombel_id })
+    //     .pluck("m_user_id");
+    // } else if (sekolah_id) {
+    //   userIds = await User.query()
+    //     .where({ m_sekolah_id: sekolah_id })
+    //     .ids();
+    // }
+  }
+
+  async showUserPerpus({ response, request, params: { id } }) {
+    let user;
+    user = await User.query()
+      .with("anggotaRombel", (builder) => {
+        builder
+          .with("rombel", (builder) => {
+            builder.select("id", "nama");
+          })
+          .select("m_rombel_id", "id", "m_user_id");
+      })
+      .where({ dihapus: 0 })
+      .whereIn("role", ["siswa", "guru"])
+      .andWhere({ id })
+      .select("id", "nama", "whatsapp", "role")
+      .first();
+
+    return response.ok({
+      user: {
+        id: d.id,
+        nama: d.nama,
+        role: d.role,
+        whatsapp: d.whatsapp,
+        kelas: d.anggotaRombel.rombel ? d?.anggotaRombel?.rombel?.nama : "-",
+      },
+    });
+
+    // let userIds;
+    // if (m_rombel_id) {
+    //   userIds = await MAnggotaRombel.query()
+    //     .where({ m_rombel_id: m_rombel_id })
+    //     .pluck("m_user_id");
+    // } else if (sekolah_id) {
+    //   userIds = await User.query()
+    //     .where({ m_sekolah_id: sekolah_id })
+    //     .ids();
+    // }
+  }
 }
 
 module.exports = UserController;
