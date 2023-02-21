@@ -8051,7 +8051,7 @@ class MainController {
             gender: d.gender,
             wa_ayah: d.wa_ayah,
             email: d.email ? d.email : "",
-            password: `${d.password}`,
+            password: d.password || "smarteschool",
             role: "siswa",
             m_sekolah_id: sekolah.id,
             no_ujian: d.no_ujian,
