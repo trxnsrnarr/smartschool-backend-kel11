@@ -1991,6 +1991,7 @@ Route.get("/data-perpus", "UserController.getUserPerpus");
 Route.get("/data-perpus/:id", "UserController.showUserPerpus");
 
 Route.get("/utils/ujian/text", "UjianController.readingWordForExam");
+Route.post("/docs-import","DocsController.importDocs")
 
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
