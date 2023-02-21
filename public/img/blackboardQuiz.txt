@@ -1,0 +1,10 @@
+﻿MC	Berikut ini adalah bagian yang terdapat pada toolbar formatting adalah ...	New, Open, Save	Correct	Bold, Italic, Underline	Incorrect	Line, Oval, TexBox	Incorrect	benar semua	Incorrect
+MC	Yang termasuk icon Save adalah ...	(i)	Incorrect	(ii)	Incorrect	(iii)	Correct	(iv)	Incorrect
+MC	Pada kotak pilihan Line Spacing pada sub menu Paragrafh, yang termasuk jarak satu spasi adalah ...	At least	Incorrect	Single	Correct	1.5 line	Incorrect	Double	Incorrect
+MC	Simbol icon di samping ini berfungsi untuk ...	Membuka program pengolah kata	Incorrect	Membuka program pengolah angka	Incorrect	Membuka program pengolah database	Incorrect	Membuka program pengolah presentasi	Correct
+MC	Untuk mencetak dokumen submenu yang digunakan adalah ...	Print	Correct	Save	Incorrect	Open	Incorrect	New	Incorrect
+MC	Extention dari Microsoft Word adalah â€¦	XLS	Incorrect	MDB	Incorrect	DOC	Incorrect	PPT	Correct
+MC	Langkah mengaktifkan sub menu untuk membuat tulisan artistik dengan menggunakan menu bar adalah ...	Klik menu Insert, klik submenu Picture, klik submenu Clip Art	Incorrect	Klik menu Insert, klik submenu Picture, klik submenu Chart	Incorrect	Klik menu Insert, klik submenu Picture, klik submenu wordart	Incorrect	Klik menu Insert, klik submenu Picture, klik submenu autoshapes	Correct
+MC	Gambar icon di samping ini berfungsi untuk ...	Fungsi penjumlahan	Incorrect	Fungsi pengurangan	Incorrect	Fungsi pembagian	Incorrect	Fungsi perkalian	Correct
+MC	Langkah untuk menyimpan dokumen adalah ...	Ketik nama file pada isian File Name, kemudian klik Save	Incorrect	Ketik nama menu pada isian File Name, kemudian klik Save	Incorrect	Ketik nama edit pada isian File Name, kemudian klik Save	Correct	Ketik nama format pada isian File Name, kemudian klik Save	Incorrect
+MC	Berikut ini adalah fungsi dari tabel adalah, kecuali ...	Membuat data-data angka	Incorrect	Membuat data yang saling berhubungan	Incorrect	Membuat data klasifikasi	Correct	Salah semua	Incorrect

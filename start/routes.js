@@ -677,6 +677,7 @@ Route.get(
   "/peserta-ujian/:peserta_ujian_id",
   "MainController.detailPesertaUjian"
 );
+
 Route.post("/peserta-ujian", "MainController.postPesertaUjian");
 Route.put("/peserta-ujian/:peserta_ujian_id", "MainController.putPesertaUjian");
 Route.put(
@@ -1988,6 +1989,8 @@ Route.put("/bobot-nilai/:bobot_id", "MainController.putBobotNilai");
 Route.get("/data-migrasi", "UserController.getDataMigrasi");
 Route.get("/data-perpus", "UserController.getUserPerpus");
 Route.get("/data-perpus/:id", "UserController.showUserPerpus");
+
+Route.get("/utils/ujian/text", "UjianController.readingWordForExam");
 
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)

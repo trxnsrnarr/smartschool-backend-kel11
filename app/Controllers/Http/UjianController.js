@@ -11,13 +11,15 @@ const TkSoalUjian = use("App/Models/TkSoalUjian");
 const MSoalUjian = use("App/Models/MSoalUjian");
 const MTemplateKesukaranMapel = use("App/Models/MTemplateKesukaranMapel");
 const MPeringatanUjianSiswa = use("App/Models/MPeringatanUjianSiswa");
-
+const fs = require('fs');
+const readline = require('readline');
 const Firestore = use("App/Models/Firestore");
 const firestore = new Firestore();
 const db = firestore.db();
 const bucket = firestore.bucket();
 const FieldValue = firestore.FieldValue();
 var striptags = require("striptags");
+const Helpers = use("Helpers");
 
 const moment = require("moment");
 require("moment/locale/id");
@@ -1216,6 +1218,38 @@ class UjianController {
     return response.ok({
       message: messagePutSuccess,
     });
+  }
+
+  async processLineByLine(fileText) {
+    const fileStream = fs.createReadStream(fileText);
+  
+    const rl = readline.createInterface({
+      input: fileStream,
+      crlfDelay: Infinity
+    });
+
+    let content = []
+  
+    for await (const line of rl) {
+       content.push(line)
+    }
+
+    return content
+  }
+
+  async readingWordForExam() {
+    try {
+      const content = await this.processLineByLine(Helpers.publicPath("img/blackboardQuiz.txt"))
+      let pattern = /\t/;
+
+      // ini cara dapetin semua soal
+      // return (content);
+
+      // ini cara dapetin per soal
+      return (content)[0].split(pattern).splice(1);
+    } catch (err) {
+      console.log(err);
+    } 
   }
 
   async postDibacaPeringatanUjianGuru({
