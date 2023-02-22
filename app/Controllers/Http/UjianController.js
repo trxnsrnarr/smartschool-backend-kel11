@@ -1268,19 +1268,19 @@ class UjianController {
       );
       let pattern = /\t/;
 
-      let totalPG = 0;
-      let totalEsai = 0;
-      const data2 = await Promise.all(
-        content.map((d) => {
-          if (d.split(pattern)[0].includes("ESS")) {
-            totalEsai = totalEsai + 1;
-            return d.split(pattern);
-          } else {
-            totalPG = totalPG + 1;
-            return d.split(pattern);
-          }
-        })
-      );
+      // let totalPG = 0;
+      // let totalEsai = 0;
+      // const data2 = await Promise.all(
+      //   content.map((d) => {
+      //     if (d.split(pattern)[0].includes("ESS")) {
+      //       totalEsai = totalEsai + 1;
+      //       return d.split(pattern);
+      //     } else {
+      //       totalPG = totalPG + 1;
+      //       return d.split(pattern);
+      //     }
+      //   })
+      // );
 
       // ini cara dapetin semua soal
       // return (content);
@@ -1290,8 +1290,8 @@ class UjianController {
 
       //   return datas
       // }))
-      const nilaiPerSoalPg = (total_nilai_pg / totalPG).toFixed(2);
-      const nilaiPerSoalEsai = (total_nilai_esai / totalEsai).toFixed(2);
+      // const nilaiPerSoalPg = (total_nilai_pg / totalPG).toFixed(2);
+      // const nilaiPerSoalEsai = (total_nilai_esai / totalEsai).toFixed(2);
       // return nilaiPerSoal
 
       let totalSoalTambah = 0;
@@ -1301,7 +1301,7 @@ class UjianController {
           const soalUjian = await MSoalUjian.create({
             bentuk: "esai",
             pertanyaan: d[0] ? htmlEscaper.escape(d[0]) : "",
-            nilai_soal: nilaiPerSoalEsai,
+            nilai_soal: total_nilai_esai,
             // kj_pg,
             m_user_id: user.id,
             dihapus: 0,
@@ -1349,7 +1349,7 @@ class UjianController {
             jawaban_c: d[5] ? htmlEscaper.escape(d[5]) : null,
             jawaban_d: d[7] ? htmlEscaper.escape(d[7]) : null,
             jawaban_e: d[9] ? htmlEscaper.escape(d[9]) : null,
-            nilai_soal: nilaiPerSoalPg,
+            nilai_soal: total_nilai_pg,
             kj_pg,
             m_user_id: user.id,
             dihapus: 0,
