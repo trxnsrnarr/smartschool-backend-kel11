@@ -15230,12 +15230,12 @@ ${jamPerubahan}`;
     ];
 
     let tipeUjian = [
-      { value: "pts1", label: "Penilaian Tengah Semester 1" },
-      { value: "pts2", label: "Penilaian Tengah Semester 2" },
+      { value: "pts1", label: "Penilaian Tengah Semester 1 / Sumatif Tengah Semester 1" },
+      { value: "pts2", label: "Penilaian Tengah Semester 2 / Sumatif Tengah Semester 2" },
       { value: "pas1", label: "Penilaian Akhir Semester 1" },
       { value: "pas2", label: "Penilaian Akhir Semester 2" },
       { value: "to", label: "Try Out" },
-      { value: "us", label: "Ujian Sekolah" },
+      { value: "us", label: "Ujian Sekolah / Asesmen Sumatif Sekolah" },
     ];
 
     const pembayaranKategori = await MPembayaranKategori.query()
