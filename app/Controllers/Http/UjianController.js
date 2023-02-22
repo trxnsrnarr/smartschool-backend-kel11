@@ -11,8 +11,8 @@ const TkSoalUjian = use("App/Models/TkSoalUjian");
 const MSoalUjian = use("App/Models/MSoalUjian");
 const MTemplateKesukaranMapel = use("App/Models/MTemplateKesukaranMapel");
 const MPeringatanUjianSiswa = use("App/Models/MPeringatanUjianSiswa");
-const fs = require('fs');
-const readline = require('readline');
+const fs = require("fs");
+const readline = require("readline");
 const Firestore = use("App/Models/Firestore");
 const firestore = new Firestore();
 const db = firestore.db();
@@ -20,6 +20,8 @@ const bucket = firestore.bucket();
 const FieldValue = firestore.FieldValue();
 var striptags = require("striptags");
 const Helpers = use("Helpers");
+const htmlEscaper = require("html-escaper");
+const MRpp = use("App/Models/MRpp");
 
 const moment = require("moment");
 require("moment/locale/id");
@@ -1222,34 +1224,173 @@ class UjianController {
 
   async processLineByLine(fileText) {
     const fileStream = fs.createReadStream(fileText);
-  
+
     const rl = readline.createInterface({
       input: fileStream,
-      crlfDelay: Infinity
+      crlfDelay: Infinity,
     });
 
-    let content = []
-  
+    let content = [];
+
     for await (const line of rl) {
-       content.push(line)
+      content.push(line);
     }
 
-    return content
+    return content;
   }
 
-  async readingWordForExam() {
+  async readingWordForExam({ request, response, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const fileUpload = request.file("file");
+
+    const user = await auth.getUser();
+
+    const { m_ujian_id, total_nilai_pg, total_nilai_esai } = request.post();
+    // const fname = `doc`;
+
+    const tes = await fileUpload.move(Helpers.publicPath("uploads/"), {
+      name: fileUpload?.clientName,
+      overwrite: true,
+    });
+
+    if (!fileUpload.moved()) {
+      return fileUpload.error();
+    }
     try {
-      const content = await this.processLineByLine(Helpers.publicPath("img/blackboardQuiz.txt"))
+      const content = await this.processLineByLine(
+        Helpers.publicPath(`uploads/${fileUpload?.clientName}`)
+      );
       let pattern = /\t/;
+
+      let totalPG = 0;
+      let totalEsai = 0;
+      const data2 = await Promise.all(
+        content.map((d) => {
+          if (d.split(pattern)[0].includes("ESS")) {
+            totalEsai = totalEsai + 1;
+            return d.split(pattern);
+          } else {
+            totalPG = totalPG + 1;
+            return d.split(pattern);
+          }
+        })
+      );
 
       // ini cara dapetin semua soal
       // return (content);
 
       // ini cara dapetin per soal
-      return (content)[0].split(pattern).splice(1);
+      // const data = await Promise.all(content.map(async(d)=>{
+
+      //   return datas
+      // }))
+      const nilaiPerSoalPg = (total_nilai_pg / totalPG).toFixed(2);
+      const nilaiPerSoalEsai = (total_nilai_esai / totalEsai).toFixed(2);
+      // return nilaiPerSoal
+
+      let totalSoalTambah = 0;
+      for (let i = 0; i < content.length; i++) {
+        const d = content[i].split(pattern).splice(1);
+        if(content[i].split(pattern)[0].includes("ESS")){
+          const soalUjian = await MSoalUjian.create({
+            bentuk: "esai",
+            pertanyaan: d[0] ? htmlEscaper.escape(d[0]) : "",
+            nilai_soal: nilaiPerSoalEsai,
+            // kj_pg,
+            m_user_id: user.id,
+            dihapus: 0,
+          });
+
+          const tkSoalUjian = await TkSoalUjian.create({
+            dihapus: 0,
+            m_ujian_id: m_ujian_id,
+            m_soal_ujian_id: soalUjian.id,
+          });
+
+          totalSoalTambah = totalSoalTambah + 1;
+        }else {
+         
+          // const result = await Promise.all(
+          //   data.map(async (d) => {
+
+          let kj_pg;
+
+          if (d[2] == "Correct") {
+            kj_pg = "A";
+          }
+
+          if (d[4] == "Correct") {
+            kj_pg = "B";
+          }
+
+          if (d[6] == "Correct") {
+            kj_pg = "C";
+          }
+
+          if (d[8] == "Correct") {
+            kj_pg = "D";
+          }
+
+          if (d[10] == "Correct") {
+            kj_pg = "E";
+          }
+
+          const soalUjian = await MSoalUjian.create({
+            bentuk: "pg",
+            pertanyaan: d[0] ? htmlEscaper.escape(d[0]) : "",
+            jawaban_a: d[1] ? htmlEscaper.escape(d[1]) : null,
+            jawaban_b: d[3] ? htmlEscaper.escape(d[3]) : null,
+            jawaban_c: d[5] ? htmlEscaper.escape(d[5]) : null,
+            jawaban_d: d[7] ? htmlEscaper.escape(d[7]) : null,
+            jawaban_e: d[9] ? htmlEscaper.escape(d[9]) : null,
+            nilai_soal: nilaiPerSoalPg,
+            kj_pg,
+            m_user_id: user.id,
+            dihapus: 0,
+          });
+
+          const tkSoalUjian = await TkSoalUjian.create({
+            dihapus: 0,
+            m_ujian_id: m_ujian_id,
+            m_soal_ujian_id: soalUjian.id,
+          });
+          // await Promise.all(
+          //   d
+          //     .split(pattern)
+          //     .splice(1)
+          //     .map(async (s) => {
+
+          //     })
+          // );
+
+          totalSoalTambah = totalSoalTambah + 1;
+          //   })
+          // );
+        }
+      }
+    
+      // return datas;
+      const checkTotal = await MRpp.query()
+        .where({ m_ujian_id: m_ujian_id })
+        .first();
+
+      if (checkTotal) {
+        await MRpp.query()
+          .where({ m_ujian_id: m_ujian_id })
+          .update({
+            soal: checkTotal.soal + totalSoalTambah,
+          });
+      }
+      return response.ok({ message: messagePostSuccess });
     } catch (err) {
       console.log(err);
-    } 
+    }
   }
 
   async postDibacaPeringatanUjianGuru({
