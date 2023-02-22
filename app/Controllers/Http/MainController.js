@@ -12778,25 +12778,25 @@ class MainController {
       });
     }
 
-    if (user.wa_real) {
-      WhatsAppService.sendMessage(
-        user.wa_real,
-        `Muka Anda terdeteksi camera pada ${moment(
-          waktu_masuk || waktu_pulang
-        ).format("YYYY-MM-DD HH:mm:ss")}`
-      );
-    }
+    // if (user.wa_real) {
+    //   WhatsAppService.sendMessage(
+    //     user.wa_real,
+    //     `Muka Anda terdeteksi camera pada ${moment(
+    //       waktu_masuk || waktu_pulang
+    //     ).format("YYYY-MM-DD HH:mm:ss")}`
+    //   );
+    // }
 
-    const fileName = new Date().getTime();
-    let url = "";
-    if (photo) {
-      const filePhoto = bucket.file(`fr/${fileName}.jpeg`);
-      filePhoto.save(Buffer.from(photo, "base64")).then(async () => {
-        const response = await filePhoto.get();
-        url = response[1].mediaLink;
-      });
-      // await Drive.put(`fr/${fileName}.jpeg`, Buffer.from(photo, "base64"));
-    }
+    // const fileName = new Date().getTime();
+    // let url = "";
+    // if (photo) {
+    //   const filePhoto = bucket.file(`fr/${fileName}.jpeg`);
+    //   filePhoto.save(Buffer.from(photo, "base64")).then(async () => {
+    //     const response = await filePhoto.get();
+    //     url = response[1].mediaLink;
+    //   });
+    //   // await Drive.put(`fr/${fileName}.jpeg`, Buffer.from(photo, "base64"));
+    // }
 
     const absen = await MAbsen.query()
       .where(
@@ -12813,9 +12813,9 @@ class MainController {
         m_user_id: user.id,
         role: user.role,
         absen: "hadir",
-        foto_masuk_local: url,
-        masker: mask,
-        suhu: temp,
+        // foto_masuk_local: url,
+        // masker: mask,
+        // suhu: temp,
         waktu_masuk,
         waktu_pulang,
       });
@@ -12825,9 +12825,9 @@ class MainController {
         m_user_id: user.id,
         role: user.role,
         absen: "hadir",
-        foto_pulang_local: url,
-        masker: mask,
-        suhu: temp,
+        // foto_pulang_local: url,
+        // masker: mask,
+        // suhu: temp,
         waktu_masuk,
         waktu_pulang,
       });
