@@ -868,7 +868,7 @@ class UserController {
         nama: user?.nama,
         role: user?.role,
         whatsapp: user?.whatsapp,
-        kelas: user?.anggotaRombel.rombel ? user?.anggotaRombel?.rombel?.nama : "-",
+        kelas: user.toJSON().anggotaRombel ? user.toJSON().anggotaRombel.rombel.nama : "-"
       },
     });
 
