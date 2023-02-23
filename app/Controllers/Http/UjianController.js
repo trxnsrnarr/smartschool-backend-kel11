@@ -1297,7 +1297,7 @@ class UjianController {
       let totalSoalTambah = 0;
       for (let i = 0; i < content.length; i++) {
         const d = content[i].split(pattern).splice(1);
-        if(content[i].split(pattern)[0].includes("ESS")){
+        if (content[i].split(pattern)[0].includes("ESS")) {
           const soalUjian = await MSoalUjian.create({
             bentuk: "esai",
             pertanyaan: d[0] ? htmlEscaper.escape(d[0]) : "",
@@ -1314,8 +1314,7 @@ class UjianController {
           });
 
           totalSoalTambah = totalSoalTambah + 1;
-        }else {
-         
+        } else {
           // const result = await Promise.all(
           //   data.map(async (d) => {
 
@@ -1374,7 +1373,7 @@ class UjianController {
           // );
         }
       }
-    
+
       // return datas;
       const checkTotal = await MRpp.query()
         .where({ m_ujian_id: m_ujian_id })
@@ -1484,6 +1483,106 @@ class UjianController {
 
     return response.ok({
       message: messageDeleteSuccess,
+    });
+  }
+
+  async detailNilaiPg({
+    response,
+    request,
+    auth,
+    params: { peserta_ujian_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const pesertaUjian = await TkPesertaUjian.query()
+      .with("jadwalUjian", (builder) => {
+        builder.with("jadwalUjian", (builder) => {
+          builder.with("ujian", (builder) => {
+            builder.with("soalUjian", (builder) => {
+              builder
+                .where({ dihapus: 0 })
+                .select("id", "m_ujian_id", "m_soal_ujian_id");
+            });
+          });
+        });
+      })
+      .with("jawabanSiswa", (builder) => {
+        builder.with("soal");
+      })
+      .with("user")
+      .with("peringatan")
+      .where({ id: peserta_ujian_id })
+      .andWhere({ m_user_id: user.id })
+      .first();
+
+    let metaHasil = {
+      nilaiPg: 0,
+      nilaiPgKompleks: 0,
+      nilaiMenjodohkan: 0,
+      benar: 0,
+    };
+
+    await Promise.all(
+      pesertaUjian.toJSON().jawabanSiswa.map(async (d) => {
+        if (d.soal.bentuk == "pg") {
+          if (d.jawaban_pg == d.soal.kj_pg) {
+            metaHasil.nilaiPg = metaHasil.nilaiPg + d.soal.nilai_soal;
+            metaHasil.benar = metaHasil.benar + 1;
+          }
+        } else if (d.soal.bentuk == "pg_kompleks") {
+          const jawabanKjKompleks = d.soal.jawaban_pg_kompleks.split(",");
+          const check1 = jawabanKjKompleks.every((e) =>
+            d.jawaban_pg_kompleks.includes(e)
+          );
+          const check2 = d.jawaban_pg_kompleks.every((e) =>
+            d.soal.jawaban_pg_kompleks.includes(e)
+          );
+          if (check1 && check2) {
+            metaHasil.nilaiPgKompleks =
+              metaHasil.nilaiPgKompleks + d.soal.nilai_soal;
+            metaHasil.benar = metaHasil.benar + 1;
+          }
+        } else if (d.soal.bentuk == "menjodohkan") {
+          // const jawabanKjMenjodohkan = d.soal.jawaban_pg_kompleks.split(",")
+          // const check1 = jawabanKjKompleks.every(e=> d.jawaban_pg_kompleks.includes(e))
+          // const check2 = d.jawaban_menjodohkan.every(e => d.soal.jawaban_pg_kompleks.includes(e))
+          if (d.jawaban_menjodohkan) {
+            if (d.jawaban_menjodohkan.length) {
+              d.jawaban_menjodohkan.map((e, id) => {
+                // metaHasil.nilaiMenjodohkan = metaHasil.nilaiMenjodohkan+','+ id ;
+                const check1 = d.soal.soal_menjodohkan.find(
+                  (r) => id + 1 == r.id
+                );
+                if (check1) {
+                  if (check1.jawaban == e - 1) {
+                    metaHasil.nilaiMenjodohkan =
+                      metaHasil.nilaiMenjodohkan + parseInt(check1.poin);
+                  }
+                }
+              });
+
+              // if (d.jawaban_rubrik_esai.indexOf("true") != -1) {
+              //   metaHasil.benar = metaHasil.benar + 1;
+              // }
+            }
+          }
+        }
+      })
+    );
+
+    
+
+    return response.ok({
+      peserta_ujian: pesertaUjian,
+      metaHasil,
     });
   }
 }

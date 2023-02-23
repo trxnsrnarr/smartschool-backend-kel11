@@ -1993,6 +1993,11 @@ Route.get("/data-perpus/:id", "UserController.showUserPerpus");
 Route.post("/import-soal-word", "UjianController.readingWordForExam");
 Route.post("/docs-import","DocsController.importDocs")
 
+Route.get(
+  "/nilai-og/:peserta_ujian_id",
+  "UjianController.detailNilaiPg"
+);
+
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");
