@@ -1994,7 +1994,7 @@ Route.post("/import-soal-word", "UjianController.readingWordForExam");
 Route.post("/docs-import","DocsController.importDocs")
 
 Route.get(
-  "/nilai-og/:peserta_ujian_id",
+  "/nilai-pg/:peserta_ujian_id",
   "UjianController.detailNilaiPg"
 );
 
