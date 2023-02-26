@@ -1528,6 +1528,8 @@ class UjianController {
       nilaiPgKompleks: 0,
       nilaiMenjodohkan: 0,
       benar: 0,
+      salah: 0,
+      jumlahSoal:pesertaUjian?.toJSON()?.jadwalUjian?.jadwalUjian?.jumlah_pg,
     };
 
     await Promise.all(
@@ -1536,6 +1538,8 @@ class UjianController {
           if (d.jawaban_pg == d.soal.kj_pg) {
             metaHasil.nilaiPg = metaHasil.nilaiPg + d.soal.nilai_soal;
             metaHasil.benar = metaHasil.benar + 1;
+          }else{
+            metaHasil.salah = metaHasil.salah + 1
           }
         } else if (d.soal.bentuk == "pg_kompleks") {
           const jawabanKjKompleks = d.soal.jawaban_pg_kompleks.split(",");
@@ -1577,8 +1581,6 @@ class UjianController {
         }
       })
     );
-
-    
 
     return response.ok({
       peserta_ujian: pesertaUjian,
