@@ -13613,11 +13613,11 @@ class MainController {
     let tipeUjian = [
       { value: "kuis", label: "Kuis" },
       { value: "ph", label: "Penilaian Harian" },
-      { value: "pts1", label: "Penilaian Tengah Semester 1" },
-      { value: "pts2", label: "Penilaian Tengah Semester 2" },
+      { value: "pts1", label: "Penilaian Tengah Semester 1 / Sumatif Tengah Semester 1" },
+      { value: "pts2", label: "Penilaian Tengah Semester 2 / Sumatif Tengah Semester 2" },
       { value: "pas1", label: "Penilaian Akhir Semester 1" },
       { value: "pas2", label: "Penilaian Akhir Semester 2" },
-      { value: "us", label: "Ujian Sekolah" },
+      { value: "us", label: "Ujian Sekolah / Asesmen Sumatif Sekolah" },
       { value: "to", label: "Try out" },
       { value: "literasi", label: "AKM - Literasi" },
       { value: "numerasi", label: "AKM - Numerasi" },
@@ -13633,7 +13633,7 @@ class MainController {
         { value: "sts1", label: "Sumatif Tengah Semester 1" },
         { value: "sts2", label: "Sumatif Tengah Semester 2" },
         { value: "sas1", label: "Sumatif Akhir Semester 1" },
-        { value: "sas2", label: "Sumatif Akhir Semester 2" },
+        { value: "sas2", label: "Sumatif Akhir Semester 2" }, 
         { value: "us", label: "Ujian Sekolah" },
         { value: "to", label: "Try out" },
         { value: "literasi", label: "AKM - Literasi" },
@@ -14080,14 +14080,15 @@ class MainController {
       ];
     }
 
+    
     let tipeUjian = [
       { value: "kuis", label: "Kuis" },
       { value: "ph", label: "Penilaian Harian" },
-      { value: "pts1", label: "Penilaian Tengah Semester 1" },
-      { value: "pts2", label: "Penilaian Tengah Semester 2" },
+      { value: "pts1", label: "Penilaian Tengah Semester 1 / Sumatif Tengah Semester 1" },
+      { value: "pts2", label: "Penilaian Tengah Semester 2 / Sumatif Tengah Semester 2" },
       { value: "pas1", label: "Penilaian Akhir Semester 1" },
       { value: "pas2", label: "Penilaian Akhir Semester 2" },
-      { value: "us", label: "Ujian Sekolah" },
+      { value: "us", label: "Ujian Sekolah / Asesmen Sumatif Sekolah" },
       { value: "to", label: "Try out" },
       { value: "literasi", label: "AKM - Literasi" },
       { value: "numerasi", label: "AKM - Numerasi" },
@@ -20789,12 +20790,12 @@ class MainController {
     ];
 
     let tipeUjian = [
-      { value: "pts1", label: "Penilaian Tengah Semester 1" },
-      { value: "pts2", label: "Penilaian Tengah Semester 2" },
+      { value: "pts1", label: "Penilaian Tengah Semester 1 / Sumatif Tengah Semester 1" },
+      { value: "pts2", label: "Penilaian Tengah Semester 2 / Sumatif Tengah Semester 2" },
       { value: "pas1", label: "Penilaian Akhir Semester 1" },
       { value: "pas2", label: "Penilaian Akhir Semester 2" },
       { value: "to", label: "Try Out" },
-      { value: "us", label: "Ujian Sekolah" },
+      { value: "us", label: "Ujian Sekolah / Asesmen Sumatif Sekolah" },
     ];
     const rombel = await MRombel.query()
       .where({ dihapus: 0 })
