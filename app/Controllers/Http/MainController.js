@@ -36188,15 +36188,7 @@ class MainController {
 
     const { search, page } = request.get();
 
-    const rombel = await MRombel.query()
-      .select("id", "nama", "tingkat")
-      .withCount("anggotaRombel as total", (builder) => {
-        builder.where({ dihapus: 0 });
-      })
-      .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta.id })
-      .fetch();
+    
 
     let siswa;
 
@@ -36226,6 +36218,19 @@ class MainController {
     if (search) {
       siswa.andWhere("nama", "like", `%${search}%`);
     }
+
+    const siswa1 = siswa
+
+    const userIds = await siswa1.ids()
+    const rombel = await MRombel.query()
+      .select("id", "nama", "tingkat")
+      .withCount("anggotaRombel as total", (builder) => {
+        builder.where({ dihapus: 0 }).whereIn("m_user_id",userIds);
+      })
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .fetch();
 
     return response.ok({
       rombel,
