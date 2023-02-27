@@ -36219,9 +36219,13 @@ class MainController {
       siswa.andWhere("nama", "like", `%${search}%`);
     }
 
-    const siswa1 = siswa
 
-    const userIds = await siswa1.ids()
+    const userIds = await User.query()
+    
+    .where({ m_sekolah_id: sekolah.id })
+    .andWhere({ dihapus: 0 })
+    .andWhere({ role: "siswa" }).ids();
+
     const rombel = await MRombel.query()
       .select("id", "nama", "tingkat")
       .withCount("anggotaRombel as total", (builder) => {
