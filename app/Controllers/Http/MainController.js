@@ -36263,7 +36263,8 @@ class MainController {
               })
               .with("sanksiSiswa", (builder) => {
                 builder.where({ dihapus: 0 });
-              }).where({dihapus:0});
+              })
+              .where({ dihapus: 0 });
           })
           .select("id", "m_user_id", "m_rombel_id")
           .where({ dihapus: 0 });
