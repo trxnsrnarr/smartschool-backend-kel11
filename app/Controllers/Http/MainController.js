@@ -14645,7 +14645,7 @@ class MainController {
         opsi_a_uraian,
         opsi_b_uraian,
         rubrik_kj: JSON.stringify(rubrik_kj),
-        pembahasan: htmlEscaper.escape(pembahasan),
+        pembahasan: pembahasan? htmlEscaper.escape(pembahasan):null,
         nilai_soal,
       });
 
