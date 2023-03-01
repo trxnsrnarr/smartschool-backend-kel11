@@ -4086,11 +4086,17 @@ class MainController {
     let { search, page, tingkat, jurusan_id, rombel_id, tingkat2 } =
       request.get();
 
+    const userIds = await User.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ role: "siswa" })
+      .ids();
+
     const jurusan = await MJurusan.query()
       .with("rombel", (builder) => {
         builder
           .withCount("anggotaRombel as jumlahAnggota", (builder) => {
-            builder.where({ dihapus: 0 });
+            builder.where({ dihapus: 0 }).whereIn("m_user_id",userIds);
           })
           .where({ dihapus: 0 })
           .andWhere({ m_ta_id: ta.id });
@@ -14645,7 +14651,7 @@ class MainController {
         opsi_a_uraian,
         opsi_b_uraian,
         rubrik_kj: JSON.stringify(rubrik_kj),
-        pembahasan: pembahasan? htmlEscaper.escape(pembahasan):null,
+        pembahasan: pembahasan ? htmlEscaper.escape(pembahasan) : null,
         nilai_soal,
       });
 
@@ -15354,6 +15360,7 @@ class MainController {
             .andWhere({ dihapus: 0 });
         })
         .whereIn("id", anggotaRombel)
+        .andWhere({ dihapus: 0 })
         .fetch();
     }
 
@@ -36188,8 +36195,6 @@ class MainController {
 
     const { search, page } = request.get();
 
-    
-
     let siswa;
 
     siswa = User.query()
@@ -36219,17 +36224,16 @@ class MainController {
       siswa.andWhere("nama", "like", `%${search}%`);
     }
 
-
     const userIds = await User.query()
-    
-    .where({ m_sekolah_id: sekolah.id })
-    .andWhere({ dihapus: 0 })
-    .andWhere({ role: "siswa" }).ids();
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ role: "siswa" })
+      .ids();
 
     const rombel = await MRombel.query()
       .select("id", "nama", "tingkat")
       .withCount("anggotaRombel as total", (builder) => {
-        builder.where({ dihapus: 0 }).whereIn("m_user_id",userIds);
+        builder.where({ dihapus: 0 }).whereIn("m_user_id", userIds);
       })
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
