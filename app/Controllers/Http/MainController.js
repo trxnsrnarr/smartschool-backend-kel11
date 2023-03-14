@@ -12910,6 +12910,7 @@ class MainController {
       user_id,
       lokasi_masuk,
       lokasi_pulang,
+      waktu_masuk,
     } = request.post();
 
     lampiran = lampiran ? lampiran.toString() : null;
@@ -12975,6 +12976,7 @@ class MainController {
         role: user.role,
         absen,
         keterangan,
+        waktu_masuk,
         foto_masuk,
         lokasi_masuk: JSON.stringify(lokasi_masuk),
         lokasi_pulang: JSON.stringify(lokasi_pulang),
@@ -13039,6 +13041,180 @@ class MainController {
       message: messagePutSuccess,
     });
   }
+
+  async postAbsenAdmin({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+    
+    
+        const user = await auth.getUser();
+
+    if (
+      user.role != "admin" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
+      return response.forbidden({ message: messageForbidden });
+    }
+
+    let {
+      absen,
+      keterangan,
+      lampiran,waktu_masuk,
+      // foto_pulang,
+      waktu_pulang,
+      foto_masuk,
+      lokasi_masuk,
+      lokasi_pulang,
+    } = request.post();
+
+    lampiran = lampiran ? lampiran.toString() : null;
+
+    // const anggotaRombel = await MAnggotaRombel.query()
+    //   .with("rombel", (builder) => {
+    //     builder.with("user", (builder) => {
+    //       builder.select("id", "nama", "wa_real");
+    //     });
+    //   })
+    //   .where({ m_user_id: user.id })
+    //   .andWhere({ dihapus: 0 })
+    //   .first();
+
+    // const mapel = await MMataPelajaran.query()
+    //   .where({ m_user_id: anggotaRombel.rombel.m_user_id })
+    //   .andWhere({ m_ta_id: ta.id })
+    //   .andWhere({ dihapus: 0 })
+    //   .first();
+
+    // const jadwalMengajar = await MJadwalMengajar.query()
+    //   .where({ m_mata_pelajaran_id: mapel.id })
+    //   .andWhere({ m_rombel_id: anggotaRombel.m_rombel_id })
+    //   .first();
+
+    let data;
+    if (absen != "hadir") {
+      data = await MAbsen.create({
+        m_sekolah_id: sekolah.id,
+        m_user_id: user.id,
+        role: user.role,
+        absen,
+        keterangan,
+        lampiran: lampiran,
+      });
+      // if (absen == "izin") {
+      //   await WhatsAppService.sendMessage(
+      //     anggotaRombel.rombel.user.wa_real,
+      //     `Halo ${
+      //       anggotaRombel.rombel.user.nama
+      //     }, anak perwalian Anda atas nama *${
+      //       user.nama
+      //     }* izin hari ini. Silahkan menekan tautan berikut untuk melihat detail keterangan absensi siswa Anda. \n \n${domain}/smarteschool/kelas${
+      //       jadwalMengajar.id
+      //     }/absen-harian`
+      //   );
+      // } else if (absen == "sakit") {
+      //   await WhatsAppService.sendMessage(
+      //     anggotaRombel.rombel.user.wa_real,
+      //     `Halo ${
+      //       anggotaRombel.rombel.user.nama
+      //     }, anak perwalian Anda atas nama *${
+      //       user.nama
+      //     }* hari ini sakit. Silahkan menekan tautan berikut untuk melihat detail keterangan absensi siswa Anda. \n \n${domain}/smarteschool/kelas${
+      //       jadwalMengajar.id
+      //     }/absen-harian`
+      //   );
+      // }
+    } else {
+      data = await MAbsen.create({
+        m_sekolah_id: sekolah.id,
+        m_user_id: user_id ? user_id : user.id,
+        role: user.role,
+        absen,
+        keterangan,waktu_masuk,
+        foto_masuk,
+        waktu_masuk,
+        waktu_pulang,
+        lokasi_masuk: JSON.stringify(lokasi_masuk),
+        lokasi_pulang: JSON.stringify(lokasi_pulang),
+      });
+    }
+
+    // await WhatsAppService.sendMessage(
+    //   user.whatsapp,
+    //   `Halo, absen anda sudah masuk. Anda masuk dengan keterangan *${absen}* \n ${keterangan ? keterangan : foto_masuk ? foto_masuk : null} \nPada pukul ${data.created_at}`
+    // );
+
+    return response.ok({
+      data: data,
+      message: messagePostSuccess,
+    });
+  }
+
+  async putAbsenAdmin({ response, request, auth, params: { absen_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const user = await auth.getUser();
+    if (
+      user.role != "admin" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
+      return response.forbidden({ message: messageForbidden });
+    }
+
+    const {
+      absen,
+      keterangan,
+      lampiran,
+      foto_pulang,
+      waktu_masuk,
+      waktu_pulang,
+      foto_masuk,
+      lokasi_masuk,
+      lokasi_pulang,
+    } = request.post();
+
+    // return JSON.stringify(lokasi_masuk) ;
+
+    if (absen != "hadir") {
+      await MAbsen.query().where({ id: absen_id }).update({
+        absen,
+        keterangan,
+        lampiran: lampiran.toString(),
+      });
+    } else {
+      await MAbsen.query()
+        .where({ id: absen_id })
+        .update({
+          foto_masuk,
+          absen,
+          waktu_masuk,
+          foto_pulang,
+          waktu_pulang,
+          lokasi_masuk: JSON.stringify(lokasi_masuk),
+          lokasi_pulang: JSON.stringify(lokasi_pulang),
+        });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
 
   async downloadAbsen({ response, request, auth }) {
     const domain = request.headers().origin;
@@ -14737,6 +14913,11 @@ class MainController {
               })
               .where("dihapus", 0);
           });
+      })
+      .with("user",(builder)=>{
+        builder.select("id","nama","m_sekolah_id").with("sekolah",(builder)=>{
+          builder.select("id","nama")
+        })
       })
       .andWhere({ dihapus: 0 })
       .andWhere(
@@ -53814,7 +53995,7 @@ class MainController {
                 row.getCell([`${(nox + 1) * 1 + 2}`]).value = `Telat`;
               }
               row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
-                absen ? absen.absen : "-"
+                absen ? `${absen.absen} (${moment(absen?.created_at).format("HH:mm:ss")} - ${moment(absen?.waktu_pulang).format("HH:mm:ss")})` : "-"
               }`;
             } else {
               row.getCell([`${(nox + 1) * 1 + 2}`]).value = `Alpa`;

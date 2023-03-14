@@ -67,6 +67,10 @@ class MJadwalUjian extends Model {
   ujian() {
     return this.belongsTo("App/Models/MUjian");
   }
+
+  user() {
+    return this.belongsTo("App/Models/User");
+  }
 }
 
 module.exports = MJadwalUjian;
