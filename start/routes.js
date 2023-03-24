@@ -1719,6 +1719,10 @@ Route.post(
   "/download-hasil-ujian/:jadwal_ujian_id",
   "SecondController.downloadHasilUjian"
 );
+Route.post(
+  "/download-hasil-ujian-2/:jadwal_ujian_id",
+  "SecondController.downloadHasilUjian2"
+);
 Route.put(
   "/gelombang-ppdb/:gelombang_ppdb_id",
   "PPDBController.putGelombangPPDB"
