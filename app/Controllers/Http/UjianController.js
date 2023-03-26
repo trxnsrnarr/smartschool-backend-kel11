@@ -1587,6 +1587,325 @@ class UjianController {
       metaHasil,
     });
   }
+  async downloadAnalisisHasilUjian({
+    response,
+    request,
+    auth,
+    params: { jadwal_ujian_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    const user = await auth.getUser();
+
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
+    const jadwalUjian = await MJadwalUjian.query()
+      .with("rombelUjian", (builder) => {
+        builder
+          .with("peserta", (builder) => {
+            builder.with("user"),
+              (builder) => {
+                builder.select("id", "nama");
+              };
+          })
+          .with("rombel")
+          .with("jadwalUjian", (builder) => {
+            builder.with("ujian");
+          });
+      })
+      .with("ujian", (builder) => {
+        builder.with("soal").withCount("soal as total");
+      })
+      .where({ id: jadwal_ujian_id })
+      .first();
+
+    // return jadwalUjian.toJSON().ujian.__meta__.total;
+
+    let workbook = new Excel.Workbook();
+    await Promise.all(
+      jadwalUjian.toJSON().rombelUjian.map(async (s) => {
+        let worksheet = workbook.addWorksheet(`${s.rombel.nama}`);
+        worksheet.getCell("A1").value = sekolah.nama;
+        worksheet.getCell("A2").value = s.rombel.nama;
+        worksheet.getCell("A3").value = jadwalUjian.toJSON().ujian.nama;
+        worksheet.getCell("A4").value = ta.tahun;
+
+        worksheet.getCell(
+          "A6"
+        ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
+        worksheet.mergeCells(`A1:Z1`);
+        worksheet.mergeCells(`A2:Z2`);
+        worksheet.mergeCells(`A3:Z3`);
+        worksheet.mergeCells(`A4:Z4`);
+        worksheet.mergeCells(`A6:Z6`);
+        worksheet.getColumn("A").width = 28;
+        worksheet.getColumn("B").width = 14;
+        worksheet.getColumn("C").width = 8;
+        worksheet.getColumn("D").width = 8.5;
+        worksheet.getColumn("E").width = 9;
+        worksheet.getColumn("F").width = 14;
+        worksheet.getColumn("G").width = 10;
+        worksheet.getColumn("H").width = 8;
+        worksheet.getColumn("I").width = 11;
+        worksheet.addConditionalFormatting({
+          ref: "A1:I4",
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 16,
+                  bold: true,
+                },
+                // fill: {
+                //   type: "pattern",
+                //   pattern: "solid",
+                //   bgColor: { argb: "0000FF", fgColor: { argb: "0000FF" } },
+                // },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+              },
+            },
+          ],
+        });
+
+        // add column headers
+        await Promise.all(
+          s.peserta
+            .sort((a, b) => ("" + a.user.nama).localeCompare(b.user.nama))
+            .map(async (d, idx) => {
+              worksheet.getRow(7).values = ["No", "Nama"];
+              worksheet.columns = [{ key: "no" }, { key: "user" }];
+              let row = worksheet.addRow({
+                no: `${idx + 1}`,
+                user: d.user ? d.user.nama : "-",
+              });
+              let hasil = 0;
+              // const row = worksheet.getRow(8);
+              await Promise.all(
+                jadwalUjian.toJSON().ujian.soal.map(async (e, nox) => {
+                  worksheet.getColumn([`${(nox + 1) * 1 + 2}`]).values = [
+                    ``,
+                    ``,
+                    ``,
+                    ``,
+                    ``,
+                    ``,
+                    `${nox + 1}`,
+                    ,
+                  ];
+                  const jawabanSiswa = await TkJawabanUjianSiswa.query()
+                    .where({ m_soal_ujian_id: e.id })
+                    .andWhere({ tk_peserta_ujian_id: d.id })
+                    .first();
+                  if (e.bentuk == "pg") {
+                    if (
+                      jawabanSiswa ? jawabanSiswa.jawaban_pg : "0" == e.kj_pg
+                    ) {
+                      row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
+                        e ? e.nilai_soal : "-"
+                      }`;
+                      hasil = hasil + e.nilai_soal;
+                    } else {
+                      row.getCell([`${(nox + 1) * 1 + 2}`]).value = `0`;
+                    }
+                  } else if (e.bentuk == "esai") {
+                    if (JSON.parse(jawabanSiswa.jawaban_rubrik_esai)) {
+                      if (JSON.parse(jawabanSiswa.jawaban_rubrik_esai).length) {
+                        JSON.parse(jawabanSiswa.jawaban_rubrik_esai).map(
+                          (ed) => {
+                            if (ed.benar) {
+                              row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
+                                ed ? ed.poin : "0"
+                              }`;
+                              hasil = hasil + ed.poin;
+                            }
+                          }
+                        );
+                      }
+                    }
+                  }
+
+                  row.getCell([`${(nox + 1) * 1 + 2}`]).border = {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  };
+                  worksheet.getColumn([`${(nox + 1) * 1 + 2}`]).fill = {
+                    type: "pattern",
+                    pattern: "solid",
+                    bgColor: {
+                      argb: "C0C0C0",
+                      fgColor: { argb: "C0C0C0" },
+                    },
+                  };
+                  // worksheet.getCell(`E${(nox + 1) * 1 + 8}`).value = e.nilai;
+                  // worksheet.columns = [
+                  //   { key: `tugas${nox+1}` },
+                  // ];
+
+                  worksheet.addConditionalFormatting({
+                    ref: `${(nox + 1) * 1 + 7}`,
+                    rules: [
+                      {
+                        type: "expression",
+                        formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                        style: {
+                          border: {
+                            top: { style: "thin" },
+                            left: { style: "thin" },
+                            bottom: { style: "thin" },
+                            right: { style: "thin" },
+                          },
+                          font: {
+                            name: "Times New Roman",
+                            family: 4,
+                            size: 11,
+                            // bold: true,
+                          },
+                          alignment: {
+                            vertical: "middle",
+                            horizontal: "left",
+                          },
+                        },
+                      },
+                    ],
+                  });
+
+                  // // Add row using key mapping to columns
+                  // let row = worksheet.addRow ({
+                  //   tugas1: e ? e.nilai : "-",
+                  //   tugas2: e ? e.nilai : "-",
+                  //   tugas3: e ? e.nilai : "-",
+                  //   tugas4: e ? e.nilai : "-",
+                  //   tugas5: e ? e.nilai : "-",
+                  // });
+                })
+              );
+              worksheet.getCell(
+                `${colName(jadwalUjian.toJSON().ujian.__meta__.total + 2)}7`
+              ).value = "Total";
+              worksheet.getCell(
+                `${colName(jadwalUjian.toJSON().ujian.__meta__.total + 2)}${
+                  (idx + 1) * 1 + 7
+                }`
+              ).value = hasil;
+              worksheet.getCell(
+                `${colName(jadwalUjian.toJSON().ujian.__meta__.total + 2)}${
+                  (idx + 1) * 1 + 7
+                }`
+              ).border = {
+                top: { style: "thin" },
+                left: { style: "thin" },
+                bottom: { style: "thin" },
+                right: { style: "thin" },
+              };
+
+              worksheet.addConditionalFormatting({
+                ref: `A7:${colName(
+                  jadwalUjian.toJSON().ujian.__meta__.total + 2
+                )}7`,
+                rules: [
+                  {
+                    type: "expression",
+                    formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                    style: {
+                      border: {
+                        top: { style: "thin" },
+                        left: { style: "thin" },
+                        bottom: { style: "thin" },
+                        right: { style: "thin" },
+                      },
+                      font: {
+                        name: "Times New Roman",
+                        family: 4,
+                        size: 14,
+                        bold: true,
+                      },
+                      fill: {
+                        type: "pattern",
+                        pattern: "solid",
+                        bgColor: {
+                          argb: "C0C0C0",
+                          fgColor: { argb: "C0C0C0" },
+                        },
+                      },
+                      alignment: {
+                        vertical: "middle",
+                        horizontal: "center",
+                      },
+                    },
+                  },
+                ],
+              });
+
+              worksheet.addConditionalFormatting({
+                ref: `A${(idx + 1) * 1 + 7}:D${(idx + 1) * 1 + 7}`,
+                rules: [
+                  {
+                    type: "expression",
+                    formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                    style: {
+                      border: {
+                        top: { style: "thin" },
+                        left: { style: "thin" },
+                        bottom: { style: "thin" },
+                        right: { style: "thin" },
+                      },
+                      font: {
+                        name: "Times New Roman",
+                        family: 4,
+                        size: 11,
+                        // bold: true,
+                      },
+                      alignment: {
+                        vertical: "middle",
+                        horizontal: "left",
+                      },
+                    },
+                  },
+                ],
+              });
+            })
+        );
+        worksheet.autoFilter = {
+          from: "A7",
+          to: `${colName(jadwalUjian.toJSON().ujian.__meta__.total + 2)}7`,
+        };
+
+        worksheet.getCell("A1").value = sekolah.nama;
+        worksheet.getCell("A2").value = s.rombel.nama;
+        worksheet.getCell("A3").value = jadwalUjian.toJSON().ujian.nama;
+        worksheet.getCell("A4").value = ta.tahun;
+        worksheet.getColumn("B").width = 35;
+
+        worksheet.getCell(
+          "A6"
+        ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
+      })
+    );
+    let namaFile = `/uploads/rekap-ujian-siswa-${keluarantanggalseconds}.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
 }
 
 module.exports = UjianController;
