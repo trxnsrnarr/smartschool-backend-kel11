@@ -14901,7 +14901,7 @@ class MainController {
     page = page ? page : 1;
 
     const jadwalUjian = await MJadwalUjian.query()
-      .select("id", "waktu_dibuka", "waktu_ditutup", "durasi")
+      .select("id", "waktu_dibuka", "waktu_ditutup", "durasi","m_user_id")
       .with("rombelUjian", (builder) => {
         builder
           .select("id", "m_rombel_id", "m_jadwal_ujian_id")
@@ -16673,6 +16673,10 @@ class MainController {
 
     const user = await auth.getUser();
 
+    if (user.role == "siswa") {
+      return response.forbidden({ message: messageForbidden });
+    }
+
     const {
       jumlah_pg,
       jumlah_esai,
@@ -16906,6 +16910,11 @@ class MainController {
 
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+
+    if (user.role == "siswa") {
+      return response.forbidden({ message: messageForbidden });
     }
 
     const jadwalUjian = await MJadwalUjian.query()
