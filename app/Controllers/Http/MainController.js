@@ -16913,6 +16913,7 @@ class MainController {
     }
 
 
+    const user = await auth.getUser();
     if (user.role == "siswa") {
       return response.forbidden({ message: messageForbidden });
     }
