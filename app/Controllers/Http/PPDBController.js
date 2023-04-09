@@ -2540,7 +2540,7 @@ class PPDBController {
     });
 
     worksheet.addConditionalFormatting({
-      ref: "A5:BF6",
+      ref: "A5:BG6",
       rules: [
         {
           type: "expression",
@@ -2634,7 +2634,7 @@ class PPDBController {
           });
 
           worksheet.addConditionalFormatting({
-            ref: `B${(idx + 1) * 1 + 5}:BF${(idx + 1) * 1 + 6}`,
+            ref: `B${(idx + 1) * 1 + 5}:BG${(idx + 1) * 1 + 6}`,
             rules: [
               {
                 type: "expression",
@@ -2665,6 +2665,7 @@ class PPDBController {
           worksheet.getRow(5).values = [
             "No",
             "Nama",
+            "No Telepon",
             "Gender",
             "Agama",
             "Tanggal lahir",
@@ -2725,6 +2726,7 @@ class PPDBController {
           worksheet.getRow(6).values = [
             "No",
             "Nama",
+            "No Telepon",
             "Gender",
             "Agama",
             "Tanggal lahir",
@@ -2785,6 +2787,7 @@ class PPDBController {
           worksheet.columns = [
             { key: "no" },
             { key: "nama" },
+            { key: "no_telepon" },
             { key: "gender" },
             { key: "agama" },
             { key: "tgllahir" },
@@ -2860,6 +2863,7 @@ class PPDBController {
           let row = worksheet.addRow({
             no: `${idx + 1}`,
             nama: d.user ? d.user.nama : "-",
+            no_telepon: d.user ? d.user.whatsapp : "-",
             gender: d.user ? d.user.gender : "-",
             agama: d.user ? d.user.agama : "-",
             tgllahir: d.user ? d.user.tanggal_lahir : "-",
@@ -3031,14 +3035,16 @@ class PPDBController {
     worksheet.mergeCells(`L5:L6`);
     worksheet.mergeCells(`M5:M6`);
     worksheet.mergeCells(`N5:N6`);
-    worksheet.mergeCells(`O5:U5`);
-    worksheet.mergeCells(`V5:AB5`);
-    worksheet.mergeCells(`AC5:AI5`);
-    worksheet.mergeCells(`AJ5:AP5`);
-    worksheet.mergeCells(`AQ5:AW5`);
-    worksheet.mergeCells(`AX5:BD5`);
-    worksheet.mergeCells(`BE5:BE6`);
+    worksheet.mergeCells(`O5:O6`);
+    worksheet.mergeCells(`P5:V5`);
+    worksheet.mergeCells(`W5:AC5`);
+    worksheet.mergeCells(`AD5:AJ5`);
+    worksheet.mergeCells(`AK5:AQ5`);
+    worksheet.mergeCells(`AR5:AX5`);
+    worksheet.mergeCells(`AY5:BE5`);
+    // worksheet.mergeCells(`BE5:BE6`);
     worksheet.mergeCells(`BF5:BF6`);
+    worksheet.mergeCells(`BG5:BG6`);
     worksheet.getColumn("A").width = 6;
     worksheet.getColumn("B").width = 20;
     worksheet.getColumn("C").width = 20;
@@ -3053,11 +3059,13 @@ class PPDBController {
     worksheet.getColumn("L").width = 20;
     worksheet.getColumn("M").width = 20;
     worksheet.getColumn("N").width = 20;
-    worksheet.getColumn("BE").width = 20;
+    worksheet.getColumn("O").width = 20;
+    // worksheet.getColumn("BE").width = 20;
     worksheet.getColumn("BF").width = 20;
+    worksheet.getColumn("BG").width = 20;
     worksheet.autoFilter = {
       from: "A6",
-      to: "BF6",
+      to: "BG6",
     };
 
     let namaFile = `/uploads/rekapan-pendaftar-ppdb-${keluarantanggalseconds}.xlsx`;
