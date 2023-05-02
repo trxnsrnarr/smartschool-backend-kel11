@@ -32410,8 +32410,10 @@ class MainController {
 
     const { ta_id = user?.m_ta_id || taS.id } = request.get();
 
+    const rombelData = await MRombel.query().select("id","m_ta_id").where({id:rombel_id}).first()
+
     const ta = await Mta.query()
-      .where({ id: ta_id })
+      .where({ id: rombelData.m_ta_id })
       .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .first();
