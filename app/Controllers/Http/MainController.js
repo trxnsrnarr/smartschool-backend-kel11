@@ -32449,7 +32449,7 @@ class MainController {
         builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id });
       })
       .with("raporEkskul", (builder) => {
-        builder.with("ekskul", (builder) => {
+        builder.where({dihapus:0}).with("ekskul", (builder) => {
           builder.select("id", "nama");
         });
       })
