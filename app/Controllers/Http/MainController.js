@@ -4727,8 +4727,8 @@ class MainController {
   }
 
   async daftarIndustri({ response, request, auth }) {
-    const domain = request.headers().origin; 
- 
+    const domain = request.headers().origin;
+
     const sekolah = await this.getSekolahByDomain(domain);
 
     if (sekolah == "404") {
