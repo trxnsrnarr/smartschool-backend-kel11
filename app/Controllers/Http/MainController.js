@@ -4672,26 +4672,9 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { nama, nama_ibu, whatsapp, password, alamat, asal_sekolah } =
+    const { nama, whatsapp, password, alamat, asal_sekolah } =
       request.post();
-    if (sekolah?.id != 14 || sekolah?.id == 13) {
-      const rules = {
-        nama: "required",
-        whatsapp: "required",
-        nama_ibu: "required",
-        password: "required",
-      };
-      const message = {
-        "nama.required": "Nama harus diisi",
-        "whatsapp.required": "Whatsapp harus diisi",
-        "nama_ibu.required": "Nama Ibu harus diisi",
-        "password.required": "Password harus diisi",
-      };
-      const validation = await validate(request.all(), rules, message);
-      if (validation.fails()) {
-        return response.unprocessableEntity(validation.messages());
-      }
-    } else {
+   
       const rules = {
         nama: "required",
         whatsapp: "required",
@@ -4706,7 +4689,6 @@ class MainController {
       if (validation.fails()) {
         return response.unprocessableEntity(validation.messages());
       }
-    }
 
     const check = await User.query()
       .where({ whatsapp: whatsapp })
@@ -4722,10 +4704,74 @@ class MainController {
 
     const res = await User.create({
       nama,
-      nama_ibu,
       whatsapp,
       password: password,
       role: "siswa",
+      m_sekolah_id: sekolah.id,
+      dihapus: 0,
+    });
+
+    if (alamat && asal_sekolah)
+      await MProfilUser.create({
+        m_user_id: res.id,
+        alamat: alamat,
+        asal_sekolah,
+      });
+
+    const { token } = await auth.generate(res);
+
+    return response.ok({
+      message: `Selamat datang ${res.nama}`,
+      token,
+    });
+  }
+
+  async daftarIndustri({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { nama, whatsapp, password, alamat,bagian, golongan, asal_sekolah } =
+      request.post();
+   
+      const rules = {
+        nama: "required",
+        whatsapp: "required",
+        password: "required",
+      };
+      const message = {
+        "nama.required": "Nama harus diisi",
+        "whatsapp.required": "Whatsapp harus diisi",
+        "password.required": "Password harus diisi",
+      };
+      const validation = await validate(request.all(), rules, message);
+      if (validation.fails()) {
+        return response.unprocessableEntity(validation.messages());
+      }
+
+    const check = await User.query()
+      .where({ whatsapp: whatsapp })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .first();
+
+    if (check) {
+      await User.query().where({ id: check.id }).update({ dihapus: 0 });
+      return response.forbidden({
+        message: "Akun sudah terdaftar",
+      });
+    }
+
+    const res = await User.create({
+      nama,
+      whatsapp,
+      password: password,
+      role: "admin",
+      bagian,
+      golongan,
       m_sekolah_id: sekolah.id,
       dihapus: 0,
     });
