@@ -114,6 +114,7 @@ Route.delete("/siswa/:siswa_id", "MainController.deleteSiswa");
 // ppdb
 Route.post("/ppdb/daftar", "MainController.daftarPPDB");
 Route.post("/siswa/daftar", "MainController.daftarSiswa");
+Route.post("/industri/daftar", "MainController.daftarIndustri");
 Route.post("/ppdb/login", "MainController.loginPPDB");
 Route.post("/ppdb/downloadgelombang", "MainController.downloadGelombangPPDB");
 
