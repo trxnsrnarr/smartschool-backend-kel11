@@ -23744,6 +23744,59 @@ class MainController {
       user: user,
     });
   }
+  
+  async getUserSer({ response, request, auth }) {
+    const {
+      page,
+      name,
+      user_id,
+      role = [],
+      notRole = [],
+      sekolah_id,
+      bentuk,
+      m_sekolah_id,
+    } = request.get();
+
+    let sekolahIds = [];
+    if (bentuk) {
+      sekolahIds = await MSekolah.query().where({ tingkat: bentuk }).ids();
+    }
+
+    let user = User.query()
+      .with("sekolah")
+      .with("profil")
+      .where({ dihapus: 0 })
+      .andWhere({role: "siswa"})
+      // .andWhereNot({ role: "admin" });
+
+   
+    if (name) {
+      user.where("nama", "like", `%${name}%`);
+    }
+    if (user_id) {
+      user.where({ id: user_id });
+    }
+    if (sekolah_id) {
+      user.where({ m_sekolah_id: sekolah_id });
+    }
+    if (m_sekolah_id) {
+      user.where({ m_sekolah_id: m_sekolah_id });
+    } else if (sekolahIds.length) {
+      user.whereIn("m_sekolah_id", sekolahIds);
+    }
+
+    if (user_id) {
+      user = await user.first();
+    } else if (sekolah_id) {
+      user = await user.limit(50).fetch();
+    } else {
+      user = await user.paginate(page, 18);
+    }
+
+    return response.ok({
+      user: user,
+    });
+  }
 
   async detailUser({ response, request, auth, params: { user_id } }) {
     const role = await auth.getUser();
