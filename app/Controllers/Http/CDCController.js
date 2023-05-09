@@ -5346,15 +5346,15 @@ class CDCController {
 
     const { rombel_id, user_id, dihapus } = request.post();
 
-    const validation = await validate(
-      request.post(),
-      rulesAnggotaRombelPost,
-      pesanSudahDitambahkan
-    );
+    // const validation = await validate(
+    //   request.post(),
+    //   rulesAnggotaRombelPost,
+    //   pesanSudahDitambahkan
+    // );
 
-    if (validation.fails()) {
-      return response.unprocessableEntity(validation.messages());
-    }
+    // if (validation.fails()) {
+    //   return response.unprocessableEntity(validation.messages());
+    // }
     
    await Promise.all( user_id.map(async(d)=>{
      await MAnggotaRombel.create({
