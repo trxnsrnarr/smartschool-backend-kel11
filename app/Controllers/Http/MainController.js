@@ -5663,7 +5663,9 @@ class MainController {
 
       const jadwalMengajar = await MJadwalMengajar.query()
         .with("rombel", (builder) => {
-          builder.where({ dihapus: 0 });
+          builder.where({ dihapus: 0 }).withCount("anggotaRombel as jumlahAnggota", (builder) => {
+            builder.where({ dihapus: 0 });
+          });
         })
         .with("jamMengajar")
         .with("mataPelajaran")
