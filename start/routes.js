@@ -2007,7 +2007,7 @@ Route.post("/login/eresource", "CDCController.login");
 Route.post("/join/eresource", "CDCController.postAnggotRombel");
 Route.put("/ubah/eresource", "CDCController.putAnggotRombel");
 
-Route.get("/user/eresource", "MainController.getUserSer");
+Route.get("eresource/user", "MainController.getUserSer");
 
 
 Route.post("/import-soal-word", "UjianController.readingWordForExam");
