@@ -5177,8 +5177,9 @@ class CDCController {
 
     if (
       user.role != "admin" ||
-      user.role == "guru" ||
-      user.m_sekolah_id != sekolah.id
+      user.role == "guru" 
+      // ||
+      // user.m_sekolah_id != sekolah.id
     ) {
       return response.forbidden({ message: messageForbidden });
     }
@@ -5220,7 +5221,7 @@ class CDCController {
     });
 
     const mataPelajaran = await MMataPelajaran.create({
-      nama: kode,
+      nama,
       kode,
       kelompok: "A",
       m_user_id,
