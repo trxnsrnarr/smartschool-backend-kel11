@@ -5360,7 +5360,9 @@ class CDCController {
      await MAnggotaRombel.create({
        m_rombel_id: rombel_id,
        m_user_id: d,
-       dihapus,
+       dihapus: 0,
+       role: "anggota"
+
      });
 
    }))
