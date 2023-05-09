@@ -5238,7 +5238,7 @@ class CDCController {
 
     const jadwalMengajarData = await Promise.all(
       jamMengajar.toJSON().map(async (data) => {
-        data.m_mata_pelajaran_id = mataPelajaran?.id;
+        data.m_mata_pelajaran_id = mataPelajaran.id;
         data.m_rombel_id = rombel.id;
         data.m_jam_mengajar_id = data.id;
         data.m_sekolah_id = sekolah.id;
