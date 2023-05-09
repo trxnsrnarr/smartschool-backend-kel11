@@ -5877,6 +5877,286 @@ class MainController {
       dataTA,
     });
   }
+  
+  async getRombelSer({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      kode_hari,
+      jam_saat_ini,
+      ta_id = user?.m_ta_id || ta.id,
+      nama
+    } = request.get();
+
+    const semuaTA = await Mta.query()
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .orderBy("id", "desc")
+      .fetch();
+
+    const dataTA = await Mta.query()
+      .where({ id: ta_id })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    if (user.role == "guru") {
+      const mataPelajaranIds = await MMataPelajaran.query()
+        .where({ m_user_id: user.id })
+        .where({ m_ta_id: ta_id })
+        .ids();
+
+      const rombel = await MRombel.query()
+        .where({ m_user_id: user.id })
+        .andWhere({ dihapus: 0 })
+        .where({ m_ta_id: ta_id })
+        .first();
+
+      const rombelIds = await MRombel.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ dihapus: 0 })
+        .where({ m_ta_id: ta_id })
+        .ids();
+
+      let jamMengajarIds = await MJamMengajar.query()
+        .where({ kode_hari: kode_hari })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .andWhere({ m_ta_id: ta_id })
+        .ids();
+
+      const jadwalMengajar = await MJadwalMengajar.query()
+        .with("rombel", (builder) => {
+          builder.where({ dihapus: 0 }).withCount("anggotaRombel as jumlahAnggota", (builder) => {
+            builder.where({ dihapus: 0 });
+          });
+        })
+        .with("jamMengajar")
+        .with("mataPelajaran")
+        .whereIn("m_rombel_id", rombelIds)
+        .where({ m_ta_id: ta_id })
+        .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
+        .whereIn("m_jam_mengajar_id", jamMengajarIds)
+        .orderBy("m_jam_mengajar_id", "asc")
+        .fetch();
+
+      const rombelMengajar = await MJadwalMengajar.query()
+        .with("rombel", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .whereIn("m_rombel_id", rombelIds)
+        .where({ m_ta_id: ta_id })
+        .with("mataPelajaran")
+        .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
+        .fetch();
+
+      const jadwalMengajarData = [];
+
+      await Promise.all(
+        jadwalMengajar.toJSON().map(async (d) => {
+          if (
+            moment(d.jamMengajar.jam_mulai, "HH:mm:ss").format("HH:mm") <=
+              jam_saat_ini &&
+            moment(d.jamMengajar.jam_selesai, "HH:mm:ss").format("HH:mm") >=
+              jam_saat_ini
+          ) {
+            jadwalMengajarData.push({ ...d, aktif: true });
+          } else {
+            jadwalMengajarData.push({ ...d, aktif: false });
+          }
+        })
+      );
+
+      return response.ok({
+        jadwalMengajar: jadwalMengajarData,
+        rombelMengajar: rombelMengajar,
+        rombel,
+        userRole: user.role,
+        semuaTA,
+        dataTA,
+      });
+    } else if (user.role == "siswa") {
+      const rombelIds = await MRombel.query()
+        .where({ m_ta_id: ta_id })
+        .andWhere({ dihapus: 0 })
+        .ids();
+
+      const rombel = await MAnggotaRombel.query()
+        .where({ m_user_id: user.id })
+        .andWhere({ dihapus: 0 })
+        .whereIn("m_rombel_id", rombelIds)
+        .pluck("m_rombel_id");
+
+      if (!rombel) {
+        return response.notFound({
+          message: messageNotFound,
+        });
+      }
+
+      // let jamMengajarIds = await MJamMengajar.query()
+      //   .where({ kode_hari: kode_hari })
+      //   .andWhere({ m_sekolah_id: sekolah.id })
+      //   .andWhere({ m_ta_id: ta_id })
+      //   .ids();
+
+      // const jadwalMengajar = await MJadwalMengajar.query()
+      //   .with("rombel", (builder) => {
+      //     builder.where({ dihapus: 0 });
+      //   })
+      //   .with("jamMengajar")
+      //   .with("mataPelajaran", (builder) => {
+      //     builder.with("user").andWhere({ dihapus: 0 });
+      //   })
+      //   .whereNotNull("m_mata_pelajaran_id")
+      //   .whereIn("m_rombel_id", rombel)
+      //   .where({ m_ta_id: ta_id })
+      //   .fetch();
+
+      // const jadwalMengajarData = [];
+      const rombelMengajar = await MRombel.query()
+      .whereNotNull("kode")
+      .where("nama", "like", `%${nama}%`)
+      .andWhere({ dihapus: 0 });
+
+      // await Promise.all(
+      //   jadwalMengajar.toJSON().map(async (d) => {
+      //     rombelMengajar.push(d);
+      //     if (jamMengajarIds.includes(d.m_jam_mengajar_id)) {
+      //       if (
+      //         moment(d.jamMengajar.jam_mulai, "HH:mm:ss").format("HH:mm") <=
+      //           jam_saat_ini &&
+      //         moment(d.jamMengajar.jam_selesai, "HH:mm:ss").format("HH:mm") >=
+      //           jam_saat_ini
+      //       ) {
+      //         jadwalMengajarData.push({ ...d, aktif: true });
+      //       } else {
+      //         jadwalMengajarData.push({ ...d, aktif: false });
+      //       }
+      //     }
+      //   })
+      // );
+
+      // const today = new Date();
+      // const absenHariIni = await MTimeline.query()
+      //   .with("tkTimeline", (builder) => {
+      //     builder.where({ m_user_id: user.id });
+      //   })
+      //   .where({ tipe: "absen" })
+      //   .whereIn(
+      //     "m_rombel_id",
+      //     jadwalMengajarData
+      //       .filter((d) => d.aktif == true)
+      //       .map((d) => d.rombel.id)
+      //   )
+      //   .whereBetween("tanggal_pembagian", [
+      //     `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`,
+      //     `${today.getFullYear()}/${
+      //       today.getMonth() + 1
+      //     }/${today.getDate()} ${jam_saat_ini}:00`,
+      //   ])
+      //   .fetch();
+
+      return response.ok({
+        // jadwalMengajar: jadwalMengajarData,
+        rombelMengajar: rombelMengajar,
+        // absen: absenHariIni,
+        rombel,
+        userRole: user.role,
+        dataTA,
+      });
+    }
+
+    let { kelompok } = request.get();
+
+    const kelompokData = [
+      { value: "reguler", label: "Reguler" },
+      { value: "ekskul", label: "Ekstrakurikuler" },
+      { value: "teori", label: "Teori (Peminatan)" },
+      { value: "praktik", label: "Praktik" },
+    ];
+
+    if (!kelompok) {
+      kelompok = kelompokData[0].value;
+    }
+
+    const rombel = await MRombel.query()
+      .with("user", (builder) => {
+        builder.select("id", "nama", "whatsapp");
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta_id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ kelompok: kelompok })
+      .orderBy("nama", "asc")
+      .fetch();
+
+    const jurusan = await MJurusan.query()
+      .select("kode", "id")
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    const guru = await User.query()
+      .select("nama", "id", "whatsapp", "avatar", "gender")
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ role: "guru" })
+      .fetch();
+
+    let tingkat = [];
+
+    if (
+      sekolah.tingkat == "SMK" ||
+      sekolah.tingkat == "SMA" ||
+      sekolah.tingkat == "MA" ||
+      sekolah.tingkat == "MAK"
+    ) {
+      tingkat = ["X", "XI", "XII", "XIII"];
+    } else if (sekolah.tingkat == "SMP" || sekolah.tingkat == "MTS") {
+      tingkat = ["VII", "VIII", "IX"];
+    } else if (sekolah.tingkat == "SD" || sekolah.tingkat == "MI") {
+      tingkat = ["I", "II", "III", "IV", "V", "VI"];
+    } else if (sekolah.tingkat == "SLB" || sekolah.tingkat == "SUPER") {
+      tingkat = [
+        "I",
+        "II",
+        "III",
+        "IV",
+        "V",
+        "VI",
+        "VII",
+        "VIII",
+        "IX",
+        "X",
+        "XI",
+        "XII",
+      ];
+    }
+
+    return response.ok({
+      rombel: rombel,
+      jurusan: jurusan,
+      guru: guru,
+      tingkat: tingkat,
+      userRole: user.role,
+      kelompok: kelompokData,
+      semuaTA,
+      dataTA,
+    });
+  }
 
   async detailRombel({
     response,

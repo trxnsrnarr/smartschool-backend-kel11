@@ -2008,6 +2008,7 @@ Route.post("/join/eresource", "CDCController.postAnggotRombel");
 Route.put("/ubah/eresource", "CDCController.putAnggotRombel");
 
 Route.get("eresource/user", "MainController.getUserSer");
+Route.get("eresource/rombel", "MainController.getRombelSer");
 
 
 Route.post("/import-soal-word", "UjianController.readingWordForExam");
