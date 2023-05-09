@@ -6030,23 +6030,6 @@ class MainController {
       .where("nama", "like", `%${nama}%`)
       .andWhere({ dihapus: 0 });
 
-      // await Promise.all(
-      //   jadwalMengajar.toJSON().map(async (d) => {
-      //     rombelMengajar.push(d);
-      //     if (jamMengajarIds.includes(d.m_jam_mengajar_id)) {
-      //       if (
-      //         moment(d.jamMengajar.jam_mulai, "HH:mm:ss").format("HH:mm") <=
-      //           jam_saat_ini &&
-      //         moment(d.jamMengajar.jam_selesai, "HH:mm:ss").format("HH:mm") >=
-      //           jam_saat_ini
-      //       ) {
-      //         jadwalMengajarData.push({ ...d, aktif: true });
-      //       } else {
-      //         jadwalMengajarData.push({ ...d, aktif: false });
-      //       }
-      //     }
-      //   })
-      // );
 
       // const today = new Date();
       // const absenHariIni = await MTimeline.query()
