@@ -5191,6 +5191,7 @@ class CDCController {
       m_jurusan_id,
       m_user_id,
       kelompok,
+      nama,
       ta_id = ta.id,
     } = request.post();
     const rules = {
@@ -5206,7 +5207,8 @@ class CDCController {
 
     const rombel = await MRombel.create({
       tingkat,
-      nama: kode,
+      kode,
+      nama,
       m_jurusan_id,
       banner,
       deskripsi,
