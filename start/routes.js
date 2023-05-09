@@ -1998,6 +1998,16 @@ Route.get("/data-migrasi", "UserController.getDataMigrasi");
 Route.get("/data-perpus", "UserController.getUserPerpus");
 Route.get("/data-perpus/:id", "UserController.showUserPerpus");
 
+// e - resource
+Route.post("/rombel/eresource", "CDCController.postRombel");
+
+Route.post("/loginwhatsapp/eresource", "CDCController.loginWhatsapp");
+Route.post("/login/eresource", "CDCController.login");
+
+Route.post("/join/eresource", "CDCController.postAnggotRombel");
+Route.put("/ubah/eresource", "CDCController.putAnggotRombel");
+
+
 Route.post("/import-soal-word", "UjianController.readingWordForExam");
 Route.post("/docs-import","DocsController.importDocs")
 
