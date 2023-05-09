@@ -6025,7 +6025,6 @@ class MainController {
       //   .where({ m_ta_id: ta_id })
       //   .fetch();
 
-      // const jadwalMengajarData = [];
       const rombelMengajar = await MRombel.query()
       .whereNotNull("kode")
       .where("nama", "like", `%${nama}%`)
