@@ -5355,12 +5355,16 @@ class CDCController {
     if (validation.fails()) {
       return response.unprocessableEntity(validation.messages());
     }
+    
+   await Promise.all( user_id.map(async(d)=>{
+     await MAnggotaRombel.create({
+       m_rombel_id: rombel_id,
+       m_user_id: d,
+       dihapus,
+     });
 
-    await MAnggotaRombel.create({
-      m_rombel_id: rombel_id,
-      m_user_id: user_id,
-      dihapus,
-    });
+   }))
+
 
     return response.ok({
       message: messagePostSuccess,
