@@ -5517,8 +5517,8 @@ class CDCController {
       });
     } else if (user.role == "siswa") {
       const anggotaRombel = await MAnggotaRombel.query()
-        .where({ m_user_id: user?.id })
-        .whereNot({ dihapus: 2 })
+        .where({ m_user_id: user.id })
+        .whereNot({ dihapus: 1 })
         .pluck("m_rombel_id");
 
       let rombelIds;
