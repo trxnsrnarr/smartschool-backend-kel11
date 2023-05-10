@@ -5526,11 +5526,11 @@ class CDCController {
         .where({ m_ta_id: ta_id })
         .andWhere({ dihapus: 0 });
 
-      if ((jenis = "cari")) {
+      if (jenis == "cari") {
         rombelIds.whereNotIn("id", anggotaRombel);
       }
 
-      if ((jenis = "daftar")) {
+      if (jenis == "daftar") {
         rombelIds.whereIn("id", anggotaRombel);
       }
 
