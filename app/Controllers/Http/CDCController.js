@@ -5426,7 +5426,7 @@ class CDCController {
     const {
       kode_hari,
       jam_saat_ini,
-      ta_id = user?.m_ta_id || ta.id,
+      ta_id = user.m_ta_id ? user.m_ta_id : ta.id,
       jenis,
     } = request.get();
 
