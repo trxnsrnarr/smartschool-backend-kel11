@@ -5423,12 +5423,9 @@ class CDCController {
 
     const user = await auth.getUser();
 
-    const {
-      kode_hari,
-      jam_saat_ini,
-      ta_id = user.m_ta_id ? user.m_ta_id : ta.id,
-      jenis,
-    } = request.get();
+    let { kode_hari, jam_saat_ini, ta_id, jenis } = request.get();
+
+    ta_id = ta_id ? ta_id : user.m_ta_id || ta.id;
 
     const semuaTA = await Mta.query()
       .andWhere({ m_sekolah_id: sekolah.id })
