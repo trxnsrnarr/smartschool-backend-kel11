@@ -5521,33 +5521,22 @@ class CDCController {
         .whereNot({ dihapus: 1 })
         .pluck("m_rombel_id");
 
-      let rombelIds;
-      rombelIds = MRombel.query()
+      let rombel;
+      rombel = MRombel.query()
         .where({ m_ta_id: ta_id })
         .andWhere({ dihapus: 0 });
 
       if (jenis == "cari") {
-        rombelIds.whereNotIn("id", anggotaRombel);
+        rombel.whereNotIn("id", anggotaRombel);
       }
 
       if (jenis == "daftar") {
-        rombelIds.whereIn("id", anggotaRombel);
+        rombel.whereIn("id", anggotaRombel);
       }
 
-      rombelIds = await rombelIds.ids();
+      rombel = await rombel.ids();
 
-      const rombel = await MAnggotaRombel.query()
-        .where({ m_user_id: user.id })
-        .andWhere({ dihapus: 0 })
-        .whereIn("m_rombel_id", rombelIds)
-        .pluck("m_rombel_id");
-
-      if (!rombel) {
-        return response.notFound({
-          message: messageNotFound,
-        });
-      }
-
+      
       let jamMengajarIds = await MJamMengajar.query()
         .where({ kode_hari: kode_hari })
         .andWhere({ m_sekolah_id: sekolah.id })
