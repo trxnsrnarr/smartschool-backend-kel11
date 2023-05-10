@@ -5423,7 +5423,7 @@ class CDCController {
 
     const user = await auth.getUser();
 
-    let { kode_hari, jam_saat_ini, ta_id, jenis } = request.get();
+    let { kode_hari, jam_saat_ini, ta_id, jenis ,search} = request.get();
 
     ta_id = ta_id ? ta_id : user.m_ta_id || ta.id;
 
@@ -5532,6 +5532,9 @@ class CDCController {
 
       if (jenis == "daftar") {
         rombel.whereIn("id", anggotaRombel);
+      }
+      if(search){
+        rombel.where("nama","LIKE",`%${search}%`)
       }
 
       rombel = await rombel.ids();
