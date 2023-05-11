@@ -5295,12 +5295,13 @@ class CDCController {
     const {
       tingkat,
       kode,
-      m_jurusan_id,
+
       m_user_id,
       kelompok,
       m_mata_pelajaran_id,
       banner,
       deskripsi,
+      nama
     } = request.post();
     const rules = {
       kode: "required",
@@ -5315,7 +5316,7 @@ class CDCController {
 
     const rombel = await MRombel.query().where({ id: id }).update({
       tingkat,
-      nama: kode,
+      nama,
       kelompok,
       m_user_id: user.id,
       banner,
