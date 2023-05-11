@@ -6354,7 +6354,7 @@ class MainController {
                       });
                   }
                 })
-                .where({ dihapus: 0 });
+                .whereIn( "dihapus", [0,2] );
             })
             .with("user");
         })
