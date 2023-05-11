@@ -5562,9 +5562,9 @@ class CDCController {
       const rombelMengajar = await MJadwalMengajar.query()
         .with("rombel", (builder) => {
           builder
-            .withCount("anggotaRombel", (builder) => {
-              builder.where({ dihapus: 0 });
-            })
+          .withCount("anggotaRombel as jumlahAnggota", (builder) => {
+            builder.where({ dihapus: 0 });
+          })
             .with("user", (builder) => {
               builder.select("id", "nama");
             })
