@@ -5238,7 +5238,7 @@ class CDCController {
 
     await TkMateriRombel.create({
       m_materi_id: materi.id,
-      m_rombel_id,
+      m_rombel_id:rombel.id,
     });
 
     const jamMengajar = await MJamMengajar.query()
