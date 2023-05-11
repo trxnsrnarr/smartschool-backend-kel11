@@ -5479,7 +5479,7 @@ class CDCController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    await MAnggotaRombel.query().where({ id: id })({
+    await MAnggotaRombel.query().where({ id: id }).update({
       m_rombel_id: rombel_id,
       m_user_id: user_id,
       dihapus,
