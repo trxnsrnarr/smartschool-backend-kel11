@@ -5267,7 +5267,7 @@ class CDCController {
       message: messagePostSuccess,
     });
   }
-  async putRombel({ response, request, auth, params: { rombel_id } }) {
+  async putRombel({ response, request, auth, params: { id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -5313,7 +5313,7 @@ class CDCController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const rombel = await MRombel.query().where({ id: rombel_id }).update({
+    const rombel = await MRombel.query().where({ id: id }).update({
       tingkat,
       nama: kode,
       kelompok,
