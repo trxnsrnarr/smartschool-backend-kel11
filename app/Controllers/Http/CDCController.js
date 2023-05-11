@@ -5602,7 +5602,7 @@ class CDCController {
       return response.ok({
         jadwalMengajar: jadwalMengajarData,
         rombelMengajar: rombelMengajar,
-        rombel,
+        // rombel,
         userRole: user.role,
         semuaTA,
         dataTA,
