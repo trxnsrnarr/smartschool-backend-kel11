@@ -5300,7 +5300,7 @@ class CDCController {
       kelompok,
       m_mata_pelajaran_id,
       banner,
-      deskripsi
+      deskripsi,
     } = request.post();
     const rules = {
       kode: "required",
@@ -5319,7 +5319,7 @@ class CDCController {
       kelompok,
       m_user_id: user.id,
       banner,
-      deskripsi
+      deskripsi,
     });
 
     await MMataPelajaran.query()
@@ -5706,17 +5706,6 @@ class CDCController {
       kelompok = kelompokData[0].value;
     }
 
-    const rombel = await MRombel.query()
-      .with("user", (builder) => {
-        builder.select("id", "nama", "whatsapp");
-      })
-      .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta_id })
-      .andWhere({ dihapus: 0 })
-      .andWhere({ kelompok: kelompok })
-      .orderBy("nama", "asc")
-      .fetch();
-
     const jurusan = await MJurusan.query()
       .select("kode", "id")
       .where({ m_sekolah_id: sekolah.id })
@@ -5760,8 +5749,72 @@ class CDCController {
       ];
     }
 
+    let rombel;
+    rombel = MRombel.query().where({ m_ta_id: ta_id }).andWhere({ dihapus: 0 });
+
+    if (search) {
+      rombel.where("nama", "LIKE", `%${search}%`);
+    }
+
+    rombel = await rombel.ids();
+
+    let jamMengajarIds = await MJamMengajar.query()
+      .where({ kode_hari: kode_hari })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta_id })
+      .ids();
+
+    let jadwalMengajar = await MJadwalMengajar.query()
+      .with("rombel", (builder) => {
+        builder
+          .withCount("anggotaRombel", (builder) => {
+            builder.where({ dihapus: 0 });
+          })
+          .with("user", (builder) => {
+            builder.select("id", "nama");
+          })
+          .where({ dihapus: 0 });
+      })
+      .with("jamMengajar")
+      .with("mataPelajaran", (builder) => {
+        builder
+          .with("user", (builder) => {
+            builder.select("id", "nama");
+          })
+          .andWhere({ dihapus: 0 });
+      })
+      .whereNotNull("m_mata_pelajaran_id")
+      .where({ m_ta_id: ta_id });
+
+    if (search) {
+      jadwalMengajar.whereIn("m_rombel_id", rombel);
+    }
+
+    jadwalMengajar = await jadwalMengajar.fetch();
+
+    const jadwalMengajarData = [];
+    const rombelMengajar = [];
+
+    await Promise.all(
+      jadwalMengajar.toJSON().map(async (d) => {
+        rombelMengajar.push(d);
+        if (jamMengajarIds.includes(d.m_jam_mengajar_id)) {
+          if (
+            moment(d.jamMengajar.jam_mulai, "HH:mm:ss").format("HH:mm") <=
+              jam_saat_ini &&
+            moment(d.jamMengajar.jam_selesai, "HH:mm:ss").format("HH:mm") >=
+              jam_saat_ini
+          ) {
+            jadwalMengajarData.push({ ...d, aktif: true });
+          } else {
+            jadwalMengajarData.push({ ...d, aktif: false });
+          }
+        }
+      })
+    );
+
     return response.ok({
-      rombel: rombel,
+      rombel: rombelMengajar,
       jurusan: jurusan,
       guru: guru,
       tingkat: tingkat,
