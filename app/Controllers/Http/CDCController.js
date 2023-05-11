@@ -5467,7 +5467,7 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { rombel_id, user_id, dihapus } = request.post();
+    const { rombel_id, user_id, dihapus,role } = request.post();
 
     const validation = await validate(
       request.post(),
@@ -5483,6 +5483,7 @@ class CDCController {
       m_rombel_id: rombel_id,
       m_user_id: user_id,
       dihapus,
+      role
     });
 
     return response.ok({
