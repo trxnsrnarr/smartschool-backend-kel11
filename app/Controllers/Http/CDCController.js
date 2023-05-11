@@ -5693,8 +5693,6 @@ class CDCController {
       });
     }
 
-    
-
     const guru = await User.query()
       .select("nama", "id", "whatsapp", "avatar", "gender")
       .where({ m_sekolah_id: sekolah.id })
@@ -5702,10 +5700,11 @@ class CDCController {
       .andWhere({ role: "guru" })
       .fetch();
 
-    
-
     let rombel;
-    rombel = MRombel.query().where({ m_ta_id: ta_id }).andWhere({ dihapus: 0 });
+    rombel = MRombel.query()
+      .where({ m_ta_id: ta_id })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 });
 
     if (search) {
       rombel.where("nama", "LIKE", `%${search}%`);
@@ -5739,7 +5738,9 @@ class CDCController {
           .andWhere({ dihapus: 0 });
       })
       .whereNotNull("m_mata_pelajaran_id")
-      .where({ m_ta_id: ta_id }).whereIn("m_rombel_id", rombel).fetch();
+      .where({ m_ta_id: ta_id })
+      .whereIn("m_rombel_id", rombel)
+      .fetch();
 
     const jadwalMengajarData = [];
     const rombelMengajar = [];
