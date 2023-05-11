@@ -5719,7 +5719,7 @@ class CDCController {
       .andWhere({ m_ta_id: ta_id })
       .ids();
 
-    let jadwalMengajar =  MJadwalMengajar.query()
+    let jadwalMengajar = await MJadwalMengajar.query()
       .with("rombel", (builder) => {
         builder
           .withCount("anggotaRombel", (builder) => {
@@ -5739,13 +5739,7 @@ class CDCController {
           .andWhere({ dihapus: 0 });
       })
       .whereNotNull("m_mata_pelajaran_id")
-      .where({ m_ta_id: ta_id });
-
-    if (search) {
-      jadwalMengajar.whereIn("m_rombel_id", rombel);
-    }
-
-    jadwalMengajar = await jadwalMengajar.fetch();
+      .where({ m_ta_id: ta_id }).whereIn("m_rombel_id", rombel).fetch();
 
     const jadwalMengajarData = [];
     const rombelMengajar = [];
