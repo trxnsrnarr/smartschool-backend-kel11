@@ -2006,7 +2006,7 @@ Route.post("/loginwhatsapp/eresource", "CDCController.loginWhatsapp");
 Route.post("/login/eresource", "CDCController.login");
 
 Route.post("/join/eresource", "CDCController.postAnggotRombel");
-Route.put("/ubah/eresource", "CDCController.putAnggotRombel");
+Route.put("/ubah/eresource/:id", "CDCController.putAnggotRombel");
 
 Route.get("eresource/user", "MainController.getUserSer");
 Route.get("eresource/rombel", "MainController.getRombelSer");
