@@ -4769,7 +4769,7 @@ class MainController {
       nama,
       whatsapp,
       password: password,
-      role: "admin-industri",
+      role: "admin",
       pangkat,
       golongan,
       m_sekolah_id: sekolah.id,
