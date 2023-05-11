@@ -5231,6 +5231,16 @@ class CDCController {
       dihapus: 0,
     });
 
+    const materi = await MMateri.create({
+      tingkat,
+      m_mata_pelajaran_id: mataPelajaran.id,
+    });
+
+    await TkMateriRombel.create({
+      m_materi_id: materi.id,
+      m_rombel_id,
+    });
+
     const jamMengajar = await MJamMengajar.query()
       .select("id")
       .where({ m_sekolah_id: sekolah.id })
@@ -5362,7 +5372,7 @@ class CDCController {
       m_rombel_id: rombel_id,
       m_user_id: user_id,
       dihapus,
-      role:"anggota"
+      role: "anggota",
     });
 
     return response.ok({
@@ -5418,7 +5428,7 @@ class CDCController {
 
     const user = await auth.getUser();
 
-    let { kode_hari, jam_saat_ini, ta_id, jenis ,search} = request.get();
+    let { kode_hari, jam_saat_ini, ta_id, jenis, search } = request.get();
 
     ta_id = ta_id ? ta_id : user.m_ta_id || ta.id;
 
@@ -5528,13 +5538,12 @@ class CDCController {
       if (jenis == "daftar") {
         rombel.whereIn("id", anggotaRombel);
       }
-      if(search){
-        rombel.where("nama","LIKE",`%${search}%`)
+      if (search) {
+        rombel.where("nama", "LIKE", `%${search}%`);
       }
 
       rombel = await rombel.ids();
 
-      
       let jamMengajarIds = await MJamMengajar.query()
         .where({ kode_hari: kode_hari })
         .andWhere({ m_sekolah_id: sekolah.id })
