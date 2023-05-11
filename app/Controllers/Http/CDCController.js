@@ -5693,24 +5693,7 @@ class CDCController {
       });
     }
 
-    let { kelompok } = request.get();
-
-    const kelompokData = [
-      { value: "reguler", label: "Reguler" },
-      { value: "ekskul", label: "Ekstrakurikuler" },
-      { value: "teori", label: "Teori (Peminatan)" },
-      { value: "praktik", label: "Praktik" },
-    ];
-
-    if (!kelompok) {
-      kelompok = kelompokData[0].value;
-    }
-
-    const jurusan = await MJurusan.query()
-      .select("kode", "id")
-      .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ dihapus: 0 })
-      .fetch();
+    
 
     const guru = await User.query()
       .select("nama", "id", "whatsapp", "avatar", "gender")
@@ -5719,35 +5702,7 @@ class CDCController {
       .andWhere({ role: "guru" })
       .fetch();
 
-    let tingkat = [];
-
-    if (
-      sekolah.tingkat == "SMK" ||
-      sekolah.tingkat == "SMA" ||
-      sekolah.tingkat == "MA" ||
-      sekolah.tingkat == "MAK"
-    ) {
-      tingkat = ["X", "XI", "XII", "XIII"];
-    } else if (sekolah.tingkat == "SMP" || sekolah.tingkat == "MTS") {
-      tingkat = ["VII", "VIII", "IX"];
-    } else if (sekolah.tingkat == "SD" || sekolah.tingkat == "MI") {
-      tingkat = ["I", "II", "III", "IV", "V", "VI"];
-    } else if (sekolah.tingkat == "SLB" || sekolah.tingkat == "SUPER") {
-      tingkat = [
-        "I",
-        "II",
-        "III",
-        "IV",
-        "V",
-        "VI",
-        "VII",
-        "VIII",
-        "IX",
-        "X",
-        "XI",
-        "XII",
-      ];
-    }
+    
 
     let rombel;
     rombel = MRombel.query().where({ m_ta_id: ta_id }).andWhere({ dihapus: 0 });
@@ -5815,11 +5770,8 @@ class CDCController {
 
     return response.ok({
       rombel: rombelMengajar,
-      jurusan: jurusan,
       guru: guru,
-      tingkat: tingkat,
       userRole: user.role,
-      kelompok: kelompokData,
       semuaTA,
       dataTA,
     });
