@@ -5267,7 +5267,75 @@ class CDCController {
       message: messagePostSuccess,
     });
   }
+  async putRombel({ response, request, auth, params: { rombel_id } }) {
+    const domain = request.headers().origin;
 
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    if (
+      user.role != "admin" ||
+      user.role == "guru" ||
+      user.m_sekolah_id != sekolah.id
+    ) {
+      return response.forbidden({ message: messageForbidden });
+    }
+
+    const {
+      tingkat,
+      kode,
+      m_jurusan_id,
+      m_user_id,
+      kelompok,
+      m_mata_pelajaran_id,
+      banner,
+      deskripsi
+    } = request.post();
+    const rules = {
+      kode: "required",
+    };
+    const message = {
+      "kode.required": "Kode  harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const rombel = await MRombel.query().where({ id: rombel_id }).update({
+      tingkat,
+      nama: kode,
+      kelompok,
+      m_user_id: user.id,
+      banner,
+      deskripsi
+    });
+
+    await MMataPelajaran.query()
+      .where({ id: m_mata_pelajaran_id })
+      .update({ m_user_id });
+
+    if (!rombel) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
   async loginWhatsapp({ response, request }) {
     const { whatsapp, role } = request.post();
     const domain = request.headers().origin;
