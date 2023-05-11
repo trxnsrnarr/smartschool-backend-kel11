@@ -5719,7 +5719,7 @@ class CDCController {
       .andWhere({ m_ta_id: ta_id })
       .ids();
 
-    let jadwalMengajar = await MJadwalMengajar.query()
+    let jadwalMengajar =  MJadwalMengajar.query()
       .with("rombel", (builder) => {
         builder
           .withCount("anggotaRombel", (builder) => {
