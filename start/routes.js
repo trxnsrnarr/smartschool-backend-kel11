@@ -2001,6 +2001,7 @@ Route.get("/data-perpus/:id", "UserController.showUserPerpus");
 // e - resource
 Route.get("/rombel-eresource", "CDCController.getRombel");
 Route.post("/rombel/eresource", "CDCController.postRombel");
+Route.put("/rombel/eresource/:id", "CDCController.putRombel");
 
 Route.post("/loginwhatsapp/eresource", "CDCController.loginWhatsapp");
 Route.post("/login/eresource", "CDCController.login");
