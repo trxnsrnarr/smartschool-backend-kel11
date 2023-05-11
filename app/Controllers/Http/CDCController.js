@@ -5238,7 +5238,7 @@ class CDCController {
 
     await TkMateriRombel.create({
       m_materi_id: materi.id,
-      m_rombel_id:rombel.id,
+      m_rombel_id: rombel.id,
     });
 
     const jamMengajar = await MJamMengajar.query()
@@ -5301,7 +5301,7 @@ class CDCController {
       m_mata_pelajaran_id,
       banner,
       deskripsi,
-      nama
+      nama,
     } = request.post();
     const rules = {
       kode: "required",
@@ -5454,7 +5454,6 @@ class CDCController {
       })
     );
 
-
     return response.ok({
       message: messagePostSuccess,
     });
@@ -5468,7 +5467,7 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { rombel_id, user_id, dihapus,role } = request.post();
+    const { rombel_id, user_id, dihapus, role } = request.post();
 
     const validation = await validate(
       request.post(),
@@ -5484,7 +5483,7 @@ class CDCController {
       m_rombel_id: rombel_id,
       m_user_id: user_id,
       dihapus,
-      role
+      role,
     });
 
     return response.ok({
@@ -5531,12 +5530,6 @@ class CDCController {
         .where({ m_ta_id: ta_id })
         .ids();
 
-      const rombel = await MRombel.query()
-        .where({ m_user_id: user.id })
-        .andWhere({ dihapus: 0 })
-        .where({ m_ta_id: ta_id })
-        .first();
-
       const rombelIds = await MRombel.query()
         .where({ m_sekolah_id: sekolah.id })
         .where({ dihapus: 0 })
@@ -5568,11 +5561,24 @@ class CDCController {
 
       const rombelMengajar = await MJadwalMengajar.query()
         .with("rombel", (builder) => {
-          builder.where({ dihapus: 0 });
+          builder
+            .withCount("anggotaRombel", (builder) => {
+              builder.where({ dihapus: 0 });
+            })
+            .with("user", (builder) => {
+              builder.select("id", "nama");
+            })
+            .where({ dihapus: 0 });
         })
         .whereIn("m_rombel_id", rombelIds)
         .where({ m_ta_id: ta_id })
-        .with("mataPelajaran")
+        .with("mataPelajaran", (builder) => {
+          builder
+            .with("user", (builder) => {
+              builder.select("id", "nama");
+            })
+            .andWhere({ dihapus: 0 });
+        })
         .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
         .fetch();
 
