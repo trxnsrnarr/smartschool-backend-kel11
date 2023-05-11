@@ -5745,9 +5745,19 @@ class CDCController {
     const jadwalMengajarData = [];
     const rombelMengajar = [];
 
+    let janganUlangRombel = [];
     await Promise.all(
       jadwalMengajar.toJSON().map(async (d) => {
         rombelMengajar.push(d);
+        if (
+          !janganUlangRombel.find(
+            (e) =>
+              e.m_rombel_id == d.m_rombel_id &&
+              e.m_mata_pelajaran_id == d.m_mata_pelajaran_id
+          )
+        ) {
+          janganUlangRombel.push(d);
+        }
         if (jamMengajarIds.includes(d.m_jam_mengajar_id)) {
           if (
             moment(d.jamMengajar.jam_mulai, "HH:mm:ss").format("HH:mm") <=
@@ -5764,7 +5774,7 @@ class CDCController {
     );
 
     return response.ok({
-      rombel: rombelMengajar,
+      rombel: janganUlangRombel,
       guru: guru,
       userRole: user.role,
       semuaTA,
