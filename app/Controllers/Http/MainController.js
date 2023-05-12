@@ -4723,7 +4723,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { nama, whatsapp, password, alamat, home, golongan, asal_sekolah } =
+    const { nama, whatsapp, password, alamat, pangkat, golongan, asal_sekolah } =
       request.post();
 
     const rules = {
@@ -4758,7 +4758,7 @@ class MainController {
       whatsapp,
       password: password,
       role: "admin",
-      home,
+      pangkat,
       golongan,
       m_sekolah_id: sekolah.id,
       dihapus: 0,
