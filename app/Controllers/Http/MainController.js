@@ -3793,47 +3793,36 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { search, page } = request.get();
+    let { search, page, role } = request.get();
 
     page = page ? parseInt(page) : 1;
     let guru;
 
+    guru = User.query()
+      .select(
+        "nama",
+        "id",
+        "whatsapp",
+        "avatar",
+        "gender",
+        "photos",
+        "role",
+        "bagian"
+      )
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .whereIn("role", ["guru", "admin", "kepsek"])
+      .orderBy("nama", "asc");
+
     if (search) {
-      guru = await User.query()
-        .select(
-          "nama",
-          "id",
-          "whatsapp",
-          "avatar",
-          "gender",
-          "photos",
-          "role",
-          "bagian"
-        )
-        .where({ m_sekolah_id: sekolah.id })
-        .andWhere({ dihapus: 0 })
-        .whereIn("role", ["guru", "admin", "kepsek"])
-        .andWhere("nama", "like", `%${search}%`)
-        .orderBy("nama", "asc")
-        .paginate(page, 25);
-    } else {
-      guru = await User.query()
-        .select(
-          "nama",
-          "id",
-          "whatsapp",
-          "avatar",
-          "gender",
-          "photos",
-          "role",
-          "bagian"
-        )
-        .where({ m_sekolah_id: sekolah.id })
-        .andWhere({ dihapus: 0 })
-        .whereIn("role", ["guru", "admin", "kepsek"])
-        .orderBy("nama", "asc")
-        .paginate(page, 25);
+      guru.andWhere("nama", "like", `%${search}%`);
     }
+
+    if (role) {
+      guru.andWhere("role", role);
+    }
+
+    guru = await guru.paginate(page, 25);
 
     return response.ok({
       guru: guru,
@@ -4096,7 +4085,7 @@ class MainController {
       .with("rombel", (builder) => {
         builder
           .withCount("anggotaRombel as jumlahAnggota", (builder) => {
-            builder.where({ dihapus: 0 }).whereIn("m_user_id",userIds);
+            builder.where({ dihapus: 0 }).whereIn("m_user_id", userIds);
           })
           .where({ dihapus: 0 })
           .andWhere({ m_ta_id: ta.id });
@@ -4672,23 +4661,22 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { nama, whatsapp, password, alamat, asal_sekolah } =
-      request.post();
-   
-      const rules = {
-        nama: "required",
-        whatsapp: "required",
-        password: "required",
-      };
-      const message = {
-        "nama.required": "Nama harus diisi",
-        "whatsapp.required": "Whatsapp harus diisi",
-        "password.required": "Password harus diisi",
-      };
-      const validation = await validate(request.all(), rules, message);
-      if (validation.fails()) {
-        return response.unprocessableEntity(validation.messages());
-      }
+    const { nama, whatsapp, password, alamat, asal_sekolah } = request.post();
+
+    const rules = {
+      nama: "required",
+      whatsapp: "required",
+      password: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+      "whatsapp.required": "Whatsapp harus diisi",
+      "password.required": "Password harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
 
     const check = await User.query()
       .where({ whatsapp: whatsapp })
@@ -4735,23 +4723,23 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { nama, whatsapp, password, alamat,pangkat, golongan, asal_sekolah } =
+    const { nama, whatsapp, password, alamat, home, golongan, asal_sekolah } =
       request.post();
-   
-      const rules = {
-        nama: "required",
-        whatsapp: "required",
-        password: "required",
-      };
-      const message = {
-        "nama.required": "Nama harus diisi",
-        "whatsapp.required": "Whatsapp harus diisi",
-        "password.required": "Password harus diisi",
-      };
-      const validation = await validate(request.all(), rules, message);
-      if (validation.fails()) {
-        return response.unprocessableEntity(validation.messages());
-      }
+
+    const rules = {
+      nama: "required",
+      whatsapp: "required",
+      password: "required",
+    };
+    const message = {
+      "nama.required": "Nama harus diisi",
+      "whatsapp.required": "Whatsapp harus diisi",
+      "password.required": "Password harus diisi",
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
 
     const check = await User.query()
       .where({ whatsapp: whatsapp })
@@ -5663,9 +5651,11 @@ class MainController {
 
       const jadwalMengajar = await MJadwalMengajar.query()
         .with("rombel", (builder) => {
-          builder.where({ dihapus: 0 }).withCount("anggotaRombel as jumlahAnggota", (builder) => {
-            builder.where({ dihapus: 0 });
-          });
+          builder
+            .where({ dihapus: 0 })
+            .withCount("anggotaRombel as jumlahAnggota", (builder) => {
+              builder.where({ dihapus: 0 });
+            });
         })
         .with("jamMengajar")
         .with("mataPelajaran")
@@ -5877,7 +5867,7 @@ class MainController {
       dataTA,
     });
   }
-  
+
   async getRombelSer({ response, request, auth }) {
     const domain = request.headers().origin;
 
@@ -5899,7 +5889,7 @@ class MainController {
       kode_hari,
       jam_saat_ini,
       ta_id = user?.m_ta_id || ta.id,
-      nama
+      nama,
     } = request.get();
 
     const semuaTA = await Mta.query()
@@ -5940,9 +5930,11 @@ class MainController {
 
       const jadwalMengajar = await MJadwalMengajar.query()
         .with("rombel", (builder) => {
-          builder.where({ dihapus: 0 }).withCount("anggotaRombel as jumlahAnggota", (builder) => {
-            builder.where({ dihapus: 0 });
-          });
+          builder
+            .where({ dihapus: 0 })
+            .withCount("anggotaRombel as jumlahAnggota", (builder) => {
+              builder.where({ dihapus: 0 });
+            });
         })
         .with("jamMengajar")
         .with("mataPelajaran")
@@ -6026,10 +6018,9 @@ class MainController {
       //   .fetch();
 
       const rombelMengajar = await MRombel.query()
-      .whereNotNull("kode")
-      .where("nama", "like", `%${nama}%`)
-      .andWhere({ dihapus: 0 });
-
+        .whereNotNull("kode")
+        .where("nama", "like", `%${nama}%`)
+        .andWhere({ dihapus: 0 });
 
       // const today = new Date();
       // const absenHariIni = await MTimeline.query()
@@ -6354,7 +6345,7 @@ class MainController {
                       });
                   }
                 })
-                .whereIn( "dihapus", [0,2] );
+                .whereIn("dihapus", [0, 2]);
             })
             .with("user");
         })
@@ -13447,21 +13438,18 @@ class MainController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
-    
-    
-        const user = await auth.getUser();
 
-    if (
-      user.role != "admin" ||
-      user.m_sekolah_id != sekolah.id
-    ) {
+    const user = await auth.getUser();
+
+    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
       return response.forbidden({ message: messageForbidden });
     }
 
     let {
       absen,
       keterangan,
-      lampiran,waktu_masuk,
+      lampiran,
+      waktu_masuk,
       // foto_pulang,
       waktu_pulang,
       foto_masuk,
@@ -13531,7 +13519,8 @@ class MainController {
         m_user_id: user_id ? user_id : user.id,
         role: user.role,
         absen,
-        keterangan,waktu_masuk,
+        keterangan,
+        waktu_masuk,
         foto_masuk,
         waktu_masuk,
         waktu_pulang,
@@ -13560,10 +13549,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
     const user = await auth.getUser();
-    if (
-      user.role != "admin" ||
-      user.m_sekolah_id != sekolah.id
-    ) {
+    if (user.role != "admin" || user.m_sekolah_id != sekolah.id) {
       return response.forbidden({ message: messageForbidden });
     }
 
@@ -13605,7 +13591,6 @@ class MainController {
       message: messagePutSuccess,
     });
   }
-
 
   async downloadAbsen({ response, request, auth }) {
     const domain = request.headers().origin;
@@ -15292,7 +15277,7 @@ class MainController {
     page = page ? page : 1;
 
     const jadwalUjian = await MJadwalUjian.query()
-      .select("id", "waktu_dibuka", "waktu_ditutup", "durasi","m_user_id")
+      .select("id", "waktu_dibuka", "waktu_ditutup", "durasi", "m_user_id")
       .with("rombelUjian", (builder) => {
         builder
           .select("id", "m_rombel_id", "m_jadwal_ujian_id")
@@ -15305,10 +15290,12 @@ class MainController {
               .where("dihapus", 0);
           });
       })
-      .with("user",(builder)=>{
-        builder.select("id","nama","m_sekolah_id").with("sekolah",(builder)=>{
-          builder.select("id","nama")
-        })
+      .with("user", (builder) => {
+        builder
+          .select("id", "nama", "m_sekolah_id")
+          .with("sekolah", (builder) => {
+            builder.select("id", "nama");
+          });
       })
       .andWhere({ dihapus: 0 })
       .andWhere(
@@ -17302,7 +17289,6 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
-
 
     const user = await auth.getUser();
     if (user.role == "siswa") {
@@ -24008,7 +23994,7 @@ class MainController {
       user: user,
     });
   }
-  
+
   async getUserSer({ response, request, auth }) {
     const {
       page,
@@ -24030,10 +24016,9 @@ class MainController {
       .with("sekolah")
       .with("profil")
       .where({ dihapus: 0 })
-      .andWhere({role: "siswa"})
-      // .andWhereNot({ role: "admin" });
+      .andWhere({ role: "siswa" });
+    // .andWhereNot({ role: "admin" });
 
-   
     if (name) {
       user.where("nama", "like", `%${name}%`);
     }
@@ -32773,7 +32758,10 @@ class MainController {
 
     const { ta_id = user?.m_ta_id || taS.id } = request.get();
 
-    const rombelData = await MRombel.query().select("id","m_ta_id").where({id:rombel_id}).first()
+    const rombelData = await MRombel.query()
+      .select("id", "m_ta_id")
+      .where({ id: rombel_id })
+      .first();
 
     const ta = await Mta.query()
       .where({ id: rombelData.m_ta_id })
@@ -32812,7 +32800,7 @@ class MainController {
         builder.where({ dihapus: 0 }).andWhere({ m_ta_id: ta.id });
       })
       .with("raporEkskul", (builder) => {
-        builder.where({dihapus:0}).with("ekskul", (builder) => {
+        builder.where({ dihapus: 0 }).with("ekskul", (builder) => {
           builder.select("id", "nama");
         });
       })
@@ -54451,7 +54439,11 @@ class MainController {
                 row.getCell([`${(nox + 1) * 1 + 2}`]).value = `Telat`;
               }
               row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
-                absen ? `${absen.absen} (${moment(absen?.created_at).format("HH:mm:ss")} - ${moment(absen?.waktu_pulang).format("HH:mm:ss")})` : "-"
+                absen
+                  ? `${absen.absen} (${moment(absen?.created_at).format(
+                      "HH:mm:ss"
+                    )} - ${moment(absen?.waktu_pulang).format("HH:mm:ss")})`
+                  : "-"
               }`;
             } else {
               row.getCell([`${(nox + 1) * 1 + 2}`]).value = `Alpa`;
