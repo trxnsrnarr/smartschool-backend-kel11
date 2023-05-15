@@ -5508,7 +5508,8 @@ class CDCController {
 
     const user = await auth.getUser();
 
-    let { kode_hari, jam_saat_ini, ta_id, jenis, search } = request.get();
+    let { kode_hari, jam_saat_ini, ta_id, jenis, search, m_user_id } =
+      request.get();
 
     ta_id = ta_id ? ta_id : user.m_ta_id || ta.id;
 
@@ -5562,9 +5563,9 @@ class CDCController {
       const rombelMengajar = await MJadwalMengajar.query()
         .with("rombel", (builder) => {
           builder
-          .withCount("anggotaRombel as jumlahAnggota", (builder) => {
-            builder.where({ dihapus: 0 });
-          })
+            .withCount("anggotaRombel as jumlahAnggota", (builder) => {
+              builder.where({ dihapus: 0 });
+            })
             .with("user", (builder) => {
               builder.select("id", "nama");
             })
@@ -5627,6 +5628,9 @@ class CDCController {
       }
       if (search) {
         rombel.where("nama", "LIKE", `%${search}%`);
+      }
+      if (m_user_id) {
+        rombel.where("m_user_id", m_user_id);
       }
 
       rombel = await rombel.ids();

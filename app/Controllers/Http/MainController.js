@@ -3807,7 +3807,8 @@ class MainController {
         "gender",
         "photos",
         "role",
-        "bagian"
+        "bagian",
+        "golongan"
       )
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
@@ -3822,7 +3823,26 @@ class MainController {
       guru.andWhere("role", role);
     }
 
-    guru = await guru.paginate(page, 25);
+    if (page == "all") {
+      guru = await guru.fetch();
+
+      let janganUlangGolongan = [];
+      const guruData = guru.toJSON().filter((d) => {
+        if (!janganUlangGolongan.find((e) => e == d.golongan)) {
+          janganUlangGolongan.push(d.golongan);
+          return true;
+        } else {
+          return false;
+        }
+      });
+
+      return response.ok({
+        guru: guru,
+        golongan: guruData,
+      });
+    } else {
+      guru = await guru.paginate(page, 25);
+    }
 
     return response.ok({
       guru: guru,
@@ -6327,7 +6347,9 @@ class MainController {
                     });
                   if (sekolah.id == 33) {
                     builder.with("sikapYadika", (builder) => {
-                      builder.where({ dihapus: 0 });
+                      builder
+                        .where({ dihapus: 0 })
+                        .andWhere({ m_ta_id: data?.m_ta_id });
                     });
                   } else {
                     builder
@@ -24005,11 +24027,19 @@ class MainController {
       sekolah_id,
       bentuk,
       m_sekolah_id,
+      keahlian,
     } = request.get();
 
     let sekolahIds = [];
     if (bentuk) {
       sekolahIds = await MSekolah.query().where({ tingkat: bentuk }).ids();
+    }
+
+    let keahlianIds;
+    if (keahlian) {
+      keahlianIds = await MProfilUser.query()
+        .where("keahlian", "LIKE", `%${keahlian}%`)
+        .pluck("m_user_id");
     }
 
     let user = User.query()
@@ -24032,6 +24062,10 @@ class MainController {
       user.where({ m_sekolah_id: m_sekolah_id });
     } else if (sekolahIds.length) {
       user.whereIn("m_sekolah_id", sekolahIds);
+    }
+
+    if (keahlian) {
+      user.whereIn("m_user_id", keahlianIds);
     }
 
     if (user_id) {
