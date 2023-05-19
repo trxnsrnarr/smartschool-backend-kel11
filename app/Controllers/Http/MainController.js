@@ -3795,7 +3795,7 @@ class MainController {
 
     let { search, page, role } = request.get();
 
-    page = page ? parseInt(page) : 1;
+    // page = page ? parseInt(page) : 1;
     let guru;
 
     guru = User.query()
@@ -3838,7 +3838,7 @@ class MainController {
 
       return response.ok({
         guru: guru,
-        golongan: guruData,
+        golongan: janganUlangGolongan,
       });
     } else {
       guru = await guru.paginate(page, 25);
