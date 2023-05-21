@@ -2722,6 +2722,7 @@ class PPDBController {
             "",
             "Pembayaran",
             "Sisa",
+            "Alamat"
           ];
           worksheet.getRow(6).values = [
             "No",
@@ -2783,6 +2784,7 @@ class PPDBController {
             "B.Ing",
             "Pembayaran",
             "Sisa",
+            "Alamat"
           ];
           worksheet.columns = [
             { key: "no" },
@@ -2844,6 +2846,7 @@ class PPDBController {
             { key: "bing6" },
             { key: "pembayaran" },
             { key: "sisa" },
+            { key: "alamat" },
           ];
 
           const checkBayar =
@@ -3017,6 +3020,7 @@ class PPDBController {
               style: "currency",
               currency: "IDR",
             })}`,
+            alamat: d.user.profil ? d.user.profil.alamat : "-",
           });
         })
     );
@@ -3045,6 +3049,7 @@ class PPDBController {
     // worksheet.mergeCells(`BE5:BE6`);
     worksheet.mergeCells(`BF5:BF6`);
     worksheet.mergeCells(`BG5:BG6`);
+    worksheet.mergeCells(`BH5:BH6`);
     worksheet.getColumn("A").width = 6;
     worksheet.getColumn("B").width = 20;
     worksheet.getColumn("C").width = 20;
@@ -3063,9 +3068,10 @@ class PPDBController {
     // worksheet.getColumn("BE").width = 20;
     worksheet.getColumn("BF").width = 20;
     worksheet.getColumn("BG").width = 20;
+    worksheet.getColumn("BH").width = 20;
     worksheet.autoFilter = {
       from: "A6",
-      to: "BG6",
+      to: "BH6",
     };
 
     let namaFile = `/uploads/rekapan-pendaftar-ppdb-${keluarantanggalseconds}.xlsx`;
