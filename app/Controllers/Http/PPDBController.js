@@ -2540,7 +2540,7 @@ class PPDBController {
     });
 
     worksheet.addConditionalFormatting({
-      ref: "A5:BG6",
+      ref: "A5:BH6",
       rules: [
         {
           type: "expression",
@@ -2634,7 +2634,7 @@ class PPDBController {
           });
 
           worksheet.addConditionalFormatting({
-            ref: `B${(idx + 1) * 1 + 5}:BG${(idx + 1) * 1 + 6}`,
+            ref: `B${(idx + 1) * 1 + 5}:BH${(idx + 1) * 1 + 6}`,
             rules: [
               {
                 type: "expression",
