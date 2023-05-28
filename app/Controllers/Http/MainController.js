@@ -17526,6 +17526,7 @@ class MainController {
             // const check2 = d.jawaban_menjodohkan.every(e => d.soal.jawaban_pg_kompleks.includes(e))
             if (d.jawaban_menjodohkan) {
               if (d.jawaban_menjodohkan.length) {
+                let benars=0
                 d.jawaban_menjodohkan.map((e, id) => {
                   // metaHasil.nilaiMenjodohkan = metaHasil.nilaiMenjodohkan+','+ id ;
                   const check1 = d.soal.soal_menjodohkan.find(
@@ -17533,15 +17534,16 @@ class MainController {
                   );
                   if (check1) {
                     if (check1.jawaban == e - 1) {
+                      benars = 1
                       metaHasil.nilaiMenjodohkan =
                         metaHasil.nilaiMenjodohkan + parseInt(check1.poin);
                     }
                   }
                 });
 
-                // if (d.jawaban_rubrik_esai.indexOf("true") != -1) {
-                //   metaHasil.benar = metaHasil.benar + 1;
-                // }
+                if (benars== 1) {
+                  metaHasil.benar = metaHasil.benar + 1;
+                }
               }
             }
           }
