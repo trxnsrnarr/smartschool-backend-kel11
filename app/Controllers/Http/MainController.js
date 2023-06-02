@@ -1306,7 +1306,7 @@ class MainController {
   }
 
   async loginWhatsapp({ response, request }) {
-    const { whatsapp, role } = request.post();
+    const { whatsapp, role, user_agent } = request.post();
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -1316,12 +1316,15 @@ class MainController {
     }
 
     const res = await User.query()
-      .select("nama", "whatsapp", "role")
+      .select("nama", "whatsapp", "role", "user_agent")
       .where({ whatsapp: `${whatsapp}` })
       .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .first();
 
+    if (user_agent != res.user_agent ) {
+      return response.notFound({ message: "Akun sudah masuk di perangkat lain" });
+    }
     if (!res) {
       return response.notFound({ message: "Akun tidak ditemukan" });
     }
