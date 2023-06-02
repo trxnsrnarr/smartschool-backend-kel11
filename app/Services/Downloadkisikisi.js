@@ -17,7 +17,7 @@ class DownloadService {
     let worksheet = workbook.addWorksheet(`KISI-KISI`, {
       properties: { tabColor: { argb: "FFC0000" } },
     });
-
+// return ujian
     // ADD LOGO
     // const logoImage = workbook.addImage({
     //   filename:
@@ -50,7 +50,7 @@ class DownloadService {
           { key: "KOMPETENSI_DASAR" },
           { key: "MATERI" },
           { key: "INDIKATOR_PENCAPAIAN_KOMPETENSI" },
-          { key: "INDIKATOR SOAL" },
+          { key: "INDIKATOR_SOAL" },
           { key: "LEVEL_KOGNITIF" },
           { key: "BENTUK_SOAL" },
           { key: "TINGKAT_KESUKARAN" },
@@ -69,7 +69,7 @@ class DownloadService {
           INDIKATOR_SOAL: d.soal ? d.soal.akm_konten_materi : "-",
           LEVEL_KOGNITIF: d.soal ? d.soal.aspek_level : "-",
           BENTUK_SOAL: d.soal ? d.soal.bentuk : "-",
-          TINGAT_KESUKARAN: d.soal ? d.soal.tingkat_kesukaran : "-",
+          TINGKAT_KESUKARAN: d.soal ? d.soal.tingkat_kesukaran : "-",
           SUMBER_BUKU: d.soal ? d.soal.sumber_buku : "-",
           NO_SOAL: d.soal ? d.soal.kantor : "-",
         });
