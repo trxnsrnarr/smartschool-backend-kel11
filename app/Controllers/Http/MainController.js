@@ -1356,6 +1356,18 @@ class MainController {
     return response.ok(res);
   }
 
+  async logout({ response, request }) {
+    const { whatsapp } = request.post();
+
+    const logout = await User.query()
+      .where({ whatsapp: `${whatsapp}` })
+      .update({ user_agent: null })
+
+      return response.ok({
+        message: "Anda berhasil logout!",
+      });
+  }
+
   async getProfilAdmin({ auth, response, request }) {
     const user = await auth.getUser();
 
