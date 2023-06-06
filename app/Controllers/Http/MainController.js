@@ -1322,13 +1322,12 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .first();
 
-    if (res.user_agent) {
-      if (user_agent != res.user_agent) {
+      if (user_agent != res?.user_agent) {
         return response.notFound({
           message: "Akun sudah masuk di perangkat lain",
         });
       }
-    }
+
     if (!res) {
       return response.notFound({ message: "Akun tidak ditemukan" });
     }
