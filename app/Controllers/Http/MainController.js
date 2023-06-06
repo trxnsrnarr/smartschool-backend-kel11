@@ -1322,6 +1322,14 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .first();
 
+      if (res?.user_agent == null) {
+        await User.query()
+        .where({ whatsapp: `${whatsapp}` })
+        .update({ user_agent: user_agent });
+        res.user_agent = user_agent;
+        return response.ok(res);
+      }
+
       if (user_agent != res?.user_agent) {
         return response.notFound({
           message: "Akun sudah masuk di perangkat lain",
