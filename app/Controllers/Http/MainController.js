@@ -1322,8 +1322,12 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .first();
 
-    if (user_agent != res.user_agent ) {
-      return response.notFound({ message: "Akun sudah masuk di perangkat lain" });
+    if (res.user_agent) {
+      if (user_agent != res.user_agent) {
+        return response.notFound({
+          message: "Akun sudah masuk di perangkat lain",
+        });
+      }
     }
     if (!res) {
       return response.notFound({ message: "Akun tidak ditemukan" });
@@ -4746,8 +4750,15 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { nama, whatsapp, password, alamat, pangkat, golongan, asal_sekolah } =
-      request.post();
+    const {
+      nama,
+      whatsapp,
+      password,
+      alamat,
+      pangkat,
+      golongan,
+      asal_sekolah,
+    } = request.post();
 
     const rules = {
       nama: "required",
@@ -17529,7 +17540,7 @@ class MainController {
             // const check2 = d.jawaban_menjodohkan.every(e => d.soal.jawaban_pg_kompleks.includes(e))
             if (d.jawaban_menjodohkan) {
               if (d.jawaban_menjodohkan.length) {
-                let benars=0
+                let benars = 0;
                 d.jawaban_menjodohkan.map((e, id) => {
                   // metaHasil.nilaiMenjodohkan = metaHasil.nilaiMenjodohkan+','+ id ;
                   const check1 = d.soal.soal_menjodohkan.find(
@@ -17537,14 +17548,14 @@ class MainController {
                   );
                   if (check1) {
                     if (check1.jawaban == e - 1) {
-                      benars = 1
+                      benars = 1;
                       metaHasil.nilaiMenjodohkan =
                         metaHasil.nilaiMenjodohkan + parseInt(check1.poin);
                     }
                   }
                 });
 
-                if (benars== 1) {
+                if (benars == 1) {
                   metaHasil.benar = metaHasil.benar + 1;
                 }
               }
