@@ -1379,13 +1379,20 @@ class MainController {
   async logout({ response, request }) {
     const { user_id } = request.post();
 
-    await User.query()
+    const res = await User.query()
       .where({ id: `${user_id}` })
       .update({ user_agent: null })
 
-    return response.ok({
-      message: "Anda berhasil logout",
-    });
+    if (res) {
+      return response.ok({
+        message: "Anda berhasil logout",
+      });
+    } else {
+      return response.notFound({
+        message: "Gagal logout",
+      });
+    }
+
   }
 
   async getProfilAdmin({ auth, response, request }) {
