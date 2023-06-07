@@ -1377,10 +1377,10 @@ class MainController {
   }
 
   async logout({ response, request }) {
-    const { whatsapp } = request.post();
+    const { user_id } = request.post();
 
     await User.query()
-      .where({ whatsapp: `${whatsapp}` })
+      .where({ id: `${user_id}` })
       .update({ user_agent: null })
 
     return response.ok({
