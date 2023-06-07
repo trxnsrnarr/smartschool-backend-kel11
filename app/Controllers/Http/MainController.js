@@ -1322,22 +1322,42 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .first();
 
-      // if (res?.user_agent == null) {
-      //   await User.query()
-      //   .where({ whatsapp: `${whatsapp}` })
-      //   .update({ user_agent: user_agent });
-      //   res.user_agent = user_agent;
-      //   return response.ok(res);
-      // }
-
-      if (user_agent != res?.user_agent) {
-        return response.notFound({
-          message: "Akun sudah masuk di perangkat lain",
-        });
-      }
-
     if (!res) {
       return response.notFound({ message: "Akun tidak ditemukan" });
+    }
+
+    if (res?.user_agent == null) {
+      await User.query()
+      .where({ whatsapp: `${whatsapp}` })
+      .update({ user_agent: user_agent });
+      res.user_agent = user_agent;
+      return response.ok(res);
+    }
+
+    if (user_agent != res?.user_agent) {
+      const last_login = await User.query()
+        .select("updated_at")
+        .where({ whatsapp: `${whatsapp}` })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .andWhere({ dihapus: 0 })
+        .first();
+
+      const currentTime = new Date().getTime();
+      const lastLoginTime = new Date(last_login.updated_at).getTime();
+      const timeDifference = currentTime - lastLoginTime;
+      const timeout = 8 * 60 * 1000;
+
+      if (timeDifference >= timeout) {
+        await User.query()
+          .where({ whatsapp: `${whatsapp}` })
+          .update({ user_agent: user_agent });
+      res.user_agent = user_agent;
+      return response.ok(res);
+      } else {
+        return response.notFound({
+          message: "Akun sudah masuk di perangkat lain",
+        })
+      };
     }
 
     if (role == "warga-sekolah" || res.role == "admin") {
@@ -1363,9 +1383,9 @@ class MainController {
       .where({ whatsapp: `${whatsapp}` })
       .update({ user_agent: null })
 
-      return response.ok({
-        message: "Anda berhasil logout!",
-      });
+    return response.ok({
+      message: "Anda berhasil logout!",
+    });
   }
 
   async getProfilAdmin({ auth, response, request }) {
