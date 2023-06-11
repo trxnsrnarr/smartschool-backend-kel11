@@ -5839,8 +5839,7 @@ class CDCController {
     rombel = await rombel.ids();
 
     let jamMengajarIds = await MJamMengajar.query()
-      .where({ kode_hari: kode_hari })
-      .andWhere({ m_sekolah_id: sekolah.id })
+      .where({ m_sekolah_id: sekolah.id })
       .andWhere({ m_ta_id: ta.id })
       .ids();
 
