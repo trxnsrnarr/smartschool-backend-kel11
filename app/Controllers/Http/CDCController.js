@@ -5804,5 +5804,119 @@ class CDCController {
       dataTA,
     });
   }
+
+  async industri({ response, request, auth }) {
+    const { page } = request.get();
+
+    const user = await User.query().where({ m_sekolah_id: 9059 }).fetch();
+
+    return response.ok({
+      user: user,
+    });
+  }
+
+  async detailIndustri({ response, request, auth, params: { id } }) {
+    const sekolah = await MSekolah.query().where({ id: 9059 }).first();
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+    const user = await auth.getUser();
+
+    let rombel;
+    rombel = MRombel.query()
+      .where({ m_ta_id: ta.id })
+      .andWhere({ m_sekolah_id: 9059 })
+      .andWhere({ dihapus: 0 })
+      .andWhere({ m_user_id: id });
+
+    rombel = await rombel.ids();
+
+    let jamMengajarIds = await MJamMengajar.query()
+      .where({ kode_hari: kode_hari })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .ids();
+
+    const jadwalMengajar = await MJadwalMengajar.query()
+      .with("rombel", (builder) => {
+        builder
+          .withCount("anggotaRombel", (builder) => {
+            builder.where({ dihapus: 0 });
+          })
+          .with("user", (builder) => {
+            builder.select("id", "nama");
+          })
+          .where({ dihapus: 0 });
+      })
+      .with("jamMengajar")
+      .with("mataPelajaran", (builder) => {
+        builder
+          .with("user", (builder) => {
+            builder.select("id", "nama");
+          })
+          .andWhere({ dihapus: 0 });
+      })
+      .whereNotNull("m_mata_pelajaran_id")
+      .whereIn("m_rombel_id", rombel)
+      .where({ m_ta_id: ta.id })
+      .fetch();
+
+    const jadwalMengajarData = [];
+    const rombelMengajar = [];
+
+    await Promise.all(
+      jadwalMengajar.toJSON().map(async (d) => {
+        rombelMengajar.push(d);
+        if (jamMengajarIds.includes(d.m_jam_mengajar_id)) {
+          if (
+            moment(d.jamMengajar.jam_mulai, "HH:mm:ss").format("HH:mm") <=
+              jam_saat_ini &&
+            moment(d.jamMengajar.jam_selesai, "HH:mm:ss").format("HH:mm") >=
+              jam_saat_ini
+          ) {
+            jadwalMengajarData.push({ ...d, aktif: true });
+          } else {
+            jadwalMengajarData.push({ ...d, aktif: false });
+          }
+        }
+      })
+    );
+
+    const today = new Date();
+    const absenHariIni = await MTimeline.query()
+      .with("tkTimeline", (builder) => {
+        builder.where({ m_user_id: user.id });
+      })
+      .where({ tipe: "absen" })
+      .whereIn(
+        "m_rombel_id",
+        jadwalMengajarData
+          .filter((d) => d.aktif == true)
+          .map((d) => d.rombel.id)
+      )
+      .whereBetween("tanggal_pembagian", [
+        `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`,
+        `${today.getFullYear()}/${
+          today.getMonth() + 1
+        }/${today.getDate()} ${jam_saat_ini}:00`,
+      ])
+      .fetch();
+
+    return response.ok({
+      jadwalMengajar: jadwalMengajarData,
+      rombelMengajar: rombelMengajar,
+      absen: absenHariIni,
+      rombel,
+      userRole: user.role,
+      
+    });
+  }
 }
 module.exports = CDCController;
