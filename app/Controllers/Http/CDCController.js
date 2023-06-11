@@ -5808,7 +5808,7 @@ class CDCController {
   async industri({ response, request, auth }) {
     const { page } = request.get();
 
-    const user = await User.query().where({ m_sekolah_id: 9059 }).fetch();
+    const user = await User.query().where({ m_sekolah_id: 9059, role:"admin" }).fetch();
 
     return response.ok({
       user: user,
