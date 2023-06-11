@@ -1322,6 +1322,12 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .first();
 
+    if (user_agent != res?.user_agent) {
+      return response.notFound({
+        message: "Akun sudah masuk di perangkat lain",
+      });
+    }
+
     if (!res) {
       return response.notFound({ message: "Akun tidak ditemukan" });
     }
@@ -27406,11 +27412,13 @@ class MainController {
         .first();
 
       if (nilaiAkhirKeterampilan) {
-        await MUjianSiswa.query()
-          .where({ id: nilaiAkhirKeterampilan.id })
-          .update({
-            nilai_keterampilan: rataData,
-          });
+        if (ta.save == 0) {
+          await MUjianSiswa.query()
+            .where({ id: nilaiAkhirKeterampilan.id })
+            .update({
+              nilai_keterampilan: rataData,
+            });
+        }
       } else {
         await MUjianSiswa.create({
           m_ta_id: ta.id,
@@ -32867,11 +32875,13 @@ class MainController {
       .first();
 
     if (nilaiAkhirKeterampilan) {
-      await MUjianSiswa.query()
-        .where({ id: nilaiAkhirKeterampilan.id })
-        .update({
-          nilai_keterampilan: rataData,
-        });
+      if (ta.save == 0) {
+        await MUjianSiswa.query()
+          .where({ id: nilaiAkhirKeterampilan.id })
+          .update({
+            nilai_keterampilan: rataData,
+          });
+      }
     } else {
       await MUjianSiswa.create({
         m_ta_id: ta_id,
@@ -43231,11 +43241,13 @@ class MainController {
             .first();
 
           if (nilaiAkhirKeterampilan) {
-            await MUjianSiswa.query()
-              .where({ id: nilaiAkhirKeterampilan.id })
-              .update({
-                nilai_keterampilan: rataData,
-              });
+            if (ta.save == 0) {
+              await MUjianSiswa.query()
+                .where({ id: nilaiAkhirKeterampilan.id })
+                .update({
+                  nilai_keterampilan: rataData,
+                });
+            }
           } else {
             await MUjianSiswa.create({
               m_ta_id: ta.id,
@@ -47782,9 +47794,11 @@ class MainController {
                           .reduce((a, b) => a + b, 0) /
                         listNilai.filter((nilai) => nilai).length
                       : 0;
-                    await MUjianSiswa.query().where({ id: ujian.id }).update({
-                      nilai: nilaiAkhir,
-                    });
+                    if (ta.save == 0) {
+                      await MUjianSiswa.query().where({ id: ujian.id }).update({
+                        nilai: nilaiAkhir,
+                      });
+                    }
                   } else {
                     const listNilai = [rataUjian, rata];
                     nilaiAkhir = listNilai.filter((nilai) => nilai).length
@@ -47966,11 +47980,13 @@ class MainController {
 
                   try {
                     if (nilaiAkhirKeterampilan) {
-                      await MUjianSiswa.query()
-                        .where({ id: nilaiAkhirKeterampilan.id })
-                        .update({
-                          nilai_keterampilan: rataData,
-                        });
+                      if (ta.save == 0) {
+                        await MUjianSiswa.query()
+                          .where({ id: nilaiAkhirKeterampilan.id })
+                          .update({
+                            nilai_keterampilan: rataData,
+                          });
+                      }
                     } else {
                       await MUjianSiswa.create({
                         m_ta_id: ta.id,

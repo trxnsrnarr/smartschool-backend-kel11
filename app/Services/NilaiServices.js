@@ -10,6 +10,7 @@ const HitungNilaiAkhir = async ({
   sekolah,
 }) => {
   let nilaiAkhir = 0;
+
   // const listNilai = [
   //   rataUjian,
   //   rata,
@@ -102,11 +103,15 @@ const HitungNilaiAkhir = async ({
       nilaiUASA = (nilaiUAS * bobot.uas_pas) / 100;
     }
     nilaiAkhir = nilaiUASA + nilaiUTSA + nilaiUjian + nilaiTugas;
-
+    if (ta.save == 1) {
+      return { nilaiAkhir, ujian, rata, rataUjian, data, dataUjian };
+    }
     if (ujian) {
-      await MUjianSiswa.query().where({ id: ujian.id }).update({
-        nilai: `${nilaiAkhir ? nilaiAkhir :0}`,
-      });
+      await MUjianSiswa.query()
+        .where({ id: ujian.id })
+        .update({
+          nilai: `${nilaiAkhir ? nilaiAkhir : 0}`,
+        });
     } else {
       // const listNilai = [rataUjian, rata];
       // nilaiAkhir = listNilai.filter((nilai) => nilai).length
@@ -117,7 +122,7 @@ const HitungNilaiAkhir = async ({
         m_ta_id: ta.id,
         m_user_id: user_id,
         m_mata_pelajaran_id: mapel.id,
-        nilai: `${nilaiAkhir ? nilaiAkhir :0}`,
+        nilai: `${nilaiAkhir ? nilaiAkhir : 0}`,
       });
     }
   } else if (nilaiUTS) {
@@ -135,13 +140,18 @@ const HitungNilaiAkhir = async ({
       nilaiUTSA = (nilaiUTS * bobot.uts_pts) / 100;
     }
     nilaiAkhir = nilaiUTSA + nilaiUjian + nilaiTugas;
+    if (ta.save == 1) {
+      return { nilaiAkhir, ujian, rata, rataUjian, data, dataUjian };
+    }
     if (ujian) {
-      await MUjianSiswa.query().where({ id: ujian.id }).update({
-        nilai: `${nilaiAkhir ? nilaiAkhir :0}`,
-        nilai_uts: `${nilaiAkhir ? nilaiAkhir :0}`,
-        avg_nilai_tugas: nilaiTugas ? nilaiTugas :0,
-        avg_nilai_ujian: nilaiUjian,
-      });
+      await MUjianSiswa.query()
+        .where({ id: ujian.id })
+        .update({
+          nilai: `${nilaiAkhir ? nilaiAkhir : 0}`,
+          nilai_uts: `${nilaiAkhir ? nilaiAkhir : 0}`,
+          avg_nilai_tugas: nilaiTugas ? nilaiTugas : 0,
+          avg_nilai_ujian: nilaiUjian,
+        });
     } else {
       // const listNilai = [rataUjian, rata];
       // nilaiAkhir = listNilai.filter((nilai) => nilai).length
