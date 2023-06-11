@@ -5888,30 +5888,12 @@ class CDCController {
       })
     );
 
-    const today = new Date();
-    const absenHariIni = await MTimeline.query()
-      .with("tkTimeline", (builder) => {
-        builder.where({ m_user_id: user.id });
-      })
-      .where({ tipe: "absen" })
-      .whereIn(
-        "m_rombel_id",
-        jadwalMengajarData
-          .filter((d) => d.aktif == true)
-          .map((d) => d.rombel.id)
-      )
-      .whereBetween("tanggal_pembagian", [
-        `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`,
-        `${today.getFullYear()}/${
-          today.getMonth() + 1
-        }/${today.getDate()} ${jam_saat_ini}:00`,
-      ])
-      .fetch();
+    
 
     return response.ok({
       jadwalMengajar: jadwalMengajarData,
       rombelMengajar: rombelMengajar,
-      absen: absenHariIni,
+      // absen: absenHariIni,
       rombel,
       userRole: user.role,
       
