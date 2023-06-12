@@ -10994,26 +10994,13 @@ ${jamPerubahan}`;
                     .andWhere({ tk_peserta_ujian_id: d.id })
                     .first();
                   if (e.bentuk == "pg") {
-                    row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
-                      jawabanSiswa.jawaban_pg ? jawabanSiswa?.jawaban_pg : ""
-                    }`;
-                    if (
-                      jawabanSiswa ? jawabanSiswa.jawaban_pg : "0" == e.kj_pg
-                    ) {
-                      // row.getCell([`${(nox + 1) * 1 + 2}`]).fill = {
-                      //   type: "pattern",
-                      //   pattern: "solid",
-                      //   fgColor: { argb: "16FF00" },
-                      // };
-
-                      hasil = hasil + e.nilai_soal;
+                    if (jawabanSiswa && jawabanSiswa.jawaban_pg) {
+                      row.getCell([`${(nox + 1) * 1 + 2}`]).value = jawabanSiswa.jawaban_pg;
+                      if (jawabanSiswa.jawaban_pg == e.kj_pg) {
+                        hasil = hasil + e.nilai_soal;
+                      }
                     } else {
-                      // row.getCell([`${(nox + 1) * 1 + 2}`]).fill = {
-                      //   type: "pattern",
-                      //   pattern: "solid",
-                      //   fgColor: { argb: "F94A29" },
-                      // };
-                      // row.getCell([`${(nox + 1) * 1 + 2}`]).value = `0`;
+                      row.getCell([`${(nox + 1) * 1 + 2}`]).value = '';
                     }
                   } else if (e.bentuk == "esai") {
                     if (
