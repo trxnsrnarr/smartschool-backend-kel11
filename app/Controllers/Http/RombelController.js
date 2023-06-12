@@ -3266,7 +3266,7 @@ class RombelController {
                     .with("templateDeskripsi");
                 })
                 .where({ dihapus: 0 })
-                .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
+                // .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
                 .orderBy("urutan", "asc");
             })
             .where({ dihapus: 0 })
@@ -3311,10 +3311,10 @@ class RombelController {
                   ];
                   // worksheet.mergeCells(`${(total + 1) * 2 + 3}:${(total + 1) * 2 + 4}`);
 
-                  if (!r.mataPelajaran.nilaiIndividu) {
-                    dataaa = dataaa + 1;
-                    return;
-                  }
+                  // if (!r.mataPelajaran.nilaiIndividu) {
+                  //   dataaa = dataaa + 1;
+                  //   return;
+                  // }
                   row.getCell([`${(total + 1) * 2 + 3}`]).value = `${
                     r.mataPelajaran.nilaiIndividu
                       ? r.mataPelajaran.nilaiIndividu.nilai
@@ -3567,9 +3567,7 @@ class RombelController {
   async importNilaiUtamaServices(
     filelocation,
     response,
-    sekolah,
-    ta,
-    rombel_id
+    ta_id,
   ) {
     var workbook = new Excel.Workbook();
 
@@ -3612,12 +3610,10 @@ class RombelController {
       }
     });
 
-    // return data;
-
     for (let i = 0; i < data.length; i++) {
       const d = data[i];
       const check = await MUjianSiswa.query()
-        .where({ m_ta_id: ta.id })
+        .where({ m_ta_id: ta_id })
         .andWhere({ m_user_id: d.whatsapp })
         .andWhere({ m_mata_pelajaran_id: d.mapel_id })
         .first();
@@ -3638,7 +3634,7 @@ class RombelController {
           await MUjianSiswa.create({
             m_mata_pelajaran_id: d.mapel_id,
             m_user_id: d.whatsapp,
-            m_ta_id: ta.id,
+            m_ta_id: ta_id,
             nilai: d.nilai,
           });
         }
@@ -3646,13 +3642,13 @@ class RombelController {
           await MUjianSiswa.create({
             m_mata_pelajaran_id: d.mapel_id,
             m_user_id: d.whatsapp,
-            m_ta_id: ta.id,
+            m_ta_id: ta_id,
             nilai_keterampilan: d.nilai,
           });
         }
       }
 
-      return;
+      DataBelum.push(d);
     }
 
     // return result;
@@ -3661,19 +3657,19 @@ class RombelController {
   }
 
   async importNilaiUtama({ request, response, auth }) {
-    const domain = request.headers().origin;
+    // const domain = request.headers().origin;
 
-    const sekolah = await this.getSekolahByDomain(domain);
+    // const sekolah = await this.getSekolahByDomain(domain);
 
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-    const ta = await this.getTAAktif(sekolah);
+    // if (sekolah == "404") {
+    //   return response.notFound({ message: "Sekolah belum terdaftar" });
+    // }
+    // const ta = await this.getTAAktif(sekolah);
 
     let file = request.file("file");
     let fname = `import-excel.xlsx`;
 
-    const { rombel_id } = request.post();
+    const { ta_id } = request.post();
     //move uploaded file into custom folder
     await file.move(Helpers.tmpPath("/uploads"), {
       name: fname,
@@ -3683,13 +3679,14 @@ class RombelController {
     if (!file.moved()) {
       return fileUpload.error();
     }
+    // return ta_id
 
     return await this.importNilaiUtamaServices(
       `tmp/uploads/${fname}`,
       response,
-      sekolah,
-      ta,
-      rombel_id
+      // sekolah,
+      ta_id,
+      // rombel_id
     );
   }
 }

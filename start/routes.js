@@ -1616,9 +1616,13 @@ Route.post(
   "/import-nilai-semua",
   "RombelController.importNilaiUtama"
 );
+// Route.post(
+//   "/download/ledger-nilai/:rombel_id",
+//   "RombelController.downloadTemplateNilai"
+// );
 Route.post(
   "/download/ledger-nilai/:rombel_id",
-  "RombelController.downloadTemplateNilai"
+  "MainController.downloadLedgerNilai2"
 );
 Route.post(
   "/download/ledger-nilai-yadika/:rombel_id",
