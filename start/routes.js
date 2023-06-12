@@ -1613,8 +1613,12 @@ Route.post(
   "MainController.importSikapRekapRombel"
 );
 Route.post(
+  "/import-nilai-semua",
+  "RombelController.importNilaiUtama"
+);
+Route.post(
   "/download/ledger-nilai/:rombel_id",
-  "MainController.downloadLedgerNilai2"
+  "RombelController.downloadTemplateNilai"
 );
 Route.post(
   "/download/ledger-nilai-yadika/:rombel_id",
@@ -2021,6 +2025,9 @@ Route.get(
   "/nilai-pg/:peserta_ujian_id",
   "UjianController.detailNilaiPg"
 );
+
+Route.get("/industri", "CDCController.industri");
+Route.get("/industri/:id", "CDCController.detailIndustri");
 
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
