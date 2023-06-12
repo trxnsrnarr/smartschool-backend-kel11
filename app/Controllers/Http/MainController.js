@@ -1345,7 +1345,7 @@ class MainController {
       const currentTime = new Date().getTime();
       const lastLoginTime = new Date(last_login.updated_at).getTime();
       const timeDifference = currentTime - lastLoginTime;
-      const timeout = 8 * 60 * 1000;
+      const timeout = 8 * 60 * 60 * 1000;
 
       if (timeDifference >= timeout) {
         await User.query()
@@ -1354,7 +1354,7 @@ class MainController {
       res.user_agent = user_agent;
       return response.ok(res);
       } else {
-        return response.notFound({
+        return response.forbidden({
           message: "Akun sudah masuk di perangkat lain",
         })
       };
