@@ -1338,32 +1338,32 @@ class MainController {
     // }
 
        
-      if (user_agent != res?.user_agent) {
-        const last_login = await User.query()
-          .select("updated_at")
-          .where({ whatsapp: `${whatsapp}` })
-          .andWhere({ m_sekolah_id: sekolah.id })
-          .andWhere({ dihapus: 0 })
-          .first();
+      // if (user_agent != res?.user_agent) {
+      //   const last_login = await User.query()
+      //     .select("updated_at")
+      //     .where({ whatsapp: `${whatsapp}` })
+      //     .andWhere({ m_sekolah_id: sekolah.id })
+      //     .andWhere({ dihapus: 0 })
+      //     .first();
 
-        const currentTime = new Date().getTime();
-        const lastLoginTime = new Date(last_login.updated_at).getTime();
-        const timeDifference = currentTime - lastLoginTime;
-        const timeout = 8 * 60 * 60 * 1000;
+      //   const currentTime = new Date().getTime();
+      //   const lastLoginTime = new Date(last_login.updated_at).getTime();
+      //   const timeDifference = currentTime - lastLoginTime;
+      //   const timeout = 8 * 60 * 60 * 1000;
 
-        if (timeDifference >= timeout) {
-          await User.query()
-            .where({ whatsapp: `${whatsapp}` })
-            .andWhere({ m_sekolah_id: sekolah.id })
-            .update({ user_agent: user_agent });
-          res.user_agent = user_agent;
-          return response.ok(res);
-        } else {
-          return response.forbidden({
-            message: "Akun sudah masuk di perangkat lain",
-          });
-        }
-      }
+      //   if (timeDifference >= timeout) {
+      //     await User.query()
+      //       .where({ whatsapp: `${whatsapp}` })
+      //       .andWhere({ m_sekolah_id: sekolah.id })
+      //       .update({ user_agent: user_agent });
+      //     res.user_agent = user_agent;
+      //     return response.ok(res);
+      //   } else {
+      //     return response.forbidden({
+      //       message: "Akun sudah masuk di perangkat lain",
+      //     });
+      //   }
+      // }
     }
     
     if (role == "warga-sekolah" || res.role == "admin") {
