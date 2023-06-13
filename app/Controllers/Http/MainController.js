@@ -494,7 +494,8 @@ class MainController {
         "tingkat1",
         "tingkat2",
         "tingkat3",
-        "tingkat4"
+        "tingkat4",
+        "save",
       )
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ aktif: 1 })
@@ -1325,15 +1326,46 @@ class MainController {
     if (!res) {
       return response.notFound({ message: "Akun tidak ditemukan" });
     }
+    if(role != "admin"){
+
 
     if (user_agent != res?.user_agent) {
       await User.query()
-        .where({ whatsapp: `${whatsapp}` })
+        .where({ whatsapp: `${whatsapp}` }).andWhere({m_sekolah_id:sekolah.id})
         .update({ user_agent: user_agent });
       res.user_agent = user_agent;
       return response.ok(res);
     }
 
+       
+      if (user_agent != res?.user_agent) {
+        const last_login = await User.query()
+          .select("updated_at")
+          .where({ whatsapp: `${whatsapp}` })
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .andWhere({ dihapus: 0 })
+          .first();
+
+        const currentTime = new Date().getTime();
+        const lastLoginTime = new Date(last_login.updated_at).getTime();
+        const timeDifference = currentTime - lastLoginTime;
+        const timeout = 8 * 60 * 60 * 1000;
+
+        if (timeDifference >= timeout) {
+          await User.query()
+            .where({ whatsapp: `${whatsapp}` })
+            .andWhere({ m_sekolah_id: sekolah.id })
+            .update({ user_agent: user_agent });
+          res.user_agent = user_agent;
+          return response.ok(res);
+        } else {
+          return response.forbidden({
+            message: "Akun sudah masuk di perangkat lain",
+          });
+        }
+      }
+    }
+    
     if (role == "warga-sekolah" || res.role == "admin") {
       return response.ok(res);
     }
@@ -1355,7 +1387,7 @@ class MainController {
 
     const res = await User.query()
       .where({ id: `${user_id}` })
-      .update({ user_agent: null })
+      .update({ user_agent: null });
 
     if (res) {
       return response.ok({
@@ -1366,7 +1398,6 @@ class MainController {
         message: "Gagal logout",
       });
     }
-
   }
 
   async getProfilAdmin({ auth, response, request }) {
