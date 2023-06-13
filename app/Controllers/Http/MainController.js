@@ -27411,7 +27411,7 @@ class MainController {
         .first();
 
       if (nilaiAkhirKeterampilan) {
-        if (ta.save == 0) {
+        if (ta.save != 1) {
           await MUjianSiswa.query()
             .where({ id: nilaiAkhirKeterampilan.id })
             .update({
@@ -32874,7 +32874,7 @@ class MainController {
       .first();
 
     if (nilaiAkhirKeterampilan) {
-      if (ta.save == 0) {
+      if (ta.save != 1) {
         await MUjianSiswa.query()
           .where({ id: nilaiAkhirKeterampilan.id })
           .update({
@@ -32900,6 +32900,7 @@ class MainController {
       produk,
       mapel,
       nilaiAkhirKeterampilan,
+      ta
     });
   }
 
@@ -43240,7 +43241,7 @@ class MainController {
             .first();
 
           if (nilaiAkhirKeterampilan) {
-            if (ta.save == 0) {
+            if (ta.save != 1) {
               await MUjianSiswa.query()
                 .where({ id: nilaiAkhirKeterampilan.id })
                 .update({
@@ -47793,7 +47794,7 @@ class MainController {
                           .reduce((a, b) => a + b, 0) /
                         listNilai.filter((nilai) => nilai).length
                       : 0;
-                    if (ta.save == 0) {
+                    if (ta.save != 1) {
                       await MUjianSiswa.query().where({ id: ujian.id }).update({
                         nilai: nilaiAkhir,
                       });
@@ -47979,7 +47980,7 @@ class MainController {
 
                   try {
                     if (nilaiAkhirKeterampilan) {
-                      if (ta.save == 0) {
+                      if (ta.save != 1) {
                         await MUjianSiswa.query()
                           .where({ id: nilaiAkhirKeterampilan.id })
                           .update({
