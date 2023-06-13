@@ -1329,13 +1329,13 @@ class MainController {
     if(role != "admin"){
 
 
-    if (user_agent != res?.user_agent) {
-      await User.query()
-        .where({ whatsapp: `${whatsapp}` }).andWhere({m_sekolah_id:sekolah.id})
-        .update({ user_agent: user_agent });
-      res.user_agent = user_agent;
-      return response.ok(res);
-    }
+    // if (user_agent != res?.user_agent) {
+    //   await User.query()
+    //     .where({ whatsapp: `${whatsapp}` }).andWhere({m_sekolah_id:sekolah.id})
+    //     .update({ user_agent: user_agent });
+    //   res.user_agent = user_agent;
+    //   return response.ok(res);
+    // }
 
        
       if (user_agent != res?.user_agent) {
