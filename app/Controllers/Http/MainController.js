@@ -17033,6 +17033,8 @@ class MainController {
       rombel_id,
       m_ujian_id,
       token,
+      tampil_nilai,
+      tampil_jawaban
     } = request.post();
     const tanggal = moment(waktu_dibuka).format(`DD`);
     const bulan = moment(waktu_dibuka).format(`M`);
@@ -17065,6 +17067,8 @@ class MainController {
       m_user_id: pembuatUjian.m_user_id,
       dihapus: 0,
       token,
+      tampil_nilai,
+      tampil_jawaban
     });
 
     let tkJadwalUjianData = [];
@@ -17157,6 +17161,8 @@ class MainController {
       rombel_id,
       m_ujian_id,
       token,
+      tampil_nilai,
+      tampil_jawaban
     } = request.post();
 
     const waktu_dibuka1 = moment(waktu_dibuka).format("YYYY-MM-DD HH:mm:ss");
@@ -17214,6 +17220,8 @@ class MainController {
         gmeet,
         diacak,
         token,
+        tampil_nilai,
+        tampil_jawaban
       });
     if (!jadwalUjian) {
       return response.notFound({
