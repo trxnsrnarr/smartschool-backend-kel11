@@ -495,7 +495,7 @@ class MainController {
         "tingkat2",
         "tingkat3",
         "tingkat4",
-        "save",
+        "save"
       )
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ aktif: 1 })
@@ -1316,28 +1316,47 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
+    const checkProfil = await MProfilUser.query()
+    .where({ telp_ibu: whatsapp })
+    .orWhere({ telp_ayah: whatsapp })
+    .first();
+
     const res = await User.query()
       .select("nama", "whatsapp", "role", "user_agent")
       .where({ whatsapp: `${whatsapp}` })
       .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .first();
+      
+      
+      if (role == "ortu") {
+      if (!res && checkProfil) {
+        await User.create({
+          nama: `Orang tua Siswa` ,
+          whatsapp,
+          password:"smarteschool",
+          role: "ortu",
+          m_sekolah_id: sekolah.id,
+          dihapus: 0,
+        });
+      return response.ok(res);
+      }
+      return response.ok(res);
 
-    if (!res) {
-      return response.notFound({ message: "Akun tidak ditemukan" });
-    }
-    if(role != "admin"){
+     }
 
+     if (!res) {
+       return response.notFound({ message: "Akun tidak ditemukan" });
+     }
 
-    // if (user_agent != res?.user_agent) {
-    //   await User.query()
-    //     .where({ whatsapp: `${whatsapp}` }).andWhere({m_sekolah_id:sekolah.id})
-    //     .update({ user_agent: user_agent });
-    //   res.user_agent = user_agent;
-    //   return response.ok(res);
-    // }
-
-       
+    if (role != "admin") {
+      // if (user_agent != res?.user_agent) {
+      //   await User.query()
+      //     .where({ whatsapp: `${whatsapp}` }).andWhere({m_sekolah_id:sekolah.id})
+      //     .update({ user_agent: user_agent });
+      //   res.user_agent = user_agent;
+      //   return response.ok(res);
+      // }
       // if (user_agent != res?.user_agent) {
       //   const last_login = await User.query()
       //     .select("updated_at")
@@ -1345,12 +1364,10 @@ class MainController {
       //     .andWhere({ m_sekolah_id: sekolah.id })
       //     .andWhere({ dihapus: 0 })
       //     .first();
-
       //   const currentTime = new Date().getTime();
       //   const lastLoginTime = new Date(last_login.updated_at).getTime();
       //   const timeDifference = currentTime - lastLoginTime;
       //   const timeout = 8 * 60 * 60 * 1000;
-
       //   if (timeDifference >= timeout) {
       //     await User.query()
       //       .where({ whatsapp: `${whatsapp}` })
@@ -1365,7 +1382,8 @@ class MainController {
       //   }
       // }
     }
-    
+  
+
     if (role == "warga-sekolah" || res.role == "admin") {
       return response.ok(res);
     }
@@ -17034,7 +17052,7 @@ class MainController {
       m_ujian_id,
       token,
       tampil_nilai,
-      tampil_jawaban
+      tampil_jawaban,
     } = request.post();
     const tanggal = moment(waktu_dibuka).format(`DD`);
     const bulan = moment(waktu_dibuka).format(`M`);
@@ -17047,162 +17065,159 @@ class MainController {
       .first();
 
     // return waktu_dibuka;
-if (sekolah?.id == 8123) {
-  const jadwalUjian = await MJadwalUjian.create({
-    jumlah_pg,
-    jumlah_esai,
-    jumlah_soal_akm,
-    jumlah_menjodohkan,
-    jumlah_uraian,
-    jumlah_pg_kompleks,
-    m_ujian_id,
-    kkm,
-    waktu_dibuka,
-    waktu_ditutup: moment(waktu_dibuka)
-      .add(durasi, "minutes")
-      .format("YYYY-MM-DD HH:mm:ss"),
-    durasi,
-    gmeet,
-    diacak,
-    m_user_id: pembuatUjian.m_user_id,
-    dihapus: 0,
-    token,
-    tampil_nilai,
-    tampil_jawaban
-  });
+    if (sekolah?.id == 8123) {
+      const jadwalUjian = await MJadwalUjian.create({
+        jumlah_pg,
+        jumlah_esai,
+        jumlah_soal_akm,
+        jumlah_menjodohkan,
+        jumlah_uraian,
+        jumlah_pg_kompleks,
+        m_ujian_id,
+        kkm,
+        waktu_dibuka,
+        waktu_ditutup: moment(waktu_dibuka)
+          .add(durasi, "minutes")
+          .format("YYYY-MM-DD HH:mm:ss"),
+        durasi,
+        gmeet,
+        diacak,
+        m_user_id: pembuatUjian.m_user_id,
+        dihapus: 0,
+        token,
+        tampil_nilai,
+        tampil_jawaban,
+      });
 
-  let tkJadwalUjianData = [];
+      let tkJadwalUjianData = [];
 
-  if (rombel_id.length) {
-    await Promise.all(
-      rombel_id.map(async (rombel) => {
-        tkJadwalUjianData.push({
-          m_rombel_id: rombel,
-          dihapus: 0,
-          m_jadwal_ujian_id: jadwalUjian.id,
-        });
-        // const anggotaRombel = await MAnggotaRombel.query()
-        //   .with("user", (builder) => {
-        //     builder.select("id", "nama", " wa_real");
-        //   })
-        //   .where({ dihapus: 0 })
-        //   .andWhere({ m_rombel_id: rombel })
-        //   .fetch();
+      if (rombel_id.length) {
+        await Promise.all(
+          rombel_id.map(async (rombel) => {
+            tkJadwalUjianData.push({
+              m_rombel_id: rombel,
+              dihapus: 0,
+              m_jadwal_ujian_id: jadwalUjian.id,
+            });
+            // const anggotaRombel = await MAnggotaRombel.query()
+            //   .with("user", (builder) => {
+            //     builder.select("id", "nama", " wa_real");
+            //   })
+            //   .where({ dihapus: 0 })
+            //   .andWhere({ m_rombel_id: rombel })
+            //   .fetch();
 
-        // await Promise.all(
-        //   anggotaRombel.toJSON().map(async (d) => {
-        //     if (d.user.wa_real) {
-        //       await WhatsAppService.sendMessage(
-        //         d.user.wa_real,
-        //         `Halo ${d.user.nama}, ada Ujian ${
-        //           pembuatUjian.toJSON().mataPelajaran.nama
-        //         } yang akan datang dengan judul ${
-        //           pembuatUjian.nama
-        //         }. Silahkan klik tautan berikut untuk melihat! *Semangat* 💪💪!! \n \n${domain}/smartschool/ujian`
-        //       );
+            // await Promise.all(
+            //   anggotaRombel.toJSON().map(async (d) => {
+            //     if (d.user.wa_real) {
+            //       await WhatsAppService.sendMessage(
+            //         d.user.wa_real,
+            //         `Halo ${d.user.nama}, ada Ujian ${
+            //           pembuatUjian.toJSON().mataPelajaran.nama
+            //         } yang akan datang dengan judul ${
+            //           pembuatUjian.nama
+            //         }. Silahkan klik tautan berikut untuk melihat! *Semangat* 💪💪!! \n \n${domain}/smartschool/ujian`
+            //       );
 
-        //       await MNotifikasiTerjadwal.create({
-        //         tanggal_dibagikan: waktu_dibuka,
-        //         tanggal_cron: `${menit} ${jam} ${tanggal} ${bulan} *`,
-        //         pesan: `Halo ${d.user.nama}, ada Ujian ${
-        //           pembuatUjian.toJSON().mataPelajaran.nama
-        //         } yang sedang berlangsung dengan judul ${
-        //           pembuatUjian.nama
-        //         }. Silahkan klik tautan berikut untuk melihat! *Semangat* !! \n \n${domain}/smartschool/ujian`,
-        //         tujuan: d.user.wa_real,
-        //         nama: `ujian-${jadwalUjian.id}-${d.m_user_id}`,
-        //       });
-        //     }
-        //   })
-        // );
-      })
-    );
+            //       await MNotifikasiTerjadwal.create({
+            //         tanggal_dibagikan: waktu_dibuka,
+            //         tanggal_cron: `${menit} ${jam} ${tanggal} ${bulan} *`,
+            //         pesan: `Halo ${d.user.nama}, ada Ujian ${
+            //           pembuatUjian.toJSON().mataPelajaran.nama
+            //         } yang sedang berlangsung dengan judul ${
+            //           pembuatUjian.nama
+            //         }. Silahkan klik tautan berikut untuk melihat! *Semangat* !! \n \n${domain}/smartschool/ujian`,
+            //         tujuan: d.user.wa_real,
+            //         nama: `ujian-${jadwalUjian.id}-${d.m_user_id}`,
+            //       });
+            //     }
+            //   })
+            // );
+          })
+        );
 
-    await TkJadwalUjian.createMany(tkJadwalUjianData);
-  }
+        await TkJadwalUjian.createMany(tkJadwalUjianData);
+      }
 
-  return response.ok({
-    message: messagePostSuccess,
-  });
-} else {
-  const jadwalUjian = await MJadwalUjian.create({
-    jumlah_pg,
-    jumlah_esai,
-    jumlah_soal_akm,
-    jumlah_menjodohkan,
-    jumlah_uraian,
-    jumlah_pg_kompleks,
-    m_ujian_id,
-    kkm,
-    waktu_dibuka,
-    waktu_ditutup: moment(waktu_dibuka)
-      .add(durasi, "minutes")
-      .format("YYYY-MM-DD HH:mm:ss"),
-    durasi,
-    gmeet,
-    diacak,
-    m_user_id: pembuatUjian.m_user_id,
-    dihapus: 0,
-    token,
-    
-  });
+      return response.ok({
+        message: messagePostSuccess,
+      });
+    } else {
+      const jadwalUjian = await MJadwalUjian.create({
+        jumlah_pg,
+        jumlah_esai,
+        jumlah_soal_akm,
+        jumlah_menjodohkan,
+        jumlah_uraian,
+        jumlah_pg_kompleks,
+        m_ujian_id,
+        kkm,
+        waktu_dibuka,
+        waktu_ditutup: moment(waktu_dibuka)
+          .add(durasi, "minutes")
+          .format("YYYY-MM-DD HH:mm:ss"),
+        durasi,
+        gmeet,
+        diacak,
+        m_user_id: pembuatUjian.m_user_id,
+        dihapus: 0,
+        token,
+      });
 
-    let tkJadwalUjianData = [];
+      let tkJadwalUjianData = [];
 
-    if (rombel_id.length) {
-      await Promise.all(
-        rombel_id.map(async (rombel) => {
-          tkJadwalUjianData.push({
-            m_rombel_id: rombel,
-            dihapus: 0,
-            m_jadwal_ujian_id: jadwalUjian.id,
-          });
-          // const anggotaRombel = await MAnggotaRombel.query()
-          //   .with("user", (builder) => {
-          //     builder.select("id", "nama", " wa_real");
-          //   })
-          //   .where({ dihapus: 0 })
-          //   .andWhere({ m_rombel_id: rombel })
-          //   .fetch();
+      if (rombel_id.length) {
+        await Promise.all(
+          rombel_id.map(async (rombel) => {
+            tkJadwalUjianData.push({
+              m_rombel_id: rombel,
+              dihapus: 0,
+              m_jadwal_ujian_id: jadwalUjian.id,
+            });
+            // const anggotaRombel = await MAnggotaRombel.query()
+            //   .with("user", (builder) => {
+            //     builder.select("id", "nama", " wa_real");
+            //   })
+            //   .where({ dihapus: 0 })
+            //   .andWhere({ m_rombel_id: rombel })
+            //   .fetch();
 
-          // await Promise.all(
-          //   anggotaRombel.toJSON().map(async (d) => {
-          //     if (d.user.wa_real) {
-          //       await WhatsAppService.sendMessage(
-          //         d.user.wa_real,
-          //         `Halo ${d.user.nama}, ada Ujian ${
-          //           pembuatUjian.toJSON().mataPelajaran.nama
-          //         } yang akan datang dengan judul ${
-          //           pembuatUjian.nama
-          //         }. Silahkan klik tautan berikut untuk melihat! *Semangat* 💪💪!! \n \n${domain}/smartschool/ujian`
-          //       );
+            // await Promise.all(
+            //   anggotaRombel.toJSON().map(async (d) => {
+            //     if (d.user.wa_real) {
+            //       await WhatsAppService.sendMessage(
+            //         d.user.wa_real,
+            //         `Halo ${d.user.nama}, ada Ujian ${
+            //           pembuatUjian.toJSON().mataPelajaran.nama
+            //         } yang akan datang dengan judul ${
+            //           pembuatUjian.nama
+            //         }. Silahkan klik tautan berikut untuk melihat! *Semangat* 💪💪!! \n \n${domain}/smartschool/ujian`
+            //       );
 
-          //       await MNotifikasiTerjadwal.create({
-          //         tanggal_dibagikan: waktu_dibuka,
-          //         tanggal_cron: `${menit} ${jam} ${tanggal} ${bulan} *`,
-          //         pesan: `Halo ${d.user.nama}, ada Ujian ${
-          //           pembuatUjian.toJSON().mataPelajaran.nama
-          //         } yang sedang berlangsung dengan judul ${
-          //           pembuatUjian.nama
-          //         }. Silahkan klik tautan berikut untuk melihat! *Semangat* !! \n \n${domain}/smartschool/ujian`,
-          //         tujuan: d.user.wa_real,
-          //         nama: `ujian-${jadwalUjian.id}-${d.m_user_id}`,
-          //       });
-          //     }
-          //   })
-          // );
-        })
-      );
+            //       await MNotifikasiTerjadwal.create({
+            //         tanggal_dibagikan: waktu_dibuka,
+            //         tanggal_cron: `${menit} ${jam} ${tanggal} ${bulan} *`,
+            //         pesan: `Halo ${d.user.nama}, ada Ujian ${
+            //           pembuatUjian.toJSON().mataPelajaran.nama
+            //         } yang sedang berlangsung dengan judul ${
+            //           pembuatUjian.nama
+            //         }. Silahkan klik tautan berikut untuk melihat! *Semangat* !! \n \n${domain}/smartschool/ujian`,
+            //         tujuan: d.user.wa_real,
+            //         nama: `ujian-${jadwalUjian.id}-${d.m_user_id}`,
+            //       });
+            //     }
+            //   })
+            // );
+          })
+        );
 
-      await TkJadwalUjian.createMany(tkJadwalUjianData);
+        await TkJadwalUjian.createMany(tkJadwalUjianData);
+      }
+
+      return response.ok({
+        message: messagePostSuccess,
+      });
     }
-
-    return response.ok({
-      message: messagePostSuccess,
-    });
-}
-
-  
   }
 
   async putJadwalUjian({
@@ -17241,7 +17256,7 @@ if (sekolah?.id == 8123) {
       m_ujian_id,
       token,
       tampil_nilai,
-      tampil_jawaban
+      tampil_jawaban,
     } = request.post();
 
     const waktu_dibuka1 = moment(waktu_dibuka).format("YYYY-MM-DD HH:mm:ss");
@@ -17281,341 +17296,341 @@ if (sekolah?.id == 8123) {
 
     // return jadwalUjianData
 
-   if (sekolah?.id == 8123) {
-    const jadwalUjian = await MJadwalUjian.query()
-    .where({ id: jadwal_ujian_id })
-    .update({
-      jumlah_pg,
-      jumlah_esai,
-      jumlah_soal_akm,
-      jumlah_menjodohkan,
-      jumlah_uraian,
-      jumlah_pg_kompleks,
-      kkm,
-      waktu_dibuka,
-      waktu_ditutup: moment(waktu_dibuka)
-        .add(durasi, "minutes")
-        .format("YYYY-MM-DD HH:mm:ss"),
-      durasi,
-      gmeet,
-      diacak,
-      token,
-      tampil_nilai,
-      tampil_jawaban
-    });
-  if (!jadwalUjian) {
-    return response.notFound({
-      message: messageNotFound,
-    });
-  }
+    if (sekolah?.id == 8123) {
+      const jadwalUjian = await MJadwalUjian.query()
+        .where({ id: jadwal_ujian_id })
+        .update({
+          jumlah_pg,
+          jumlah_esai,
+          jumlah_soal_akm,
+          jumlah_menjodohkan,
+          jumlah_uraian,
+          jumlah_pg_kompleks,
+          kkm,
+          waktu_dibuka,
+          waktu_ditutup: moment(waktu_dibuka)
+            .add(durasi, "minutes")
+            .format("YYYY-MM-DD HH:mm:ss"),
+          durasi,
+          gmeet,
+          diacak,
+          token,
+          tampil_nilai,
+          tampil_jawaban,
+        });
+      if (!jadwalUjian) {
+        return response.notFound({
+          message: messageNotFound,
+        });
+      }
 
-  let tkJadwalUjianData = [];
-  const tkJadwalIds = await TkJadwalUjian.query()
-    .andWhere({ m_jadwal_ujian_id: jadwal_ujian_id })
-    .where({ dihapus: 0 })
-    .pluck("m_rombel_id");
+      let tkJadwalUjianData = [];
+      const tkJadwalIds = await TkJadwalUjian.query()
+        .andWhere({ m_jadwal_ujian_id: jadwal_ujian_id })
+        .where({ dihapus: 0 })
+        .pluck("m_rombel_id");
 
-  if (rombel_id.length) {
-    await Promise.all(
-      tkJadwalIds
-        .filter((d) => !rombel_id.includes(d))
-        .map(async (d) => {
-          await TkJadwalUjian.query()
-            .where({ m_rombel_id: d })
-            .andWhere({ m_jadwal_ujian_id: jadwal_ujian_id })
-            .where({ dihapus: 0 })
-            .update({
-              dihapus: 1,
-            });
-          // const anggotaRombel = await MAnggotaRombel.query()
-          //   .with("user", (builder) => {
-          //     builder.select("id", "nama", " wa_real");
-          //   })
-          //   .where({ dihapus: 0 })
-          //   .andWhere({ m_rombel_id: d })
-          //   .fetch();
-          // const checkNotif = await MNotifikasiTerjadwal.query()
-          //   .where("nama", "like", `%ujian-${jadwal_ujian_id}-%`)
-          //   .fetch();
+      if (rombel_id.length) {
+        await Promise.all(
+          tkJadwalIds
+            .filter((d) => !rombel_id.includes(d))
+            .map(async (d) => {
+              await TkJadwalUjian.query()
+                .where({ m_rombel_id: d })
+                .andWhere({ m_jadwal_ujian_id: jadwal_ujian_id })
+                .where({ dihapus: 0 })
+                .update({
+                  dihapus: 1,
+                });
+              // const anggotaRombel = await MAnggotaRombel.query()
+              //   .with("user", (builder) => {
+              //     builder.select("id", "nama", " wa_real");
+              //   })
+              //   .where({ dihapus: 0 })
+              //   .andWhere({ m_rombel_id: d })
+              //   .fetch();
+              // const checkNotif = await MNotifikasiTerjadwal.query()
+              //   .where("nama", "like", `%ujian-${jadwal_ujian_id}-%`)
+              //   .fetch();
 
-          // await Promise.all(
-          //   anggotaRombel.toJSON().map(async (e) => {
-          //     if (e.user.wa_real) {
-          //       const checkNote = checkNotif
-          //         .toJSON()
-          //         .find(
-          //           (s) => s.nama == `ujian-${jadwal_ujian_id}-${e.m_user_id}`
-          //         );
-          //       if (checkNote) {
-          //         await MNotifikasiTerjadwal.query()
-          //           .where(
-          //             "nama",
-          //             "like",
-          //             `%ujian-${jadwal_ujian_id}-${e.m_user_id}%`
-          //           )
-          //           .delete();
-          //       }
-          //       await WhatsAppService.sendMessage(
-          //         e.user.wa_real,
-          //         `Halo ${e.user.nama}, Ujian ${
-          //           jadwalUjianData.toJSON().ujian.mataPelajaran.nama
-          //         } dengan judul ${
-          //           jadwalUjianData.toJSON().ujian.nama
-          //         } Telah dihapus. `
-          //       );
-          //     }
-          //   })
-          // );
-        })
-    );
-    await Promise.all(
-      rombel_id.map(async (rombel) => {
-        const check = await TkJadwalUjian.query()
-          .where({ m_rombel_id: rombel })
-          .andWhere({ m_jadwal_ujian_id: jadwal_ujian_id })
-          .where({ dihapus: 0 })
-          .first();
+              // await Promise.all(
+              //   anggotaRombel.toJSON().map(async (e) => {
+              //     if (e.user.wa_real) {
+              //       const checkNote = checkNotif
+              //         .toJSON()
+              //         .find(
+              //           (s) => s.nama == `ujian-${jadwal_ujian_id}-${e.m_user_id}`
+              //         );
+              //       if (checkNote) {
+              //         await MNotifikasiTerjadwal.query()
+              //           .where(
+              //             "nama",
+              //             "like",
+              //             `%ujian-${jadwal_ujian_id}-${e.m_user_id}%`
+              //           )
+              //           .delete();
+              //       }
+              //       await WhatsAppService.sendMessage(
+              //         e.user.wa_real,
+              //         `Halo ${e.user.nama}, Ujian ${
+              //           jadwalUjianData.toJSON().ujian.mataPelajaran.nama
+              //         } dengan judul ${
+              //           jadwalUjianData.toJSON().ujian.nama
+              //         } Telah dihapus. `
+              //       );
+              //     }
+              //   })
+              // );
+            })
+        );
+        await Promise.all(
+          rombel_id.map(async (rombel) => {
+            const check = await TkJadwalUjian.query()
+              .where({ m_rombel_id: rombel })
+              .andWhere({ m_jadwal_ujian_id: jadwal_ujian_id })
+              .where({ dihapus: 0 })
+              .first();
 
-        // const anggotaRombel = await MAnggotaRombel.query()
-        //   .with("user", (builder) => {
-        //     builder.select("id", "nama", " wa_real");
-        //   })
-        //   .where({ dihapus: 0 })
-        //   .andWhere({ m_rombel_id: rombel })
-        //   .fetch();
+            // const anggotaRombel = await MAnggotaRombel.query()
+            //   .with("user", (builder) => {
+            //     builder.select("id", "nama", " wa_real");
+            //   })
+            //   .where({ dihapus: 0 })
+            //   .andWhere({ m_rombel_id: rombel })
+            //   .fetch();
 
-        // if (waktu_dibuka1 != jadwalUjianData.waktu_dibuka) {
-        //   // coba =2;
-        //   if (
-        //     moment().format("YYYY-MM-DD HH:mm:ss") >
-        //     moment(jadwalUjianData.waktu_dibuka).format("YYYY-MM-DD HH:mm:ss")
-        //   ) {
-        //     await Promise.all(
-        //       anggotaRombel.toJSON().map(async (d) => {
-        //         if (d.user.wa_real) {
-        //           await WhatsAppService.sendMessage(
-        //             d.user.wa_real,
-        //             `Halo ${d.user.nama}, Ujian ${
-        //               jadwalUjianData.toJSON().ujian.mataPelajaran.nama
-        //             } dengan judul ${
-        //               jadwalUjianData.toJSON().ujian.nama
-        //             } telah diubah jadwal mulainya. Silahkan klik tautan berikut untuk melihat! Semangat!!👍 \n \n${domain}/smartschool/ujian`
-        //           );
-        //         }
-        //       })
-        //     );
-        //   }
-        // }
-        if (!check) {
-          tkJadwalUjianData.push({
-            m_rombel_id: rombel,
-            dihapus: 0,
-            m_jadwal_ujian_id: jadwal_ujian_id,
-          });
+            // if (waktu_dibuka1 != jadwalUjianData.waktu_dibuka) {
+            //   // coba =2;
+            //   if (
+            //     moment().format("YYYY-MM-DD HH:mm:ss") >
+            //     moment(jadwalUjianData.waktu_dibuka).format("YYYY-MM-DD HH:mm:ss")
+            //   ) {
+            //     await Promise.all(
+            //       anggotaRombel.toJSON().map(async (d) => {
+            //         if (d.user.wa_real) {
+            //           await WhatsAppService.sendMessage(
+            //             d.user.wa_real,
+            //             `Halo ${d.user.nama}, Ujian ${
+            //               jadwalUjianData.toJSON().ujian.mataPelajaran.nama
+            //             } dengan judul ${
+            //               jadwalUjianData.toJSON().ujian.nama
+            //             } telah diubah jadwal mulainya. Silahkan klik tautan berikut untuk melihat! Semangat!!👍 \n \n${domain}/smartschool/ujian`
+            //           );
+            //         }
+            //       })
+            //     );
+            //   }
+            // }
+            if (!check) {
+              tkJadwalUjianData.push({
+                m_rombel_id: rombel,
+                dihapus: 0,
+                m_jadwal_ujian_id: jadwal_ujian_id,
+              });
 
-          // await Promise.all(
-          //   anggotaRombel.toJSON().map(async (d) => {
-          //     if (d.user.wa_real) {
-          //       await WhatsAppService.sendMessage(
-          //         d.user.wa_real,
-          //         `Halo ${d.user.nama}, ada Ujian ${
-          //           jadwalUjianData.toJSON().ujian.mataPelajaran.nama
-          //         } yang akan datang dengan judul ${
-          //           jadwalUjianData.toJSON().ujian.nama
-          //         }. Silahkan klik tautan berikut untuk melihat! Semangat!! \n \n${domain}/smartschool/ujian`
-          //       );
+              // await Promise.all(
+              //   anggotaRombel.toJSON().map(async (d) => {
+              //     if (d.user.wa_real) {
+              //       await WhatsAppService.sendMessage(
+              //         d.user.wa_real,
+              //         `Halo ${d.user.nama}, ada Ujian ${
+              //           jadwalUjianData.toJSON().ujian.mataPelajaran.nama
+              //         } yang akan datang dengan judul ${
+              //           jadwalUjianData.toJSON().ujian.nama
+              //         }. Silahkan klik tautan berikut untuk melihat! Semangat!! \n \n${domain}/smartschool/ujian`
+              //       );
 
-          //       await MNotifikasiTerjadwal.create({
-          //         tanggal_dibagikan: waktu_dibuka1,
-          //         tanggal_cron: `${menit} ${jam} ${tanggal} ${bulan} *`,
-          //         pesan: `Halo ${d.user.nama}, ada Ujian ${
-          //           jadwalUjianData.toJSON().ujian.mataPelajaran.nama
-          //         } yang sedang berlangsung dengan judul ${
-          //           jadwalUjianData.toJSON().ujian.nama
-          //         }. Silahkan klik tautan berikut untuk melihat! Semangat!! \n \n${domain}/smartschool/ujian`,
-          //         tujuan: d.user.wa_real,
-          //         nama: `ujian-${jadwalUjian.id}-${d.m_user_id}`,
-          //       });
-          //     }
-          //   })
-          // );
-        }
-      })
-    );
+              //       await MNotifikasiTerjadwal.create({
+              //         tanggal_dibagikan: waktu_dibuka1,
+              //         tanggal_cron: `${menit} ${jam} ${tanggal} ${bulan} *`,
+              //         pesan: `Halo ${d.user.nama}, ada Ujian ${
+              //           jadwalUjianData.toJSON().ujian.mataPelajaran.nama
+              //         } yang sedang berlangsung dengan judul ${
+              //           jadwalUjianData.toJSON().ujian.nama
+              //         }. Silahkan klik tautan berikut untuk melihat! Semangat!! \n \n${domain}/smartschool/ujian`,
+              //         tujuan: d.user.wa_real,
+              //         nama: `ujian-${jadwalUjian.id}-${d.m_user_id}`,
+              //       });
+              //     }
+              //   })
+              // );
+            }
+          })
+        );
 
-    const tkJadwalUjian = await TkJadwalUjian.createMany(tkJadwalUjianData);
-  }
+        const tkJadwalUjian = await TkJadwalUjian.createMany(tkJadwalUjianData);
+      }
 
-  return response.ok({
-    message: messagePutSuccess,
-  });
-   } else { 
-    const jadwalUjian = await MJadwalUjian.query()
-    .where({ id: jadwal_ujian_id })
-    .update({
-      jumlah_pg,
-      jumlah_esai,
-      jumlah_soal_akm,
-      jumlah_menjodohkan,
-      jumlah_uraian,
-      jumlah_pg_kompleks,
-      kkm,
-      waktu_dibuka,
-      waktu_ditutup: moment(waktu_dibuka)
-        .add(durasi, "minutes")
-        .format("YYYY-MM-DD HH:mm:ss"),
-      durasi,
-      gmeet,
-      diacak,
-      token,
-    });
-  if (!jadwalUjian) {
-    return response.notFound({
-      message: messageNotFound,
-    });
-  }
+      return response.ok({
+        message: messagePutSuccess,
+      });
+    } else {
+      const jadwalUjian = await MJadwalUjian.query()
+        .where({ id: jadwal_ujian_id })
+        .update({
+          jumlah_pg,
+          jumlah_esai,
+          jumlah_soal_akm,
+          jumlah_menjodohkan,
+          jumlah_uraian,
+          jumlah_pg_kompleks,
+          kkm,
+          waktu_dibuka,
+          waktu_ditutup: moment(waktu_dibuka)
+            .add(durasi, "minutes")
+            .format("YYYY-MM-DD HH:mm:ss"),
+          durasi,
+          gmeet,
+          diacak,
+          token,
+        });
+      if (!jadwalUjian) {
+        return response.notFound({
+          message: messageNotFound,
+        });
+      }
 
-  let tkJadwalUjianData = [];
-  const tkJadwalIds = await TkJadwalUjian.query()
-    .andWhere({ m_jadwal_ujian_id: jadwal_ujian_id })
-    .where({ dihapus: 0 })
-    .pluck("m_rombel_id");
+      let tkJadwalUjianData = [];
+      const tkJadwalIds = await TkJadwalUjian.query()
+        .andWhere({ m_jadwal_ujian_id: jadwal_ujian_id })
+        .where({ dihapus: 0 })
+        .pluck("m_rombel_id");
 
-  if (rombel_id.length) {
-    await Promise.all(
-      tkJadwalIds
-        .filter((d) => !rombel_id.includes(d))
-        .map(async (d) => {
-          await TkJadwalUjian.query()
-            .where({ m_rombel_id: d })
-            .andWhere({ m_jadwal_ujian_id: jadwal_ujian_id })
-            .where({ dihapus: 0 })
-            .update({
-              dihapus: 1,
-            });
-          // const anggotaRombel = await MAnggotaRombel.query()
-          //   .with("user", (builder) => {
-          //     builder.select("id", "nama", " wa_real");
-          //   })
-          //   .where({ dihapus: 0 })
-          //   .andWhere({ m_rombel_id: d })
-          //   .fetch();
-          // const checkNotif = await MNotifikasiTerjadwal.query()
-          //   .where("nama", "like", `%ujian-${jadwal_ujian_id}-%`)
-          //   .fetch();
+      if (rombel_id.length) {
+        await Promise.all(
+          tkJadwalIds
+            .filter((d) => !rombel_id.includes(d))
+            .map(async (d) => {
+              await TkJadwalUjian.query()
+                .where({ m_rombel_id: d })
+                .andWhere({ m_jadwal_ujian_id: jadwal_ujian_id })
+                .where({ dihapus: 0 })
+                .update({
+                  dihapus: 1,
+                });
+              // const anggotaRombel = await MAnggotaRombel.query()
+              //   .with("user", (builder) => {
+              //     builder.select("id", "nama", " wa_real");
+              //   })
+              //   .where({ dihapus: 0 })
+              //   .andWhere({ m_rombel_id: d })
+              //   .fetch();
+              // const checkNotif = await MNotifikasiTerjadwal.query()
+              //   .where("nama", "like", `%ujian-${jadwal_ujian_id}-%`)
+              //   .fetch();
 
-          // await Promise.all(
-          //   anggotaRombel.toJSON().map(async (e) => {
-          //     if (e.user.wa_real) {
-          //       const checkNote = checkNotif
-          //         .toJSON()
-          //         .find(
-          //           (s) => s.nama == `ujian-${jadwal_ujian_id}-${e.m_user_id}`
-          //         );
-          //       if (checkNote) {
-          //         await MNotifikasiTerjadwal.query()
-          //           .where(
-          //             "nama",
-          //             "like",
-          //             `%ujian-${jadwal_ujian_id}-${e.m_user_id}%`
-          //           )
-          //           .delete();
-          //       }
-          //       await WhatsAppService.sendMessage(
-          //         e.user.wa_real,
-          //         `Halo ${e.user.nama}, Ujian ${
-          //           jadwalUjianData.toJSON().ujian.mataPelajaran.nama
-          //         } dengan judul ${
-          //           jadwalUjianData.toJSON().ujian.nama
-          //         } Telah dihapus. `
-          //       );
-          //     }
-          //   })
-          // );
-        })
-    );
-    await Promise.all(
-      rombel_id.map(async (rombel) => {
-        const check = await TkJadwalUjian.query()
-          .where({ m_rombel_id: rombel })
-          .andWhere({ m_jadwal_ujian_id: jadwal_ujian_id })
-          .where({ dihapus: 0 })
-          .first();
+              // await Promise.all(
+              //   anggotaRombel.toJSON().map(async (e) => {
+              //     if (e.user.wa_real) {
+              //       const checkNote = checkNotif
+              //         .toJSON()
+              //         .find(
+              //           (s) => s.nama == `ujian-${jadwal_ujian_id}-${e.m_user_id}`
+              //         );
+              //       if (checkNote) {
+              //         await MNotifikasiTerjadwal.query()
+              //           .where(
+              //             "nama",
+              //             "like",
+              //             `%ujian-${jadwal_ujian_id}-${e.m_user_id}%`
+              //           )
+              //           .delete();
+              //       }
+              //       await WhatsAppService.sendMessage(
+              //         e.user.wa_real,
+              //         `Halo ${e.user.nama}, Ujian ${
+              //           jadwalUjianData.toJSON().ujian.mataPelajaran.nama
+              //         } dengan judul ${
+              //           jadwalUjianData.toJSON().ujian.nama
+              //         } Telah dihapus. `
+              //       );
+              //     }
+              //   })
+              // );
+            })
+        );
+        await Promise.all(
+          rombel_id.map(async (rombel) => {
+            const check = await TkJadwalUjian.query()
+              .where({ m_rombel_id: rombel })
+              .andWhere({ m_jadwal_ujian_id: jadwal_ujian_id })
+              .where({ dihapus: 0 })
+              .first();
 
-        // const anggotaRombel = await MAnggotaRombel.query()
-        //   .with("user", (builder) => {
-        //     builder.select("id", "nama", " wa_real");
-        //   })
-        //   .where({ dihapus: 0 })
-        //   .andWhere({ m_rombel_id: rombel })
-        //   .fetch();
+            // const anggotaRombel = await MAnggotaRombel.query()
+            //   .with("user", (builder) => {
+            //     builder.select("id", "nama", " wa_real");
+            //   })
+            //   .where({ dihapus: 0 })
+            //   .andWhere({ m_rombel_id: rombel })
+            //   .fetch();
 
-        // if (waktu_dibuka1 != jadwalUjianData.waktu_dibuka) {
-        //   // coba =2;
-        //   if (
-        //     moment().format("YYYY-MM-DD HH:mm:ss") >
-        //     moment(jadwalUjianData.waktu_dibuka).format("YYYY-MM-DD HH:mm:ss")
-        //   ) {
-        //     await Promise.all(
-        //       anggotaRombel.toJSON().map(async (d) => {
-        //         if (d.user.wa_real) {
-        //           await WhatsAppService.sendMessage(
-        //             d.user.wa_real,
-        //             `Halo ${d.user.nama}, Ujian ${
-        //               jadwalUjianData.toJSON().ujian.mataPelajaran.nama
-        //             } dengan judul ${
-        //               jadwalUjianData.toJSON().ujian.nama
-        //             } telah diubah jadwal mulainya. Silahkan klik tautan berikut untuk melihat! Semangat!!👍 \n \n${domain}/smartschool/ujian`
-        //           );
-        //         }
-        //       })
-        //     );
-        //   }
-        // }
-        if (!check) {
-          tkJadwalUjianData.push({
-            m_rombel_id: rombel,
-            dihapus: 0,
-            m_jadwal_ujian_id: jadwal_ujian_id,
-          });
+            // if (waktu_dibuka1 != jadwalUjianData.waktu_dibuka) {
+            //   // coba =2;
+            //   if (
+            //     moment().format("YYYY-MM-DD HH:mm:ss") >
+            //     moment(jadwalUjianData.waktu_dibuka).format("YYYY-MM-DD HH:mm:ss")
+            //   ) {
+            //     await Promise.all(
+            //       anggotaRombel.toJSON().map(async (d) => {
+            //         if (d.user.wa_real) {
+            //           await WhatsAppService.sendMessage(
+            //             d.user.wa_real,
+            //             `Halo ${d.user.nama}, Ujian ${
+            //               jadwalUjianData.toJSON().ujian.mataPelajaran.nama
+            //             } dengan judul ${
+            //               jadwalUjianData.toJSON().ujian.nama
+            //             } telah diubah jadwal mulainya. Silahkan klik tautan berikut untuk melihat! Semangat!!👍 \n \n${domain}/smartschool/ujian`
+            //           );
+            //         }
+            //       })
+            //     );
+            //   }
+            // }
+            if (!check) {
+              tkJadwalUjianData.push({
+                m_rombel_id: rombel,
+                dihapus: 0,
+                m_jadwal_ujian_id: jadwal_ujian_id,
+              });
 
-          // await Promise.all(
-          //   anggotaRombel.toJSON().map(async (d) => {
-          //     if (d.user.wa_real) {
-          //       await WhatsAppService.sendMessage(
-          //         d.user.wa_real,
-          //         `Halo ${d.user.nama}, ada Ujian ${
-          //           jadwalUjianData.toJSON().ujian.mataPelajaran.nama
-          //         } yang akan datang dengan judul ${
-          //           jadwalUjianData.toJSON().ujian.nama
-          //         }. Silahkan klik tautan berikut untuk melihat! Semangat!! \n \n${domain}/smartschool/ujian`
-          //       );
+              // await Promise.all(
+              //   anggotaRombel.toJSON().map(async (d) => {
+              //     if (d.user.wa_real) {
+              //       await WhatsAppService.sendMessage(
+              //         d.user.wa_real,
+              //         `Halo ${d.user.nama}, ada Ujian ${
+              //           jadwalUjianData.toJSON().ujian.mataPelajaran.nama
+              //         } yang akan datang dengan judul ${
+              //           jadwalUjianData.toJSON().ujian.nama
+              //         }. Silahkan klik tautan berikut untuk melihat! Semangat!! \n \n${domain}/smartschool/ujian`
+              //       );
 
-          //       await MNotifikasiTerjadwal.create({
-          //         tanggal_dibagikan: waktu_dibuka1,
-          //         tanggal_cron: `${menit} ${jam} ${tanggal} ${bulan} *`,
-          //         pesan: `Halo ${d.user.nama}, ada Ujian ${
-          //           jadwalUjianData.toJSON().ujian.mataPelajaran.nama
-          //         } yang sedang berlangsung dengan judul ${
-          //           jadwalUjianData.toJSON().ujian.nama
-          //         }. Silahkan klik tautan berikut untuk melihat! Semangat!! \n \n${domain}/smartschool/ujian`,
-          //         tujuan: d.user.wa_real,
-          //         nama: `ujian-${jadwalUjian.id}-${d.m_user_id}`,
-          //       });
-          //     }
-          //   })
-          // );
-        }
-      })
-    );
+              //       await MNotifikasiTerjadwal.create({
+              //         tanggal_dibagikan: waktu_dibuka1,
+              //         tanggal_cron: `${menit} ${jam} ${tanggal} ${bulan} *`,
+              //         pesan: `Halo ${d.user.nama}, ada Ujian ${
+              //           jadwalUjianData.toJSON().ujian.mataPelajaran.nama
+              //         } yang sedang berlangsung dengan judul ${
+              //           jadwalUjianData.toJSON().ujian.nama
+              //         }. Silahkan klik tautan berikut untuk melihat! Semangat!! \n \n${domain}/smartschool/ujian`,
+              //         tujuan: d.user.wa_real,
+              //         nama: `ujian-${jadwalUjian.id}-${d.m_user_id}`,
+              //       });
+              //     }
+              //   })
+              // );
+            }
+          })
+        );
 
-    const tkJadwalUjian = await TkJadwalUjian.createMany(tkJadwalUjianData);
-  }
+        const tkJadwalUjian = await TkJadwalUjian.createMany(tkJadwalUjianData);
+      }
 
-  return response.ok({
-    message: messagePutSuccess,
-  });
-   }
+      return response.ok({
+        message: messagePutSuccess,
+      });
+    }
   }
 
   async deleteJadwalUjian({
@@ -33155,7 +33170,7 @@ if (sekolah?.id == 8123) {
       produk,
       mapel,
       nilaiAkhirKeterampilan,
-      ta
+      ta,
     });
   }
 
