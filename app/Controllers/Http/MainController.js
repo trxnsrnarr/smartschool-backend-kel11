@@ -17065,7 +17065,7 @@ class MainController {
       .first();
 
     // return waktu_dibuka;
-    if (sekolah?.id == 8123) {
+    if (sekolah?.id == 8123 || sekolah?.id == 3364 || sekolah?.id == 3367 || sekolah?.id == 3388 || sekolah?.id == 4995 || sekolah?.id == 5025 || sekolah?.id == 9348  ) {
       const jadwalUjian = await MJadwalUjian.create({
         jumlah_pg,
         jumlah_esai,
@@ -17296,7 +17296,7 @@ class MainController {
 
     // return jadwalUjianData
 
-    if (sekolah?.id == 8123) {
+    if (sekolah?.id == 8123 || sekolah?.id == 3364 || sekolah?.id == 3367 || sekolah?.id == 3388 || sekolah?.id == 4995 || sekolah?.id == 5025 || sekolah?.id == 9348 ) {
       const jadwalUjian = await MJadwalUjian.query()
         .where({ id: jadwal_ujian_id })
         .update({
