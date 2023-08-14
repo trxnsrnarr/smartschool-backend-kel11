@@ -2622,7 +2622,7 @@ class DinasController {
       const rpp = await MRpp.query()
         .where({ m_user_id: user_id })
         .andWhere({ dihapus: 0 })
-        .where({ tipe: "rpp" })
+        .where({ tipe: null })
         .fetch();
 
       const silabus = await MRpp.query()
