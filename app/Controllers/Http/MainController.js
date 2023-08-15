@@ -1316,17 +1316,6 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const checkProfil = await MProfilUser.query()
-      .where({ telp_ibu: whatsapp })
-      .orWhere({ telp_ayah: whatsapp })
-      .first();
-
-      const checkProfilSiswa = await User.query()
-      .where({ id: checkProfil.m_user_id })
-      .first();
-
-
-
     const res = await User.query()
       .select("nama", "whatsapp", "role", "user_agent")
       .where({ whatsapp: `${whatsapp}` })
@@ -1335,6 +1324,15 @@ class MainController {
       .first();
 
     if (role == "ortu") {
+      const checkProfil = await MProfilUser.query()
+      .where({ telp_ibu: whatsapp })
+      .orWhere({ telp_ayah: whatsapp })
+      .first();
+
+      const checkProfilSiswa = await User.query()
+      .where({ id: checkProfil.m_user_id })
+      .first();
+      
       if (!res && checkProfil) {
         await User.create({
           nama: `Orang tua ${checkProfilSiswa.nama}`,
