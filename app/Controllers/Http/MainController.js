@@ -1332,7 +1332,7 @@ class MainController {
       const checkProfilSiswa = await User.query()
       .where({ id: checkProfil.m_user_id })
       .first();
-      
+
       if (!res && checkProfil) {
         await User.create({
           nama: `Orang tua ${checkProfilSiswa.nama}`,
@@ -13245,7 +13245,13 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const userDataOrtu = await MProfilUser.query()
+    const { hari_ini, kode_hari, jam_saat_ini } = request.get();
+
+    let absen;
+    let jadwalMengajar = null;
+
+    if (user.role == "ortu") {
+      const userDataOrtu = await MProfilUser.query()
       .where({ telp_ayah: user.whatsapp })
       .orWhere({ telp_ibu: user.whatsapp })
       .first();
@@ -13253,13 +13259,6 @@ class MainController {
       const userDataSiswa = await User.query()
       .where({ id: userDataOrtu.m_user_id })
       .first();
-
-    const { hari_ini, kode_hari, jam_saat_ini } = request.get();
-
-    let absen;
-    let jadwalMengajar = null;
-
-    if (user.role == "ortu") {
       if (hari_ini) {
         absen = await MAbsen.query()
           .where("created_at", "like", `%${hari_ini}%`)
