@@ -1317,9 +1317,15 @@ class MainController {
     }
 
     const checkProfil = await MProfilUser.query()
-    .where({ telp_ibu: whatsapp })
-    .orWhere({ telp_ayah: whatsapp })
-    .first();
+      .where({ telp_ibu: whatsapp })
+      .orWhere({ telp_ayah: whatsapp })
+      .first();
+
+      const checkProfilSiswa = await User.query()
+      .where({ id: checkProfil.m_user_id })
+      .first();
+
+
 
     const res = await User.query()
       .select("nama", "whatsapp", "role", "user_agent")
@@ -1327,27 +1333,29 @@ class MainController {
       .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .first();
-      
-      
-      if (role == "ortu") {
+
+    if (role == "ortu") {
       if (!res && checkProfil) {
         await User.create({
-          nama: `Orang tua Siswa` ,
+          nama: `Orang tua ${checkProfilSiswa.nama}`,
           whatsapp,
-          password:"smarteschool",
+          password: "smarteschool",
           role: "ortu",
           m_sekolah_id: sekolah.id,
           dihapus: 0,
         });
-      return response.ok(res);
+        return response.ok({
+          nama: `Orang tua ${checkProfilSiswa.nama}`,
+          role: "ortu",
+          whatsapp,
+        });
       }
       return response.ok(res);
+    }
 
-     }
-
-     if (!res) {
-       return response.notFound({ message: "Akun tidak ditemukan" });
-     }
+    if (!res) {
+      return response.notFound({ message: "Akun tidak ditemukan" });
+    }
 
     if (role != "admin") {
       // if (user_agent != res?.user_agent) {
@@ -1382,7 +1390,6 @@ class MainController {
       //   }
       // }
     }
-  
 
     if (role == "warga-sekolah" || res.role == "admin") {
       return response.ok(res);
@@ -1450,27 +1457,62 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .fetch();
 
-    const userData = await User.query()
+    if (user?.role == "ortu") {
+
+      const userDataOrtu = await User.query()
       .where({ id: user.id })
       .with("sekolah")
       .with("profil")
       .first();
 
-    let rombel;
-
-    if (ta != "404") {
-      rombel = await MRombel.query()
-        .where({ m_ta_id: ta.id })
-        .andWhere({ m_user_id: user.id })
+      const userData = await MProfilUser.query()
+        .where({ telp_ayah: user.whatsapp })
+        .orWhere({ telp_ibu: user.whatsapp })
         .first();
-    }
 
-    return response.ok({
-      user: userData,
-      mataPelajaran: mataPelajaran,
-      rombel,
-      ta,
-    });
+      const userDataSiswa = await User.query()
+        .where({ id: userData.m_user_id })
+        .first();
+
+      let rombel;
+
+      if (ta != "404") {
+        rombel = await MRombel.query()
+          .where({ m_ta_id: ta.id })
+          .andWhere({ m_user_id: user.id })
+          .first();
+      }
+
+      return response.ok({
+        user: userDataOrtu,
+        userSiswa:userDataSiswa,
+        mataPelajaran: mataPelajaran,
+        rombel,
+        ta,
+      });
+    } else {
+      const userData = await User.query()
+        .where({ id: user.id })
+        .with("sekolah")
+        .with("profil")
+        .first();
+
+      let rombel;
+
+      if (ta != "404") {
+        rombel = await MRombel.query()
+          .where({ m_ta_id: ta.id })
+          .andWhere({ m_user_id: user.id })
+          .first();
+      }
+
+      return response.ok({
+        user: userData,
+        mataPelajaran: mataPelajaran,
+        rombel,
+        ta,
+      });
+    }
   }
 
   async putProfil({ auth, response, request }) {
@@ -13205,49 +13247,99 @@ class MainController {
 
     const user = await auth.getUser();
 
+    const userDataOrtu = await MProfilUser.query()
+      .where({ telp_ayah: user.whatsapp })
+      .orWhere({ telp_ibu: user.whatsapp })
+      .first();
+
+      const userDataSiswa = await User.query()
+      .where({ id: userDataOrtu.m_user_id })
+      .first();
+
     const { hari_ini, kode_hari, jam_saat_ini } = request.get();
 
     let absen;
     let jadwalMengajar = null;
 
-    if (hari_ini) {
-      absen = await MAbsen.query()
-        .where("created_at", "like", `%${hari_ini}%`)
-        .andWhere({ m_user_id: user.id })
-        .first();
-
-      const rombelIds = await MRombel.query().where({ m_ta_id: ta.id }).ids();
-
-      const rombelId = await MAnggotaRombel.query()
-        .where({ m_user_id: user.id })
-        .andWhere({ dihapus: 0 })
-        .whereIn("m_rombel_id", rombelIds)
-        .pluck("m_rombel_id");
-
-      let jamMengajarId = await MJamMengajar.query()
-        .where({ kode_hari: kode_hari })
-        .andWhere("jam_mulai", ">=", jam_saat_ini)
-        .andWhere({ m_sekolah_id: sekolah.id })
-        .andWhere({ m_ta_id: ta.id })
-        .pluck("id");
-
-      if (!jamMengajarId) {
-        jadwalMengajar = await MJadwalMengajar.query()
-          .with("jamMengajar")
-          .with("rombel")
-          .with("mataPelajaran")
-          .where({ m_jam_mengajar_id: jamMengajarId[0] })
-          .andWhere({ m_rombel_id: rombelId[0] })
+    if (user.role == "ortu") {
+      if (hari_ini) {
+        absen = await MAbsen.query()
+          .where("created_at", "like", `%${hari_ini}%`)
+          .andWhere({ m_user_id: userDataSiswa.id })
           .first();
-      }
-    } else {
-      absen = await MAbsen.query().where({ m_user_id: user.id }).fetch();
-    }
 
-    return response.ok({
-      absen: absen,
-      jadwalMengajar: jadwalMengajar,
-    });
+        const rombelIds = await MRombel.query().where({ m_ta_id: ta.id }).ids();
+
+        const rombelId = await MAnggotaRombel.query()
+          .where({ m_user_id: userDataSiswa.id })
+          .andWhere({ dihapus: 0 })
+          .whereIn("m_rombel_id", rombelIds)
+          .pluck("m_rombel_id");
+
+        let jamMengajarId = await MJamMengajar.query()
+          .where({ kode_hari: kode_hari })
+          .andWhere("jam_mulai", ">=", jam_saat_ini)
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .andWhere({ m_ta_id: ta.id })
+          .pluck("id");
+
+        if (!jamMengajarId) {
+          jadwalMengajar = await MJadwalMengajar.query()
+            .with("jamMengajar")
+            .with("rombel")
+            .with("mataPelajaran")
+            .where({ m_jam_mengajar_id: jamMengajarId[0] })
+            .andWhere({ m_rombel_id: rombelId[0] })
+            .first();
+        }
+      } else {
+        absen = await MAbsen.query().where({ m_user_id: userDataSiswa.id }).fetch();
+      }
+
+      return response.ok({
+        absen: absen,
+        jadwalMengajar: jadwalMengajar,
+      });
+    } else {
+      if (hari_ini) {
+        absen = await MAbsen.query()
+          .where("created_at", "like", `%${hari_ini}%`)
+          .andWhere({ m_user_id: user.id })
+          .first();
+
+        const rombelIds = await MRombel.query().where({ m_ta_id: ta.id }).ids();
+
+        const rombelId = await MAnggotaRombel.query()
+          .where({ m_user_id: user.id })
+          .andWhere({ dihapus: 0 })
+          .whereIn("m_rombel_id", rombelIds)
+          .pluck("m_rombel_id");
+
+        let jamMengajarId = await MJamMengajar.query()
+          .where({ kode_hari: kode_hari })
+          .andWhere("jam_mulai", ">=", jam_saat_ini)
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .andWhere({ m_ta_id: ta.id })
+          .pluck("id");
+
+        if (!jamMengajarId) {
+          jadwalMengajar = await MJadwalMengajar.query()
+            .with("jamMengajar")
+            .with("rombel")
+            .with("mataPelajaran")
+            .where({ m_jam_mengajar_id: jamMengajarId[0] })
+            .andWhere({ m_rombel_id: rombelId[0] })
+            .first();
+        }
+      } else {
+        absen = await MAbsen.query().where({ m_user_id: user.id }).fetch();
+      }
+
+      return response.ok({
+        absen: absen,
+        jadwalMengajar: jadwalMengajar,
+      });
+    }
   }
 
   async detailAbsen({ response, request, auth, params: { absen_id } }) {
@@ -17065,7 +17157,15 @@ class MainController {
       .first();
 
     // return waktu_dibuka;
-    if (sekolah?.id == 8123 || sekolah?.id == 3364 || sekolah?.id == 3367 || sekolah?.id == 3388 || sekolah?.id == 4995 || sekolah?.id == 5025 || sekolah?.id == 9348  ) {
+    if (
+      sekolah?.id == 8123 ||
+      sekolah?.id == 3364 ||
+      sekolah?.id == 3367 ||
+      sekolah?.id == 3388 ||
+      sekolah?.id == 4995 ||
+      sekolah?.id == 5025 ||
+      sekolah?.id == 9348
+    ) {
       const jadwalUjian = await MJadwalUjian.create({
         jumlah_pg,
         jumlah_esai,
@@ -17296,7 +17396,15 @@ class MainController {
 
     // return jadwalUjianData
 
-    if (sekolah?.id == 8123 || sekolah?.id == 3364 || sekolah?.id == 3367 || sekolah?.id == 3388 || sekolah?.id == 4995 || sekolah?.id == 5025 || sekolah?.id == 9348 ) {
+    if (
+      sekolah?.id == 8123 ||
+      sekolah?.id == 3364 ||
+      sekolah?.id == 3367 ||
+      sekolah?.id == 3388 ||
+      sekolah?.id == 4995 ||
+      sekolah?.id == 5025 ||
+      sekolah?.id == 9348
+    ) {
       const jadwalUjian = await MJadwalUjian.query()
         .where({ id: jadwal_ujian_id })
         .update({
