@@ -15138,11 +15138,11 @@ class MainController {
           kd_konten_materi: "" + explanation.getCell("B" + rowNumber).value,
           level_kognitif: "" + explanation.getCell("C" + rowNumber).value,
           tingkat_kesukaran: "" + explanation.getCell("D" + rowNumber).value,
-          bentuk: "" + explanation.getCell("E" + rowNumber).value,
-          akm_konteks_materi: "" + explanation.getCell("F" + rowNumber).value,
-          akm_konten_materi: "" + explanation.getCell("G" + rowNumber).value,
+          akm_konteks_materi: "" + explanation.getCell("E" + rowNumber).value,
+          akm_konten_materi: "" + explanation.getCell("F" + rowNumber).value,
           // akm_proses_kognitif: '' + explanation.getCell("A" + rowNumber).value,
-          sumber_buku: "" + explanation.getCell("H" + rowNumber).value,
+          sumber_buku: "" + explanation.getCell("G" + rowNumber).value,
+          bentuk: "" + explanation.getCell("H" + rowNumber).value,
 
           pertanyaan: "" + explanation.getCell("I" + rowNumber).value,
           jawaban_a: "" + explanation.getCell("J" + rowNumber).value,
@@ -15164,11 +15164,11 @@ class MainController {
           kd_konten_materi: d.kd_konten_materi,
           level_kognitif: d.level_kognitif,
           bentuk: d.bentuk,
-          akm_konten_materi,
-          akm_konteks_materi,
+          akm_konteks_materi: d.akm_konteks_materi,
+          akm_konten_materi: d.akm_konten_materi,
           // akm_proses_kognitif,
-          sumber_buku,
-          tingkat_kesukaran,
+          sumber_buku: d.sumber_buku,
+          tingkat_kesukaran: d.tingkat_kesukaran,
           pertanyaan: htmlEscaper.escape(d.pertanyaan),
           jawaban_a: htmlEscaper.escape(d.jawaban_a),
           jawaban_b: htmlEscaper.escape(d.jawaban_b),
@@ -15308,7 +15308,7 @@ class MainController {
       return fileUpload.error();
     }
 
-    return await this.importSoalUjianServices(
+    return await this.importSoalUjian1Services(
       `${Helpers.publicPath("/uploads")}/${fname}`,
       user,
       m_ujian_id
