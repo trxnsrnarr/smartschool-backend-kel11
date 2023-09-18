@@ -1322,7 +1322,7 @@ class MainController {
       .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .first();
-
+  
     if (role == "ortu") {
       const checkProfil = await MProfilUser.query()
       .where({ telp_ibu: whatsapp })
@@ -16054,7 +16054,7 @@ class MainController {
       }
     }
   }
-
+  
   async detailJadwalUjian({
     response,
     request,
@@ -16111,6 +16111,38 @@ class MainController {
             })
             .where({ tk_jadwal_ujian_id: tk_jadwal_ujian_id })
             .andWhere({ dihapus: 0 });
+        })
+        .whereIn("id", anggotaRombel)
+        .andWhere({ dihapus: 0 })
+        .fetch();
+    }else{
+      const tkJadwalUjian = await TkJadwalUjian.query()
+        .where({ m_jadwal_ujian_id: jadwal_ujian_id })
+        .pluck("m_rombel_id");
+
+        // return tkJadwalUjian
+
+      const anggotaRombel = await MAnggotaRombel.query()
+        .whereIn("m_rombel_id", tkJadwalUjian)
+        .andWhere({ dihapus: 0 })
+        .pluck("m_user_id");
+
+
+      detailRombel = await MRombel.query()
+        .whereIn("id", tkJadwalUjian).fetch()
+
+      pesertaUjianData = await User.query()
+        .with("pesertaUjian", (builder) => {
+          builder
+            .with("peringatan")
+            .withCount("peringatan as belumDibaca", (builder) => {
+              builder.where({ dibaca_guru: 0 }).whereNotNull("jawaban");
+            })
+            .whereIn("tk_jadwal_ujian_id", tkJadwalUjian)
+            .andWhere({ dihapus: 0 });
+        })
+        .with("anggotaRombel", (builder)=>{
+          builder.with("rombel")
         })
         .whereIn("id", anggotaRombel)
         .andWhere({ dihapus: 0 })
