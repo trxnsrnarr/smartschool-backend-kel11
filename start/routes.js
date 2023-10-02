@@ -675,6 +675,10 @@ Route.post("/ujian", "MainController.postUjian");
 Route.put("/ujian/:ujian_id", "MainController.putUjian");
 Route.delete("/ujian/:ujian_id", "MainController.deleteUjian");
 
+// ujian sampah
+Route.get("/ujian-sampah", "MainController.getUjianSampah");
+Route.put("/ujian-sampah/:ujian_id", "MainController.putUjianSampah");
+
 // peserta ujian
 Route.get(
   "/peserta-ujian/:peserta_ujian_id",

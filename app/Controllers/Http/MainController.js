@@ -14783,6 +14783,273 @@ class MainController {
     });
   }
 
+  async getUjianSampah({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      tingkat,
+      daftar_ujian_id,
+      page = 1,
+      search,
+      filter_mapel,
+      filter_tipe,
+      filter_tingkat,
+    } = request.get();
+
+    if (tingkat) {
+      let ujianTingkat;
+
+      if (user.role == "admin") {
+        const userIds = await User.query()
+          .where({ dihapus: 0 })
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .whereIn("role", ["guru", "admin"])
+          .ids();
+
+        const tipeUjian = [
+          "pts1",
+          "pts2",
+          "pas1",
+          "pas2",
+          "us",
+          "literasi",
+          "numerasi",
+        ];
+
+        ujianTingkat = await MUjian.query()
+          .select("id", "nama")
+          .where({ tingkat: tingkat })
+          .andWhere({ dihapus: 1 })
+          .whereIn("m_user_id", userIds)
+          .whereIn("tipe", tipeUjian)
+          .orderBy("id", "desc")
+          .fetch();
+      } else {
+        ujianTingkat = await MUjian.query()
+          .select("id", "nama")
+          .where({ tingkat: tingkat })
+          .andWhere({ dihapus: 1 })
+          .andWhere({ m_user_id: user.id })
+          .orderBy("id", "desc")
+          .fetch();
+      }
+
+      let ujianDetail;
+
+      if (daftar_ujian_id) {
+        ujianDetail = await MUjian.query()
+          .with("soalUjian", (builder) => {
+            builder
+              .with("soal", (builder) => {
+                builder.where({ dihapus: 0 });
+              })
+              .where({ dihapus: 0 });
+          })
+          .where({ id: daftar_ujian_id })
+          .first();
+      }
+
+      return response.ok({
+        ujianTingkat: ujianTingkat,
+        ujianDetail: ujianDetail,
+      });
+    }
+
+    let mataPelajaran, ujian;
+
+    if (user.role == "guru") {
+      mataPelajaran = await MMataPelajaran.query()
+        .with("user")
+        .where({ dihapus: 0 })
+        .andWhere({ m_user_id: user.id })
+        .andWhere({ m_ta_id: ta.id })
+        .fetch();
+    } else if (user.role == "admin") {
+      mataPelajaran = await MMataPelajaran.query()
+        .with("user")
+        .where({ dihapus: 0 })
+        .andWhere({ m_ta_id: ta.id })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .fetch();
+    }
+
+    if (user.role == "admin") {
+      const userIds = await User.query()
+        .where({ dihapus: 0 })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .whereIn("role", ["guru", "admin"])
+        .ids();
+      ujian = MUjian.query()
+        .with("mataPelajaran")
+        .withCount("soalUjian as jumlahSoal", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .where({ dihapus: 1 })
+        .whereIn("m_user_id", userIds)
+        .orderBy("id", "desc");
+    } else {
+      ujian = MUjian.query()
+        .with("mataPelajaran")
+        .withCount("soalUjian as jumlahSoal", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .where({ dihapus: 1 })
+        .andWhere({ m_user_id: user.id })
+        .orderBy("id", "desc");
+    }
+
+    if (search) {
+      ujian = ujian.where("nama", "like", `%${search}%`);
+    }
+    if (filter_mapel) {
+      ujian = ujian.where({ m_user_id: filter_mapel });
+    }
+    if (filter_tingkat) {
+      ujian = ujian.where({ tingkat: filter_tingkat });
+    }
+    if (filter_tipe) {
+      ujian = ujian.where({ tipe: filter_tipe });
+    } else {
+      ujian.whereNot({ tipe: "ppdb" });
+    }
+
+    ujian = await ujian.paginate(page, 20);
+
+    let tingkatData = [];
+
+    if (
+      sekolah.tingkat == "SMK" ||
+      sekolah.tingkat == "SMA" ||
+      sekolah.tingkat == "MA" ||
+      sekolah.tingkat == "MAK"
+    ) {
+      tingkatData = ["X", "XI", "XII", "XIII"];
+    } else if (sekolah.tingkat == "SMP" || sekolah.tingkat == "MTS") {
+      tingkatData = ["VII", "VIII", "IX"];
+    } else if (sekolah.tingkat == "SD" || sekolah.tingkat == "MI") {
+      tingkatData = ["I", "II", "III", "IV", "V", "VI"];
+    } else if (sekolah.tingkat == "SLB" || sekolah.tingkat == "SUPER") {
+      tingkatData = [
+        "I",
+        "II",
+        "III",
+        "IV",
+        "V",
+        "VI",
+        "VII",
+        "VIII",
+        "IX",
+        "X",
+        "XI",
+        "XII",
+      ];
+    }
+
+    let tipeUjian = [
+      { value: "kuis", label: "Kuis" },
+      { value: "ph", label: "Penilaian Harian" },
+      {
+        value: "pts1",
+        label: "Penilaian Tengah Semester 1 / Sumatif Tengah Semester 1",
+      },
+      {
+        value: "pts2",
+        label: "Penilaian Tengah Semester 2 / Sumatif Tengah Semester 2",
+      },
+      { value: "pas1", label: "Penilaian Akhir Semester 1" },
+      { value: "pas2", label: "Penilaian Akhir Semester 2" },
+      { value: "us", label: "Ujian Sekolah / Asesmen Sumatif Sekolah" },
+      { value: "to", label: "Try out" },
+      { value: "literasi", label: "AKM - Literasi" },
+      { value: "numerasi", label: "AKM - Numerasi" },
+    ];
+    if (sekolah.id == 8719) {
+      tipeUjian = [
+        { value: "kuis", label: "Kuis" },
+        { value: "ph", label: "Penilaian Harian" },
+        { value: "pts1", label: "Penilaian Tengah Semester 1" },
+        { value: "pts2", label: "Penilaian Tengah Semester 2" },
+        { value: "pas1", label: "Penilaian Akhir Semester 1" },
+        { value: "pas2", label: "Penilaian Akhir Semester 2" },
+        { value: "sts1", label: "Sumatif Tengah Semester 1" },
+        { value: "sts2", label: "Sumatif Tengah Semester 2" },
+        { value: "sas1", label: "Sumatif Akhir Semester 1" },
+        { value: "sas2", label: "Sumatif Akhir Semester 2" },
+        { value: "us", label: "Ujian Sekolah" },
+        { value: "to", label: "Try out" },
+        { value: "literasi", label: "AKM - Literasi" },
+        { value: "numerasi", label: "AKM - Numerasi" },
+      ];
+    }
+
+    return response.ok({
+      ujian: ujian.toJSON().data,
+      total: ujian.toJSON().total,
+      lastPage: ujian.toJSON().lastPage,
+      mataPelajaran: mataPelajaran,
+      tingkat: tingkatData,
+      tipeUjian: tipeUjian,
+    });
+  }
+
+  async putUjianSampah({ response, request, auth, params: { ujian_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { dihapus } = request.post();
+    const rules = {
+      dihapus: "required"
+    };
+    const message = {
+      "dihapus.required": "Status Ujian Dihapus harus diisi"
+    };
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    const ujian = await MUjian.query().where({ id: ujian_id }).update({
+      dihapus
+    });
+
+    if (!ujian) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
   async getSoalUjian({ response, request, auth }) {
     const domain = request.headers().origin;
 
