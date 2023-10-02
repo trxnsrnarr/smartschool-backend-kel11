@@ -4513,7 +4513,7 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    let { nama, whatsapp, gender, password, avatar, photos, no_ujian } =
+    let { nama, whatsapp, gender, password, avatar, photos, no_ujian, role } =
       request.post();
     // const rules = {
     //   nama: "required",
@@ -4541,6 +4541,7 @@ class MainController {
       avatar,
       photos,
       no_ujian,
+      role
     };
 
     password ? (payload.password = await Hash.make(password)) : null;
