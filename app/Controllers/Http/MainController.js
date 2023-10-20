@@ -1399,7 +1399,9 @@ class MainController {
     if (res.role != role) {
       return response.forbidden({
         message: "Oops.. sepertinya anda salah pilih akun",
-      });
+        res
+      }) 
+      
     }
 
     return response.ok(res);
