@@ -15611,8 +15611,8 @@ ${jamPerubahan}`;
         value: "pts2",
         label: "Penilaian Tengah Semester 2 / Sumatif Tengah Semester 2",
       },
-      { value: "pas1", label: "Penilaian Akhir Semester 1" },
-      { value: "pas2", label: "Penilaian Akhir Semester 2" },
+      { value: "pas1", label: "Penilaian Akhir Semester 1 / Sumatif Akhir Semester 1" },
+      { value: "pas2", label: "Penilaian Akhir Semester 2 / Sumatif Akhir Semester 2" },
       { value: "to", label: "Try Out" },
       { value: "us", label: "Ujian Sekolah / Asesmen Sumatif Sekolah" },
     ];

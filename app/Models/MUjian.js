@@ -38,8 +38,8 @@ class MUjian extends Model {
     if (tipe == "ph") return "Penilaian Harian";
     else if (tipe == "pts1") return "Penilaian Tengah Semester 1 / Sumatif Tengah Semester 1";
     else if (tipe == "pts2") return "Penilaian Tengah Semester 2 / Sumatif Tengah Semester 2";
-    else if (tipe == "pas1") return "Penilaian Akhir Semester 1";
-    else if (tipe == "pas2") return "Penilaian Akhir Semester 2";
+    else if (tipe == "pas1") return "Penilaian Akhir Semester 1 / Sumatif Akhir Semester 1";
+    else if (tipe == "pas2") return "Penilaian Akhir Semester 2 / Sumatif Akhir Semester 2";
     else if (tipe == "us") return "Ujian Sekolah / Asesmen Sumatif Sekolah";
     else if (tipe == "literasi") return "AKM - Literasi";
     else if (tipe == "numerasi") return "AKM - Numerasi";

@@ -1399,7 +1399,9 @@ class MainController {
     if (res.role != role) {
       return response.forbidden({
         message: "Oops.. sepertinya anda salah pilih akun",
-      });
+        res
+      }) 
+      
     }
 
     return response.ok(res);
@@ -14417,8 +14419,8 @@ class MainController {
         value: "pts2",
         label: "Penilaian Tengah Semester 2 / Sumatif Tengah Semester 2",
       },
-      { value: "pas1", label: "Penilaian Akhir Semester 1" },
-      { value: "pas2", label: "Penilaian Akhir Semester 2" },
+      { value: "pas1", label: "Penilaian Akhir Semester 1 / Sumatif Akhir Semester 1" },
+      { value: "pas2", label: "Penilaian Akhir Semester 2 / Sumatif Akhir Semester 2" },
       { value: "us", label: "Ujian Sekolah / Asesmen Sumatif Sekolah" },
       { value: "to", label: "Try out" },
       { value: "literasi", label: "AKM - Literasi" },
@@ -15014,8 +15016,8 @@ class MainController {
         value: "pts2",
         label: "Penilaian Tengah Semester 2 / Sumatif Tengah Semester 2",
       },
-      { value: "pas1", label: "Penilaian Akhir Semester 1" },
-      { value: "pas2", label: "Penilaian Akhir Semester 2" },
+      { value: "pas1", label: "Penilaian Akhir Semester 1 / Sumatif Akhir Semester 1" },
+      { value: "pas2", label: "Penilaian Akhir Semester 2 / Sumatif Akhir Semester 2" },
       { value: "us", label: "Ujian Sekolah / Asesmen Sumatif Sekolah" },
       { value: "to", label: "Try out" },
       { value: "literasi", label: "AKM - Literasi" },
@@ -15160,8 +15162,8 @@ class MainController {
         value: "pts2",
         label: "Penilaian Tengah Semester 2 / Sumatif Tengah Semester 2",
       },
-      { value: "pas1", label: "Penilaian Akhir Semester 1" },
-      { value: "pas2", label: "Penilaian Akhir Semester 2" },
+      { value: "pas1", label: "Penilaian Akhir Semester 1 / Sumatif Akhir Semester 1" },
+      { value: "pas2", label: "Penilaian Akhir Semester 2 / Sumatif Akhir Semester 2" },
       { value: "us", label: "Ujian Sekolah / Asesmen Sumatif Sekolah" },
       { value: "to", label: "Try out" },
       { value: "literasi", label: "AKM - Literasi" },
@@ -22255,8 +22257,8 @@ class MainController {
         value: "pts2",
         label: "Penilaian Tengah Semester 2 / Sumatif Tengah Semester 2",
       },
-      { value: "pas1", label: "Penilaian Akhir Semester 1" },
-      { value: "pas2", label: "Penilaian Akhir Semester 2" },
+      { value: "pas1", label: "Penilaian Akhir Semester 1 / Sumatif Akhir Semester 1" },
+      { value: "pas2", label: "Penilaian Akhir Semester 2 / Sumatif Akhir Semester 2" },
       { value: "to", label: "Try Out" },
       { value: "us", label: "Ujian Sekolah / Asesmen Sumatif Sekolah" },
     ];
@@ -41309,18 +41311,18 @@ class MainController {
       if (tipe != "disposisi") {
         surat = MSurat.query()
           .where({ dihapus: 0 })
-          .andWhere({ m_user_id: user.id });
+          .andWhere({ m_user_id: user.id }).orderBy("created_at", "desc");
         if (tipe == "keluar") {
-          surat.andWhere({ tipe: "keluar" });
+          surat.andWhere({ tipe: "keluar" }).orderBy("created_at", "desc");
         } else if (tipe == "masuk") {
-          surat.andWhere({ tipe: "masuk" });
+          surat.andWhere({ tipe: "masuk" }).orderBy("created_at", "desc");
         } else if (tipe == "keputusan") {
-          surat.andWhere({ tipe: "keputusan" });
+          surat.andWhere({ tipe: "keputusan" }).orderBy("created_at", "desc");
         }
       } else if (tipe == "disposisi") {
         suratDataIds = MSurat.query()
           .where({ m_sekolah_id: sekolah.id })
-          .andWhere({ dihapus: 0 });
+          .andWhere({ dihapus: 0 }).orderBy("created_at", "desc");
         if (search) {
           suratDataIds.where("perihal", "like", `%${search}%`);
         }
@@ -41331,7 +41333,7 @@ class MainController {
           .with("surat")
           .with("pelaporanDisposisi")
           .where({ dihapus: 0 })
-          .whereIn("m_surat_id", suratDataIds);
+          .whereIn("m_surat_id", suratDataIds).orderBy("created_at", "desc");
         if (nav == "belum selesai") {
           surat.andWhere({ status: 0 });
         } else if (nav == "selesai") {
@@ -41342,24 +41344,24 @@ class MainController {
       if (tipe != "disposisi") {
         surat = MSurat.query()
           .where({ dihapus: 0 })
-          .andWhere({ m_sekolah_id: sekolah.id });
+          .andWhere({ m_sekolah_id: sekolah.id }).orderBy("created_at", "desc");
         if (tipe == "keluar") {
-          surat.andWhere({ tipe: "keluar" });
+          surat.andWhere({ tipe: "keluar" }).orderBy("created_at", "desc");
         } else if (tipe == "masuk") {
           surat
             .with("disposisi")
             .andWhere({ tipe: "masuk" })
-            .andWhere({ teruskan: 1 });
+            .andWhere({ teruskan: 1 }).orderBy("created_at", "desc");
         } else if (tipe == "keputusan") {
           surat
             .with("disposisi")
             .andWhere({ tipe: "keputusan" })
-            .andWhere({ teruskan: 1 });
+            .andWhere({ teruskan: 1 }).orderBy("created_at", "desc");
         }
       } else if (tipe == "disposisi") {
         suratDataIds = MSurat.query()
           .where({ m_sekolah_id: sekolah.id })
-          .andWhere({ dihapus: 0 });
+          .andWhere({ dihapus: 0 }).orderBy("created_at", "desc");
         if (search) {
           suratDataIds.where("perihal", "like", `%${search}%`);
         }
@@ -41370,11 +41372,11 @@ class MainController {
           .with("surat")
           .with("pelaporanDisposisi")
           .where({ dihapus: 0 })
-          .whereIn("m_surat_id", suratDataIds);
+          .whereIn("m_surat_id", suratDataIds).orderBy("created_at", "desc");
         if (nav == "belum selesai") {
-          surat.andWhere({ status: 0 });
+          surat.andWhere({ status: 0 }).orderBy("created_at", "desc");
         } else if (nav == "selesai") {
-          surat.andWhere({ status: 1 });
+          surat.andWhere({ status: 1 }).orderBy("created_at", "desc");
         }
       }
     }
