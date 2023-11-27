@@ -2827,6 +2827,49 @@ class MainController {
     });
   }
 
+  async putLupaPassword({ auth, response, request }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    // const user = await auth.getUser();
+
+    const { password_baru, whatsapp } = request.post();
+
+    const user = await User.query().where({ whatsapp })
+      .where("dihapus", 0)
+      .where({ role: "siswa" })
+      .first()
+
+    if(!user) {
+      return response.notFound({ message: "Nomor Whatsapp tidak terdaftar" });
+    }
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    // if (!(await Hash.verify(password_lama, user.password))) {
+    //   return response.notFound({ message: "Password yang anda masukan salah" });
+    // }
+
+    const update = await User.query()
+      .where({ id: user.id })
+      .update({
+        password: await Hash.make(password_baru),
+      });
+
+    if (!update) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
   async loginAdminWhatsapp({ response, request }) {
     const { whatsapp } = request.post();
 
