@@ -31878,7 +31878,7 @@ class MainController {
   async daftarsekolah({ response, request }) {
     const { search, page, limit } = request.get();
 
-    let sekolah = MSekolah.query().select("id", "nama", "favicon", "domain");
+    let sekolah = MSekolah.query().select("id", "nama", "favicon", "domain").whereNot("id", 8123);
 
     if (search) {
       sekolah.where("nama", "like", `%${search}%`);
