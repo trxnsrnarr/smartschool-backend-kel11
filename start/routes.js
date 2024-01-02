@@ -18,6 +18,27 @@ const { route, RouteGroup } = require("@adonisjs/framework/src/Route/Manager");
 /** @type {typeof import('@adonisjs/framework/src/Route/Manager')} */
 const Route = use("Route");
 
+
+// auth
+Route.post("/loginwhatsapp", "MainController.loginWhatsapp");
+Route.post("/login", "MainController.login");
+Route.post("/login-admin", "MainController.loginSuperAdmin");
+Route.post("/loginadminwhatsapp", "MainController.loginAdminWhatsapp");
+Route.post("/loginadmin", "MainController.loginAdmin");
+Route.post("/logout", "MainController.logout")
+Route.get("/profil", "MainController.getProfil");
+Route.get("/profil-admin", "MainController.getProfilAdmin");
+Route.put("/profil", "MainController.putProfil");
+Route.put("/ubah-password", "MainController.putUbahPassword");
+Route.put("/lupa-password", "MainController.putLupaPassword");
+Route.post("/profil-user", "MainController.postProfilUser");
+Route.post("/profil-user-admin", "MainController.postProfilUserAdmin");
+Route.get("/profil-user", "MainController.getProfilUser");
+Route.get("/profil-user/:user_id", "MainController.detailProfilUser");
+Route.post("/profil-user/:user_id", "MainController.postDetailProfilUser");
+Route.get("/profil/guru/:user_id", "MainController.getProfilGuru");
+
+
 Route.get("/master/kcd-leaderboard", "MainController.getKcdLeaderboard");
 Route.get(
   "/master/sekolah-dinas-summary",
@@ -60,25 +81,6 @@ Route.get("/regency", "MainController.getRegency");
 Route.get("/district", "MainController.getDistrict");
 Route.get("/village", "MainController.getVillage");
 Route.get("/sekolah-kemdikbud", "MainController.getMasterSekolah");
-
-// auth
-Route.post("/loginwhatsapp", "MainController.loginWhatsapp");
-Route.post("/login", "MainController.login");
-Route.post("/login-admin", "MainController.loginSuperAdmin");
-Route.post("/loginadminwhatsapp", "MainController.loginAdminWhatsapp");
-Route.post("/loginadmin", "MainController.loginAdmin");
-Route.post("/logout", "MainController.logout")
-Route.get("/profil", "MainController.getProfil");
-Route.get("/profil-admin", "MainController.getProfilAdmin");
-Route.put("/profil", "MainController.putProfil");
-Route.put("/ubah-password", "MainController.putUbahPassword");
-Route.put("/lupa-password", "MainController.putLupaPassword");
-Route.post("/profil-user", "MainController.postProfilUser");
-Route.post("/profil-user-admin", "MainController.postProfilUserAdmin");
-Route.get("/profil-user", "MainController.getProfilUser");
-Route.get("/profil-user/:user_id", "MainController.detailProfilUser");
-Route.post("/profil-user/:user_id", "MainController.postDetailProfilUser");
-Route.get("/profil/guru/:user_id", "MainController.getProfilGuru");
 
 // user
 Route.get("/user", "MainController.getUser");
@@ -1621,14 +1623,14 @@ Route.post(
   "/import-nilai-semua",
   "RombelController.importNilaiUtama"
 );
-// Route.post(
-//   "/download/ledger-nilai/:rombel_id",
-//   "RombelController.downloadTemplateNilai"
-// );
 Route.post(
   "/download/ledger-nilai/:rombel_id",
-  "MainController.downloadLedgerNilai2"
+  "RombelController.downloadTemplateNilai"
 );
+// Route.post(
+//   "/download/ledger-nilai/:rombel_id",
+//   "MainController.downloadLedgerNilai2"
+// );
 Route.post(
   "/download/ledger-nilai-yadika/:rombel_id",
   "SecondController.downloadLedgerNilai2"
@@ -2035,8 +2037,14 @@ Route.get(
   "UjianController.detailNilaiPg"
 );
 
+
+Route.post("/user/import", "UserController.importUser");
+Route.post("/user/download", "UserController.downloadUser");
+
 Route.get("/industri", "CDCController.industri");
 Route.get("/industri/:id", "CDCController.detailIndustri");
+
+Route.post("/regency/import", "DocsController.importKabupaten");
 
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
