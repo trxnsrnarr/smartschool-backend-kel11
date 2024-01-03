@@ -1322,8 +1322,6 @@ class MainController {
       .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .first();
-
-      return response.ok(res)
   
     if (role == "ortu") {
       const checkProfil = await MProfilUser.query()
