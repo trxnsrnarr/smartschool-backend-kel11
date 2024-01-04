@@ -7,7 +7,12 @@ class TkPesertaUjianSchema extends Schema {
   up () {
     this.table('tk_peserta_ujian', (table) => {
       // alter table
-      table.boolean("block").defaultTo(0)
+      table.integer("tk_siswa_ujian_id").unsigned().index("tk_siswa_ujian_id");
+      table
+        .foreign("tk_siswa_ujian_id")
+        .references("tk_siswa_ujian.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
     })
   }
 

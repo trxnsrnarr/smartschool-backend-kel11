@@ -495,7 +495,6 @@ class MainController {
         "tingkat2",
         "tingkat3",
         "tingkat4",
-        "save"
       )
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ aktif: 1 })
@@ -14502,7 +14501,7 @@ class MainController {
     const filterUjian = soalUjian.toJSON().soalUjian.filter((d) => {
       if (d.soal.bentuk) {
         if (
-          ["menjodohkan", "uraian", "esai", "pg_kompleks", "pg"].includes(
+          ["menjodohkan", "uraian", "esai", "pg_kompleks", "pg", "isian"].includes(
             d.soal.bentuk.toLowerCase().trim()
           )
         ) {
@@ -14530,12 +14529,16 @@ class MainController {
 
     let jumlahSoalEsai = 0;
 
+    let jumlahSoalIsian = 0;
+
     await Promise.all(
       soalUjianIds.toJSON().map(async (d) => {
         if (d.soal.bentuk.toLowerCase().trim() == "pg") {
           jumlahSoalPg = jumlahSoalPg + 1;
         } else if (d.soal.bentuk.toLowerCase().trim() == "esai") {
           jumlahSoalEsai = jumlahSoalEsai + 1;
+        } else if (d.soal.bentuk.toLowerCase().trim() == "isian") {
+          jumlahSoalIsian = jumlahSoalIsian + 1;
         }
       })
     );
@@ -14613,7 +14616,7 @@ class MainController {
       bentukSoal = [
         { value: "pg", label: "Pilihan Ganda" },
         { value: "esai", label: "Esai" },
-        { value: "esai", label: "Isian" },
+        { value: "isian", label: "Isian" },
       ];
     }
 
@@ -14656,6 +14659,7 @@ class MainController {
       levelKognitif,
       jumlahSoalPg: jumlahSoalPg,
       jumlahSoalEsai: jumlahSoalEsai,
+      jumlahSoalIsian: jumlahSoalIsian,
       // filter
       totalNilai,
       tingkat: tingkatData,
@@ -15305,6 +15309,7 @@ class MainController {
       pembahasan,
       nilai_soal,
       m_ujian_id,
+      jawaban_benar,
       // uraian
       opsi_a_uraian,
       opsi_b_uraian,
@@ -15424,6 +15429,7 @@ class MainController {
       opsi_b_uraian,
       rubrik_kj: JSON.stringify(rubrik_kj),
       pembahasan: htmlEscaper.escape(pembahasan || "-"),
+      jawaban_benar,
       nilai_soal,
       m_user_id: user.id,
       dihapus: 0,
@@ -16096,6 +16102,9 @@ class MainController {
             .where({ bentuk: "menjodohkan" })
             .andWhere("tk_soal_ujian.dihapus", 0);
         })
+        .withCount("soal as soal_isian", (builder) => {
+          builder.where({ bentuk: "isian" });
+        })
         .whereIn("id", [...ujianIds, ...ujianMapelIds])
         .andWhere({ dihapus: 0 })
         .fetch();
@@ -16242,7 +16251,10 @@ class MainController {
           builder.where({ bentuk: "uraian" }).andWhere({ dihapus: 0 });
         })
         .withCount("soal as soal_menjodohkan", (builder) => {
-          builder.where({ bentuk: "menjodohkan" }).andWhere({ dihapus: 0 });
+          builder.where({ bentuk: "menjodohkan" });
+        })
+        .withCount("soal as soal_isian", (builder) => {
+          builder.where({ bentuk: "isian" });
         })
         .whereIn("m_user_id", userIds)
         .andWhere({ dihapus: 0 });
@@ -17518,6 +17530,7 @@ class MainController {
     const {
       jumlah_pg,
       jumlah_esai,
+      jumlah_isian,
       jumlah_menjodohkan,
       jumlah_uraian,
       jumlah_pg_kompleks,
@@ -17556,6 +17569,7 @@ class MainController {
       const jadwalUjian = await MJadwalUjian.create({
         jumlah_pg,
         jumlah_esai,
+        jumlah_isian,
         jumlah_soal_akm,
         jumlah_menjodohkan,
         jumlah_uraian,
@@ -17633,6 +17647,7 @@ class MainController {
       const jadwalUjian = await MJadwalUjian.create({
         jumlah_pg,
         jumlah_esai,
+        jumlah_isian,
         jumlah_soal_akm,
         jumlah_menjodohkan,
         jumlah_uraian,
@@ -18264,6 +18279,7 @@ class MainController {
       let metaHasil = {
         nilaiPg: 0,
         nilaiEsai: 0,
+        nilaiIsian: 0,
         nilaiPgKompleks: 0,
         nilaiUraian: 0,
         nilaiMenjodohkan: 0,
@@ -18286,6 +18302,11 @@ class MainController {
             analisisTotal[d.soal.kd] = analisisTotal[d.soal.kd]
               ? analisisTotal[d.soal.kd] + 1
               : 1;
+          } else if (d.soal.bentuk == "isian") {
+            if (d.jawaban_isian == d.soal.jawaban_benar) {
+              metaHasil.nilaiIsian = metaHasil.nilaiIsian + d.soal.nilai_soal;
+              metaHasil.benar = metaHasil.benar + 1;
+            }
           } else if (d.soal.bentuk == "esai") {
             if (JSON.parse(d.jawaban_rubrik_esai)) {
               if (JSON.parse(d.jawaban_rubrik_esai).length) {
@@ -18364,6 +18385,7 @@ class MainController {
       metaHasil.nilaiTotal =
         (metaHasil.nilaiPg ? metaHasil.nilaiPg : 0) +
         (metaHasil.nilaiEsai ? metaHasil.nilaiEsai : 0) +
+        (metaHasil.nilaiIsian ? metaHasil.nilaiIsian : 0) +
         (metaHasil.nilaiPgKompleks ? metaHasil.nilaiPgKompleks : 0) +
         (metaHasil.nilaiUraian ? metaHasil.nilaiUraian : 0) +
         (metaHasil.nilaiMenjodohkan ? metaHasil.nilaiMenjodohkan : 0);
@@ -18445,6 +18467,7 @@ class MainController {
       let metaHasil = {
         nilaiPg: 0,
         nilaiEsai: 0,
+        nilaiIsian: 0,
         nilaiPgKompleks: 0,
         nilaiUraian: 0,
         nilaiMenjodohkan: 0,
@@ -18467,6 +18490,11 @@ class MainController {
             analisisTotal[d.soal.kd] = analisisTotal[d.soal.kd]
               ? analisisTotal[d.soal.kd] + 1
               : 1;
+          } else if (d.soal.bentuk == "isian") {
+            if (d.jawaban_isian == d.soal.jawaban_benar) {
+              metaHasil.nilaiIsian = metaHasil.nilaiIsian + d.soal.nilai_soal;
+              metaHasil.benar = metaHasil.benar + 1;
+            }
           } else if (d.soal.bentuk == "esai") {
             if (JSON.parse(d.jawaban_rubrik_esai)) {
               if (JSON.parse(d.jawaban_rubrik_esai).length) {
@@ -18545,6 +18573,7 @@ class MainController {
       metaHasil.nilaiTotal =
         (metaHasil.nilaiPg ? metaHasil.nilaiPg : 0) +
         (metaHasil.nilaiEsai ? metaHasil.nilaiEsai : 0) +
+        (metaHasil.nilaiIsian ? metaHasil.nilaiIsian : 0) +
         (metaHasil.nilaiPgKompleks ? metaHasil.nilaiPgKompleks : 0) +
         (metaHasil.nilaiUraian ? metaHasil.nilaiUraian : 0) +
         (metaHasil.nilaiMenjodohkan ? metaHasil.nilaiMenjodohkan : 0);
@@ -18641,7 +18670,8 @@ class MainController {
               "bentuk",
               "dihapus",
               "m_user_id",
-              "audio"
+              "audio",
+              "jawaban_benar"
             );
           })
           .where({ id: jawaban_siswa_id })
@@ -18722,6 +18752,15 @@ class MainController {
             dijawab: 0,
             m_soal_ujian_id: d.soal.id,
             jawaban_rubrik_esai: d.soal.rubrik_kj,
+            tk_peserta_ujian_id: pesertaUjian.id,
+          };
+        } else if (d.soal.bentuk == "isian") {
+          return {
+            durasi: 0,
+            ragu: 0,
+            dijawab: 0,
+            m_soal_ujian_id: d.soal.id,
+            jawaban_isian: d.soal.jawaban_isian,
             tk_peserta_ujian_id: pesertaUjian.id,
           };
         }
@@ -18806,6 +18845,15 @@ class MainController {
             jawaban_rubrik_esai: d.soal.rubrik_kj,
             tk_peserta_ujian_id: pesertaUjian.id,
           };
+        } else if (d.soal.bentuk == "isian") {
+          return {
+            durasi: 0,
+            ragu: 0,
+            dijawab: 0,
+            m_soal_ujian_id: d.soal.id,
+            jawaban_isian: d.soal.jawaban_isian,
+            tk_peserta_ujian_id: pesertaUjian.id,
+          };
         }
       });
       if (jadwalData.diacak) {
@@ -18885,6 +18933,14 @@ class MainController {
         .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_esai)
         .ids();
 
+      const soalMasterIsian = await MSoalUjian.query()
+        .where({ dihapus: 0 })
+        .whereIn("id", soalIds)
+        .where({ bentuk: "isian" })
+        .orderByRaw(`${diacak}`)
+        .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_isian)
+        .ids();
+
       const soalMasterMenjodohkan = await MSoalUjian.query()
         .where({ dihapus: 0 })
         .whereIn("id", soalIds)
@@ -18916,6 +18972,7 @@ class MainController {
         .whereIn("m_soal_ujian_id", [
           ...soalMasterPG,
           ...soalMasterEsai,
+          ...soalMasterIsian,
           ...soalMasterMenjodohkan,
           ...soalMasterPgKompleks,
           ...soalMasterUraian,
@@ -18981,6 +19038,15 @@ class MainController {
               dijawab: 0,
               dinilai: 1,
               m_soal_ujian_id: d.soal.id,
+              tk_peserta_ujian_id: pesertaUjian.id,
+            });
+          } else if (d.soal.bentuk.toLowerCase().trim() == "isian") {
+            soalData.push({
+              durasi: 0,
+              ragu: 0,
+              dijawab: 0,
+              m_soal_ujian_id: d.soal.id,
+              jawaban_isian: d.soal.jawaban_isian,
               tk_peserta_ujian_id: pesertaUjian.id,
             });
           }
@@ -19058,6 +19124,28 @@ class MainController {
         .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_esai)
         .fetch();
 
+      const soalIsianIds = await TkSoalUjian.query()
+        .where({ dihapus: 0 })
+        .andWhere({ m_ujian_id: ujian_id })
+        .pluck("m_soal_ujian_id");
+
+      const soalMasterIsianIds = await MSoalUjian.query()
+        .where({ bentuk: "isian" })
+        .andWhere({ dihapus: 0 })
+        .whereIn("id", soalIsianIds)
+        // .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_esai)
+        .ids();
+
+      const soalIsian = await TkSoalUjian.query()
+        .with("soal", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .where({ m_ujian_id: ujian_id })
+        .whereIn("m_soal_ujian_id", soalMasterIsianIds)
+        .orderByRaw(`${diacak}`)
+        .limit(jadwalUjian.toJSON().jadwalUjian.jumlah_isian)
+        .fetch();
+
       const soalData = [];
 
       const trx = await Database.beginTransaction();
@@ -19094,6 +19182,19 @@ class MainController {
             dijawab: 0,
             m_soal_ujian_id: d.soal.id,
             jawaban_rubrik_esai: d.soal.rubrik_kj,
+            tk_peserta_ujian_id: pesertaUjian.id,
+          });
+        })
+      );
+
+      await Promise.all(
+        soalIsian.toJSON().map(async (d) => {
+          soalData.push({
+            durasi: 0,
+            ragu: 0,
+            dijawab: 0,
+            m_soal_ujian_id: d.soal.id,
+            jawaban_isian: d.soal.jawaban_isian,
             tk_peserta_ujian_id: pesertaUjian.id,
           });
         })
@@ -19379,6 +19480,7 @@ class MainController {
       jawaban_pg_kompleks,
       jawaban_menjodohkan,
       jawaban_foto,
+      jawaban_isian,
     } = request.post();
     jawaban_esai = jawaban_esai ? htmlEscaper.escape(jawaban_esai) : "";
     const jawaban_pg_kompleks1 = jawaban_pg_kompleks
@@ -19529,6 +19631,15 @@ class MainController {
         //       nilai: (nilai ? nilai.nilai : 0) - nilaiSiswa.toJSON().soal.poin,
         //     });
         // }
+      } else if (jawaban_isian) {
+        jawabanUjianSiswa = await TkJawabanUjianSiswa.query()
+          .where({ id: jawaban_ujian_siswa_id })
+          .update({
+            jawaban_isian,
+            durasi,
+            ragu,
+            dijawab: 1,
+          });
       } else {
         jawabanUjianSiswa = await TkJawabanUjianSiswa.query()
           .where({ id: jawaban_ujian_siswa_id })
