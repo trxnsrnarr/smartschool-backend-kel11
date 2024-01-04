@@ -1251,7 +1251,7 @@ class UjianController {
 
     const user = await auth.getUser();
 
-    const { m_ujian_id, total_nilai_pg, total_nilai_esai } = request.post();
+    const { m_ujian_id, total_nilai_pg, total_nilai_esai, total_nilai_pg_kompleks} = request.post();
     // const fname = `doc`;
 
     const tes = await fileUpload.move(Helpers.publicPath("uploads/"), {
@@ -1314,6 +1314,63 @@ class UjianController {
           });
 
           totalSoalTambah = totalSoalTambah + 1;
+        } else if(content[i].split(pattern)[0].includes("MA")){
+          // const result = await Promise.all(
+          //   data.map(async (d) => {
+          
+          let jawaban_pg_kompleks =[];
+
+          if (d[2] == "Correct") {
+            jawaban_pg_kompleks.push("A") 
+          }
+
+          if (d[4] == "Correct") {
+            jawaban_pg_kompleks.push("B") 
+          }
+
+          if (d[6] == "Correct") {
+            jawaban_pg_kompleks.push("C") 
+          }
+
+          if (d[8] == "Correct") {
+            jawaban_pg_kompleks.push("D") 
+          }
+
+          if (d[10] == "Correct") {
+            jawaban_pg_kompleks.push("E") 
+          }
+
+          const soalUjian = await MSoalUjian.create({
+            bentuk: "pg_kompleks",
+            pertanyaan: d[0] ? htmlEscaper.escape(d[0]) : "",
+            jawaban_a: d[1] ? htmlEscaper.escape(d[1]) : null,
+            jawaban_b: d[3] ? htmlEscaper.escape(d[3]) : null,
+            jawaban_c: d[5] ? htmlEscaper.escape(d[5]) : null,
+            jawaban_d: d[7] ? htmlEscaper.escape(d[7]) : null,
+            jawaban_e: d[9] ? htmlEscaper.escape(d[9]) : null,
+            nilai_soal: total_nilai_pg_kompleks,
+            m_user_id: user.id,
+            dihapus: 0,
+            jawaban_pg_kompleks:jawaban_pg_kompleks.toString()
+          });
+
+          const tkSoalUjian = await TkSoalUjian.create({
+            dihapus: 0,
+            m_ujian_id: m_ujian_id,
+            m_soal_ujian_id: soalUjian.id,
+          });
+          // await Promise.all(
+          //   d
+          //     .split(pattern)
+          //     .splice(1)
+          //     .map(async (s) => {
+
+          //     })
+          // );
+
+          totalSoalTambah = totalSoalTambah + 1;
+          //   })
+          // );
         } else {
           // const result = await Promise.all(
           //   data.map(async (d) => {
