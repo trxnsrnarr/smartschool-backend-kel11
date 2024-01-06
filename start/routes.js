@@ -93,6 +93,7 @@ Route.post("/hapus-akun-role", "UserController.hapusAkunRole");
 // sekolah
 Route.get("/sekolah", "MainController.getSekolah");
 Route.put("/sekolah/:sekolah_id", "MainController.putSekolah");
+Route.put("/info-sekolah/:sekolah_id", "MainController.putLatLong");
 
 // jurusan
 Route.get("/jurusan", "MainController.getJurusan");
