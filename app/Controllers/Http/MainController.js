@@ -494,7 +494,7 @@ class MainController {
         "tingkat1",
         "tingkat2",
         "tingkat3",
-        "tingkat4",
+        "tingkat4"
       )
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ aktif: 1 })
@@ -1404,7 +1404,7 @@ class MainController {
 
     return response.ok(res);
   }
-  
+
   async logout({ response, request }) {
     const { user_id } = request.post();
 
@@ -2950,7 +2950,7 @@ class MainController {
     const { password, whatsapp } = request.post();
 
     const res = await User.query()
-    .where({ whatsapp: `${whatsapp}` })
+      .where({ whatsapp: `${whatsapp}` })
       .andWhere({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .first();
@@ -14609,9 +14609,14 @@ class MainController {
     const filterUjian = soalUjian.toJSON().soalUjian.filter((d) => {
       if (d.soal.bentuk) {
         if (
-          ["menjodohkan", "uraian", "esai", "pg_kompleks", "pg", "isian"].includes(
-            d.soal.bentuk.toLowerCase().trim()
-          )
+          [
+            "menjodohkan",
+            "uraian",
+            "esai",
+            "pg_kompleks",
+            "pg",
+            "isian",
+          ].includes(d.soal.bentuk.toLowerCase().trim())
         ) {
           return true;
         } else {
@@ -16211,7 +16216,9 @@ class MainController {
             .andWhere("tk_soal_ujian.dihapus", 0);
         })
         .withCount("soal as soal_isian", (builder) => {
-          builder.where({ bentuk: "isian" });
+          builder
+            .where({ bentuk: "isian" })
+            .andWhere("tk_soal_ujian.dihapus", 0);
         })
         .whereIn("id", [...ujianIds, ...ujianMapelIds])
         .andWhere({ dihapus: 0 })
@@ -16347,22 +16354,32 @@ class MainController {
       let ujian = MUjian.query()
         .select("id", "nama", "tipe")
         .withCount("soal as soal_pg", (builder) => {
-          builder.where({ bentuk: "pg" }).andWhere({ dihapus: 0 });
+          builder.where({ bentuk: "pg" }).andWhere("tk_soal_ujian.dihapus", 0);
         })
         .withCount("soal as soal_esai", (builder) => {
-          builder.where({ bentuk: "esai" }).andWhere({ dihapus: 0 });
+          builder
+            .where({ bentuk: "esai" })
+            .andWhere("tk_soal_ujian.dihapus", 0);
         })
         .withCount("soal as soal_pg_kompleks", (builder) => {
-          builder.where({ bentuk: "pg_kompleks" }).andWhere({ dihapus: 0 });
+          builder
+            .where({ bentuk: "pg_kompleks" })
+            .andWhere("tk_soal_ujian.dihapus", 0);
         })
         .withCount("soal as soal_uraian", (builder) => {
-          builder.where({ bentuk: "uraian" }).andWhere({ dihapus: 0 });
+          builder
+            .where({ bentuk: "uraian" })
+            .andWhere("tk_soal_ujian.dihapus", 0);
         })
         .withCount("soal as soal_menjodohkan", (builder) => {
-          builder.where({ bentuk: "menjodohkan" });
+          builder
+            .where({ bentuk: "menjodohkan" })
+            .andWhere("tk_soal_ujian.dihapus", 0);
         })
         .withCount("soal as soal_isian", (builder) => {
-          builder.where({ bentuk: "isian" });
+          builder
+            .where({ bentuk: "isian" })
+            .andWhere("tk_soal_ujian.dihapus", 0);
         })
         .whereIn("m_user_id", userIds)
         .andWhere({ dihapus: 0 });
@@ -19589,7 +19606,7 @@ class MainController {
       jawaban_menjodohkan,
       jawaban_foto,
       jawaban_isian,
-      ganti
+      ganti,
     } = request.post();
     jawaban_esai = jawaban_esai ? htmlEscaper.escape(jawaban_esai) : "";
     const jawaban_pg_kompleks1 = jawaban_pg_kompleks
@@ -19600,8 +19617,8 @@ class MainController {
     jawaban_menjodohkan = jawaban_menjodohkan
       ? JSON.stringify(jawaban_menjodohkan)
       : null;
-if(ganti){
-  let jawabanUjianSiswa;
+    if (ganti) {
+      let jawabanUjianSiswa;
 
       if (jawaban_opsi_uraian) {
         jawabanUjianSiswa = await TkJawabanUjianSiswa.query()
@@ -19693,8 +19710,7 @@ if(ganti){
         progress:
           jawabanUjianSiswaData.toJSON().pesertaUjian.__meta__.totalDijawab,
       });
-}else
-    if (user.role == "guru" || user.role == "admin") {
+    } else if (user.role == "guru" || user.role == "admin") {
       await TkJawabanUjianSiswa.query()
         .where({ id: jawaban_ujian_siswa_id })
         .update({
@@ -47152,12 +47168,9 @@ if(ganti){
       message: messagePostSuccess,
     });
   }
-  
+
   async putLatLong({ response, request, auth, params: { sekolah_id } }) {
-    const {
-      lat,
-      long
-    } = request.post();
+    const { lat, long } = request.post();
 
     // let validation = await validate(
     //   request.post(),
@@ -47169,10 +47182,12 @@ if(ganti){
     //   return response.unprocessableEntity(validation.messages());
     // }
 
-    const sekolah = await MInformasiSekolah.query().where({ m_sekolah_id: sekolah_id }).update({
-      lat,
-      long
-    })
+    const sekolah = await MInformasiSekolah.query()
+      .where({ m_sekolah_id: sekolah_id })
+      .update({
+        lat,
+        long,
+      });
 
     if (!sekolah) {
       return response.notFound({
