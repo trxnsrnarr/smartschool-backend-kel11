@@ -8,7 +8,10 @@ const MMataPelajaran = use("App/Models/MMataPelajaran");
 const MMateri = use("App/Models/MMateri");
 const MUjian = use("App/Models/MUjian");
 const TkSoalUjian = use("App/Models/TkSoalUjian");
+const TkJadwalUjian = use("App/Models/TkJadwalUjian");
 const MSoalUjian = use("App/Models/MSoalUjian");
+const MAnggotaRombel = use("App/Models/MAnggotaRombel");
+const MRombel = use("App/Models/MRombel");
 const MTemplateKesukaranMapel = use("App/Models/MTemplateKesukaranMapel");
 const MPeringatanUjianSiswa = use("App/Models/MPeringatanUjianSiswa");
 const fs = require("fs");
@@ -1251,7 +1254,12 @@ class UjianController {
 
     const user = await auth.getUser();
 
-    const { m_ujian_id, total_nilai_pg, total_nilai_esai, total_nilai_pg_kompleks} = request.post();
+    const {
+      m_ujian_id,
+      total_nilai_pg,
+      total_nilai_esai,
+      total_nilai_pg_kompleks,
+    } = request.post();
     // const fname = `doc`;
 
     const tes = await fileUpload.move(Helpers.publicPath("uploads/"), {
@@ -1314,30 +1322,30 @@ class UjianController {
           });
 
           totalSoalTambah = totalSoalTambah + 1;
-        } else if(content[i].split(pattern)[0].includes("MA")){
+        } else if (content[i].split(pattern)[0].includes("MA")) {
           // const result = await Promise.all(
           //   data.map(async (d) => {
-          
-          let jawaban_pg_kompleks =[];
+
+          let jawaban_pg_kompleks = [];
 
           if (d[2] == "Correct") {
-            jawaban_pg_kompleks.push("A") 
+            jawaban_pg_kompleks.push("A");
           }
 
           if (d[4] == "Correct") {
-            jawaban_pg_kompleks.push("B") 
+            jawaban_pg_kompleks.push("B");
           }
 
           if (d[6] == "Correct") {
-            jawaban_pg_kompleks.push("C") 
+            jawaban_pg_kompleks.push("C");
           }
 
           if (d[8] == "Correct") {
-            jawaban_pg_kompleks.push("D") 
+            jawaban_pg_kompleks.push("D");
           }
 
           if (d[10] == "Correct") {
-            jawaban_pg_kompleks.push("E") 
+            jawaban_pg_kompleks.push("E");
           }
 
           const soalUjian = await MSoalUjian.create({
@@ -1351,7 +1359,7 @@ class UjianController {
             nilai_soal: total_nilai_pg_kompleks,
             m_user_id: user.id,
             dihapus: 0,
-            jawaban_pg_kompleks:jawaban_pg_kompleks.toString()
+            jawaban_pg_kompleks: jawaban_pg_kompleks.toString(),
           });
 
           const tkSoalUjian = await TkSoalUjian.create({
@@ -1586,7 +1594,7 @@ class UjianController {
       nilaiMenjodohkan: 0,
       benar: 0,
       salah: 0,
-      jumlahSoal:pesertaUjian?.toJSON()?.jadwalUjian?.jadwalUjian?.jumlah_pg,
+      jumlahSoal: pesertaUjian?.toJSON()?.jadwalUjian?.jadwalUjian?.jumlah_pg,
     };
 
     await Promise.all(
@@ -1595,8 +1603,8 @@ class UjianController {
           if (d.jawaban_pg == d.soal.kj_pg) {
             metaHasil.nilaiPg = metaHasil.nilaiPg + d.soal.nilai_soal;
             metaHasil.benar = metaHasil.benar + 1;
-          }else{
-            metaHasil.salah = metaHasil.salah + 1
+          } else {
+            metaHasil.salah = metaHasil.salah + 1;
           }
         } else if (d.soal.bentuk == "pg_kompleks") {
           const jawabanKjKompleks = d.soal.jawaban_pg_kompleks.split(",");
@@ -1957,6 +1965,281 @@ class UjianController {
       })
     );
     let namaFile = `/uploads/rekap-ujian-siswa-${keluarantanggalseconds}.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
+
+  async downloadAbsen({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const ta = await this.getTAAktif(sekolah);
+
+    const { tk_jadwal_ujian_id } = request.post();
+
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
+    const tkJadwalUjian = await TkJadwalUjian.query()
+      .with("jadwalUjian", (builder) => {
+        builder.with("ujian", (builder) => builder.with("mataPelajaran"));
+      })
+      .with("rombel")
+      .where({ id: tk_jadwal_ujian_id })
+      .first();
+
+    const anggotaRombel = await MAnggotaRombel.query()
+      .where({ m_rombel_id: tkJadwalUjian.m_rombel_id })
+      .andWhere({ dihapus: 0 })
+      .pluck("m_user_id");
+
+    const pesertaUjianData = await User.query()
+      // .with("pesertaUjian", (builder) => {
+      //   builder
+      //     .with("peringatan")
+      //     .withCount("peringatan as belumDibaca", (builder) => {
+      //       builder.where({ dibaca_guru: 0 }).whereNotNull("jawaban");
+      //     })
+      //     .where({ tk_jadwal_ujian_id: tk_jadwal_ujian_id })
+      //     .andWhere({ dihapus: 0 });
+      // })
+      .whereIn("id", anggotaRombel)
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    let workbook = new Excel.Workbook();
+    let worksheet = workbook.addWorksheet(`Daftar Absen`);
+    worksheet.mergeCells("A1:F1");
+    worksheet.mergeCells("A2:F2");
+    worksheet.mergeCells("A3:F3");
+    worksheet.getCell(
+      "A7"
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
+    worksheet.addConditionalFormatting({
+      ref: "A1:F3",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 16,
+              bold: true,
+            },
+            // fill: {
+            //   type: "pattern",
+            //   pattern: "solid",
+            //   bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            // },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            // border: {
+            //   top: { style: "thin" },
+            //   left: { style: "thin" },
+            //   bottom: { style: "thin" },
+            //   right: { style: "thin" },
+            // },
+          },
+        },
+      ],
+    });
+    worksheet.addConditionalFormatting({
+      ref: "A8:F8",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+
+    worksheet.getCell("A5").value = `Hari, tanggal: ${moment().format(
+      "dddd, DD MMMM YYYY"
+    )}`;
+    worksheet.getCell("A6").value = `Mata Pelajaran : ${
+      tkJadwalUjian.toJSON().jadwalUjian.ujian.mataPelajaran.nama
+    } `;
+    worksheet.getCell("E5").value = `Kelas : ${
+      tkJadwalUjian.toJSON().rombel.nama
+    }`;
+    worksheet.getCell("E6").value = `Ruang : ....`;
+    await Promise.all(
+      pesertaUjianData
+        .toJSON()
+        .sort((a, b) => ("" + a.nama).localeCompare(b.nama))
+        .map(async (d, idx) => {
+          worksheet.getCell("A1").value = "DAFTAR HADIR UJIAN";
+          worksheet.getCell("A2").value = sekolah.nama;
+          worksheet.getCell("A3").value = `TAHUN PELAJARAN ${ta.tahun}`;
+          worksheet.addConditionalFormatting({
+            ref: `B${(idx + 1) * 1 + 8}:D${(idx + 1) * 1 + 8}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 11,
+                    // bold: true,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "left",
+                  },
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
+                },
+              },
+            ],
+          });
+          worksheet.addConditionalFormatting({
+            ref: `E${(idx + 1) * 1 + 8}:F${(idx + 1) * 1 + 8}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 11,
+                    // bold: true,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "right",
+                  },
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
+                },
+              },
+            ],
+          });
+          worksheet.addConditionalFormatting({
+            ref: `A${(idx + 1) * 1 + 8}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 11,
+                    // bold: true,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
+                },
+              },
+            ],
+          });
+          // add column headers
+          worksheet.getRow(8).values = [
+            "No",
+            "No Peserta",
+            "Nama Peserta",
+            "Whatsapp",
+            "Tanda Tangan",
+            "Tanda Tangan",
+          ];
+          worksheet.columns = [
+            { key: "no" },
+            { key: "no_p" },
+            { key: "nama" },
+            { key: "whatsapp" },
+            { key: "ttd" },
+            { key: "ttd2" },
+          ];
+
+          // Add row using key mapping to columns
+          if (idx % 2 === 0) {
+            let row = worksheet.addRow({
+              no: `${idx + 1}`,
+              no_p: d ? d.no_ujian : "-",
+              nama: d ? d.nama : "-",
+              whatsapp: d ? d.whatsapp : "-",
+              ttd: "",
+              ttd2: idx + 1,
+            });
+          } else {
+            let row = worksheet.addRow({
+              no: `${idx + 1}`,
+              no_p: d ? d.no_ujian : "-",
+              nama: d ? d.nama : "-",
+              whatsapp: d ? d.whatsapp : "-",
+              ttd: idx + 1,
+              ttd2: "",
+            });
+          }
+        })
+    );
+
+    worksheet.getColumn("A").width = 7;
+    worksheet.getColumn("B").width = 12;
+    worksheet.getColumn("C").width = 25;
+    worksheet.getColumn("D").width = 16;
+    worksheet.getColumn("E").width = 14;
+    worksheet.getColumn("F").width = 14;
+
+    let namaFile = `/uploads/Daftar-Hadir-Ujian-${
+      tkJadwalUjian.toJSON().rombel.nama
+    }-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);

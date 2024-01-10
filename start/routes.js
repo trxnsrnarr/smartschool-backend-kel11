@@ -1090,6 +1090,8 @@ Route.post(
   "MainController.downloadKartuTemplate"
 );
 
+Route.post("/ujian/download-absen", "UjianController.downloadAbsen");
+
 Route.get("/daftar-sekolah", "MainController.daftarsekolah");
 Route.get(
   "/daftar-sekolah-kolaborasi",

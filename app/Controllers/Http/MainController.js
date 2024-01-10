@@ -19589,6 +19589,7 @@ class MainController {
       jawaban_menjodohkan,
       jawaban_foto,
       jawaban_isian,
+      ganti
     } = request.post();
     jawaban_esai = jawaban_esai ? htmlEscaper.escape(jawaban_esai) : "";
     const jawaban_pg_kompleks1 = jawaban_pg_kompleks
@@ -19599,7 +19600,100 @@ class MainController {
     jawaban_menjodohkan = jawaban_menjodohkan
       ? JSON.stringify(jawaban_menjodohkan)
       : null;
+if(ganti){
+  let jawabanUjianSiswa;
 
+      if (jawaban_opsi_uraian) {
+        jawabanUjianSiswa = await TkJawabanUjianSiswa.query()
+          .where({ id: jawaban_ujian_siswa_id })
+          .update({
+            jawaban_opsi_uraian,
+            jawaban_uraian,
+            durasi,
+            ragu,
+            dijawab: 1,
+            jawaban_foto,
+          });
+      } else if (jawaban_pg_kompleks) {
+        jawabanUjianSiswa = await TkJawabanUjianSiswa.query()
+          .where({ id: jawaban_ujian_siswa_id })
+          .update({
+            jawaban_pg_kompleks: jawaban_pg_kompleks1,
+            durasi,
+            ragu,
+            dijawab: 1,
+          });
+      }
+      if (jawaban_menjodohkan) {
+        jawabanUjianSiswa = await TkJawabanUjianSiswa.query()
+          .where({ id: jawaban_ujian_siswa_id })
+          .update({
+            jawaban_menjodohkan,
+            durasi,
+            ragu,
+            dijawab: 1,
+          });
+      } else if (jawaban_esai) {
+        jawabanUjianSiswa = await TkJawabanUjianSiswa.query()
+          .where({ id: jawaban_ujian_siswa_id })
+          .update({
+            jawaban_esai,
+            durasi,
+            ragu,
+            dijawab: 1,
+            jawaban_foto,
+          });
+      } else if (jawaban_pg) {
+        jawabanUjianSiswa = await TkJawabanUjianSiswa.query()
+          .where({ id: jawaban_ujian_siswa_id })
+          .update({
+            jawaban_pg,
+            durasi,
+            ragu,
+            dijawab: 1,
+          });
+      } else if (jawaban_isian) {
+        jawabanUjianSiswa = await TkJawabanUjianSiswa.query()
+          .where({ id: jawaban_ujian_siswa_id })
+          .update({
+            jawaban_isian,
+            durasi,
+            ragu,
+            dijawab: 1,
+          });
+      } else {
+        jawabanUjianSiswa = await TkJawabanUjianSiswa.query()
+          .where({ id: jawaban_ujian_siswa_id })
+          .update({
+            ragu,
+          });
+      }
+
+      if (!jawabanUjianSiswa) {
+        return response.notFound({
+          message: messageNotFound,
+        });
+      }
+
+      const jawabanUjianSiswaData = await TkJawabanUjianSiswa.query()
+        .with("pesertaUjian", (builder) => {
+          builder.withCount("jawabanSiswa as totalDijawab", (builder) => {
+            builder.where({ dijawab: 1 });
+          });
+        })
+        .where({ id: jawaban_ujian_siswa_id })
+        .first();
+
+      return response.ok({
+        doc_id: jawabanUjianSiswaData.toJSON().pesertaUjian.doc_id,
+        warning: jawabanUjianSiswaData.toJSON().pesertaUjian.warning,
+        tk_jadwal_ujian_id:
+          jawabanUjianSiswaData.toJSON().pesertaUjian.tk_jadwal_ujian_id,
+        user_id: jawabanUjianSiswaData.toJSON().pesertaUjian.m_user_id,
+        progress:
+          jawabanUjianSiswaData.toJSON().pesertaUjian.__meta__.totalDijawab,
+      });
+}else
     if (user.role == "guru" || user.role == "admin") {
       await TkJawabanUjianSiswa.query()
         .where({ id: jawaban_ujian_siswa_id })
