@@ -32421,8 +32421,7 @@ class MainController {
     const { search, page, limit } = request.get();
 
     let sekolah = MSekolah.query()
-      .select("id", "nama", "favicon", "domain")
-      .whereNot("id", 8123);
+      .select("id", "nama", "favicon", "domain");
 
     if (search) {
       sekolah.where("nama", "like", `%${search}%`);
