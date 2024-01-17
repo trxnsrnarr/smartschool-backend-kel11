@@ -2825,16 +2825,14 @@ class PPDBController {
                     : namaGelombang?.includes("reguler 3")
                     ? "02"
                     : "03"
-                }${" "}
-              -${" "}
-              ${padNumber(
-                gelombangAktif
-                  .toJSON()
-                  .gelombang?.pendaftar.findIndex(
-                    (d) => d.id == gelombangAktif?.id
-                  ) + 1,
-                `${gelombangAktif.toJSON().gelombang?.diterima}`.length
-              )}
+                } - ${padNumber(
+                  gelombangAktif
+                    .toJSON()
+                    .gelombang?.pendaftar.findIndex(
+                      (d) => d.id == gelombangAktif?.id
+                    ) + 1,
+                  `${gelombangAktif.toJSON().gelombang?.diterima}`.length
+                )}
             `;
 
           const pembayaran = JSON.parse(d?.pembayaran || "[]");
@@ -3261,7 +3259,7 @@ class PPDBController {
           });
         })
     );
-// return data
+    // return data
     worksheet.mergeCells(`A5:A6`);
     worksheet.mergeCells(`B5:B6`);
     worksheet.mergeCells(`C5:C6`);
