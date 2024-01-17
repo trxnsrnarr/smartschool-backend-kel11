@@ -2898,7 +2898,7 @@ class PPDBController {
 
           // add column headers
           worksheet.getRow(5).values = [
-            "No",
+            
             "Nama",
             "No Telepon",
             "Gender",
@@ -2960,7 +2960,7 @@ class PPDBController {
             "Alamat",
           ];
           worksheet.getRow(6).values = [
-            "No",
+            
             "Nama",
             "No Telepon",
             "Gender",
@@ -3022,7 +3022,6 @@ class PPDBController {
             "Alamat",
           ];
           worksheet.columns = [
-            { key: "no" },
             { key: "nama" },
             { key: "no_telepon" },
             { key: "gender" },
@@ -3099,7 +3098,6 @@ class PPDBController {
 
           // Add row using key mapping to columns
           let row = worksheet.addRow({
-            no: `${idx + 1}`,
             nama: d.user ? d.user.nama : "-",
             no_telepon: d.user ? d.user.whatsapp : "-",
             gender: d.user ? d.user.gender : "-",
@@ -3285,7 +3283,7 @@ class PPDBController {
     worksheet.mergeCells(`BF5:BF6`);
     worksheet.mergeCells(`BG5:BG6`);
     worksheet.mergeCells(`BH5:BH6`);
-    worksheet.getColumn("A").width = 6;
+    worksheet.getColumn("A").width = 20;
     worksheet.getColumn("B").width = 20;
     worksheet.getColumn("C").width = 20;
     worksheet.getColumn("D").width = 20;
