@@ -1049,7 +1049,7 @@ class PPDBController {
     }
     let jalurIds;
 
-    if (sekolah?.id == 14 || sekolah?.id == 13) {
+    if (sekolah?.id == 14 || sekolah?.id == 13 || sekolah?.id == 121) {
       jalurIds = await MJalurPpdb.query()
         .where({ dihapus: 0 })
         .where({ m_sekolah_id: sekolah.id })
@@ -1138,7 +1138,7 @@ class PPDBController {
       }
     }
 
-    if (sekolah?.id == 14 || sekolah?.id == 13) {
+    if (sekolah?.id == 14 || sekolah?.id == 13 || sekolah?.id == 121) {
       const jalurIds1 = await MJalurPpdb.query()
         .where({ dihapus: 0 })
         .where({ m_sekolah_id: sekolah.id })
@@ -1178,7 +1178,7 @@ class PPDBController {
       .andWhere({ role: "ppdb" })
       .count("* as total");
 
-    if (sekolah?.id == 14 || sekolah?.id == 13) {
+    if (sekolah?.id == 14 || sekolah?.id == 13 || sekolah?.id == 121) {
       const jalurIds1 = await MJalurPpdb.query()
         .where({ dihapus: 0 })
         .where({ m_sekolah_id: sekolah.id })
@@ -2585,7 +2585,7 @@ class PPDBController {
     const namaGelombang = gelombang.nama.toLowerCase();
     let jalurIds;
 
-    if (sekolah?.id == 14 || sekolah?.id == 13) {
+    if (sekolah?.id == 14 || sekolah?.id == 13 || sekolah?.id == 121) {
       jalurIds = await MJalurPpdb.query()
         .where({ dihapus: 0 })
         .where({ m_sekolah_id: sekolah.id })
@@ -2617,7 +2617,7 @@ class PPDBController {
 
     let gelombangUser;
 
-    if (sekolah?.id == 14 || sekolah?.id == 13) {
+    if (sekolah?.id == 14 || sekolah?.id == 13 || sekolah?.id == 121) {
       const jalurIds1 = await MJalurPpdb.query()
         .where({ dihapus: 0 })
         .where({ m_sekolah_id: sekolah.id })
@@ -2709,7 +2709,7 @@ class PPDBController {
             .where({ dihapus: 0 })
             .fetch();
 
-          if (sekolah?.id == 14 || sekolah?.id == 13) {
+          if (sekolah?.id == 14 || sekolah?.id == 13 || sekolah?.id == 121) {
             const jalurIds1 = await MJalurPpdb.query()
               .where({ dihapus: 0 })
               .where({ m_sekolah_id: sekolah.id })
@@ -2811,7 +2811,7 @@ class PPDBController {
                   gelombangPembelian.toJSON().gelombang?.diterima.length
                 )}`
               : `${moment().format("YYYY")} - ${
-                  sekolah?.id == 13 || sekolah?.id == 14
+                  sekolah?.id == 13 || sekolah?.id == 121 || sekolah?.id == 14
                     ? padNumber(
                         gelombangUser?.findIndex(
                           (d) => d.id == gelombangAktif.toJSON().gelombang?.id
