@@ -32417,11 +32417,30 @@ class MainController {
     return kartusoalFile;
   }
 
+  
+  async putKoordinat({ response, request, params: { sekolah_id } }) {
+    const { lat, long } = request.post();
+
+    const sekolah = await MSekolah.query()
+      .where({ id: sekolah_id }).update({lat, long});
+
+    if (!sekolah) {
+      return response.notFound({
+        message: messageNotFound,
+      });
+    }
+
+    return response.ok({
+      message: messagePutSuccess,
+    });
+  }
+
+
   async daftarsekolah({ response, request }) {
     const { search, page, limit } = request.get();
 
     let sekolah = MSekolah.query()
-      .select("id", "nama", "favicon", "domain");
+      .select("id", "nama", "favicon", "domain", "lat", "long");
 
     if (search) {
       sekolah.where("nama", "like", `%${search}%`);
@@ -47165,37 +47184,6 @@ class MainController {
 
     return response.ok({
       message: messagePostSuccess,
-    });
-  }
-
-  async putLatLong({ response, request, auth, params: { sekolah_id } }) {
-    const { lat, long } = request.post();
-
-    // let validation = await validate(
-    //   request.post(),
-    //   rulesUserPost,
-    //   messagesUser
-    // );
-
-    // if (validation.fails()) {
-    //   return response.unprocessableEntity(validation.messages());
-    // }
-
-    const sekolah = await MInformasiSekolah.query()
-      .where({ m_sekolah_id: sekolah_id })
-      .update({
-        lat,
-        long,
-      });
-
-    if (!sekolah) {
-      return response.notFound({
-        message: messageNotFound,
-      });
-    }
-
-    return response.ok({
-      message: messagePutSuccess,
     });
   }
 
