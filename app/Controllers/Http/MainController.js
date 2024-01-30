@@ -21910,6 +21910,7 @@ class MainController {
       // tk perpus mapel
       m_mata_pelajaran_id,
       // tk perpus tag
+      no_rak,
       tag,
       cover,
     } = request.post();
@@ -21996,6 +21997,7 @@ class MainController {
       m_buku_id: checkBuku.id,
       m_sekolah_id: sekolah.id,
       dihapus: 0,
+      no_rak,
     });
 
     if (m_mata_pelajaran_id) {
@@ -22062,6 +22064,7 @@ class MainController {
       // tk perpus mapel
       m_mata_pelajaran_id,
       // tk perpus tag
+      no_rak,
       tag,
       cover,
     } = request.post();
@@ -22150,6 +22153,7 @@ class MainController {
         m_buku_id: checkBuku.id,
         m_sekolah_id: sekolah.id,
         dihapus: 0,
+        no_rak
       });
 
     if (m_mata_pelajaran_id) {
