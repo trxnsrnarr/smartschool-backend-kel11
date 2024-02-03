@@ -21913,6 +21913,7 @@ class MainController {
       no_rak,
       tag,
       cover,
+      sumber
     } = request.post();
     const rules = {
       judul: "required",
@@ -21997,7 +21998,7 @@ class MainController {
       m_buku_id: checkBuku.id,
       m_sekolah_id: sekolah.id,
       dihapus: 0,
-      no_rak,
+      no_rak,sumber
     });
 
     if (m_mata_pelajaran_id) {
@@ -22066,7 +22067,7 @@ class MainController {
       // tk perpus tag
       no_rak,
       tag,
-      cover,
+      cover,sumber
     } = request.post();
     const rules = {
       judul: "required",
@@ -22153,7 +22154,7 @@ class MainController {
         m_buku_id: checkBuku.id,
         m_sekolah_id: sekolah.id,
         dihapus: 0,
-        no_rak
+        no_rak,sumber
       });
 
     if (m_mata_pelajaran_id) {
