@@ -41,7 +41,7 @@ class DownloadService {
           quality: 25,
           encoding: "base64",
           selector: "div",
-          puppeteerArgs: { args: ["--no-sandbox", "--disable-setuid-sandbox"] },
+          puppeteerArgs: { args: ["--no-sandbox", "--disable-setuid-sandbox","--disable-extensions"] },
         });
         const dimensions = sizeOf(Buffer.from(image, "base64"));
         const imagea = await nodeHtmlToImage({
@@ -50,7 +50,7 @@ class DownloadService {
           quality: 25,
           encoding: "base64",
           selector: "div",
-          puppeteerArgs: { args: ["--no-sandbox", "--disable-setuid-sandbox"] },
+          puppeteerArgs: { args: ["--no-sandbox", "--disable-setuid-sandbox","--disable-extensions"] },
         });
         const dimensionsa = sizeOf(Buffer.from(imagea, "base64"));
         const imageb = await nodeHtmlToImage({
@@ -59,7 +59,7 @@ class DownloadService {
           quality: 25,
           encoding: "base64",
           selector: "div",
-          puppeteerArgs: { args: ["--no-sandbox", "--disable-setuid-sandbox"] },
+          puppeteerArgs: { args: ["--no-sandbox", "--disable-setuid-sandbox","--disable-extensions"] },
         });
         const dimensionsb = sizeOf(Buffer.from(imageb, "base64"));
         const imagec = await nodeHtmlToImage({
@@ -68,7 +68,7 @@ class DownloadService {
           quality: 25,
           encoding: "base64",
           selector: "div",
-          puppeteerArgs: { args: ["--no-sandbox", "--disable-setuid-sandbox"] },
+          puppeteerArgs: { args: ["--no-sandbox", "--disable-setuid-sandbox","--disable-extensions"] },
         });
         const dimensionsc = sizeOf(Buffer.from(imagec, "base64"));
         const imaged = await nodeHtmlToImage({
@@ -77,7 +77,7 @@ class DownloadService {
           quality: 25,
           encoding: "base64",
           selector: "div",
-          puppeteerArgs: { args: ["--no-sandbox", "--disable-setuid-sandbox"] },
+          puppeteerArgs: { args: ["--no-sandbox", "--disable-setuid-sandbox","--disable-extensions"] },
         });
         const dimensionsd = sizeOf(Buffer.from(imaged, "base64"));
         const imagee = await nodeHtmlToImage({
@@ -86,7 +86,7 @@ class DownloadService {
           quality: 25,
           encoding: "base64",
           selector: "div",
-          puppeteerArgs: { args: ["--no-sandbox", "--disable-setuid-sandbox"] },
+          puppeteerArgs: { args: ["--no-sandbox", "--disable-setuid-sandbox","--disable-extensions"] },
         });
         const dimensionse = sizeOf(Buffer.from(imagee, "base64"));
 

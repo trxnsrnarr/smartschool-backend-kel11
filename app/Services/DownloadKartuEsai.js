@@ -39,7 +39,7 @@ class DownloadService {
           quality: 25,
           encoding: "base64",
           selector: "div",
-          puppeteerArgs: { args: ["--no-sandbox", "--disable-setuid-sandbox"] },
+          puppeteerArgs: { args: ["--no-sandbox", "--disable-setuid-sandbox","--disable-extensions"] },
         });
         const dimensions = sizeOf(Buffer.from(imageEsai, "base64"));
         const imageEsay = workbook.addImage({
