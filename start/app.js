@@ -57,4 +57,7 @@ const aliases = {};
 */
 const commands = [];
 
-module.exports = { providers, aceProviders, aliases, commands };
+module.exports = {http: {
+  // Konfigurasi HTTP server
+  timeout: 600000, // timeout dalam milidetik (misalnya, 60 detik)
+}, providers, aceProviders, aliases, commands };
