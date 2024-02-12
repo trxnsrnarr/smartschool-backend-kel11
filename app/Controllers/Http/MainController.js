@@ -16701,7 +16701,7 @@ class MainController {
           `${jadwalUjian.toJSON().rombel.nama}`
         );
         worksheet.addConditionalFormatting({
-          ref: "A10:N10",
+          ref: "A10:P10",
           rules: [
             {
               type: "expression",
@@ -16761,9 +16761,11 @@ class MainController {
                         nilaiPgKompleks: 0,
                         nilaiUraian: 0,
                         nilaiMenjodohkan: 0,
+                        nilaiIsian:0,
                         nilaiTotal: 0,
                         benarPg: 0,
                         benarEsai: 0,
+                        benarIsian:0,
                         benarPgKompleks: 0,
                         benarUraian: 0,
                         benarMenjodohkan: 0,
@@ -16789,6 +16791,12 @@ class MainController {
                             analisisTotal[d.soal.kd] = analisisTotal[d.soal.kd]
                               ? analisisTotal[d.soal.kd] + 1
                               : 1;
+                          }else if (d.soal.bentuk == "isian") {
+                            if (d.jawaban_isian == d.soal.jawaban_benar) {
+                              metaHasil.nilaiIsian = metaHasil.nilaiIsian + d.soal.nilai_soal;
+                              metaHasil.benar = metaHasil.benar + 1;
+                              metaHasil.benarIsian = metaHasil.benarIsian +1; 
+                            }
                           } else if (d.soal.bentuk == "esai") {
                             if (JSON.parse(d.jawaban_rubrik_esai)) {
                               if (JSON.parse(d.jawaban_rubrik_esai).length) {
@@ -16891,6 +16899,8 @@ class MainController {
                         "Nama",
                         "Nilai PG",
                         "Nilai Esai",
+
+                        "Nilai Isian",
                         "Nilai PG Kompleks",
                         "Nilai Uraian",
                         "Nilai Menjodohkan",
@@ -16898,6 +16908,7 @@ class MainController {
 
                         "Total Benar PG",
                         "Total Benar Esai",
+                        "Total Benar Isian",
                         "Total Benar PG Kompleks",
                         "Total Benar Uraian",
                         "Total Benar Menjodohkan",
@@ -16909,6 +16920,7 @@ class MainController {
                         { key: "user" },
                         { key: "nilai_pg" },
                         { key: "nilai_esai" },
+                        { key: "nilai_isian" },
                         { key: "nilai_pg_kompleks" },
                         { key: "nilai_uraian" },
                         { key: "nilai_menjodohkan" },
@@ -16916,6 +16928,7 @@ class MainController {
 
                         { key: "benar_pg" },
                         { key: "benar_esai" },
+                        { key: "benar_isian" },
                         { key: "benar_pg_kompleks" },
                         { key: "benar_uraian" },
                         { key: "benar_menjodohkan" },
@@ -16923,7 +16936,7 @@ class MainController {
                         { key: "keluar_tab" },
                       ];
                       worksheet.addConditionalFormatting({
-                        ref: `B${(idx + 1) * 1 + 10}:N${(idx + 1) * 1 + 10}`,
+                        ref: `B${(idx + 1) * 1 + 10}:P${(idx + 1) * 1 + 10}`,
                         rules: [
                           {
                             type: "expression",
@@ -16981,12 +16994,15 @@ class MainController {
                         user: d.nama,
                         nilai_pg: metaHasil.nilaiPg,
                         nilai_esai: metaHasil.nilaiEsai,
+
+                        nilai_isian: metaHasil.nilaiIsian,
                         nilai_pg_kompleks: metaHasil.nilaiPgKompleks,
                         nilai_uraian: metaHasil.nilaiUraian,
                         nilai_menjodohkan: metaHasil.nilaiMenjodohkan,
                         nilai_total: metaHasil.nilaiTotal,
                         benar_pg: metaHasil.benarPg,
                         benar_esai: metaHasil.benarEsai,
+                        benar_isian: metaHasil.benarIsian,
                         benar_pg_kompleks: metaHasil.benarPgKompleks,
                         benar_uraian: metaHasil.benarUraian,
                         benar_menjodohkan: metaHasil.benarMenjodohkan,
@@ -17001,6 +17017,7 @@ class MainController {
                   "Nama",
                   "Nilai PG",
                   "Nilai Esai",
+                  "Nilai Isian",
                   "Nilai PG Kompleks",
                   "Nilai Uraian",
                   "Nilai Menjodohkan",
@@ -17008,6 +17025,7 @@ class MainController {
 
                   "Total Benar PG",
                   "Total Benar Esai",
+                  "Total Benar Isian",
                   "Total Benar PG Kompleks",
                   "Total Benar Uraian",
                   "Total Benar Menjodohkan",
@@ -17019,6 +17037,7 @@ class MainController {
                   { key: "user" },
                   { key: "nilai_pg" },
                   { key: "nilai_esai" },
+                  { key: "nilai_isian" },
                   { key: "nilai_pg_kompleks" },
                   { key: "nilai_uraian" },
                   { key: "nilai_menjodohkan" },
@@ -17026,6 +17045,7 @@ class MainController {
 
                   { key: "benar_pg" },
                   { key: "benar_esai" },
+                  { key: "benar_isian" },
                   { key: "benar_pg_kompleks" },
                   { key: "benar_uraian" },
                   { key: "benar_menjodohkan" },
@@ -17038,12 +17058,15 @@ class MainController {
                   user: d.nama,
                   nilai_pg: 0,
                   nilai_esai: 0,
+
+                  nilai_isian: 0,
                   nilai_pg_kompleks: 0,
                   nilai_uraian: 0,
                   nilai_menjodohkan: 0,
                   nilai_total: 0,
                   benar_pg: 0,
                   benar_esai: 0,
+                  benar_isian: 0,
                   benar_pg_kompleks: 0,
                   benar_uraian: 0,
                   benar_menjodohkan: 0,
@@ -17051,7 +17074,7 @@ class MainController {
                   keluar_tab: 0,
                 });
                 worksheet.addConditionalFormatting({
-                  ref: `B${(idx + 1) * 1 + 10}:N${(idx + 1) * 1 + 10}`,
+                  ref: `B${(idx + 1) * 1 + 10}:P${(idx + 1) * 1 + 10}`,
                   rules: [
                     {
                       type: "expression",
