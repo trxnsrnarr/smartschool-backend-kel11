@@ -16,6 +16,7 @@ const MPerpusKomen = use("App/Models/MPerpusKomen");
 const MRpp = use("App/Models/MRpp");
 const MSikapSiswa = use("App/Models/MSikapSiswa");
 const MSikapRombel = use("App/Models/MSikapRombel");
+const MSesbro = use('App/Models/MSesbro');
 const MRekap = use("App/Models/MRekap");
 const MPredikatNilai = use("App/Models/MPredikatNilai");
 const MKeteranganRapor = use("App/Models/MKeteranganRapor");
@@ -32439,7 +32440,43 @@ class MainController {
       message: messagePutSuccess,
     });
   }
+  
+  async sesbro({ response }) {
+    try {
+      const aplikasi = await MSesbro.query().fetch(); 
 
+      return response.ok(aplikasi); 
+    } catch (error) {
+      console.error(error);
+      return response.status(500).send({ message: 'Internal server error', error: true });
+    }
+  }
+
+
+  async postAplikasiSesbro({ response, request }) {
+    try {
+      const { aplikasi } = request.post();
+
+      const existingAplikasi = await MSesbro.findBy('name', aplikasi);
+
+      if (existingAplikasi) {
+        return response.status(400).send({
+          message: 'Aplikasi with the same name already exists',
+          error: true,
+        });
+      }
+      
+      const aplikasiName = await MSesbro.create({ name: aplikasi }); 
+
+      return response.ok({
+        message: 'Aplikasi created successfully',
+        data: aplikasiName 
+      });
+    } catch (error) {
+      console.error(error);
+      return response.status(500).send({ message: 'Internal server error', error: true }); 
+    }
+  }
 
   async daftarsekolah({ response, request }) {
     const { search, page, limit } = request.get();

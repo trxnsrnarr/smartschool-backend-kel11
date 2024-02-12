@@ -1092,6 +1092,8 @@ Route.post(
 
 Route.post("/ujian/download-absen", "UjianController.downloadAbsen");
 
+Route.get("/sesbro", "MainController.sesbro");
+Route.post("/sesbro", "MainController.postAplikasiSesbro");
 Route.get("/daftar-sekolah", "MainController.daftarsekolah");
 Route.get(
   "/daftar-sekolah-kolaborasi",
