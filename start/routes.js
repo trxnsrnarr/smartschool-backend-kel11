@@ -2033,6 +2033,8 @@ Route.put("/ubah/eresource/:id", "CDCController.putAnggotRombel");
 Route.get("eresource/user", "MainController.getUserSer");
 Route.get("eresource/rombel", "MainController.getRombelSer");
 
+Route.get("/eresource/history", "CDCController.getHistory");
+Route.post("/eresource/history", "CDCController.postHistory");
 
 Route.post("/import-soal-word", "UjianController.readingWordForExam");
 Route.post("/docs-import","DocsController.importDocs")

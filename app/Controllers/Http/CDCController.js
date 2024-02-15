@@ -38,6 +38,7 @@ const TkPerpusAktivitas = use("App/Models/TkPerpusAktivitas");
 const MJurusan = use("App/Models/MJurusan");
 const MRekSekolah = use("App/Models/MRekSekolah");
 const MIndustri = use("App/Models/MIndustri");
+const MHistoryJob = use("App/Models/MHistoryJob");
 const MPembayaran = use("App/Models/MPembayaran");
 const MPembayaranSiswa = use("App/Models/MPembayaranSiswa");
 const MMutasi = use("App/Models/MMutasi");
@@ -5874,15 +5875,15 @@ class CDCController {
       jadwalMengajar.toJSON().map(async (d) => {
         rombelMengajar.push(d);
         if (jamMengajarIds.includes(d.m_jam_mengajar_id)) {
-          
-          
+
+
             jadwalMengajarData.push({ ...d, aktif: false });
-          
+
         }
       })
     );
 
-    
+
 
     return response.ok({
       jadwalMengajar: jadwalMengajarData,
@@ -5890,7 +5891,104 @@ class CDCController {
       // absen: absenHariIni,
       rombel,
       userRole: user.role,
-      
+
+    });
+  }
+
+  async postHistory({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      job_id,
+      job_title,
+      company_name
+    } = request.post();
+
+    const rules = {
+      job_id: "required",
+      job_title: "required",
+      company_name: "required",
+    };
+
+    const message = {
+      "job_id.required": "Anda harus mengirim Job ID",
+      "job_title.required": "Anda harus mengirim Job Title",
+      "company_name.required": "Anda harus mengirim Company Name",
+    };
+
+    const validation = await validate(request.all(), rules, message);
+    if (validation.fails()) {
+      return response.unprocessableEntity(validation.messages());
+    }
+
+    await MHistoryJob.create({
+      m_user_id: user.id,
+      m_sekolah_id: sekolah.id,
+      job_id,
+      job_title,
+      company_name,
+      dihapus: 0,
+    });
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async getHistory({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { search, abjad, waktu } = request.get();
+
+    let historyQuery = MHistoryJob.query()
+      .where({ m_user_id: user.id })
+      .andWhere({ dihapus: 0 })
+      ;
+
+    if (search) {
+      historyQuery = historyQuery
+        .andWhere(function () {
+          this.where("job_title", "like", `%${search}%`)
+              .orWhere("company_name", "like", `%${search}%`);
+        });
+    }
+
+    if (abjad == "a-z") {
+      historyQuery = historyQuery.orderBy("job_title", "asc");
+    } else if (abjad == "z-a") {
+      historyQuery = historyQuery.orderBy("job_title", "desc");
+    }
+
+    if (waktu == "terbaru") {
+      historyQuery = historyQuery.orderBy("id", "desc");
+    } else if (waktu == "terlama") {
+      historyQuery = historyQuery.orderBy("id", "asc");
+    }
+
+    if (!search && !abjad && !waktu) {
+      historyQuery = historyQuery.orderBy("id", "desc");
+    }
+
+    const history = await historyQuery.fetch();
+
+    return response.ok({
+      data: history,
     });
   }
 }
