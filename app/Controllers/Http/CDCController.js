@@ -5985,7 +5985,7 @@ class CDCController {
       historyQuery = historyQuery.orderBy("id", "desc");
     }
 
-    const history = await historyQuery.fetch();
+    const history = await historyQuery.paginate();
 
     return response.ok({
       data: history,
