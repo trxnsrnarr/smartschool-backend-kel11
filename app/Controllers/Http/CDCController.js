@@ -5954,12 +5954,11 @@ class CDCController {
 
     const user = await auth.getUser();
 
-    let { search, abjad, waktu } = request.get();
+    let { search, abjad, waktu, page } = request.get();
 
     let historyQuery = MHistoryJob.query()
       .where({ m_user_id: user.id })
-      .andWhere({ dihapus: 0 })
-      ;
+      .andWhere({ dihapus: 0 });
 
     if (search) {
       historyQuery = historyQuery
@@ -5985,7 +5984,7 @@ class CDCController {
       historyQuery = historyQuery.orderBy("id", "desc");
     }
 
-    const history = await historyQuery.paginate();
+    const history = await historyQuery.paginate(page, 25);
 
     return response.ok({
       data: history,
