@@ -38,6 +38,7 @@ const TkPerpusAktivitas = use("App/Models/TkPerpusAktivitas");
 const MJurusan = use("App/Models/MJurusan");
 const MRekSekolah = use("App/Models/MRekSekolah");
 const MIndustri = use("App/Models/MIndustri");
+const MLowongan = use("App/Models/MLowongan");
 const MHistoryJob = use("App/Models/MHistoryJob");
 const MPembayaran = use("App/Models/MPembayaran");
 const MPembayaranSiswa = use("App/Models/MPembayaranSiswa");
@@ -6074,5 +6075,197 @@ class CDCController {
     });
   }
 
+  async getLowongan({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { search, page } = request.get();
+
+    let lowongan = MLowongan.query()
+      .where({ m_user_id: user.id })
+      .andWhere({ dihapus: 0 });
+
+    if (search) {
+      lowongan = lowongan.andWhere("posisi", "like", `%${search}%`)
+    }
+
+    const data = await lowongan.paginate(page, 25);
+
+    return response.ok({
+      data
+    });
+  }
+
+  async postLowongan({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      posisi,
+      deadline,
+      deskripsi,
+      bidang,
+      jenis,
+      tipe,
+      jenis_kelamin,
+      gaji_min,
+      gaji_max,
+      jumlah,
+      persyaratan_khusus,
+      pendidikan,
+      umur_min,
+      umur_max,
+      status,
+      minimal_pengalaman,
+      kondisi_fisik,
+      keterampilan,
+    } = request.post()
+
+    await MLowongan.create({
+      posisi,
+      deadline,
+      deskripsi,
+      bidang,
+      jenis,
+      tipe,
+      jenis_kelamin,
+      gaji_min,
+      gaji_max,
+      jumlah,
+      persyaratan_khusus,
+      pendidikan,
+      umur_min,
+      umur_max,
+      status,
+      minimal_pengalaman,
+      kondisi_fisik,
+      keterampilan,
+      m_user_id: user.id,
+    })
+
+    return response.ok({
+      message: messagePostSuccess,
+    });
+  }
+
+  async detailLowongan({ response, request, auth, params: { id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const lowongan = await MLowongan.query().where({ id }).first();
+
+    if (!lowongan) {
+      return response.notFound({ message: messageNotFound });
+    }
+
+    return response.ok(lowongan)
+  }
+
+  async putLowongan({ response, request, auth, params: { id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const {
+      posisi,
+      deadline,
+      deskripsi,
+      bidang,
+      jenis,
+      tipe,
+      jenis_kelamin,
+      gaji_min,
+      gaji_max,
+      jumlah,
+      persyaratan_khusus,
+      pendidikan,
+      umur_min,
+      umur_max,
+      status,
+      minimal_pengalaman,
+      kondisi_fisik,
+      keterampilan,
+    } = request.post()
+
+    const lowongan = await MLowongan.query().where({ id }).first();
+
+    if (!lowongan) {
+      return response.notFound({ message: messageNotFound });
+    }
+
+    await MLowongan.query().where({ id }).update({
+      posisi,
+      deadline,
+      deskripsi,
+      bidang,
+      jenis,
+      tipe,
+      jenis_kelamin,
+      gaji_min,
+      gaji_max,
+      jumlah,
+      persyaratan_khusus,
+      pendidikan,
+      umur_min,
+      umur_max,
+      status,
+      minimal_pengalaman,
+      kondisi_fisik,
+      keterampilan,
+      m_user_id: user.id,
+    })
+
+    const data = await MLowongan.query().where({ id }).first();
+
+    return response.ok({
+      message: messagePutSuccess,
+      data
+    })
+  }
+
+  async deleteLowongan({ response, request, auth, params: { id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    await MLowongan.query().where({ id }).update({
+      dihapus: 1
+    })
+
+    return response.ok({ message: messageDeleteSuccess })
+  }
 }
 module.exports = CDCController;

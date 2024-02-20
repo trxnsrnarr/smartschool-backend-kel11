@@ -2038,6 +2038,12 @@ Route.post("/eresource/history", "CDCController.postHistory");
 Route.get("/eresource/history/:id", "CDCController.getHistoryManajemen");
 Route.get("/eresource/history-user", "CDCController.getUserHistory");
 
+Route.get("/eresource/lowongan", "CDCController.getLowongan");
+Route.post("/eresource/lowongan", "CDCController.postLowongan");
+Route.get("/eresource/lowongan/:id", "CDCController.detailLowongan");
+Route.put("/eresource/lowongan/:id", "CDCController.putLowongan");
+Route.delete("/eresource/lowongan/:id", "CDCController.deleteLowongan");
+
 Route.post("/import-soal-word", "UjianController.readingWordForExam");
 Route.post("/docs-import","DocsController.importDocs")
 
