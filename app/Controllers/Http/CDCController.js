@@ -5962,7 +5962,7 @@ class CDCController {
 
     if (search) {
       historyQuery = historyQuery
-        .andWhere(() => {
+        .andWhere(function () {
           this.where("job_title", "like", `%${search}%`)
               .orWhere("company_name", "like", `%${search}%`);
         });
@@ -6010,7 +6010,7 @@ class CDCController {
 
     if (search) {
       historyQuery = historyQuery
-        .andWhere(() => {
+        .andWhere(function () {
           this.where("job_title", "like", `%${search}%`)
               .orWhere("company_name", "like", `%${search}%`);
         });
