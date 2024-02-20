@@ -2035,6 +2035,8 @@ Route.get("eresource/rombel", "MainController.getRombelSer");
 
 Route.get("/eresource/history", "CDCController.getHistory");
 Route.post("/eresource/history", "CDCController.postHistory");
+Route.get("/eresource/history/:id", "CDCController.getHistoryManajemen");
+Route.get("/eresource/history-user", "CDCController.getUserHistory");
 
 Route.post("/import-soal-word", "UjianController.readingWordForExam");
 Route.post("/docs-import","DocsController.importDocs")

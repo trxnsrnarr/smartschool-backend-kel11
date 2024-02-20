@@ -5931,7 +5931,7 @@ class CDCController {
 
     await MHistoryJob.create({
       m_user_id: user.id,
-      m_sekolah_id: sekolah.id,
+      m_sekolah_id: user.m_sekolah_id,
       job_id,
       job_title,
       company_name,
@@ -5962,7 +5962,7 @@ class CDCController {
 
     if (search) {
       historyQuery = historyQuery
-        .andWhere(function () {
+        .andWhere(() => {
           this.where("job_title", "like", `%${search}%`)
               .orWhere("company_name", "like", `%${search}%`);
         });
@@ -5990,5 +5990,89 @@ class CDCController {
       data: history,
     });
   }
+
+  async getHistoryManajemen({ response, request, auth, params: { id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { search, abjad, waktu, page } = request.get();
+
+    let historyQuery = MHistoryJob.query()
+      .where({ m_user_id: id })
+      .andWhere({ dihapus: 0 });
+
+    if (search) {
+      historyQuery = historyQuery
+        .andWhere(() => {
+          this.where("job_title", "like", `%${search}%`)
+              .orWhere("company_name", "like", `%${search}%`);
+        });
+    }
+
+    if (abjad == "a-z") {
+      historyQuery = historyQuery.orderBy("job_title", "asc");
+    } else if (abjad == "z-a") {
+      historyQuery = historyQuery.orderBy("job_title", "desc");
+    }
+
+    if (waktu == "terbaru") {
+      historyQuery = historyQuery.orderBy("id", "desc");
+    } else if (waktu == "terlama") {
+      historyQuery = historyQuery.orderBy("id", "asc");
+    }
+
+    if (!search && !abjad && !waktu) {
+      historyQuery = historyQuery.orderBy("id", "desc");
+    }
+
+    const history = await historyQuery.paginate(page, 25);
+
+    return response.ok({
+      data: history,
+    });
+  }
+
+  async getUserHistory({ response, request, auth, params: { id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+        return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { search, page } = request.get();
+
+    let query = Database.connection()
+        .table("m_user")
+        .select('id', 'nama', 'username', 'whatsapp', 'email', 'm_sekolah_id')
+        .whereIn('id', function() {
+          this.select('m_user_id')
+            .from('m_history_jobs')
+            .distinct()
+            .where({ m_sekolah_id: sekolah.id })
+            .andWhere({ dihapus: 0 });
+        });
+
+    if (search) {
+      query = query.where('nama', 'like', `%${search}%`);
+    }
+
+    const siswa = await query.paginate(page, 25);
+
+    return response.ok({
+      data: siswa,
+    });
+  }
+
 }
 module.exports = CDCController;
