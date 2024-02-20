@@ -6039,13 +6039,13 @@ class CDCController {
     });
   }
 
-  async getUserHistory({ response, request, auth, params: { id } }) {
+  async getUserHistory({ response, request, auth}) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
 
     if (sekolah == "404") {
-        return response.notFound({ message: "Sekolah belum terdaftar" });
+      return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
     const user = await auth.getUser();
