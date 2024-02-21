@@ -2048,6 +2048,7 @@ Route.put("/eresource/lowongan/:id", "CDCController.putLowongan");
 Route.delete("/eresource/lowongan/:id", "CDCController.deleteLowongan");
 
 Route.get("/eresource/perusahaan/:id", "CDCController.detailPerusahaan");
+Route.get("/eresource/perusahaan/:id/lowongan", "CDCController.getPerusahaanLowongan");
 
 Route.post("/import-soal-word", "UjianController.readingWordForExam");
 Route.post("/docs-import","DocsController.importDocs")

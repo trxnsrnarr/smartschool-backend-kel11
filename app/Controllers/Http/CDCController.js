@@ -6181,6 +6181,7 @@ class CDCController {
       minimal_pengalaman,
       kondisi_fisik,
       keterampilan,
+      alamat
     } = request.post()
 
     await MLowongan.create({
@@ -6202,6 +6203,7 @@ class CDCController {
       minimal_pengalaman,
       kondisi_fisik,
       keterampilan,
+      alamat,
       m_user_id: user.id,
     })
 
@@ -6260,6 +6262,7 @@ class CDCController {
       minimal_pengalaman,
       kondisi_fisik,
       keterampilan,
+      alamat
     } = request.post()
 
     const lowongan = await MLowongan.query().where({ id }).first();
@@ -6287,6 +6290,7 @@ class CDCController {
       minimal_pengalaman,
       kondisi_fisik,
       keterampilan,
+      alamat,
       m_user_id: user.id,
     })
 
@@ -6325,13 +6329,37 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const perusahaan = await User.query().where({ id }).with("profil").with("lowongan").first();
+    const perusahaan = await User.query().where({ id }).with("profil").first();
 
     if (!perusahaan) {
       return response.notFound({ message: messageNotFound });
     }
 
     return response.ok(perusahaan)
+  }
+
+  async getPerusahaanLowongan({ response, request, params: { id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    let { search, page } = request.get();
+
+    let lowongan = MLowongan.query().where({ m_user_id: id }).andWhere({ dihapus: 0 }).with("user").with("profil");
+
+    if (search) {
+      lowongan = lowongan.andWhere("posisi", "like", `%${search}%`)
+    }
+
+    const data = await lowongan.paginate(page, 10);
+
+    return response.ok({
+      data
+    });
   }
 }
 module.exports = CDCController;
