@@ -5955,7 +5955,7 @@ class CDCController {
 
     const user = await auth.getUser();
 
-    let { search, abjad, waktu, page } = request.get();
+    let { search, abjad, waktu, page, limit = 25 } = request.get();
 
     let historyQuery = MHistoryJob.query()
       .where({ m_user_id: user.id })
@@ -5985,7 +5985,7 @@ class CDCController {
       historyQuery = historyQuery.orderBy("id", "desc");
     }
 
-    const history = await historyQuery.paginate(page, 25);
+    const history = await historyQuery.paginate(page, limit);
 
     return response.ok({
       data: history,
@@ -6003,7 +6003,7 @@ class CDCController {
 
     const user = await auth.getUser();
 
-    let { search, abjad, waktu, page } = request.get();
+    let { search, abjad, waktu, page, limit = 25 } = request.get();
 
     let historyQuery = MHistoryJob.query()
       .where({ m_user_id: id })
@@ -6033,7 +6033,7 @@ class CDCController {
       historyQuery = historyQuery.orderBy("id", "desc");
     }
 
-    const history = await historyQuery.paginate(page, 25);
+    const history = await historyQuery.paginate(page, limit);
 
     return response.ok({
       data: history,
@@ -6051,7 +6051,7 @@ class CDCController {
 
     const user = await auth.getUser();
 
-    let { search, page } = request.get();
+    let { search, page, limit = 25 } = request.get();
 
     let query = Database.connection()
         .table("m_user")
@@ -6068,7 +6068,7 @@ class CDCController {
       query = query.where('nama', 'like', `%${search}%`);
     }
 
-    const siswa = await query.paginate(page, 25);
+    const siswa = await query.paginate(page, limit);
 
     return response.ok({
       data: siswa,
@@ -6084,7 +6084,7 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { search, page, jenis } = request.get();
+    let { search, page, limit = 25, jenis } = request.get();
 
     let lowongan = MLowongan.query().where({ dihapus: 0 }).with("user").with("profil");
 
@@ -6096,7 +6096,7 @@ class CDCController {
       lowongan = lowongan.andWhere("jenis", "like", `%${search}%`)
     }
 
-    const data = await lowongan.paginate(page, 25);
+    const data = await lowongan.paginate(page, limit);
 
     return response.ok({
       data
@@ -6132,7 +6132,7 @@ class CDCController {
 
     const user = await auth.getUser();
 
-    let { search, page } = request.get();
+    let { search, page, limit = 25 } = request.get();
 
     let lowongan = MLowongan.query()
       .where({ m_user_id: user.id })
@@ -6144,7 +6144,7 @@ class CDCController {
       lowongan = lowongan.andWhere("posisi", "like", `%${search}%`)
     }
 
-    const data = await lowongan.paginate(page, 25);
+    const data = await lowongan.paginate(page, limit);
 
     return response.ok({
       data
@@ -6347,7 +6347,7 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { search, page } = request.get();
+    let { search, page, limit = 10 } = request.get();
 
     let lowongan = MLowongan.query().where({ m_user_id: id }).andWhere({ dihapus: 0 }).with("user").with("profil");
 
@@ -6355,7 +6355,7 @@ class CDCController {
       lowongan = lowongan.andWhere("posisi", "like", `%${search}%`)
     }
 
-    const data = await lowongan.paginate(page, 10);
+    const data = await lowongan.paginate(page, limit);
 
     return response.ok({
       data
