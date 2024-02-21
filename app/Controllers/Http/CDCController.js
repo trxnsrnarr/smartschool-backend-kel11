@@ -6075,6 +6075,36 @@ class CDCController {
     });
   }
 
+  async getLowonganV2({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    let { search, page, jenis } = request.get();
+
+    let lowongan = MLowongan.query().where({ dihapus: 0 }).with("user").with("profil");
+
+    if (search) {
+      lowongan = lowongan.andWhere("posisi", "like", `%${search}%`)
+    }
+
+    if (jenis) {
+      lowongan = lowongan.andWhere("jenis", "like", `%${search}%`)
+    }
+
+    const data = await lowongan.paginate(page, 25);
+
+    return response.ok({
+      data
+    });
+  }
+
   async getLowongan({ response, request, auth }) {
     const domain = request.headers().origin;
 
@@ -6090,7 +6120,9 @@ class CDCController {
 
     let lowongan = MLowongan.query()
       .where({ m_user_id: user.id })
-      .andWhere({ dihapus: 0 });
+      .andWhere({ dihapus: 0 })
+      .with("user")
+      .with("profil");
 
     if (search) {
       lowongan = lowongan.andWhere("posisi", "like", `%${search}%`)
@@ -6173,7 +6205,7 @@ class CDCController {
 
     const user = await auth.getUser();
 
-    const lowongan = await MLowongan.query().where({ id }).first();
+    const lowongan = await MLowongan.query().where({ id }).with("user").with("profil").first();
 
     if (!lowongan) {
       return response.notFound({ message: messageNotFound });
