@@ -6315,5 +6315,23 @@ class CDCController {
 
     return response.ok({ message: messageDeleteSuccess })
   }
+
+  async detailPerusahaan({ response, request, params: { id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const perusahaan = await User.query().where({ id }).with("profil").with("lowongan").first();
+
+    if (!perusahaan) {
+      return response.notFound({ message: messageNotFound });
+    }
+
+    return response.ok(perusahaan)
+  }
 }
 module.exports = CDCController;

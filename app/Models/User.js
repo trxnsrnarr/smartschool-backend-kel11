@@ -98,6 +98,9 @@ class User extends Model {
   profil() {
     return this.hasOne("App/Models/MProfilUser", "id", "m_user_id");
   }
+  lowongan() {
+    return this.hasMany("App/Models/MLowongan", "id", "m_user_id");
+  }
   sikap() {
     return this.hasOne("App/Models/MSikapSiswa", "id", "m_user_id");
   }
