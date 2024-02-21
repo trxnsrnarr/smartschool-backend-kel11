@@ -6075,7 +6075,7 @@ class CDCController {
     });
   }
 
-  async getLowonganV2({ response, request, auth }) {
+  async getLowonganV2({ response, request }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -6083,8 +6083,6 @@ class CDCController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
-
-    const user = await auth.getUser();
 
     let { search, page, jenis } = request.get();
 
@@ -6103,6 +6101,24 @@ class CDCController {
     return response.ok({
       data
     });
+  }
+
+  async detailLowonganV2({ response, request, params: { id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const lowongan = await MLowongan.query().where({ id }).with("user").with("profil").first();
+
+    if (!lowongan) {
+      return response.notFound({ message: messageNotFound });
+    }
+
+    return response.ok(lowongan)
   }
 
   async getLowongan({ response, request, auth }) {

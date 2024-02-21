@@ -2038,7 +2038,8 @@ Route.post("/eresource/history", "CDCController.postHistory");
 Route.get("/eresource/history/:id", "CDCController.getHistoryManajemen");
 Route.get("/eresource/history-user", "CDCController.getUserHistory");
 
-Route.get("/eresource/lowongan/v2", "CDCController.getLowonganV2");
+Route.get("/eresource/lowongan-v2", "CDCController.getLowonganV2");
+Route.get("/eresource/lowongan-v2/:id", "CDCController.detailLowonganV2");
 
 Route.get("/eresource/lowongan", "CDCController.getLowongan");
 Route.post("/eresource/lowongan", "CDCController.postLowongan");
