@@ -6101,7 +6101,7 @@ class CDCController {
     }
 
     if (job_function) {
-      lowongan = lowongan.andWhere({ bidang_keahlian: jobFunction })
+      lowongan = lowongan.andWhere({ bidang_keahlian: job_function })
     }
 
     if (job_type) {
