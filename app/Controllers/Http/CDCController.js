@@ -6084,7 +6084,7 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { search, page, limit = 25, region, industries, jobFunction, jobType } = request.get();
+    let { search, page, limit = 25, region, industries, job_function, job_type } = request.get();
 
     let lowongan = MLowongan.query().where({ dihapus: 0 }).with("user").with("profil");
 
@@ -6100,18 +6100,18 @@ class CDCController {
       lowongan = lowongan.andWhere({ industri: industries })
     }
 
-    if (jobFunction) {
+    if (job_function) {
       lowongan = lowongan.andWhere({ bidang_keahlian: jobFunction })
     }
 
-    if (jobType) {
-      if (jobType == "full time") {
+    if (job_type) {
+      if (job_type == "full time") {
         lowongan = lowongan.andWhere({ jenis: "full time" })
-      } else if (jobType == "part time") {
+      } else if (job_type == "part time") {
         lowongan = lowongan.andWhere({ jenis: "part time" })
-      } else if (jobType == "contract") {
+      } else if (job_type == "contract") {
         lowongan = lowongan.andWhere({ jenis: "contract" })
-      } else if (jobType == "internship") {
+      } else if (job_type == "internship") {
         lowongan = lowongan.andWhere({ jenis: "internship" })
       }
     }
