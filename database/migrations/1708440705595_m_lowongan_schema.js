@@ -10,7 +10,6 @@ class MLowonganSchema extends Schema {
       table.string("posisi")
       table.datetime("deadline")
       table.text("deskripsi")
-      table.string("bidang")
       table.string("jenis")
       table.string("tipe")
       table.string("jenis_kelamin")
