@@ -4952,7 +4952,6 @@ class MainController {
       dihapus: 0,
     });
 
-    if (alamat && asal_sekolah)
       await MProfilUser.create({
         m_user_id: res.id,
         alamat: alamat,
@@ -13006,7 +13005,7 @@ class MainController {
         user.wa_real,
         `Halo ${user.nama}, ada balasan komentar dari Guru ${
           timelineTk.toJSON().timeline.user.nama
-        } dengan komentar ${komen}. Silahkan klik tautan berikut untuk membalasnya! Semangat!! 
+        } dengan komentar ${komen}. Silahkan klik tautan berikut untuk membalasnya! Semangat!!
         ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${
           timelineTk.m_timeline_id
         }?hal=tugas`
@@ -13026,7 +13025,7 @@ class MainController {
         user.wa_real,
         `Halo ${user.nama}, ada balasan komentar dari Siswa ${
           timelineTk.toJSON().user.nama
-        } dengan komentar ${komen}. Silahkan klik tautan berikut untuk membalasnya! Semangat!! 
+        } dengan komentar ${komen}. Silahkan klik tautan berikut untuk membalasnya! Semangat!!
         ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${
           timelineTk.m_timeline_id
         }?hal=tugas`
@@ -16796,7 +16795,7 @@ class MainController {
                             if (d.jawaban_isian == d.soal.jawaban_benar) {
                               metaHasil.nilaiIsian = metaHasil.nilaiIsian + d.soal.nilai_soal;
                               metaHasil.benar = metaHasil.benar + 1;
-                              metaHasil.benarIsian = metaHasil.benarIsian +1; 
+                              metaHasil.benarIsian = metaHasil.benarIsian +1;
                             }
                           } else if (d.soal.bentuk == "esai") {
                             if (JSON.parse(d.jawaban_rubrik_esai)) {
@@ -32446,7 +32445,7 @@ class MainController {
     return kartusoalFile;
   }
 
-  
+
   async putKoordinat({ response, request, params: { sekolah_id } }) {
     const { lat, long } = request.post();
 
@@ -32463,12 +32462,12 @@ class MainController {
       message: messagePutSuccess,
     });
   }
-  
+
   async sesbro({ response }) {
     try {
-      const aplikasi = await MSesbro.query().fetch(); 
+      const aplikasi = await MSesbro.query().fetch();
 
-      return response.ok(aplikasi); 
+      return response.ok(aplikasi);
     } catch (error) {
       console.error(error);
       return response.status(500).send({ message: 'Internal server error', error: true });
@@ -32488,16 +32487,16 @@ class MainController {
           error: true,
         });
       }
-      
-      const aplikasiName = await MSesbro.create({ name: aplikasi }); 
+
+      const aplikasiName = await MSesbro.create({ name: aplikasi });
 
       return response.ok({
         message: 'Aplikasi created successfully',
-        data: aplikasiName 
+        data: aplikasiName
       });
     } catch (error) {
       console.error(error);
-      return response.status(500).send({ message: 'Internal server error', error: true }); 
+      return response.status(500).send({ message: 'Internal server error', error: true });
     }
   }
 
