@@ -4906,6 +4906,7 @@ class MainController {
 
     const {
       nama,
+      email,
       whatsapp,
       password,
       alamat,
@@ -4943,6 +4944,7 @@ class MainController {
 
     const res = await User.create({
       nama,
+      email,
       whatsapp,
       password: password,
       role: "admin",

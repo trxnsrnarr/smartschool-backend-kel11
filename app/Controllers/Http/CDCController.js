@@ -6086,7 +6086,7 @@ class CDCController {
 
     let { search, page, limit = 25, region, industries, job_functions, job_type } = request.get();
 
-    let lowongan = MLowongan.query().where({ dihapus: 0 }).with("user").with("profil");
+    let lowongan = MLowongan.query().where({ dihapus: 0 }).with("user").with("profil").orderBy("id", "desc");
 
     if (search) {
       lowongan = lowongan.andWhere("posisi", "like", `%${search}%`)
