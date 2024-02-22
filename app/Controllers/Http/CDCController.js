@@ -6105,9 +6105,9 @@ class CDCController {
     }
 
     if (jobType) {
-      if (jobType == "fulltime") {
+      if (jobType == "full time") {
         lowongan = lowongan.andWhere({ jenis: "full time" })
-      } else if (jobType == "parttime") {
+      } else if (jobType == "part time") {
         lowongan = lowongan.andWhere({ jenis: "part time" })
       } else if (jobType == "contract") {
         lowongan = lowongan.andWhere({ jenis: "contract" })
