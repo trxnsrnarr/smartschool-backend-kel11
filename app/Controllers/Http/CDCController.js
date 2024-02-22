@@ -6084,7 +6084,7 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { search, page, limit = 25, jenis } = request.get();
+    let { search, page, limit = 25, region, industries, jobFunction, jobType } = request.get();
 
     let lowongan = MLowongan.query().where({ dihapus: 0 }).with("user").with("profil");
 
@@ -6092,8 +6092,28 @@ class CDCController {
       lowongan = lowongan.andWhere("posisi", "like", `%${search}%`)
     }
 
-    if (jenis) {
-      lowongan = lowongan.andWhere("jenis", "like", `%${search}%`)
+    if (region) {
+      lowongan = lowongan.andWhere('alamat', 'like', `%${region}%`)
+    }
+
+    if (industries) {
+      lowongan = lowongan.andWhere({ industri: industries })
+    }
+
+    if (jobFunction) {
+      lowongan = lowongan.andWhere({ bidang_keahlian: jobFunction })
+    }
+
+    if (jobType) {
+      if (jobType == "fulltime") {
+        lowongan = lowongan.andWhere({ jenis: "full time" })
+      } else if (jobType == "parttime") {
+        lowongan = lowongan.andWhere({ jenis: "part time" })
+      } else if (jobType == "contract") {
+        lowongan = lowongan.andWhere({ jenis: "contract" })
+      } else if (jobType == "internship") {
+        lowongan = lowongan.andWhere({ jenis: "internship" })
+      }
     }
 
     const data = await lowongan.paginate(page, limit);
@@ -6181,7 +6201,9 @@ class CDCController {
       minimal_pengalaman,
       kondisi_fisik,
       keterampilan,
-      alamat
+      alamat,
+      industri,
+      bidang_keahlian
     } = request.post()
 
     await MLowongan.create({
@@ -6204,6 +6226,8 @@ class CDCController {
       kondisi_fisik,
       keterampilan,
       alamat,
+      industri,
+      bidang_keahlian,
       m_user_id: user.id,
     })
 
@@ -6262,7 +6286,9 @@ class CDCController {
       minimal_pengalaman,
       kondisi_fisik,
       keterampilan,
-      alamat
+      alamat,
+      industri,
+      bidang_keahlian
     } = request.post()
 
     const lowongan = await MLowongan.query().where({ id }).first();
@@ -6291,6 +6317,8 @@ class CDCController {
       kondisi_fisik,
       keterampilan,
       alamat,
+      industri,
+      bidang_keahlian,
       m_user_id: user.id,
     })
 
