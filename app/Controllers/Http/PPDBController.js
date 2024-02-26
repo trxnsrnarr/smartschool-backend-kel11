@@ -2813,7 +2813,7 @@ class PPDBController {
               : `${moment().format("YYYY")} - ${
                   sekolah?.id == 13 || sekolah?.id == 121 || sekolah?.id == 14
                     ? padNumber(
-                        gelombangUser?.findIndex(
+                        gelombangUser.toJSON()?.findIndex(
                           (d) => d.id == gelombangAktif.toJSON().gelombang?.id
                         ) + 1,
                         `${gelombangUser?.length}`
@@ -2898,7 +2898,7 @@ class PPDBController {
 
           // add column headers
           worksheet.getRow(5).values = [
-            
+
             "Nama",
             "No Telepon",
             "Gender",
@@ -2960,7 +2960,7 @@ class PPDBController {
             "Alamat",
           ];
           worksheet.getRow(6).values = [
-            
+
             "Nama",
             "No Telepon",
             "Gender",
