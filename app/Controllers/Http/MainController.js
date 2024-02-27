@@ -16,7 +16,7 @@ const MPerpusKomen = use("App/Models/MPerpusKomen");
 const MRpp = use("App/Models/MRpp");
 const MSikapSiswa = use("App/Models/MSikapSiswa");
 const MSikapRombel = use("App/Models/MSikapRombel");
-const MSesbro = use('App/Models/MSesbro');
+const MSesbro = use("App/Models/MSesbro");
 const MRekap = use("App/Models/MRekap");
 const MPredikatNilai = use("App/Models/MPredikatNilai");
 const MKeteranganRapor = use("App/Models/MKeteranganRapor");
@@ -4763,7 +4763,7 @@ class MainController {
 
     const { nama, nama_ibu, whatsapp, password, alamat, asal_sekolah } =
       request.post();
-    if (sekolah?.id != 14 || sekolah?.id == 13 ) {
+    if (sekolah?.id != 14 || sekolah?.id == 13) {
       const rules = {
         nama: "required",
         whatsapp: "required",
@@ -14848,9 +14848,44 @@ class MainController {
           .andWhere({ dihapus: 0 })
           .pluck("m_soal_ujian_id");
         soalIds.map(async (item) => {
+          const dataUjian = await MSoalUjian.query()
+            .where({ id: item })
+            .first();
+          const createUjian = await MSoalUjian.create({
+            kd:dataUjian.kd,
+            kd_konten_materi:dataUjian.kd_konten_materi,
+            level_kognitif:dataUjian.level_kognitif,
+            bentuk:dataUjian.bentuk,
+            akm_konten_materi:dataUjian.akm_konten_materi,
+            akm_konteks_materi:dataUjian.akm_konteks_materi,
+            akm_proses_kognitif:dataUjian.akm_proses_kognitif,
+            tingkat_kesukaran:dataUjian.tingkat_kesukaran,
+            sumber_buku:dataUjian.sumber_buku,
+            audio:dataUjian.audio,
+            pertanyaan:dataUjian.pertanyaan,
+            jawaban_a:dataUjian.jawaban_a,
+            jawaban_b:dataUjian.jawaban_b,
+            jawaban_c:dataUjian.jawaban_c,
+            jawaban_d:dataUjian.jawaban_d,
+            jawaban_e:dataUjian.jawaban_e,
+            kj_pg:dataUjian.kj_pg,
+            kj_uraian:dataUjian.kj_uraian,
+            jawaban_pg_kompleks:dataUjian.jawaban_pg_kompleks,
+            pilihan_menjodohkan:dataUjian.pilihan_menjodohkan,
+            soal_menjodohkan:dataUjian.soal_menjodohkan,
+            opsi_a_uraian:dataUjian.opsi_a_uraian,
+            opsi_b_uraian:dataUjian.opsi_b_uraian,
+            rubrik_kj:dataUjian.rubrik_kj,
+            pembahasan:dataUjian.pembahasan,
+            jawaban_benar:dataUjian.jawaban_benar,
+            nilai_soal:dataUjian.nilai_soal,
+            m_user_id: user.id,
+            dihapus: 0,
+          });
+
           await TkSoalUjian.create({
             m_ujian_id: ujian.id,
-            m_soal_ujian_id: item,
+            m_soal_ujian_id: createUjian?.id,
             dihapus: 0,
           });
         });
@@ -16763,11 +16798,11 @@ class MainController {
                         nilaiPgKompleks: 0,
                         nilaiUraian: 0,
                         nilaiMenjodohkan: 0,
-                        nilaiIsian:0,
+                        nilaiIsian: 0,
                         nilaiTotal: 0,
                         benarPg: 0,
                         benarEsai: 0,
-                        benarIsian:0,
+                        benarIsian: 0,
                         benarPgKompleks: 0,
                         benarUraian: 0,
                         benarMenjodohkan: 0,
@@ -16793,11 +16828,12 @@ class MainController {
                             analisisTotal[d.soal.kd] = analisisTotal[d.soal.kd]
                               ? analisisTotal[d.soal.kd] + 1
                               : 1;
-                          }else if (d.soal.bentuk == "isian") {
+                          } else if (d.soal.bentuk == "isian") {
                             if (d.jawaban_isian == d.soal.jawaban_benar) {
-                              metaHasil.nilaiIsian = metaHasil.nilaiIsian + d.soal.nilai_soal;
+                              metaHasil.nilaiIsian =
+                                metaHasil.nilaiIsian + d.soal.nilai_soal;
                               metaHasil.benar = metaHasil.benar + 1;
-                              metaHasil.benarIsian = metaHasil.benarIsian +1;
+                              metaHasil.benarIsian = metaHasil.benarIsian + 1;
                             }
                           } else if (d.soal.bentuk == "esai") {
                             if (JSON.parse(d.jawaban_rubrik_esai)) {
@@ -21938,7 +21974,7 @@ class MainController {
       no_rak,
       tag,
       cover,
-      sumber
+      sumber,
     } = request.post();
     const rules = {
       judul: "required",
@@ -22023,7 +22059,8 @@ class MainController {
       m_buku_id: checkBuku.id,
       m_sekolah_id: sekolah.id,
       dihapus: 0,
-      no_rak,sumber
+      no_rak,
+      sumber,
     });
 
     if (m_mata_pelajaran_id) {
@@ -22092,7 +22129,8 @@ class MainController {
       // tk perpus tag
       no_rak,
       tag,
-      cover,sumber
+      cover,
+      sumber,
     } = request.post();
     const rules = {
       judul: "required",
@@ -22179,7 +22217,8 @@ class MainController {
         m_buku_id: checkBuku.id,
         m_sekolah_id: sekolah.id,
         dihapus: 0,
-        no_rak,sumber
+        no_rak,
+        sumber,
       });
 
     if (m_mata_pelajaran_id) {
@@ -32447,12 +32486,12 @@ class MainController {
     return kartusoalFile;
   }
 
-
   async putKoordinat({ response, request, params: { sekolah_id } }) {
     const { lat, long } = request.post();
 
     const sekolah = await MSekolah.query()
-      .where({ id: sekolah_id }).update({lat, long});
+      .where({ id: sekolah_id })
+      .update({ lat, long });
 
     if (!sekolah) {
       return response.notFound({
@@ -32472,20 +32511,21 @@ class MainController {
       return response.ok(aplikasi);
     } catch (error) {
       console.error(error);
-      return response.status(500).send({ message: 'Internal server error', error: true });
+      return response
+        .status(500)
+        .send({ message: "Internal server error", error: true });
     }
   }
-
 
   async postAplikasiSesbro({ response, request }) {
     try {
       const { aplikasi } = request.post();
 
-      const existingAplikasi = await MSesbro.findBy('name', aplikasi);
+      const existingAplikasi = await MSesbro.findBy("name", aplikasi);
 
       if (existingAplikasi) {
         return response.status(400).send({
-          message: 'Aplikasi with the same name already exists',
+          message: "Aplikasi with the same name already exists",
           error: true,
         });
       }
@@ -32505,8 +32545,14 @@ class MainController {
   async daftarsekolah({ response, request }) {
     const { search, page, limit } = request.get();
 
-    let sekolah = MSekolah.query()
-      .select("id", "nama", "favicon", "domain", "lat", "long");
+    let sekolah = MSekolah.query().select(
+      "id",
+      "nama",
+      "favicon",
+      "domain",
+      "lat",
+      "long"
+    );
 
     if (search) {
       sekolah.where("nama", "like", `%${search}%`);
