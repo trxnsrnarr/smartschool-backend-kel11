@@ -32538,7 +32538,7 @@ class MainController {
       });
     } catch (error) {
       console.error(error);
-      return response.status(500).send({ message: 'Internal server error', error: true });
+      return response.status(500).send({ message: "Internal server error", error: true });
     }
   }
 
