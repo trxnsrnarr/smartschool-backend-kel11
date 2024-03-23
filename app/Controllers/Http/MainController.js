@@ -14847,7 +14847,9 @@ class MainController {
           .where({ m_ujian_id: ujian_id })
           .andWhere({ dihapus: 0 })
           .pluck("m_soal_ujian_id");
-        soalIds.map(async (item) => {
+          for (let i = 0; i < soalIds.length; i++) {
+            const item = soalIds[i];
+        // soalIds.map(async (item) => {
           const dataUjian = await MSoalUjian.query()
             .where({ id: item })
             .first();
@@ -14888,7 +14890,8 @@ class MainController {
             m_soal_ujian_id: createUjian?.id,
             dihapus: 0,
           });
-        });
+        // });
+          }
       }
 
       return response.ok({
