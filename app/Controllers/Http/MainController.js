@@ -36535,7 +36535,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { page, search } = request.get();
+    let { page, search,lokasi_id } = request.get();
 
     page = page ? parseInt(page) : 1;
 
@@ -36549,16 +36549,14 @@ class MainController {
     if (search) {
       barang.andWhere("nama", "like", `%${search}%`);
     }
+    if (lokasi_id) {
+      barang.andWhere("m_lokasi_id",lokasi_id);
+    }
 
-    const lokasi = MLokasi.query()
-      .select("id", "nama")
-      .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .fetch();
 
     return response.ok({
       barang: await barang.paginate(page, 25),
-      lokasi,
+
     });
   }
 
