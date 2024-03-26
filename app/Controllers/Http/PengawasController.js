@@ -67,7 +67,7 @@ class PengawasController {
 
     const user = await auth.getUser();
 
-    if (user.role != "pengawas" && user.role != "admin") {
+    if (user.role != "pengawas" && user.role != "admin" && user.role != "kepsek") {
       return response.forbidden({ message: messageForbidden });
     }
 
