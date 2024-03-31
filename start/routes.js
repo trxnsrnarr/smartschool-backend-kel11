@@ -107,6 +107,7 @@ Route.get("/guru/:guru_id", "MainController.detailGuru");
 Route.post("/guru", "MainController.postGuru");
 Route.put("/guru/:guru_id", "MainController.putGuru");
 Route.delete("/guru/:guru_id", "MainController.deleteGuru");
+Route.get("/absen-data", "MainController.getAbsenGuru");
 
 // siswa
 Route.get("/siswa", "MainController.getSiswa");

@@ -4954,11 +4954,11 @@ class MainController {
       dihapus: 0,
     });
 
-      await MProfilUser.create({
-        m_user_id: res.id,
-        alamat: alamat,
-        asal_sekolah,
-      });
+    await MProfilUser.create({
+      m_user_id: res.id,
+      alamat: alamat,
+      asal_sekolah,
+    });
 
     const { token } = await auth.generate(res);
 
@@ -13164,6 +13164,141 @@ class MainController {
     });
   }
 
+  async getAbsenGuru({ response, request, auth }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    if (ta == "404") {
+      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+    }
+
+    const { role, tanggal_awal, tanggal_akhir, absen } = request.get();
+
+    if (role == "guru") {
+      const range = moment(tanggal_akhir).diff(moment(tanggal_awal), "day");
+
+      let listHari = [];
+      for (let i = 0; i < range + 1; i++) {
+        const hari = moment(tanggal_awal).add(i, "days").format("YYYY-MM-DD");
+        listHari.push(hari);
+      }
+
+      // const absen = await User.query()
+      //   .with("absen", (builder) => {
+      //     builder.whereBetween("created_at", [
+      //       moment(tanggal_awal).format("YYYY-MM-DD 00:00:00"),
+      //       moment(tanggal_akhir).format("YYYY-MM-DD 23:59:59"),
+      //     ]);
+      //   })
+      //   .where({ m_sekolah_id: sekolah.id })
+      //   .andWhere({ dihapus: 0 })
+      //   .andWhere({ role: role })
+      //   .fetch();
+
+      let total;
+      total = await User.query()
+        .where({ dihapus: 0 })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .andWhere("role", role)
+        .getCount();
+
+      const userIds = await User.query()
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ dihapus: 0 })
+        .andWhere("role", role)
+        .ids();
+      const data = await Promise.all(
+        listHari.map(async (r) => {
+          const absenData = await MAbsen.query()
+            .where("created_at", "like", `%${r}%`)
+            .andWhere({ m_sekolah_id: sekolah.id })
+            .andWhere({ role: role })
+            .andWhere({ absen: absen })
+            .getCount();
+            
+
+            // const absenDatas = await MAbsen.query()
+            // .where("created_at", "like", `%${r}%`)
+            // .andWhere({ m_sekolah_id: sekolah.id })
+            // .andWhere({ role: role })
+            // .andWhere({ absen: absen }).fetch()
+
+          return {
+            tanggal: r,
+            absen: absenData ? (absenData / total) * 100 : 0,
+            total: absenData,
+            // absenDatas
+          };
+        })
+      );
+
+      return response.ok({
+        data,
+        total,
+        listHari,
+      });
+    } else if (role == "siswa") {
+      const rombel = await MRombel.query()
+        .where({ dihapus: 0 })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .andWhere({ m_ta_id: ta.id })
+        .fetch();
+
+      let rombelData = [];
+
+      await Promise.all(
+        rombel.toJSON().map(async (d) => {
+          const userIds = await MAnggotaRombel.query()
+            .where({ m_rombel_id: d.id })
+            .andWhere({ dihapus: 0 })
+            .pluck("m_user_id");
+
+          const totalHadir = await MAbsen.query()
+            .with("user")
+            .where("created_at", "like", `%${tanggal}%`)
+            .andWhere({ absen: "hadir" })
+            .whereIn("m_user_id", userIds)
+            .count("* as total");
+          const totalSakit = await MAbsen.query()
+            .with("user")
+            .where("created_at", "like", `%${tanggal}%`)
+            .andWhere({ absen: "sakit" })
+            .whereIn("m_user_id", userIds)
+            .count("* as total");
+          const totalIzin = await MAbsen.query()
+            .with("user")
+            .where("created_at", "like", `%${tanggal}%`)
+            .andWhere({ absen: "izin" })
+            .whereIn("m_user_id", userIds)
+            .count("* as total");
+          const totalAlpa =
+            userIds.length -
+            (totalHadir[0].total + totalSakit[0].total + totalIzin[0].total);
+
+          return rombelData.push({
+            rombel: d.nama,
+            id: d.id,
+            totalHadir: totalHadir[0].total,
+            totalSakit: totalSakit[0].total,
+            totalIzin: totalIzin[0].total,
+            totalAlpa,
+          });
+        })
+      );
+
+      return response.ok({
+        rombel: rombelData,
+      });
+    }
+  }
+
   async getAbsen({ response, request, auth }) {
     const domain = request.headers().origin;
 
@@ -14847,40 +14982,40 @@ class MainController {
           .where({ m_ujian_id: ujian_id })
           .andWhere({ dihapus: 0 })
           .pluck("m_soal_ujian_id");
-          for (let i = 0; i < soalIds.length; i++) {
-            const item = soalIds[i];
-        // soalIds.map(async (item) => {
+        for (let i = 0; i < soalIds.length; i++) {
+          const item = soalIds[i];
+          // soalIds.map(async (item) => {
           const dataUjian = await MSoalUjian.query()
             .where({ id: item })
             .first();
           const createUjian = await MSoalUjian.create({
-            kd:dataUjian.kd,
-            kd_konten_materi:dataUjian.kd_konten_materi,
-            level_kognitif:dataUjian.level_kognitif,
-            bentuk:dataUjian.bentuk,
-            akm_konten_materi:dataUjian.akm_konten_materi,
-            akm_konteks_materi:dataUjian.akm_konteks_materi,
-            akm_proses_kognitif:dataUjian.akm_proses_kognitif,
-            tingkat_kesukaran:dataUjian.tingkat_kesukaran,
-            sumber_buku:dataUjian.sumber_buku,
-            audio:dataUjian.audio,
-            pertanyaan:dataUjian.pertanyaan,
-            jawaban_a:dataUjian.jawaban_a,
-            jawaban_b:dataUjian.jawaban_b,
-            jawaban_c:dataUjian.jawaban_c,
-            jawaban_d:dataUjian.jawaban_d,
-            jawaban_e:dataUjian.jawaban_e,
-            kj_pg:dataUjian.kj_pg,
-            kj_uraian:dataUjian.kj_uraian,
-            jawaban_pg_kompleks:dataUjian.jawaban_pg_kompleks,
-            pilihan_menjodohkan:dataUjian.pilihan_menjodohkan,
-            soal_menjodohkan:dataUjian.soal_menjodohkan,
-            opsi_a_uraian:dataUjian.opsi_a_uraian,
-            opsi_b_uraian:dataUjian.opsi_b_uraian,
-            rubrik_kj:dataUjian.rubrik_kj,
-            pembahasan:dataUjian.pembahasan,
-            jawaban_benar:dataUjian.jawaban_benar,
-            nilai_soal:dataUjian.nilai_soal,
+            kd: dataUjian.kd,
+            kd_konten_materi: dataUjian.kd_konten_materi,
+            level_kognitif: dataUjian.level_kognitif,
+            bentuk: dataUjian.bentuk,
+            akm_konten_materi: dataUjian.akm_konten_materi,
+            akm_konteks_materi: dataUjian.akm_konteks_materi,
+            akm_proses_kognitif: dataUjian.akm_proses_kognitif,
+            tingkat_kesukaran: dataUjian.tingkat_kesukaran,
+            sumber_buku: dataUjian.sumber_buku,
+            audio: dataUjian.audio,
+            pertanyaan: dataUjian.pertanyaan,
+            jawaban_a: dataUjian.jawaban_a,
+            jawaban_b: dataUjian.jawaban_b,
+            jawaban_c: dataUjian.jawaban_c,
+            jawaban_d: dataUjian.jawaban_d,
+            jawaban_e: dataUjian.jawaban_e,
+            kj_pg: dataUjian.kj_pg,
+            kj_uraian: dataUjian.kj_uraian,
+            jawaban_pg_kompleks: dataUjian.jawaban_pg_kompleks,
+            pilihan_menjodohkan: dataUjian.pilihan_menjodohkan,
+            soal_menjodohkan: dataUjian.soal_menjodohkan,
+            opsi_a_uraian: dataUjian.opsi_a_uraian,
+            opsi_b_uraian: dataUjian.opsi_b_uraian,
+            rubrik_kj: dataUjian.rubrik_kj,
+            pembahasan: dataUjian.pembahasan,
+            jawaban_benar: dataUjian.jawaban_benar,
+            nilai_soal: dataUjian.nilai_soal,
             m_user_id: user.id,
             dihapus: 0,
           });
@@ -14890,8 +15025,8 @@ class MainController {
             m_soal_ujian_id: createUjian?.id,
             dihapus: 0,
           });
-        // });
-          }
+          // });
+        }
       }
 
       return response.ok({
@@ -32536,12 +32671,14 @@ class MainController {
       const aplikasiName = await MSesbro.create({ name: aplikasi });
 
       return response.ok({
-        message: 'Aplikasi created successfully',
-        data: aplikasiName
+        message: "Aplikasi created successfully",
+        data: aplikasiName,
       });
     } catch (error) {
       console.error(error);
-      return response.status(500).send({ message: "Internal server error", error: true });
+      return response
+        .status(500)
+        .send({ message: "Internal server error", error: true });
     }
   }
 
@@ -36535,7 +36672,7 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { page, search,lokasi_id } = request.get();
+    let { page, search, lokasi_id } = request.get();
 
     page = page ? parseInt(page) : 1;
 
@@ -36550,13 +36687,11 @@ class MainController {
       barang.andWhere("nama", "like", `%${search}%`);
     }
     if (lokasi_id) {
-      barang.andWhere("m_lokasi_id",lokasi_id);
+      barang.andWhere("m_lokasi_id", lokasi_id);
     }
-
 
     return response.ok({
       barang: await barang.paginate(page, 25),
-
     });
   }
 
