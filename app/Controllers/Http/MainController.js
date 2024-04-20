@@ -13222,13 +13222,12 @@ class MainController {
             .andWhere({ role: role })
             .andWhere({ absen: absen })
             .getCount();
-            
 
-            // const absenDatas = await MAbsen.query()
-            // .where("created_at", "like", `%${r}%`)
-            // .andWhere({ m_sekolah_id: sekolah.id })
-            // .andWhere({ role: role })
-            // .andWhere({ absen: absen }).fetch()
+          // const absenDatas = await MAbsen.query()
+          // .where("created_at", "like", `%${r}%`)
+          // .andWhere({ m_sekolah_id: sekolah.id })
+          // .andWhere({ role: role })
+          // .andWhere({ absen: absen }).fetch()
 
           return {
             tanggal: r,
@@ -17869,6 +17868,7 @@ class MainController {
       token,
       tampil_nilai,
       tampil_jawaban,
+      keluartab,
     } = request.post();
     const tanggal = moment(waktu_dibuka).format(`DD`);
     const bulan = moment(waktu_dibuka).format(`M`);
@@ -17899,6 +17899,7 @@ class MainController {
         jumlah_uraian,
         jumlah_pg_kompleks,
         m_ujian_id,
+        keluar_tab: keluartab,
         kkm,
         waktu_dibuka,
         waktu_ditutup: moment(waktu_dibuka)
@@ -17977,6 +17978,7 @@ class MainController {
         jumlah_uraian,
         jumlah_pg_kompleks,
         m_ujian_id,
+        keluar_tab: keluartab,
         kkm,
         waktu_dibuka,
         waktu_ditutup: moment(waktu_dibuka)
@@ -18083,6 +18085,7 @@ class MainController {
       token,
       tampil_nilai,
       tampil_jawaban,
+      keluartab,
     } = request.post();
 
     const waktu_dibuka1 = moment(waktu_dibuka).format("YYYY-MM-DD HH:mm:ss");
@@ -18147,6 +18150,7 @@ class MainController {
             .format("YYYY-MM-DD HH:mm:ss"),
           durasi,
           gmeet,
+          keluar_tab: keluartab,
           diacak,
           token,
           tampil_nilai,
@@ -18317,6 +18321,7 @@ class MainController {
           gmeet,
           diacak,
           token,
+          keluar_tab: keluartab,
         });
       if (!jadwalUjian) {
         return response.notFound({
