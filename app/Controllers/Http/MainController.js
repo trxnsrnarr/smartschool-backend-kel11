@@ -2128,6 +2128,33 @@ class MainController {
       avatar,
       home,
     };
+    
+    if (sekolah?.id == 9487) {
+      const rules = {
+        nisn: "required",
+      };
+      const message = {
+        "nisn.required": "NISN harus diisi",
+      };
+      const validation = await validate(request.all(), rules, message);
+      if (validation.fails()) {
+        return response.unprocessableEntity(validation.messages());
+      }
+      const cek = await MProfilUser.query().where({ nisn }).first();
+
+      if (cek) {
+        const cek2 = await User.query()
+          .where({ id: cek.id })
+          .andWhere({ m_sekolah_id: sekolah?.id })
+          .first();
+        if (cek2) {
+          return response.forbidden({
+            message: "NISN sudah terdaftar",
+          });
+        }
+      }
+    }
+
 
     if (pendidikan) {
       pendidikan = JSON.stringify(pendidikan);
@@ -2174,6 +2201,8 @@ class MainController {
     }
 
     await User.query().where({ id: user.id }).update(userPayload);
+
+    
 
     const check = await MProfilUser.query()
       .select("id")
@@ -4761,8 +4790,9 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const { nama, nama_ibu, whatsapp, password, alamat, asal_sekolah } =
+    const { nama, nama_ibu, whatsapp, password, alamat, asal_sekolah, nisn } =
       request.post();
+
     if (sekolah?.id != 14 || sekolah?.id == 13) {
       const rules = {
         nama: "required",
@@ -4770,12 +4800,14 @@ class MainController {
         nama_ibu: "required",
         password: "required",
       };
+
       const message = {
         "nama.required": "Nama harus diisi",
         "whatsapp.required": "Whatsapp harus diisi",
         "nama_ibu.required": "Nama Ibu harus diisi",
         "password.required": "Password harus diisi",
       };
+
       const validation = await validate(request.all(), rules, message);
       if (validation.fails()) {
         return response.unprocessableEntity(validation.messages());
@@ -4809,6 +4841,32 @@ class MainController {
       });
     }
 
+    if (sekolah?.id == 9487) {
+      const rules = {
+        nisn: "required",
+      };
+      const message = {
+        "nisn.required": "NISN harus diisi",
+      };
+      const validation = await validate(request.all(), rules, message);
+      if (validation.fails()) {
+        return response.unprocessableEntity(validation.messages());
+      }
+      const cek = await MProfilUser.query().where({ nisn }).first();
+
+      if (cek) {
+        const cek2 = await User.query()
+          .where({ id: cek.id })
+          .andWhere({ m_sekolah_id: sekolah?.id })
+          .first();
+        if (cek2) {
+          return response.forbidden({
+            message: "NISN sudah terdaftar",
+          });
+        }
+      }
+    }
+
     const res = await User.create({
       nama,
       nama_ibu,
@@ -4819,12 +4877,19 @@ class MainController {
       dihapus: 0,
     });
 
-    if (alamat && asal_sekolah)
+    if (alamat && asal_sekolah) {
       await MProfilUser.create({
         m_user_id: res.id,
         alamat: alamat,
         asal_sekolah,
+        nisn,
       });
+    }
+    if (nisn){
+      await MProfilUser.create({
+        m_user_id: res.id,
+        nisn,
+      });}
 
     const { token } = await auth.generate(res);
 
@@ -4833,6 +4898,7 @@ class MainController {
       token,
     });
   }
+
   async daftarSiswa({ response, request, auth }) {
     const domain = request.headers().origin;
 
