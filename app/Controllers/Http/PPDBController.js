@@ -2813,9 +2813,11 @@ class PPDBController {
               : `${moment().format("YYYY")} - ${
                   sekolah?.id == 13 || sekolah?.id == 121 || sekolah?.id == 14
                     ? padNumber(
-                        gelombangUser.toJSON()?.findIndex(
-                          (d) => d.id == gelombangAktif.toJSON().gelombang?.id
-                        ) + 1,
+                        gelombangUser
+                          .toJSON()
+                          ?.findIndex(
+                            (d) => d.id == gelombangAktif.toJSON().gelombang?.id
+                          ) + 1,
                         `${gelombangUser?.length}`
                       )
                     : namaGelombang?.includes("khusus")
@@ -2898,7 +2900,6 @@ class PPDBController {
 
           // add column headers
           worksheet.getRow(5).values = [
-
             "Nama",
             "No Telepon",
             "Gender",
@@ -2960,7 +2961,6 @@ class PPDBController {
             "Alamat",
           ];
           worksheet.getRow(6).values = [
-
             "Nama",
             "No Telepon",
             "Gender",
@@ -3315,6 +3315,636 @@ class PPDBController {
     return namaFile;
   }
 
+  async downloadGelombangPpdbMtsn({
+    request,
+    response,
+    auth,
+    params: { gelombang_ppdb_id },
+  }) {
+    const user = await auth.getUser();
+
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+    const ta = await this.getTAAktif(sekolah);
+
+    if (!ta) {
+      return response.notFound({
+        message: "Aktifkan tahun ajaran yg tersedia di menu kurikulum",
+      });
+    }
+    const keluarantanggalseconds =
+      moment().format("YYYY-MM-DD ") + new Date().getTime();
+
+    const gelombang = await MGelombangPpdb.query()
+      .with("pendaftar", (builder) => {
+        builder
+          .with("user", (builder) => {
+            builder.with("profil");
+          })
+          .where({ dihapus: 0 });
+      })
+      .with("jalur")
+      .where({ id: gelombang_ppdb_id })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    const jurusan = await MJurusan.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .where({ dihapus: 0 })
+      .fetch();
+
+    // return gelombang;
+    const awal = moment(`${gelombang.dibuka}`).format("DD-MM-YYYY ");
+    const akhir = moment(`${gelombang.ditutup}`).format("DD-MM-YYYY ");
+    // return data;
+    let workbook = new Excel.Workbook();
+    let worksheet = workbook.addWorksheet(`Daftar Pendaftar`);
+
+    worksheet.mergeCells("A1:Q1");
+    worksheet.mergeCells("A2:Q2");
+    worksheet.mergeCells("A3:Q3");
+
+    worksheet.getCell(
+      "A4"
+    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
+
+    worksheet.addConditionalFormatting({
+      ref: "A1:Q3",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 16,
+              bold: true,
+            },
+            // fill: {
+            //   type: "pattern",
+            //   pattern: "solid",
+            //   bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            // },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            // border: {
+            //   top: { style: "thin" },
+            //   left: { style: "thin" },
+            //   bottom: { style: "thin" },
+            //   right: { style: "thin" },
+            // },
+          },
+        },
+      ],
+    });
+
+    worksheet.addConditionalFormatting({
+      ref: "A5:Q6",
+      rules: [
+        {
+          type: "expression",
+          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+          style: {
+            font: {
+              name: "Times New Roman",
+              family: 4,
+              size: 12,
+              bold: true,
+            },
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+            },
+            alignment: {
+              vertical: "middle",
+              horizontal: "center",
+            },
+            border: {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            },
+          },
+        },
+      ],
+    });
+
+    worksheet.getCell("A1").value = "Rekapan Gelombang PPDB";
+    worksheet.getCell("A2").value = gelombang.nama;
+    worksheet.getCell("A3").value = `${awal} - ${akhir}`;
+
+    const namaGelombang = gelombang.nama.toLowerCase();
+    let jalurIds;
+
+    if (sekolah?.id == 14 || sekolah?.id == 13 || sekolah?.id == 121) {
+      jalurIds = await MJalurPpdb.query()
+        .where({ dihapus: 0 })
+        .where({ m_sekolah_id: sekolah.id })
+        .where({ tipe: "Pengembalian" })
+        .ids();
+    } else {
+      jalurIds = await MJalurPpdb.query()
+        .where({ dihapus: 0 })
+        .where({ m_sekolah_id: sekolah.id })
+        .ids();
+    }
+    const gelombangIds = await MGelombangPpdb.query()
+      .where({ dihapus: 0 })
+      .whereIn("m_jalur_ppdb_id", jalurIds)
+      .where({ m_ta_id: ta.id })
+      .ids();
+
+    const checkIds = await MGelombangPpdb.query()
+      .where(
+        "dibuka",
+        "<=",
+        moment().endOf("day").format("YYYY-MM-DD HH:mm:ss")
+      )
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .whereIn("id", gelombangIds)
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .ids();
+
+    let gelombangUser;
+
+    if (sekolah?.id == 14 || sekolah?.id == 13 || sekolah?.id == 121) {
+      const jalurIds1 = await MJalurPpdb.query()
+        .where({ dihapus: 0 })
+        .where({ m_sekolah_id: sekolah.id })
+        .ids();
+
+      const gelombangIds1 = await MGelombangPpdb.query()
+        .where({ dihapus: 0 })
+        .whereIn("m_jalur_ppdb_id", jalurIds1)
+        .where({ m_ta_id: ta.id })
+        .ids();
+      gelombangUser = await MGelombangPpdb.query()
+        .with("jalur")
+        .withCount("pendaftar as jumlahPendaftar", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .where({ m_sekolah_id: sekolah.id })
+        .whereIn("id", gelombangIds1)
+        .andWhere({ m_ta_id: ta.id })
+        .andWhere({ dihapus: 0 })
+        .fetch();
+    } else {
+      gelombangUser = await MGelombangPpdb.query()
+        .with("jalur")
+        .withCount("pendaftar as jumlahPendaftar", (builder) => {
+          builder.where({ dihapus: 0 });
+        })
+        .where({ m_sekolah_id: sekolah.id })
+        .whereIn("id", gelombangIds)
+        .andWhere({ m_ta_id: ta.id })
+        .andWhere({ dihapus: 0 })
+        .fetch();
+    }
+    const data = await Promise.all(
+      gelombang
+        .toJSON()
+        .pendaftar.sort((a, b) =>
+          ("" + a.user.nama).localeCompare("" + b.user.nama)
+        )
+        .map(async (d, idx) => {
+          const urutan = gelombang
+            .toJSON()
+            .pendaftar.findIndex((e) => e.id == d.id);
+          const dataAbsensi = d.user.profil
+            ? JSON.parse(d.user.profil.data_absensi || "{}")
+            : {};
+
+          let gelombangAktif;
+          let pendaftarIds;
+          let pendaftarIds1;
+          let terdaftar;
+          let terdaftarPembelian;
+          let gelombangPembelian;
+
+          gelombangAktif = await MPendaftarPpdb.query()
+            .with("gelombang", (builder) => {
+              builder
+                .with("jalur")
+                .with("pendaftar", (builder) => {
+                  builder
+                    .select("id", "m_gelombang_ppdb_id")
+                    .where({ dihapus: 0 });
+                })
+                .with("informasi", (builder) => {
+                  builder
+                    .where({ tipe: "ujian" })
+                    .with("ujian")
+                    .andWhere({ dihapus: 0 });
+                });
+            })
+            .with("diskon")
+            .where({ dihapus: 0 })
+            // .whereIn("m_gelombang_ppdb_id", gelombangIds)
+            .andWhere({ m_user_id: d.user.id })
+            .whereIn("m_gelombang_ppdb_id", checkIds)
+            .first();
+
+          pendaftarIds = await MPendaftarPpdb.query()
+            .where({ dihapus: 0 })
+            .whereIn("m_gelombang_ppdb_id", gelombangIds)
+            .andWhere({ m_user_id: d.user.id })
+            .pluck("m_gelombang_ppdb_id");
+
+          terdaftar = await MGelombangPpdb.query()
+            .with("pendaftar1", (builder) => {
+              builder.where({ m_user_id: d.user.id });
+            })
+            .with("jalur")
+            .whereIn("id", pendaftarIds)
+            .where({ dihapus: 0 })
+            .fetch();
+
+          if (sekolah?.id == 14 || sekolah?.id == 13 || sekolah?.id == 121) {
+            const jalurIds1 = await MJalurPpdb.query()
+              .where({ dihapus: 0 })
+              .where({ m_sekolah_id: sekolah.id })
+              .andWhere({ tipe: "Pembelian" })
+              .ids();
+            const gelombangIds1 = await MGelombangPpdb.query()
+              .where({ dihapus: 0 })
+              .whereIn("m_jalur_ppdb_id", jalurIds1)
+              .where({ m_ta_id: ta.id })
+              .ids();
+
+            const checkIds1 = await MGelombangPpdb.query()
+              .where(
+                "dibuka",
+                "<=",
+                moment().endOf("day").format("YYYY-MM-DD HH:mm:ss")
+              )
+              .andWhere({ m_sekolah_id: sekolah.id })
+              .whereIn("id", gelombangIds1)
+              .andWhere({ m_ta_id: ta.id })
+              .andWhere({ dihapus: 0 })
+              .ids();
+
+            if (d.user.id) {
+              gelombangPembelian = await MPendaftarPpdb.query()
+                .with("gelombang", (builder) => {
+                  builder
+                    .with("jalur")
+                    .with("pendaftar", (builder) => {
+                      builder
+                        .select("id", "m_gelombang_ppdb_id", "m_user_id")
+                        .where({ dihapus: 0 });
+                    })
+                    .with("informasi", (builder) => {
+                      builder
+                        .where({ tipe: "ujian" })
+                        .with("ujian")
+                        .andWhere({ dihapus: 0 });
+                    });
+                })
+                .where({ dihapus: 0 })
+                // .whereIn("m_gelombang_ppdb_id", gelombangIds)
+                .andWhere({ m_user_id: d.user.id })
+                .whereIn("m_gelombang_ppdb_id", checkIds1)
+                .first();
+
+              pendaftarIds1 = await MPendaftarPpdb.query()
+                .where({ dihapus: 0 })
+                .whereIn("m_gelombang_ppdb_id", gelombangIds1)
+                .andWhere({ m_user_id: d.user.id })
+                .pluck("m_gelombang_ppdb_id");
+
+              terdaftarPembelian = await MGelombangPpdb.query()
+                .with("pendaftar1", (builder) => {
+                  builder.where({ m_user_id: d.user.id });
+                })
+                .with("jalur")
+                .whereIn("id", pendaftarIds1)
+                .where({ dihapus: 0 })
+                .fetch();
+            }
+          }
+
+          let semuaGelombangPengembalian;
+          if (gelombangAktif) {
+            semuaGelombangPengembalian = await MGelombangPpdb.query()
+              .where({ dihapus: 0 })
+              .where({
+                m_jalur_ppdb_id:
+                  gelombangAktif.toJSON().gelombang.m_jalur_ppdb_id,
+              })
+              .where({ m_ta_id: ta.id })
+              .ids();
+          }
+          // return {semuaGelombangPengembalian,gelombangAktif,checkIds}
+          // const nomorPeserta = `${moment().format("YYYY")} - ${
+          //   namaGelombang.includes("khusus")
+          //     ? "00"
+          //     : namaGelombang.includes("reguler 1")
+          //     ? "01"
+          //     : namaGelombang.includes("reguler 3")
+          //     ? "02"
+          //     : "03"
+          // } - ${padNumber(urutan + 1, `${gelombang.diterima}`.length)}`;
+
+          const nomorPeserta =
+            sekolah?.id == 14
+              ? `${moment().format("YYYY")} - ${padNumber(
+                  semuaGelombangPengembalian?.findIndex(
+                    (d) => d == gelombangAktif?.gelombang?.id
+                  ) + 1,
+                  `2`
+                )} ${"-"} ${padNumber(
+                  gelombangPembelian
+                    .toJSON()
+                    .gelombang?.pendaftar.findIndex(
+                      (d) => d.id == gelombangPembelian?.id
+                    ) + 1,
+                  gelombangPembelian.toJSON().gelombang?.diterima.length
+                )}`
+              : `${moment().format("YYYY")} - ${
+                  sekolah?.id == 13 || sekolah?.id == 121 || sekolah?.id == 14
+                    ? padNumber(
+                        gelombangUser
+                          .toJSON()
+                          ?.findIndex(
+                            (d) => d.id == gelombangAktif.toJSON().gelombang?.id
+                          ) + 1,
+                        `${gelombangUser?.length}`
+                      )
+                    : namaGelombang?.includes("khusus")
+                    ? "00"
+                    : namaGelombang?.includes("reguler 1")
+                    ? "01"
+                    : namaGelombang?.includes("reguler 3")
+                    ? "02"
+                    : "03"
+                } - ${padNumber(
+                  gelombangAktif
+                    .toJSON()
+                    .gelombang?.pendaftar.findIndex(
+                      (d) => d.id == gelombangAktif?.id
+                    ) + 1,
+                  `${gelombangAktif.toJSON().gelombang?.diterima}`.length
+                )}
+            `;
+
+          const pembayaran = JSON.parse(d?.pembayaran || "[]");
+          const totalPembayaran = pembayaran?.reduce(
+            (a, b) => a + parseInt(b.nominal),
+            0
+          );
+          worksheet.addConditionalFormatting({
+            ref: `A${(idx + 1) * 1 + 5}:A${(idx + 1) * 1 + 6}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 11,
+                    // bold: true,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "center",
+                  },
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
+                },
+              },
+            ],
+          });
+
+          worksheet.addConditionalFormatting({
+            ref: `B${(idx + 1) * 1 + 5}:Q${(idx + 1) * 1 + 6}`,
+            rules: [
+              {
+                type: "expression",
+                formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                style: {
+                  font: {
+                    name: "Times New Roman",
+                    family: 4,
+                    size: 11,
+                    // bold: true,
+                  },
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "left",
+                  },
+                  border: {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  },
+                },
+              },
+            ],
+          });
+
+          // add column headers
+          worksheet.getRow(5).values = [
+            "Nama",
+            "No Telepon",
+            "Gender",
+            "Agama",
+            "Tanggal lahir",
+            "Asal Sekolah",
+            "Nomor Peserta",
+            "Tanggal Mendaftar",
+            "Status",
+
+            "Kelas IV (Ganjil)",
+            "Kelas V (Ganjil)",
+            "Kelas VI (Ganjil)",
+            "Rata-Rata Kumulatif",
+            "Link Rapor Kelas IV (Ganjil)",
+            "Link Rapor Kelas V (Ganjil)",
+            "Link Rapor Kelas VI (Ganjil)",
+            "Alamat",
+          ];
+          worksheet.getRow(6).values = [
+            "Nama",
+            "No Telepon",
+            "Gender",
+            "Agama",
+            "Tanggal lahir",
+            "Asal Sekolah",
+            "Nomor Peserta",
+            "Tanggal Mendaftar",
+            "Status",
+            "Kelas IV (Ganjil)",
+            "Kelas V (Ganjil)",
+            "Kelas VI (Ganjil)",
+            "Rata-Rata Kumulatif",
+            "Link Rapor Kelas IV (Ganjil)",
+            "Link Rapor Kelas V (Ganjil)",
+            "Link Rapor Kelas VI (Ganjil)",
+            "Alamat",
+          ];
+          worksheet.columns = [
+            { key: "nama" },
+            { key: "no_telepon" },
+            { key: "gender" },
+            { key: "agama" },
+            { key: "tgllahir" },
+            { key: "asalsklh" },
+            { key: "nomorPeserta" },
+            { key: "tanggal" },
+            { key: "status" },
+            { key: "kelasIV" },
+            { key: "kelasV" },
+            { key: "kelasVI" },
+            { key: "rata2" },
+            { key: "semesterIV" },
+            { key: "semesterV" },
+            { key: "semesterVI" },
+            { key: "alamat" },
+          ];
+
+          const checkBayar =
+            JSON.parse(d?.pembayaran || "[]")?.reduce((a, b) => {
+              if (b?.diverifikasi) {
+                return a + b?.nominal;
+              } else {
+                return a + 0;
+              }
+            }, 0) < (gelombang?.jalur?.biaya || 0)
+              ? "menungguKonfirmasiPembayaran"
+              : d?.status;
+          // const status = dataStatus[checkBayar];
+          let status = "";
+          if (
+            d?.status == "menungguKonfirmasiPembayaran" &&
+            sekolah?.id == 9487
+          ) {
+            status = dataStatus["menungguHasilPengumuman"];
+          } else if (
+            d?.status == "menungguSeleksiBerkas" &&
+            sekolah?.id == 9487
+          ) {
+            status = dataStatus["tidakLulusSeleksi"];
+          } else if (sekolah?.id == 9487) {
+            status = dataStatus[d?.status];
+          } else {
+            status = dataStatus[checkBayar];
+          }
+          const jurusanData = jurusan.toJSON();
+
+          // Add row using key mapping to columns
+          let row = worksheet.addRow({
+            nama: d.user ? d.user.nama : "-",
+            no_telepon: d.user ? d.user.whatsapp : "-",
+            gender: d.user ? d.user.gender : "-",
+            agama: d.user ? d.user.agama : "-",
+            tgllahir: d.user ? d.user.tanggal_lahir : "-",
+            asalsklh: d.user.profil ? d.user.profil.asal_sekolah : "-",
+            nomorPeserta: nomorPeserta ? nomorPeserta : "-",
+            tanggal: d ? d.created_at : "-",
+            status: d ? status.text : "-",
+
+            kelasIV: d?.user?.profil?.semester1,
+            kelasV: d?.user?.profil?.semester2,
+            kelasVI: d?.user?.profil?.semester3,
+            rata2: (
+              ((d?.user?.profil?.semester1
+                ? parseFloat(d?.user?.profil?.semester1)
+                : 0) +
+                (d?.user?.profil?.semester2
+                  ? parseFloat(d?.user?.profil?.semester2)
+                  : 0) +
+                (d?.user?.profil?.semester3
+                  ? parseFloat(d?.user?.profil?.semester3)
+                  : 0)) /
+              3
+            ).toFixed(2),
+            semesterIV: d?.user?.profil?.semester4,
+            semesterV: d?.user?.profil?.semester5,
+            semesterVI: d?.user?.profil?.semester6,
+
+            alamat: d.user.profil ? d.user.profil.alamat : "-",
+          });
+        })
+    );
+    // return data
+    worksheet.mergeCells(`A5:A6`);
+    worksheet.mergeCells(`B5:B6`);
+    worksheet.mergeCells(`C5:C6`);
+    worksheet.mergeCells(`D5:D6`);
+    worksheet.mergeCells(`E5:E6`);
+    worksheet.mergeCells(`F5:F6`);
+    worksheet.mergeCells(`G5:G6`);
+    worksheet.mergeCells(`H5:H6`);
+    worksheet.mergeCells(`I5:I6`);
+    worksheet.mergeCells(`J5:J6`);
+    worksheet.mergeCells(`K5:K6`);
+    worksheet.mergeCells(`L5:L6`);
+    worksheet.mergeCells(`M5:M6`);
+    worksheet.mergeCells(`N5:N6`);
+    worksheet.mergeCells(`O5:O6`);
+    worksheet.mergeCells(`P5:P6`);
+    worksheet.mergeCells(`Q5:Q6`);
+    // worksheet.mergeCells(`P5:V5`);
+    // worksheet.mergeCells(`W5:AC5`);
+    // worksheet.mergeCells(`AD5:AJ5`);
+    // worksheet.mergeCells(`AK5:AQ5`);
+    // worksheet.mergeCells(`AR5:AX5`);
+    // worksheet.mergeCells(`AY5:BE5`);
+    // worksheet.mergeCells(`BE5:BE6`);
+    // worksheet.mergeCells(`BF5:BF6`);
+    // worksheet.mergeCells(`BG5:BG6`);
+    // worksheet.mergeCells(`BH5:BH6`);
+    worksheet.getColumn("A").width = 20;
+    worksheet.getColumn("B").width = 20;
+    worksheet.getColumn("C").width = 20;
+    worksheet.getColumn("D").width = 20;
+    worksheet.getColumn("E").width = 20;
+    worksheet.getColumn("F").width = 20;
+    worksheet.getColumn("G").width = 20;
+    worksheet.getColumn("H").width = 20;
+    worksheet.getColumn("I").width = 20;
+    worksheet.getColumn("J").width = 20;
+    worksheet.getColumn("K").width = 20;
+    worksheet.getColumn("L").width = 20;
+    worksheet.getColumn("M").width = 20;
+    worksheet.getColumn("N").width = 28;
+    worksheet.getColumn("O").width = 28;
+    worksheet.getColumn("P").width = 28;
+    worksheet.getColumn("Q").width = 28;
+    worksheet.getColumn("R").width = 28;
+    // worksheet.getColumn("BE").width = 20;
+    worksheet.getColumn("BF").width = 20;
+    worksheet.getColumn("BG").width = 20;
+    worksheet.getColumn("BH").width = 20;
+    worksheet.autoFilter = {
+      from: "A6",
+      to: "Q6",
+    };
+
+    let namaFile = `/uploads/rekapan-pendaftar-ppdb-${keluarantanggalseconds}.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
   async putDiskon({ response, request, auth, params: { id } }) {
     const domain = request.headers().origin;
 

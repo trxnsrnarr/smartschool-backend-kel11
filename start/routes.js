@@ -1755,6 +1755,11 @@ Route.post(
   "/download-gelombang-ppdb/:gelombang_ppdb_id",
   "PPDBController.downloadGelombangPpdb"
 );
+
+Route.post(
+  "/download-gelombang-ppdb-mtsn/:gelombang_ppdb_id",
+  "PPDBController.downloadGelombangPpdbMtsn"
+);
 Route.delete(
   "/gelombang-ppdb/:gelombang_ppdb_id",
   "PPDBController.deleteGelombangPPDB"
