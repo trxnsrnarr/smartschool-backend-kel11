@@ -2814,7 +2814,7 @@ class PPDBController {
                   sekolah?.id == 13 || sekolah?.id == 121 || sekolah?.id == 14
                     ? padNumber(
                         gelombangUser
-                          .toJSON()
+                          .toJSON() 
                           ?.findIndex(
                             (d) => d.id == gelombangAktif.toJSON().gelombang?.id
                           ) + 1,
@@ -3102,7 +3102,7 @@ class PPDBController {
             no_telepon: d.user ? d.user.whatsapp : "-",
             gender: d.user ? d.user.gender : "-",
             agama: d.user ? d.user.agama : "-",
-            tgllahir: d.user ? d.user.tanggal_lahir : "-",
+            tgllahir: d.user ? moment(`${d.user.tanggal_lahir}`).format("DD-MM-YYYY") : "-",
             asalsklh: d.user.profil ? d.user.profil.asal_sekolah : "-",
             nomorPeserta: nomorPeserta ? nomorPeserta : "-",
             tanggal: d ? d.created_at : "-",
@@ -3854,7 +3854,7 @@ class PPDBController {
             no_telepon: d.user ? d.user.whatsapp : "-",
             gender: d.user ? d.user.gender : "-",
             agama: d.user ? d.user.agama : "-",
-            tgllahir: d.user ? d.user.tanggal_lahir : "-",
+            tgllahir: d.user ? moment(`${d.user.tanggal_lahir}`).format("DD-MM-YYYY") : "-",
             asalsklh: d.user.profil ? d.user.profil.asal_sekolah : "-",
             nomorPeserta: nomorPeserta ? nomorPeserta : "-",
             tanggal: d ? d.created_at : "-",
