@@ -2610,12 +2610,14 @@ class PPDBController {
         moment().endOf("day").format("YYYY-MM-DD HH:mm:ss")
       )
       .andWhere({ m_sekolah_id: sekolah.id })
-      .whereIn("id", gelombangIds)
+      .whereIn("id", [gelombang_ppdb_id])
       .andWhere({ m_ta_id: ta.id })
       .andWhere({ dihapus: 0 })
       .ids();
 
-    let gelombangUser;
+      
+
+    let gelombangUser=[];
 
     if (sekolah?.id == 14 || sekolah?.id == 13 || sekolah?.id == 121) {
       const jalurIds1 = await MJalurPpdb.query()
@@ -2650,6 +2652,8 @@ class PPDBController {
         .andWhere({ dihapus: 0 })
         .fetch();
     }
+    
+
     const data = await Promise.all(
       gelombang
         .toJSON()
@@ -3102,7 +3106,7 @@ class PPDBController {
             no_telepon: d.user ? d.user.whatsapp : "-",
             gender: d.user ? d.user.gender : "-",
             agama: d.user ? d.user.agama : "-",
-            tgllahir: d.user ? moment(`${d.user.tanggal_lahir}`).format("DD-MM-YYYY") : "-",
+            tgllahir: d?.user?.tanggal_lahir ? moment(`${d.user.tanggal_lahir}`).format("DD-MM-YYYY") : "-",
             asalsklh: d.user.profil ? d.user.profil.asal_sekolah : "-",
             nomorPeserta: nomorPeserta ? nomorPeserta : "-",
             tanggal: d ? d.created_at : "-",
@@ -3257,7 +3261,7 @@ class PPDBController {
           });
         })
     );
-    // return data
+
     worksheet.mergeCells(`A5:A6`);
     worksheet.mergeCells(`B5:B6`);
     worksheet.mergeCells(`C5:C6`);
@@ -3841,7 +3845,7 @@ class PPDBController {
             (sekolah?.id == 9487 || sekolah?.id == 9489)
           ) {
             status = dataStatus["tidakLulusSeleksi"];
-          } else if ((sekolah?.id == 9487 || sekolah?.id == 9489)) {
+          } else if (sekolah?.id == 9487 || sekolah?.id == 9489) {
             status = dataStatus[d?.status];
           } else {
             status = dataStatus[checkBayar];
@@ -3854,7 +3858,7 @@ class PPDBController {
             no_telepon: d.user ? d.user.whatsapp : "-",
             gender: d.user ? d.user.gender : "-",
             agama: d.user ? d.user.agama : "-",
-            tgllahir: d.user ? moment(`${d.user.tanggal_lahir}`).format("DD-MM-YYYY") : "-",
+            tgllahir: d?.user?.tanggal_lahir ? moment(`${d.user.tanggal_lahir}`).format("DD-MM-YYYY") : "-",
             asalsklh: d.user.profil ? d.user.profil.asal_sekolah : "-",
             nomorPeserta: nomorPeserta ? nomorPeserta : "-",
             tanggal: d ? d.created_at : "-",
