@@ -3833,15 +3833,15 @@ class PPDBController {
           let status = "";
           if (
             d?.status == "menungguKonfirmasiPembayaran" &&
-            sekolah?.id == 9487
+            (sekolah?.id == 9487 || sekolah?.id == 9489)
           ) {
             status = dataStatus["menungguHasilPengumuman"];
           } else if (
             d?.status == "menungguSeleksiBerkas" &&
-            sekolah?.id == 9487
+            (sekolah?.id == 9487 || sekolah?.id == 9489)
           ) {
             status = dataStatus["tidakLulusSeleksi"];
-          } else if (sekolah?.id == 9487) {
+          } else if ((sekolah?.id == 9487 || sekolah?.id == 9489)) {
             status = dataStatus[d?.status];
           } else {
             status = dataStatus[checkBayar];

@@ -2129,7 +2129,7 @@ class MainController {
       home,
     };
     
-    if (sekolah?.id == 9487) {
+    if (sekolah?.id == 9487 || sekolah?.id == 9489) {
       const rules = {
         nisn: "required",
       };
@@ -4841,7 +4841,7 @@ class MainController {
       });
     }
 
-    if (sekolah?.id == 9487) {
+    if (sekolah?.id == 9487 || sekolah?.id == 9489) {
       const rules = {
         nisn: "required",
       };
