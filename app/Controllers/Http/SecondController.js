@@ -10870,14 +10870,14 @@ ${jamPerubahan}`;
           .with("jadwalUjian", (builder) => {
             builder.with("ujian");
           });
-      })
+      }) 
       .with("ujian", (builder) => {
         builder.with("soal").withCount("soal as total");
       })
       .where({ id: jadwal_ujian_id })
       .first();
 
-    // return jadwalUjian.toJSON().ujian.__meta__.total;
+    // return jadwalUjian.toJSON().ujian;
 
     let rombel
     let workbook = new Excel.Workbook();
@@ -10980,7 +10980,8 @@ ${jamPerubahan}`;
                     ``,
                     ``,
                     ``,
-                    `${e?.pertanyaan}`,
+                    // `${e?.pertanyaan}`
+                    `${nox + 1}`,
                     ,
                   ];
                   const jawabanSiswa = await TkJawabanUjianSiswa.query()
