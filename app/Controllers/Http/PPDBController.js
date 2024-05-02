@@ -3685,10 +3685,10 @@ class PPDBController {
                   ? "SD"
                   : "MI"}
                 ${padNumber(
-                  gelombangAktif?.gelombang?.pendaftar.findIndex(
+                  gelombangAktif.toJSON().gelombang?.pendaftar.findIndex(
                     (d) => d.id == gelombangAktif?.id
                   ) + 1,
-                  `${gelombangAktif?.gelombang?.diterima}`
+                  `${gelombangAktif.toJSON().gelombang?.diterima}`
                     .length
                 )}
               `): `${moment().format("YYYY")} - ${
