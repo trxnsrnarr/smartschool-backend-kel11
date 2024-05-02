@@ -3675,7 +3675,23 @@ class PPDBController {
                     ) + 1,
                   gelombangPembelian.toJSON().gelombang?.diterima.length
                 )}`
-              : `${moment().format("YYYY")} - ${
+              : sekolah?.id == 9487 ||
+              sekolah?.id == 9489 ? (
+              <>
+                REG
+                {gelombangAktif?.gelombang?.nama?.indexOf(
+                  "SD"
+                ) !== -1
+                  ? "SD"
+                  : "MI"}
+                {padNumber(
+                  gelombangAktif?.gelombang?.pendaftar.findIndex(
+                    (d) => d.id == gelombangAktif?.id
+                  ) + 1,
+                  `${gelombangAktif?.gelombang?.diterima}`
+                    .length
+                )}
+              </>): `${moment().format("YYYY")} - ${
                   sekolah?.id == 13 || sekolah?.id == 121 || sekolah?.id == 14
                     ? padNumber(
                         gelombangUser
