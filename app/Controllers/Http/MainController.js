@@ -736,7 +736,7 @@ class MainController {
   }
 
   async getMasterSekolahSS({ response, request }) {
-    let { page, propinsi, kabupaten } = request.get();
+    let { page, propinsi, kabupaten, search } = request.get();
 
     let kodePropsId;
 
@@ -789,6 +789,9 @@ class MainController {
       })
       .whereIn("id", kodePropsId)
       .orderBy("jumlah_topik", "desc");
+    if (search) {
+      res.where("sekolah", "like", `%${search}%`);
+    }
 
     return response.ok({
       sekolah: await res.paginate(page, 50),
@@ -2128,7 +2131,7 @@ class MainController {
       avatar,
       home,
     };
-    
+
     if (sekolah?.id == 9487 || sekolah?.id == 9489) {
       const rules = {
         nisn: "required",
@@ -2154,7 +2157,6 @@ class MainController {
         }
       }
     }
-
 
     if (pendidikan) {
       pendidikan = JSON.stringify(pendidikan);
@@ -2201,8 +2203,6 @@ class MainController {
     }
 
     await User.query().where({ id: user.id }).update(userPayload);
-
-    
 
     const check = await MProfilUser.query()
       .select("id")
@@ -4885,11 +4885,12 @@ class MainController {
         nisn,
       });
     }
-    if (nisn){
+    if (nisn) {
       await MProfilUser.create({
         m_user_id: res.id,
         nisn,
-      });}
+      });
+    }
 
     const { token } = await auth.generate(res);
 
