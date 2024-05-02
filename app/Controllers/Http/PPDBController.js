@@ -2615,9 +2615,7 @@ class PPDBController {
       .andWhere({ dihapus: 0 })
       .ids();
 
-      
-
-    let gelombangUser=[];
+    let gelombangUser = [];
 
     if (sekolah?.id == 14 || sekolah?.id == 13 || sekolah?.id == 121) {
       const jalurIds1 = await MJalurPpdb.query()
@@ -2652,7 +2650,6 @@ class PPDBController {
         .andWhere({ dihapus: 0 })
         .fetch();
     }
-    
 
     const data = await Promise.all(
       gelombang
@@ -2818,7 +2815,7 @@ class PPDBController {
                   sekolah?.id == 13 || sekolah?.id == 121 || sekolah?.id == 14
                     ? padNumber(
                         gelombangUser
-                          .toJSON() 
+                          .toJSON()
                           ?.findIndex(
                             (d) => d.id == gelombangAktif.toJSON().gelombang?.id
                           ) + 1,
@@ -3106,7 +3103,9 @@ class PPDBController {
             no_telepon: d.user ? d.user.whatsapp : "-",
             gender: d.user ? d.user.gender : "-",
             agama: d.user ? d.user.agama : "-",
-            tgllahir: d?.user?.tanggal_lahir ? moment(`${d.user.tanggal_lahir}`).format("DD-MM-YYYY") : "-",
+            tgllahir: d?.user?.tanggal_lahir
+              ? moment(`${d.user.tanggal_lahir}`).format("DD-MM-YYYY")
+              : "-",
             asalsklh: d.user.profil ? d.user.profil.asal_sekolah : "-",
             nomorPeserta: nomorPeserta ? nomorPeserta : "-",
             tanggal: d ? d.created_at : "-",
@@ -3675,23 +3674,20 @@ class PPDBController {
                     ) + 1,
                   gelombangPembelian.toJSON().gelombang?.diterima.length
                 )}`
-              : sekolah?.id == 9487 ||
-              sekolah?.id == 9489 ? (
-              `
-                REG
-                ${gelombangAktif?.gelombang?.nama?.indexOf(
-                  "SD"
-                ) !== -1
-                  ? "SD"
-                  : "MI"}
-                ${padNumber(
-                  gelombangAktif.toJSON().gelombang?.pendaftar.findIndex(
-                    (d) => d.id == gelombangAktif?.id
-                  ) + 1,
-                  `${gelombangAktif.toJSON().gelombang?.diterima}`
-                    .length
-                )}
-              `): `${moment().format("YYYY")} - ${
+              : sekolah?.id == 9487 || sekolah?.id == 9489
+              ? `REG${
+                  gelombangAktif?.gelombang?.nama?.indexOf("SD") !== -1
+                    ? "SD"
+                    : "MI"
+                }${padNumber(
+                  gelombangAktif
+                    .toJSON()
+                    .gelombang?.pendaftar.findIndex(
+                      (d) => d.id == gelombangAktif?.id
+                    ) + 1,
+                  `${gelombangAktif.toJSON().gelombang?.diterima}`.length
+                )}`
+              : `${moment().format("YYYY")} - ${
                   sekolah?.id == 13 || sekolah?.id == 121 || sekolah?.id == 14
                     ? padNumber(
                         gelombangUser
@@ -3874,7 +3870,9 @@ class PPDBController {
             no_telepon: d.user ? d.user.whatsapp : "-",
             gender: d.user ? d.user.gender : "-",
             agama: d.user ? d.user.agama : "-",
-            tgllahir: d?.user?.tanggal_lahir ? moment(`${d.user.tanggal_lahir}`).format("DD-MM-YYYY") : "-",
+            tgllahir: d?.user?.tanggal_lahir
+              ? moment(`${d.user.tanggal_lahir}`).format("DD-MM-YYYY")
+              : "-",
             asalsklh: d.user.profil ? d.user.profil.asal_sekolah : "-",
             nomorPeserta: nomorPeserta ? nomorPeserta : "-",
             tanggal: d ? d.created_at : "-",
