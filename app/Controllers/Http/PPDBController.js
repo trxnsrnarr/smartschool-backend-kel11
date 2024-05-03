@@ -3570,11 +3570,11 @@ class PPDBController {
           //     ? "02"
           //     : "03"
           // } - ${padNumber(urutan + 1, `${gelombang.diterima}`.length)}`;
-console.log(gelombangAktif?.gelombang?.nama);
+console.log(gelombangAktif.toJSON().gelombang?.nama,gelombangAktif.toJSON()?.gelombang?.nama?.indexOf("SD") == -1);
           const nomorPeserta =
             sekolah?.id == 9487 || sekolah?.id == 9489
               ? `REG${
-                  gelombangAktif?.toJSON()?.gelombang?.nama?.indexOf("SD") == -1
+                  gelombangAktif.toJSON()?.gelombang?.nama?.indexOf("SD") == -1
                     ? "SD"
                     : "MI"
                 }${padNumber(
