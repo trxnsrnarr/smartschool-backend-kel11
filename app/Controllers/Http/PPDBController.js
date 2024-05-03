@@ -3529,9 +3529,8 @@ class PPDBController {
             : {};
 
           let gelombangAktif;
-          let pendaftarIds;
+          
           let pendaftarIds1;
-          let terdaftar;
           let terdaftarPembelian;
           let gelombangPembelian;
 
@@ -3558,20 +3557,6 @@ class PPDBController {
             .whereIn("m_gelombang_ppdb_id", checkIds)
             .first();
 
-          pendaftarIds = await MPendaftarPpdb.query()
-            .where({ dihapus: 0 })
-            .whereIn("m_gelombang_ppdb_id", gelombangIds)
-            .andWhere({ m_user_id: d.user.id })
-            .pluck("m_gelombang_ppdb_id");
-
-          terdaftar = await MGelombangPpdb.query()
-            .with("pendaftar1", (builder) => {
-              builder.where({ m_user_id: d.user.id });
-            })
-            .with("jalur")
-            .whereIn("id", pendaftarIds)
-            .where({ dihapus: 0 })
-            .fetch();
 
           if (sekolah?.id == 14 || sekolah?.id == 13 || sekolah?.id == 121) {
             const jalurIds1 = await MJalurPpdb.query()
@@ -3714,11 +3699,7 @@ class PPDBController {
                 )}
             `;
 
-          const pembayaran = JSON.parse(d?.pembayaran || "[]");
-          const totalPembayaran = pembayaran?.reduce(
-            (a, b) => a + parseInt(b.nominal),
-            0
-          );
+          
           worksheet.addConditionalFormatting({
             ref: `A${(idx + 1) * 1 + 5}:A${(idx + 1) * 1 + 6}`,
             rules: [
