@@ -325,7 +325,7 @@ class MainController {
   async singleUpload({ request, response }) {
     const fileUpload = request.file("file");
 
-    const fname = `${new Date().getTime()}.${fileUpload.extname}`;
+    const fname = `${Date.now()}.${fileUpload.extname}`;
 
     await fileUpload.move(Helpers.publicPath("uploads/"), {
       name: fname,
@@ -342,7 +342,7 @@ class MainController {
   async richEditorUpload({ request, response }) {
     const fileUpload = request.file("file");
 
-    const fname = `${new Date().getTime()}.${fileUpload.extname}`;
+    const fname = `${Date.now()}.${fileUpload.extname}`;
 
     await fileUpload.move(Helpers.publicPath("uploads/"), {
       name: fname,
@@ -358,7 +358,7 @@ class MainController {
 
   async multipleUpload({ request, response }) {
     // const fileUpload = request.file("file");
-    // const fname = `${new Date().getTime()}.${fileUpload.extname}`;
+    // const fname = `${Date.now()}.${fileUpload.extname}`;
     // await fileUpload.move(Helpers.publicPath("uploads/"), {
     //   name: fname,
     //   overwrite: true,
@@ -1230,7 +1230,7 @@ class MainController {
     }
 
     // if(lampiran != null){
-    //   const fname = `surat-pernyataan-${new Date().getTime()}-${id}.${
+    //   const fname = `surat-pernyataan-${Date.now()}-${id}.${
     //     lampiran.extname
     //   }`;
     //   await lampiran.move(Helpers.publicPath("surat/"), {
@@ -1373,7 +1373,7 @@ class MainController {
       //     .andWhere({ m_sekolah_id: sekolah.id })
       //     .andWhere({ dihapus: 0 })
       //     .first();
-      //   const currentTime = new Date().getTime();
+      //   const currentTime = Date.now();
       //   const lastLoginTime = new Date(last_login.updated_at).getTime();
       //   const timeDifference = currentTime - lastLoginTime;
       //   const timeout = 8 * 60 * 60 * 1000;
@@ -3854,7 +3854,7 @@ class MainController {
 
     const { nama, waktu, masker, suhu, foto } = request.post();
 
-    const fileName = new Date().getTime();
+    const fileName = Date.now();
     await Drive.put(`camera/${fileName}.jpeg`, Buffer.from(foto, "base64"));
 
     let user;
@@ -8113,7 +8113,7 @@ class MainController {
       return response.unprocessableEntity(validation.messages());
     }
 
-    const slug = `${slugify(judul)}-${new Date().getTime()}`;
+    const slug = `${slugify(judul)}-${Date.now()}`;
 
     let post;
 
@@ -12897,7 +12897,7 @@ class MainController {
     const { jadwal_mengajar_id } = request.post();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD HH-mm-ss-") + new Date().getTime();
+      moment().format("YYYY-MM-DD HH-mm-ss-") + Date.now();
 
     const jadwalMengajar = await MJadwalMengajar.query()
       .with("rombel")
@@ -13024,7 +13024,7 @@ class MainController {
       })
     );
 
-    let namaFile = `/uploads/absen-pertemuan-${new Date().getTime()}.xlsx`;
+    let namaFile = `/uploads/absen-pertemuan-${Date.now()}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -13658,7 +13658,7 @@ class MainController {
       );
     }
 
-    const fileName = new Date().getTime();
+    const fileName = Date.now();
     let url = "";
     if (photo) {
       const filePhoto = bucket.file(`fr/${fileName}.jpeg`);
@@ -14160,7 +14160,7 @@ class MainController {
 
     const { role, tanggal, rombel_id } = request.post();
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     if (role == "siswa") {
       let rombel = MRombel.query()
@@ -14327,7 +14327,7 @@ class MainController {
       worksheet.getColumn("K").width = 13;
       worksheet.getColumn("L").width = 13;
 
-      let namaFile = `/uploads/rekap-absen-siswa-${new Date().getTime()}.xlsx`;
+      let namaFile = `/uploads/rekap-absen-siswa-${Date.now()}.xlsx`;
 
       // save workbook to disk
       await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -15994,7 +15994,7 @@ class MainController {
 
     let file = request.file("file");
 
-    let fname = `import-excel-soal-${new Date().getTime()}.xlsx`;
+    let fname = `import-excel-soal-${Date.now()}.xlsx`;
 
     const user = await auth.getUser();
 
@@ -16903,7 +16903,7 @@ class MainController {
 
     const { tk_jadwal_ujian_id, m_jadwal_ujian_id } = request.post();
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const jadwalUjian = await TkJadwalUjian.query()
       .with("peserta", (builder) => {
@@ -17608,7 +17608,7 @@ class MainController {
 
     // const { tk_jadwal_ujian_id, m_jadwal_ujian_id } = request.post();
     // const keluarantanggalseconds =
-    //   moment().format("YYYY-MM-DD ") + new Date().getTime();
+    //   moment().format("YYYY-MM-DD ") + Date.now();
 
     const { limit = 10, offset = 0 } = request.post();
 
@@ -20783,7 +20783,7 @@ class MainController {
     // Create a document
     const doc = new PDFDocument({ size: "A4" });
 
-    let namaFile = `/uploads/kartu-peserta-${new Date().getTime()}.pdf`;
+    let namaFile = `/uploads/kartu-peserta-${Date.now()}.pdf`;
 
     // Pipe its output somewhere, like to a file or HTTP response
     // See below for browser usage
@@ -29344,7 +29344,7 @@ class MainController {
     const user = await auth.getUser();
     const { role, tanggal_awal, tanggal_akhir } = request.post();
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const tanggalDistinct = await Database.raw(
       "SELECT DISTINCT DATE_FORMAT(created_at, '%Y-%m-%d') as tanggalDistinct from m_absen WHERE created_at BETWEEN ? AND  ?",
@@ -29920,7 +29920,7 @@ class MainController {
       .where({ id: ta_id })
       .first();
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const mapel = await MMataPelajaran.query()
       .with("user")
@@ -30188,7 +30188,7 @@ class MainController {
     const user = await auth.getUser();
     const { tanggal_awal, tanggal_akhir } = request.post();
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const mutasi = await MMutasi.query()
       .whereBetween("waktu_dibuat", [
@@ -30393,7 +30393,7 @@ class MainController {
     const { dari_tanggal, sampai_tanggal, kategori, tipe_akun, search, tipe } =
       request.post();
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const rekQuery = MRekSekolah.query()
       .where({ m_sekolah_id: sekolah.id })
@@ -31435,7 +31435,7 @@ class MainController {
     const { rombel_id, ta_id = ta.id } = request.post();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const query = MRombel.query()
       .with("user")
@@ -31617,7 +31617,7 @@ class MainController {
         );
       })
     );
-    let namaFile = `/uploads/rekap-rombel-${keluarantanggalseconds}-${new Date().getTime()}.xlsx`;
+    let namaFile = `/uploads/rekap-rombel-${keluarantanggalseconds}-${Date.now()}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -31640,7 +31640,7 @@ class MainController {
     }
     const user = await auth.getUser();
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const pembayaran = await MPembayaran.query()
       .with("rombel", (builder) => {
@@ -32010,7 +32010,7 @@ class MainController {
     }
     const user = await auth.getUser();
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
     const alumni = await MAlumni.query()
       .with("user", (builder) => {
         builder.where({ m_sekolah_id: sekolah.id });
@@ -32228,7 +32228,7 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
     const kepsek = ta.nama_kepsek;
 
     const ujian = await MUjian.query()
@@ -32291,7 +32291,7 @@ class MainController {
     const esaiFilter = esaiSoal.filter((d) => d != null);
     // worksheet 1
 
-    // let logoFileName = `logo-${new Date().getTime()}.png`;
+    // let logoFileName = `logo-${Date.now()}.png`;
 
     // try {
     //   const downloader = new Downloader({
@@ -32341,7 +32341,7 @@ class MainController {
       .first();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
     const kepsek = ta.nama_kepsek;
 
     const ujian = await MUjian.query()
@@ -32415,7 +32415,7 @@ class MainController {
       .first();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
     const kepsek = ta.nama_kepsek;
 
     const ujian = await MUjian.query()
@@ -32481,7 +32481,7 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const taa = await Mta.query()
       .where({ m_sekolah_id: sekolah.id })
@@ -32537,7 +32537,7 @@ class MainController {
       .first();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const ujian = await MUjian.query()
       .with("mataPelajaran", (builder) => {
@@ -32602,7 +32602,7 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
     const kepsek = ta.nama_kepsek;
 
     const ujian = await MUjian.query()
@@ -32668,7 +32668,7 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
     const kepsek = ta.nama_kepsek;
 
     const ujian = await MUjian.query()
@@ -34954,7 +34954,7 @@ class MainController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const gelombang = await MGelombangPpdb.query()
       .with("pendaftar", (builder) => {
@@ -35552,7 +35552,7 @@ class MainController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const jadwalMengajar = await MJadwalMengajar.query()
       .with("mataPelajaran", (builder) => {
@@ -37606,7 +37606,7 @@ class MainController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const lokasi = await MLokasi.query()
       .where({ dihapus: 0 })
@@ -37875,7 +37875,7 @@ class MainController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const barang = await MBarang.query()
       .with("lokasi", (builder) => {
@@ -39925,7 +39925,7 @@ class MainController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const buku = await MBukuTamu.query().where({ dihapus: 0 }).fetch();
 
@@ -40196,7 +40196,7 @@ class MainController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const { tanggal_awal, tanggal_akhir } = request.post();
 
@@ -40556,7 +40556,7 @@ class MainController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const { tanggal_awal, tanggal_akhir } = request.post();
 
@@ -41112,7 +41112,7 @@ class MainController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const { role, tanggal, rombel_id } = request.post();
 
@@ -41381,7 +41381,7 @@ class MainController {
     }
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const user = await auth.getUser();
     const { tanggal_awal, tanggal_akhir, rombel_id } = request.post();
@@ -44928,7 +44928,7 @@ class MainController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const rekapan = await MRekapRombel.query()
       .with("rekap")
@@ -45630,7 +45630,7 @@ class MainController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const bukuKunjunganPengajuan = await MPertemuanBk.query()
       .with("user", (builder) => {
@@ -47153,7 +47153,7 @@ class MainController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const pembayaran = await TkPembayaranRombel.query()
       // .with("rombel",(builder)=>{
@@ -47914,7 +47914,7 @@ class MainController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const rombel = await MRombel.query()
       .with("user", (builder) => {
@@ -48237,7 +48237,7 @@ class MainController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const guru = await User.query()
       .withCount("absen as juli", (builder) => {
@@ -48461,7 +48461,7 @@ class MainController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const barang = await MBarang.query()
       .where({ m_sekolah_id: sekolah.id })
@@ -48685,7 +48685,7 @@ class MainController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const rombel = await MRombel.query()
       .with("user", (builder) => {
@@ -49643,7 +49643,7 @@ class MainController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const rombel = await MRombel.query()
       .with("anggotaRombel", (builder) => {
@@ -50181,7 +50181,7 @@ class MainController {
     let { tipe = "uts", ta_id, rombel_id } = request.post();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const rombel = await MRombel.query()
       .with("anggotaRombel", (builder) => {
@@ -50919,7 +50919,7 @@ class MainController {
       .first();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const rombel = await MRombel.query()
       .with("anggotaRombel", (builder) => {
@@ -51283,7 +51283,7 @@ class MainController {
     let { ranking = [] } = request.post();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const rombel = await MRombel.query()
       .with("anggotaRombel", (builder) => {
@@ -51681,7 +51681,7 @@ class MainController {
     let { ranking = [] } = request.post();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const userIds = await User.query()
       .where({ m_sekolah_id: sekolah.id })
@@ -54157,7 +54157,7 @@ class MainController {
       // return jumlahSiswa;
 
       const keluarantanggalseconds =
-        moment().format("YYYY-MM-DD ") + new Date().getTime();
+        moment().format("YYYY-MM-DD ") + Date.now();
 
       let workbook = new Excel.Workbook();
       let worksheet = workbook.addWorksheet(`Analisis Materi`);
@@ -54391,7 +54391,7 @@ class MainController {
     const { m_rencana_keuangan_id } = request.post();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     let rekening = MRekSekolah.query()
       .where({ dihapus: 0 })
@@ -55095,7 +55095,7 @@ class MainController {
     const user = await auth.getUser();
     const { role, tanggal_awal, tanggal_akhir, rombel_id } = request.post();
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const tanggalDistinct = await Database.raw(
       "SELECT DISTINCT DATE_FORMAT(created_at, '%Y-%m-%d') as tanggalDistinct from m_absen WHERE created_at BETWEEN ? AND  ?",
@@ -55393,7 +55393,7 @@ class MainController {
     const user = await auth.getUser();
     const { role, tanggal_awal, tanggal_akhir, rombel_id } = request.post();
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const tanggalDistinct = await Database.raw(
       "SELECT DISTINCT DATE_FORMAT(created_at, '%Y-%m-%d') as tanggalDistinct from m_absen WHERE created_at BETWEEN ? AND  ?",
@@ -55703,7 +55703,7 @@ class MainController {
     }
     const { role, tanggal_awal, tanggal_akhir, rombel_id } = request.post();
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const tanggalS = ta ? ta.tanggal_awal : "2022-1-1";
     const tanggalE = ta ? ta.tanggal_akhir : "2022-1-1";
@@ -56006,7 +56006,7 @@ class MainController {
     const user = await auth.getUser();
     const { role, tanggal_awal, tanggal_akhir, rombel_id } = request.post();
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const tanggalDistinct = await Database.raw(
       "SELECT DISTINCT DATE_FORMAT(created_at, '%Y-%m-%d') as tanggalDistinct from m_absen WHERE created_at BETWEEN ? AND  ?",
@@ -56993,7 +56993,7 @@ class MainController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const barang = await MBarang.query()
       .with("lokasi", (builder) => {
@@ -57181,7 +57181,7 @@ class MainController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const barang = await MBarang.query()
       .with("lokasi", (builder) => {
@@ -57624,7 +57624,7 @@ class MainController {
     let { tipe, ta_id = ta.id } = request.post();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const anggotaRombel = await MAnggotaRombel.query()
       .with("user", (builder) => {

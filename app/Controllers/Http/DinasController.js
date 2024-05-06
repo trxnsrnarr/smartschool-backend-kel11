@@ -274,7 +274,7 @@ class DinasController {
   async singleUpload({ request, response }) {
     const fileUpload = request.file("file");
 
-    const fname = `${new Date().getTime()}.${fileUpload.extname}`;
+    const fname = `${Date.now()}.${fileUpload.extname}`;
 
     await fileUpload.move(Helpers.publicPath("uploads/"), {
       name: fname,
@@ -291,7 +291,7 @@ class DinasController {
   async richEditorUpload({ request, response }) {
     const fileUpload = request.file("file");
 
-    const fname = `${new Date().getTime()}.${fileUpload.extname}`;
+    const fname = `${Date.now()}.${fileUpload.extname}`;
 
     await fileUpload.move(Helpers.publicPath("uploads/"), {
       name: fname,
@@ -307,7 +307,7 @@ class DinasController {
 
   async multipleUpload({ request, response }) {
     // const fileUpload = request.file("file");
-    // const fname = `${new Date().getTime()}.${fileUpload.extname}`;
+    // const fname = `${Date.now()}.${fileUpload.extname}`;
     // await fileUpload.move(Helpers.publicPath("uploads/"), {
     //   name: fname,
     //   overwrite: true,
@@ -2969,7 +2969,7 @@ class DinasController {
     // const { pertemuan_id } = request.post();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD HH-mm-ss-") + new Date().getTime();
+      moment().format("YYYY-MM-DD HH-mm-ss-") + Date.now();
 
     const timeline = await MTimeline.query()
       .with("tkTimeline", (builder) => {
@@ -3172,7 +3172,7 @@ class DinasController {
 
     let namaFile = `/uploads/absen-pertemuan-${
       timeline.toJSON().tanggal_pertemuan
-    }-${new Date().getTime()}.xlsx`;
+    }-${Date.now()}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -3197,7 +3197,7 @@ class DinasController {
     const user = await auth.getUser();
     const { jadwal_mengajar_id } = request.post();
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const jadwalMengajar = await MJadwalMengajar.query()
       .with("rombel", (builder) => {
@@ -3470,7 +3470,7 @@ class DinasController {
     const user = await auth.getUser();
     const { jadwal_mengajar_id, tipe } = request.post();
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const jadwalMengajar = await MJadwalMengajar.query()
       .with("mataPelajaran", (builder) => {
@@ -3895,7 +3895,7 @@ class DinasController {
     const user = await auth.getUser();
     const { jadwal_mengajar_id } = request.post();
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const jadwalMengajar = await MJadwalMengajar.query()
       .with("mataPelajaran", (builder) => {
@@ -4685,7 +4685,7 @@ class DinasController {
 
     // const { jadwal_mengajar_id, tipe } = request.post();
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
     const mataPelajaranIds = await MMataPelajaran.query()
       .where({ m_user_id: user.id })
       .ids();
@@ -4932,7 +4932,7 @@ class DinasController {
 
     const { jadwal_mengajar_id, tipe } = request.post();
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
     const mataPelajaranIds = await MMataPelajaran.query()
       .where({ m_user_id: user.id })
       .ids();
@@ -5325,7 +5325,7 @@ class DinasController {
 
     const { user_id } = request.post();
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
     const mataPelajaranIds = await MMataPelajaran.query()
       .where({ m_user_id: user_id })
       .ids();

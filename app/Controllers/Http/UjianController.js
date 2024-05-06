@@ -471,7 +471,7 @@ class UjianController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const materi = await MMateri.query().where({ id: materi_id }).first();
 
@@ -1671,7 +1671,7 @@ class UjianController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const jadwalUjian = await MJadwalUjian.query()
       .with("rombelUjian", (builder) => {
@@ -1988,7 +1988,7 @@ class UjianController {
     const { tk_jadwal_ujian_id } = request.post();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const tkJadwalUjian = await TkJadwalUjian.query()
       .with("jadwalUjian", (builder) => {

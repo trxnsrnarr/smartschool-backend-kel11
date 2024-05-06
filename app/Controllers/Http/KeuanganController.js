@@ -4631,7 +4631,7 @@ class KeuanganController {
     const { tanggal_awal, tanggal_akhir } = request.post();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const awal1 = moment(tanggal_awal).locale("id").format("DD MMMM YYYY ");
     const akhir1 = moment(tanggal_akhir).locale("id").format("DD MMMM YYYY ");
@@ -5000,7 +5000,7 @@ class KeuanganController {
     const { tanggal_awal, tanggal_akhir } = request.post();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const awal1 = moment(tanggal_awal).locale("id").format("DD MMMM YYYY ");
     const akhir1 = moment(tanggal_akhir).locale("id").format("DD MMMM YYYY ");
@@ -5513,7 +5513,7 @@ ${jamPerubahan}`;
     const { tanggal_awal, tanggal_akhir } = request.post();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const awal1 = moment(tanggal_awal).locale("id").format("DD MMMM YYYY ");
     const akhir1 = moment(tanggal_akhir).locale("id").format("DD MMMM YYYY ");
@@ -6776,7 +6776,7 @@ ${jamPerubahan}`;
     // return data;
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const awal1 = moment(tanggal_awal).format("DD MMMM YYYY ");
     const akhir1 = moment(tanggal_akhir).format("DD MMMM YYYY ");
@@ -7586,7 +7586,7 @@ ${jamPerubahan}`;
     // return data;
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const awal1 = moment(tanggal_awal).format("DD MMMM YYYY ");
     const akhir1 = moment(tanggal_akhir).format("DD MMMM YYYY ");

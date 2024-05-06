@@ -778,7 +778,7 @@ class SecondController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const pembayaran = await MPembayaran.query()
       .select("id", "nama", "bulan")
@@ -3089,7 +3089,7 @@ class SecondController {
     const { tanggal_awal, tanggal_akhir } = request.post();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const awal1 = moment(tanggal_awal).locale("id").format("DD MMMM YYYY ");
     const akhir1 = moment(tanggal_akhir).locale("id").format("DD MMMM YYYY ");
@@ -3463,7 +3463,7 @@ class SecondController {
     const { tanggal_awal, tanggal_akhir, status } = request.post();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const awal1 = moment(tanggal_awal).locale("id").format("DD MMMM YYYY ");
     const akhir1 = moment(tanggal_akhir).locale("id").format("DD MMMM YYYY ");
@@ -3877,7 +3877,7 @@ ${jamPerubahan}`;
     // return data;
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const awal1 = moment(tanggal_awal).format("DD MMMM YYYY ");
     const akhir1 = moment(tanggal_akhir).format("DD MMMM YYYY ");
@@ -4699,7 +4699,7 @@ ${jamPerubahan}`;
     // return data;
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const awal1 = moment(tanggal_awal).locale("id").format("DD MMMM YYYY ");
     const akhir1 = moment(tanggal_akhir).locale("id").format("DD MMMM YYYY ");
@@ -4888,7 +4888,7 @@ ${jamPerubahan}`;
     const { tanggal_awal, tanggal_akhir, data1 } = request.post();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const awal1 = moment(tanggal_awal).locale("id").format("DD MMMM YYYY ");
     const akhir1 = moment(tanggal_akhir).locale("id").format("DD MMMM YYYY ");
@@ -5115,7 +5115,7 @@ ${jamPerubahan}`;
   //   const { tanggal_awal, tanggal_akhir } = request.post();
 
   //   const keluarantanggalseconds =
-  //     moment().format("YYYY-MM-DD ") + new Date().getTime();
+  //     moment().format("YYYY-MM-DD ") + Date.now();
 
   //   const awal1 = moment(tanggal_awal).locale("id").format("DD MMMM YYYY ");
   //   const akhir1 = moment(tanggal_akhir).locale("id").format("DD MMMM YYYY ");
@@ -5427,7 +5427,7 @@ ${jamPerubahan}`;
     return data;
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const awal1 = moment(tanggal_awal).locale("id").format("DD MMMM YYYY ");
     const akhir1 = moment(tanggal_akhir).locale("id").format("DD MMMM YYYY ");
@@ -5801,7 +5801,7 @@ ${jamPerubahan}`;
     // return data;
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const awal1 = moment(tanggal_awal).format("DD MMMM YYYY ");
     const akhir1 = moment(tanggal_akhir).format("DD MMMM YYYY ");
@@ -6287,7 +6287,7 @@ ${jamPerubahan}`;
     // return data;
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const awal1 = moment(tanggal_awal).locale("id").format("DD MMMM YYYY ");
     const akhir1 = moment(tanggal_akhir).locale("id").format("DD MMMM YYYY ");
@@ -6532,7 +6532,7 @@ ${jamPerubahan}`;
     return data;
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const awal1 = moment(tanggal_awal).locale("id").format("DD MMMM YYYY ");
     const akhir1 = moment(tanggal_akhir).locale("id").format("DD MMMM YYYY ");
@@ -6802,7 +6802,7 @@ ${jamPerubahan}`;
     // return data;
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const awal1 = moment(tanggal_awal).format("DD MMMM YYYY ");
     const akhir1 = moment(tanggal_akhir).format("DD MMMM YYYY ");
@@ -10533,7 +10533,7 @@ ${jamPerubahan}`;
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const jadwalUjian = await MJadwalUjian.query()
       .with("rombelUjian", (builder) => {
@@ -10852,7 +10852,7 @@ ${jamPerubahan}`;
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const { tk_jadwal_ujian_id, m_jadwal_ujian_id } = request.post();
 
@@ -13120,7 +13120,7 @@ ${jamPerubahan}`;
 
     const { data } = request.post();
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     let workbook = new Excel.Workbook();
     let worksheet = workbook.addWorksheet(`Daftar Akun`);
@@ -13561,7 +13561,7 @@ ${jamPerubahan}`;
     let { ranking = [] } = request.post();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     // const userData1 = await User.query().where("nama","like",`%Elisabeth Yolanda Witin%`).first()
 
@@ -14031,7 +14031,7 @@ ${jamPerubahan}`;
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     // const userData1 = await User.query().where("nama","like",`%Elisabeth Yolanda Witin%`).first()
 

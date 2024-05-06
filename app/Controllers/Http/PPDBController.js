@@ -703,7 +703,7 @@ class PPDBController {
     );
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     // return gelombang;
     const awal = moment(`${jadwalUjian.waktu_dibuka}`).format("DD-MM-YYYY ");
@@ -1813,7 +1813,7 @@ class PPDBController {
     }
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const jadwalPpdb = await MJadwalPpdb.query()
       .with("soal")
@@ -2477,7 +2477,7 @@ class PPDBController {
       });
     }
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const gelombang = await MGelombangPpdb.query()
       .with("pendaftar", (builder) => {
@@ -3341,7 +3341,7 @@ class PPDBController {
       });
     }
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const gelombang = await MGelombangPpdb.query()
       .with("pendaftar", (builder) => {

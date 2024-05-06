@@ -275,7 +275,7 @@ class CDCController {
   async singleUpload({ request, response }) {
     const fileUpload = request.file("file");
 
-    const fname = `${new Date().getTime()}.${fileUpload.extname}`;
+    const fname = `${Date.now()}.${fileUpload.extname}`;
 
     await fileUpload.move(Helpers.publicPath("uploads/"), {
       name: fname,
@@ -292,7 +292,7 @@ class CDCController {
   async richEditorUpload({ request, response }) {
     const fileUpload = request.file("file");
 
-    const fname = `${new Date().getTime()}.${fileUpload.extname}`;
+    const fname = `${Date.now()}.${fileUpload.extname}`;
 
     await fileUpload.move(Helpers.publicPath("uploads/"), {
       name: fname,
@@ -308,7 +308,7 @@ class CDCController {
 
   async multipleUpload({ request, response }) {
     // const fileUpload = request.file("file");
-    // const fname = `${new Date().getTime()}.${fileUpload.extname}`;
+    // const fname = `${Date.now()}.${fileUpload.extname}`;
     // await fileUpload.move(Helpers.publicPath("uploads/"), {
     //   name: fname,
     //   overwrite: true,

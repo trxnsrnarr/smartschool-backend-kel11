@@ -148,7 +148,7 @@ class RombelController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const { tingkat } = request.post();
 
@@ -620,7 +620,7 @@ class RombelController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const { tingkat } = request.post();
 
@@ -1879,7 +1879,7 @@ class RombelController {
     const { rombel_id } = request.post();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const query = MRombel.query()
       .with("user")
@@ -2075,7 +2075,7 @@ class RombelController {
     let namaFile = `/uploads/rekap-rombel-${rombel
       .toJSON()
       .map((d) => d.nama)
-      .join(" ")}-${new Date().getTime()}.xlsx`;
+      .join(" ")}-${Date.now()}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -2299,7 +2299,7 @@ class RombelController {
     let { tipe } = request.post();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
     const rombel = await MRombel.query()
       .select("id", "nama")
       .where({ id: rombel_id })
@@ -2797,7 +2797,7 @@ class RombelController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const jadwalMengajar = await MJadwalMengajar.query()
       .with("mataPelajaran", (builder) => {
@@ -3161,7 +3161,7 @@ class RombelController {
     const user = await auth.getUser();
 
     const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + new Date().getTime();
+      moment().format("YYYY-MM-DD ") + Date.now();
 
     const userIds = await User.query()
       .where({ m_sekolah_id: sekolah.id })
