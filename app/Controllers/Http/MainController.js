@@ -20455,9 +20455,9 @@ class MainController {
     // ini masih buffer
     if (deskripsi_singkat)
       updatePayload.deskripsi_singkat =
-        Buffer(deskripsi_singkat).toString("base64");
-    if (visi) updatePayload.visi = Buffer(visi).toString("base64");
-    if (misi) updatePayload.misi = Buffer(misi).toString("base64");
+        Buffer.from(deskripsi_singkat).toString("base64");
+    if (visi) updatePayload.visi = Buffer.from(visi).toString("base64");
+    if (misi) updatePayload.misi = Buffer.from(misi).toString("base64");
     if (background_section_mengapa)
       updatePayload.background_section_mengapa = background_section_mengapa;
     if (jumlah_siswa) updatePayload.jumlah_siswa = jumlah_siswa;
@@ -20472,19 +20472,19 @@ class MainController {
     if (banner_profil) updatePayload.banner_profil = banner_profil;
     if (deskripsi_sekolah)
       updatePayload.deskripsi_sekolah =
-        Buffer(deskripsi_sekolah).toString("base64");
+        Buffer.from(deskripsi_sekolah).toString("base64");
     if (foto_tentang_sekolah)
       updatePayload.foto_tentang_sekolah = foto_tentang_sekolah
         ? foto_tentang_sekolah.toString()
         : "";
     if (pesan_kepsek)
-      updatePayload.pesan_kepsek = Buffer(pesan_kepsek).toString("base64");
+      updatePayload.pesan_kepsek = Buffer.from(pesan_kepsek).toString("base64");
     if (foto_kepsek) updatePayload.foto_kepsek = foto_kepsek;
-    if (sejarah) updatePayload.sejarah = Buffer(sejarah).toString("base64");
+    if (sejarah) updatePayload.sejarah = Buffer.from(sejarah).toString("base64");
     if (foto_sejarah) updatePayload.foto_sejarah = foto_sejarah;
     if (foto_logo) updatePayload.foto_logo = foto_logo;
     if (lirik_mars)
-      updatePayload.lirik_mars = Buffer(lirik_mars).toString("base64");
+      updatePayload.lirik_mars = Buffer.from(lirik_mars).toString("base64");
     if (lagu_mars) updatePayload.lagu_mars = lagu_mars;
     if (alamat) updatePayload.alamat = alamat;
     if (gmaps) updatePayload.gmaps = gmaps;
@@ -22258,7 +22258,7 @@ class MainController {
     // ini masih buffer
     const perpus = await MPerpus.create({
       judul,
-      deskripsi: deskripsi ? Buffer(deskripsi).toString("base64") : "",
+      deskripsi: deskripsi ? Buffer.from(deskripsi).toString("base64") : "",
       penulis: penulis ? penulis.toString() : "",
       penerbit,
       tahun_terbit,
@@ -22416,7 +22416,7 @@ class MainController {
       .where({ id: perpus_id })
       .update({
         judul,
-        deskripsi: deskripsi ? Buffer(deskripsi).toString("base64") : "",
+        deskripsi: deskripsi ? Buffer.from(deskripsi).toString("base64") : "",
         penulis: penulis ? penulis.toString() : "",
         penerbit,
         tahun_terbit,
@@ -41086,7 +41086,7 @@ class MainController {
           .where("id", d.id)
           .update({
             kesimpulan: d.kesimpulan
-              ? Buffer(d.kesimpulan, "base64").toString("ascii")
+              ? Buffer.from(d.kesimpulan, "base64").toString("ascii")
               : "",
           });
       })

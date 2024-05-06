@@ -33,7 +33,7 @@ class MPerpus extends Model {
   }
   // ini masih buffer
   getDeskripsi(deskripsi) {
-    return deskripsi ? Buffer(deskripsi, "base64").toString("ascii") : "";
+    return deskripsi ? Buffer.from(deskripsi, "base64").toString("ascii") : "";
   }
 }
 
