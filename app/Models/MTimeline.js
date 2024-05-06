@@ -88,7 +88,7 @@ class MTimeline extends Model {
     return moment(created_at).format("DD MMMM YYYY");
   }
 
-  getAbsen({ updated_at, created_at, diubah }) {
+  getAbsen({  created_at  }) {
     if (
       moment(created_at).format("YYYY-MM-DD") == moment().format("YYYY-MM-DD")
     ) {
