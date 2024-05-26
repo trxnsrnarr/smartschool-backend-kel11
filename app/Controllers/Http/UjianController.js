@@ -8,7 +8,9 @@ const MMataPelajaran = use("App/Models/MMataPelajaran");
 const MMateri = use("App/Models/MMateri");
 const MUjian = use("App/Models/MUjian");
 const TkSoalUjian = use("App/Models/TkSoalUjian");
+const TkJawabanUjianSiswa = use("App/Models/TkJawabanUjianSiswa");
 const TkJadwalUjian = use("App/Models/TkJadwalUjian");
+const MJadwalUjian = use("App/Models/MJadwalUjian");
 const MSoalUjian = use("App/Models/MSoalUjian");
 const MAnggotaRombel = use("App/Models/MAnggotaRombel");
 const MRombel = use("App/Models/MRombel");
@@ -42,6 +44,18 @@ const messageForbidden = "Dilarang, anda bukan seorang admin";
 const messageEmailSuccess = "Data berhasil dikirim ke email";
 const pesanSudahDitambahkan = "Data sudah ditambahkan";
 
+function colName(n) {
+  var ordA = "a".charCodeAt(0);
+  var ordZ = "z".charCodeAt(0);
+  var len = ordZ - ordA + 1;
+
+  var s = "";
+  while (n >= 0) {
+    s = String.fromCharCode((n % len) + ordA) + s;
+    n = Math.floor(n / len) - 1;
+  }
+  return s.toUpperCase();
+}
 class UjianController {
   async getSekolahByDomain(domain) {
     const sekolah = await MSekolah.query()
@@ -470,8 +484,7 @@ class UjianController {
 
     const user = await auth.getUser();
 
-    const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + Date.now();
+    const keluarantanggalseconds = moment().format("YYYY-MM-DD ") + Date.now();
 
     const materi = await MMateri.query().where({ id: materi_id }).first();
 
@@ -1670,8 +1683,7 @@ class UjianController {
 
     const user = await auth.getUser();
 
-    const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + Date.now();
+    const keluarantanggalseconds = moment().format("YYYY-MM-DD ") + Date.now();
 
     const jadwalUjian = await MJadwalUjian.query()
       .with("rombelUjian", (builder) => {
@@ -1987,8 +1999,7 @@ class UjianController {
 
     const { tk_jadwal_ujian_id } = request.post();
 
-    const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + Date.now();
+    const keluarantanggalseconds = moment().format("YYYY-MM-DD ") + Date.now();
 
     const tkJadwalUjian = await TkJadwalUjian.query()
       .with("jadwalUjian", (builder) => {
@@ -2240,6 +2251,1568 @@ class UjianController {
     let namaFile = `/uploads/Daftar-Hadir-Ujian-${
       tkJadwalUjian.toJSON().rombel.nama
     }-${keluarantanggalseconds}.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
+
+  async downloadJadwalUjian({ response, request }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { tk_jadwal_ujian_id, m_jadwal_ujian_id } = request.post();
+    const keluarantanggalseconds = moment().format("YYYY-MM-DD ") + Date.now();
+
+    const jadwalUjian = await TkJadwalUjian.query()
+      .with("peserta", (builder) => {
+        builder.with("user"),
+          (builder) => {
+            builder.select("id", "nama");
+          };
+      })
+      .with("rombel")
+      .with("jadwalUjian", (builder) => {
+        builder.with("ujian");
+      })
+      .where({ id: tk_jadwal_ujian_id })
+      .first();
+
+    const tkJadwalUjian = await TkJadwalUjian.query()
+      .where({ id: tk_jadwal_ujian_id })
+      .pluck("m_rombel_id");
+
+    const anggotaRombel = await MAnggotaRombel.query()
+      .where({ m_rombel_id: tkJadwalUjian[0] })
+      .andWhere({ dihapus: 0 })
+      .pluck("m_user_id");
+
+    const pesertaUjianData = await User.query()
+      .select("id", "nama")
+      .whereIn("id", anggotaRombel)
+      .fetch();
+
+    const workbook = new Excel.Workbook();
+
+    await Promise.all(
+      [0].map(async (_) => {
+        // Create workbook & add worksheet
+        const worksheet = workbook.addWorksheet(
+          `${jadwalUjian.toJSON().rombel.nama}`
+        );
+        worksheet.addConditionalFormatting({
+          ref: "A10:P10",
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  bold: true,
+                },
+                fill: {
+                  type: "pattern",
+                  pattern: "solid",
+                  bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        await Promise.all(
+          pesertaUjianData
+            .toJSON()
+            .sort((a, b) => ("" + a.nama).localeCompare(b.nama))
+            .map(async (d, idx) => {
+              let update = 0;
+              await Promise.all(
+                jadwalUjian
+                  .toJSON()
+                  .peserta.sort((a, b) =>
+                    ("" + a.user.nama).localeCompare(b.user.nama)
+                  )
+                  .map(async (e) => {
+                    if (d.id == e.m_user_id) {
+                      update = 1;
+                      const pesertaUjian = await TkPesertaUjian.query()
+                        .with("jawabanSiswa", (builder) => {
+                          builder.with("soal");
+                        })
+                        .with("user")
+                        .where({ id: e.id })
+                        .first();
+
+                      let metaHasil = {
+                        nilaiPg: 0,
+                        nilaiEsai: 0,
+                        nilaiPgKompleks: 0,
+                        nilaiUraian: 0,
+                        nilaiMenjodohkan: 0,
+                        nilaiIsian: 0,
+                        nilaiTotal: 0,
+                        benarPg: 0,
+                        benarEsai: 0,
+                        benarIsian: 0,
+                        benarPgKompleks: 0,
+                        benarUraian: 0,
+                        benarMenjodohkan: 0,
+                        benar: 0,
+                      };
+                      let analisisBenar = {};
+                      let analisisTotal = {};
+
+                      await Promise.all(
+                        pesertaUjian.toJSON().jawabanSiswa.map(async (d) => {
+                          if (d.soal.bentuk == "pg") {
+                            if (d.jawaban_pg == d.soal.kj_pg) {
+                              metaHasil.nilaiPg =
+                                metaHasil.nilaiPg + d.soal.nilai_soal;
+                              metaHasil.benar = metaHasil.benar + 1;
+                              metaHasil.benarPg = metaHasil.benarPg + 1;
+                              analisisBenar[d.soal.kd] = analisisBenar[
+                                d.soal.kd
+                              ]
+                                ? analisisBenar[d.soal.kd] + 1
+                                : 1;
+                            }
+                            analisisTotal[d.soal.kd] = analisisTotal[d.soal.kd]
+                              ? analisisTotal[d.soal.kd] + 1
+                              : 1;
+                          } else if (d.soal.bentuk == "isian") {
+                            if (d.jawaban_isian == d.soal.jawaban_benar) {
+                              metaHasil.nilaiIsian =
+                                metaHasil.nilaiIsian + d.soal.nilai_soal;
+                              metaHasil.benar = metaHasil.benar + 1;
+                              metaHasil.benarIsian = metaHasil.benarIsian + 1;
+                            }
+                          } else if (d.soal.bentuk == "esai") {
+                            if (JSON.parse(d.jawaban_rubrik_esai)) {
+                              if (JSON.parse(d.jawaban_rubrik_esai).length) {
+                                JSON.parse(d.jawaban_rubrik_esai).map((e) => {
+                                  if (e.benar) {
+                                    metaHasil.nilaiEsai =
+                                      metaHasil.nilaiEsai +
+                                      parseInt(e.poin ? e.poin : 0);
+                                  }
+                                });
+
+                                if (
+                                  d.jawaban_rubrik_esai.indexOf("true") != -1
+                                ) {
+                                  metaHasil.benar = metaHasil.benar + 1;
+                                  metaHasil.benarEsai = metaHasil.benarEsai + 1;
+                                }
+                              }
+                            }
+                          } else if (d.soal.bentuk == "pg_kompleks") {
+                            const jawabanKjKompleks =
+                              d.soal.jawaban_pg_kompleks.split(",");
+                            const check1 = jawabanKjKompleks.every((e) =>
+                              d.jawaban_pg_kompleks.includes(e)
+                            );
+                            const check2 = d.jawaban_pg_kompleks.every((e) =>
+                              d.soal.jawaban_pg_kompleks.includes(e)
+                            );
+                            if (check1 && check2) {
+                              metaHasil.nilaiPgKompleks =
+                                metaHasil.nilaiPgKompleks + d.soal.nilai_soal;
+                              metaHasil.benar = metaHasil.benar + 1;
+                              metaHasil.benarPgKompleks =
+                                metaHasil.benarPgKompleks + 1;
+                              analisisBenar[d.soal.kd] = analisisBenar[
+                                d.soal.kd
+                              ]
+                                ? analisisBenar[d.soal.kd] + 1
+                                : 1;
+                            }
+                            analisisTotal[d.soal.kd] = analisisTotal[d.soal.kd]
+                              ? analisisTotal[d.soal.kd] + 1
+                              : 1;
+                          } else if (d.soal.bentuk == "uraian") {
+                            if (d.jawaban_opsi_uraian == d.soal.kj_uraian) {
+                              metaHasil.nilaiUraian =
+                                metaHasil.nilaiUraian + d.soal.nilai_soal;
+                              metaHasil.benar = metaHasil.benar + 1;
+                              metaHasil.benarUraian = metaHasil.benarUraian + 1;
+                              analisisBenar[d.soal.kd] = analisisBenar[
+                                d.soal.kd
+                              ]
+                                ? analisisBenar[d.soal.kd] + 1
+                                : 1;
+                            }
+                            analisisTotal[d.soal.kd] = analisisTotal[d.soal.kd]
+                              ? analisisTotal[d.soal.kd] + 1
+                              : 1;
+                          } else if (d.soal.bentuk == "menjodohkan") {
+                            // const jawabanKjMenjodohkan = d.soal.jawaban_pg_kompleks.split(",")
+                            // const check1 = jawabanKjKompleks.every(e=> d.jawaban_pg_kompleks.includes(e))
+                            // const check2 = d.jawaban_menjodohkan.every(e => d.soal.jawaban_pg_kompleks.includes(e))
+                            if (d.jawaban_menjodohkan) {
+                              if (d.jawaban_menjodohkan.length) {
+                                d.jawaban_menjodohkan.map((e, id) => {
+                                  // metaHasil.nilaiMenjodohkan = metaHasil.nilaiMenjodohkan+','+ id ;
+                                  const check1 = d.soal.soal_menjodohkan.find(
+                                    (r) => id + 1 == r.id
+                                  );
+                                  if (check1) {
+                                    if (check1.jawaban == e - 1) {
+                                      metaHasil.nilaiMenjodohkan =
+                                        metaHasil.nilaiMenjodohkan +
+                                        parseInt(check1.poin);
+                                      metaHasil.benar = metaHasil.benar + 1;
+                                      metaHasil.benarMenjodohkan =
+                                        d.jawaban_menjodohkan.length;
+                                    }
+                                  }
+                                });
+                              }
+                            }
+                          }
+                        })
+                      );
+
+                      metaHasil.nilaiTotal =
+                        (metaHasil.nilaiPg ? metaHasil.nilaiPg : 0) +
+                        (metaHasil.nilaiEsai ? metaHasil.nilaiEsai : 0) +
+                        (metaHasil.nilaiPgKompleks
+                          ? metaHasil.nilaiPgKompleks
+                          : 0) +
+                        (metaHasil.nilaiUraian ? metaHasil.nilaiUraian : 0) +
+                        (metaHasil.nilaiMenjodohkan
+                          ? metaHasil.nilaiMenjodohkan
+                          : 0);
+
+                      // add column headers
+                      worksheet.getRow(10).values = [
+                        "Nama",
+                        "Nilai PG",
+                        "Nilai Esai",
+
+                        "Nilai Isian",
+                        "Nilai PG Kompleks",
+                        "Nilai Uraian",
+                        "Nilai Menjodohkan",
+                        "Nilai Total",
+
+                        "Total Benar PG",
+                        "Total Benar Esai",
+                        "Total Benar Isian",
+                        "Total Benar PG Kompleks",
+                        "Total Benar Uraian",
+                        "Total Benar Menjodohkan",
+                        "Total Benar",
+                        "Keluar Tab",
+                      ];
+
+                      worksheet.columns = [
+                        { key: "user" },
+                        { key: "nilai_pg" },
+                        { key: "nilai_esai" },
+                        { key: "nilai_isian" },
+                        { key: "nilai_pg_kompleks" },
+                        { key: "nilai_uraian" },
+                        { key: "nilai_menjodohkan" },
+                        { key: "nilai_total" },
+
+                        { key: "benar_pg" },
+                        { key: "benar_esai" },
+                        { key: "benar_isian" },
+                        { key: "benar_pg_kompleks" },
+                        { key: "benar_uraian" },
+                        { key: "benar_menjodohkan" },
+                        { key: "benar_total" },
+                        { key: "keluar_tab" },
+                      ];
+                      worksheet.addConditionalFormatting({
+                        ref: `B${(idx + 1) * 1 + 10}:P${(idx + 1) * 1 + 10}`,
+                        rules: [
+                          {
+                            type: "expression",
+                            formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                            style: {
+                              font: {
+                                name: "Times New Roman",
+                                family: 4,
+                                size: 11,
+                                // bold: true,
+                              },
+                              alignment: {
+                                vertical: "middle",
+                                horizontal: "center",
+                              },
+                              border: {
+                                top: { style: "thin" },
+                                left: { style: "thin" },
+                                bottom: { style: "thin" },
+                                right: { style: "thin" },
+                              },
+                            },
+                          },
+                        ],
+                      });
+                      worksheet.addConditionalFormatting({
+                        ref: `A${(idx + 1) * 1 + 10}`,
+                        rules: [
+                          {
+                            type: "expression",
+                            formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                            style: {
+                              font: {
+                                name: "Times New Roman",
+                                family: 4,
+                                size: 11,
+                                // bold: true,
+                              },
+                              alignment: {
+                                vertical: "middle",
+                                horizontal: "left",
+                              },
+                              border: {
+                                top: { style: "thin" },
+                                left: { style: "thin" },
+                                bottom: { style: "thin" },
+                                right: { style: "thin" },
+                              },
+                            },
+                          },
+                        ],
+                      });
+                      // Add row using key mapping to columns
+                      const row = worksheet.addRow({
+                        user: d.nama,
+                        nilai_pg: metaHasil.nilaiPg,
+                        nilai_esai: metaHasil.nilaiEsai,
+
+                        nilai_isian: metaHasil.nilaiIsian,
+                        nilai_pg_kompleks: metaHasil.nilaiPgKompleks,
+                        nilai_uraian: metaHasil.nilaiUraian,
+                        nilai_menjodohkan: metaHasil.nilaiMenjodohkan,
+                        nilai_total: metaHasil.nilaiTotal,
+                        benar_pg: metaHasil.benarPg,
+                        benar_esai: metaHasil.benarEsai,
+                        benar_isian: metaHasil.benarIsian,
+                        benar_pg_kompleks: metaHasil.benarPgKompleks,
+                        benar_uraian: metaHasil.benarUraian,
+                        benar_menjodohkan: metaHasil.benarMenjodohkan,
+                        benar_total: metaHasil.benar,
+                        keluar_tab: pesertaUjian?.warning,
+                      });
+                    }
+                  })
+              );
+              if (update == 0) {
+                worksheet.getRow(10).values = [
+                  "Nama",
+                  "Nilai PG",
+                  "Nilai Esai",
+                  "Nilai Isian",
+                  "Nilai PG Kompleks",
+                  "Nilai Uraian",
+                  "Nilai Menjodohkan",
+                  "Nilai Total",
+
+                  "Total Benar PG",
+                  "Total Benar Esai",
+                  "Total Benar Isian",
+                  "Total Benar PG Kompleks",
+                  "Total Benar Uraian",
+                  "Total Benar Menjodohkan",
+                  "Total Benar",
+                  "Keluar Tab",
+                ];
+
+                worksheet.columns = [
+                  { key: "user" },
+                  { key: "nilai_pg" },
+                  { key: "nilai_esai" },
+                  { key: "nilai_isian" },
+                  { key: "nilai_pg_kompleks" },
+                  { key: "nilai_uraian" },
+                  { key: "nilai_menjodohkan" },
+                  { key: "nilai_total" },
+
+                  { key: "benar_pg" },
+                  { key: "benar_esai" },
+                  { key: "benar_isian" },
+                  { key: "benar_pg_kompleks" },
+                  { key: "benar_uraian" },
+                  { key: "benar_menjodohkan" },
+                  { key: "benar_total" },
+                  { key: "keluar_tab" },
+                ];
+
+                // Add row using key mapping to columns
+                const row = worksheet.addRow({
+                  user: d.nama,
+                  nilai_pg: 0,
+                  nilai_esai: 0,
+
+                  nilai_isian: 0,
+                  nilai_pg_kompleks: 0,
+                  nilai_uraian: 0,
+                  nilai_menjodohkan: 0,
+                  nilai_total: 0,
+                  benar_pg: 0,
+                  benar_esai: 0,
+                  benar_isian: 0,
+                  benar_pg_kompleks: 0,
+                  benar_uraian: 0,
+                  benar_menjodohkan: 0,
+                  benar_total: 0,
+                  keluar_tab: 0,
+                });
+                worksheet.addConditionalFormatting({
+                  ref: `B${(idx + 1) * 1 + 10}:P${(idx + 1) * 1 + 10}`,
+                  rules: [
+                    {
+                      type: "expression",
+                      formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                      style: {
+                        font: {
+                          name: "Times New Roman",
+                          family: 4,
+                          size: 11,
+                          // bold: true,
+                        },
+                        alignment: {
+                          vertical: "middle",
+                          horizontal: "center",
+                        },
+                        border: {
+                          top: { style: "thin" },
+                          left: { style: "thin" },
+                          bottom: { style: "thin" },
+                          right: { style: "thin" },
+                        },
+                      },
+                    },
+                  ],
+                });
+                worksheet.addConditionalFormatting({
+                  ref: `A${(idx + 1) * 1 + 10}`,
+                  rules: [
+                    {
+                      type: "expression",
+                      formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                      style: {
+                        font: {
+                          name: "Times New Roman",
+                          family: 4,
+                          size: 11,
+                          // bold: true,
+                        },
+                        alignment: {
+                          vertical: "middle",
+                          horizontal: "left",
+                        },
+                        border: {
+                          top: { style: "thin" },
+                          left: { style: "thin" },
+                          bottom: { style: "thin" },
+                          right: { style: "thin" },
+                        },
+                      },
+                    },
+                  ],
+                });
+              }
+            })
+        );
+
+        worksheet.getCell("A1").value = "Ujian";
+        worksheet.getCell("B1").value =
+          jadwalUjian.toJSON().jadwalUjian.ujian.nama;
+        worksheet.getCell("D1").value = "Tanggal";
+        worksheet.getCell("E1").value = `${
+          jadwalUjian.toJSON().jadwalUjian.tanggalUjian
+        } ${jadwalUjian.toJSON().jadwalUjian.waktuUjian}`;
+        worksheet.getCell("D2").value = "KKM";
+        worksheet.getCell("E2").value = jadwalUjian.toJSON().jadwalUjian.kkm;
+        worksheet.getCell("A2").value = "Durasi";
+        worksheet.getCell("B2").value = `${
+          jadwalUjian.toJSON().jadwalUjian.durasi
+        } menit`;
+
+        worksheet.getColumn("A").width = 25;
+        worksheet.getColumn("B").width = 11;
+        worksheet.getColumn("C").width = 11;
+        worksheet.getColumn("D").width = 19;
+        worksheet.getColumn("E").width = 13;
+        worksheet.getColumn("F").width = 19;
+        worksheet.getColumn("G").width = 13;
+
+        worksheet.autoFilter = {
+          from: "A10",
+          to: "N10",
+        };
+
+        // worksheet.getCell("A4").value = "RPP";
+        // worksheet.getCell("A5").value = d.rpp.toString();
+
+        // worksheet.getCell("A7").value = "Deskripsi";
+        // worksheet.getCell("A8").value = d.deskripsi;
+
+        // worksheet.columns.forEach(function (column, i) {
+        //   let maxLength = 0;
+        //   column["eachCell"]({ includeEmpty: true }, function (cell) {
+        //     let columnLength = cell.value ? cell.value.toString().length : 10;
+
+        //     if (cell.value == "alpa") {
+        //       // red
+        //       cell.fill = {
+        //         type: "pattern",
+        //         pattern: "solid",
+        //         fgColor: { argb: "F9D5D4" },
+        //         bgColor: { argb: "F9D5D4" },
+        //       };
+
+        //       cell.font = {
+        //         color: { argb: "FC544B" },
+        //       };
+        //     }
+
+        //     if (cell.value == "sakit") {
+        //       // yellow
+        //       cell.fill = {
+        //         type: "pattern",
+        //         pattern: "solid",
+        //         fgColor: { argb: "FCE8D2" },
+        //         bgColor: { argb: "FCE8D2" },
+        //       };
+
+        //       cell.font = {
+        //         color: { argb: "F9AC50" },
+        //       };
+        //     }
+
+        //     if (cell.value == "izin") {
+        //       // green
+        //       cell.fill = {
+        //         type: "pattern",
+        //         pattern: "solid",
+        //         fgColor: { argb: "E0FCE4" },
+        //         bgColor: { argb: "E0FCE4" },
+        //       };
+
+        //       cell.font = {
+        //         color: { argb: "63ED7A" },
+        //       };
+        //     }
+
+        //     if (cell.value == "hadir") {
+        //       // green
+        //       cell.fill = {
+        //         type: "pattern",
+        //         pattern: "solid",
+        //         fgColor: { argb: "2680EB" },
+        //         bgColor: { argb: "2680EB" },
+        //       };
+
+        //       cell.font = {
+        //         color: { argb: "FFFFFF" },
+        //       };
+        //     }
+
+        //     if (columnLength > maxLength) {
+        //       maxLength = columnLength;
+        //     }
+        //   });
+
+        //   column.width = maxLength < 15 ? 15 : maxLength > 30 ? 30 : 15;
+        // });
+        // worksheet.autoFilter = {
+        //   from: 'A11',
+        //   to: 'D99',
+        // }
+      })
+    );
+
+    let namaFile = `/uploads/${jadwalUjian
+      .toJSON()
+      .jadwalUjian.ujian.nama.replace(/[\/|\\:*?"<>]/g, " ")} ${jadwalUjian
+      .toJSON()
+      .rombel.nama.replace(/[\/|\\:*?"<>]/g, " ")}-${Date.now()}.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
+
+  async downloadSemuaJadwalUjian({ response, request }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const { tk_jadwal_ujian_id, m_jadwal_ujian_id } = request.post();
+    const keluarantanggalseconds = moment().format("YYYY-MM-DD ") + Date.now();
+
+    const workbook = new Excel.Workbook();
+    const jadwalUjianData = await MJadwalUjian.query()
+      .with("ujian")
+      .where({ id: m_jadwal_ujian_id })
+      .first();
+
+    const jadwalUjian = await TkJadwalUjian.query()
+      .with("peserta", (builder) => {
+        builder.with("user"),
+          (builder) => {
+            builder.select("id", "nama");
+          };
+      })
+      .with("rombel")
+      .with("jadwalUjian", (builder) => {
+        builder.with("ujian");
+      })
+      .where({ m_jadwal_ujian_id: m_jadwal_ujian_id })
+      // .where({ id: tk_jadwal_ujian_id })
+      .fetch();
+
+    await Promise.all(
+      jadwalUjian.toJSON().map(async (r) => {
+        const tkJadwalUjian = await TkJadwalUjian.query()
+          .where({ id: r.id })
+          .pluck("m_rombel_id");
+
+        const anggotaRombel = await MAnggotaRombel.query()
+          .where({ m_rombel_id: r.m_rombel_id })
+          .andWhere({ dihapus: 0 })
+          .pluck("m_user_id");
+
+        const pesertaUjianData = await User.query()
+          .select("id", "nama")
+          .whereIn("id", anggotaRombel)
+          .fetch();
+
+        // Create workbook & add worksheet
+        const worksheet = workbook.addWorksheet(`${r.rombel.nama}`);
+        worksheet.addConditionalFormatting({
+          ref: "A10:P10",
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  bold: true,
+                },
+                fill: {
+                  type: "pattern",
+                  pattern: "solid",
+                  bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+        await Promise.all(
+          pesertaUjianData
+            .toJSON()
+            .sort((a, b) => ("" + a.nama).localeCompare(b.nama))
+            .map(async (d, idx) => {
+              let update = 0;
+              await Promise.all(
+                r.peserta
+                  .sort((a, b) => ("" + a.user.nama).localeCompare(b.user.nama))
+                  .map(async (e) => {
+                    if (d.id == e.m_user_id) {
+                      update = 1;
+                      const pesertaUjian = await TkPesertaUjian.query()
+                        .with("jawabanSiswa", (builder) => {
+                          builder.with("soal");
+                        })
+                        .with("user")
+                        .where({ id: e.id })
+                        .first();
+
+                      let metaHasil = {
+                        nilaiPg: 0,
+                        nilaiEsai: 0,
+                        nilaiPgKompleks: 0,
+                        nilaiUraian: 0,
+                        nilaiMenjodohkan: 0,
+                        nilaiIsian: 0,
+                        nilaiTotal: 0,
+                        benarPg: 0,
+                        benarEsai: 0,
+                        benarIsian: 0,
+                        benarPgKompleks: 0,
+                        benarUraian: 0,
+                        benarMenjodohkan: 0,
+                        benar: 0,
+                      };
+                      let analisisBenar = {};
+                      let analisisTotal = {};
+
+                      await Promise.all(
+                        pesertaUjian.toJSON().jawabanSiswa.map(async (d) => {
+                          if (d.soal.bentuk == "pg") {
+                            if (d.jawaban_pg == d.soal.kj_pg) {
+                              metaHasil.nilaiPg =
+                                metaHasil.nilaiPg + d.soal.nilai_soal;
+                              metaHasil.benar = metaHasil.benar + 1;
+                              metaHasil.benarPg = metaHasil.benarPg + 1;
+                              analisisBenar[d.soal.kd] = analisisBenar[
+                                d.soal.kd
+                              ]
+                                ? analisisBenar[d.soal.kd] + 1
+                                : 1;
+                            }
+                            analisisTotal[d.soal.kd] = analisisTotal[d.soal.kd]
+                              ? analisisTotal[d.soal.kd] + 1
+                              : 1;
+                          } else if (d.soal.bentuk == "isian") {
+                            if (d.jawaban_isian == d.soal.jawaban_benar) {
+                              metaHasil.nilaiIsian =
+                                metaHasil.nilaiIsian + d.soal.nilai_soal;
+                              metaHasil.benar = metaHasil.benar + 1;
+                              metaHasil.benarIsian = metaHasil.benarIsian + 1;
+                            }
+                          } else if (d.soal.bentuk == "esai") {
+                            if (JSON.parse(d.jawaban_rubrik_esai)) {
+                              if (JSON.parse(d.jawaban_rubrik_esai).length) {
+                                JSON.parse(d.jawaban_rubrik_esai).map((e) => {
+                                  if (e.benar) {
+                                    metaHasil.nilaiEsai =
+                                      metaHasil.nilaiEsai +
+                                      parseInt(e.poin ? e.poin : 0);
+                                  }
+                                });
+
+                                if (
+                                  d.jawaban_rubrik_esai.indexOf("true") != -1
+                                ) {
+                                  metaHasil.benar = metaHasil.benar + 1;
+                                  metaHasil.benarEsai = metaHasil.benarEsai + 1;
+                                }
+                              }
+                            }
+                          } else if (d.soal.bentuk == "pg_kompleks") {
+                            const jawabanKjKompleks =
+                              d.soal.jawaban_pg_kompleks.split(",");
+                            const check1 = jawabanKjKompleks.every((e) =>
+                              d.jawaban_pg_kompleks.includes(e)
+                            );
+                            const check2 = d.jawaban_pg_kompleks.every((e) =>
+                              d.soal.jawaban_pg_kompleks.includes(e)
+                            );
+                            if (check1 && check2) {
+                              metaHasil.nilaiPgKompleks =
+                                metaHasil.nilaiPgKompleks + d.soal.nilai_soal;
+                              metaHasil.benar = metaHasil.benar + 1;
+                              metaHasil.benarPgKompleks =
+                                metaHasil.benarPgKompleks + 1;
+                              analisisBenar[d.soal.kd] = analisisBenar[
+                                d.soal.kd
+                              ]
+                                ? analisisBenar[d.soal.kd] + 1
+                                : 1;
+                            }
+                            analisisTotal[d.soal.kd] = analisisTotal[d.soal.kd]
+                              ? analisisTotal[d.soal.kd] + 1
+                              : 1;
+                          } else if (d.soal.bentuk == "uraian") {
+                            if (d.jawaban_opsi_uraian == d.soal.kj_uraian) {
+                              metaHasil.nilaiUraian =
+                                metaHasil.nilaiUraian + d.soal.nilai_soal;
+                              metaHasil.benar = metaHasil.benar + 1;
+                              metaHasil.benarUraian = metaHasil.benarUraian + 1;
+                              analisisBenar[d.soal.kd] = analisisBenar[
+                                d.soal.kd
+                              ]
+                                ? analisisBenar[d.soal.kd] + 1
+                                : 1;
+                            }
+                            analisisTotal[d.soal.kd] = analisisTotal[d.soal.kd]
+                              ? analisisTotal[d.soal.kd] + 1
+                              : 1;
+                          } else if (d.soal.bentuk == "menjodohkan") {
+                            // const jawabanKjMenjodohkan = d.soal.jawaban_pg_kompleks.split(",")
+                            // const check1 = jawabanKjKompleks.every(e=> d.jawaban_pg_kompleks.includes(e))
+                            // const check2 = d.jawaban_menjodohkan.every(e => d.soal.jawaban_pg_kompleks.includes(e))
+                            if (d.jawaban_menjodohkan) {
+                              if (d.jawaban_menjodohkan.length) {
+                                d.jawaban_menjodohkan.map((e, id) => {
+                                  // metaHasil.nilaiMenjodohkan = metaHasil.nilaiMenjodohkan+','+ id ;
+                                  const check1 = d.soal.soal_menjodohkan.find(
+                                    (r) => id + 1 == r.id
+                                  );
+                                  if (check1) {
+                                    if (check1.jawaban == e - 1) {
+                                      metaHasil.nilaiMenjodohkan =
+                                        metaHasil.nilaiMenjodohkan +
+                                        parseInt(check1.poin);
+                                      metaHasil.benar = metaHasil.benar + 1;
+                                      metaHasil.benarMenjodohkan =
+                                        d.jawaban_menjodohkan.length;
+                                    }
+                                  }
+                                });
+                              }
+                            }
+                          }
+                        })
+                      );
+
+                      metaHasil.nilaiTotal =
+                        (metaHasil.nilaiPg ? metaHasil.nilaiPg : 0) +
+                        (metaHasil.nilaiEsai ? metaHasil.nilaiEsai : 0) +
+                        (metaHasil.nilaiPgKompleks
+                          ? metaHasil.nilaiPgKompleks
+                          : 0) +
+                        (metaHasil.nilaiUraian ? metaHasil.nilaiUraian : 0) +
+                        (metaHasil.nilaiMenjodohkan
+                          ? metaHasil.nilaiMenjodohkan
+                          : 0);
+
+                      // add column headers
+                      worksheet.getRow(10).values = [
+                        "Nama",
+                        "Nilai PG",
+                        "Nilai Esai",
+
+                        "Nilai Isian",
+                        "Nilai PG Kompleks",
+                        "Nilai Uraian",
+                        "Nilai Menjodohkan",
+                        "Nilai Total",
+
+                        "Total Benar PG",
+                        "Total Benar Esai",
+                        "Total Benar Isian",
+                        "Total Benar PG Kompleks",
+                        "Total Benar Uraian",
+                        "Total Benar Menjodohkan",
+                        "Total Benar",
+                        "Keluar Tab",
+                      ];
+
+                      worksheet.columns = [
+                        { key: "user" },
+                        { key: "nilai_pg" },
+                        { key: "nilai_esai" },
+                        { key: "nilai_isian" },
+                        { key: "nilai_pg_kompleks" },
+                        { key: "nilai_uraian" },
+                        { key: "nilai_menjodohkan" },
+                        { key: "nilai_total" },
+
+                        { key: "benar_pg" },
+                        { key: "benar_esai" },
+                        { key: "benar_isian" },
+                        { key: "benar_pg_kompleks" },
+                        { key: "benar_uraian" },
+                        { key: "benar_menjodohkan" },
+                        { key: "benar_total" },
+                        { key: "keluar_tab" },
+                      ];
+                      worksheet.addConditionalFormatting({
+                        ref: `B${(idx + 1) * 1 + 10}:P${(idx + 1) * 1 + 10}`,
+                        rules: [
+                          {
+                            type: "expression",
+                            formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                            style: {
+                              font: {
+                                name: "Times New Roman",
+                                family: 4,
+                                size: 11,
+                                // bold: true,
+                              },
+                              alignment: {
+                                vertical: "middle",
+                                horizontal: "center",
+                              },
+                              border: {
+                                top: { style: "thin" },
+                                left: { style: "thin" },
+                                bottom: { style: "thin" },
+                                right: { style: "thin" },
+                              },
+                            },
+                          },
+                        ],
+                      });
+                      worksheet.addConditionalFormatting({
+                        ref: `A${(idx + 1) * 1 + 10}`,
+                        rules: [
+                          {
+                            type: "expression",
+                            formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                            style: {
+                              font: {
+                                name: "Times New Roman",
+                                family: 4,
+                                size: 11,
+                                // bold: true,
+                              },
+                              alignment: {
+                                vertical: "middle",
+                                horizontal: "left",
+                              },
+                              border: {
+                                top: { style: "thin" },
+                                left: { style: "thin" },
+                                bottom: { style: "thin" },
+                                right: { style: "thin" },
+                              },
+                            },
+                          },
+                        ],
+                      });
+                      // Add row using key mapping to columns
+                      const row = worksheet.addRow({
+                        user: d.nama,
+                        nilai_pg: metaHasil.nilaiPg,
+                        nilai_esai: metaHasil.nilaiEsai,
+
+                        nilai_isian: metaHasil.nilaiIsian,
+                        nilai_pg_kompleks: metaHasil.nilaiPgKompleks,
+                        nilai_uraian: metaHasil.nilaiUraian,
+                        nilai_menjodohkan: metaHasil.nilaiMenjodohkan,
+                        nilai_total: metaHasil.nilaiTotal,
+                        benar_pg: metaHasil.benarPg,
+                        benar_esai: metaHasil.benarEsai,
+                        benar_isian: metaHasil.benarIsian,
+                        benar_pg_kompleks: metaHasil.benarPgKompleks,
+                        benar_uraian: metaHasil.benarUraian,
+                        benar_menjodohkan: metaHasil.benarMenjodohkan,
+                        benar_total: metaHasil.benar,
+                        keluar_tab: pesertaUjian?.warning,
+                      });
+                    }
+                  })
+              );
+              if (update == 0) {
+                worksheet.getRow(10).values = [
+                  "Nama",
+                  "Nilai PG",
+                  "Nilai Esai",
+                  "Nilai Isian",
+                  "Nilai PG Kompleks",
+                  "Nilai Uraian",
+                  "Nilai Menjodohkan",
+                  "Nilai Total",
+
+                  "Total Benar PG",
+                  "Total Benar Esai",
+                  "Total Benar Isian",
+                  "Total Benar PG Kompleks",
+                  "Total Benar Uraian",
+                  "Total Benar Menjodohkan",
+                  "Total Benar",
+                  "Keluar Tab",
+                ];
+
+                worksheet.columns = [
+                  { key: "user" },
+                  { key: "nilai_pg" },
+                  { key: "nilai_esai" },
+                  { key: "nilai_isian" },
+                  { key: "nilai_pg_kompleks" },
+                  { key: "nilai_uraian" },
+                  { key: "nilai_menjodohkan" },
+                  { key: "nilai_total" },
+
+                  { key: "benar_pg" },
+                  { key: "benar_esai" },
+                  { key: "benar_isian" },
+                  { key: "benar_pg_kompleks" },
+                  { key: "benar_uraian" },
+                  { key: "benar_menjodohkan" },
+                  { key: "benar_total" },
+                  { key: "keluar_tab" },
+                ];
+
+                // Add row using key mapping to columns
+                const row = worksheet.addRow({
+                  user: d.nama,
+                  nilai_pg: 0,
+                  nilai_esai: 0,
+
+                  nilai_isian: 0,
+                  nilai_pg_kompleks: 0,
+                  nilai_uraian: 0,
+                  nilai_menjodohkan: 0,
+                  nilai_total: 0,
+                  benar_pg: 0,
+                  benar_esai: 0,
+                  benar_isian: 0,
+                  benar_pg_kompleks: 0,
+                  benar_uraian: 0,
+                  benar_menjodohkan: 0,
+                  benar_total: 0,
+                  keluar_tab: 0,
+                });
+                worksheet.addConditionalFormatting({
+                  ref: `B${(idx + 1) * 1 + 10}:P${(idx + 1) * 1 + 10}`,
+                  rules: [
+                    {
+                      type: "expression",
+                      formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                      style: {
+                        font: {
+                          name: "Times New Roman",
+                          family: 4,
+                          size: 11,
+                          // bold: true,
+                        },
+                        alignment: {
+                          vertical: "middle",
+                          horizontal: "center",
+                        },
+                        border: {
+                          top: { style: "thin" },
+                          left: { style: "thin" },
+                          bottom: { style: "thin" },
+                          right: { style: "thin" },
+                        },
+                      },
+                    },
+                  ],
+                });
+                worksheet.addConditionalFormatting({
+                  ref: `A${(idx + 1) * 1 + 10}`,
+                  rules: [
+                    {
+                      type: "expression",
+                      formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                      style: {
+                        font: {
+                          name: "Times New Roman",
+                          family: 4,
+                          size: 11,
+                          // bold: true,
+                        },
+                        alignment: {
+                          vertical: "middle",
+                          horizontal: "left",
+                        },
+                        border: {
+                          top: { style: "thin" },
+                          left: { style: "thin" },
+                          bottom: { style: "thin" },
+                          right: { style: "thin" },
+                        },
+                      },
+                    },
+                  ],
+                });
+              }
+            })
+        );
+
+        worksheet.getCell("A1").value = "Ujian";
+        worksheet.getCell("B1").value = jadwalUjianData.toJSON().ujian.nama;
+        worksheet.getCell("D1").value = "Tanggal";
+        worksheet.getCell("E1").value = `${
+          jadwalUjianData.toJSON().tanggalUjian
+        } ${jadwalUjianData.toJSON().waktuUjian}`;
+        worksheet.getCell("D2").value = "KKM";
+        worksheet.getCell("E2").value = jadwalUjianData.kkm;
+        worksheet.getCell("A2").value = "Durasi";
+        worksheet.getCell("B2").value = `${jadwalUjianData.durasi} menit`;
+
+        worksheet.getColumn("A").width = 25;
+        worksheet.getColumn("B").width = 11;
+        worksheet.getColumn("C").width = 11;
+        worksheet.getColumn("D").width = 19;
+        worksheet.getColumn("E").width = 13;
+        worksheet.getColumn("F").width = 19;
+        worksheet.getColumn("G").width = 13;
+
+        worksheet.autoFilter = {
+          from: "A10",
+          to: "N10",
+        };
+
+        // worksheet.getCell("A4").value = "RPP";
+        // worksheet.getCell("A5").value = d.rpp.toString();
+
+        // worksheet.getCell("A7").value = "Deskripsi";
+        // worksheet.getCell("A8").value = d.deskripsi;
+
+        // worksheet.columns.forEach(function (column, i) {
+        //   let maxLength = 0;
+        //   column["eachCell"]({ includeEmpty: true }, function (cell) {
+        //     let columnLength = cell.value ? cell.value.toString().length : 10;
+
+        //     if (cell.value == "alpa") {
+        //       // red
+        //       cell.fill = {
+        //         type: "pattern",
+        //         pattern: "solid",
+        //         fgColor: { argb: "F9D5D4" },
+        //         bgColor: { argb: "F9D5D4" },
+        //       };
+
+        //       cell.font = {
+        //         color: { argb: "FC544B" },
+        //       };
+        //     }
+
+        //     if (cell.value == "sakit") {
+        //       // yellow
+        //       cell.fill = {
+        //         type: "pattern",
+        //         pattern: "solid",
+        //         fgColor: { argb: "FCE8D2" },
+        //         bgColor: { argb: "FCE8D2" },
+        //       };
+
+        //       cell.font = {
+        //         color: { argb: "F9AC50" },
+        //       };
+        //     }
+
+        //     if (cell.value == "izin") {
+        //       // green
+        //       cell.fill = {
+        //         type: "pattern",
+        //         pattern: "solid",
+        //         fgColor: { argb: "E0FCE4" },
+        //         bgColor: { argb: "E0FCE4" },
+        //       };
+
+        //       cell.font = {
+        //         color: { argb: "63ED7A" },
+        //       };
+        //     }
+
+        //     if (cell.value == "hadir") {
+        //       // green
+        //       cell.fill = {
+        //         type: "pattern",
+        //         pattern: "solid",
+        //         fgColor: { argb: "2680EB" },
+        //         bgColor: { argb: "2680EB" },
+        //       };
+
+        //       cell.font = {
+        //         color: { argb: "FFFFFF" },
+        //       };
+        //     }
+
+        //     if (columnLength > maxLength) {
+        //       maxLength = columnLength;
+        //     }
+        //   });
+
+        //   column.width = maxLength < 15 ? 15 : maxLength > 30 ? 30 : 15;
+        // });
+        // worksheet.autoFilter = {
+        //   from: 'A11',
+        //   to: 'D99',
+        // }
+      })
+    );
+
+    let namaFile = `/uploads/${jadwalUjianData
+      .toJSON()
+      .ujian.nama.replace(
+        /[\/|\\:*?"<>]/g,
+        " "
+      )} Semua Kelas-${Date.now()}.xlsx`;
+
+    // save workbook to disk
+    await workbook.xlsx.writeFile(`public${namaFile}`);
+
+    return namaFile;
+  }
+
+  async downloadHasilSemuaUjian2({
+    response,
+    request,
+    auth,
+    params: { jadwal_ujian_id },
+  }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
+    const user = await auth.getUser();
+
+    const keluarantanggalseconds = moment().format("YYYY-MM-DD ") + Date.now();
+
+    const { tk_jadwal_ujian_id, m_jadwal_ujian_id } = request.post();
+
+    const jadwalUjian = await MJadwalUjian.query()
+      .with("rombelUjian", (builder) => {
+        builder
+          .with("peserta", (builder) => {
+            builder.with("user"),
+              (builder) => {
+                builder.select("id", "nama");
+              };
+          })
+          // .where({ id: tk_jadwal_ujian_id })
+          .with("rombel")
+          .with("jadwalUjian", (builder) => {
+            builder.with("ujian");
+          });
+      })
+      .with("ujian", (builder) => {
+        builder.with("soal").withCount("soal as total");
+      })
+      .where({ id: jadwal_ujian_id })
+      .first();
+
+    // return jadwalUjian.toJSON().ujian;
+
+    let rombel;
+    let workbook = new Excel.Workbook();
+    await Promise.all(
+      jadwalUjian.toJSON().rombelUjian.map(async (s) => {
+        let worksheet = workbook.addWorksheet(`${s.rombel.nama}`);
+        rombel = s.rombel.nama;
+        worksheet.getCell("A1").value = sekolah.nama;
+        worksheet.getCell("A2").value = s.rombel.nama;
+        worksheet.getCell("A3").value = jadwalUjian.toJSON().ujian.nama;
+        worksheet.getCell("A4").value = ta.tahun;
+
+        worksheet.getCell(
+          "A6"
+        ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
+        worksheet.mergeCells(`A1:Z1`);
+        worksheet.mergeCells(`A2:Z2`);
+        worksheet.mergeCells(`A3:Z3`);
+        worksheet.mergeCells(`A4:Z4`);
+        worksheet.mergeCells(`A6:Z6`);
+        worksheet.getColumn("A").width = 28;
+        worksheet.getColumn("B").width = 14;
+        worksheet.getColumn("C").width = 8;
+        worksheet.getColumn("D").width = 8.5;
+        worksheet.getColumn("E").width = 9;
+        worksheet.getColumn("F").width = 14;
+        worksheet.getColumn("G").width = 10;
+        worksheet.getColumn("H").width = 8;
+        worksheet.getColumn("I").width = 11;
+        worksheet.addConditionalFormatting({
+          ref: "A1:I4",
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 16,
+                  bold: true,
+                },
+                // fill: {
+                //   type: "pattern",
+                //   pattern: "solid",
+                //   bgColor: { argb: "0000FF", fgColor: { argb: "0000FF" } },
+                // },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+              },
+            },
+          ],
+        });
+
+        // add column headers
+        await Promise.all(
+          s.peserta
+            .sort((a, b) => ("" + a.user.nama).localeCompare(b.user.nama))
+            .map(async (d, idx) => {
+              worksheet.getRow(7).values = ["No", "Nama"];
+              worksheet.columns = [{ key: "no" }, { key: "user" }];
+              let row = worksheet.addRow({
+                no: `${idx + 1}`,
+                user: d.user ? d.user.nama : "-",
+              });
+              let hasil = 0;
+              // const row = worksheet.getRow(8);
+              await Promise.all(
+                jadwalUjian.toJSON().ujian.soal.map(async (e, nox) => {
+                  // const image = await nodeHtmlToImage({
+                  //   html: formattedHTML(e.pertanyaan),
+                  //   type: "jpeg",
+                  //   quality: 25,
+                  //   encoding: "base64",
+                  //   selector: "div",
+                  //   puppeteerArgs: {
+                  //     args: ["--no-sandbox", "--disable-setuid-sandbox"],
+                  //   },
+                  // });
+                  // const dimensions = sizeOf(Buffer.from(image, "base64"));
+                  // const imageId = workbook.addImage({
+                  //   base64: image,
+                  //   extension: "jpeg",
+                  // });
+                  // worksheet.getRow(`7`).height =
+                  //   (dimensions.height * 3) / 4 + 4;
+                  // worksheet.addImage(imageId, {
+                  //   tl: { col: [`${(nox + 1) * 1 + 2.1}`], row: 7.1 },
+                  //   ext: {
+                  //     width: `${dimensions.width}`,
+                  //     height: `${dimensions.height}`,
+                  //   },
+                  // });
+                  worksheet.getColumn([`${(nox + 1) * 1 + 2}`]).values = [
+                    ``,
+                    ``,
+                    ``,
+                    ``,
+                    ``,
+                    ``,
+                    // `${e?.pertanyaan}`
+                    `${nox + 1}`,
+                    ,
+                  ];
+                  const jawabanSiswa = await TkJawabanUjianSiswa.query()
+                    .select(
+                      "id",
+                      "jawaban_pg",
+                      "jawaban_esai",
+                      "jawaban_rubrik_esai"
+                    )
+                    .where({ m_soal_ujian_id: e.id })
+                    .andWhere({ tk_peserta_ujian_id: d.id })
+                    .first();
+                  if (e.bentuk == "pg") {
+                    if (jawabanSiswa && jawabanSiswa.jawaban_pg) {
+                      row.getCell([`${(nox + 1) * 1 + 2}`]).value =
+                        jawabanSiswa.jawaban_pg;
+                      if (jawabanSiswa.jawaban_pg == e.kj_pg) {
+                        hasil = hasil + e.nilai_soal;
+                      }
+                    } else {
+                      row.getCell([`${(nox + 1) * 1 + 2}`]).value = "";
+                    }
+                  } else if (e.bentuk == "esai") {
+                    if (
+                      jawabanSiswa?.jawaban_rubrik_esai
+                        ? JSON.parse(jawabanSiswa.jawaban_rubrik_esai)
+                        : 0
+                    ) {
+                      if (
+                        JSON.parse(jawabanSiswa?.jawaban_rubrik_esai).length
+                      ) {
+                        JSON.parse(jawabanSiswa?.jawaban_rubrik_esai).map(
+                          (ed) => {
+                            row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
+                              jawabanSiswa ? jawabanSiswa.jawaban_esai : "0"
+                            }`;
+                            if (ed.benar) {
+                              row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
+                                ed ? ed.poin : "0"
+                              }`;
+                              hasil = hasil + ed.poin;
+                            }
+                          }
+                        );
+                      }
+                    }
+                  }
+
+                  row.getCell([`${(nox + 1) * 1 + 2}`]).border = {
+                    top: { style: "thin" },
+                    left: { style: "thin" },
+                    bottom: { style: "thin" },
+                    right: { style: "thin" },
+                  };
+                  worksheet.getColumn([`${(nox + 1) * 1 + 2}`]).fill = {
+                    type: "pattern",
+                    pattern: "solid",
+                    bgColor: {
+                      argb: "C0C0C0",
+                      fgColor: { argb: "C0C0C0" },
+                    },
+                  };
+                  // worksheet.getCell(`E${(nox + 1) * 1 + 8}`).value = e.nilai;
+                  // worksheet.columns = [
+                  //   { key: `tugas${nox+1}` },
+                  // ];
+
+                  worksheet.addConditionalFormatting({
+                    ref: `${(nox + 1) * 1 + 7}`,
+                    rules: [
+                      {
+                        type: "expression",
+                        formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                        style: {
+                          border: {
+                            top: { style: "thin" },
+                            left: { style: "thin" },
+                            bottom: { style: "thin" },
+                            right: { style: "thin" },
+                          },
+                          // fill: {type: 'pattern', pattern: 'solid', bgColor: {argb: warna}},
+                          font: {
+                            name: "Times New Roman",
+                            family: 4,
+                            size: 11,
+                            // bold: true,
+                          },
+                          alignment: {
+                            vertical: "middle",
+                            horizontal: "left",
+                          },
+                        },
+                      },
+                    ],
+                  });
+
+                  // // Add row using key mapping to columns
+                  // let row = worksheet.addRow ({
+                  //   tugas1: e ? e.nilai : "-",
+                  //   tugas2: e ? e.nilai : "-",
+                  //   tugas3: e ? e.nilai : "-",
+                  //   tugas4: e ? e.nilai : "-",
+                  //   tugas5: e ? e.nilai : "-",
+                  // });
+                })
+              );
+              worksheet.getCell(
+                `${colName(jadwalUjian.toJSON().ujian.__meta__.total + 2)}7`
+              ).value = "Total";
+              worksheet.getCell(
+                `${colName(jadwalUjian.toJSON().ujian.__meta__.total + 2)}${
+                  (idx + 1) * 1 + 7
+                }`
+              ).value = hasil;
+              worksheet.getCell(
+                `${colName(jadwalUjian.toJSON().ujian.__meta__.total + 2)}${
+                  (idx + 1) * 1 + 7
+                }`
+              ).border = {
+                top: { style: "thin" },
+                left: { style: "thin" },
+                bottom: { style: "thin" },
+                right: { style: "thin" },
+              };
+
+              worksheet.addConditionalFormatting({
+                ref: `A7:${colName(
+                  jadwalUjian.toJSON().ujian.__meta__.total + 2
+                )}7`,
+                rules: [
+                  {
+                    type: "expression",
+                    formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                    style: {
+                      border: {
+                        top: { style: "thin" },
+                        left: { style: "thin" },
+                        bottom: { style: "thin" },
+                        right: { style: "thin" },
+                      },
+                      font: {
+                        name: "Times New Roman",
+                        family: 4,
+                        size: 14,
+                        bold: true,
+                      },
+                      fill: {
+                        type: "pattern",
+                        pattern: "solid",
+                        bgColor: {
+                          argb: "C0C0C0",
+                          fgColor: { argb: "C0C0C0" },
+                        },
+                      },
+                      alignment: {
+                        vertical: "middle",
+                        horizontal: "center",
+                      },
+                    },
+                  },
+                ],
+              });
+
+              worksheet.addConditionalFormatting({
+                ref: `A${(idx + 1) * 1 + 7}:D${(idx + 1) * 1 + 7}`,
+                rules: [
+                  {
+                    type: "expression",
+                    formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                    style: {
+                      border: {
+                        top: { style: "thin" },
+                        left: { style: "thin" },
+                        bottom: { style: "thin" },
+                        right: { style: "thin" },
+                      },
+                      font: {
+                        name: "Times New Roman",
+                        family: 4,
+                        size: 11,
+                        // bold: true,
+                      },
+                      alignment: {
+                        vertical: "middle",
+                        horizontal: "left",
+                      },
+                    },
+                  },
+                ],
+              });
+            })
+        );
+        worksheet.autoFilter = {
+          from: "A7",
+          to: `${colName(jadwalUjian.toJSON().ujian.__meta__.total + 2)}7`,
+        };
+
+        worksheet.getCell("A1").value = sekolah.nama;
+        worksheet.getCell("A2").value = s.rombel.nama;
+        worksheet.getCell("A3").value = jadwalUjian.toJSON().ujian.nama;
+        worksheet.getCell("A4").value = ta.tahun;
+        worksheet.getColumn("B").width = 35;
+
+        worksheet.getCell(
+          "A6"
+        ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
+      })
+    );
+    let namaFile = `/uploads/rekap-hasil-ujian-siswa-semua-kelas-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);

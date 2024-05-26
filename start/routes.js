@@ -18,14 +18,13 @@ const { route, RouteGroup } = require("@adonisjs/framework/src/Route/Manager");
 /** @type {typeof import('@adonisjs/framework/src/Route/Manager')} */
 const Route = use("Route");
 
-
 // auth
 Route.post("/loginwhatsapp", "MainController.loginWhatsapp");
 Route.post("/login", "MainController.login");
 Route.post("/login-admin", "MainController.loginSuperAdmin");
 Route.post("/loginadminwhatsapp", "MainController.loginAdminWhatsapp");
 Route.post("/loginadmin", "MainController.loginAdmin");
-Route.post("/logout", "MainController.logout")
+Route.post("/logout", "MainController.logout");
 Route.get("/profil", "MainController.getProfil");
 Route.get("/profil-admin", "MainController.getProfilAdmin");
 Route.put("/profil", "MainController.putProfil");
@@ -37,7 +36,6 @@ Route.get("/profil-user", "MainController.getProfilUser");
 Route.get("/profil-user/:user_id", "MainController.detailProfilUser");
 Route.post("/profil-user/:user_id", "MainController.postDetailProfilUser");
 Route.get("/profil/guru/:user_id", "MainController.getProfilGuru");
-
 
 Route.get("/master/kcd-leaderboard", "MainController.getKcdLeaderboard");
 Route.get(
@@ -715,7 +713,11 @@ Route.get("/jadwal-ujian-check", "SecondController.getJadwalUjianCheck");
 Route.get("/jadwal-ujian/:jadwal_ujian_id", "MainController.detailJadwalUjian");
 Route.post(
   "/jadwal-ujian/download-hasil",
-  "MainController.downloadJadwalUjian"
+  "UjianController.downloadJadwalUjian"
+);
+Route.post(
+  "/jadwal-ujian/download-semua-hasil",
+  "UjianController.downloadSemuaJadwalUjian"
 );
 Route.post(
   "/jadwal-ujian/update-nilai",
@@ -1625,10 +1627,7 @@ Route.post(
   "/import/rekap-sikap/:rombel_id/:mata_pelajaran_id",
   "MainController.importSikapRekapRombel"
 );
-Route.post(
-  "/import-nilai-semua",
-  "RombelController.importNilaiUtama"
-);
+Route.post("/import-nilai-semua", "RombelController.importNilaiUtama");
 Route.post(
   "/download/ledger-nilai/:rombel_id",
   "RombelController.downloadTemplateNilai"
@@ -1746,6 +1745,10 @@ Route.post(
 Route.post(
   "/download-hasil-ujian-2/:jadwal_ujian_id",
   "SecondController.downloadHasilUjian2"
+);
+Route.post(
+  "/download-hasil-semua-ujian-2/:jadwal_ujian_id",
+  "UjianController.downloadHasilSemuaUjian2"
 );
 Route.put(
   "/gelombang-ppdb/:gelombang_ppdb_id",
@@ -2054,16 +2057,15 @@ Route.put("/eresource/lowongan/:id", "CDCController.putLowongan");
 Route.delete("/eresource/lowongan/:id", "CDCController.deleteLowongan");
 
 Route.get("/eresource/perusahaan/:id", "CDCController.detailPerusahaan");
-Route.get("/eresource/perusahaan/:id/lowongan", "CDCController.getPerusahaanLowongan");
-
-Route.post("/import-soal-word", "UjianController.readingWordForExam");
-Route.post("/docs-import","DocsController.importDocs")
-
 Route.get(
-  "/nilai-pg/:peserta_ujian_id",
-  "UjianController.detailNilaiPg"
+  "/eresource/perusahaan/:id/lowongan",
+  "CDCController.getPerusahaanLowongan"
 );
 
+Route.post("/import-soal-word", "UjianController.readingWordForExam");
+Route.post("/docs-import", "DocsController.importDocs");
+
+Route.get("/nilai-pg/:peserta_ujian_id", "UjianController.detailNilaiPg");
 
 Route.post("/user/import", "UserController.importUser");
 Route.post("/user/download", "UserController.downloadUser");
