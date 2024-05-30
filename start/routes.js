@@ -2075,6 +2075,9 @@ Route.get("/industri/:id", "CDCController.detailIndustri");
 
 Route.post("/regency/import", "DocsController.importKabupaten");
 
+
+Route.get("/sekolah-grade", "UserController.getSekolahGrade");
+
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
 Route.any("*", "MainController.notFoundPage");

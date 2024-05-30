@@ -9,6 +9,7 @@ const MNotifikasiTerjadwal = use("App/Models/MNotifikasiTerjadwal");
 const MMataPelajaran = use("App/Models/MMataPelajaran");
 const MRombel = use("App/Models/MRombel");
 const MJurusan = use("App/Models/MJurusan");
+const SekolahGrade = use("App/Models/SekolahGrade");
 const MJadwalMengajar = use("App/Models/MJadwalMengajar");
 
 const Hash = use("Hash");
@@ -682,20 +683,20 @@ class UserController {
   async getDataMigrasi({ response, request, auth }) {
     const sekolahData = await MSekolah.query()
       .with("informasi")
-      .where({ id: 578 })
+      .where({ id: 33 })
       .first();
 
     // const user = await auth.getUser();
 
-    let { m_ta_id = 8362 } = request.post();
-    m_ta_id = 8362;
+    let { m_ta_id = 8928 } = request.post();
+    m_ta_id = 8928;
 
     const ta = await Mta.query().where({ id: m_ta_id }).first();
     const user = await User.query()
       .with("profil")
       .where({ dihapus: 0 })
       .andWhere({ role: "guru" })
-      .andWhere({ m_sekolah_id: 578 })
+      .andWhere({ m_sekolah_id: 33 })
       .fetch();
 
     const rombel = await MRombel.query()
@@ -708,7 +709,7 @@ class UserController {
       .where({ dihapus: 0 })
       .andWhere({ m_ta_id: m_ta_id })
       .andWhere({ m_sekolah_id: sekolahData.id })
-      .andWhere({ tingkat: "X" })
+      .whereIn( "tingkat", ["XI"] )
       .ids();
 
     const jadwalMengajar = await MJadwalMengajar.query()
@@ -719,7 +720,7 @@ class UserController {
         )
       )
       .where({ m_ta_id: m_ta_id })
-      .andWhere({ m_sekolah_id: 578 })
+      .andWhere({ m_sekolah_id: 33 })
       .whereNotNull("m_mata_pelajaran_id")
       .whereIn("m_rombel_id", rombel)
       .fetch();
@@ -882,6 +883,77 @@ class UserController {
     //     .where({ m_sekolah_id: sekolah_id })
     //     .ids();
     // }
+  }
+
+  async getSekolahGrade({ response, request }) {
+    let {
+      page,
+      search = "",
+      status,
+      grade,
+      kabupaten,
+    } = request.get();
+
+    page = page ? page : 1;
+
+    const res = SekolahGrade.query();
+
+    let number;
+    if(search){
+
+      if (search.match(/\d/g)) {
+        number = parseInt(search.match(/\d/g).join(""));
+        search = search.replace(/\d/g, "");
+      }
+  
+      if (
+        !search.toLowerCase().includes(status.toLowerCase()) &&
+        (search.toLowerCase().includes("negeri") ||
+          search.toLowerCase().includes("negri") ||
+          search.toLowerCase().includes("swasta"))
+      ) {
+        search = `${status} ${search}`;
+      }
+      if (
+        search.toLowerCase().includes("negeri") ||
+        search.toLowerCase().includes("negri")
+      ) {
+        search = search.toLowerCase().includes("negri")
+          ? `${search.split(" ")[0]}N${search.slice(
+              search.toLowerCase().search("negri") + 5
+            )}`
+          : `${search.split(" ")[0]}N${search.slice(
+              search.toLowerCase().search("negeri") + 6
+            )}`;
+      }
+      if (search.toLowerCase().includes("swasta")) {
+        search = `${search.split(" ")[0]}S${search.slice(
+          search.toLowerCase().search("swasta") + 6
+        )}`;
+      }
+      res.where("nama", "like", `%${search}%`);
+    }
+
+   
+    if (status) {
+      res.andWhere("status", status);
+    }
+
+    
+    if (kabupaten) {
+      res.andWhere("kabupaten", kabupaten);
+    }
+
+    if (grade) {
+      res.andWhere("grade", grade);
+    }
+
+    // res.orderByRaw("ExtractNusmber(TRIM(sekolah))");
+    res.orderBy("grade","asc");
+
+    return response.ok({
+      sekolah: await res.paginate(page,25),
+    });
   }
 }
 
