@@ -777,8 +777,7 @@ class SecondController {
 
     const user = await auth.getUser();
 
-    const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + Date.now();
+    const keluarantanggalseconds = moment().format("YYYY-MM-DD ") + Date.now();
 
     const pembayaran = await MPembayaran.query()
       .select("id", "nama", "bulan")
@@ -3088,8 +3087,7 @@ class SecondController {
 
     const { tanggal_awal, tanggal_akhir } = request.post();
 
-    const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + Date.now();
+    const keluarantanggalseconds = moment().format("YYYY-MM-DD ") + Date.now();
 
     const awal1 = moment(tanggal_awal).locale("id").format("DD MMMM YYYY ");
     const akhir1 = moment(tanggal_akhir).locale("id").format("DD MMMM YYYY ");
@@ -3462,8 +3460,7 @@ class SecondController {
 
     const { tanggal_awal, tanggal_akhir, status } = request.post();
 
-    const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + Date.now();
+    const keluarantanggalseconds = moment().format("YYYY-MM-DD ") + Date.now();
 
     const awal1 = moment(tanggal_awal).locale("id").format("DD MMMM YYYY ");
     const akhir1 = moment(tanggal_akhir).locale("id").format("DD MMMM YYYY ");
@@ -3876,8 +3873,7 @@ ${jamPerubahan}`;
     const { tanggal_awal, tanggal_akhir, data, rencana_id } = request.post();
     // return data;
 
-    const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + Date.now();
+    const keluarantanggalseconds = moment().format("YYYY-MM-DD ") + Date.now();
 
     const awal1 = moment(tanggal_awal).format("DD MMMM YYYY ");
     const akhir1 = moment(tanggal_akhir).format("DD MMMM YYYY ");
@@ -4698,8 +4694,7 @@ ${jamPerubahan}`;
     const { tanggal_awal, tanggal_akhir, data } = request.post();
     // return data;
 
-    const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + Date.now();
+    const keluarantanggalseconds = moment().format("YYYY-MM-DD ") + Date.now();
 
     const awal1 = moment(tanggal_awal).locale("id").format("DD MMMM YYYY ");
     const akhir1 = moment(tanggal_akhir).locale("id").format("DD MMMM YYYY ");
@@ -4887,8 +4882,7 @@ ${jamPerubahan}`;
 
     const { tanggal_awal, tanggal_akhir, data1 } = request.post();
 
-    const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + Date.now();
+    const keluarantanggalseconds = moment().format("YYYY-MM-DD ") + Date.now();
 
     const awal1 = moment(tanggal_awal).locale("id").format("DD MMMM YYYY ");
     const akhir1 = moment(tanggal_akhir).locale("id").format("DD MMMM YYYY ");
@@ -5426,8 +5420,7 @@ ${jamPerubahan}`;
 
     return data;
 
-    const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + Date.now();
+    const keluarantanggalseconds = moment().format("YYYY-MM-DD ") + Date.now();
 
     const awal1 = moment(tanggal_awal).locale("id").format("DD MMMM YYYY ");
     const akhir1 = moment(tanggal_akhir).locale("id").format("DD MMMM YYYY ");
@@ -5800,8 +5793,7 @@ ${jamPerubahan}`;
     const { tanggal_awal, tanggal_akhir, data, rencana_id } = request.post();
     // return data;
 
-    const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + Date.now();
+    const keluarantanggalseconds = moment().format("YYYY-MM-DD ") + Date.now();
 
     const awal1 = moment(tanggal_awal).format("DD MMMM YYYY ");
     const akhir1 = moment(tanggal_akhir).format("DD MMMM YYYY ");
@@ -6286,8 +6278,7 @@ ${jamPerubahan}`;
     const { tanggal_awal, tanggal_akhir, data } = request.post();
     // return data;
 
-    const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + Date.now();
+    const keluarantanggalseconds = moment().format("YYYY-MM-DD ") + Date.now();
 
     const awal1 = moment(tanggal_awal).locale("id").format("DD MMMM YYYY ");
     const akhir1 = moment(tanggal_akhir).locale("id").format("DD MMMM YYYY ");
@@ -6531,8 +6522,7 @@ ${jamPerubahan}`;
 
     return data;
 
-    const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + Date.now();
+    const keluarantanggalseconds = moment().format("YYYY-MM-DD ") + Date.now();
 
     const awal1 = moment(tanggal_awal).locale("id").format("DD MMMM YYYY ");
     const akhir1 = moment(tanggal_akhir).locale("id").format("DD MMMM YYYY ");
@@ -6801,8 +6791,7 @@ ${jamPerubahan}`;
     const { tanggal_awal, tanggal_akhir, data, rencana_id } = request.post();
     // return data;
 
-    const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + Date.now();
+    const keluarantanggalseconds = moment().format("YYYY-MM-DD ") + Date.now();
 
     const awal1 = moment(tanggal_awal).format("DD MMMM YYYY ");
     const akhir1 = moment(tanggal_akhir).format("DD MMMM YYYY ");
@@ -10532,8 +10521,7 @@ ${jamPerubahan}`;
 
     const user = await auth.getUser();
 
-    const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + Date.now();
+    const keluarantanggalseconds = moment().format("YYYY-MM-DD ") + Date.now();
 
     const jadwalUjian = await MJadwalUjian.query()
       .with("rombelUjian", (builder) => {
@@ -10851,8 +10839,7 @@ ${jamPerubahan}`;
 
     const user = await auth.getUser();
 
-    const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + Date.now();
+    const keluarantanggalseconds = moment().format("YYYY-MM-DD ") + Date.now();
 
     const { tk_jadwal_ujian_id, m_jadwal_ujian_id } = request.post();
 
@@ -10870,7 +10857,7 @@ ${jamPerubahan}`;
           .with("jadwalUjian", (builder) => {
             builder.with("ujian");
           });
-      }) 
+      })
       .with("ujian", (builder) => {
         builder.with("soal").withCount("soal as total");
       })
@@ -10879,12 +10866,12 @@ ${jamPerubahan}`;
 
     // return jadwalUjian.toJSON().ujian;
 
-    let rombel
+    let rombel;
     let workbook = new Excel.Workbook();
     await Promise.all(
       jadwalUjian.toJSON().rombelUjian.map(async (s) => {
         let worksheet = workbook.addWorksheet(`${s.rombel.nama}`);
-        rombel = s.rombel.nama
+        rombel = s.rombel.nama;
         worksheet.getCell("A1").value = sekolah.nama;
         worksheet.getCell("A2").value = s.rombel.nama;
         worksheet.getCell("A3").value = jadwalUjian.toJSON().ujian.nama;
@@ -10996,12 +10983,15 @@ ${jamPerubahan}`;
                     .first();
                   if (e.bentuk == "pg") {
                     if (jawabanSiswa && jawabanSiswa.jawaban_pg) {
-                      row.getCell([`${(nox + 1) * 1 + 2}`]).value = jawabanSiswa.jawaban_pg;
+                      row.getCell([`${(nox + 1) * 1 + 2}`]).value =
+                        jawabanSiswa.jawaban_pg;
                       if (jawabanSiswa.jawaban_pg == e.kj_pg) {
                         hasil = hasil + e.nilai_soal;
                       }
                     } else {
-                      row.getCell([`${(nox + 1) * 1 + 2}`]).value = '';
+                      row.getCell([
+                        `${(nox + 1) * 1 + 2}`,
+                      ]).value = `${jawabanSiswa.jawaban_pg} (salah)`;
                     }
                   } else if (e.bentuk == "esai") {
                     if (
@@ -11026,6 +11016,10 @@ ${jamPerubahan}`;
                           }
                         );
                       }
+                    } else {
+                      row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
+                        jawabanSiswa ? jawabanSiswa.jawaban_esai : "0"
+                      }`;
                     }
                   }
 
@@ -13119,8 +13113,7 @@ ${jamPerubahan}`;
     const user = await auth.getUser();
 
     const { data } = request.post();
-    const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + Date.now();
+    const keluarantanggalseconds = moment().format("YYYY-MM-DD ") + Date.now();
 
     let workbook = new Excel.Workbook();
     let worksheet = workbook.addWorksheet(`Daftar Akun`);
@@ -13560,8 +13553,7 @@ ${jamPerubahan}`;
 
     let { ranking = [] } = request.post();
 
-    const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + Date.now();
+    const keluarantanggalseconds = moment().format("YYYY-MM-DD ") + Date.now();
 
     // const userData1 = await User.query().where("nama","like",`%Elisabeth Yolanda Witin%`).first()
 
@@ -14030,8 +14022,7 @@ ${jamPerubahan}`;
 
     const user = await auth.getUser();
 
-    const keluarantanggalseconds =
-      moment().format("YYYY-MM-DD ") + Date.now();
+    const keluarantanggalseconds = moment().format("YYYY-MM-DD ") + Date.now();
 
     // const userData1 = await User.query().where("nama","like",`%Elisabeth Yolanda Witin%`).first()
 
@@ -15612,8 +15603,14 @@ ${jamPerubahan}`;
         value: "pts2",
         label: "Penilaian Tengah Semester 2 / Sumatif Tengah Semester 2",
       },
-      { value: "pas1", label: "Penilaian Akhir Semester 1 / Sumatif Akhir Semester 1" },
-      { value: "pas2", label: "Penilaian Akhir Semester 2 / Sumatif Akhir Semester 2" },
+      {
+        value: "pas1",
+        label: "Penilaian Akhir Semester 1 / Sumatif Akhir Semester 1",
+      },
+      {
+        value: "pas2",
+        label: "Penilaian Akhir Semester 2 / Sumatif Akhir Semester 2",
+      },
       { value: "to", label: "Try Out" },
       { value: "us", label: "Ujian Sekolah / Asesmen Sumatif Sekolah" },
     ];
