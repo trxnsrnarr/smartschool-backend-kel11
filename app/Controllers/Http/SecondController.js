@@ -10991,7 +10991,7 @@ ${jamPerubahan}`;
                     } else {
                       row.getCell([
                         `${(nox + 1) * 1 + 2}`,
-                      ]).value = `${jawabanSiswa.jawaban_pg} (salah)`;
+                      ]).value = `${jawabanSiswa?.jawaban_pg} (salah)`;
                     }
                   } else if (e.bentuk == "esai") {
                     if (
