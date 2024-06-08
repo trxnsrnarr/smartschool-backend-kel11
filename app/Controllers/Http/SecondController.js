@@ -11015,6 +11015,10 @@ ${jamPerubahan}`;
                             }
                           }
                         );
+                      }else {
+                        row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
+                          jawabanSiswa ? jawabanSiswa.jawaban_esai : "0"
+                        }`;
                       }
                     } else {
                       row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
