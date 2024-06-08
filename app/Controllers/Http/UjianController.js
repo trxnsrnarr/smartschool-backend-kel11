@@ -3624,7 +3624,9 @@ class UjianController {
                         hasil = hasil + e.nilai_soal;
                       }
                     } else {
-                      row.getCell([`${(nox + 1) * 1 + 2}`]).value = "";
+                      row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
+                        jawabanSiswa?.jawaban_pg ? jawabanSiswa?.jawaban_pg : ""
+                      } (salah)`;
                     }
                   } else if (e.bentuk == "esai") {
                     if (
@@ -3638,17 +3640,43 @@ class UjianController {
                         JSON.parse(jawabanSiswa?.jawaban_rubrik_esai).map(
                           (ed) => {
                             row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
-                              jawabanSiswa ? jawabanSiswa.jawaban_esai : "0"
+                              jawabanSiswa
+                                ? jawabanSiswa.jawaban_esai.replace(
+                                    /<.*?>/g,
+                                    ""
+                                  )
+                                : "0"
                             }`;
                             if (ed.benar) {
                               row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
                                 ed ? ed.poin : "0"
                               }`;
                               hasil = hasil + ed.poin;
+                            } else {
+                              row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
+                                jawabanSiswa?.jawaban_esai
+                                  ? jawabanSiswa.jawaban_esai.replace(
+                                      /<.*?>/g,
+                                      ""
+                                    )
+                                  : "0"
+                              }`;
                             }
                           }
                         );
+                      } else {
+                        row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
+                          jawabanSiswa?.jawaban_esai
+                            ? jawabanSiswa.jawaban_esai.replace(/<.*?>/g, "")
+                            : "0"
+                        }`;
                       }
+                    } else {
+                      row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
+                        jawabanSiswa?.jawaban_esai
+                          ? jawabanSiswa.jawaban_esai.replace(/<.*?>/g, "")
+                          : "0"
+                      }`;
                     }
                   }
 

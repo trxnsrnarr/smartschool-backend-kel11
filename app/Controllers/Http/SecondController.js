@@ -11005,7 +11005,7 @@ ${jamPerubahan}`;
                         JSON.parse(jawabanSiswa?.jawaban_rubrik_esai).map(
                           (ed) => {
                             row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
-                              jawabanSiswa ? jawabanSiswa.jawaban_esai.replace(/<.*?>/g, '') : "0"
+                              jawabanSiswa?.jawaban_esai ? jawabanSiswa.jawaban_esai.replace(/<.*?>/g, '') : "0"
                             }`;
                             if (ed.benar) {
                               row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
@@ -11017,12 +11017,12 @@ ${jamPerubahan}`;
                         );
                       }else {
                         row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
-                          jawabanSiswa ? jawabanSiswa.jawaban_esai.replace(/<.*?>/g, '') : "0"
+                          jawabanSiswa?.jawaban_esai ? jawabanSiswa.jawaban_esai.replace(/<.*?>/g, '') : "0"
                         }`;
                       }
                     } else {
                       row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
-                        jawabanSiswa ? jawabanSiswa.jawaban_esai.replace(/<.*?>/g, '') : "0"
+                        jawabanSiswa?.jawaban_esai ? jawabanSiswa.jawaban_esai.replace(/<.*?>/g, '') : "0"
                       }`;
                     }
                   }
