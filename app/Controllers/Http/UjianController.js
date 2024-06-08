@@ -3640,12 +3640,12 @@ class UjianController {
                         JSON.parse(jawabanSiswa?.jawaban_rubrik_esai).map(
                           (ed) => {
                             row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
-                              jawabanSiswa
+                              jawabanSiswa?.jawaban_esai
                                 ? jawabanSiswa.jawaban_esai.replace(
-                                    /<.*?>/g,
+                                    /<\/?[^>]+(>|$)/g,
                                     ""
                                   )
-                                : "0"
+                                : "(Tidak Menjawab Soal)"
                             }`;
                             if (ed.benar) {
                               row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
@@ -3656,10 +3656,10 @@ class UjianController {
                               row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
                                 jawabanSiswa?.jawaban_esai
                                   ? jawabanSiswa.jawaban_esai.replace(
-                                      /<.*?>/g,
+                                      /<\/?[^>]+(>|$)/g,
                                       ""
                                     )
-                                  : "0"
+                                  : "(Tidak Menjawab Soal)"
                               }`;
                             }
                           }
@@ -3667,15 +3667,15 @@ class UjianController {
                       } else {
                         row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
                           jawabanSiswa?.jawaban_esai
-                            ? jawabanSiswa.jawaban_esai.replace(/<.*?>/g, "")
-                            : "0"
+                            ? jawabanSiswa.jawaban_esai.replace(/<\/?[^>]+(>|$)/g, "")
+                            : "(Tidak Menjawab Soal)"
                         }`;
                       }
                     } else {
                       row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
                         jawabanSiswa?.jawaban_esai
-                          ? jawabanSiswa.jawaban_esai.replace(/<.*?>/g, "")
-                          : "0"
+                          ? jawabanSiswa.jawaban_esai.replace(/<\/?[^>]+(>|$)/g, "")
+                          : "(Tidak Menjawab Soal)"
                       }`;
                     }
                   }

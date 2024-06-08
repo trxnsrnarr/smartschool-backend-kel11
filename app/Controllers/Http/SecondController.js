@@ -10989,9 +10989,9 @@ ${jamPerubahan}`;
                         hasil = hasil + e.nilai_soal;
                       }
                     } else {
-                      row.getCell([
-                        `${(nox + 1) * 1 + 2}`,
-                      ]).value = `${jawabanSiswa?.jawaban_pg ?jawabanSiswa?.jawaban_pg:""} (salah)`;
+                      row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
+                        jawabanSiswa?.jawaban_pg ? jawabanSiswa?.jawaban_pg : ""
+                      } (salah)`;
                     }
                   } else if (e.bentuk == "esai") {
                     if (
@@ -11005,7 +11005,12 @@ ${jamPerubahan}`;
                         JSON.parse(jawabanSiswa?.jawaban_rubrik_esai).map(
                           (ed) => {
                             row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
-                              jawabanSiswa?.jawaban_esai ? jawabanSiswa.jawaban_esai.replace(/<.*?>/g, '') : "0"
+                              jawabanSiswa?.jawaban_esai
+                                ? jawabanSiswa.jawaban_esai.replace(
+                                    /<\/?[^>]+(>|$)/g,
+                                    ""
+                                  )
+                                : "(Tidak Menjawab Soal)"
                             }`;
                             if (ed.benar) {
                               row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
@@ -11015,14 +11020,18 @@ ${jamPerubahan}`;
                             }
                           }
                         );
-                      }else {
+                      } else {
                         row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
-                          jawabanSiswa?.jawaban_esai ? jawabanSiswa.jawaban_esai.replace(/<.*?>/g, '') : "0"
+                          jawabanSiswa?.jawaban_esai
+                            ? jawabanSiswa.jawaban_esai.replace(/<\/?[^>]+(>|$)/g, "")
+                            : "(Tidak Menjawab Soal)"
                         }`;
                       }
                     } else {
                       row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
-                        jawabanSiswa?.jawaban_esai ? jawabanSiswa.jawaban_esai.replace(/<.*?>/g, '') : "0"
+                        jawabanSiswa?.jawaban_esai
+                          ? jawabanSiswa.jawaban_esai.replace(/<\/?[^>]+(>|$)/g, "")
+                          : "(Tidak Menjawab Soal)"
                       }`;
                     }
                   }
