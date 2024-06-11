@@ -41,7 +41,13 @@ class DownloadService {
           quality: 25,
           encoding: "base64",
           selector: "div",
-          puppeteerArgs: { args: ["--no-sandbox", "--disable-setuid-sandbox","--disable-extensions"] },
+          puppeteerArgs: {
+            args: [
+              "--no-sandbox",
+              "--disable-setuid-sandbox",
+              "--disable-extensions",
+            ],
+          },
         });
         const dimensions = sizeOf(Buffer.from(image, "base64"));
         const imagea = await nodeHtmlToImage({
@@ -50,7 +56,13 @@ class DownloadService {
           quality: 25,
           encoding: "base64",
           selector: "div",
-          puppeteerArgs: { args: ["--no-sandbox", "--disable-setuid-sandbox","--disable-extensions"] },
+          puppeteerArgs: {
+            args: [
+              "--no-sandbox",
+              "--disable-setuid-sandbox",
+              "--disable-extensions",
+            ],
+          },
         });
         const dimensionsa = sizeOf(Buffer.from(imagea, "base64"));
         const imageb = await nodeHtmlToImage({
@@ -59,7 +71,13 @@ class DownloadService {
           quality: 25,
           encoding: "base64",
           selector: "div",
-          puppeteerArgs: { args: ["--no-sandbox", "--disable-setuid-sandbox","--disable-extensions"] },
+          puppeteerArgs: {
+            args: [
+              "--no-sandbox",
+              "--disable-setuid-sandbox",
+              "--disable-extensions",
+            ],
+          },
         });
         const dimensionsb = sizeOf(Buffer.from(imageb, "base64"));
         const imagec = await nodeHtmlToImage({
@@ -68,7 +86,13 @@ class DownloadService {
           quality: 25,
           encoding: "base64",
           selector: "div",
-          puppeteerArgs: { args: ["--no-sandbox", "--disable-setuid-sandbox","--disable-extensions"] },
+          puppeteerArgs: {
+            args: [
+              "--no-sandbox",
+              "--disable-setuid-sandbox",
+              "--disable-extensions",
+            ],
+          },
         });
         const dimensionsc = sizeOf(Buffer.from(imagec, "base64"));
         const imaged = await nodeHtmlToImage({
@@ -77,7 +101,13 @@ class DownloadService {
           quality: 25,
           encoding: "base64",
           selector: "div",
-          puppeteerArgs: { args: ["--no-sandbox", "--disable-setuid-sandbox","--disable-extensions"] },
+          puppeteerArgs: {
+            args: [
+              "--no-sandbox",
+              "--disable-setuid-sandbox",
+              "--disable-extensions",
+            ],
+          },
         });
         const dimensionsd = sizeOf(Buffer.from(imaged, "base64"));
         const imagee = await nodeHtmlToImage({
@@ -86,7 +116,13 @@ class DownloadService {
           quality: 25,
           encoding: "base64",
           selector: "div",
-          puppeteerArgs: { args: ["--no-sandbox", "--disable-setuid-sandbox","--disable-extensions"] },
+          puppeteerArgs: {
+            args: [
+              "--no-sandbox",
+              "--disable-setuid-sandbox",
+              "--disable-extensions",
+            ],
+          },
         });
         const dimensionse = sizeOf(Buffer.from(imagee, "base64"));
 
@@ -297,7 +333,7 @@ class DownloadService {
                 color: { argb: "000000" },
                 bold: true,
               },
-              text: `Kompetensi Dasar`,
+              text: sekolah?.id == 33 ? `Kode TP` : `Kompetensi Dasar`,
             },
           ],
         };
@@ -400,9 +436,10 @@ class DownloadService {
         worksheet2.getCell(
           `B${(idx + 1) * 32 - 20}`
         ).value = `${d.kd_konten_materi}`;
-        worksheet2.getCell(
-          `F${(idx + 1) * 32 - 21}`
-        ).value = `Indikator Pencapaian Kompetensi`;
+        worksheet2.getCell(`F${(idx + 1) * 32 - 21}`).value =
+          sekolah?.id == 33
+            ? `Tujuan Pembelajaran`
+            : `Indikator Pencapaian Kompetensi`;
         worksheet2.getCell(
           `F${(idx + 1) * 32 - 20}`
         ).value = `${d.akm_konteks_materi}`;

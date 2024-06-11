@@ -39,7 +39,13 @@ class DownloadService {
           quality: 25,
           encoding: "base64",
           selector: "div",
-          puppeteerArgs: { args: ["--no-sandbox", "--disable-setuid-sandbox","--disable-extensions"] },
+          puppeteerArgs: {
+            args: [
+              "--no-sandbox",
+              "--disable-setuid-sandbox",
+              "--disable-extensions",
+            ],
+          },
         });
         const dimensions = sizeOf(Buffer.from(imageEsai, "base64"));
         const imageEsay = workbook.addImage({
@@ -227,7 +233,7 @@ class DownloadService {
                 color: { argb: "000000" },
                 bold: true,
               },
-              text: `Kompetensi Dasar`,
+              text: sekolah?.id == 33 ? `Kode TP` : `Kompetensi Dasar`,
             },
           ],
         };
@@ -330,9 +336,10 @@ class DownloadService {
         worksheet3.getCell(
           `B${(idx + 1) * 32 - 20}`
         ).value = `${d.kd_konten_materi}`;
-        worksheet3.getCell(
-          `F${(idx + 1) * 32 - 21}`
-        ).value = `Indikator Pencapaian Kompetensi`;
+        worksheet3.getCell(`F${(idx + 1) * 32 - 21}`).value =
+          sekolah?.id == 33
+            ? `Tujuan Pembelajaran`
+            : `Indikator Pencapaian Kompetensi`;
         worksheet3.getCell(
           `F${(idx + 1) * 32 - 20}`
         ).value = `${d.akm_konteks_materi}`;
