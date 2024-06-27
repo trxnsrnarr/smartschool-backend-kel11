@@ -47,6 +47,10 @@ class MPendaftarPpdb extends Model {
   user() {
     return this.belongsTo("App/Models/User", "m_user_id");
   }
+
+  userKonfirmasi() {
+    return this.belongsTo("App/Models/User", "konfirmasi_id");
+  }
 }
 
 module.exports = MPendaftarPpdb;

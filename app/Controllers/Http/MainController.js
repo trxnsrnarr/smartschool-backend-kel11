@@ -15873,7 +15873,7 @@ class MainController {
           //     .andWhere({ m_soal_ujian_id: cek.id })
           //     .andWhere({ m_ujian_id: m_ujian_id })
           //     .first();
-  
+
           //   if (tkSoalUjianData) {
           //     return "Sudah Tersedia";
           //   }
@@ -15892,7 +15892,6 @@ class MainController {
         ) {
           return "Bentuk Soal Salah";
         }
-      
 
         const soalUjian = await MSoalUjian.create({
           kd: d.kd,
@@ -16257,7 +16256,8 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    const { status, page, search, tipe_ujian } = request.get();
+    const { status, page, search, tipe_ujian, tanggal, mapel_id, guru_id } =
+      request.get();
 
     const hari_ini = moment().format("YYYY-MM-DD HH:mm");
 
@@ -16270,21 +16270,40 @@ class MainController {
       .count("* as total");
     const total = count[0].total;
 
+    const userData = await User.query()
+      .select("id", "nama")
+      .where({ dihapus: 0 })
+      .andWhereIn("role", ["guru", "admin"])
+      .andWhere({ m_sekolah_id: sekolah?.id })
+      .fetch();
+
     if (user.role == "guru") {
       const ujianIds = await MUjian.query()
         .where({ m_user_id: user.id })
         .where({ dihapus: 0 })
         .ids();
 
+      const mataPelajaranData = await MMataPelajaran.query()
+        .select("id", "nama")
+        .where({ m_user_id: user.id })
+        .andWhere({ m_ta_id: ta.id })
+        .andWhere({ dihapus: 0 })
+        .fetch();
+
       const mataPelajaranIds = await MMataPelajaran.query()
         .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .ids();
 
-      const ujianMapelIds = await MUjian.query()
-        .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
-        .where({ dihapus: 0 })
-        .ids();
+      let ujianMapelIds = MUjian.query().where({ dihapus: 0 });
+
+      if (mapel_id) {
+        ujianMapelIds.where({ m_mata_pelajaran_id: mapel_id });
+      } else {
+        ujianMapelIds.whereIn("m_mata_pelajaran_id", mataPelajaranIds);
+      }
+
+      ujianMapelIds = await ujianMapelIds.ids();
 
       const rombelWalas = await MRombel.query()
         .where({ m_user_id: user.id })
@@ -16308,6 +16327,7 @@ class MainController {
         .andWhere({ dihapus: 0 })
         .distinct("m_jadwal_ujian_id")
         .pluck("m_jadwal_ujian_id");
+
       const jadwalSoalIds = await MJadwalUjian.query()
         .whereIn("m_ujian_id", [...ujianIds, ...ujianMapelIds])
         .andWhere({ dihapus: 0 })
@@ -16342,7 +16362,7 @@ class MainController {
       let jadwalUjian;
 
       if (status == "akan-datang") {
-        jadwalUjian = await MJadwalUjian.query()
+        jadwalUjian = MJadwalUjian.query()
           .with("ujian", (builder) => {
             if (search) {
               builder.where("nama", "like", `%${search}%`);
@@ -16351,10 +16371,17 @@ class MainController {
           .where({ m_user_id: user.id })
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_dibuka", ">", hari_ini)
-          .orderBy("waktu_dibuka", "desc")
-          .fetch();
+          .orderBy("waktu_dibuka", "desc");
+
+        if (tanggal) {
+          jadwalUjian.whereBetween("waktu_dibuka", [
+            `${tanggal} 00:00:00`,
+            `${tanggal} 23:59:59`,
+          ]);
+        }
+        jadwalUjian = await jadwalUjian.fetch();
       } else if (status == "berlangsung") {
-        jadwalUjian = await MJadwalUjian.query()
+        jadwalUjian = MJadwalUjian.query()
           .with("ujian", (builder) => {
             if (search) {
               builder.where("nama", "like", `%${search}%`);
@@ -16364,8 +16391,15 @@ class MainController {
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_dibuka", "<=", hari_ini)
           .andWhere("waktu_ditutup", ">=", hari_ini)
-          .orderBy("waktu_dibuka", "desc")
-          .fetch();
+          .orderBy("waktu_dibuka", "desc");
+
+        if (tanggal) {
+          jadwalUjian.whereBetween("waktu_dibuka", [
+            `${tanggal} 00:00:00`,
+            `${tanggal} 23:59:59`,
+          ]);
+        }
+        jadwalUjian = await jadwalUjian.fetch();
       } else if (status == "sudah-selesai") {
         const ujianIds = await MUjian.query()
           .where("nama", "like", `%${search}%`)
@@ -16374,14 +16408,21 @@ class MainController {
           // .andWhere({ m_sekolah_id: sekolah.id })
           .ids();
 
-        jadwalUjian = await MJadwalUjian.query()
+        jadwalUjian = MJadwalUjian.query()
           .with("ujian")
           .whereIn("m_ujian_id", ujianIds)
           // .where({ m_user_id: user.id })
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_ditutup", "<=", hari_ini)
-          .orderBy("waktu_dibuka", "desc")
-          .paginate(page, 10);
+          .orderBy("waktu_dibuka", "desc");
+
+        if (tanggal) {
+          jadwalUjian.whereBetween("waktu_dibuka", [
+            `${tanggal} 00:00:00`,
+            `${tanggal} 23:59:59`,
+          ]);
+        }
+        jadwalUjian = await jadwalUjian.paginate(page, 10);
       }
 
       const jadwalUjianDataFormat = [];
@@ -16507,6 +16548,7 @@ class MainController {
           totalData: jadwalUjian.toJSON().total,
           lastPage: jadwalUjian.toJSON().lastPage,
           total,
+          mataPelajaranData,
         });
       } else {
         return response.ok({
@@ -16514,6 +16556,7 @@ class MainController {
           jadwalUjian: jadwalUjianDataFormat,
           ujian,
           total,
+          mataPelajaranData,
         });
       }
     } else if (user.role == "admin") {
@@ -16523,16 +16566,40 @@ class MainController {
         .andWhere({ m_sekolah_id: sekolah.id })
         .fetch();
 
+      const mataPelajaranData = await MMataPelajaran.query()
+        .select("id", "nama")
+        .andWhere({ m_ta_id: ta.id })
+        .andWhere({ dihapus: 0 })
+        .fetch();
+
       const userIds = await User.query()
         .where({ m_sekolah_id: sekolah.id })
         .where({ dihapus: 0 })
         .whereIn("role", ["admin", "guru"])
         .ids();
 
+      let mataPelajaranIds = MMataPelajaran.query()
+        .where({ dihapus: 0 })
+        .andWhere({ m_ta_id: ta.id });
+
+      if (guru_id) {
+        mataPelajaranIds.andWhere({ m_user_id: guru_id });
+      }
+      if (mapel_id) {
+        mataPelajaranIds.andWhere({ id: mapel_id });
+      }
+
+      mataPelajaranIds = await mataPelajaranIds.ids();
+
+      let ujianMapelIds = await MUjian.query()
+        .where({ dihapus: 0 })
+        .whereIn("m_mata_pelajaran_id", mataPelajaranIds)
+        .ids();
+
       let jadwalUjian;
 
       if (status == "akan-datang") {
-        jadwalUjian = await MJadwalUjian.query()
+        jadwalUjian = MJadwalUjian.query()
           .with("ujian", (builder) => {
             if (search) {
               builder.where("nama", "like", `%${search}%`);
@@ -16541,10 +16608,19 @@ class MainController {
           .whereIn("m_user_id", userIds)
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_dibuka", ">", hari_ini)
-          .orderBy("waktu_dibuka", "desc")
-          .fetch();
+          .orderBy("waktu_dibuka", "desc");
+        if (tanggal) {
+          jadwalUjian.whereBetween("waktu_dibuka", [
+            `${tanggal} 00:00:00`,
+            `${tanggal} 23:59:59`,
+          ]);
+        }
+        if (guru_id || mapel_id) {
+          jadwalUjian.whereIn("m_ujian_id", ujianMapelIds);
+        }
+        jadwalUjian = await jadwalUjian.fetch();
       } else if (status == "berlangsung") {
-        jadwalUjian = await MJadwalUjian.query()
+        jadwalUjian = MJadwalUjian.query()
           .with("ujian", (builder) => {
             if (search) {
               builder.where("nama", "like", `%${search}%`);
@@ -16554,8 +16630,17 @@ class MainController {
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_dibuka", "<=", hari_ini)
           .andWhere("waktu_ditutup", ">=", hari_ini)
-          .orderBy("waktu_dibuka", "desc")
-          .fetch();
+          .orderBy("waktu_dibuka", "desc");
+        if (tanggal) {
+          jadwalUjian.whereBetween("waktu_dibuka", [
+            `${tanggal} 00:00:00`,
+            `${tanggal} 23:59:59`,
+          ]);
+        }
+        if (guru_id || mapel_id) {
+          jadwalUjian.whereIn("m_ujian_id", ujianMapelIds);
+        }
+        jadwalUjian = await jadwalUjian.fetch();
       } else if (status == "sudah-selesai") {
         const ujianIds = await MUjian.query()
           .where("nama", "like", `%${search}%`)
@@ -16564,13 +16649,24 @@ class MainController {
           // .andWhere({ m_sekolah_id: sekolah.id })
           .ids();
 
-        jadwalUjian = await MJadwalUjian.query()
+        jadwalUjian = MJadwalUjian.query()
           .with("ujian")
-          .whereIn("m_ujian_id", ujianIds)
           .andWhere({ dihapus: 0 })
           .andWhere("waktu_ditutup", "<=", hari_ini)
-          .orderBy("waktu_dibuka", "desc")
-          .paginate(page, 10);
+          .orderBy("waktu_dibuka", "desc");
+        if (guru_id || mapel_id) {
+          jadwalUjian.whereIn("m_ujian_id", ujianMapelIds);
+        } else {
+          jadwalUjian.whereIn("m_ujian_id", ujianIds);
+        }
+
+        if (tanggal) {
+          jadwalUjian.whereBetween("waktu_dibuka", [
+            `${tanggal} 00:00:00`,
+            `${tanggal} 23:59:59`,
+          ]);
+        }
+        jadwalUjian = await jadwalUjian.paginate(page, 10);
       }
 
       const jadwalUjianDataFormat = [];
@@ -16672,6 +16768,8 @@ class MainController {
           totalData: jadwalUjian.toJSON().total,
           lastPage: jadwalUjian.toJSON().lastPage,
           total,
+          userData,
+          mataPelajaranData,
         });
       } else {
         return response.ok({
@@ -16679,6 +16777,8 @@ class MainController {
           jadwalUjian: jadwalUjianDataFormat,
           ujian,
           total,
+          userData,
+          mataPelajaranData,
         });
       }
     } else if (user.role == "siswa") {
@@ -20465,7 +20565,13 @@ class MainController {
   }
 
   //belum validasi
-  async putPendaftarPPDB({ response, request, params: { pendaftar_ppdb_id } }) {
+  async putPendaftarPPDB({
+    auth,
+    response,
+    request,
+    params: { pendaftar_ppdb_id },
+  }) {
+    const user = await auth.getUser();
     const {
       bank,
       norek,
@@ -20499,6 +20605,11 @@ class MainController {
         status,
         surat_rekomendasi,
       });
+    if (status) {
+      await MPendaftarPpdb.query().where({ id: pendaftar_ppdb_id }).update({
+        konfirmasi_id: user?.id,
+      });
+    }
 
     if (!check) {
       return response.notFound({
