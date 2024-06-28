@@ -3336,12 +3336,12 @@ class PPDBController {
                   // gelombangAktif
                   //   .toJSON()
 
-                  d.gelombang?.pendaftar.findIndex(
-                    (d) => d.id == gelombangAktif?.id
+                 gelombang?.pendaftar.findIndex(
+                    (r) => r.id == d?.id
                   ) + 1,
                   `${
                     // gelombangAktif.toJSON()
-                    d.gelombang?.diterima
+                    gelombang?.diterima
                   }`.length
                 )}
           `;
