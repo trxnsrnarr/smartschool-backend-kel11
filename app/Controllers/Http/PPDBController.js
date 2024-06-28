@@ -3336,7 +3336,7 @@ class PPDBController {
                   // gelombangAktif
                   //   .toJSON()
 
-                 gelombang?.pendaftar.findIndex(
+                 gelombang.toJSON()?.pendaftar.findIndex(
                     (r) => r.id == d?.id
                   ) + 1,
                   `${
