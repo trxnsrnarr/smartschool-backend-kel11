@@ -14798,66 +14798,7 @@ class MainController {
 
     const { nav } = request.get();
 
-    if (nav == "riwayat") {
-      const count = await MJadwalUjian.query()
-        .where({ m_user_id: user.id })
-        .andWhere({ dihapus: 0 })
-        .andWhere("waktu_ditutup", ">=", hari_ini)
-        .count("* as total");
-      const total = count[0].total;
-
-      let jadwalUjian = MJadwalUjian.query()
-        // .with("ujian")
-        .where("m_ujian_id", id)
-        // .where({ m_user_id: user.id })
-        .andWhere({ dihapus: 0 })
-        .andWhere("waktu_ditutup", "<=", hari_ini)
-        .orderBy("waktu_dibuka", "desc");
-
-      if (tanggal) {
-        jadwalUjian.whereBetween("waktu_dibuka", [
-          `${tanggal} 00:00:00`,
-          `${tanggal} 23:59:59`,
-        ]);
-      }
-      jadwalUjian = await jadwalUjian.paginate(page, 10);
-
-      const jadwalUjianDataFormat = [];
-
-      await Promise.all(
-        jadwalUjian
-          .toJSON()
-          .data.filter((item) => item.ujian)
-          .map(async (jadwalUjianData) => {
-            const tkJadwalUjian = await TkJadwalUjian.query()
-              .with("rombel", (builder) => {
-                builder.where({ dihapus: 0 });
-              })
-              .where({ m_jadwal_ujian_id: jadwalUjianData.id })
-              .where({ dihapus: 0 })
-              .fetch();
-
-            let metaJadwalUjian = {
-              remedial: 0,
-              susulan: 0,
-              diatasKKM: 0,
-            };
-            jadwalUjianDataFormat.push({
-              jadwalUjian: jadwalUjianData,
-              rombel: tkJadwalUjian,
-              metaJadwalUjian: metaJadwalUjian,
-            });
-          })
-      );
-
-      return response.ok({
-        jadwalUjian: jadwalUjianDataFormat,
-
-        totalData: jadwalUjian.toJSON().total,
-        lastPage: jadwalUjian.toJSON().lastPage,
-        total,
-      });
-    }
+   
 
     const ujian = await MUjian.query().where({ id: ujian_id }).first();
 
@@ -15026,6 +14967,78 @@ class MainController {
         "XI",
         "XII",
       ];
+    }
+    if (nav == "riwayat") {
+      const count = await MJadwalUjian.query()
+        .where({ m_user_id: user.id })
+        .andWhere({ dihapus: 0 })
+        .andWhere("waktu_ditutup", ">=", hari_ini)
+        .count("* as total");
+      const total = count[0].total;
+
+      let jadwalUjian = MJadwalUjian.query()
+        // .with("ujian")
+        .where("m_ujian_id", id)
+        // .where({ m_user_id: user.id })
+        .andWhere({ dihapus: 0 })
+        .andWhere("waktu_ditutup", "<=", hari_ini)
+        .orderBy("waktu_dibuka", "desc");
+
+      if (tanggal) {
+        jadwalUjian.whereBetween("waktu_dibuka", [
+          `${tanggal} 00:00:00`,
+          `${tanggal} 23:59:59`,
+        ]);
+      }
+      jadwalUjian = await jadwalUjian.paginate(page, 10);
+
+      const jadwalUjianDataFormat = [];
+
+      await Promise.all(
+        jadwalUjian
+          .toJSON()
+          .data.filter((item) => item.ujian)
+          .map(async (jadwalUjianData) => {
+            const tkJadwalUjian = await TkJadwalUjian.query()
+              .with("rombel", (builder) => {
+                builder.where({ dihapus: 0 });
+              })
+              .where({ m_jadwal_ujian_id: jadwalUjianData.id })
+              .where({ dihapus: 0 })
+              .fetch();
+
+            let metaJadwalUjian = {
+              remedial: 0,
+              susulan: 0,
+              diatasKKM: 0,
+            };
+            jadwalUjianDataFormat.push({
+              jadwalUjian: jadwalUjianData,
+              rombel: tkJadwalUjian,
+              metaJadwalUjian: metaJadwalUjian,
+            });
+          })
+      );
+
+      return response.ok({
+        jadwalUjian: jadwalUjianDataFormat,
+
+        totalData: jadwalUjian.toJSON().total,
+        lastPage: jadwalUjian.toJSON().lastPage,
+        total,
+        ujian: { ...ujian.toJSON(), soalUjian: filterUjian },
+        kontenMateri,
+        konteksMateri,
+        prosesKognitif,
+        bentukSoal,
+        levelKognitif,
+        jumlahSoalPg: jumlahSoalPg,
+        jumlahSoalEsai: jumlahSoalEsai,
+        jumlahSoalIsian: jumlahSoalIsian,
+        // filter
+        totalNilai,
+        tingkat: tingkatData,
+      });
     }
 
     return response.ok({
