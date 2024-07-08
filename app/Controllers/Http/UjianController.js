@@ -3642,7 +3642,7 @@ class UjianController {
                             row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
                               jawabanSiswa?.jawaban_esai
                                 ? jawabanSiswa.jawaban_esai.replace(
-                                    /<\/?[^>]+(>|$)/g,
+                                    /<\/?[^>]+(>|$)/ig,
                                     ""
                                   )
                                 : "(Tidak Menjawab Soal)"
@@ -3656,7 +3656,7 @@ class UjianController {
                               row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
                                 jawabanSiswa?.jawaban_esai
                                   ? jawabanSiswa.jawaban_esai.replace(
-                                      /<\/?[^>]+(>|$)/g,
+                                      /<\/?[^>]+(>|$)/ig,
                                       ""
                                     )
                                   : "(Tidak Menjawab Soal)"
@@ -3667,14 +3667,14 @@ class UjianController {
                       } else {
                         row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
                           jawabanSiswa?.jawaban_esai
-                            ? jawabanSiswa.jawaban_esai.replace(/<\/?[^>]+(>|$)/g, "")
+                            ? jawabanSiswa.jawaban_esai.replace(/<\/?[^>]+(>|$)/ig, "")
                             : "(Tidak Menjawab Soal)"
                         }`;
                       }
                     } else {
                       row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
                         jawabanSiswa?.jawaban_esai
-                          ? jawabanSiswa.jawaban_esai.replace(/<\/?[^>]+(>|$)/g, "")
+                          ? jawabanSiswa.jawaban_esai.replace(/<\/?[^>]+(>|$)/ig, "")
                           : "(Tidak Menjawab Soal)"
                       }`;
                     }

@@ -16350,7 +16350,7 @@ class MainController {
     const userData = await User.query()
       .select("id", "nama")
       .where({ dihapus: 0 })
-      .andWhereIn("role", ["guru", "admin"])
+      .whereIn("role", ["guru", "admin"])
       .andWhere({ m_sekolah_id: sekolah?.id })
       .fetch();
 
