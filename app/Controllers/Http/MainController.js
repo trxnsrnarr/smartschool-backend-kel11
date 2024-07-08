@@ -14997,8 +14997,8 @@ class MainController {
 
       await Promise.all(
         jadwalUjian
-          .toJSON()
-          .data.filter((item) => item.ujian)
+          .toJSON().data
+          // .data.filter((item) => item.ujian)
           .map(async (jadwalUjianData) => {
             const tkJadwalUjian = await TkJadwalUjian.query()
               .with("rombel", (builder) => {
