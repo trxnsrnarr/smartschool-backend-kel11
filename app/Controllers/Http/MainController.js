@@ -14979,7 +14979,7 @@ class MainController {
 
       let jadwalUjian = MJadwalUjian.query()
         // .with("ujian")
-        .where("m_ujian_id", id)
+        .where("m_ujian_id", ujian_id)
         // .where({ m_user_id: user.id })
         .andWhere({ dihapus: 0 })
         .andWhere("waktu_ditutup", "<=", hari_ini)
