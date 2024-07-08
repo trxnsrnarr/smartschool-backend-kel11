@@ -14796,7 +14796,7 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    const { nav ,tanggal} = request.get();
+    const { nav ,tanggal, page} = request.get();
 
    
     const hari_ini = moment().format("YYYY-MM-DD HH:mm");
