@@ -14799,6 +14799,7 @@ class MainController {
     const { nav } = request.get();
 
    
+    const hari_ini = moment().format("YYYY-MM-DD HH:mm");
 
     const ujian = await MUjian.query().where({ id: ujian_id }).first();
 
