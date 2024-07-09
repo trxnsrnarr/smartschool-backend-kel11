@@ -3261,11 +3261,11 @@ class PPDBController {
                 .whereIn("m_gelombang_ppdb_id", checkIds1)
                 .first();
 
-              pendaftarIds1 = await MPendaftarPpdb.query()
-                .where({ dihapus: 0 })
-                .whereIn("m_gelombang_ppdb_id", gelombangIds1)
-                .andWhere({ m_user_id: d.user.id })
-                .pluck("m_gelombang_ppdb_id");
+            //  const pendaftarIds1 = await MPendaftarPpdb.query()
+            //     .where({ dihapus: 0 })
+            //     .whereIn("m_gelombang_ppdb_id", gelombangIds1)
+            //     .andWhere({ m_user_id: d.user.id })
+            //     .pluck("m_gelombang_ppdb_id");
 
               // terdaftarPembelian = await MGelombangPpdb.query()
               //   .with("pendaftar1", (builder) => {
@@ -3321,7 +3321,9 @@ class PPDBController {
                         gelombangUser
                           .toJSON()
                           ?.findIndex(
-                            (d) => d.id == gelombangAktif.toJSON().gelombang?.id
+                            (d) => d.id == 
+                            // gelombangAktif.toJSON().
+                            gelombang?.id
                           ) + 1,
                         `${gelombangUser?.length}`
                       )
