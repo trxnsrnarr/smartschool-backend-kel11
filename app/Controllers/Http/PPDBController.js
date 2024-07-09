@@ -3214,7 +3214,7 @@ class PPDBController {
           //   .where({ dihapus: 0 })
           //   .fetch();
 
-          if (sekolah?.id == 14 || sekolah?.id == 13 || sekolah?.id == 121) {
+          if (sekolah?.id == 14 || sekolah?.id == 13 ) {
             const jalurIds1 = await MJalurPpdb.query()
               .where({ dihapus: 0 })
               .where({ m_sekolah_id: sekolah.id })
@@ -3279,7 +3279,7 @@ class PPDBController {
           }
 
           let semuaGelombangPengembalian;
-          if (gelombangAktif && sekolah?.id == 14) {
+          if (sekolah?.id == 14) {
             semuaGelombangPengembalian = await MGelombangPpdb.query()
               .where({ dihapus: 0 })
               .where({
