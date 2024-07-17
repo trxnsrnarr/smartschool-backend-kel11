@@ -409,7 +409,7 @@ class DownloadService {
           ],
         };
         worksheet2.getCell(`D${(idx + 1) * 32 - 23}`).value = `${
-          ujian.toJSON().mataPelajaran ?ujian.toJSON().mataPelajaran?.nama:  ""
+          ujian.toJSON().mataPelajaran ? ujian.toJSON().mataPelajaran?.nama : ""
         }`;
         worksheet2.getCell(`B${(idx + 1) * 32 - 22}`).value = {
           richText: [
@@ -855,7 +855,9 @@ class DownloadService {
           `H${(idx + 1) * 32 - 7}`
         ).value = `Guru Mata Pelajaran`;
         worksheet2.getCell(`H${(idx + 1) * 32 - 3}`).value = `${
-          ujian.toJSON().mataPelajaran.user.nama
+          ujian.toJSON().mataPelajaran
+            ? ujian.toJSON().mataPelajaran.user.nama
+            : ""
         }`;
 
         worksheet2.addConditionalFormatting({
