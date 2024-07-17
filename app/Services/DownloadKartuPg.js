@@ -409,7 +409,7 @@ class DownloadService {
           ],
         };
         worksheet2.getCell(`D${(idx + 1) * 32 - 23}`).value = `${
-          ujian.toJSON().mataPelajaran.nama
+          ujian.toJSON().mataPelajaran.nama || ""
         }`;
         worksheet2.getCell(`B${(idx + 1) * 32 - 22}`).value = {
           richText: [
