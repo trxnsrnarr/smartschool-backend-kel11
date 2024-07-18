@@ -328,7 +328,9 @@ class DownloadService {
             richText: [
               {
                 font: { name: "Calibri" },
-                text: `${ujian.toJSON().mataPelajaran.user.nama}`,
+                text: `${ ujian.toJSON().mataPelajaran
+                  ? ujian.toJSON().mataPelajaran.user.nama
+                  : ""}`,
               },
             ],
           };
@@ -600,7 +602,9 @@ class DownloadService {
       richText: [
         {
           font: { name: "Times New Roman" },
-          text: `${ujian.toJSON().mataPelajaran.nama}`,
+          text: `${ ujian.toJSON().mataPelajaran
+            ? ujian.toJSON().mataPelajaran.nama
+            : ""}`,
         },
       ],
     };
@@ -660,7 +664,9 @@ class DownloadService {
       richText: [
         {
           font: { name: "Times New Roman" },
-          text: `${ujian.toJSON().mataPelajaran.user.nama}`,
+          text: `${ ujian.toJSON().mataPelajaran
+            ? ujian.toJSON().mataPelajaran.user.nama
+            : ""}`,
         },
       ],
     };

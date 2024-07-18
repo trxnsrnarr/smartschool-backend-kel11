@@ -412,7 +412,9 @@ class DownloadService {
       richText: [
         {
           font: { name: "Calibri" },
-          text: `${ujian.toJSON().mataPelajaran.user.nama}`,
+          text: `${ ujian.toJSON().mataPelajaran
+            ? ujian.toJSON().mataPelajaran.user.nama
+            : ""}`,
         },
       ],
     };

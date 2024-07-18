@@ -488,7 +488,9 @@ class DownloadService {
             color: { argb: "000000" },
             bold: true,
           },
-          text: `${ujian.toJSON().mataPelajaran.nama}`,
+          text: `${ ujian.toJSON().mataPelajaran
+            ? ujian.toJSON().mataPelajaran.nama
+            : ""}`,
         },
       ],
     };
@@ -502,7 +504,9 @@ class DownloadService {
             color: { argb: "000000" },
             // bold: true,
           },
-          text: `${ujian.toJSON().mataPelajaran.user.nama}`,
+          text: `${ ujian.toJSON().mataPelajaran
+            ? ujian.toJSON().mataPelajaran.user.nama
+            : ""}`,
         },
       ],
     };
