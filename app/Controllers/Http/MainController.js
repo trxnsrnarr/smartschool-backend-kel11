@@ -1340,7 +1340,7 @@ class MainController {
         await User.create({
           nama: `Orang tua ${checkProfilSiswa.nama}`,
           whatsapp,
-          password: "smarteschool",
+          password: "cazboxedu",
           role: "ortu",
           m_sekolah_id: sekolah.id,
           dihapus: 0,
@@ -3557,7 +3557,7 @@ class MainController {
   async aktivasiWa({ response, request }) {
     const { verifikasi, wa_real } = request.post();
     if (!verifikasi || !wa_real) {
-      return "Format Verifikasi salah. Dapatkan Template verifikasi pada menu profil smarteschool";
+      return "Format Verifikasi salah. Dapatkan Template verifikasi pada menu profil cazbox edu";
     }
 
     let dbConn = "mysql";
@@ -3578,7 +3578,7 @@ class MainController {
         }
       );
     } else if (!user) {
-      return "Format Verifikasi salah. Dapatkan Template verifikasi pada menu profil smarteschool";
+      return "Format Verifikasi salah. Dapatkan Template verifikasi pada menu profil cazbox edu";
     }
 
     await Database.connection(dbConn)
@@ -3586,7 +3586,7 @@ class MainController {
       .where({ id: user.id })
       .update({ wa_real: wa_real, verifikasi: "" });
     // return `Nomor whatsapp terverifikasi: ${wa_real.replace("@c.us", "")}`;
-    return "Selamat nomor Anda berhasil terverifikasi, kini Smarteschool Anda akan mendapatkan notifikasi melalui akun WhatsApp ini. Terimakasih..";
+    return "Selamat nomor Anda berhasil terverifikasi, kini Cazbox Edu Anda akan mendapatkan notifikasi melalui akun WhatsApp ini. Terimakasih..";
   }
 
   async aktivasi({ response, request, auth }) {
@@ -8533,7 +8533,7 @@ class MainController {
             whatsapp: d.whatsapp,
             gender: d.gender,
             // email: d.email ? d.email : "",
-            password: d.password || "smarteschool",
+            password: d.password || "cazboxedu",
             role: "siswa",
             m_sekolah_id: sekolah.id,
             dihapus: 0,
@@ -8563,7 +8563,7 @@ class MainController {
           await User.query()
             .where({ id: checkUser.toJSON().id })
             .update({
-              password: await Hash.make(d.password || "smarteschool"),
+              password: await Hash.make(d.password || "cazboxedu"),
             });
         }
 
@@ -8697,7 +8697,7 @@ class MainController {
             gender: d.gender,
             wa_ayah: d.wa_ayah,
             email: d.email ? d.email : "",
-            password: d.password || "smarteschool",
+            password: d.password || "cazboxedu",
             role: "siswa",
             m_sekolah_id: sekolah.id,
             no_ujian: d.no_ujian,
@@ -28797,7 +28797,7 @@ class MainController {
           nama: d.nama,
           whatsapp: d.whatsapp,
           gender: d.gender,
-          password: `smartschool`,
+          password: `cazboxedu`,
           role: "guru",
           m_sekolah_id: sekolah.id,
           dihapus: 0,
@@ -28895,7 +28895,7 @@ class MainController {
             .where({ id: checkUser.id })
             .update({
               dihapus: 0,
-              password: await Hash.make(d.password + "" || "smarteschool"),
+              password: await Hash.make(d.password + "" || "cazboxedu"),
             });
 
           return dataUpdated++;
@@ -28905,7 +28905,7 @@ class MainController {
             nama: d.nama,
             whatsapp: d.whatsapp,
             gender: d.gender,
-            password: d.password + "" || "smarteschool",
+            password: d.password + "" || "cazboxedu",
             role: "guru",
             m_sekolah_id: sekolah.id,
             dihapus: 0,
@@ -29446,7 +29446,7 @@ class MainController {
             whatsapp: d.whatsapp,
             // email: d.email ? d.email : "",
             m_sekolah_id: sekolah.id,
-            password: "smartschool",
+            password: "cazboxedu",
             role: "guru",
             dihapus: 0,
           });
@@ -30457,7 +30457,7 @@ class MainController {
             whatsapp: walas,
             gender: gender,
             // email: d.email ? d.email : "",
-            password: "smartschool",
+            password: "cazboxedu",
             role: "guru",
             m_sekolah_id: sekolah.id,
             dihapus: 0,
@@ -30626,7 +30626,7 @@ class MainController {
             whatsapp: d.whatsapp,
             // email: d.email ? d.email : "",
             gender: d.jk,
-            password: "smartschool",
+            password: "cazboxedu",
             role: "siswa",
             tempat_lahir: d.tempatlahir,
             tanggal_lahir: tgllahir,
@@ -30809,7 +30809,7 @@ class MainController {
             whatsapp: walas,
             gender: gender,
             // email: d.email ? d.email : "",
-            password: "smartschool",
+            password: "cazboxedu",
             role: "guru",
             m_sekolah_id: sekolah.id,
             dihapus: 0,
@@ -30948,7 +30948,7 @@ class MainController {
             whatsapp: d.whatsapp,
             // email: d.email ? d.email : "",
             gender: d.jk,
-            password: d.password || "smarteschool",
+            password: d.password || "cazboxedu",
             role: "siswa",
             m_sekolah_id: sekolah.id,
             dihapus: 0,
@@ -30959,7 +30959,7 @@ class MainController {
               .where({ id: checkUser.id })
               .update({
                 dihapus: 0,
-                password: await Hash.make(d.password || "smarteschool"),
+                password: await Hash.make(d.password || "cazboxedu"),
               });
           }
 
@@ -56174,7 +56174,7 @@ class MainController {
           .first();
 
         if (!checkUser) {
-          return `${d.nama} belum terdaftar di Smarteschool`;
+          return `${d.nama} belum terdaftar di Cazbox Edu`;
         }
 
         const checkAnggotaEksktrakurikuler = await MAnggotaEkskul.query()
@@ -57444,7 +57444,7 @@ class MainController {
   }
 
   async notFoundPage({ response, request, auth }) {
-    return `<p>Data tidak ditemukan, silahkan kembali ke <a href="http://getsmartschool.id">Smart School</a></p>`;
+    return `<p>Data tidak ditemukan, silahkan kembali ke <a href="https://cazbox.id">Cazbox Edu</a></p>`;
   }
 }
 module.exports = MainController;
