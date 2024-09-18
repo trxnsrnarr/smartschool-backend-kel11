@@ -1,0 +1,16 @@
+env: flex
+runtime: nodejs
+env_variables:
+  APP_KEY: "JD93YQ9BEY5vN8sERTZ4unRWzyqytYWO"
+  DB_CONNECTION: mysql
+  DB_HOST: "localhost"
+  DB_DATABASE: "smartschool"
+  DB_USER: "root"
+  DB_PASSWORD: "usahadandoa2020"
+  DB_SOCKET: "/cloudsql/smart-school-300211:asia-southeast2:smart-school"
+  GCP_API_KEYS: "AIzaSyAeIMzWUV3w1A39AZcV8NxICLlUh5SJLj4"
+beta_settings:
+  cloud_sql_instances: smart-school-300211:asia-southeast2:smart-school
+automatic_scaling:
+  min_num_instances: 1
+  max_num_instances: 4

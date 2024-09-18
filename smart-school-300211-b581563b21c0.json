@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "smart-school-300211",
+  "private_key_id": "b581563b21c025176b22cde59bbed695d1794acf",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDDwVpY/hTav8Hn\nF82MLsrPVAbpvO1HtuyxB/SvfsgJA2xqqcOiu3Pyd/YzO52NxgLNo3pAYNOny97D\nr36i2EWcf382aBFAd+hkBKEiQwYpJbmtk6rec/ryUUPj9Gf3PLyRe7EKFRMVJLTa\n1CL2cHE0t+5W+/NYLU6eCn3Ko6WBKaR4NCaH55OhlQbwQCD9xE1Mv0I1osedMmwo\nJYXJJHvv0bzwbCuKjr5NOAdNJXHnDSkAbv6NHeVEPXky/giqYFuVg5Mt3ZA6ogJw\nJt+3bYbVgU0u7TcL4yVH30foOn0m4z4wm0LmURvy3M2KwKq1GcD1yHevAohZWoeh\nfSD35RuTAgMBAAECggEAMPV/6jgJ8Tf6gBjE8OWXFcmXPQhidAg9JH2v5eCYmSCB\nEiBJbL7jXeZA7klfu2ClvNbBMa7F4PatTVXsH0BmEKEWqP3YKr6SoclCn7YRqWLl\nEJOZLa/mOIq4px+ujPhk1SIRgksJDcWzcfOSlv5CYgQKmTjEgO479mz7Tx4ku6vF\nfJ93udoe/x/8DJV6XrGeljap9uhd8erZR8G9lpEj7jdB6XcacV8Rg7KlJQe97S3q\n3iRT+wdu5isN1gYl10mdaNJE7/lzYHxobufs3L3P7f7Op45QWS6wBV4J8mQMYujI\nCvwqCbzqoSJWW2s2EI8S6CMI8vbXzKBGC8f84AF4sQKBgQDqe8boCqLND2C9p+NV\nZL9+9aHlIELkidClx52NMn95U1rTA3NBh/yCzh6KIxeSur2jgZxGHijMSdipTsRM\ni+MVNAWzx9RN9+3q+Y66EbCVvTjI2cRGSS7jx2b8N/sEatRAJcPH/mkjTi2BX98T\n8CktUfmYFq+KMmumMi+NO7ZBuwKBgQDVt9DuMMXBEdJnSs5rWtuluDm9RJFmP+W7\nJ1YkqJgiB5pxhz/6mtuH76yJtfsFaHGRlUN7nC5+/NS7oiEHXISqyMPctVsH6Va5\n/4+7fq6D/PyOCqU3jPn9D7xi+/s1F6BOVv5SkLWwrFqXd57sIIYBbvTjF/HduJqn\n9V7HOpOkCQKBgQC8e5J/o00KGHpi+Tk7wyhLHZdtXmlm24DkQXjbruPY2q//Pp6+\n5liLrLPPxjWEtKcLb3v2wPd6f0GxlqckAK4gtRiAUvjNU6XjY4be+qk/NEMY8DNd\nbCZM4lReGYGlI1pJ1hFyCYbp4kWh4TaoCDyROXuwTUv9gloV1fFzTbRLUQKBgEEq\nRkOKjZHcLEqgjaZAUv8J2Fk0oh0KWLMjQGn3GkQuC1KYidKRC2U8mGB5I6w3d4GL\ngMMdETRZRUhdHDMRa8ZjZw1SIwqbhH08RohGDVJjfmKVLmFs1ADsnmWULbm3lYKt\nleh5BV10gD71E3kuRY4EVhk0gOQ5WLbj411eKAx5AoGBAMj7FjQypNtvLqfQ+7sS\n0Le4eMluEU3H1X6XZm1cdBeiply8ktd1mzUYLbTO9fFoGmr9N+8usXIvETc2LX6A\ngBzWaxk+Dl7UGZ2xsSZU/8tA1FWrUJ0WnYVSFciZL7y1SEiJloxH7fAGDDklRcZz\nVszKDagNggiIJazvYnQnahm6\n-----END PRIVATE KEY-----\n",
+  "client_email": "smartschool@smart-school-300211.iam.gserviceaccount.com",
+  "client_id": "113030074866816071407",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/smartschool%40smart-school-300211.iam.gserviceaccount.com"
+}
