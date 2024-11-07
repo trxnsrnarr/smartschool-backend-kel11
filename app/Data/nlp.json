@@ -1,0 +1,21 @@
+[
+  { "content": "benar", "intent": "text_question" },
+  { "content": "tidak", "intent": "text_question" },
+  { "content": "apa itu gambar?", "intent": "text_question" },
+  { "content": "berapakah umur saya?", "intent": "text_question" },
+  { "content": "siapakah nama saya?", "intent": "text_question" },
+  { "content": "jelaskan tentang desain grafis", "intent": "text_question" },
+  { "content": "apa yang dimaksud dengan sketsa?", "intent": "text_question" },
+  { "content": "buatkan gambar anjing", "intent": "image_request" },
+  { "content": "tolong visualisasikan grafik penjualan", "intent": "image_request" },
+  { "content": "saya ingin gambar pemandangan", "intent": "image_request" },
+  { "content": "berikan saya salah satu contoh lukisan dalam berupa gambar", "intent": "image_request" },
+  { "content": "tampilkan foto pemandangan yang indah", "intent": "image_request" },
+  { "content": "tunjukkan gambar sketsa dari kota", "intent": "image_request" },
+  { "content": "tolong kirimkan foto rumah modern", "intent": "image_request" },
+  { "content": "kirimkan file laporan dalam format PDF", "intent": "file_request" },
+  { "content": "kirimkan laporan penjualan dalam format PDF", "intent": "file_request" },
+  { "content": "saya butuh laporan dalam format PDF", "intent": "file_request" },
+  { "content": "tolong kirimkan file dokumen dalam format PDF", "intent": "file_request" },
+  { "content": "kirimkan laporan hasil kerja dalam format PDF", "intent": "file_request" }
+]
