@@ -2081,7 +2081,6 @@ Route.get("/sekolah-grade", "UserController.getSekolahGrade");
 // Chatbot Route
 Route.post("/chatbot", "ChatbotController.openAIResponse");
 Route.get("/chatrooms", "ChatbotController.getChatrooms");
-Route.get("/chatrooms/:id", "ChatbotController.getChatroomById");
 Route.delete("/chatrooms", "ChatbotController.deleteAllChatrooms");
 Route.delete("/chatrooms/:id", "ChatbotController.deleteChatroomById");
 Route.get("/messages/:chatroom_id", "ChatbotController.getMessagesByChatroomId");

@@ -12,6 +12,12 @@ const natural = require('natural');
 const PDFDocument = require('pdfkit');
 const classifier = new natural.BayesClassifier();
 
+// Function untuk menghapus tag image dari data content image
+function getBase64FromImgTag(content) {
+  const match = content.match(/<img[^>]+src=["']([^"']+)["']/);
+  return match ? match[1] : null;
+}
+
 // Function untuk memuat data dari file JSON dan melatih classifier
 function trainClassifierFromJson(filePath) {
   // Membaca file JSON
@@ -74,15 +80,51 @@ class ChatbotController {
     }
   }
 
-  async processOpenAI(previousChats, userMessage, intent) {
+  async processOpenAI(userMessage, chatroomId, intent) {
     try {
       let response
 
+      const previousChatsData = await MMessage.query()
+        .where("m_chatroom_id", chatroomId || null)
+        .where("type_of_content", "text_request")
+        .orderBy("created_at", "asc")
+        .fetch();
+
+      // Mengonversi hasil query menjadi array of objects dengan struktur yang diinginkan
+      const previousChats = previousChatsData.toJSON().map(message => ({
+        role: message.role,
+        content: message.content
+      }));
+
       switch (intent) {
         case "text_question":
+          const imagesBase64 = await MMessage.query()
+            .where("m_chatroom_id", chatroomId || null)
+            .where("type_of_content", "image_request")
+            .where("role", "assistant")
+            .orderBy("created_at", "asc")
+            .fetch();
+
+          const images = imagesBase64.toJSON();
+
+          const previousImage_url = {
+            type: "image_url",
+            image_url: {
+              url: images.length > 0 ? getBase64FromImgTag(images[0].content) : null
+            }
+          }
+
           response = await openai.chat.completions.create({
             model: "gpt-4o",
-            messages: [...previousChats, { role: "user", content: userMessage }]
+            messages: [...previousChats, {
+              role: "user", content: [
+                {
+                  type: "text",
+                  text: userMessage
+                },
+                previousImage_url
+              ]
+            }]
           });
           return response.choices[0].message.content;
         case "image_request":
@@ -152,21 +194,9 @@ class ChatbotController {
       const user = await auth.getUser();
       const userId = user.id;
 
-      const previousChatsData = await MMessage.query()
-        .where("m_chatroom_id", chatroomId || null)
-        .orderBy("created_at", "asc")
-        .fetch();
-
-      // Mengonversi hasil query menjadi array of objects dengan struktur yang diinginkan
-      const previousChats = previousChatsData.toJSON().map(message => ({
-        role: message.role,
-        content: message.content
-      }));
-      // const filteredPreviousChats = filterMessagesWithoutFiles(previousChats);
-
       const intent = classifier.classify(userMessage);
 
-      const responseOpenAI = await this.processOpenAI(previousChats, userMessage, intent);
+      const responseOpenAI = await this.processOpenAI(userMessage, chatroomId, intent);
       if (responseOpenAI.status === "error") {
         return response.status(500).json({
           status: responseOpenAI.status,
@@ -222,28 +252,6 @@ class ChatbotController {
       return response.status(500).json({
         status: 'error',
         message: 'Failed to get chatrooms',
-        error: error.message
-      });
-    }
-  }
-
-  async getChatroomById({ params, response }) {
-    try {
-      const chatroom = await MChatroom.find(params.id);
-      if (!chatroom) {
-        return response.status(404).json({
-          status: 'error',
-          message: 'Chatroom not found'
-        });
-      }
-      return response.json({
-        status: 'success',
-        data: chatroom
-      });
-    } catch (error) {
-      return response.status(500).json({
-        status: 'error',
-        message: 'Failed to get chatroom by ID',
         error: error.message
       });
     }
