@@ -82,18 +82,23 @@ class ChatbotController {
 
   async processOpenAI(userMessage, chatroomId, intent) {
     try {
-      let response
+      let response;
 
       const previousChatsData = await MMessage.query()
         .where("m_chatroom_id", chatroomId || null)
-        .where("type_of_content", "text_request")
+        .where("type_of_content", "text_question")
         .orderBy("created_at", "asc")
         .fetch();
 
       // Mengonversi hasil query menjadi array of objects dengan struktur yang diinginkan
       const previousChats = previousChatsData.toJSON().map(message => ({
         role: message.role,
-        content: message.content
+        content: [
+          {
+            type: "text",
+            text: message.content
+          }
+        ]
       }));
 
       switch (intent) {
@@ -107,24 +112,32 @@ class ChatbotController {
 
           const images = imagesBase64.toJSON();
 
-          const previousImage_url = {
-            type: "image_url",
-            image_url: {
-              url: images.length > 0 ? getBase64FromImgTag(images[0].content) : null
-            }
-          }
+          const imageBase64Urls = images
+            .map(image => getBase64FromImgTag(image.content))
+            .filter(url => url !== null);
+
+          const previousImage_urls = imageBase64Urls.length > 0
+            ? imageBase64Urls.map(url => ({
+              type: "image_url",
+              image_url: { url }
+            }))
+            : null;
 
           response = await openai.chat.completions.create({
             model: "gpt-4o",
-            messages: [...previousChats, {
-              role: "user", content: [
-                {
-                  type: "text",
-                  text: userMessage
-                },
-                previousImage_url
-              ]
-            }]
+            messages: [
+              ...previousChats,
+              {
+                role: "user",
+                content: [
+                  {
+                    type: "text",
+                    text: userMessage
+                  },
+                  ...(previousImage_urls ? previousImage_urls : [])
+                ]
+              }
+            ]
           });
           return response.choices[0].message.content;
         case "image_request":
