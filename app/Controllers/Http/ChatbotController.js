@@ -331,7 +331,41 @@ class ChatbotController {
     }
   }
 
-  async getSuggestedChat({ auth, params, response, request }) { }
+  async getSuggestions({ auth, response, request }) {
+    const user = await auth.getUser();
+    const userProfileTemplate = `
+      Analisa ini dalam membuat saran pencarian yang lebih akurat
+          Asal Sekolah : ${user?.sekolah?.nama}
+          Jabatan : ${user?.role}
+      `;
+    const inputValue = request.input("input_value");
+    try {
+      const responseOpenAI = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system", content: `Kamu adalah asisten saran pencarian. ${userProfileTemplate}. Ketika pengguna mengetikkan sebagian kata atau frasa, berikan beberapa ide atau saran pencarian yang relevan. Gunakan bahasa Indonesia dan batasi jawaban hingga 50 token.`
+          },
+          {
+            role: "user",
+            content: `Berikan tiga saran pencarian terkait untuk: "${inputValue}". Tampilkan saran dalam bentuk teks yang langsung terhubung dengan kata/frasa tersebut, tanpa angka atau bullet, dipisahkan dengan garis baru. Format jawaban harus: "${inputValue} {saran}" dan gunakan tanda baca yang sesuai.`,
+          }
+        ],
+        max_tokens: 50,
+      });
+
+      const suggestionsList = responseOpenAI.choices[0].message.content.split('\n');
+      return response.json({
+        status: 'success',
+        data: suggestionsList
+      })
+    } catch (error) {
+      return response.status(500).json({
+        status: 'error',
+        message: error.message
+      })
+    }
+  }
 }
 
 module.exports = ChatbotController

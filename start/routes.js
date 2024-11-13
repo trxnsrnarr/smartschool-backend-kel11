@@ -2084,6 +2084,7 @@ Route.get("/chatrooms", "ChatbotController.getChatrooms");
 Route.delete("/chatrooms", "ChatbotController.deleteAllChatrooms");
 Route.delete("/chatrooms/:id", "ChatbotController.deleteChatroomById");
 Route.get("/messages/:chatroom_id", "ChatbotController.getMessagesByChatroomId");
+Route.post("/suggestions", "ChatbotController.getSuggestions");
 
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
