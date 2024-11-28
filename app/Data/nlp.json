@@ -6,6 +6,8 @@
   { "content": "siapakah nama saya?", "intent": "text_question" },
   { "content": "jelaskan tentang desain grafis", "intent": "text_question" },
   { "content": "apa yang dimaksud dengan sketsa?", "intent": "text_question" },
+  { "content": "Apakah AI bisa membuat gambar, audio, dan video?", "intent": "text_question" },
+  { "content": "apa yang saya bahas di percakapan sebelumnya?", "intent": "text_question" },
   { "content": "buatkan gambar anjing", "intent": "image_request" },
   { "content": "tolong visualisasikan grafik penjualan", "intent": "image_request" },
   { "content": "saya ingin gambar pemandangan", "intent": "image_request" },
@@ -17,5 +19,12 @@
   { "content": "kirimkan laporan penjualan dalam format PDF", "intent": "file_request" },
   { "content": "saya butuh laporan dalam format PDF", "intent": "file_request" },
   { "content": "tolong kirimkan file dokumen dalam format PDF", "intent": "file_request" },
-  { "content": "kirimkan laporan hasil kerja dalam format PDF", "intent": "file_request" }
+  { "content": "kirimkan laporan hasil kerja dalam format PDF", "intent": "file_request" },
+  { "content": "Buatkan saya file pdf yang berisi data Guru di sekolah SMKN 26 Jakarta!", "intent": "file_request" },
+  { "content": "Berapa jumlah pengguna di sekolah SMKN 26 Jakarta?", "intent": "sql_request" },
+  { "content": "Sebutkan 3 penghargaan yang dimiliki sekolah SMAN 4 Cibinong!", "intent": "sql_request" },
+  { "content": "Sebutkan 3 prestasi yang dimiliki sekolah SMKN 1 Cibinong", "intent": "sql_request" },
+  { "content": "Berapa jumlah anggota ekskul di sekolah SMAN 1 Cibinong?", "intent": "sql_request" },
+  { "content": "Sebutkan 3 anggota ekskul Osis yang dimiliki sekolah SMK Yaspia!", "intent": "sql_request" },
+  { "content": "Sebutkan 3 nama pengguna di sekolah SMKN 2 Cibinong!", "intent": "sql_request" }
 ]

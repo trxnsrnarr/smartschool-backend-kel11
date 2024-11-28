@@ -12,6 +12,32 @@ const natural = require('natural');
 const PDFDocument = require('pdfkit');
 const classifier = new natural.BayesClassifier();
 
+// Langchain
+const { z } = require("zod");
+const { DataSource } = require("typeorm");
+const { SqlDatabase } = require("langchain/sql_db");
+const { ChatOpenAI } = require("@langchain/openai");
+const { createSqlQueryChain } = require("langchain/chains/sql_db");
+const { PromptTemplate, ChatPromptTemplate } = require("@langchain/core/prompts");
+const { StringOutputParser } = require("@langchain/core/output_parsers");
+const { RunnablePassthrough, RunnableSequence } = require("@langchain/core/runnables");
+
+const llm = new ChatOpenAI({
+  modelName: "gpt-3.5-turbo",
+  temperature: 0,
+});
+
+const datasource = new DataSource({
+  type: Env.get("DB_CONNECTION"),
+  host: Env.get("DB_HOST"),
+  port: Env.get("DB_PORT"),
+  username: Env.get("DB_USER"),
+  password: Env.get("DB_PASSWORD"),
+  database: Env.get("DB_DATABASE"),
+  synchronize: false,
+  logging: false,
+});
+
 // Function untuk menghapus tag image dari data content image
 function getBase64FromImgTag(content) {
   const match = content.match(/<img[^>]+src=["']([^"']+)["']/);
@@ -77,6 +103,139 @@ class ChatbotController {
         message: 'An error occurred while storing messages',
         error: error.message,
       };
+    }
+  }
+
+  async sqlRequest(question) {
+    const db = await SqlDatabase.fromDataSourceParams({
+      appDataSource: datasource,
+      includesTables: ["m_penghargaan", "tk_perusahaan_sekolah", "m_ta", "m_sekolah", "m_user", "m_sanksi_siswa", "m_sikap_siswa", "tk_siswa_pelanggaran", "m_sanksi_pelanggaran", "m_prestasi", "m_anggota_ekskul", "m_ekstrakurikuler", "m_rapor_ekskul", "m_sarpras", "m_keterangan_pkl", "m_perusahaan", "m_mou_perusahaan", "m_alumni", "m_disposisi", "m_pelaporan_disposisi", "m_surat"],
+      sampleRowsInTableInfo: 2,
+    });
+
+    const Table = z.object({
+      names: z.array(z.string()).describe("Names of tables in SQL database"),
+    });
+
+    const tableNames = db.includesTables.map((t) => t).join("\n");
+
+    const system = `
+      Return the names of ALL the SQL tables that MIGHT be relevant to the user question.
+      The tables are:
+
+      ${tableNames}
+
+      Remember to include ALL POTENTIALLY RELEVANT tables, even if you're not sure that they're needed.
+      Question: {question}
+      Relevant Tables:
+    `;
+
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", system],
+      ["human", "{question}"],
+    ]);
+
+    const tableChain = prompt.pipe(llm.withStructuredOutput(Table));
+
+    const answerPrompt = PromptTemplate.fromTemplate(`
+      Given the following user question, corresponding SQL query, and SQL result, answer the user question.
+
+      Question: {question}
+      SQL Query: {query}
+      SQL Result: {result}
+
+      Answer:
+    `);
+
+    const answerChain = answerPrompt.pipe(llm).pipe(new StringOutputParser());
+
+    // Validasi sebelum query dibuat
+    const validationPrompt = `
+      You are a {dialect} SQL expert. Your task is to generate syntactically correct and contextually accurate {dialect} queries based on the given input question.
+
+      Important instructions:
+      1. **Relational Context**:
+        - The database contains tables with relationships defined through columns named \`<table_name>_id\`. Use these columns to join tables correctly.
+        - Ensure JOINs are properly constructed and only include columns relevant to the query context.
+
+      2. **Role and Filtering**:
+        - Pay close attention to columns such as \`role\` or similar attributes to filter data correctly. Ensure the column's content is matched accurately to the user’s intent.
+
+      3. **Query Construction**:
+        - Only query columns that are necessary to answer the question.
+        - Unless the user specifies in the question a specific number of examples to obtain, query for at most {top_k} or 5 results using the LIMIT clause as per {dialect}.
+        - Avoid selecting all columns with \`*\` unless explicitly requested.
+        - Wrap each column name in backticks to denote them as delimited identifiers.
+        - Made a multiple lines query (Just made a single line query).
+        - Dont made a string query.
+        - Dont using '\n' instead of ' '.
+        - Dont using '+' for concatenation.
+
+      4. **Error Avoidance**:
+        - Avoid common SQL mistakes, such as:
+          - Using NOT IN with NULL values.
+          - Improper use of UNION instead of UNION ALL.
+          - Data type mismatches in WHERE clauses or JOIN conditions.
+          - Incorrect number of arguments in SQL functions.
+          - Missing or improper quoting of identifiers.
+          - Using BETWEEN for exclusive ranges unless explicitly needed.
+          - Failing to consider NULL handling where applicable.
+          - Never Using Limit, Always using LIMIT.
+
+      5. **General Notes**:
+        - Use \`date('now')\` to handle questions involving "today".
+        - Always ensure the query adheres to the structure and constraints of the provided table schema.
+        - For User's table there a role colomn to differentiate between siswa, guru and admin. Use this column to filter data correctly.
+
+      Please use the following tables schema:
+      {table_info}
+
+      Generate the query based on the user’s input and ensure it aligns with the database structure and relationships described above. Double-check the query for accuracy and logical correctness before finalizing it. Every generated query **must include a LIMIT clause with a maximum of {top_k} or 5 results**, unless explicitly instructed otherwise.
+    `;
+
+    const prompt2 = ChatPromptTemplate.fromMessages([
+      ["system", validationPrompt],
+      ["human", "{input}"]
+    ]);
+
+    // const executeQuery = new QuerySqlTool(db);
+    const queryChain = await createSqlQueryChain({
+      llm,
+      db,
+      prompt: prompt2,
+      dialect: "mysql"
+    });
+
+    const fullChain = RunnableSequence.from([
+      // Langkah 1: Dapatkan nama tabel yang relevan
+      RunnablePassthrough
+        .assign({
+          relevantTables: (i) => tableChain.invoke({ question: i.question }),
+        })
+        .assign({
+          query: (i) =>
+            queryChain.invoke({
+              question: i.question,
+              tableNamesToUse: i.relevantTables,
+            }),
+        }),
+      RunnablePassthrough
+        .assign({
+          result: async (i) => {
+            return await db.run(i.query)
+          }
+        }),
+
+      // Langkah 2: Dapatkan jawaban dari pertanyaan sesuai format
+      answerChain
+    ]);
+
+    try {
+      const responseOpenAI = await fullChain.invoke({ question: question });
+      return responseOpenAI;
+    } catch (err) {
+      console.error("Error in query response:", err);
+      return err.message;
     }
   }
 
@@ -188,6 +347,8 @@ class ChatbotController {
 
           // Return Base64 string of PDF
           return `<a href="data:application/pdf;base64,${pdfBase64}" download="file.pdf">Download File PDF</a>`;
+        case "sql_request":
+          return await this.sqlRequest(userMessage)
         default:
           return "Invalid intent";
       }
@@ -341,7 +502,7 @@ class ChatbotController {
     const inputValue = request.input("input_value");
     try {
       const responseOpenAI = await openai.chat.completions.create({
-        model: "gpt-4o",
+        model: "gpt-3.5-turbo",
         messages: [
           {
             role: "system", content: `Kamu adalah asisten saran pencarian. ${userProfileTemplate}. Ketika pengguna mengetikkan sebagian kata atau frasa, berikan beberapa ide atau saran pencarian yang relevan. Gunakan bahasa Indonesia dan batasi jawaban hingga 50 token.`
@@ -363,6 +524,74 @@ class ChatbotController {
       return response.status(500).json({
         status: 'error',
         message: error.message
+      })
+    }
+  }
+
+  async generateQuestions(role, tingkat = null, numQuestions = 1) {
+    try {
+      const template = tingkat
+        ? `Buat {numQuestions} pertanyaan umum untuk role {role} di tingkat {tingkat}. Jawaban harus singkat tanpa simbol tambahan seperti ** - atau lainnya.`
+        : `Buat {numQuestions} pertanyaan umum untuk role {role}. Jawaban harus singkat tanpa simbol tambahan seperti ** - atau lainnya.`;
+
+      const prompt = ChatPromptTemplate.fromTemplate(template);
+
+      const chain = prompt.pipe(openai);
+
+      // Eksekusi prompt
+      const response = await chain.invoke({
+        numQuestions,
+        role,
+        tingkat
+      });
+
+      // Periksa struktur respons dan ekstrak teks
+      const responseText = response.text || response; // Jika respons berupa objek, ambil properti `text`
+
+      // Parsing hasil menjadi array pertanyaan
+      const questions = responseText
+        .split('\n')
+        .filter(Boolean)
+        .map((question) =>
+          question
+            .replace(/^\d+\.\s*/, '')
+            .trim()
+        );
+
+      console.log('Raw response:', responseText);
+      return questions;
+    } catch (error) {
+      console.error('Error generating questions:', error.message);
+      return [];
+    }
+  }
+
+  async addGeneratedQuestions(role, tingkat = null) {
+    const newQuestions = await generateQuestions(role, tingkat);
+
+    newQuestions.forEach((question) => {
+      existingData.questions.push({ question, role, tingkat });
+    });
+
+    console.log(`Pertanyaan untuk ${role}${tingkat ? ` di tingkat ${tingkat}` : ''} berhasil ditambahkan:`, newQuestions);
+  }
+
+  async getTemplateSuggestions({ auth, response }) {
+    try {
+      const user = await auth.getUser();
+      console.log(user);
+
+      const templateSuggestions = this.addGeneratedQuestions(user.role, "sma");
+
+      return response.json({
+        status: 200,
+        data: templateSuggestions
+      })
+    }
+    catch (error) {
+      return response.json({
+        status: 500,
+        data: error.message
       })
     }
   }
