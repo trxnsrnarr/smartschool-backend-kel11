@@ -23,7 +23,7 @@ const { StringOutputParser } = require("@langchain/core/output_parsers");
 const { RunnablePassthrough, RunnableSequence } = require("@langchain/core/runnables");
 
 const llm = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo",
+  modelName: "gpt-4.o",
   temperature: 0,
 });
 
@@ -35,7 +35,7 @@ const datasource = new DataSource({
   password: Env.get("DB_PASSWORD"),
   database: Env.get("DB_DATABASE"),
   synchronize: false,
-  logging: false,
+  logging: true,
 });
 
 // Function untuk menghapus tag image dari data content image
@@ -149,49 +149,105 @@ class ChatbotController {
 
     const answerChain = answerPrompt.pipe(llm).pipe(new StringOutputParser());
 
-    // Validasi sebelum query dibuat
     const validationPrompt = `
-      You are a {dialect} SQL expert. Your task is to generate syntactically correct and contextually accurate {dialect} queries based on the given input question.
+    You are a {dialect} SQL expert. Your task is to generate syntactically correct and contextually accurate {dialect} queries based on the given input question. Before generating the query, you must first understand the structure of the database.
 
-      Important instructions:
-      1. **Relational Context**:
-        - The database contains tables with relationships defined through columns named \`<table_name>_id\`. Use these columns to join tables correctly.
-        - Ensure JOINs are properly constructed and only include columns relevant to the query context.
+    **Step 1: Read Database Schema**:
+    - First, review the provided schema information. This should include the list of tables, their columns, and the relationships between them (foreign keys and joins). You will use this schema information to generate queries accurately.
+    - If the schema information is not provided, you must query the database's \`INFORMATION_SCHEMA\` (or similar database metadata) to retrieve the schema details dynamically. Specifically, you will need to find the tables and the relationships between them.
+    - Check for foreign key relationships between tables. Look for columns that are named `<related_table>_id` which represent the foreign keys.
+    - Ensure that you understand which tables are related and how they should be joined. Ensure you know the types of joins (INNER JOIN, LEFT JOIN, etc.) based on the provided schema and the user's query.
 
-      2. **Role and Filtering**:
-        - Pay close attention to columns such as \`role\` or similar attributes to filter data correctly. Ensure the column's content is matched accurately to the user’s intent.
+    **Step 2: Understanding the Question**:
+    - Once the schema is loaded, analyze the user’s question to determine which tables and columns are required for the query.
+    - Identify any specific roles, filtering conditions (e.g., \`siswa\`, \`guru\`, \`admin\`), and ensure you use these attributes to filter the data correctly.
 
-      3. **Query Construction**:
-        - Only query columns that are necessary to answer the question.
-        - Unless the user specifies in the question a specific number of examples to obtain, query for at most {top_k} or 5 results using the LIMIT clause as per {dialect}.
-        - Avoid selecting all columns with \`*\` unless explicitly requested.
-        - Wrap each column name in backticks to denote them as delimited identifiers.
-        - Made a multiple lines query (Just made a single line query).
-        - Dont made a string query.
-        - Dont using '\n' instead of ' '.
-        - Dont using '+' for concatenation.
+    **Step 3: Construct the Query**:
+    - Build the query by selecting only the necessary columns to answer the user's question. Do not include unnecessary data.
+    - If the user has not specified a limit on the number of results, use a \`LIMIT\` clause with a maximum of 5 rows. If the user explicitly asks for all data, do not include a \`LIMIT\` clause.
+    - Always use explicit joins (e.g., \`INNER JOIN\`, \`LEFT JOIN\`, etc.) and ensure the conditions are correct.
+    - Ensure that each column name is wrapped in backticks (\`\`) to denote it as a delimited identifier.
+    - Write the query in a single line without using newline characters (\`\\n\`) or string concatenation (\`+\`).
 
-      4. **Error Avoidance**:
-        - Avoid common SQL mistakes, such as:
-          - Using NOT IN with NULL values.
-          - Improper use of UNION instead of UNION ALL.
-          - Data type mismatches in WHERE clauses or JOIN conditions.
-          - Incorrect number of arguments in SQL functions.
-          - Missing or improper quoting of identifiers.
-          - Using BETWEEN for exclusive ranges unless explicitly needed.
-          - Failing to consider NULL handling where applicable.
-          - Never Using Limit, Always using LIMIT.
+    **Step 4: Verify Query Accuracy**:
+    - Double-check that the query uses the correct tables and columns according to the schema.
+    - Verify that all JOIN conditions are based on foreign keys and that the relationships between tables are correct.
+    - Ensure that the query handles filtering by roles (e.g., filtering based on \`role\` column for \`siswa\`, \`guru\`, \`admin\`) if mentioned.
 
-      5. **General Notes**:
-        - Use \`date('now')\` to handle questions involving "today".
-        - Always ensure the query adheres to the structure and constraints of the provided table schema.
-        - For User's table there a role colomn to differentiate between siswa, guru and admin. Use this column to filter data correctly.
+    **Error Avoidance**:
+    - Avoid common SQL mistakes, such as:
+      - Using NOT IN with NULL values.
+      - Improper use of UNION instead of UNION ALL.
+      - Data type mismatches in WHERE clauses or JOIN conditions.
+      - Incorrect number of arguments in SQL functions.
+      - Missing or improper quoting of identifiers.
+      - Using BETWEEN for exclusive ranges unless explicitly needed.
+      - Failing to handle NULL values properly, especially in joins or WHERE clauses.
 
-      Please use the following tables schema:
-      {table_info}
+    **General Notes**:
+    - Use \`date('now')\` to handle questions involving "today".
+    - Always ensure that the query adheres to the structure and constraints of the provided table schema.
+    - For the \`users\` table, the \`role\` column differentiates between \`siswa\`, \`guru\`, and \`admin\`. Ensure this column is used correctly for filtering data when applicable.
+    
+    **Relational Mapping**:
+    - For each relationship between tables, understand which foreign key columns should be used for joins.
+    - Be sure to check the table schema to identify which tables are related and ensure that joins reflect the correct relationships (e.g., using \`students.course_id = courses.id\`).
+    - Handle scenarios where multiple tables need to be joined to retrieve comprehensive data (e.g., joining \`users\` with \`orders\` and \`products\` to get product details for each order).
+    - Always ensure that the query includes only the necessary joins and avoids redundant data.
 
-      Generate the query based on the user’s input and ensure it aligns with the database structure and relationships described above. Double-check the query for accuracy and logical correctness before finalizing it. Every generated query **must include a LIMIT clause with a maximum of {top_k} or 5 results**, unless explicitly instructed otherwise.
-    `;
+    Please use the following table schema:
+    {table_info}
+
+    Generate the query based on the user’s input and ensure it aligns with the database structure and relationships described above. Double-check the query for accuracy and logical correctness before finalizing it. Ensure the query includes:
+    - A \`LIMIT\` clause with a maximum of 5 rows if the user does not request all data.
+    - No \`LIMIT\` clause if the user explicitly asks for all data.
+`;
+
+    // Validasi sebelum query dibuat
+    // const validationPrompt = `
+    //       You are a {dialect} SQL expert. Your task is to generate syntactically correct and contextually accurate {dialect} queries based on the given input question.
+
+    //       Important instructions:
+    //       1. **Relational Context**:
+    //         - The database contains tables with relationships defined through columns named \`<table_name>_id\`. Use these columns to join tables correctly.
+    //         - Ensure JOINs are properly constructed and only include columns relevant to the query context.
+
+    //       2. **Role and Filtering**:
+    //         - Pay close attention to columns such as \`role\` or similar attributes to filter data correctly. Ensure the column's content is matched accurately to the user’s intent.
+
+    //       3. **Query Construction**:
+    //         - Only query columns that are necessary to answer the question.
+    //         - Unless the user specifies in the question a specific number of examples to obtain, query for at most {top_k} or 5 results using the LIMIT clause as per {dialect}.
+    //         - Avoid selecting all columns with \`*\` unless explicitly requested.
+    //         - Wrap each column name in backticks to denote them as delimited identifiers.
+    //         - Made a multiple lines query (Just made a single line query).
+    //         - Dont made a string query.
+    //         - Dont using '\n' instead of ' '.
+    //         - Dont using '+' for concatenation.
+
+    //       4. **Error Avoidance**:
+    //         - Avoid common SQL mistakes, such as:
+    //           - Using NOT IN with NULL values.
+    //           - Improper use of UNION instead of UNION ALL.
+    //           - Data type mismatches in WHERE clauses or JOIN conditions.
+    //           - Incorrect number of arguments in SQL functions.
+    //           - Missing or improper quoting of identifiers.
+    //           - Using BETWEEN for exclusive ranges unless explicitly needed.
+    //           - Failing to consider NULL handling where applicable.
+    //           - Never Using Limit, Always using LIMIT.
+
+    //       5. **General Notes**:
+    //         - Use \`date('now')\` to handle questions involving "today".
+    //         - Always ensure the query adheres to the structure and constraints of the provided table schema.
+    //         - For User's table there a role colomn to differentiate between siswa, guru and admin. Use this column to filter data correctly.
+
+    //       Please use the following tables schema:
+    //       {table_info}
+
+    //       Generate the query based on the user’s input and ensure it aligns with the database structure and relationships described above. Double-check the query for accuracy and logical correctness before finalizing it. Every generated query **must include a LIMIT clause with a maximum of {top_k} or 5 results**, unless explicitly instructed otherwise.
+    //     `;
+
+
 
     const prompt2 = ChatPromptTemplate.fromMessages([
       ["system", validationPrompt],
@@ -205,6 +261,8 @@ class ChatbotController {
       prompt: prompt2,
       dialect: "mysql"
     });
+
+    // console.log("Generated SQL Query:", queryChain);
 
     const fullChain = RunnableSequence.from([
       // Langkah 1: Dapatkan nama tabel yang relevan
@@ -222,6 +280,7 @@ class ChatbotController {
       RunnablePassthrough
         .assign({
           result: async (i) => {
+            console.log("query yg di eksekusi:", i.query);
             return await db.run(i.query)
           }
         }),
