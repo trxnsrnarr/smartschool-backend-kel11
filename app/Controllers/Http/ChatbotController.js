@@ -109,7 +109,7 @@ class ChatbotController {
   async sqlRequest(question) {
     const db = await SqlDatabase.fromDataSourceParams({
       appDataSource: datasource,
-      includesTables: ["m_penghargaan", "tk_perusahaan_sekolah", "m_ta", "m_sekolah", "m_user", "m_sanksi_siswa", "m_sikap_siswa", "tk_siswa_pelanggaran", "m_sanksi_pelanggaran", "m_prestasi", "m_anggota_ekskul", "m_ekstrakurikuler", "m_rapor_ekskul", "m_sarpras", "m_keterangan_pkl", "m_perusahaan", "m_mou_perusahaan", "m_alumni", "m_disposisi", "m_pelaporan_disposisi", "m_surat", "m_jurusan", "m_mata_pelajaran"],
+      includesTables: ["m_penghargaan", "tk_perusahaan_sekolah", "m_ta", "m_sekolah", "m_user", "m_sanksi_siswa", "m_sikap_siswa", "m_pelanggaran","m_kategori_pelanggaran", "tk_siswa_pelanggaran", "m_sanksi_pelanggaran", "m_prestasi", "m_anggota_ekskul", "m_ekstrakurikuler", "m_rapor_ekskul", "m_sarpras", "m_keterangan_pkl", "m_perusahaan", "m_mou_perusahaan", "m_alumni", "m_disposisi", "m_pelaporan_disposisi", "m_surat", "m_jurusan", "m_mata_pelajaran"],
       sampleRowsInTableInfo: 2,
     });
 
