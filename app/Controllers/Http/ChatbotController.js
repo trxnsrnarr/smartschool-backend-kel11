@@ -23,7 +23,7 @@ const { StringOutputParser } = require("@langchain/core/output_parsers");
 const { RunnablePassthrough, RunnableSequence } = require("@langchain/core/runnables");
 
 const llm = new ChatOpenAI({
-  modelName: "gpt-4.o",
+  modelName: "gpt-4o",
   temperature: 0,
 });
 
@@ -113,6 +113,7 @@ class ChatbotController {
       sampleRowsInTableInfo: 2,
     });
 
+
     const Table = z.object({
       names: z.array(z.string()).describe("Names of tables in SQL database"),
     });
@@ -136,7 +137,7 @@ class ChatbotController {
     ]);
 
     const tableChain = prompt.pipe(llm.withStructuredOutput(Table));
-
+    
     const answerPrompt = PromptTemplate.fromTemplate(`
       Given the following user question, corresponding SQL query, and SQL result, answer the user question.
 
@@ -155,7 +156,7 @@ class ChatbotController {
     **Step 1: Read Database Schema**:
     - First, review the provided schema information. This should include the list of tables, their columns, and the relationships between them (foreign keys and joins). You will use this schema information to generate queries accurately.
     - If the schema information is not provided, you must query the database's \`INFORMATION_SCHEMA\` (or similar database metadata) to retrieve the schema details dynamically. Specifically, you will need to find the tables and the relationships between them.
-    - Check for foreign key relationships between tables. Look for columns that are named `<related_table>_id` which represent the foreign keys.
+    - Check for foreign key relationships between tables. Look for columns that are named \`<related_table>_id\` which represent the foreign keys.
     - Ensure that you understand which tables are related and how they should be joined. Ensure you know the types of joins (INNER JOIN, LEFT JOIN, etc.) based on the provided schema and the user's query.
 
     **Step 2: Understanding the Question**:
@@ -164,6 +165,7 @@ class ChatbotController {
 
     **Step 3: Construct the Query**:
     - Build the query by selecting only the necessary columns to answer the user's question. Do not include unnecessary data.
+    - Unless the user specifies in the question a specific number of examples to obtain, query for at most {top_k} or 5 results using the LIMIT clause as per {dialect}.
     - If the user has not specified a limit on the number of results, use a \`LIMIT\` clause with a maximum of 5 rows. If the user explicitly asks for all data, do not include a \`LIMIT\` clause.
     - Always use explicit joins (e.g., \`INNER JOIN\`, \`LEFT JOIN\`, etc.) and ensure the conditions are correct.
     - Ensure that each column name is wrapped in backticks (\`\`) to denote it as a delimited identifier.
@@ -198,9 +200,12 @@ class ChatbotController {
     Please use the following table schema:
     {table_info}
 
-    Generate the query based on the user’s input and ensure it aligns with the database structure and relationships described above. Double-check the query for accuracy and logical correctness before finalizing it. Ensure the query includes:
+    Generate the query based on the user’s input and ensure it aligns with the database structure and relationships described above. Double-check the query for accuracy and logical correctness before finalizing it. Every generated query **must include a LIMIT clause with a maximum of {top_k} or 5 results**, unless explicitly instructed otherwise:
     - A \`LIMIT\` clause with a maximum of 5 rows if the user does not request all data.
     - No \`LIMIT\` clause if the user explicitly asks for all data.
+
+    Extract SQL only from the answer for example:
+    SELECT COUNT('m_user'.'id') AS jumlah_siswa FROM 'm_user' INNER JOIN 'm_sekolah' ON 'm_user'.'m_sekolah_id' = 'm_sekolah'.'id' WHERE 'm_user'.'role' = 'siswa' AND 'm_sekolah'.'nama' = 'SMKN 26 Jakarta';
 `;
 
     // Validasi sebelum query dibuat
@@ -261,7 +266,8 @@ class ChatbotController {
       prompt: prompt2,
       dialect: "mysql"
     });
-
+    console.log("ini query chain", queryChain);
+    
     // console.log("Generated SQL Query:", queryChain);
 
     const fullChain = RunnableSequence.from([
