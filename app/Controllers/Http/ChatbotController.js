@@ -109,7 +109,7 @@ class ChatbotController {
   async sqlRequest(question) {
     const db = await SqlDatabase.fromDataSourceParams({
       appDataSource: datasource,
-      includesTables: ["m_penghargaan", "tk_perusahaan_sekolah", "m_ta", "m_sekolah", "m_user", "m_sanksi_siswa", "m_sikap_siswa", "tk_siswa_pelanggaran", "m_sanksi_pelanggaran", "m_prestasi", "m_anggota_ekskul", "m_ekstrakurikuler", "m_rapor_ekskul", "m_sarpras", "m_keterangan_pkl", "m_perusahaan", "m_mou_perusahaan", "m_alumni", "m_disposisi", "m_pelaporan_disposisi", "m_surat"],
+      includesTables: ["m_penghargaan", "tk_perusahaan_sekolah", "m_ta", "m_sekolah", "m_user", "m_sanksi_siswa", "m_sikap_siswa", "tk_siswa_pelanggaran", "m_sanksi_pelanggaran", "m_prestasi", "m_anggota_ekskul", "m_ekstrakurikuler", "m_rapor_ekskul", "m_sarpras", "m_keterangan_pkl", "m_perusahaan", "m_mou_perusahaan", "m_alumni", "m_disposisi", "m_pelaporan_disposisi", "m_surat", "m_jurusan", "m_mata_pelajaran"],
       sampleRowsInTableInfo: 2,
     });
 
@@ -185,6 +185,10 @@ class ChatbotController {
       - Missing or improper quoting of identifiers.
       - Using BETWEEN for exclusive ranges unless explicitly needed.
       - Failing to handle NULL values properly, especially in joins or WHERE clauses.
+      - Do NOT use Markdown annotations (like \`\`\`sql).
+      - Only return the raw SQL query.
+      - Ensure the query is syntactically and contextually correct.
+      - Verify joins, filters, and conditions are accurate based on the database schema.
 
     **General Notes**:
     - Use \`date('now')\` to handle questions involving "today".
@@ -229,6 +233,7 @@ class ChatbotController {
     //         - Dont made a string query.
     //         - Dont using '\n' instead of ' '.
     //         - Dont using '+' for concatenation.
+
 
     //       4. **Error Avoidance**:
     //         - Avoid common SQL mistakes, such as:
