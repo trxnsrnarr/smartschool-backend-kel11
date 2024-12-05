@@ -832,11 +832,11 @@ class MainController {
     ) {
       search = search.toLowerCase().includes("negri")
         ? `${search.split(" ")[0]}N${search.slice(
-            search.toLowerCase().search("negri") + 5
-          )}`
+          search.toLowerCase().search("negri") + 5
+        )}`
         : `${search.split(" ")[0]}N${search.slice(
-            search.toLowerCase().search("negeri") + 6
-          )}`;
+          search.toLowerCase().search("negeri") + 6
+        )}`;
     }
     if (search.toLowerCase().includes("swasta")) {
       search = `${search.split(" ")[0]}S${search.slice(
@@ -3926,8 +3926,7 @@ class MainController {
           6281316119411,
           `Wajah tidak dikenal dengan suhu tubuh ${Math.abs(
             suhu
-          )}℃ dan dalam keadaan ${
-            masker ? "menggunakan masker" : "tidak menggunakan masker"
+          )}℃ dan dalam keadaan ${masker ? "menggunakan masker" : "tidak menggunakan masker"
           } pada ${moment(waktu).format("DD MMM YYYY HH:mm:ss")}`
         );
 
@@ -3949,8 +3948,7 @@ class MainController {
         6281316119411,
         `Wajah tidak dikenal dengan suhu tubuh ${Math.abs(
           suhu
-        )}℃ dan dalam keadaan ${
-          masker ? "menggunakan masker" : "tidak menggunakan masker"
+        )}℃ dan dalam keadaan ${masker ? "menggunakan masker" : "tidak menggunakan masker"
         } pada ${moment(waktu).format("DD MMM YYYY HH:mm:ss")}`
       );
 
@@ -3963,8 +3961,7 @@ class MainController {
       6281316119411,
       `${user.nama} sudah hadir di sekolah dengan suhu tubuh ${Math.abs(
         suhu
-      )}℃ dan dalam keadaan ${
-        masker ? "menggunakan masker" : "tidak menggunakan masker"
+      )}℃ dan dalam keadaan ${masker ? "menggunakan masker" : "tidak menggunakan masker"
       } pada ${moment(waktu).format("DD MMM YYYY HH:mm:ss")}`
     );
 
@@ -5938,9 +5935,9 @@ class MainController {
         jadwalMengajar.toJSON().map(async (d) => {
           if (
             moment(d.jamMengajar.jam_mulai, "HH:mm:ss").format("HH:mm") <=
-              jam_saat_ini &&
+            jam_saat_ini &&
             moment(d.jamMengajar.jam_selesai, "HH:mm:ss").format("HH:mm") >=
-              jam_saat_ini
+            jam_saat_ini
           ) {
             jadwalMengajarData.push({ ...d, aktif: true });
           } else {
@@ -6003,9 +6000,9 @@ class MainController {
           if (jamMengajarIds.includes(d.m_jam_mengajar_id)) {
             if (
               moment(d.jamMengajar.jam_mulai, "HH:mm:ss").format("HH:mm") <=
-                jam_saat_ini &&
+              jam_saat_ini &&
               moment(d.jamMengajar.jam_selesai, "HH:mm:ss").format("HH:mm") >=
-                jam_saat_ini
+              jam_saat_ini
             ) {
               jadwalMengajarData.push({ ...d, aktif: true });
             } else {
@@ -6029,8 +6026,7 @@ class MainController {
         )
         .whereBetween("tanggal_pembagian", [
           `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`,
-          `${today.getFullYear()}/${
-            today.getMonth() + 1
+          `${today.getFullYear()}/${today.getMonth() + 1
           }/${today.getDate()} ${jam_saat_ini}:00`,
         ])
         .fetch();
@@ -6217,9 +6213,9 @@ class MainController {
         jadwalMengajar.toJSON().map(async (d) => {
           if (
             moment(d.jamMengajar.jam_mulai, "HH:mm:ss").format("HH:mm") <=
-              jam_saat_ini &&
+            jam_saat_ini &&
             moment(d.jamMengajar.jam_selesai, "HH:mm:ss").format("HH:mm") >=
-              jam_saat_ini
+            jam_saat_ini
           ) {
             jadwalMengajarData.push({ ...d, aktif: true });
           } else {
@@ -8672,8 +8668,8 @@ class MainController {
             explanation.getCell("D" + rowNumber).value == null
               ? ""
               : typeof explanation.getCell("D" + rowNumber).value == "object"
-              ? JSON.parse(explanation.getCell("D" + rowNumber).value).text
-              : explanation.getCell("D" + rowNumber).value,
+                ? JSON.parse(explanation.getCell("D" + rowNumber).value).text
+                : explanation.getCell("D" + rowNumber).value,
           gender: explanation.getCell("E" + rowNumber).value,
           role: explanation.getCell("F" + rowNumber).value,
           password: explanation.getCell("G " + rowNumber).value,
@@ -10434,13 +10430,13 @@ class MainController {
             tugasDraf.push(d);
           } else if (
             moment(d.tugas.tanggal_pembagian).format("YYYY-MM-DD") <=
-              hari_ini &&
+            hari_ini &&
             moment(d.tugas.tanggal_pengumpulan).format("YYYY-MM-DD") >= hari_ini
           ) {
             tugasSaatIni.push(d);
           } else if (
             moment(d.tugas.tanggal_pembagian).format("YYYY-MM-DD") >=
-              hari_ini &&
+            hari_ini &&
             moment(d.tugas.waktu_pembagian).format("HH:mm") >= jam_saat_ini
           ) {
             tugasTerjadwal.push(d);
@@ -10583,9 +10579,8 @@ class MainController {
           m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id,
           tipe: "tugas",
           dihapus: 0,
-          tanggal_pembagian: `${tanggal_pembagian} ${
-            waktu_pembagian ? waktu_pembagian : `00:00:00`
-          }`,
+          tanggal_pembagian: `${tanggal_pembagian} ${waktu_pembagian ? waktu_pembagian : `00:00:00`
+            }`,
         });
 
         const idsGuru = await User.query()
@@ -10623,9 +10618,8 @@ class MainController {
               m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id,
               tipe: "tugas",
               dihapus: 0,
-              tanggal_pembagian: `${tanggal_pembagian} ${
-                waktu_pembagian ? waktu_pembagian : `00:00:00`
-              }`,
+              tanggal_pembagian: `${tanggal_pembagian} ${waktu_pembagian ? waktu_pembagian : `00:00:00`
+                }`,
             });
           })
         );
@@ -10922,14 +10916,12 @@ class MainController {
         draft,
       });
 
-    const tanggalLengkap = `${tanggal_pembagian} ${
-      waktu_pembagian ? waktu_pembagian : "00:00:00"
-    }`;
+    const tanggalLengkap = `${tanggal_pembagian} ${waktu_pembagian ? waktu_pembagian : "00:00:00"
+      }`;
     const tanggalSebelumLengkap = `${moment(
       tugasSebelum.tanggal_pembagian
-    ).format("YYYY-MM-DD HH:mm:ss")} ${
-      tugasSebelum.waktu_pembagian ? tugasSebelum.waktu_pembagian : "00:00:00"
-    }`;
+    ).format("YYYY-MM-DD HH:mm:ss")} ${tugasSebelum.waktu_pembagian ? tugasSebelum.waktu_pembagian : "00:00:00"
+      }`;
     // return moment().format("YYYY-MM-DD HH:mm:ss")
     // return tanggalLengkap
     const tugasData = await MTugas.query()
@@ -11512,8 +11504,8 @@ class MainController {
                   moment(d.timeline.tugas.tanggal_pembagian)
                     .add(7, "hours")
                     .format("YYYY-MM-DD") +
-                    " " +
-                    d.timeline.tugas.waktu_pembagian
+                  " " +
+                  d.timeline.tugas.waktu_pembagian
                 ) <= moment() ||
                 d.timeline.tugas.waktu_pembagian == null
               )
@@ -11521,8 +11513,7 @@ class MainController {
                   moment(
                     `${moment(d.timeline.tugas.tanggal_pengumpulan)
                       .add(7, "hours")
-                      .format("YYYY-MM-DD")} ${
-                      d.timeline.tugas.waktu_pengumpulan
+                      .format("YYYY-MM-DD")} ${d.timeline.tugas.waktu_pengumpulan
                     }`
                   ).format("YYYY-MM-DD HH:mm:ss") >= waktu_saat_ini
                 ) {
@@ -11748,11 +11739,10 @@ class MainController {
       if (
         timeline.toJSON().tipe == "tugas" &&
         moment(
-          `${timeline.toJSON().timeline.tugas.tanggal_pengumpulan} ${
-            timeline.toJSON().timeline.tugas.waktu_pengumpulan
+          `${timeline.toJSON().timeline.tugas.tanggal_pengumpulan} ${timeline.toJSON().timeline.tugas.waktu_pengumpulan
           }`
         ).format("YYYY-MM-DD HH:mm:ss") >=
-          moment().format("YYYY-MM-DD HH:mm:ss")
+        moment().format("YYYY-MM-DD HH:mm:ss")
       ) {
         sudah_lewat = true;
       }
@@ -12338,13 +12328,10 @@ class MainController {
               await MNotifikasiTerjadwal.create({
                 tanggal_dibagikan: tanggal_pembagian,
                 tanggal_cron: `${menit} ${jam} ${tanggal} ${bulan} *`,
-                pesan: `Halo ${d.user.nama}, ada materi dari Guru ${
-                  user.nama
-                } (${mapel.nama}) BAB ${topik.toJSON().bab.judul} - ${
-                  topik.judul
-                }. Silahkan klik tautan berikut untuk melihat materi! Semangat!! \n \n${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${
-                  timeline.id
-                }?hal=materi`,
+                pesan: `Halo ${d.user.nama}, ada materi dari Guru ${user.nama
+                  } (${mapel.nama}) BAB ${topik.toJSON().bab.judul} - ${topik.judul
+                  }. Silahkan klik tautan berikut untuk melihat materi! Semangat!! \n \n${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timeline.id
+                  }?hal=materi`,
                 tujuan: d.user.wa_real,
                 nama: `materi-${timeline.id}-${d.m_user_id}`,
               });
@@ -12751,13 +12738,10 @@ class MainController {
               await MNotifikasiTerjadwal.create({
                 tanggal_dibagikan: tanggal_pembagian,
                 tanggal_cron: `${menit} ${jam} ${tanggal} ${bulan} *`,
-                pesan: `Halo ${d.user.nama}, ada materi dari Guru ${
-                  user.nama
-                } (${mapel.nama}) BAB ${topik.toJSON().bab.judul} - ${
-                  topik.judul
-                }. Silahkan klik tautan berikut untuk melihat materi! Semangat!! \n \n${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${
-                  timeline.id
-                }?hal=materi`,
+                pesan: `Halo ${d.user.nama}, ada materi dari Guru ${user.nama
+                  } (${mapel.nama}) BAB ${topik.toJSON().bab.judul} - ${topik.judul
+                  }. Silahkan klik tautan berikut untuk melihat materi! Semangat!! \n \n${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timeline.id
+                  }?hal=materi`,
                 tujuan: d.user.wa_real,
                 nama: `materi-${timeline.id}-${d.m_user_id}`,
               });
@@ -13072,11 +13056,9 @@ class MainController {
     if (user.role == "siswa") {
       WhatsAppService.sendMessage(
         user.wa_real,
-        `Halo ${user.nama}, ada balasan komentar dari Guru ${
-          timelineTk.toJSON().timeline.user.nama
+        `Halo ${user.nama}, ada balasan komentar dari Guru ${timelineTk.toJSON().timeline.user.nama
         } dengan komentar ${komen}. Silahkan klik tautan berikut untuk membalasnya! Semangat!!
-        ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${
-          timelineTk.m_timeline_id
+        ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timelineTk.m_timeline_id
         }?hal=tugas`
       );
       //  kirimNotifWa(
@@ -13092,11 +13074,9 @@ class MainController {
     } else if (user.role == "guru") {
       WhatsAppService.sendMessage(
         user.wa_real,
-        `Halo ${user.nama}, ada balasan komentar dari Siswa ${
-          timelineTk.toJSON().user.nama
+        `Halo ${user.nama}, ada balasan komentar dari Siswa ${timelineTk.toJSON().user.nama
         } dengan komentar ${komen}. Silahkan klik tautan berikut untuk membalasnya! Semangat!!
-        ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${
-          timelineTk.m_timeline_id
+        ${domain}/smartschool/kelas/${m_jadwal_mengajar_id}/kegiatan/${timelineTk.m_timeline_id
         }?hal=tugas`
       );
       //  kirimNotifWa(
@@ -14285,7 +14265,7 @@ class MainController {
                       ? anggota.user.absen.length
                         ? anggota.user.absen[0].foto_masuk_local
                           ? "https://server1.smarteschool.net/camera/" +
-                            anggota.user.absen[0].foto_masuk_local
+                          anggota.user.absen[0].foto_masuk_local
                           : "-"
                         : "-"
                       : "-"
@@ -14302,7 +14282,7 @@ class MainController {
                       ? anggota.user.absen.length
                         ? anggota.user.absen[0].foto_pulang_local
                           ? "https://server1.smarteschool.net/camera/" +
-                            anggota.user.absen[0].foto_pulang_local
+                          anggota.user.absen[0].foto_pulang_local
                           : "-"
                         : "-"
                       : "-"
@@ -14540,7 +14520,7 @@ class MainController {
     }
   }
 
-  async getTest({ response, request, auth }) {}
+  async getTest({ response, request, auth }) { }
 
   async getUjian({ response, request, auth }) {
     const domain = request.headers().origin;
@@ -14796,9 +14776,9 @@ class MainController {
       return response.forbidden({ message: messageForbidden });
     }
 
-    const { nav ,tanggal, page} = request.get();
+    const { nav, tanggal, page } = request.get();
 
-   
+
     const hari_ini = moment().format("YYYY-MM-DD HH:mm");
 
     const ujian = await MUjian.query().where({ id: ujian_id }).first();
@@ -17404,16 +17384,14 @@ class MainController {
             worksheet.getCell("B1").value =
               jadwalUjian.toJSON().jadwalUjian.ujian.nama;
             worksheet.getCell("D1").value = "Tanggal";
-            worksheet.getCell("E1").value = `${
-              jadwalUjian.toJSON().jadwalUjian.tanggalUjian
-            } ${jadwalUjian.toJSON().jadwalUjian.waktuUjian}`;
+            worksheet.getCell("E1").value = `${jadwalUjian.toJSON().jadwalUjian.tanggalUjian
+              } ${jadwalUjian.toJSON().jadwalUjian.waktuUjian}`;
             worksheet.getCell("D2").value = "KKM";
             worksheet.getCell("E2").value =
               jadwalUjian.toJSON().jadwalUjian.kkm;
             worksheet.getCell("A2").value = "Durasi";
-            worksheet.getCell("B2").value = `${
-              jadwalUjian.toJSON().jadwalUjian.durasi
-            } menit`;
+            worksheet.getCell("B2").value = `${jadwalUjian.toJSON().jadwalUjian.durasi
+              } menit`;
 
             // worksheet.getCell("A4").value = "RPP";
             // worksheet.getCell("A5").value = d.rpp.toString();
@@ -17501,8 +17479,8 @@ class MainController {
         ).format("HH-mm")} ${jadwalUjian
           .toJSON()
           .jadwalUjian.ujian.nama.replace(/[\/|\\:*?"<>]/g, " ")} ${jadwalUjian
-          .toJSON()
-          .rombel.nama.replace(/[\/|\\:*?"<>]/g, " ")}.xlsx`;
+            .toJSON()
+            .rombel.nama.replace(/[\/|\\:*?"<>]/g, " ")}.xlsx`;
 
         // save workbook to disk
         await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -20722,17 +20700,14 @@ class MainController {
       });
     } else if (check.nominal > gelombang.biaya_pendaftaran) {
       return response.ok({
-        message: `Pembayaran ${gelombang.nama} kelebihan Rp${
-          +check.nominal - +gelombang.biaya_pendaftaran
-        } dengan nomor transaksi #${check.id}`,
+        message: `Pembayaran ${gelombang.nama} kelebihan Rp${+check.nominal - +gelombang.biaya_pendaftaran
+          } dengan nomor transaksi #${check.id}`,
       });
     } else if (check.nominal < gelombang.biaya_pendaftaran) {
       return response.ok({
-        message: `Pembayaran ${gelombang.nama} kurang Rp${
-          +gelombang.biaya_pendaftaran - +check.nominal
-        } dengan nomor transaksi #${
-          check.id
-        }. Silahkan upload kekurangannya pada menu pembayaran`,
+        message: `Pembayaran ${gelombang.nama} kurang Rp${+gelombang.biaya_pendaftaran - +check.nominal
+          } dengan nomor transaksi #${check.id
+          }. Silahkan upload kekurangannya pada menu pembayaran`,
       });
     }
   }
@@ -23959,14 +23934,12 @@ class MainController {
 
     const mutasi = await MMutasi.create({
       tipe: "kredit",
-      nama: `Pembayaran ${riwayat.toJSON().rombelPembayaran.pembayaran.nama} ${
-        riwayat.toJSON().rombelPembayaran.pembayaran.jenis == "spp"
+      nama: `Pembayaran ${riwayat.toJSON().rombelPembayaran.pembayaran.nama} ${riwayat.toJSON().rombelPembayaran.pembayaran.jenis == "spp"
           ? riwayat.toJSON().rombelPembayaran.pembayaran.bulan
           : ""
-      }-${riwayat.toJSON().user.nama}`,
-      kategori: `pembayaran ${
-        riwayat.toJSON().rombelPembayaran.pembayaran.jenis
-      }`,
+        }-${riwayat.toJSON().user.nama}`,
+      kategori: `pembayaran ${riwayat.toJSON().rombelPembayaran.pembayaran.jenis
+        }`,
       nominal: pembayaranSiswa.nominal,
       dihapus: 0,
       m_rek_sekolah_id:
@@ -23995,9 +23968,8 @@ class MainController {
     }
     if (riwayat.toJSON().rombelPembayaran?.pembayaran?.nama_transaksi) {
       const transaksi = await MKeuTransaksi.create({
-        nama: `${
-          riwayat.toJSON().rombelPembayaran?.pembayaran?.nama_transaksi_siswa
-        } - ${riwayat.toJSON().user.nama}`,
+        nama: `${riwayat.toJSON().rombelPembayaran?.pembayaran?.nama_transaksi_siswa
+          } - ${riwayat.toJSON().user.nama}`,
         // nomor,
         tanggal: moment().format("YYYY-MM-DD"),
         dihapus: 0,
@@ -24094,16 +24066,13 @@ class MainController {
 
         const mutasi = await MMutasi.create({
           tipe: "debit",
-          nama: `Pembayaran ${
-            riwayat.toJSON().rombelPembayaran.pembayaran.nama
-          } ${
-            riwayat.toJSON().rombelPembayaran.pembayaran.jenis == "spp"
+          nama: `Pembayaran ${riwayat.toJSON().rombelPembayaran.pembayaran.nama
+            } ${riwayat.toJSON().rombelPembayaran.pembayaran.jenis == "spp"
               ? riwayat.toJSON().rombelPembayaran.pembayaran.bulan
               : ""
-          }-${riwayat.toJSON().user.nama}`,
-          kategori: `pembayaran ${
-            riwayat.toJSON().rombelPembayaran.pembayaran.jenis
-          }`,
+            }-${riwayat.toJSON().user.nama}`,
+          kategori: `pembayaran ${riwayat.toJSON().rombelPembayaran.pembayaran.jenis
+            }`,
           nominal: pembayaranSiswa.nominal,
           dihapus: 0,
           m_sekolah_id: sekolah.id,
@@ -24188,9 +24157,8 @@ class MainController {
 
     const mutasi = await MMutasi.create({
       tipe: "kredit",
-      nama: `Pembayaran ${pembayaranUtama.nama} ${
-        pembayaranUtama.jenis == "spp" ? pembayaranUtama.bulan : ""
-      }-${riwayat.toJSON().user.nama}`,
+      nama: `Pembayaran ${pembayaranUtama.nama} ${pembayaranUtama.jenis == "spp" ? pembayaranUtama.bulan : ""
+        }-${riwayat.toJSON().user.nama}`,
       kategori: `pembayaran ${pembayaranUtama.jenis}`,
       nominal: pembayaranUtama.nominal,
       dihapus: 0,
@@ -24208,9 +24176,8 @@ class MainController {
 
     if (pembayaranUtama.nama_transaksi) {
       const transaksi = await MKeuTransaksi.create({
-        nama: `${pembayaranUtama.nama_transaksi_siswa} - ${
-          riwayat.toJSON().user.nama
-        }`,
+        nama: `${pembayaranUtama.nama_transaksi_siswa} - ${riwayat.toJSON().user.nama
+          }`,
         // nomor,
         tanggal: moment().format("YYYY-MM-DD"),
         dihapus: 0,
@@ -28691,8 +28658,8 @@ class MainController {
             explanation.getCell("S" + rowNumber).value == null
               ? ""
               : typeof explanation.getCell("S" + rowNumber).value == "object"
-              ? JSON.parse(explanation.getCell("S" + rowNumber).value).text
-              : explanation.getCell("S" + rowNumber).value,
+                ? JSON.parse(explanation.getCell("S" + rowNumber).value).text
+                : explanation.getCell("S" + rowNumber).value,
           tugas_tambahan: explanation.getCell("T" + rowNumber).value,
         });
       }
@@ -30471,9 +30438,8 @@ class MainController {
         //   rombelall: explanation.getCell("B" + rowNumber).value,
         //   tingkat: `${rombelall.split(" ")[0]}`,
         // });
-        let rombelData = `${romawi[rombelall.split(" ")[0] - 1]} ${
-          rombelall.split(" ")[1]
-        } ${rombelall.split(" ")[2]}`;
+        let rombelData = `${romawi[rombelall.split(" ")[0] - 1]} ${rombelall.split(" ")[1]
+          } ${rombelall.split(" ")[2]}`;
 
         const rombelCheck = await MRombel.query()
           .where({ nama: rombelData })
@@ -30570,17 +30536,16 @@ class MainController {
             explanation.getCell("X" + rowNumber).value == null
               ? ""
               : typeof explanation.getCell("X" + rowNumber).value == "object"
-              ? JSON.parse(explanation.getCell("X" + rowNumber).value).text
-              : explanation.getCell("X" + rowNumber).value,
+                ? JSON.parse(explanation.getCell("X" + rowNumber).value).text
+                : explanation.getCell("X" + rowNumber).value,
           namaayah: explanation.getCell("Y" + rowNumber).value,
           pekerjaanayah: explanation.getCell("Z" + rowNumber).value,
           namaibu: explanation.getCell("AA" + rowNumber).value,
           pekerjaanibu: explanation.getCell("AB" + rowNumber).value,
           namawali: explanation.getCell("AC" + rowNumber).value,
           pekerjaanwali: explanation.getCell("AD" + rowNumber).value,
-          rombel: `${romawi[rombelsiswa.split(" ")[0] - 1]} ${
-            rombelsiswa.split(" ")[1]
-          } ${rombelsiswa.split(" ")[2]}`,
+          rombel: `${romawi[rombelsiswa.split(" ")[0] - 1]} ${rombelsiswa.split(" ")[1]
+            } ${rombelsiswa.split(" ")[2]}`,
           kebutuhan: explanation.getCell("AF" + rowNumber).value,
           asalsekolah: explanation.getCell("AG" + rowNumber).value,
           bb: explanation.getCell("AH" + rowNumber).value,
@@ -30823,9 +30788,8 @@ class MainController {
         //   rombelall: explanation.getCell("B" + rowNumber).value,
         //   tingkat: `${rombelall.split(" ")[0]}`,
         // });
-        let rombelData = `${romawi[rombelall.split(" ")[0] - 1]} ${
-          rombelall.split(" ")[1]
-        } ${rombelall.split(" ")[2]}`;
+        let rombelData = `${romawi[rombelall.split(" ")[0] - 1]} ${rombelall.split(" ")[1]
+          } ${rombelall.split(" ")[2]}`;
 
         const rombelCheck = await MRombel.query()
           .where({ nama: rombelData })
@@ -30913,11 +30877,10 @@ class MainController {
             explanation.getCell("O" + rowNumber).value == null
               ? ""
               : typeof explanation.getCell("O" + rowNumber).value == "object"
-              ? JSON.parse(explanation.getCell("O" + rowNumber).value).text
-              : explanation.getCell("O" + rowNumber).value,
-          rombel: `${romawi[rombelsiswa.split(" ")[0] - 1]} ${
-            rombelsiswa.split(" ")[1]
-          } ${rombelsiswa.split(" ")[2]}`,
+                ? JSON.parse(explanation.getCell("O" + rowNumber).value).text
+                : explanation.getCell("O" + rowNumber).value,
+          rombel: `${romawi[rombelsiswa.split(" ")[0] - 1]} ${rombelsiswa.split(" ")[1]
+            } ${rombelsiswa.split(" ")[2]}`,
           password: explanation.getCell("Q" + rowNumber).value,
         });
       }
@@ -40870,7 +40833,7 @@ class MainController {
                 ? anggota.user.absen
                   ? anggota.user.absen.length
                     ? anggota.user.absen[0].foto_masuk_local ||
-                      anggota.user.absen[0].foto_masuk
+                    anggota.user.absen[0].foto_masuk
                     : "-"
                   : "-"
                 : "-",
@@ -40885,7 +40848,7 @@ class MainController {
                 ? anggota.user.absen
                   ? anggota.user.absen.length
                     ? anggota.user.absen[0].foto_pulang_local ||
-                      anggota.user.absen[0].foto_pulang
+                    anggota.user.absen[0].foto_pulang
                     : "-"
                   : "-"
                 : "-",
@@ -41527,8 +41490,8 @@ class MainController {
               moment(d.timeline.tugas.tanggal_pembagian)
                 .add(7, "hours")
                 .format("YYYY-MM-DD") +
-                " " +
-                d.timeline.tugas.waktu_pembagian
+              " " +
+              d.timeline.tugas.waktu_pembagian
             ) <= moment() ||
             d.timeline.tugas.waktu_pembagian == null
           ) {
@@ -41619,11 +41582,9 @@ class MainController {
         .where({ tipe: "absen" })
         .whereIn("m_rombel_id", [...noDuplicate])
         .whereBetween("tanggal_pembagian", [
-          `${today.getFullYear()}-${
-            today.getMonth() + 1
+          `${today.getFullYear()}-${today.getMonth() + 1
           }-${today.getDate()} 00:00:00`,
-          `${today.getFullYear()}-${
-            today.getMonth() + 1
+          `${today.getFullYear()}-${today.getMonth() + 1
           }-${today.getDate()} 23:59:59`,
         ])
         .andWhere({ m_user_id: user.id })
@@ -41704,11 +41665,9 @@ class MainController {
           jadwalMengajar.toJSON().map((d) => d.rombel.id)
         )
         .whereBetween("tanggal_pembagian", [
-          `${today.getFullYear()}-${
-            today.getMonth() + 1
+          `${today.getFullYear()}-${today.getMonth() + 1
           }-${today.getDate()} 00:00:00`,
-          `${today.getFullYear()}-${today.getMonth() + 1}-${
-            today.getDate() + 1
+          `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate() + 1
           } 00:00:00`,
         ])
         .andWhere({ dihapus: 0 })
@@ -41829,6 +41788,51 @@ class MainController {
         surat = MSurat.query()
           .where({ dihapus: 0 })
           .andWhere({ m_sekolah_id: sekolah.id })
+          .orderBy("created_at", "desc");
+        if (tipe == "keluar") {
+          surat.andWhere({ tipe: "keluar" }).orderBy("created_at", "desc");
+        } else if (tipe == "masuk") {
+          surat
+            .with("disposisi")
+            .andWhere({ tipe: "masuk" })
+            .andWhere({ teruskan: 1 })
+            .orderBy("created_at", "desc");
+        } else if (tipe == "keputusan") {
+          surat
+            .with("disposisi")
+            .andWhere({ tipe: "keputusan" })
+            .andWhere({ teruskan: 1 })
+            .orderBy("created_at", "desc");
+        }
+      } else if (tipe == "disposisi") {
+        suratDataIds = MSurat.query()
+          .where({ m_sekolah_id: sekolah.id })
+          .andWhere({ dihapus: 0 })
+          .orderBy("created_at", "desc");
+        if (search) {
+          suratDataIds.where("perihal", "like", `%${search}%`);
+        }
+
+        suratDataIds = await suratDataIds.ids();
+
+        surat = MDisposisi.query()
+          .with("surat")
+          .with("pelaporanDisposisi")
+          .where({ dihapus: 0 })
+          .whereIn("m_surat_id", suratDataIds)
+          .orderBy("created_at", "desc");
+        if (nav == "belum selesai") {
+          surat.andWhere({ status: 0 }).orderBy("created_at", "desc");
+        } else if (nav == "selesai") {
+          surat.andWhere({ status: 1 }).orderBy("created_at", "desc");
+        }
+      }
+    } else if (user.role == "guru") {
+      if (tipe != "disposisi") {
+        surat = MSurat.query()
+          .where({ dihapus: 0 })
+          .andWhere({ m_sekolah_id: sekolah.id })
+          .andWhere({ m_user_id: user.id })
           .orderBy("created_at", "desc");
         if (tipe == "keluar") {
           surat.andWhere({ tipe: "keluar" }).orderBy("created_at", "desc");
@@ -44237,7 +44241,7 @@ class MainController {
                   .update({
                     uts_id: nilaiSiswa1.id,
                   });
-              } catch (error) {}
+              } catch (error) { }
             } else {
               await MUjianSiswa.create({
                 m_user_id: userSiswa.id,
@@ -44746,9 +44750,8 @@ class MainController {
       to: "D5",
     };
 
-    let namaFile = `/uploads/rekapan-nilai-${
-      rekapan.toJSON().rekap.tipe
-    }-siswa-${keluarantanggalseconds}.xlsx`;
+    let namaFile = `/uploads/rekapan-nilai-${rekapan.toJSON().rekap.tipe
+      }-siswa-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -44958,11 +44961,9 @@ class MainController {
           bukuKunjungan
             .andWhere({ status: null })
             .whereBetween("tanggal_konsultasi", [
-              `${today.getFullYear()}-${
-                today.getMonth() + 1
+              `${today.getFullYear()}-${today.getMonth() + 1
               }-${today.getDate()} 00:00:00`,
-              `${today.getFullYear()}-${today.getMonth() + 1}-${
-                today.getDate() + 1
+              `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate() + 1
               } 00:00:00`,
             ]);
         } else if (nav == "akan_datang") {
@@ -44972,8 +44973,7 @@ class MainController {
             .andWhere(
               "tanggal_konsultasi",
               ">",
-              `${today.getFullYear()}-${
-                today.getMonth() + 1
+              `${today.getFullYear()}-${today.getMonth() + 1
               }-${today.getDate()} 00:00:00`
             );
         } else if (nav == "selesai") {
@@ -46641,9 +46641,8 @@ class MainController {
 
             const mutasi = await MMutasi.create({
               tipe: "kredit",
-              nama: `Pembayaran ${pembayaran.nama} ${
-                pembayaran.jenis == "spp" ? pembayaran.bulan : ""
-              }-${user.nama}`,
+              nama: `Pembayaran ${pembayaran.nama} ${pembayaran.jenis == "spp" ? pembayaran.bulan : ""
+                }-${user.nama}`,
               kategori: `pembayaran ${pembayaran.jenis}`,
               nominal: d.nominal,
               dihapus: 0,
@@ -47725,9 +47724,8 @@ class MainController {
           worksheet.getCell(
             `B${(idx + 1) * 1 + 25}`
           ).value = `${ta.nama_kepsek}`;
-          worksheet.getCell(`B${(idx + 1) * 1 + 20}`).value = `${
-            sekolah.kabupaten
-          }, ${moment().format("DD-MMM-YYYY")}`;
+          worksheet.getCell(`B${(idx + 1) * 1 + 20}`).value = `${sekolah.kabupaten
+            }, ${moment().format("DD-MMM-YYYY")}`;
           worksheet.getCell(
             `B${(idx + 1) * 1 + 21}`
           ).value = `Bendahara Sekolah`;
@@ -47979,9 +47977,8 @@ class MainController {
             `C${(idx + 1) * 1 + 15}`
           ).value = `${ta.nama_kepsek}`;
 
-          worksheet.getCell(`C${(idx + 1) * 1 + 11}`).value = `${
-            sekolah.kabupaten
-          }, ${moment().format("DD-MMM-YYYY")}`;
+          worksheet.getCell(`C${(idx + 1) * 1 + 11}`).value = `${sekolah.kabupaten
+            }, ${moment().format("DD-MMM-YYYY")}`;
           worksheet.getCell(`L${(idx + 1) * 1 + 12}`).value = `Waka. Kurikulum`;
           worksheet.getCell(
             `L${(idx + 1) * 1 + 15}`
@@ -48490,27 +48487,20 @@ class MainController {
 
           worksheet.mergeCells(`B${(idx + 1) * 1 + 7}:C${(idx + 1) * 1 + 7}`);
           worksheet.getCell(`B${(idx + 1) * 1 + 7}`).value = `Total`;
-          worksheet.getCell(`D${(idx + 1) * 1 + 7}`).value = `=SUM(D7:D${
-            (idx + 1) * 1 + 6
-          })`;
-          worksheet.getCell(`E${(idx + 1) * 1 + 7}`).value = `=SUM(E7:E${
-            (idx + 1) * 1 + 6
-          })`;
-          worksheet.getCell(`F${(idx + 1) * 1 + 7}`).value = `=SUM(F7:F${
-            (idx + 1) * 1 + 6
-          })`;
-          worksheet.getCell(`G${(idx + 1) * 1 + 7}`).value = `=SUM(G7:G${
-            (idx + 1) * 1 + 6
-          })`;
-          worksheet.getCell(`H${(idx + 1) * 1 + 7}`).value = `=H${
-            (idx + 1) * 1 + 7
-          }/$H$${(idx + 1) * 1 + 7}`;
-          worksheet.getCell(`I${(idx + 1) * 1 + 7}`).value = `=I${
-            (idx + 1) * 1 + 7
-          }/$I$${(idx + 1) * 1 + 7}`;
-          worksheet.getCell(`J${(idx + 1) * 1 + 7}`).value = `=J${
-            (idx + 1) * 1 + 7
-          }/$J$${(idx + 1) * 1 + 7}`;
+          worksheet.getCell(`D${(idx + 1) * 1 + 7}`).value = `=SUM(D7:D${(idx + 1) * 1 + 6
+            })`;
+          worksheet.getCell(`E${(idx + 1) * 1 + 7}`).value = `=SUM(E7:E${(idx + 1) * 1 + 6
+            })`;
+          worksheet.getCell(`F${(idx + 1) * 1 + 7}`).value = `=SUM(F7:F${(idx + 1) * 1 + 6
+            })`;
+          worksheet.getCell(`G${(idx + 1) * 1 + 7}`).value = `=SUM(G7:G${(idx + 1) * 1 + 6
+            })`;
+          worksheet.getCell(`H${(idx + 1) * 1 + 7}`).value = `=H${(idx + 1) * 1 + 7
+            }/$H$${(idx + 1) * 1 + 7}`;
+          worksheet.getCell(`I${(idx + 1) * 1 + 7}`).value = `=I${(idx + 1) * 1 + 7
+            }/$I$${(idx + 1) * 1 + 7}`;
+          worksheet.getCell(`J${(idx + 1) * 1 + 7}`).value = `=J${(idx + 1) * 1 + 7
+            }/$J$${(idx + 1) * 1 + 7}`;
 
           worksheet.mergeCells(`B${(idx + 1) * 1 + 9}:C${(idx + 1) * 1 + 9}`);
           worksheet.mergeCells(`B${(idx + 1) * 1 + 10}:C${(idx + 1) * 1 + 10}`);
@@ -48552,9 +48542,8 @@ class MainController {
             `B${(idx + 1) * 1 + 17}`
           ).value = `${ta.nama_kepsek}`;
 
-          worksheet.getCell(`G${(idx + 1) * 1 + 13}`).value = `${
-            sekolah.kabupaten
-          }, ${moment().format("DD-MMM-YYYY")}`;
+          worksheet.getCell(`G${(idx + 1) * 1 + 13}`).value = `${sekolah.kabupaten
+            }, ${moment().format("DD-MMM-YYYY")}`;
           worksheet.getCell(`G${(idx + 1) * 1 + 14}`).value = `Hubin`;
           worksheet.getCell(`G${(idx + 1) * 1 + 17}`).value = `{nama hubin}`;
         }
@@ -48992,9 +48981,9 @@ class MainController {
                     ];
                     nilaiAkhir = listNilai.filter((nilai) => nilai).length
                       ? listNilai
-                          .filter((nilai) => nilai)
-                          .reduce((a, b) => a + b, 0) /
-                        listNilai.filter((nilai) => nilai).length
+                        .filter((nilai) => nilai)
+                        .reduce((a, b) => a + b, 0) /
+                      listNilai.filter((nilai) => nilai).length
                       : 0;
                     if (ta.save != 1) {
                       await MUjianSiswa.query().where({ id: ujian.id }).update({
@@ -49005,9 +48994,9 @@ class MainController {
                     const listNilai = [rataUjian, rata];
                     nilaiAkhir = listNilai.filter((nilai) => nilai).length
                       ? listNilai
-                          .filter((nilai) => nilai)
-                          .reduce((a, b) => a + b, 0) /
-                        listNilai.filter((nilai) => nilai).length
+                        .filter((nilai) => nilai)
+                        .reduce((a, b) => a + b, 0) /
+                      listNilai.filter((nilai) => nilai).length
                       : 0;
                     await MUjianSiswa.create({
                       m_ta_id: ta.id,
@@ -49494,64 +49483,64 @@ class MainController {
               ? d.user.rekapSikap.m_sikap_ditunjukkan_id.includes("1")
                 ? 1
                 : d.user.rekapSikap.m_sikap_ditingkatkan_id.includes("1")
-                ? 0
-                : ""
+                  ? 0
+                  : ""
               : "",
             Jujur: d.user.rekapSikap
               ? d.user.rekapSikap.m_sikap_ditunjukkan_id.includes("2")
                 ? 1
                 : d.user.rekapSikap.m_sikap_ditingkatkan_id.includes("2")
-                ? 0
-                : ""
+                  ? 0
+                  : ""
               : "",
             SopanSantun: d.user.rekapSikap
               ? d.user.rekapSikap.m_sikap_ditunjukkan_id.includes("3")
                 ? 1
                 : d.user.rekapSikap.m_sikap_ditingkatkan_id.includes("3")
-                ? 0
-                : ""
+                  ? 0
+                  : ""
               : "",
             Disiplin: d.user.rekapSikap
               ? d.user.rekapSikap.m_sikap_ditunjukkan_id.includes("4")
                 ? 1
                 : d.user.rekapSikap.m_sikap_ditingkatkan_id.includes("4")
-                ? 0
-                : ""
+                  ? 0
+                  : ""
               : "",
             PercayaDiri: d.user.rekapSikap
               ? d.user.rekapSikap.m_sikap_ditunjukkan_id.includes("5")
                 ? 1
                 : d.user.rekapSikap.m_sikap_ditingkatkan_id.includes("5")
-                ? 0
-                : ""
+                  ? 0
+                  : ""
               : "",
             TanggungJawab: d.user.rekapSikap
               ? d.user.rekapSikap.m_sikap_ditunjukkan_id.includes("6")
                 ? 1
                 : d.user.rekapSikap.m_sikap_ditingkatkan_id.includes("6")
-                ? 0
-                : ""
+                  ? 0
+                  : ""
               : "",
             Bersyukur: d.user.rekapSikap
               ? d.user.rekapSikap.m_sikap_ditunjukkan_id.includes("7")
                 ? 1
                 : d.user.rekapSikap.m_sikap_ditingkatkan_id.includes("7")
-                ? 0
-                : ""
+                  ? 0
+                  : ""
               : "",
             BekerjaSama: d.user.rekapSikap
               ? d.user.rekapSikap.m_sikap_ditunjukkan_id.includes("8")
                 ? 1
                 : d.user.rekapSikap.m_sikap_ditingkatkan_id.includes("8")
-                ? 0
-                : ""
+                  ? 0
+                  : ""
               : "",
             GotongRoyong: d.user.rekapSikap
               ? d.user.rekapSikap.m_sikap_ditunjukkan_id.includes("9")
                 ? 1
                 : d.user.rekapSikap.m_sikap_ditingkatkan_id.includes("9")
-                ? 0
-                : ""
+                  ? 0
+                  : ""
               : "",
           });
         })
@@ -50016,128 +50005,128 @@ class MainController {
               ? d.user.sikap.m_sikap_sosial_ditunjukkan_id.includes("1")
                 ? 1
                 : d.user.sikap.m_sikap_sosial_ditingkatkan_id.includes("1")
-                ? 0
-                : ""
+                  ? 0
+                  : ""
               : "",
             Jujur: d.user.sikap
               ? d.user.sikap.m_sikap_sosial_ditunjukkan_id.includes("2")
                 ? 1
                 : d.user.sikap.m_sikap_sosial_ditingkatkan_id.includes("2")
-                ? 0
-                : ""
+                  ? 0
+                  : ""
               : "",
             SopanSantun: d.user.sikap
               ? d.user.sikap.m_sikap_sosial_ditunjukkan_id.includes("3")
                 ? 1
                 : d.user.sikap.m_sikap_sosial_ditingkatkan_id.includes("3")
-                ? 0
-                : ""
+                  ? 0
+                  : ""
               : "",
             Disiplin: d.user.sikap
               ? d.user.sikap.m_sikap_sosial_ditunjukkan_id.includes("4")
                 ? 1
                 : d.user.sikap.m_sikap_sosial_ditingkatkan_id.includes("4")
-                ? 0
-                : ""
+                  ? 0
+                  : ""
               : "",
             PercayaDiri: d.user.sikap
               ? d.user.sikap.m_sikap_sosial_ditunjukkan_id.includes("5")
                 ? 1
                 : d.user.sikap.m_sikap_sosial_ditingkatkan_id.includes("5")
-                ? 0
-                : ""
+                  ? 0
+                  : ""
               : "",
             TanggungJawab: d.user.sikap
               ? d.user.sikap.m_sikap_sosial_ditunjukkan_id.includes("6")
                 ? 1
                 : d.user.sikap.m_sikap_sosial_ditingkatkan_id.includes("6")
-                ? 0
-                : ""
+                  ? 0
+                  : ""
               : "",
             Bersyukur: d.user.sikap
               ? d.user.sikap.m_sikap_sosial_ditunjukkan_id.includes("7")
                 ? 1
                 : d.user.sikap.m_sikap_sosial_ditingkatkan_id.includes("7")
-                ? 0
-                : ""
+                  ? 0
+                  : ""
               : "",
             BekerjaSama: d.user.sikap
               ? d.user.sikap.m_sikap_sosial_ditunjukkan_id.includes("8")
                 ? 1
                 : d.user.sikap.m_sikap_sosial_ditingkatkan_id.includes("8")
-                ? 0
-                : ""
+                  ? 0
+                  : ""
               : "",
             GotongRoyong: d.user.sikap
               ? d.user.sikap.m_sikap_sosial_ditunjukkan_id.includes("9")
                 ? 1
                 : d.user.sikap.m_sikap_sosial_ditingkatkan_id.includes("9")
-                ? 0
-                : ""
+                  ? 0
+                  : ""
               : "",
 
             Berdoasebelum: d.user.sikap
               ? d.user.sikap.m_sikap_spiritual_ditunjukkan_id.includes("1")
                 ? 1
                 : d.user.sikap.m_sikap_spiritual_ditingkatkan_id.includes("1")
-                ? 0
-                : ""
+                  ? 0
+                  : ""
               : "",
             Menjalankan: d.user.sikap
               ? d.user.sikap.m_sikap_spiritual_ditunjukkan_id.includes("2")
                 ? 1
                 : d.user.sikap.m_sikap_spiritual_ditingkatkan_id.includes("2")
-                ? 0
-                : ""
+                  ? 0
+                  : ""
               : "",
             Memberi: d.user.sikap
               ? d.user.sikap.m_sikap_spiritual_ditunjukkan_id.includes("3")
                 ? 1
                 : d.user.sikap.m_sikap_spiritual_ditingkatkan_id.includes("3")
-                ? 0
-                : ""
+                  ? 0
+                  : ""
               : "",
             Bersyukur: d.user.sikap
               ? d.user.sikap.m_sikap_spiritual_ditunjukkan_id.includes("4")
                 ? 1
                 : d.user.sikap.m_sikap_spiritual_ditingkatkan_id.includes("4")
-                ? 0
-                : ""
+                  ? 0
+                  : ""
               : "",
             Mensyukuri: d.user.sikap
               ? d.user.sikap.m_sikap_spiritual_ditunjukkan_id.includes("5")
                 ? 1
                 : d.user.sikap.m_sikap_spiritual_ditingkatkan_id.includes("5")
-                ? 0
-                : ""
+                  ? 0
+                  : ""
               : "",
             Bersyukurketika: d.user.sikap
               ? d.user.sikap.m_sikap_spiritual_ditunjukkan_id.includes("6")
                 ? 1
                 : d.user.sikap.m_sikap_spiritual_ditingkatkan_id.includes("6")
-                ? 0
-                : ""
+                  ? 0
+                  : ""
               : "",
             Berserahdiri: d.user.sikap
               ? d.user.sikap.m_sikap_spiritual_ditunjukkan_id.includes("7")
                 ? 1
                 : d.user.sikap.m_sikap_spiritual_ditingkatkan_id.includes("7")
-                ? 0
-                : ""
+                  ? 0
+                  : ""
               : "",
             Memelihara: d.user.sikap
               ? d.user.sikap.m_sikap_spiritual_ditunjukkan_id.includes("8")
                 ? 1
                 : d.user.sikap.m_sikap_spiritual_ditingkatkan_id.includes("8")
-                ? 0
-                : ""
+                  ? 0
+                  : ""
               : "",
             Menghormati: d.user.sikap
               ? d.user.sikap.m_sikap_spiritual_ditunjukkan_id.includes("9")
                 ? 1
                 : d.user.sikap.m_sikap_spiritual_ditingkatkan_id.includes("9")
-                ? 0
-                : ""
+                  ? 0
+                  : ""
               : "",
           });
         })
@@ -50607,12 +50596,10 @@ class MainController {
                 ];
                 // worksheet.mergeCells(`${(nox + 1) * 2 + 3}:${(nox + 1) * 2 + 4}`);
 
-                row.getCell([`${(nox + 1) * 2 + 3}`]).value = `${
-                  e.nilai ? e.nilai : "-"
-                }`;
-                row.getCell([`${(nox + 1) * 2 + 4}`]).value = `${
-                  e.nilai_keterampilan ? e.nilai_keterampilan : "-"
-                }`;
+                row.getCell([`${(nox + 1) * 2 + 3}`]).value = `${e.nilai ? e.nilai : "-"
+                  }`;
+                row.getCell([`${(nox + 1) * 2 + 4}`]).value = `${e.nilai_keterampilan ? e.nilai_keterampilan : "-"
+                  }`;
                 row.getCell([`${(nox + 1) * 2 + 3}`]).border = {
                   top: { style: "thin" },
                   left: { style: "thin" },
@@ -50735,9 +50722,8 @@ class MainController {
         })
     );
 
-    worksheet.getCell("A1").value = `LEGER PERNILAIAN TENGAH SEMESTER ${
-      ta.semester == 1 ? "GANJIL" : "GENAP"
-    } DARING`;
+    worksheet.getCell("A1").value = `LEGER PERNILAIAN TENGAH SEMESTER ${ta.semester == 1 ? "GANJIL" : "GENAP"
+      } DARING`;
     worksheet.getCell("A2").value = rombel.nama;
     worksheet.getCell("A3").value = sekolah.nama;
     worksheet.getCell("A4").value = `TAHUN PELAJARAN ${ta.tahun}`;
@@ -50988,12 +50974,10 @@ class MainController {
                 ];
                 // worksheet.mergeCells(`${(nox + 1) * 2 + 3}:${(nox + 1) * 2 + 4}`);
 
-                row.getCell([`${(nox + 1) * 3 + 2}`]).value = `${
-                  e.nilai ? e.nilai : "-"
-                }`;
-                row.getCell([`${(nox + 1) * 3 + 3}`]).value = `${
-                  e.nilai_keterampilan ? e.nilai_keterampilan : "-"
-                }`;
+                row.getCell([`${(nox + 1) * 3 + 2}`]).value = `${e.nilai ? e.nilai : "-"
+                  }`;
+                row.getCell([`${(nox + 1) * 3 + 3}`]).value = `${e.nilai_keterampilan ? e.nilai_keterampilan : "-"
+                  }`;
                 const nilaiA = Math.round(
                   e.nilai * 0.3 + e.nilai_keterampilan * 0.7
                 );
@@ -51127,9 +51111,8 @@ class MainController {
         })
     );
 
-    worksheet.getCell("A1").value = `LEGER PERNILAIAN AKHIR SEMESTER ${
-      ta.semester == 1 ? "GANJIL" : "GENAP"
-    }  DARING`;
+    worksheet.getCell("A1").value = `LEGER PERNILAIAN AKHIR SEMESTER ${ta.semester == 1 ? "GANJIL" : "GENAP"
+      }  DARING`;
     worksheet.getCell("A2").value = rombel.nama;
     worksheet.getCell("A3").value = sekolah.nama;
     worksheet.getCell("A4").value = `TAHUN PELAJARAN ${ta.tahun}`;
@@ -51422,16 +51405,14 @@ class MainController {
                     dataaa = dataaa + 1;
                     return;
                   }
-                  row.getCell([`${(total + 1) * 2 + 3}`]).value = `${
-                    r.mataPelajaran.nilaiIndividu
+                  row.getCell([`${(total + 1) * 2 + 3}`]).value = `${r.mataPelajaran.nilaiIndividu
                       ? r.mataPelajaran.nilaiIndividu.nilai
                       : "-"
-                  }`;
-                  row.getCell([`${(total + 1) * 2 + 4}`]).value = `${
-                    r.mataPelajaran.nilaiIndividu
+                    }`;
+                  row.getCell([`${(total + 1) * 2 + 4}`]).value = `${r.mataPelajaran.nilaiIndividu
                       ? r.mataPelajaran.nilaiIndividu.nilai_keterampilan
                       : "-"
-                  }`;
+                    }`;
                   row.getCell([`${(total + 1) * 2 + 3}`]).border = {
                     top: { style: "thin" },
                     left: { style: "thin" },
@@ -51563,9 +51544,8 @@ class MainController {
     //   return response.ok({ message: "Data untuk Leger Nilai Belum Lengkap" });
     // }
     // return result;
-    worksheet.getCell("A1").value = `LEGER PERNILAIAN AKHIR SEMESTER ${
-      ta.semester == 1 ? "GANJIL" : "GENAP"
-    } DARING`;
+    worksheet.getCell("A1").value = `LEGER PERNILAIAN AKHIR SEMESTER ${ta.semester == 1 ? "GANJIL" : "GENAP"
+      } DARING`;
     worksheet.getCell("A2").value = rombel.nama;
     worksheet.getCell("A3").value = sekolah.nama;
     worksheet.getCell("A4").value = `TAHUN PELAJARAN ${ta.tahun}`;
@@ -51787,9 +51767,9 @@ class MainController {
     }
     if (
       bobotUpdate.tugas_pas +
-        bobotUpdate.uh_pas +
-        bobotUpdate.uts_pas +
-        bobotUpdate.uas_pas !==
+      bobotUpdate.uh_pas +
+      bobotUpdate.uts_pas +
+      bobotUpdate.uas_pas !==
       100
     ) {
       return response.notFound({
@@ -51799,9 +51779,9 @@ class MainController {
     }
     if (
       bobotUpdate.proyek_pts +
-        bobotUpdate.produk_pts +
-        bobotUpdate.praktik_pts +
-        bobotUpdate.portofolio_pts !==
+      bobotUpdate.produk_pts +
+      bobotUpdate.praktik_pts +
+      bobotUpdate.portofolio_pts !==
       100
     ) {
       return response.notFound({
@@ -51811,9 +51791,9 @@ class MainController {
     }
     if (
       bobotUpdate.proyek_pas +
-        bobotUpdate.produk_pas +
-        bobotUpdate.praktik_pas +
-        bobotUpdate.portofolio_pas !==
+      bobotUpdate.produk_pas +
+      bobotUpdate.praktik_pas +
+      bobotUpdate.portofolio_pas !==
       100
     ) {
       return response.notFound({
@@ -55802,13 +55782,12 @@ class MainController {
               if (moment(absen.created_at).format("HH:mm:ss") > "06.30") {
                 row.getCell([`${(nox + 1) * 1 + 2}`]).value = `Telat`;
               }
-              row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${
-                absen
+              row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${absen
                   ? `${absen.absen} (${moment(absen?.created_at).format(
-                      "HH:mm:ss"
-                    )} - ${moment(absen?.waktu_pulang).format("HH:mm:ss")})`
+                    "HH:mm:ss"
+                  )} - ${moment(absen?.waktu_pulang).format("HH:mm:ss")})`
                   : "-"
-              }`;
+                }`;
             } else {
               row.getCell([`${(nox + 1) * 1 + 2}`]).value = `Alpa`;
             }
