@@ -26,5 +26,9 @@
   { "content": "Sebutkan 3 prestasi yang dimiliki sekolah SMKN 1 Cibinong", "intent": "sql_request" },
   { "content": "Berapa jumlah anggota ekskul di sekolah SMAN 1 Cibinong?", "intent": "sql_request" },
   { "content": "Sebutkan 3 anggota ekskul Osis yang dimiliki sekolah SMK Yaspia!", "intent": "sql_request" },
-  { "content": "Sebutkan 3 nama pengguna di sekolah SMKN 2 Cibinong!", "intent": "sql_request" }
+  { "content": "Sebutkan 3 nama pengguna di sekolah SMKN 2 Cibinong!", "intent": "sql_request" },
+  { "content": "ada berapa jumlah ujian hari ini?", "intent": "sql_request" },
+  { "content": "ada berapa jumlah ujian hari ini di sekolah Sekolah Demo Smarteschool?", "intent": "sql_request" },
+  { "content": "ujian apa saja yang dilakukan hari ini?", "intent": "sql_request" },
+  { "content": "hari ini ada ujian apa di SMKN 26 Jakarta?", "intent": "sql_request" }
 ]
