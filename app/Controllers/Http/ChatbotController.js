@@ -29,10 +29,10 @@ const llm = new ChatOpenAI({
 
 const datasource = new DataSource({
   type: Env.get("DB_CONNECTION"),
-  host: Env.get("DB_HOST"),
+  host: Env.get("A_DB_HOST"),
   port: Env.get("DB_PORT"),
-  username: Env.get("DB_USER"),
-  password: Env.get("DB_PASSWORD"),
+  username: Env.get("A_DB_USER"),
+  password: Env.get("A_DB_PASSWORD"),
   database: Env.get("DB_DATABASE"),
   synchronize: false,
   logging: true,
