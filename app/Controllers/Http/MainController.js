@@ -14996,6 +14996,7 @@ class MainController {
               diatasKKM: 0,
             };
             jadwalUjianDataFormat.push({
+              hari_ini,
               jadwalUjian: jadwalUjianData,
               rombel: tkJadwalUjian,
               metaJadwalUjian: metaJadwalUjian,
@@ -16329,6 +16330,8 @@ class MainController {
       .count("* as total");
     const total = count[0].total;
 
+    // console.log(hari_ini, count, total)
+
     const userData = await User.query()
       .select("id", "nama")
       .where({ dihapus: 0 })
@@ -16773,6 +16776,7 @@ class MainController {
               };
 
               jadwalUjianDataFormat.push({
+                hari_ini,
                 jadwalUjian: jadwalUjianData,
                 rombel: tkJadwalUjian,
                 metaJadwalUjian: metaJadwalUjian,
