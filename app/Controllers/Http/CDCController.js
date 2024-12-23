@@ -321,7 +321,7 @@ class CDCController {
     // if (!profilePics.movedAll()) {
     //   return profilePics.errors()
     // }
-    // return "http://demoapi.getsmartschool.id/uploads/" + fname;
+    // return "https://demoapi.smarteschool.id/uploads/" + fname;
   }
 
   async getSekolahByDomain(domain) {

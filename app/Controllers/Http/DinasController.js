@@ -320,7 +320,7 @@ class DinasController {
     // if (!profilePics.movedAll()) {
     //   return profilePics.errors()
     // }
-    // return "http://demoapi.getsmartschool.id/uploads/" + fname;
+    // return "https://demoapi.smarteschool.id/uploads/" + fname;
   }
 
   async getSekolahByDomain(domain) {
@@ -5874,7 +5874,7 @@ class DinasController {
   }
 
   async notFoundPage({ response, request, auth }) {
-    return `<p>Data tidak ditemukan, silahkan kembali ke <a href="http://getsmartschool.id">Smart School</a></p>`;
+    return `<p>Data tidak ditemukan, silahkan kembali ke <a href="https://smarteschool.id">Smart School</a></p>`;
   }
 }
 module.exports = DinasController;
