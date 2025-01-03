@@ -21395,340 +21395,11 @@ class MainController {
 
     const ta = await this.getTAAktif(sekolah);
 
-    const mataPelajaran = await MMataPelajaran.query()
-      .select("id", "nama")
-      .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta.id })
-      .andWhere({ dihapus: 0 })
-      .fetch();
-
-    const { nav, search, tag, urutkan } = request.get();
+    const { nav, page, search, tag, urutkan } = request.get();
 
     let perpus;
-
-    if (tag) {
-      const tagIds = await MPerpusTag.query().whereIn("nama", tag).ids();
-
-      const perpusTags = await TkPerpusTag.query()
-        .whereIn("m_perpus_tag_id", tagIds)
-        .pluck("m_perpus_id");
-
-      perpus = await MPerpus.query()
-        .with("user")
-        .with("buku")
-        .with("sekolah")
-        .with("tag", (builder) => {
-          builder.with("tag");
-        })
-        .with("mapel", (builder) => {
-          builder.with("mapel");
-        })
-        .withCount("aktivitasPerpus as total_baca", (builder) => {
-          builder.where({ aktivitas: "baca" });
-        })
-        .withCount("aktivitasPerpus as total_download", (builder) => {
-          builder.where({ aktivitas: "download" });
-        })
-        .withCount("aktivitasPerpus as total_rating", (builder) => {
-          builder.where({ aktivitas: "rating" });
-        })
-        .withCount("komen as total_komen", (builder) => {
-          builder.where({ dihapus: 0 });
-        })
-        .whereIn("id", perpusTags)
-        .andWhere({ dihapus: 0 })
-        .orWhere("judul", "like", `%${decodeURIComponent(search)}%`)
-        .orWhere("deskripsi", "like", `%${decodeURIComponent(search)}%`)
-        .orWhere("penulis", "like", `%${decodeURIComponent(search)}%`)
-        .orWhere("penerbit", "like", `%${decodeURIComponent(search)}%`)
-        .orWhere("isbn", "like", `%${decodeURIComponent(search)}%`)
-        .andWhere({ dihapus: 0 })
-        .orderBy("id", "desc")
-        .fetch();
-    }
-
-    if (search) {
-      if (nav == "buku-saya") {
-        perpus = await MPerpus.query()
-          .with("user")
-          .with("buku")
-          .with("sekolah")
-          .with("tag", (builder) => {
-            builder.with("tag");
-          })
-          .with("mapel", (builder) => {
-            builder.with("mapel");
-          })
-          .withCount("aktivitasPerpus as total_baca", (builder) => {
-            builder.where({ aktivitas: "baca" });
-          })
-          .withCount("aktivitasPerpus as total_download", (builder) => {
-            builder.where({ aktivitas: "download" });
-          })
-          .withCount("aktivitasPerpus as total_rating", (builder) => {
-            builder.where({ aktivitas: "rating" });
-          })
-          .withCount("komen as total_komen", (builder) => {
-            builder.where({ dihapus: 0 });
-          })
-          .where({ m_sekolah_id: sekolah.id })
-          .andWhere({ dihapus: 0 })
-          .andWhere({ m_user_id: user.id })
-          .orWhere("judul", "like", `%${decodeURIComponent(search)}%`)
-          .orWhere("deskripsi", "like", `%${decodeURIComponent(search)}%`)
-          .orWhere("penulis", "like", `%${decodeURIComponent(search)}%`)
-          .orWhere("penerbit", "like", `%${decodeURIComponent(search)}%`)
-          .orWhere("isbn", "like", `%${decodeURIComponent(search)}%`)
-          .andWhere({ dihapus: 0 })
-          .orderBy("id", "desc")
-          .fetch();
-      } else if (nav == "buku-sekolah") {
-        perpus = await MPerpus.query()
-          .with("user")
-          .with("buku")
-          .with("sekolah")
-          .with("tag", (builder) => {
-            builder.with("tag");
-          })
-          .with("mapel", (builder) => {
-            builder.with("mapel");
-          })
-          .withCount("aktivitasPerpus as total_baca", (builder) => {
-            builder.where({ aktivitas: "baca" });
-          })
-          .withCount("aktivitasPerpus as total_download", (builder) => {
-            builder.where({ aktivitas: "download" });
-          })
-          .withCount("aktivitasPerpus as total_rating", (builder) => {
-            builder.where({ aktivitas: "rating" });
-          })
-          .withCount("komen as total_komen", (builder) => {
-            builder.where({ dihapus: 0 });
-          })
-          .where({ m_sekolah_id: sekolah.id })
-          .andWhere({ dihapus: 0 })
-          .orWhere("judul", "like", `%${decodeURIComponent(search)}%`)
-          .orWhere("deskripsi", "like", `%${decodeURIComponent(search)}%`)
-          .orWhere("penulis", "like", `%${decodeURIComponent(search)}%`)
-          .orWhere("penerbit", "like", `%${decodeURIComponent(search)}%`)
-          .orWhere("isbn", "like", `%${decodeURIComponent(search)}%`)
-          .andWhere({ dihapus: 0 })
-          .orderBy("id", "desc")
-          .fetch();
-      } else if (nav == "smartlibrary") {
-        perpus = await MPerpus.query()
-          .with("user")
-          .with("buku")
-          .with("sekolah")
-          .with("tag", (builder) => {
-            builder.with("tag");
-          })
-          .with("mapel", (builder) => {
-            builder.with("mapel");
-          })
-          .withCount("aktivitasPerpus as total_baca", (builder) => {
-            builder.where({ aktivitas: "baca" });
-          })
-          .withCount("aktivitasPerpus as total_download", (builder) => {
-            builder.where({ aktivitas: "download" });
-          })
-          .withCount("aktivitasPerpus as total_rating", (builder) => {
-            builder.where({ aktivitas: "rating" });
-          })
-          .withCount("komen as total_komen", (builder) => {
-            builder.where({ dihapus: 0 });
-          })
-          .where({ m_sekolah_id: sekolah.id })
-          .andWhere({ dihapus: 0 })
-          .orWhere("judul", "like", `%${decodeURIComponent(search)}%`)
-          .orWhere("deskripsi", "like", `%${decodeURIComponent(search)}%`)
-          .orWhere("penulis", "like", `%${decodeURIComponent(search)}%`)
-          .orWhere("penerbit", "like", `%${decodeURIComponent(search)}%`)
-          .orWhere("isbn", "like", `%${decodeURIComponent(search)}%`)
-          .andWhere({ dihapus: 0 })
-          .orderBy("id", "desc")
-          .fetch();
-      } else {
-        perpus = await MPerpus.query()
-          .with("user")
-          .with("buku")
-          .with("sekolah")
-          .with("tag", (builder) => {
-            builder.with("tag");
-          })
-          .with("mapel", (builder) => {
-            builder.with("mapel");
-          })
-          .withCount("aktivitasPerpus as total_baca", (builder) => {
-            builder.where({ aktivitas: "baca" });
-          })
-          .withCount("aktivitasPerpus as total_download", (builder) => {
-            builder.where({ aktivitas: "download" });
-          })
-          .withCount("aktivitasPerpus as total_rating", (builder) => {
-            builder.where({ aktivitas: "rating" });
-          })
-          .withCount("komen as total_komen", (builder) => {
-            builder.where({ dihapus: 0 });
-          })
-          .where({ dihapus: 0 })
-          .orWhere("judul", "like", `%${decodeURIComponent(search)}%`)
-          .orWhere("deskripsi", "like", `%${decodeURIComponent(search)}%`)
-          .orWhere("penulis", "like", `%${decodeURIComponent(search)}%`)
-          .orWhere("penerbit", "like", `%${decodeURIComponent(search)}%`)
-          .orWhere("isbn", "like", `%${decodeURIComponent(search)}%`)
-          .andWhere({ dihapus: 0 })
-          .orderBy("id", "desc")
-          .fetch();
-      }
-    } else if (nav == "buku-saya") {
-      perpus = await MPerpus.query()
-        .with("user")
-        .with("buku")
-        .with("sekolah")
-        .with("tag", (builder) => {
-          builder.with("tag");
-        })
-        .with("mapel", (builder) => {
-          builder.with("mapel");
-        })
-        .withCount("aktivitasPerpus as total_baca", (builder) => {
-          builder.where({ aktivitas: "baca" });
-        })
-        .withCount("aktivitasPerpus as total_download", (builder) => {
-          builder.where({ aktivitas: "download" });
-        })
-        .withCount("aktivitasPerpus as total_rating", (builder) => {
-          builder.where({ aktivitas: "rating" });
-        })
-        .withCount("komen as total_komen", (builder) => {
-          builder.where({ dihapus: 0 });
-        })
-        .where({ m_sekolah_id: sekolah.id })
-        .andWhere({ dihapus: 0 })
-        .andWhere({ m_user_id: user.id })
-        .orderBy("id", "desc")
-        .fetch();
-    } else if (nav == "buku-sekolah") {
-      perpus = await MPerpus.query()
-        .with("user")
-        .with("buku")
-        .with("sekolah")
-        .with("tag", (builder) => {
-          builder.with("tag");
-        })
-        .with("mapel", (builder) => {
-          builder.with("mapel");
-        })
-        .withCount("aktivitasPerpus as total_baca", (builder) => {
-          builder.where({ aktivitas: "baca" });
-        })
-        .withCount("aktivitasPerpus as total_download", (builder) => {
-          builder.where({ aktivitas: "download" });
-        })
-        .withCount("aktivitasPerpus as total_rating", (builder) => {
-          builder.where({ aktivitas: "rating" });
-        })
-        .withCount("komen as total_komen", (builder) => {
-          builder.where({ dihapus: 0 });
-        })
-        .where({ m_sekolah_id: sekolah.id })
-        .andWhere({ dihapus: 0 })
-        .orderBy("id", "desc")
-        .fetch();
-    } else if (nav == "smartlibrary") {
-      perpus = await MPerpus.query()
-        .with("user")
-        .with("buku")
-        .with("sekolah")
-        .with("tag", (builder) => {
-          builder.with("tag");
-        })
-        .with("mapel", (builder) => {
-          builder.with("mapel");
-        })
-        .withCount("aktivitasPerpus as total_baca", (builder) => {
-          builder.where({ aktivitas: "baca" });
-        })
-        .withCount("aktivitasPerpus as total_download", (builder) => {
-          builder.where({ aktivitas: "download" });
-        })
-        .withCount("aktivitasPerpus as total_rating", (builder) => {
-          builder.where({ aktivitas: "rating" });
-        })
-        .withCount("komen as total_komen", (builder) => {
-          builder.where({ dihapus: 0 });
-        })
-        .where({ m_sekolah_id: sekolah.id })
-        .andWhere({ dihapus: 0 })
-        .orderBy("id", "desc")
-        .fetch();
-    } else {
-      perpus = await MPerpus.query()
-        .with("user")
-        .with("buku")
-        .with("sekolah")
-        .with("tag", (builder) => {
-          builder.with("tag");
-        })
-        .with("mapel", (builder) => {
-          builder.with("mapel");
-        })
-        .withCount("aktivitasPerpus as total_baca", (builder) => {
-          builder.where({ aktivitas: "baca" });
-        })
-        .withCount("aktivitasPerpus as total_download", (builder) => {
-          builder.where({ aktivitas: "download" });
-        })
-        .withCount("aktivitasPerpus as total_rating", (builder) => {
-          builder.where({ aktivitas: "rating" });
-        })
-        .withCount("komen as total_komen", (builder) => {
-          builder.where({ dihapus: 0 });
-        })
-        .where({ dihapus: 0 })
-        .orderBy("id", "desc")
-        .fetch();
-    }
-
-    if (urutkan == "terbaru") {
-    } else if (urutkan == "populer") {
-    } else if (urutkan == "dibicarakan") {
-    }
-
-    const tagData = await MPerpusTag.query()
-      .where({ dihapus: 0 })
-      .limit(5)
-      .fetch();
-
-    const filter = [
-      { label: "Terbaru", value: "terbaru" },
-      { label: "Paling Populer", value: "populer" },
-      { label: "Paling Dibicarakan", value: "dibicarakan" },
-    ];
-
-    return response.ok({
-      perpus: perpus,
-      mataPelajaran: mataPelajaran,
-      tag: tagData,
-      filter: filter,
-    });
-  }
-
-  async detailPerpus({ response, request, auth, params: { perpus_id } }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-
-    const ta = await this.getTAAktif(sekolah);
-
-    const perpus = await MPerpus.query()
+    let total = 0;
+    const queryPerpus = MPerpus.query()
       .with("user")
       .with("buku")
       .with("sekolah")
@@ -21747,21 +21418,496 @@ class MainController {
       .withCount("aktivitasPerpus as total_rating", (builder) => {
         builder.where({ aktivitas: "rating" });
       })
-      .with("komen", (builder) => {
-        builder.with("user").where({ dihapus: 0 });
-      })
-      .where({ id: perpus_id })
-      .orderBy("id", "desc")
-      .first();
+      .withCount("komen as total_komen", (builder) => {
+        builder.where({ dihapus: 0 });
+      });
+    
+    switch (nav){
+      case "buku-saya":
+        queryPerpus.where({ m_sekolah_id: sekolah.id, m_user_id: user.id, dihapus: 0 });
+        break;
+      case "buku-sekolah":
+        queryPerpus.where({ m_sekolah_id: sekolah.id, dihapus: 0 });
+        break;
+      case "smartlibrary":
+        try {
+          let { data } = await axios.get('https://api.buku.cloudapp.web.id/api/statistic/getPopularCatalogue?qty=1414');
+          if (search) {
+            data = {
+              ...data,
+              results: data.results.filter((item) =>
+                item.title.toLowerCase().includes(search.toLowerCase())
+              ),
+            };
+          }
+          total = data.results.length;
 
-    const ratingPerpus = await TkPerpusAktivitas.query()
-      .where({ m_perpus_id: perpus_id })
-      .andWhere({ aktivitas: "rating" })
-      .avg("rating as ratingPerpus");
+          const itemsPerPage = 12;
+          const startIndex = (page - 1) * itemsPerPage;
+          const endIndex = startIndex + itemsPerPage;
+          if (total > itemsPerPage) {
+            data = {
+              ...data,
+              results: data.results.slice(startIndex, endIndex),
+            };
+          };
+
+          const totalPerpusAktivitas = async (aktivitas, id) => {
+            let total = 0;
+            if (aktivitas === "komen") {
+              const [result] = await MPerpusKomen.query()
+                .where({ buku_kemdikbud_id: id, dihapus: 0 })
+                .count("* as total");
+              total = result.total || 0;
+            } else {
+              const [result] = await TkPerpusAktivitas.query()
+                .where({ buku_kemdikbud_id: id, aktivitas })
+                .count("* as total");
+              total = result.total || 0;
+            }
+            return total;
+          };
+      
+          perpus = await Promise.all(
+            data.results.map(async (item) => {
+              const total_baca = await totalPerpusAktivitas("baca", item.id);
+              const total_download = await totalPerpusAktivitas("download", item.id);
+              const total_rating = await totalPerpusAktivitas("rating", item.id);
+              const total_komen = await totalPerpusAktivitas("komen", item.id);
+      
+              return {
+                ...item,
+                __meta__: {
+                  total_baca,
+                  total_download,
+                  total_rating,
+                  total_komen,
+                },
+              };
+            })
+          );
+        } catch (error) {
+          console.error("Error fetching perpus data:", error);
+          throw new Error("Terjadi kesalahan saat mengambil data perpustakaan.");
+        }
+        break;
+      default:
+        queryPerpus.where({ m_sekolah_id: sekolah.id, dihapus: 0 });
+        break;
+    }
+    
+    if (nav !== "smartlibrary") {
+      if (search) {
+        queryPerpus.andWhere("judul", "like", `%${decodeURIComponent(search)}%`);
+      };
+      const data = await queryPerpus.orderBy("id", "desc").paginate(page, 12);
+      perpus = data.toJSON().data;
+      total = perpus?.length;
+    };
+
+    // if (tag) {
+    //   const tagIds = await MPerpusTag.query().whereIn("nama", tag).ids();
+
+    //   const perpusTags = await TkPerpusTag.query()
+    //     .whereIn("m_perpus_tag_id", tagIds)
+    //     .pluck("m_perpus_id");
+
+    //   perpus = await MPerpus.query()
+    //     .with("user")
+    //     .with("buku")
+    //     .with("sekolah")
+    //     .with("tag", (builder) => {
+    //       builder.with("tag");
+    //     })
+    //     .with("mapel", (builder) => {
+    //       builder.with("mapel");
+    //     })
+    //     .withCount("aktivitasPerpus as total_baca", (builder) => {
+    //       builder.where({ aktivitas: "baca" });
+    //     })
+    //     .withCount("aktivitasPerpus as total_download", (builder) => {
+    //       builder.where({ aktivitas: "download" });
+    //     })
+    //     .withCount("aktivitasPerpus as total_rating", (builder) => {
+    //       builder.where({ aktivitas: "rating" });
+    //     })
+    //     .withCount("komen as total_komen", (builder) => {
+    //       builder.where({ dihapus: 0 });
+    //     })
+    //     .whereIn("id", perpusTags)
+    //     .andWhere({ dihapus: 0 })
+    //     .orWhere("judul", "like", `%${decodeURIComponent(search)}%`)
+    //     .orWhere("deskripsi", "like", `%${decodeURIComponent(search)}%`)
+    //     .orWhere("penulis", "like", `%${decodeURIComponent(search)}%`)
+    //     .orWhere("penerbit", "like", `%${decodeURIComponent(search)}%`)
+    //     .orWhere("isbn", "like", `%${decodeURIComponent(search)}%`)
+    //     .andWhere({ dihapus: 0 })
+    //     .orderBy("id", "desc")
+    //     .fetch();
+    // }
+
+    // if (search) {
+    //   if (nav == "buku-saya") {
+    //     perpus = await MPerpus.query()
+    //       .with("user")
+    //       .with("buku")
+    //       .with("sekolah")
+    //       .with("tag", (builder) => {
+    //         builder.with("tag");
+    //       })
+    //       .with("mapel", (builder) => {
+    //         builder.with("mapel");
+    //       })
+    //       .withCount("aktivitasPerpus as total_baca", (builder) => {
+    //         builder.where({ aktivitas: "baca" });
+    //       })
+    //       .withCount("aktivitasPerpus as total_download", (builder) => {
+    //         builder.where({ aktivitas: "download" });
+    //       })
+    //       .withCount("aktivitasPerpus as total_rating", (builder) => {
+    //         builder.where({ aktivitas: "rating" });
+    //       })
+    //       .withCount("komen as total_komen", (builder) => {
+    //         builder.where({ dihapus: 0 });
+    //       })
+    //       .where({ m_sekolah_id: sekolah.id })
+    //       .andWhere({ dihapus: 0 })
+    //       .andWhere({ m_user_id: user.id })
+    //       .orWhere("judul", "like", `%${decodeURIComponent(search)}%`)
+    //       .orWhere("deskripsi", "like", `%${decodeURIComponent(search)}%`)
+    //       .orWhere("penulis", "like", `%${decodeURIComponent(search)}%`)
+    //       .orWhere("penerbit", "like", `%${decodeURIComponent(search)}%`)
+    //       .orWhere("isbn", "like", `%${decodeURIComponent(search)}%`)
+    //       .andWhere({ dihapus: 0 })
+    //       .orderBy("id", "desc")
+    //       .fetch();
+    //   } else if (nav == "buku-sekolah") {
+    //     perpus = await MPerpus.query()
+    //       .with("user")
+    //       .with("buku")
+    //       .with("sekolah")
+    //       .with("tag", (builder) => {
+    //         builder.with("tag");
+    //       })
+    //       .with("mapel", (builder) => {
+    //         builder.with("mapel");
+    //       })
+    //       .withCount("aktivitasPerpus as total_baca", (builder) => {
+    //         builder.where({ aktivitas: "baca" });
+    //       })
+    //       .withCount("aktivitasPerpus as total_download", (builder) => {
+    //         builder.where({ aktivitas: "download" });
+    //       })
+    //       .withCount("aktivitasPerpus as total_rating", (builder) => {
+    //         builder.where({ aktivitas: "rating" });
+    //       })
+    //       .withCount("komen as total_komen", (builder) => {
+    //         builder.where({ dihapus: 0 });
+    //       })
+    //       .where({ m_sekolah_id: sekolah.id })
+    //       .andWhere({ dihapus: 0 })
+    //       .orWhere("judul", "like", `%${decodeURIComponent(search)}%`)
+    //       .orWhere("deskripsi", "like", `%${decodeURIComponent(search)}%`)
+    //       .orWhere("penulis", "like", `%${decodeURIComponent(search)}%`)
+    //       .orWhere("penerbit", "like", `%${decodeURIComponent(search)}%`)
+    //       .orWhere("isbn", "like", `%${decodeURIComponent(search)}%`)
+    //       .andWhere({ dihapus: 0 })
+    //       .orderBy("id", "desc")
+    //       .fetch();
+    //   } else if (nav == "smartlibrary") {
+    //     perpus = await MPerpus.query()
+    //       .with("user")
+    //       .with("buku")
+    //       .with("sekolah")
+    //       .with("tag", (builder) => {
+    //         builder.with("tag");
+    //       })
+    //       .with("mapel", (builder) => {
+    //         builder.with("mapel");
+    //       })
+    //       .withCount("aktivitasPerpus as total_baca", (builder) => {
+    //         builder.where({ aktivitas: "baca" });
+    //       })
+    //       .withCount("aktivitasPerpus as total_download", (builder) => {
+    //         builder.where({ aktivitas: "download" });
+    //       })
+    //       .withCount("aktivitasPerpus as total_rating", (builder) => {
+    //         builder.where({ aktivitas: "rating" });
+    //       })
+    //       .withCount("komen as total_komen", (builder) => {
+    //         builder.where({ dihapus: 0 });
+    //       })
+    //       .where({ m_sekolah_id: sekolah.id })
+    //       .andWhere({ dihapus: 0 })
+    //       .orWhere("judul", "like", `%${decodeURIComponent(search)}%`)
+    //       .orWhere("deskripsi", "like", `%${decodeURIComponent(search)}%`)
+    //       .orWhere("penulis", "like", `%${decodeURIComponent(search)}%`)
+    //       .orWhere("penerbit", "like", `%${decodeURIComponent(search)}%`)
+    //       .orWhere("isbn", "like", `%${decodeURIComponent(search)}%`)
+    //       .andWhere({ dihapus: 0 })
+    //       .orderBy("id", "desc")
+    //       .fetch();
+    //   } else {
+    //     perpus = await MPerpus.query()
+    //       .with("user")
+    //       .with("buku")
+    //       .with("sekolah")
+    //       .with("tag", (builder) => {
+    //         builder.with("tag");
+    //       })
+    //       .with("mapel", (builder) => {
+    //         builder.with("mapel");
+    //       })
+    //       .withCount("aktivitasPerpus as total_baca", (builder) => {
+    //         builder.where({ aktivitas: "baca" });
+    //       })
+    //       .withCount("aktivitasPerpus as total_download", (builder) => {
+    //         builder.where({ aktivitas: "download" });
+    //       })
+    //       .withCount("aktivitasPerpus as total_rating", (builder) => {
+    //         builder.where({ aktivitas: "rating" });
+    //       })
+    //       .withCount("komen as total_komen", (builder) => {
+    //         builder.where({ dihapus: 0 });
+    //       })
+    //       .where({ dihapus: 0 })
+    //       .orWhere("judul", "like", `%${decodeURIComponent(search)}%`)
+    //       .orWhere("deskripsi", "like", `%${decodeURIComponent(search)}%`)
+    //       .orWhere("penulis", "like", `%${decodeURIComponent(search)}%`)
+    //       .orWhere("penerbit", "like", `%${decodeURIComponent(search)}%`)
+    //       .orWhere("isbn", "like", `%${decodeURIComponent(search)}%`)
+    //       .andWhere({ dihapus: 0 })
+    //       .orderBy("id", "desc")
+    //       .fetch();
+    //   }
+    // } else if (nav == "buku-saya") {
+    //   perpus = await MPerpus.query()
+    //     .with("user")
+    //     .with("buku")
+    //     .with("sekolah")
+    //     .with("tag", (builder) => {
+    //       builder.with("tag");
+    //     })
+    //     .with("mapel", (builder) => {
+    //       builder.with("mapel");
+    //     })
+    //     .withCount("aktivitasPerpus as total_baca", (builder) => {
+    //       builder.where({ aktivitas: "baca" });
+    //     })
+    //     .withCount("aktivitasPerpus as total_download", (builder) => {
+    //       builder.where({ aktivitas: "download" });
+    //     })
+    //     .withCount("aktivitasPerpus as total_rating", (builder) => {
+    //       builder.where({ aktivitas: "rating" });
+    //     })
+    //     .withCount("komen as total_komen", (builder) => {
+    //       builder.where({ dihapus: 0 });
+    //     })
+    //     .where({ m_sekolah_id: sekolah.id })
+    //     .andWhere({ dihapus: 0 })
+    //     .andWhere({ m_user_id: user.id })
+    //     .orderBy("id", "desc")
+    //     .fetch();
+    // } else if (nav == "buku-sekolah") {
+    //   perpus = await MPerpus.query()
+    //     .with("user")
+    //     .with("buku")
+    //     .with("sekolah")
+    //     .with("tag", (builder) => {
+    //       builder.with("tag");
+    //     })
+    //     .with("mapel", (builder) => {
+    //       builder.with("mapel");
+    //     })
+    //     .withCount("aktivitasPerpus as total_baca", (builder) => {
+    //       builder.where({ aktivitas: "baca" });
+    //     })
+    //     .withCount("aktivitasPerpus as total_download", (builder) => {
+    //       builder.where({ aktivitas: "download" });
+    //     })
+    //     .withCount("aktivitasPerpus as total_rating", (builder) => {
+    //       builder.where({ aktivitas: "rating" });
+    //     })
+    //     .withCount("komen as total_komen", (builder) => {
+    //       builder.where({ dihapus: 0 });
+    //     })
+    //     .where({ m_sekolah_id: sekolah.id })
+    //     .andWhere({ dihapus: 0 })
+    //     .orderBy("id", "desc")
+    //     .fetch();
+    // } else if (nav == "smartlibrary") {
+    //   perpus = await MPerpus.query()
+    //     .with("user")
+    //     .with("buku")
+    //     .with("sekolah")
+    //     .with("tag", (builder) => {
+    //       builder.with("tag");
+    //     })
+    //     .with("mapel", (builder) => {
+    //       builder.with("mapel");
+    //     })
+    //     .withCount("aktivitasPerpus as total_baca", (builder) => {
+    //       builder.where({ aktivitas: "baca" });
+    //     })
+    //     .withCount("aktivitasPerpus as total_download", (builder) => {
+    //       builder.where({ aktivitas: "download" });
+    //     })
+    //     .withCount("aktivitasPerpus as total_rating", (builder) => {
+    //       builder.where({ aktivitas: "rating" });
+    //     })
+    //     .withCount("komen as total_komen", (builder) => {
+    //       builder.where({ dihapus: 0 });
+    //     })
+    //     .where({ m_sekolah_id: sekolah.id })
+    //     .andWhere({ dihapus: 0 })
+    //     .orderBy("id", "desc")
+    //     .fetch();
+    // } else {
+    //   perpus = await MPerpus.query()
+    //     .with("user")
+    //     .with("buku")
+    //     .with("sekolah")
+    //     .with("tag", (builder) => {
+    //       builder.with("tag");
+    //     })
+    //     .with("mapel", (builder) => {
+    //       builder.with("mapel");
+    //     })
+    //     .withCount("aktivitasPerpus as total_baca", (builder) => {
+    //       builder.where({ aktivitas: "baca" });
+    //     })
+    //     .withCount("aktivitasPerpus as total_download", (builder) => {
+    //       builder.where({ aktivitas: "download" });
+    //     })
+    //     .withCount("aktivitasPerpus as total_rating", (builder) => {
+    //       builder.where({ aktivitas: "rating" });
+    //     })
+    //     .withCount("komen as total_komen", (builder) => {
+    //       builder.where({ dihapus: 0 });
+    //     })
+    //     .where({ dihapus: 0 })
+    //     .orderBy("id", "desc")
+    //     .fetch();
+    // }
+
+    // if (urutkan == "terbaru") {
+    // } else if (urutkan == "populer") {
+    // } else if (urutkan == "dibicarakan") {
+    // }
+
+    const mataPelajaran = await MMataPelajaran.query()
+      .select("id", "nama")
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+
+    const tagData = await MPerpusTag.query()
+      .where({ dihapus: 0 })
+      .limit(5)
+      .fetch();
+
+    const filter = [
+      { label: "Terbaru", value: "terbaru" },
+      { label: "Paling Populer", value: "populer" },
+      { label: "Paling Dibicarakan", value: "dibicarakan" },
+    ];
+
+    return response.ok({
+      perpus,
+      total,
+      mataPelajaran,
+      tag: tagData,
+      filter,
+    });
+  }
+
+  async detailPerpus({ response, request, auth, params: { perpus_id } }) {
+    const domain = request.headers().origin;
+    const { is_kemdikbud } = request.get();
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const user = await auth.getUser();
+
+    const ta = await this.getTAAktif(sekolah);
+
+    const query = TkPerpusAktivitas.query()
+      .where({ aktivitas: "rating" })
+
+    let perpus;
+    if (is_kemdikbud === "true") {
+      const { data } = await axios.get(`https://api.buku.cloudapp.web.id/api/catalogue/getDetails?slug=${perpus_id}`);
+      const results = data.results;
+      const komen = await MPerpusKomen.query()
+        .with("user").where({ dihapus: 0 })
+        .where({ buku_kemdikbud_id: results.id })
+        .fetch();
+
+      const totalPerpusAktivitas = async (aktivitas) => {
+        const [{ total }] = await TkPerpusAktivitas.query()
+          .where({ buku_kemdikbud_id: results.id })
+          .where({ aktivitas })
+          .count("* as total");
+        return total || 0;
+      };
+
+      const [totalBaca, totalDownload, totalRating] = await Promise.all([
+        totalPerpusAktivitas("baca"),
+        totalPerpusAktivitas("download"),
+        totalPerpusAktivitas("rating"),
+      ]);
+
+      query.andWhere({ buku_kemdikbud_id: results.id });
+      perpus = {
+        ...results,
+        komen: komen ? komen.toJSON() : [],
+        __meta__: {
+          total_baca: totalBaca,
+          total_download: totalDownload,
+          total_rating: totalRating,
+        },
+      };
+    } else {
+      query.andWhere({ m_perpus_id: perpus_id })
+      perpus = await MPerpus.query()
+        .with("user")
+        .with("buku")
+        .with("sekolah")
+        .with("tag", (builder) => {
+          builder.with("tag");
+        })
+        .with("mapel", (builder) => {
+          builder.with("mapel");
+        })
+        .withCount("aktivitasPerpus as total_baca", (builder) => {
+          builder.where({ aktivitas: "baca" });
+        })
+        .withCount("aktivitasPerpus as total_download", (builder) => {
+          builder.where({ aktivitas: "download" });
+        })
+        .withCount("aktivitasPerpus as total_rating", (builder) => {
+          builder.where({ aktivitas: "rating" });
+        })
+        .with("komen", (builder) => {
+          builder.with("user").where({ dihapus: 0 });
+        })
+        .where({ id: perpus_id })
+        .orderBy("id", "desc")
+        .first();
+    }
+
+    const ratingPerpus = await query.avg("rating as ratingPerpus");
 
     return response.ok({
       perpus: perpus,
-      ratingPerpus: ratingPerpus[0].ratingPerpus,
+      ratingPerpus: ratingPerpus[0]?.ratingPerpus 
+        ? ratingPerpus[0].ratingPerpus.toFixed(1) 
+        : "0.0",
     });
   }
 
@@ -22388,35 +22534,48 @@ class MainController {
 
     const user = await auth.getUser();
 
-    const { aktivitas, waktu_mulai, waktu_selesai, m_perpus_id, rating } =
+    const { aktivitas, waktu_mulai, waktu_selesai, m_perpus_id, kemdikbud_id, rating } =
       request.post();
 
-    const check = await TkPerpusAktivitas.query()
-      .where({ m_user_id: user.id })
-      .andWhere({ m_perpus_id: m_perpus_id })
-      .andWhere({ aktivitas: aktivitas })
-      .first();
+    try {
+      const query = TkPerpusAktivitas.query()
+        .where({ m_user_id: user.id })
+        .andWhere({ aktivitas })
 
-    if (!check) {
-      await TkPerpusAktivitas.create({
-        dihapus: 0,
-        m_user_id: user.id,
-        aktivitas,
-        waktu_mulai,
-        waktu_selesai,
-        m_perpus_id,
-        rating,
+      if (m_perpus_id !== null) {
+        query.andWhere({ m_perpus_id });
+      } else {
+        query.andWhere({ buku_kemdikbud_id: kemdikbud_id });
+      }
+
+      const check = await query.first();
+
+      if (aktivitas === "rating" && check) {
+        await TkPerpusAktivitas.query().where({ id: check.id }).update({
+          rating,
+          waktu_selesai,
+        });
+      } else {
+        await TkPerpusAktivitas.create({
+          dihapus: 0,
+          m_user_id: user.id,
+          aktivitas,
+          waktu_mulai,
+          waktu_selesai,
+          m_perpus_id,
+          buku_kemdikbud_id: kemdikbud_id,
+          rating,
+        });
+      }
+
+      return response.ok({
+        message: messagePostSuccess,
       });
-    } else {
-      await TkPerpusAktivitas.query().where({ id: check.id }).update({
-        waktu_selesai,
-        rating,
+    } catch(error) {
+      return response.fails({
+        message: error.messages,
       });
     }
-
-    return response.ok({
-      message: messagePostSuccess,
-    });
   }
 
   async postPerpusKomen({ response, request, auth }) {
@@ -22430,7 +22589,7 @@ class MainController {
 
     const user = await auth.getUser();
 
-    let { m_perpus_id, komen } = request.post();
+    let { m_perpus_id, kemdikbud_id, komen } = request.post();
 
     const rules = {
       komen: "required",
@@ -22446,6 +22605,7 @@ class MainController {
     const perpusKomen = await MPerpusKomen.create({
       dihapus: 0,
       m_perpus_id: m_perpus_id,
+      buku_kemdikbud_id: kemdikbud_id,
       komen: komen,
       m_user_id: user.id,
     });
