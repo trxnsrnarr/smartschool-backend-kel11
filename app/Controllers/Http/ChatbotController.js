@@ -110,45 +110,62 @@ class ChatbotController {
     const db = await SqlDatabase.fromDataSourceParams({
       appDataSource: datasource,
       includesTables: [
-      "m_penghargaan", 
-      "tk_perusahaan_sekolah", 
-      "m_ta", 
-      "m_sekolah", 
-      "m_user", 
-      "m_sanksi_siswa", 
-      "m_sikap_siswa", 
-      "m_pelanggaran",
-      "m_kategori_pelanggaran", 
-      "tk_siswa_pelanggaran", 
-      "m_sanksi_pelanggaran", 
-      "m_prestasi", 
-      "m_anggota_ekskul", 
-      "m_ekstrakurikuler", 
-      "m_rapor_ekskul", 
-      "m_sarpras", 
-      "m_keterangan_pkl", 
-      "m_perusahaan", 
-      "m_mou_perusahaan", 
-      "m_alumni", 
-      "m_disposisi", 
-      "m_pelaporan_disposisi", 
-      "m_surat", 
-      "m_jurusan", 
-      "m_mata_pelajaran",
-      "m_jadwal_ujian",
-      "m_peringatan_ujian_siswa",
-      "m_soal_ujian",
-      "m_ujian",
-      "m_ujian_siswa",
-      "tk_jadwal_ujian",
-      "tk_jawaban_ujian_siswa",
-      "tk_peserta_ujian",
-      "tk_peserta_ujian_ppdb",
-      "tk_siswa_ujian",
-      "tk_soal_ujian"
+        // Table Utama
+        "m_user",
+        "m_sekolah",
+        "m_ta",
+
+        // TU
+        "m_mata_pelajaran",
+        "m_profil_user",
+        "m_rombel",
+        "m_anggota_rombel",
+        "m_barang",
+        "m_lokasi",
+        "m_surat",
+        "m_disposisi",
+        "m_pelaporan_disposisi",
+
+        // PPDB
+        "m_alur_ppdb",
+        "m_jalur_ppdb",
+        "m_informasi_jalur_ppdb",
+        "m_pendaftar_ppdb",
+        "m_gelombang_ppdb",
+        "m_jadwal_ppdb",
+        "tk_peserta_ujian_ppdb",
+
+        //
+        "m_penghargaan",
+        "tk_perusahaan_sekolah",
+        "m_sanksi_siswa",
+        "m_sikap_siswa",
+        "m_pelanggaran",
+        "m_kategori_pelanggaran",
+        "tk_siswa_pelanggaran",
+        "m_sanksi_pelanggaran",
+        "m_prestasi",
+        "m_anggota_ekskul",
+        "m_ekstrakurikuler",
+        "m_rapor_ekskul",
+        "m_sarpras",
+        "m_keterangan_pkl",
+        "m_perusahaan",
+        "m_mou_perusahaan",
+        "m_alumni",
+        "m_jurusan",
+        "m_jadwal_ujian",
+        "m_peringatan_ujian_siswa",
+        "m_soal_ujian",
+        "m_ujian",
+        "m_ujian_siswa",
+        "tk_jadwal_ujian",
+        "tk_jawaban_ujian_siswa",
+        "tk_peserta_ujian",
+        "tk_siswa_ujian",
+        "tk_soal_ujian"
       ],
       sampleRowsInTableInfo: 2,
-      
     });
 
 
@@ -175,80 +192,81 @@ class ChatbotController {
     ]);
 
     const tableChain = prompt.pipe(llm.withStructuredOutput(Table));
-    
+
     const answerPrompt = PromptTemplate.fromTemplate(`
-      Given the following user question, corresponding SQL query, and SQL result, answer the user question.
+      Diberikan pertanyaan pengguna berikut, query SQL yang sesuai, dan hasil SQL, jawablah pertanyaan pengguna.
 
-      Question: {question}
-      SQL Query: {query}
-      SQL Result: {result}
+      Pertanyaan: {question}
+      Query SQL: {query}
+      Hasil SQL: {result}
 
-      Answer:
+      Jawaban:
     `);
 
     const answerChain = answerPrompt.pipe(llm).pipe(new StringOutputParser());
 
     const validationPrompt = `
-    You are a {dialect} SQL expert. Your task is to generate syntactically correct and contextually accurate {dialect} queries based on the given input question. Before generating the query, you must first understand the structure of the database.
+      Tugas Anda sebagai ahli SQL {dialect} adalah untuk menghasilkan query SQL yang sintaksisnya benar dan kontekstual sesuai dengan pertanyaan yang diberikan. Sebelum membuat query, Anda harus memahami struktur database terlebih dahulu.
 
-    **Step 1: Read Database Schema**:
-    - First, review the provided schema information. This should include the list of tables, their columns, and the relationships between them (foreign keys and joins). You will use this schema information to generate queries accurately.
-    - If the schema information is not provided, you must query the database's \`INFORMATION_SCHEMA\` (or similar database metadata) to retrieve the schema details dynamically. Specifically, you will need to find the tables and the relationships between them.
-    - Check for foreign key relationships between tables. Look for columns that are named \`<related_table>_id\` which represent the foreign keys.
-    - Ensure that you understand which tables are related and how they should be joined. Ensure you know the types of joins (INNER JOIN, LEFT JOIN, etc.) based on the provided schema and the user's query.
+      **Langkah 1: Membaca Skema Database**
+        - Pertama, tinjau informasi skema yang diberikan. Informasi ini mencakup daftar tabel, kolom-kolomnya, dan hubungan antar tabel (kunci asing dan cara penggabungan/join). Gunakan informasi ini untuk membuat query secara akurat.
+        - Jika informasi skema tidak disediakan, Anda harus mengambil detail skema database secara dinamis melalui \`INFORMATION_SCHEMA\` (atau metadata database serupa). Secara spesifik, Anda perlu menemukan tabel dan hubungan antar tabelnya.
+        - Periksa hubungan kunci asing antara tabel. Cari kolom yang dinamai dengan pola \`<related_table>_id\` yang menunjukkan kunci asing.
+        - Pastikan Anda memahami tabel mana yang berhubungan dan bagaimana mereka harus digabungkan. Pastikan juga Anda mengetahui jenis penggabungan (INNER JOIN, LEFT JOIN, dll.) berdasarkan skema dan pertanyaan pengguna.
 
-    **Step 2: Understanding the Question**:
-    - Once the schema is loaded, analyze the user’s question to determine which tables and columns are required for the query.
-    - Identify any specific roles, filtering conditions (e.g., \`siswa\`, \`guru\`, \`admin\`), and ensure you use these attributes to filter the data correctly.
+      **Langkah 2: Memahami Pertanyaan**
+        - Setelah skema dimuat, analisis pertanyaan pengguna untuk menentukan tabel dan kolom mana yang dibutuhkan untuk query.
+        - Identifikasi peran spesifik atau kondisi penyaringan (misalnya, \`siswa\`, \`guru\`, \`admin\`) dan pastikan atribut ini digunakan untuk memfilter data secara benar.
 
-    **Step 3: Construct the Query**:
-    - Build the query by selecting only the necessary columns to answer the user's question. Do not include unnecessary data.
-    - Unless the user specifies in the question a specific number of examples to obtain, query for at most {top_k} or 5 results using the LIMIT clause as per {dialect}.
-    - If the user has not specified a limit on the number of results, use a \`LIMIT\` clause with a maximum of 5 rows. If the user explicitly asks for all data, do not include a \`LIMIT\` clause.
-    - Always use explicit joins (e.g., \`INNER JOIN\`, \`LEFT JOIN\`, etc.) and ensure the conditions are correct.
-    - Ensure that each column name is wrapped in backticks (\`\`) to denote it as a delimited identifier.
-    - Write the query in a single line without using newline characters (\`\\n\`) or string concatenation (\`+\`).
+      **Langkah 3: Membuat Query**
+        - Buat query dengan memilih hanya kolom yang diperlukan untuk menjawab pertanyaan pengguna. Jangan sertakan data yang tidak diperlukan.
+        - Kecuali pengguna menentukan jumlah data yang ingin diambil, gunakan batasan maksimal ({top_k} atau 5 hasil) dengan klausa LIMIT sesuai dengan standar {dialect}.
+        - Jika pengguna tidak menentukan batas jumlah data, tambahkan klausa LIMIT dengan maksimum 5 baris. Jika pengguna meminta semua data secara eksplisit, jangan sertakan klausa LIMIT.
+        - Gunakan penggabungan eksplisit (misalnya, \`INNER JOIN\`, \`LEFT JOIN\`, dll.) dan pastikan kondisinya benar.
+        - Bungkus setiap nama kolom dengan tanda kutip balik (\`\`) untuk menandai bahwa itu adalah pengenal.
+        - Tulis query dalam satu baris tanpa menggunakan karakter baris baru (\`\\n\`) atau penggabungan string (\`+\`).
 
-    **Step 4: Verify Query Accuracy**:
-    - Double-check that the query uses the correct tables and columns according to the schema.
-    - Verify that all JOIN conditions are based on foreign keys and that the relationships between tables are correct.
-    - Ensure that the query handles filtering by roles (e.g., filtering based on \`role\` column for \`siswa\`, \`guru\`, \`admin\`) if mentioned.
+      **Langkah 4: Verifikasi Ketepatan Query**
+        - Periksa ulang bahwa query menggunakan tabel dan kolom yang benar sesuai dengan skema.
+        - Pastikan semua kondisi JOIN didasarkan pada kunci asing dan bahwa hubungan antar tabel sudah benar.
+        - Pastikan query menangani penyaringan berdasarkan peran (misalnya, memfilter berdasarkan kolom role untuk siswa, guru, admin) jika disebutkan.
 
-    **Error Avoidance**:
-    - Avoid common SQL mistakes, such as:
-      - Using NOT IN with NULL values.
-      - Improper use of UNION instead of UNION ALL.
-      - Data type mismatches in WHERE clauses or JOIN conditions.
-      - Incorrect number of arguments in SQL functions.
-      - Missing or improper quoting of identifiers.
-      - Using BETWEEN for exclusive ranges unless explicitly needed.
-      - Failing to handle NULL values properly, especially in joins or WHERE clauses.
-      - Do NOT use Markdown annotations (like \`\`\`sql).
-      - Only return the raw SQL query.
-      - Ensure the query is syntactically and contextually correct.
-      - Verify joins, filters, and conditions are accurate based on the database schema.
+      **Hindari Kesalahan Umum**
+      **Hindari kesalahan umum dalam SQL, seperti**:
+        - Menggunakan NOT IN dengan nilai NULL.
+        - Penggunaan UNION yang salah, seharusnya menggunakan UNION ALL.
+        - Ketidaksesuaian tipe data dalam klausa WHERE atau kondisi JOIN.
+        - Jumlah argumen yang salah dalam fungsi SQL.
+        - Penggunaan tanda kutip yang tidak benar pada pengenal.
+        - Menggunakan BETWEEN untuk rentang eksklusif kecuali diminta secara eksplisit.
+        - Gagal menangani nilai NULL dengan benar, terutama dalam JOIN atau klausa WHERE.
+        - Jangan menggunakan anotasi Markdown (seperti sql).
+        - Hanya kembalikan query SQL mentah.
+        - Pastikan query secara sintaksis dan kontekstual benar.
+        - Verifikasi penggabungan, filter, dan kondisi yang benar sesuai dengan skema database.
 
-    **General Notes**:
-    - Use \`date('now')\` to handle questions involving "today".
-    - Always ensure that the query adheres to the structure and constraints of the provided table schema.
-    - For the \`users\` table, the \`role\` column differentiates between \`siswa\`, \`guru\`, and \`admin\`. Ensure this column is used correctly for filtering data when applicable.
-    
-    **Relational Mapping**:
-    - For each relationship between tables, understand which foreign key columns should be used for joins.
-    - Be sure to check the table schema to identify which tables are related and ensure that joins reflect the correct relationships (e.g., using \`students.course_id = courses.id\`).
-    - Handle scenarios where multiple tables need to be joined to retrieve comprehensive data (e.g., joining \`users\` with \`orders\` and \`products\` to get product details for each order).
-    - Always ensure that the query includes only the necessary joins and avoids redundant data.
+      **Catatan Umum**
+        - Gunakan \`CURDATE()\` untuk menangani pertanyaan yang melibatkan "hari ini".
+        - Selalu pastikan query sesuai dengan struktur dan batasan tabel yang diberikan.
+        - Untuk tabel \`m_user\`, kolom \`role\` membedakan antara siswa, guru, dan admin. Pastikan kolom ini digunakan dengan benar untuk memfilter data jika berlaku.
 
-    Please use the following table schema:
-    {table_info}
+      **Pemetaan Relasional**
+        - Untuk setiap hubungan antar tabel, pahami kolom kunci asing mana yang harus digunakan untuk penggabungan.
+        - Pastikan query hanya mencakup penggabungan yang diperlukan dan menghindari data yang redundan.
 
-    Generate the query based on the user’s input and ensure it aligns with the database structure and relationships described above. Double-check the query for accuracy and logical correctness before finalizing it. Every generated query **must include a LIMIT clause with a maximum of {top_k} or 5 results**, unless explicitly instructed otherwise:
-    - A \`LIMIT\` clause with a maximum of 5 rows if the user does not request all data.
-    - No \`LIMIT\` clause if the user explicitly asks for all data.
+      Gunakan skema tabel berikut:
+      {table_info}
 
-    Extract SQL only from the answer for example:
-    SELECT COUNT('m_user'.'id') AS jumlah_siswa FROM 'm_user' INNER JOIN 'm_sekolah' ON 'm_user'.'m_sekolah_id' = 'm_sekolah'.'id' WHERE 'm_user'.'role' = 'siswa' AND 'm_sekolah'.'nama' = 'SMKN 26 Jakarta';
-`;
+      Buat query berdasarkan input pengguna dan pastikan query sesuai dengan struktur database dan hubungan yang dijelaskan di atas. Periksa ulang query untuk ketepatan dan kebenaran logis sebelum menyelesaikannya. Setiap query yang dihasilkan harus mencakup klausa LIMIT dengan maksimal {top_k} atau 5 hasil, kecuali dinyatakan sebaliknya oleh pengguna:
+        - Tambahkan klausa \`LIMIT\` dengan maksimal 5 baris jika pengguna tidak meminta semua data.
+        - Jangan tambahkan klausa \`LIMIT\` jika pengguna secara eksplisit meminta semua data.
+
+      Hanya keluarkan query SQL mentah sebagai output.
+      Contoh output:
+        - Query untuk menghitung jumlah pengguna siswa: SELECT COUNT('m_user'.'id') AS jumlah_siswa FROM 'm_user' INNER JOIN 'm_sekolah' ON 'm_user'.'m_sekolah_id' = 'm_sekolah'.'id' WHERE 'm_user'.'role' = 'siswa' AND 'm_sekolah'.'nama' = 'SMKN 26 Jakarta';
+        - Query untuk melihat data ujian hari ini: SELECT m_ujian.nama AS ujian_nama, m_jadwal_ujian.waktu_dibuka, m_user.nama AS pembuat_jadwal, m_sekolah.nama AS sekolah_nama FROM m_ujian JOIN m_jadwal_ujian ON m_jadwal_ujian.m_ujian_id = m_ujian.id JOIN m_user ON m_user.id = m_jadwal_ujian.m_user_id JOIN m_sekolah ON m_sekolah.id = m_user.m_sekolah_id WHERE date(m_jadwal_ujian.waktu_dibuka) = curdate() AND m_sekolah.nama = "SMAN 8 Jakarta";
+        - Query untuk melihat data peserta ujian hari ini: SELECT m_ujian.nama AS ujian_nama, m_jadwal_ujian.waktu_dibuka, m_user.nama AS user_nama, m_sekolah.nama AS sekolah_nama,tk_peserta_ujian.m_user_id AS peserta_ujian_id,peserta_user.nama AS peserta_ujian_nama, tk_jadwal_ujian.id AS tk_jadwal_ujian FROM m_ujian JOIN m_jadwal_ujian ON m_jadwal_ujian.m_ujian_id = m_ujian.id JOIN m_user ON m_user.id = m_jadwal_ujian.m_user_id JOIN m_sekolah ON m_sekolah.id = m_user.m_sekolah_id JOIN tk_peserta_ujian ON tk_peserta_ujian.tk_jadwal_ujian_id = m_jadwal_ujian.id JOIN m_user AS peserta_user ON peserta_user.id = tk_peserta_ujian.m_user_id JOIN tk_jadwal_ujian ON tk_jadwal_ujian.id = tk_peserta_ujian.tk_jadwal_ujian_id WHER DATE(m_jadwal_ujian.waktu_dibuka) = CURDATE() AND m_sekolah.nama = "SMAN 8 Jakarta";
+    `;
 
     // Validasi sebelum query dibuat
     // const validationPrompt = `
@@ -295,8 +313,6 @@ class ChatbotController {
     //       Generate the query based on the user’s input and ensure it aligns with the database structure and relationships described above. Double-check the query for accuracy and logical correctness before finalizing it. Every generated query **must include a LIMIT clause with a maximum of {top_k} or 5 results**, unless explicitly instructed otherwise.
     //     `;
 
-
-
     const prompt2 = ChatPromptTemplate.fromMessages([
       ["system", validationPrompt],
       ["human", "{input}"]
@@ -310,7 +326,7 @@ class ChatbotController {
       dialect: "mysql"
     });
     console.log("ini query chain", queryChain);
-    
+
     // console.log("Generated SQL Query:", queryChain);
 
     const fullChain = RunnableSequence.from([
@@ -456,7 +472,9 @@ class ChatbotController {
           // Return Base64 string of PDF
           return `<a href="data:application/pdf;base64,${pdfBase64}" download="file.pdf">Download File PDF</a>`;
         case "sql_request":
-          return await this.sqlRequest(userMessage)
+          const responseSQL = await this.sqlRequest(userMessage);
+          console.log(responseSQL);
+          return responseSQL;
         default:
           return "Invalid intent";
       }
@@ -464,6 +482,7 @@ class ChatbotController {
       return {
         status: 'error',
         message: 'An error occurred while proccessing OpenAI',
+        intent,
         error: error.message,
       };
     }
@@ -472,8 +491,10 @@ class ChatbotController {
   async openAIResponse({ auth, request, response }) {
     try {
       const userMessage = request.input("message");
+      // const typeOfAnalysisData = request.input("type_of_analysis_data");
       const chatroomId = request.input("chatroom_id");
       const user = await auth.getUser();
+      // console.log(user);
       const userId = user.id;
 
       const intent = classifier.classify(userMessage);
@@ -483,6 +504,7 @@ class ChatbotController {
         return response.status(500).json({
           status: responseOpenAI.status,
           message: responseOpenAI.message,
+          intent: responseOpenAI.intent,
           error: responseOpenAI.error,
         });
       }
