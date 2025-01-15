@@ -36,6 +36,7 @@ const datasource = new DataSource({
   database: Env.get("DB_DATABASE"),
   synchronize: false,
   logging: true,
+  timezone: Z
 });
 
 // Function untuk menghapus tag image dari data content image
@@ -163,7 +164,18 @@ class ChatbotController {
         "tk_jawaban_ujian_siswa",
         "tk_peserta_ujian",
         "tk_siswa_ujian",
-        "tk_soal_ujian"
+        "tk_soal_ujian",
+        "m_jam_mengajar",
+        "m_jadwal_mengajar",
+        "m_kategori",
+        "m_kategori_mapel",
+        "m_predikat_nilai",
+        "m_bobot_nilai",
+        "m_tugas",
+        "m_rekap",
+        "tk_rekap_nilai",
+        "m_rekap_rombel",
+        "tk_mapel_rapor"
       ],
       sampleRowsInTableInfo: 2,
     });
@@ -217,6 +229,7 @@ class ChatbotController {
       **Langkah 2: Memahami Pertanyaan**
         - Setelah skema dimuat, analisis pertanyaan pengguna untuk menentukan tabel dan kolom mana yang dibutuhkan untuk query.
         - Identifikasi peran spesifik atau kondisi penyaringan (misalnya, \`siswa\`, \`guru\`, \`admin\`) dan pastikan atribut ini digunakan untuk memfilter data secara benar.
+        
 
       **Langkah 3: Membuat Query**
         - Buat query dengan memilih hanya kolom yang diperlukan untuk menjawab pertanyaan pengguna. Jangan sertakan data yang tidak diperlukan.
@@ -224,6 +237,7 @@ class ChatbotController {
         - Jika pengguna tidak menentukan batas jumlah data, tambahkan klausa LIMIT dengan maksimum 5 baris. Jika pengguna meminta semua data secara eksplisit, jangan sertakan klausa LIMIT.
         - Gunakan penggabungan eksplisit (misalnya, \`INNER JOIN\`, \`LEFT JOIN\`, dll.) dan pastikan kondisinya benar.
         - Bungkus setiap nama kolom dengan tanda kutip balik (\`\`) untuk menandai bahwa itu adalah pengenal.
+        - Tambahkan kondisi untuk setiap tabel yang memiliki kolom \`dihapus\`, dengan memastikan \`dihapus = 0\` jika kolom tersebut ada. Jika kolom \`dihapus\` tidak ada pada tabel, jangan sertakan kondisi ini.
         - Tulis query dalam satu baris tanpa menggunakan karakter baris baru (\`\\n\`) atau penggabungan string (\`+\`).
 
       **Langkah 4: Verifikasi Ketepatan Query**
@@ -246,7 +260,14 @@ class ChatbotController {
         - Verifikasi penggabungan, filter, dan kondisi yang benar sesuai dengan skema database.
 
       **Catatan Umum**
-        - Gunakan \`CURDATE()\` untuk menangani pertanyaan yang melibatkan "hari ini".
+        - Tambahkan logika untuk membaca data berdasarkan waktu tertentu. Gunakan:
+        - **Hari ini:** Gunakan \`CURDATE()\`.
+        - **Kemarin:** Gunakan \`DATE_SUB(CURDATE(), INTERVAL 1 DAY)\`.
+        - **Besok:** Gunakan \`DATE_ADD(CURDATE(), INTERVAL 1 DAY)\`.
+        - **Lusa:** Gunakan \`DATE_ADD(CURDATE(), INTERVAL 2 DAY)\`.
+        - **Dua hari lalu:** Gunakan \`DATE_SUB(CURDATE(), INTERVAL 2 DAY)\`.
+        - **Rentang waktu:** Gunakan format \`BETWEEN 'YYYY-MM-DD' AND 'YYYY-MM-DD'\`.
+        - **Hari tertentu dalam minggu:** Gunakan \`DAYOFWEEK()\` atau \`WEEKDAY()\` untuk membandingkan hari tertentu.
         - Selalu pastikan query sesuai dengan struktur dan batasan tabel yang diberikan.
         - Untuk tabel \`m_user\`, kolom \`role\` membedakan antara siswa, guru, dan admin. Pastikan kolom ini digunakan dengan benar untuk memfilter data jika berlaku.
 
@@ -264,8 +285,11 @@ class ChatbotController {
       Hanya keluarkan query SQL mentah sebagai output.
       Contoh output:
         - Query untuk menghitung jumlah pengguna siswa: SELECT COUNT('m_user'.'id') AS jumlah_siswa FROM 'm_user' INNER JOIN 'm_sekolah' ON 'm_user'.'m_sekolah_id' = 'm_sekolah'.'id' WHERE 'm_user'.'role' = 'siswa' AND 'm_sekolah'.'nama' = 'SMKN 26 Jakarta';
+        - Query untuk melihat data lokasi berserta dengan total barang sarpas: SELECT m_lokasi.nama AS nama_lokasi, COUNT(m_barang.nama) AS total_barang FROM m_lokasi JOIN m_barang ON m_lokasi.id = m_barang.m_lokasi_id JOIN m_sekolah ON m_lokasi.m_sekolah_id = m_sekolah.id WHERE m_sekolah.nama = 'Sekolah Demo Smarteschool' AND m_lokasi.dihapus = 0 AND m_barang.dihapus = 0 GROUP BY m_lokasi.nama;
         - Query untuk melihat data ujian hari ini: SELECT m_ujian.nama AS ujian_nama, m_jadwal_ujian.waktu_dibuka, m_user.nama AS pembuat_jadwal, m_sekolah.nama AS sekolah_nama FROM m_ujian JOIN m_jadwal_ujian ON m_jadwal_ujian.m_ujian_id = m_ujian.id JOIN m_user ON m_user.id = m_jadwal_ujian.m_user_id JOIN m_sekolah ON m_sekolah.id = m_user.m_sekolah_id WHERE date(m_jadwal_ujian.waktu_dibuka) = curdate() AND m_sekolah.nama = "SMAN 8 Jakarta";
         - Query untuk melihat data peserta ujian hari ini: SELECT m_ujian.nama AS ujian_nama, m_jadwal_ujian.waktu_dibuka, m_user.nama AS user_nama, m_sekolah.nama AS sekolah_nama,tk_peserta_ujian.m_user_id AS peserta_ujian_id,peserta_user.nama AS peserta_ujian_nama, tk_jadwal_ujian.id AS tk_jadwal_ujian FROM m_ujian JOIN m_jadwal_ujian ON m_jadwal_ujian.m_ujian_id = m_ujian.id JOIN m_user ON m_user.id = m_jadwal_ujian.m_user_id JOIN m_sekolah ON m_sekolah.id = m_user.m_sekolah_id JOIN tk_peserta_ujian ON tk_peserta_ujian.tk_jadwal_ujian_id = m_jadwal_ujian.id JOIN m_user AS peserta_user ON peserta_user.id = tk_peserta_ujian.m_user_id JOIN tk_jadwal_ujian ON tk_jadwal_ujian.id = tk_peserta_ujian.tk_jadwal_ujian_id WHER DATE(m_jadwal_ujian.waktu_dibuka) = CURDATE() AND m_sekolah.nama = "SMAN 8 Jakarta";
+        - Query untuk menghitung jumlah data surat: SELECT COUNT(m_surat.id) AS jumlah_surat_masuk  FROM m_surat INNER JOIN m_sekolah ON m_surat.m_sekolah_id = m_sekolah.id WHERE m_surat.tipe = 'masuk' AND m_sekolah.nama = 'SMKN 12 Garut' AND m_surat.dihapus = 0;
+        - Query untuk menampilkan jadwal mengajar sesuai dengan waktu yang ditentukan: SELECT m_rombel.nama AS kelas, m_jam_mengajar.jam_mulai, m_jam_mengajar.jam_selesai, m_mata_pelajaran.nama AS mata_pelajaran, m_user.nama AS guru FROM m_jadwal_mengajar JOIN m_jam_mengajar ON m_jadwal_mengajar.m_jam_mengajar_id = m_jam_mengajar.id JOIN m_mata_pelajaran ON m_jadwal_mengajar.m_mata_pelajaran_id = m_mata_pelajaran.id JOIN m_rombel ON m_jadwal_mengajar.m_rombel_id = m_rombel.id JOIN m_user ON m_mata_pelajaran.m_user_id = m_user.id JOIN m_sekolah ON m_jadwal_mengajar.m_sekolah_id = m_sekolah.id JOIN m_ta ON m_jadwal_mengajar.m_ta_id = m_ta.id WHERE m_sekolah.nama = 'Sekolah Demo Smarteschool' AND m_ta.aktif = 1 AND m_jam_mengajar.kode_hari = DAYOFWEEK(CURDATE()) - 1 and m_user.dihapus = 0 and m_mata_pelajaran.dihapus = 0 and m_rombel.dihapus = 0 and m_ta.dihapus = 0;
     `;
 
     // Validasi sebelum query dibuat
