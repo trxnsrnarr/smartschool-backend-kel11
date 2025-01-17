@@ -207,6 +207,7 @@ class ChatbotController {
 
     const answerPrompt = PromptTemplate.fromTemplate(`
       Diberikan pertanyaan pengguna berikut, query SQL yang sesuai, dan hasil SQL, jawablah pertanyaan pengguna.
+      Semisal hasil dari SQL Error maka berikanlah respon yang menjelaskan bahwa pertanyaan pengguna kurang memberikan informasi yang tepat.
 
       Pertanyaan: {question}
       Query SQL: {query}
@@ -369,6 +370,7 @@ class ChatbotController {
         .assign({
           result: async (i) => {
             console.log("query yg di eksekusi:", i.query);
+            console.log("hasil query yg di eksekusi:", await db.run(i.query));
             return await db.run(i.query)
           }
         }),
