@@ -230,6 +230,7 @@ class ChatbotController {
       **Langkah 2: Memahami Pertanyaan**
         - Setelah skema dimuat, analisis pertanyaan pengguna untuk menentukan tabel dan kolom mana yang dibutuhkan untuk query.
         - Identifikasi peran spesifik atau kondisi penyaringan (misalnya, \`siswa\`, \`guru\`, \`admin\`) dan pastikan atribut ini digunakan untuk memfilter data secara benar.
+        
 
       **Langkah 3: Membuat Query**
         - Buat query dengan memilih hanya kolom yang diperlukan untuk menjawab pertanyaan pengguna. Jangan sertakan data yang tidak diperlukan.
@@ -237,7 +238,8 @@ class ChatbotController {
         - Jika pengguna tidak menentukan batas jumlah data, tambahkan klausa LIMIT dengan maksimum 5 baris. Jika pengguna meminta semua data secara eksplisit, jangan sertakan klausa LIMIT.
         - Gunakan penggabungan eksplisit (misalnya, \`INNER JOIN\`, \`LEFT JOIN\`, dll.) dan pastikan kondisinya benar.
         - Bungkus setiap nama kolom dengan tanda kutip balik (\`\`) untuk menandai bahwa itu adalah pengenal.
-        - Tambahkan kondisi untuk setiap tabel yang memiliki kolom \`dihapus\`, dengan memastikan \`dihapus = 0\` jika kolom tersebut ada. Jika kolom \`dihapus\` tidak ada pada tabel, jangan sertakan kondisi ini.
+        - Pastikan cek apakah ada kolom \'dihapus'\ pada tabel relevan yang diperlukan untuk membuat query kemudian pastikan nilainya adalah 0. Jika tidak ada kolom dihapus pada tabel relevan yang diperlukan maka tidak perlu menggunakan kondisi ini.
+        - Jika ada kondisi pencarian data nama di setiap tabel seperti "Berapa jumlah siswa SMAN 4 Cibinong?" gunakan opsi LIKE untuk mencari data nama yang paling mirip dari value yang di inputkan. contoh: LIKE '%smk%kampung%jawa%' dan  LIKE '%x%tkro%1%'
         - Tulis query dalam satu baris tanpa menggunakan karakter baris baru (\`\\n\`) atau penggabungan string (\`+\`).
 
       **Langkah 4: Verifikasi Ketepatan Query**
@@ -287,55 +289,15 @@ class ChatbotController {
         - Query untuk menghitung jumlah pengguna siswa: SELECT COUNT('m_user'.'id') AS jumlah_siswa FROM 'm_user' INNER JOIN 'm_sekolah' ON 'm_user'.'m_sekolah_id' = 'm_sekolah'.'id' WHERE 'm_user'.'role' = 'siswa' AND 'm_sekolah'.'nama' = 'SMKN 26 Jakarta';
         - Query untuk melihat data lokasi berserta dengan total barang sarpas: SELECT m_lokasi.nama AS nama_lokasi, COUNT(m_barang.nama) AS total_barang FROM m_lokasi JOIN m_barang ON m_lokasi.id = m_barang.m_lokasi_id JOIN m_sekolah ON m_lokasi.m_sekolah_id = m_sekolah.id WHERE m_sekolah.nama = 'Sekolah Demo Smarteschool' AND m_lokasi.dihapus = 0 AND m_barang.dihapus = 0 GROUP BY m_lokasi.nama;
         - Query untuk melihat data ujian hari ini: SELECT m_ujian.nama AS ujian_nama, m_jadwal_ujian.waktu_dibuka, m_user.nama AS pembuat_jadwal, m_sekolah.nama AS sekolah_nama FROM m_ujian JOIN m_jadwal_ujian ON m_jadwal_ujian.m_ujian_id = m_ujian.id JOIN m_user ON m_user.id = m_jadwal_ujian.m_user_id JOIN m_sekolah ON m_sekolah.id = m_user.m_sekolah_id WHERE date(m_jadwal_ujian.waktu_dibuka) = curdate() AND m_sekolah.nama = "SMAN 8 Jakarta";
-        - Query untuk melihat data peserta ujian hari ini: SELECT m_ujian.nama AS ujian_nama, m_jadwal_ujian.waktu_dibuka, m_user.nama AS user_nama, m_sekolah.nama AS sekolah_nama,tk_peserta_ujian.m_user_id AS peserta_ujian_id,peserta_user.nama AS peserta_ujian_nama, tk_jadwal_ujian.id AS tk_jadwal_ujian FROM m_ujian JOIN m_jadwal_ujian ON m_jadwal_ujian.m_ujian_id = m_ujian.id JOIN m_user ON m_user.id = m_jadwal_ujian.m_user_id JOIN m_sekolah ON m_sekolah.id = m_user.m_sekolah_id JOIN tk_peserta_ujian ON tk_peserta_ujian.tk_jadwal_ujian_id = m_jadwal_ujian.id JOIN m_user AS peserta_user ON peserta_user.id = tk_peserta_ujian.m_user_id JOIN tk_jadwal_ujian ON tk_jadwal_ujian.id = tk_peserta_ujian.tk_jadwal_ujian_id WHER DATE(m_jadwal_ujian.waktu_dibuka) = CURDATE() AND m_sekolah.nama = "SMAN 8 Jakarta";
+        - Query untuk melihat data ujian dengan tanggal tertentu: SELECT m_ujian.nama AS ujian_nama, m_jadwal_ujian.waktu_dibuka, m_user.nama AS pembuat_jadwal, m_sekolah.nama AS sekolah_nama FROM m_ujian JOIN m_jadwal_ujian ON m_jadwal_ujian.m_ujian_id = m_ujian.id JOIN m_user ON m_user.id = m_jadwal_ujian.m_user_id JOIN m_sekolah ON m_sekolah.id = m_user.m_sekolah_id WHERE date(m_jadwal_ujian.waktu_dibuka) = "2025-01-2016" AND m_sekolah.nama = "SMAN 8 Jakarta";
+        - Query untuk melihat data peserta ujian hari ini: select distinct tk_peserta_ujian.id as id_peserta, m_user.nama as nama_peserta, m_jadwal_ujian.waktu_dibuka as waktu_dibuka, m_ujian.nama as nama_ujian, m_sekolah.nama as nama_sekolah from tk_peserta_ujian join m_user on m_user.id = tk_peserta_ujian.m_user_id join m_sekolah on m_sekolah.id = m_user.m_sekolah_id join tk_jadwal_ujian on tk_jadwal_ujian.id = tk_peserta_ujian.tk_jadwal_ujian_id join m_jadwal_ujian on m_jadwal_ujian.id = tk_jadwal_ujian.m_jadwal_ujian_id join m_ujian on m_ujian.id = m_jadwal_ujian.m_ujian_id where date(m_jadwal_ujian.waktu_dibuka) = curdate() and m_sekolah.nama = "sman 8 jakarta";
+        - Query untuk melihat data peserta ujian dengan tanggal tertentu: select distinct tk_peserta_ujian.id as id_peserta, m_user.nama as nama_peserta, m_jadwal_ujian.waktu_dibuka as waktu_dibuka, m_ujian.nama as nama_ujian, m_sekolah.nama as nama_sekolah from tk_peserta_ujian join m_user on m_user.id = tk_peserta_ujian.m_user_id join m_sekolah on m_sekolah.id = m_user.m_sekolah_id join tk_jadwal_ujian on tk_jadwal_ujian.id = tk_peserta_ujian.tk_jadwal_ujian_id join m_jadwal_ujian on m_jadwal_ujian.id = tk_jadwal_ujian.m_jadwal_ujian_id join m_ujian on m_ujian.id = m_jadwal_ujian.m_ujian_id where date(m_jadwal_ujian.waktu_dibuka) = "2025-01-16" and m_sekolah.nama = "sman 8 jakarta";
         - Query untuk melihat data surat keluar pada tanggal yang ditentukan: SELECT m_surat.nomor, m_surat.perihal, m_surat.asal, m_surat.tanggal FROM m_surat INNER JOIN m_sekolah ON m_surat.m_sekolah_id = m_sekolah.id WHERE m_surat.tipe = 'keluar' AND m_surat.tanggal = '2021-11-11' AND m_sekolah.nama = 'SMK Bhakti Persada' AND m_surat.dihapus = 0;
         - Query untuk menampilkan jadwal mengajar sesuai dengan waktu yang ditentukan: SELECT m_rombel.nama AS kelas, m_jam_mengajar.jam_mulai, m_jam_mengajar.jam_selesai, m_mata_pelajaran.nama AS mata_pelajaran, m_user.nama AS guru FROM m_jadwal_mengajar JOIN m_jam_mengajar ON m_jadwal_mengajar.m_jam_mengajar_id = m_jam_mengajar.id JOIN m_mata_pelajaran ON m_jadwal_mengajar.m_mata_pelajaran_id = m_mata_pelajaran.id JOIN m_rombel ON m_jadwal_mengajar.m_rombel_id = m_rombel.id JOIN m_user ON m_mata_pelajaran.m_user_id = m_user.id JOIN m_sekolah ON m_jadwal_mengajar.m_sekolah_id = m_sekolah.id JOIN m_ta ON m_jadwal_mengajar.m_ta_id = m_ta.id WHERE m_sekolah.nama = 'Sekolah Demo Smarteschool' AND m_ta.aktif = 1 AND m_jam_mengajar.kode_hari = DAYOFWEEK(CURDATE()) - 1 and m_user.dihapus = 0 and m_mata_pelajaran.dihapus = 0 and m_rombel.dihapus = 0 and m_ta.dihapus = 0;
-    `;
+        - Query untuk menampilkan nilai ujian siswa: SELECT tk_peserta_ujian.nilai FROM tk_peserta_ujian JOIN m_user ON tk_peserta_ujian.m_user_id = m_user.id JOIN tk_jadwal_ujian ON tk_peserta_ujian.tk_jadwal_ujian_id = tk_jadwal_ujian.id join m_jadwal_ujian on tk_jadwal_ujian.m_jadwal_ujian_id = m_jadwal_ujian.id join m_ujian on m_jadwal_ujian.m_ujian_id = m_ujian.id WHERE m_ujian.nama = 'DIAGNOSTIK MATEMATIKA 2425' AND m_user.nama = 'HILMY MUZHAFFAR PASHA'
+        `;
 
-    // Validasi sebelum query dibuat
-    // const validationPrompt = `
-    //       You are a {dialect} SQL expert. Your task is to generate syntactically correct and contextually accurate {dialect} queries based on the given input question.
-
-    //       Important instructions:
-    //       1. **Relational Context**:
-    //         - The database contains tables with relationships defined through columns named \`<table_name>_id\`. Use these columns to join tables correctly.
-    //         - Ensure JOINs are properly constructed and only include columns relevant to the query context.
-
-    //       2. **Role and Filtering**:
-    //         - Pay close attention to columns such as \`role\` or similar attributes to filter data correctly. Ensure the column's content is matched accurately to the user’s intent.
-
-    //       3. **Query Construction**:
-    //         - Only query columns that are necessary to answer the question.
-    //         - Unless the user specifies in the question a specific number of examples to obtain, query for at most {top_k} or 5 results using the LIMIT clause as per {dialect}.
-    //         - Avoid selecting all columns with \`*\` unless explicitly requested.
-    //         - Wrap each column name in backticks to denote them as delimited identifiers.
-    //         - Made a multiple lines query (Just made a single line query).
-    //         - Dont made a string query.
-    //         - Dont using '\n' instead of ' '.
-    //         - Dont using '+' for concatenation.
-
-
-    //       4. **Error Avoidance**:
-    //         - Avoid common SQL mistakes, such as:
-    //           - Using NOT IN with NULL values.
-    //           - Improper use of UNION instead of UNION ALL.
-    //           - Data type mismatches in WHERE clauses or JOIN conditions.
-    //           - Incorrect number of arguments in SQL functions.
-    //           - Missing or improper quoting of identifiers.
-    //           - Using BETWEEN for exclusive ranges unless explicitly needed.
-    //           - Failing to consider NULL handling where applicable.
-    //           - Never Using Limit, Always using LIMIT.
-
-    //       5. **General Notes**:
-    //         - Use \`date('now')\` to handle questions involving "today".
-    //         - Always ensure the query adheres to the structure and constraints of the provided table schema.
-    //         - For User's table there a role colomn to differentiate between siswa, guru and admin. Use this column to filter data correctly.
-
-    //       Please use the following tables schema:
-    //       {table_info}
-
-    //       Generate the query based on the user’s input and ensure it aligns with the database structure and relationships described above. Double-check the query for accuracy and logical correctness before finalizing it. Every generated query **must include a LIMIT clause with a maximum of {top_k} or 5 results**, unless explicitly instructed otherwise.
-    //     `;
+    
 
     const prompt2 = ChatPromptTemplate.fromMessages([
       ["system", validationPrompt],
@@ -349,7 +311,7 @@ class ChatbotController {
       prompt: prompt2,
       dialect: "mysql"
     });
-    console.log("ini query chain", queryChain);
+    // console.log("ini query chain", queryChain);
 
     // console.log("Generated SQL Query:", queryChain);
 
@@ -383,8 +345,12 @@ class ChatbotController {
       const responseOpenAI = await fullChain.invoke({ question: question });
       return responseOpenAI;
     } catch (err) {
-      console.error("Error in query response:", err);
-      return err.message;
+      console.error("Error in query response BE:", err);
+      // return err.message;
+      return { 
+        status: 'error', 
+        message: "Kesalahan dalam memproses permintaan. Silakan coba lagi nanti." 
+    }; 
     }
   }
 
@@ -530,7 +496,8 @@ class ChatbotController {
           status: responseOpenAI.status,
           message: responseOpenAI.message,
           intent: responseOpenAI.intent,
-          error: responseOpenAI.error,
+          // error: responseOpenAI.error,
+          error: undefined,
         });
       }
 
@@ -562,7 +529,8 @@ class ChatbotController {
       return response.status(500).json({
         status: 'error',
         message: 'An error occurred while getting OpenAI response',
-        error: error.message,
+        // error: error.message,
+        error: undefined,
       });
     }
   }
