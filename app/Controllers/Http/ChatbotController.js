@@ -136,9 +136,13 @@ class ChatbotController {
         "m_jadwal_ppdb",
         "tk_peserta_ujian_ppdb",
 
-        //
-        "m_penghargaan",
+        // PKL
+        "m_penerimaan_siswa",
+        "m_penerimaan_perusahaan",
         "tk_perusahaan_sekolah",
+        "m_perusahaan",
+        
+        "m_penghargaan",
         "m_sanksi_siswa",
         "m_sikap_siswa",
         "m_pelanggaran",
@@ -151,7 +155,6 @@ class ChatbotController {
         "m_rapor_ekskul",
         "m_sarpras",
         "m_keterangan_pkl",
-        "m_perusahaan",
         "m_mou_perusahaan",
         "m_alumni",
         "m_jurusan",
@@ -179,7 +182,6 @@ class ChatbotController {
       ],
       sampleRowsInTableInfo: 2,
     });
-
 
     const Table = z.object({
       names: z.array(z.string()).describe("Names of tables in SQL database"),
@@ -230,7 +232,6 @@ class ChatbotController {
       **Langkah 2: Memahami Pertanyaan**
         - Setelah skema dimuat, analisis pertanyaan pengguna untuk menentukan tabel dan kolom mana yang dibutuhkan untuk query.
         - Identifikasi peran spesifik atau kondisi penyaringan (misalnya, \`siswa\`, \`guru\`, \`admin\`) dan pastikan atribut ini digunakan untuk memfilter data secara benar.
-        
 
       **Langkah 3: Membuat Query**
         - Buat query dengan memilih hanya kolom yang diperlukan untuk menjawab pertanyaan pengguna. Jangan sertakan data yang tidak diperlukan.
@@ -295,9 +296,8 @@ class ChatbotController {
         - Query untuk melihat data surat keluar pada tanggal yang ditentukan: SELECT m_surat.nomor, m_surat.perihal, m_surat.asal, m_surat.tanggal FROM m_surat INNER JOIN m_sekolah ON m_surat.m_sekolah_id = m_sekolah.id WHERE m_surat.tipe = 'keluar' AND m_surat.tanggal = '2021-11-11' AND m_sekolah.nama = 'SMK Bhakti Persada' AND m_surat.dihapus = 0;
         - Query untuk menampilkan jadwal mengajar sesuai dengan waktu yang ditentukan: SELECT m_rombel.nama AS kelas, m_jam_mengajar.jam_mulai, m_jam_mengajar.jam_selesai, m_mata_pelajaran.nama AS mata_pelajaran, m_user.nama AS guru FROM m_jadwal_mengajar JOIN m_jam_mengajar ON m_jadwal_mengajar.m_jam_mengajar_id = m_jam_mengajar.id JOIN m_mata_pelajaran ON m_jadwal_mengajar.m_mata_pelajaran_id = m_mata_pelajaran.id JOIN m_rombel ON m_jadwal_mengajar.m_rombel_id = m_rombel.id JOIN m_user ON m_mata_pelajaran.m_user_id = m_user.id JOIN m_sekolah ON m_jadwal_mengajar.m_sekolah_id = m_sekolah.id JOIN m_ta ON m_jadwal_mengajar.m_ta_id = m_ta.id WHERE m_sekolah.nama = 'Sekolah Demo Smarteschool' AND m_ta.aktif = 1 AND m_jam_mengajar.kode_hari = DAYOFWEEK(CURDATE()) - 1 and m_user.dihapus = 0 and m_mata_pelajaran.dihapus = 0 and m_rombel.dihapus = 0 and m_ta.dihapus = 0;
         - Query untuk menampilkan nilai ujian siswa: SELECT tk_peserta_ujian.nilai FROM tk_peserta_ujian JOIN m_user ON tk_peserta_ujian.m_user_id = m_user.id JOIN tk_jadwal_ujian ON tk_peserta_ujian.tk_jadwal_ujian_id = tk_jadwal_ujian.id join m_jadwal_ujian on tk_jadwal_ujian.m_jadwal_ujian_id = m_jadwal_ujian.id join m_ujian on m_jadwal_ujian.m_ujian_id = m_ujian.id WHERE m_ujian.nama = 'DIAGNOSTIK MATEMATIKA 2425' AND m_user.nama = 'HILMY MUZHAFFAR PASHA'
-        `;
-
-    
+        - Query untuk menampilkan nama siswa yang pkl di perusahaan PT. SmartSchool: SELECT m_user.nama AS nama_siswa FROM m_penerimaan_siswa INNER JOIN m_user ON m_penerimaan_siswa.m_user_id = m_user.id INNER JOIN m_penerimaan_perusahaan ON m_penerimaan_siswa.m_penerimaan_perusahaan_id = m_penerimaan_perusahaan.id INNER JOIN tk_perusahaan_sekolah ON m_penerimaan_perusahaan.tk_perusahaan_sekolah_id = tk_perusahaan_sekolah.id INNER JOIN m_perusahaan ON tk_perusahaan_sekolah.m_perusahaan_id = m_perusahaan.id WHERE m_perusahaan.nama = "PT. SmartSchool" AND m_perusahaan.dihapus = 0 AND m_penerimaan_siswa.dihapus = 0;
+    `;
 
     const prompt2 = ChatPromptTemplate.fromMessages([
       ["system", validationPrompt],
@@ -347,10 +347,10 @@ class ChatbotController {
     } catch (err) {
       console.error("Error in query response BE:", err);
       // return err.message;
-      return { 
-        status: 'error', 
-        message: "Kesalahan dalam memproses permintaan. Silakan coba lagi nanti." 
-    }; 
+      return {
+        status: 'error',
+        message: "Kesalahan dalam memproses permintaan. Silakan coba lagi nanti."
+    };
     }
   }
 
