@@ -107,7 +107,7 @@ class ChatbotController {
     }
   }
 
-  async sqlRequest(question) {
+  async sqlRequest(question, user) {
     const db = await SqlDatabase.fromDataSourceParams({
       appDataSource: datasource,
       includesTables: [
@@ -141,7 +141,7 @@ class ChatbotController {
         "m_penerimaan_perusahaan",
         "tk_perusahaan_sekolah",
         "m_perusahaan",
-        
+
         "m_penghargaan",
         "m_sanksi_siswa",
         "m_sikap_siswa",
@@ -221,7 +221,16 @@ class ChatbotController {
     const answerChain = answerPrompt.pipe(llm).pipe(new StringOutputParser());
 
     const validationPrompt = `
-      Tugas Anda sebagai ahli SQL {dialect} adalah untuk menghasilkan query SQL yang sintaksisnya benar dan kontekstual sesuai dengan pertanyaan yang diberikan. Sebelum membuat query, Anda harus memahami struktur database terlebih dahulu.
+      Tugas Anda sebagai ahli SQL {dialect} adalah untuk menghasilkan query SQL yang sintaksisnya benar dan kontekstual sesuai dengan pertanyaan yang diberikan.
+      Buatlah query SQL berdasarkan informasi pengguna yang telah login. Informasi pengguna yang tersedia adalah sebagai berikut:
+
+      ID Pengguna: ${user.id}
+      Role: ${user.role} (contoh: 'siswa', 'guru', atau 'admin')
+      Nama: ${user.nama}
+      ID Sekolah: ${user.m_sekolah_id}
+      Saat pengguna memberikan pertanyaan, tugas Anda adalah:
+      Memahami konteks pertanyaan dan memastikan query SQL yang dihasilkan relevan dengan data pengguna.
+      Sebelum membuat query, Anda harus memahami struktur database terlebih dahulu.
 
       **Langkah 1: Membaca Skema Database**
         - Pertama, tinjau informasi skema yang diberikan. Informasi ini mencakup daftar tabel, kolom-kolomnya, dan hubungan antar tabel (kunci asing dan cara penggabungan/join). Gunakan informasi ini untuk membuat query secara akurat.
@@ -242,6 +251,7 @@ class ChatbotController {
         - Pastikan cek apakah ada kolom \'dihapus'\ pada tabel relevan yang diperlukan untuk membuat query kemudian pastikan nilainya adalah 0. Jika tidak ada kolom dihapus pada tabel relevan yang diperlukan maka tidak perlu menggunakan kondisi ini.
         - Jika ada kondisi pencarian data nama di setiap tabel seperti "Berapa jumlah siswa SMAN 4 Cibinong?" gunakan opsi LIKE untuk mencari data nama yang paling mirip dari value yang di inputkan. contoh: LIKE '%smk%kampung%jawa%' dan  LIKE '%x%tkro%1%'
         - Tulis query dalam satu baris tanpa menggunakan karakter baris baru (\`\\n\`) atau penggabungan string (\`+\`).
+        - Jika pertanyaan berkaitan dengan informasi pribadi pengguna, tambahkan kondisi filter berdasarkan id, role, atau m_sekolah_id.
 
       **Langkah 4: Verifikasi Ketepatan Query**
         - Periksa ulang bahwa query menggunakan tabel dan kolom yang benar sesuai dengan skema.
@@ -297,6 +307,7 @@ class ChatbotController {
         - Query untuk menampilkan jadwal mengajar sesuai dengan waktu yang ditentukan: SELECT m_rombel.nama AS kelas, m_jam_mengajar.jam_mulai, m_jam_mengajar.jam_selesai, m_mata_pelajaran.nama AS mata_pelajaran, m_user.nama AS guru FROM m_jadwal_mengajar JOIN m_jam_mengajar ON m_jadwal_mengajar.m_jam_mengajar_id = m_jam_mengajar.id JOIN m_mata_pelajaran ON m_jadwal_mengajar.m_mata_pelajaran_id = m_mata_pelajaran.id JOIN m_rombel ON m_jadwal_mengajar.m_rombel_id = m_rombel.id JOIN m_user ON m_mata_pelajaran.m_user_id = m_user.id JOIN m_sekolah ON m_jadwal_mengajar.m_sekolah_id = m_sekolah.id JOIN m_ta ON m_jadwal_mengajar.m_ta_id = m_ta.id WHERE m_sekolah.nama = 'Sekolah Demo Smarteschool' AND m_ta.aktif = 1 AND m_jam_mengajar.kode_hari = DAYOFWEEK(CURDATE()) - 1 and m_user.dihapus = 0 and m_mata_pelajaran.dihapus = 0 and m_rombel.dihapus = 0 and m_ta.dihapus = 0;
         - Query untuk menampilkan nilai ujian siswa: SELECT tk_peserta_ujian.nilai FROM tk_peserta_ujian JOIN m_user ON tk_peserta_ujian.m_user_id = m_user.id JOIN tk_jadwal_ujian ON tk_peserta_ujian.tk_jadwal_ujian_id = tk_jadwal_ujian.id join m_jadwal_ujian on tk_jadwal_ujian.m_jadwal_ujian_id = m_jadwal_ujian.id join m_ujian on m_jadwal_ujian.m_ujian_id = m_ujian.id WHERE m_ujian.nama = 'DIAGNOSTIK MATEMATIKA 2425' AND m_user.nama = 'HILMY MUZHAFFAR PASHA'
         - Query untuk menampilkan nama siswa yang pkl di perusahaan PT. SmartSchool: SELECT m_user.nama AS nama_siswa FROM m_penerimaan_siswa INNER JOIN m_user ON m_penerimaan_siswa.m_user_id = m_user.id INNER JOIN m_penerimaan_perusahaan ON m_penerimaan_siswa.m_penerimaan_perusahaan_id = m_penerimaan_perusahaan.id INNER JOIN tk_perusahaan_sekolah ON m_penerimaan_perusahaan.tk_perusahaan_sekolah_id = tk_perusahaan_sekolah.id INNER JOIN m_perusahaan ON tk_perusahaan_sekolah.m_perusahaan_id = m_perusahaan.id WHERE m_perusahaan.nama = "PT. SmartSchool" AND m_perusahaan.dihapus = 0 AND m_penerimaan_siswa.dihapus = 0;
+        - Query untuk mendapatkan data nama walikelas dari suatu rombel atau kelas seseorang: SELECT m_user.nama AS nama_walikelas FROM m_rombel INNER JOIN m_anggota_rombel ON m_anggota_rombel.m_rombel_id = m_rombel.id INNER JOIN m_user ON m_rombel.m_user_id = m_user.id WHERE m_anggota_rombel.m_user_id = 2912837 AND m_anggota_rombel.dihapus = 0 LIMIT 5;
     `;
 
     const prompt2 = ChatPromptTemplate.fromMessages([
@@ -354,7 +365,7 @@ class ChatbotController {
     }
   }
 
-  async processOpenAI(userMessage, chatroomId, intent) {
+  async processOpenAI(userMessage, user, chatroomId, intent) {
     try {
       let response;
 
@@ -463,7 +474,7 @@ class ChatbotController {
           // Return Base64 string of PDF
           return `<a href="data:application/pdf;base64,${pdfBase64}" download="file.pdf">Download File PDF</a>`;
         case "sql_request":
-          const responseSQL = await this.sqlRequest(userMessage);
+          const responseSQL = await this.sqlRequest(userMessage, user);
           console.log(responseSQL);
           return responseSQL;
         default:
@@ -485,12 +496,12 @@ class ChatbotController {
       // const typeOfAnalysisData = request.input("type_of_analysis_data");
       const chatroomId = request.input("chatroom_id");
       const user = await auth.getUser();
-      // console.log(user);
+      console.log(user);
       const userId = user.id;
 
       const intent = classifier.classify(userMessage);
 
-      const responseOpenAI = await this.processOpenAI(userMessage, chatroomId, intent);
+      const responseOpenAI = await this.processOpenAI(userMessage, user, chatroomId, intent);
       if (responseOpenAI.status === "error") {
         return response.status(500).json({
           status: responseOpenAI.status,
