@@ -13417,11 +13417,11 @@ class MainController {
             .where({ m_rombel_id: d.id })
             .andWhere({ dihapus: 0 })
             .pluck("m_user_id");
-
+          console.log(userIds);
           const totalHadir = await MAbsen.query()
             .with("user")
             .where("created_at", "like", `%${tanggal}%`)
-            .andWhere({ absen: "hadir" })
+            .where("absen", "hadir")
             .whereIn("m_user_id", userIds)
             .count("* as total");
           const totalSakit = await MAbsen.query()
@@ -13440,6 +13440,7 @@ class MainController {
             userIds.length -
             (totalHadir[0].total + totalSakit[0].total + totalIzin[0].total);
 
+            console.log(totalHadir);
           return rombelData.push({
             rombel: d.nama,
             id: d.id,
@@ -14164,6 +14165,8 @@ class MainController {
 
       let workbook = new Excel.Workbook();
 
+      let worksheet = workbook.addWorksheet(`${tanggal}`);
+
       await Promise.all(
         rombel.toJSON().map(async (d, idx) => {
           let worksheet = workbook.addWorksheet(`${idx + 1}.${d.nama}`);
@@ -14308,7 +14311,7 @@ class MainController {
       worksheet.getColumn("K").width = 13;
       worksheet.getColumn("L").width = 13;
 
-      let namaFile = `/uploads/rekap-absen-siswa-${Date.now()}.xlsx`;
+      let namaFile = `/uploads/rekap-absen-siswa-${keluarantanggalseconds}.xlsx`;
 
       // save workbook to disk
       await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -21421,7 +21424,7 @@ class MainController {
       .withCount("komen as total_komen", (builder) => {
         builder.where({ dihapus: 0 });
       });
-    
+
     switch (nav){
       case "buku-saya":
         queryPerpus.where({ m_sekolah_id: sekolah.id, m_user_id: user.id, dihapus: 0 });
@@ -21467,14 +21470,14 @@ class MainController {
             }
             return total;
           };
-      
+
           perpus = await Promise.all(
             data.results.map(async (item) => {
               const total_baca = await totalPerpusAktivitas("baca", item.id);
               const total_download = await totalPerpusAktivitas("download", item.id);
               const total_rating = await totalPerpusAktivitas("rating", item.id);
               const total_komen = await totalPerpusAktivitas("komen", item.id);
-      
+
               return {
                 ...item,
                 __meta__: {
@@ -21495,7 +21498,7 @@ class MainController {
         queryPerpus.where({ m_sekolah_id: sekolah.id, dihapus: 0 });
         break;
     }
-    
+
     if (nav !== "smartlibrary") {
       if (search) {
         queryPerpus.andWhere("judul", "like", `%${decodeURIComponent(search)}%`);
@@ -21905,8 +21908,8 @@ class MainController {
 
     return response.ok({
       perpus: perpus,
-      ratingPerpus: ratingPerpus[0]?.ratingPerpus 
-        ? ratingPerpus[0].ratingPerpus.toFixed(1) 
+      ratingPerpus: ratingPerpus[0]?.ratingPerpus
+        ? ratingPerpus[0].ratingPerpus.toFixed(1)
         : "0.0",
     });
   }
