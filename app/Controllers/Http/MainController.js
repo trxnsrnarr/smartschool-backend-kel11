@@ -16617,6 +16617,7 @@ class MainController {
         });
       } else {
         return response.ok({
+          hari_ini,
           rombel,
           jadwalUjian: jadwalUjianDataFormat,
           ujian,
@@ -16779,7 +16780,6 @@ class MainController {
               };
 
               jadwalUjianDataFormat.push({
-                hari_ini,
                 jadwalUjian: jadwalUjianData,
                 rombel: tkJadwalUjian,
                 metaJadwalUjian: metaJadwalUjian,
@@ -16839,6 +16839,7 @@ class MainController {
         });
       } else {
         return response.ok({
+          hari_ini,
           rombel,
           jadwalUjian: jadwalUjianDataFormat,
           ujian,
@@ -16974,6 +16975,7 @@ class MainController {
         });
       } else {
         return response.ok({
+          hari_ini,
           jadwalUjian: ujian,
           pembayaran: pembayaran.toJSON().filter((item) => {
             if (!item.rombelPembayaran.pembayaran) {
@@ -18246,6 +18248,8 @@ class MainController {
 
     const { jawaban_siswa_id, siswa, ppdb, lihat_ujian } = request.get();
 
+    const hari_ini = moment().format("YYYY-MM-DD HH:mm");
+
     let pesertaUjian;
 
     if (lihat_ujian) {
@@ -18672,6 +18676,7 @@ class MainController {
       }
 
       return response.ok({
+        hari_ini,
         peserta_ujian: pesertaUjian,
         soal_ids: soal_ids,
         soal_siswa: soal_siswa,
