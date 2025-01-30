@@ -13362,7 +13362,7 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    const { role, tanggal } = request.get();
+    const { role, tanggal_awal, tanggal_akhir } = request.get();
 
     if (role == "guru") {
       const absen = await User.query()
@@ -13417,30 +13417,28 @@ class MainController {
             .where({ m_rombel_id: d.id })
             .andWhere({ dihapus: 0 })
             .pluck("m_user_id");
-          console.log(userIds);
           const totalHadir = await MAbsen.query()
             .with("user")
-            .where("created_at", "like", `%${tanggal}%`)
-            .where("absen", "hadir")
+            .where({ absen: "hadir" })
+            .whereBetween("created_at", [`${tanggal_awal}`, `${tanggal_akhir}`])
             .whereIn("m_user_id", userIds)
             .count("* as total");
           const totalSakit = await MAbsen.query()
             .with("user")
-            .where("created_at", "like", `%${tanggal}%`)
-            .andWhere({ absen: "sakit" })
+            .where({ absen: "sakit" })
+            .whereBetween("created_at", [`${tanggal_awal}`, `${tanggal_akhir}`])
             .whereIn("m_user_id", userIds)
             .count("* as total");
           const totalIzin = await MAbsen.query()
             .with("user")
-            .where("created_at", "like", `%${tanggal}%`)
-            .andWhere({ absen: "izin" })
+            .where({ absen: "izin" })
+            .whereBetween("created_at", [`${tanggal_awal}`, `${tanggal_akhir}`])
             .whereIn("m_user_id", userIds)
             .count("* as total");
           const totalAlpa =
             userIds.length -
             (totalHadir[0].total + totalSakit[0].total + totalIzin[0].total);
 
-            console.log(totalHadir);
           return rombelData.push({
             rombel: d.nama,
             id: d.id,
@@ -14165,11 +14163,11 @@ class MainController {
 
       let workbook = new Excel.Workbook();
 
-      let worksheet = workbook.addWorksheet(`${tanggal}`);
+      // let worksheet = workbook.addWorksheet(`${tanggal}`);
 
       await Promise.all(
         rombel.toJSON().map(async (d, idx) => {
-          let worksheet = workbook.addWorksheet(`${idx + 1}.${d.nama}`);
+          let worksheet = workbook.addWorksheet(`${idx + 1}. ${d.nama}`);
 
           await Promise.all(
             d.anggotaRombel
@@ -55151,13 +55149,8 @@ class MainController {
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .andWhere({ role: "siswa" })
-      .whereIn(
-        "id",
-        anggotaRombel.toJSON().map((item) => item.m_user_id)
-      )
+      .whereIn("id", anggotaRombel.toJSON().map((item) => item.m_user_id))
       .fetch();
-
-    // loop pertama untuk nge looping data kepsek
 
     // loop pertama untuk nge looping data Siswa
     const rekapAbsenSiswa = await Promise.all(
@@ -55187,8 +55180,8 @@ class MainController {
             ) {
               totalHadir = totalHadir + 1;
 
-              if (moment(e.created_at).format("HH:mm:ss") > "06.30") {
-                totalTelat = totalTelat + 1;
+              if (moment(e.created_at, "YYYY-MM-DD HH:mm:ss").isAfter(moment("06:30:00", "HH:mm:ss"))) {
+                totalTelat += 1;
               }
             }
           })
@@ -55209,16 +55202,14 @@ class MainController {
       })
     );
 
-    // return rekapAbsenSiswa;
-
     let workbook = new Excel.Workbook();
 
     let worksheet = workbook.addWorksheet(`RekapAbsen`);
-    const awal = moment(`${tanggal_awal}`).format("DD-MM-YYYY");
-    const akhir = moment(`${tanggal_akhir}`).format("DD-MM-YYYY");
+    const awal = moment(`${tanggal_awal}`).format("YYYY-MM-DD");
+    const akhir = moment(`${tanggal_akhir}`).format("YYYY-MM-DD");
     worksheet.getCell(
       "A5"
-    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${moment().format("YYYY-MM-DD ")} oleh ${user.nama}`;
     worksheet.addConditionalFormatting({
       ref: `A1:H4`,
       rules: [
@@ -55261,10 +55252,6 @@ class MainController {
         },
       ],
     });
-    worksheet.mergeCells(`A1:H1`);
-    worksheet.mergeCells(`A2:H2`);
-    worksheet.mergeCells(`A3:H3`);
-    worksheet.mergeCells(`A4:H4`);
     worksheet.addConditionalFormatting({
       ref: `A6:H6`,
       rules: [
@@ -55389,10 +55376,12 @@ class MainController {
       })
     );
 
-    worksheet.getCell("A1").value = "Rekap Absen";
-    worksheet.getCell("A2").value = sekolah.nama;
-    worksheet.getCell("A3").value = rombel.nama;
-    worksheet.getCell("A4").value = `${awal} sampai ${akhir}`;
+    worksheet.getCell("B1").value = "Rekap Absen";
+    worksheet.getCell("B2").value = sekolah.nama;
+    worksheet.getCell("B3").value = rombel.nama;
+    worksheet.getCell("B4").value = `${awal} sampai ${akhir}`;
+    worksheet.getColumn("B").width = 40;
+    worksheet.getColumn("C").width = 13;
 
     worksheet.views = [
       {
@@ -55404,7 +55393,207 @@ class MainController {
       },
     ];
 
-    let namaFile = `/uploads/rekap-absen-siswa ${keluarantanggalseconds}.xlsx`;
+    const range = moment(tanggal_akhir).diff(moment(tanggal_awal), "day");
+
+    let listHari = [];
+    for (let i = 0; i < range + 1; i++) {
+      const hari = moment(tanggal_awal).add(i, "days").format("YYYY-MM-DD");
+      listHari.push(hari);
+    }
+
+    await Promise.all(
+      listHari.map(async (e, idx) => {
+        let worksheet = workbook.addWorksheet(`${idx + 1}. ${e}`);
+
+        worksheet.getCell(
+          "A5"
+        ).value = `Diunduh tanggal ${moment().format("YYYY-MM-DD")} oleh ${user.nama}`;
+        worksheet.addConditionalFormatting({
+          ref: `A1:H4`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 16,
+                  bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+              },
+            },
+          ],
+        });
+        worksheet.addConditionalFormatting({
+          ref: `A4:H4`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+              },
+            },
+          ],
+        });
+        worksheet.addConditionalFormatting({
+          ref: `A6:H6`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+                fill: {
+                  type: "pattern",
+                  pattern: "solid",
+                  bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
+                },
+                border: {
+                  top: { style: "thin" },
+                  left: { style: "thin" },
+                  bottom: { style: "thin" },
+                  right: { style: "thin" },
+                },
+              },
+            },
+          ],
+        });
+
+        await Promise.all(
+          absenSiswa.toJSON().map(async (d, nox) => {
+            const absen = await MAbsen.query()
+              .where({ m_user_id: d.id })
+              .whereBetween("created_at", [`${e} 00:00:00`, `${e} 23:59:59`])
+              .first();
+
+            worksheet.getRow(6).values = ["No", "Nama", "Whatsapp", "Status", "Foto Masuk", "Waktu Masuk", "Foto Keluar", "Waktu Keluar"];
+
+            worksheet.columns = [{ key: "no" }, { key: "user" }, { key: "whatsapp" }, { key: "status" }, { key: "foto_masuk" }, { key: "waktu_masuk" }, { key: "foto_keluar" }, { key: "waktu_keluar" }];
+
+            worksheet.addRow({
+              no: `${nox + 1}`,
+              user: d ? d.nama : "-",
+              whatsapp: d ? d.whatsapp : "-",
+              status: absen ? (() => {
+                        switch (absen.absen) {
+                          case "hadir":
+                            return "Hadir";
+                          case "sakit":
+                            return "Sakit";
+                          case "izin":
+                            return "Izin";
+                          default:
+                            return "Alpha";
+                        }
+                      })() : "Alpha",
+              foto_masuk: absen?.foto_masuk ?? "-",
+              waktu_masuk: absen?.waktu_masuk ? moment(absen.waktu_masuk).format("YYYY-MM-DD HH:mm:ss") : "-",
+              foto_keluar: absen?.foto_keluar ?? "-",
+              waktu_keluar: absen?.waktu_keluar ? moment(absen.waktu_keluar).format("YYYY-MM-DD HH:mm:ss") : "-",
+            });
+
+            worksheet.addConditionalFormatting({
+              ref: `B${(nox + 1) * 1 + 6}:H${(nox + 1) * 1 + 6}`,
+              rules: [
+                {
+                  type: "expression",
+                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                  style: {
+                    font: {
+                      name: "Times New Roman",
+                      family: 4,
+                      size: 11,
+                      // bold: true,
+                    },
+                    alignment: {
+                      vertical: "middle",
+                      horizontal: "left",
+                    },
+                    border: {
+                      top: { style: "thin" },
+                      left: { style: "thin" },
+                      bottom: { style: "thin" },
+                      right: { style: "thin" },
+                    },
+                  },
+                },
+              ],
+            });
+            worksheet.addConditionalFormatting({
+              ref: `A${(nox + 1) * 1 + 6}:H${(nox + 1) * 1 + 6}`,
+              rules: [
+                {
+                  type: "expression",
+                  formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+                  style: {
+                    font: {
+                      name: "Times New Roman",
+                      family: 4,
+                      size: 11,
+                      // bold: true,
+                    },
+                    alignment: {
+                      vertical: "middle",
+                      horizontal: "center",
+                    },
+                    border: {
+                      top: { style: "thin" },
+                      left: { style: "thin" },
+                      bottom: { style: "thin" },
+                      right: { style: "thin" },
+                    },
+                  },
+                },
+              ],
+            });
+          })
+        );
+
+        worksheet.getCell("B1").value = "Rekap Absen";
+        worksheet.getCell("B2").value = sekolah.nama;
+        worksheet.getCell("B3").value = rombel.nama;
+        worksheet.getCell("B4").value = `${e}`;
+        worksheet.getColumn("B").width = 40;
+        worksheet.getColumn("C").width = 13;
+
+
+        worksheet.views = [
+          {
+            state: "frozen",
+            xSplit: 2,
+            ySplit: 6,
+            topLeftCell: "A6",
+            activeCell: "A6",
+          },
+        ];
+      })
+    );
+
+    let namaFile = `/uploads/rekap-absen-siswa-${rombel.nama} ${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -55412,7 +55601,7 @@ class MainController {
     return namaFile;
   }
 
-  async downloadRekapAbsenSiswa2({ response, request, auth }) {
+  async downloadRekapAbsenSeluruhSiswa({ response, request, auth }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -55420,36 +55609,30 @@ class MainController {
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
-    const taS = await this.getTAAktif(sekolah);
 
-    const user = await auth.getUser();
-    const { ta_id = user?.m_ta_id || taS.id } = request.get();
-
-    const ta = await Mta.query()
-      .where({ id: ta_id })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ dihapus: 0 })
-      .first();
+    const ta = await this.getTAAktif(sekolah);
 
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
-    const { role, tanggal_awal, tanggal_akhir, rombel_id } = request.post();
+    const user = await auth.getUser();
+    const { role, tanggal_awal, tanggal_akhir } = request.post();
     const keluarantanggalseconds = moment().format("YYYY-MM-DD ") + Date.now();
-
-    const tanggalS = ta ? ta.tanggal_awal : "2022-1-1";
-    const tanggalE = ta ? ta.tanggal_akhir : "2022-1-1";
 
     const tanggalDistinct = await Database.raw(
       "SELECT DISTINCT DATE_FORMAT(created_at, '%Y-%m-%d') as tanggalDistinct from m_absen WHERE created_at BETWEEN ? AND  ?",
-      [`${tanggalS}`, `${tanggalE}`]
+      [tanggal_awal, tanggal_akhir]
     );
 
-    const rombel = await MRombel.query().where({ id: rombel_id }).first();
+    const rombels = await MRombel.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ m_ta_id: ta.id })
+      .fetch();
 
     const anggotaRombel = await MAnggotaRombel.query()
       .select("m_user_id")
-      .where({ m_rombel_id: rombel_id })
+      .whereIn("m_rombel_id", rombels.toJSON().map((item) => item.id))
       .andWhere({ dihapus: 0 })
       .fetch();
 
@@ -55458,81 +55641,31 @@ class MainController {
       .with("absen", (builder) => {
         builder
           .select("id", "m_user_id", "created_at", "absen")
-          .whereBetween("created_at", [`${tanggalS} `, `${tanggalE}`]);
+          .whereBetween("created_at", [`${tanggal_awal}`, `${tanggal_akhir}`]);
+      })
+      .with("anggotaRombel", (builder) => {
+        builder
+          .whereHas("rombel", (builder) => {
+            builder.where({ dihapus: 0, m_sekolah_id: sekolah.id, m_ta_id: ta.id })
+          })
+          .where({ dihapus: 0 })
       })
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
       .andWhere({ role: "siswa" })
-      .whereIn(
-        "id",
-        anggotaRombel.toJSON().map((item) => item.m_user_id)
-      )
+      .whereIn("id", anggotaRombel.toJSON().map((item) => item.m_user_id))
       .fetch();
-
-    // loop pertama untuk nge looping data kepsek
-
-    // loop pertama untuk nge looping data Siswa
-    const rekapAbsenSiswa = await Promise.all(
-      absenSiswa.toJSON().map(async (d) => {
-        let namaSiswa = d.nama;
-        let waSiswa = d.whatsapp;
-        let totalSakit = 0;
-        let totalHadir = 0;
-        let totalTelat = 0;
-        let totalIzin = 0;
-        let totalAlpa = 0;
-
-        // loop ketiga untuk nge looping absen Siswa
-        await Promise.all(
-          d.absen.map(async (e) => {
-            if (e.absen == "sakit") {
-              totalSakit = totalSakit + 1;
-            } else if (e.absen == "izin") {
-              totalIzin = totalIzin + 1;
-            } else if (
-              (await Promise.all(
-                tanggalDistinct.find(async (tanggal) => {
-                  tanggal.tanggalDistinct ==
-                    moment(e.created_at).format("YYYY-MM-DD");
-                })
-              )) !== undefined
-            ) {
-              totalHadir = totalHadir + 1;
-
-              if (moment(e.created_at).format("HH:mm:ss") > "06.30") {
-                totalTelat = totalTelat + 1;
-              }
-            }
-          })
-        );
-
-        totalAlpa =
-          tanggalDistinct[0].length - (totalSakit + totalHadir + totalIzin);
-
-        return {
-          namaSiswa,
-          waSiswa,
-          totalSakit,
-          totalHadir,
-          totalTelat,
-          totalIzin,
-          totalAlpa,
-        };
-      })
-    );
-
-    // return rekapAbsenSiswa;
 
     let workbook = new Excel.Workbook();
 
     let worksheet = workbook.addWorksheet(`RekapAbsen`);
-    const awal = moment(`${tanggal_awal}`).format("DD-MM-YYYY");
-    const akhir = moment(`${tanggal_akhir}`).format("DD-MM-YYYY");
+    const awal = moment(`${tanggal_awal}`).format("YYYY-MM-DD");
+    const akhir = moment(`${tanggal_akhir}`).format("YYYY-MM-DD");
     worksheet.getCell(
       "A5"
-    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${moment().format("YYYY-MM-DD ")} oleh ${user.nama}`;
     worksheet.addConditionalFormatting({
-      ref: `A1:G4`,
+      ref: `A1:H4`,
       rules: [
         {
           type: "expression",
@@ -55553,7 +55686,7 @@ class MainController {
       ],
     });
     worksheet.addConditionalFormatting({
-      ref: `A4:G4`,
+      ref: `A4:H4`,
       rules: [
         {
           type: "expression",
@@ -55573,135 +55706,176 @@ class MainController {
         },
       ],
     });
-    worksheet.mergeCells(`A1:G1`);
-    worksheet.mergeCells(`A2:G2`);
-    worksheet.mergeCells(`A3:G3`);
-    worksheet.mergeCells(`A4:G4`);
-    worksheet.addConditionalFormatting({
-      ref: `A6:G6`,
-      rules: [
-        {
-          type: "expression",
-          formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-          style: {
-            font: {
-              name: "Times New Roman",
-              family: 4,
-              size: 12,
-              bold: true,
-            },
-            alignment: {
-              vertical: "middle",
-              horizontal: "center",
-            },
-            fill: {
-              type: "pattern",
-              pattern: "solid",
-              bgColor: { argb: "C0C0C0", fgColor: { argb: "C0C0C0" } },
-            },
-            border: {
-              top: { style: "thin" },
-              left: { style: "thin" },
-              bottom: { style: "thin" },
-              right: { style: "thin" },
-            },
-          },
-        },
-      ],
-    });
 
-    await Promise.all(
-      rekapAbsenSiswa.map(async (d, idx) => {
-        worksheet.addConditionalFormatting({
-          ref: `B${(idx + 1) * 1 + 6}:G${(idx + 1) * 1 + 6}`,
-          rules: [
-            {
-              type: "expression",
-              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-              style: {
-                font: {
-                  name: "Times New Roman",
-                  family: 4,
-                  size: 11,
-                  // bold: true,
-                },
-                alignment: {
-                  vertical: "middle",
-                  horizontal: "left",
-                },
-                border: {
-                  top: { style: "thin" },
-                  left: { style: "thin" },
-                  bottom: { style: "thin" },
-                  right: { style: "thin" },
-                },
-              },
-            },
-          ],
-        });
-        worksheet.addConditionalFormatting({
-          ref: `A${(idx + 1) * 1 + 6}`,
-          rules: [
-            {
-              type: "expression",
-              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
-              style: {
-                font: {
-                  name: "Times New Roman",
-                  family: 4,
-                  size: 11,
-                  // bold: true,
-                },
-                alignment: {
-                  vertical: "middle",
-                  horizontal: "center",
-                },
-                border: {
-                  top: { style: "thin" },
-                  left: { style: "thin" },
-                  bottom: { style: "thin" },
-                  right: { style: "thin" },
-                },
-              },
-            },
-          ],
-        });
-        worksheet.getRow(6).values = [
-          "No",
-          "Nama",
-          "Whatsapp",
-          "Telat",
-          "Sakit",
-          "Izin",
-          "Alpa",
-        ];
+    worksheet.getCell("B1").value = "Rekap Absen";
+    worksheet.getCell("B2").value = sekolah.nama;
+    worksheet.getCell("B3").value = rombels.toJSON().map((item) => item.nama).join(", ");
+    worksheet.getCell("B4").value = `${awal} sampai ${akhir}`;
+    worksheet.getColumn("B").width = 40;
+    worksheet.getColumn("C").width = 13;
 
-        worksheet.columns = [
-          { key: "no" },
-          { key: "user" },
-          { key: "whatsapp" },
-          { key: "telat" },
-          { key: "sakit" },
-          { key: "izin" },
-          { key: "alpa" },
-        ];
+    // loop untuk nge looping data Siswa Seluruh Tanggal
+    const rekapAbsenSiswa = await Promise.all(
+      absenSiswa.toJSON().map(async (d) => {
+        let idRombel = d.anggotaRombel.m_rombel_id;
+        let namaSiswa = d.nama;
+        let waSiswa = d.whatsapp;
+        let totalSakit = 0;
+        let totalHadir = 0;
+        let totalTelat = 0;
+        let totalIzin = 0;
+        let totalAlpha = 0;
 
-        let row = worksheet.addRow({
-          no: `${idx + 1}`,
-          user: d ? d.namaSiswa : "-",
-          whatsapp: d ? d.waSiswa : "-",
-          telat: d ? d.totalTelat : "-",
-          sakit: d ? d.totalSakit : "-",
-          izin: d ? d.totalIzin : "-",
-          alpa: d ? d.totalAlpa : "-",
-        });
+        // loop ketiga untuk nge looping absen Siswa
+        await Promise.all(
+          d.absen.map(async (e) => {
+            if (e.absen == "sakit") {
+              totalSakit = totalSakit + 1;
+            } else if (e.absen == "izin") {
+              totalIzin = totalIzin + 1;
+            } else if (
+              (await Promise.all(
+                tanggalDistinct.find(async (tanggal) => {
+                  tanggal.tanggalDistinct ==
+                    moment(e.created_at).format("YYYY-MM-DD");
+                })
+              )) !== undefined
+            ) {
+              totalHadir = totalHadir + 1;
+
+              if (moment(e.created_at, "YYYY-MM-DD HH:mm:ss").isAfter(moment("06:30:00", "HH:mm:ss"))) {
+                totalTelat += 1;
+              }
+            }
+          })
+        );
+
+        totalAlpha =
+          tanggalDistinct[0].length - (totalSakit + totalHadir + totalIzin);
+
+        return {
+          idRombel,
+          namaSiswa,
+          waSiswa,
+          totalSakit,
+          totalHadir,
+          totalTelat,
+          totalIzin,
+          totalAlpha,
+        };
       })
     );
 
-    worksheet.getCell("A1").value = "Rekap Absen";
-    worksheet.getCell("A2").value = sekolah.nama;
-    worksheet.getCell("A3").value = rombel.nama;
-    worksheet.getCell("A4").value = `${awal} sampai ${akhir}`;
+    // loop untuk nge looping data Siswa per Tanggal
+    const rekapAbsenSiswaTanggal = async (tanggal) => {
+      return await Promise.all(
+        absenSiswa.toJSON().map(async (d) => {
+          let idRombel = d.anggotaRombel.m_rombel_id;
+          let namaSiswa = d.nama;
+          let waSiswa = d.whatsapp;
+          let status;
+          let fotoMasuk;
+          let waktuMasuk;
+          let fotoKeluar;
+          let waktuKeluar;
+
+          const absen = await MAbsen.query()
+            .where({ m_user_id: d.id })
+            .whereBetween("created_at", [`${tanggal} 00:00:00`, `${tanggal} 23:59:59`])
+            .first();
+
+          switch (absen?.absen) { // Gunakan optional chaining agar tidak error jika absen null
+            case "hadir":
+              status = "Hadir";
+              break;
+            case "sakit":
+              status = "Sakit";
+              break;
+            case "izin":
+              status = "Izin";
+              break;
+            default:
+              status = "Alpha";
+          }
+
+          fotoMasuk = absen?.foto_masuk ?? "-";
+          waktuMasuk = absen?.waktu_masuk ? moment(absen.waktu_masuk).format("YYYY-MM-DD HH:mm:ss") : "-";
+          fotoKeluar = absen?.foto_keluar ?? "-";
+          waktuKeluar = absen?.waktu_keluar ? moment(absen.waktu_keluar).format("YYYY-MM-DD HH:mm:ss") : "-";
+
+          return {
+            idRombel,
+            namaSiswa,
+            waSiswa,
+            status,
+            fotoMasuk,
+            waktuMasuk,
+            fotoKeluar,
+            waktuKeluar,
+          };
+        })
+      );
+    };
+
+    let currentRow = 6;
+    rombels.toJSON().forEach((rombel, index) => {
+      // Tambahkan judul rombel di atas tabel
+      worksheet.mergeCells(`A${currentRow}:H${currentRow}`);
+      worksheet.getCell(`A${currentRow}`).value = `Rombel: ${rombel.nama}`;
+      worksheet.getCell(`A${currentRow}`).font = { bold: true, size: 14 };
+      worksheet.getCell(`A${currentRow}`).alignment = { horizontal: "center" };
+      currentRow += 2;
+
+      // Header tabel
+      const headers = ["No", "Nama", "WhatsApp", "Hadir", "Telat", "Sakit", "Izin", "Alpha"];
+      headers.forEach((header, colIndex) => {
+        const cell = worksheet.getCell(currentRow, colIndex + 1);
+        cell.value = header;
+        cell.font = { bold: true };
+        cell.alignment = { horizontal: "center" };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "C0C0C0" },
+          bgColor: { argb: "C0C0C0" },
+        };
+        cell.border = {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          bottom: { style: "thin" },
+          right: { style: "thin" },
+        };
+      });
+      currentRow++;
+
+      // Data Siswa
+      rekapAbsenSiswa.filter((d) => d.idRombel == rombel.id).forEach((d, idx) => {
+        const rowData = [
+          idx + 1,
+          d ? d.namaSiswa : "-",
+          d ? d.waSiswa : "-",
+          d ? d.totalHadir : "-",
+          d ? d.totalTelat : "-",
+          d ? d.totalSakit : "-",
+          d ? d.totalIzin : "-",
+          d ? d.totalAlpha : "-",
+        ];
+
+        rowData.forEach((value, colIndex) => {
+          const cell = worksheet.getCell(currentRow, colIndex + 1);
+          cell.value = value;
+          cell.alignment = { horizontal: "center" };
+          cell.border = {
+            top: { style: "thin" },
+            left: { style: "thin" },
+            bottom: { style: "thin" },
+            right: { style: "thin" },
+          };
+        });
+        currentRow++;
+      });
+      currentRow += 2;
+    });
 
     worksheet.views = [
       {
@@ -55712,6 +55886,149 @@ class MainController {
         activeCell: "A6",
       },
     ];
+
+    const range = moment(tanggal_akhir).diff(moment(tanggal_awal), "day");
+
+    let listHari = [];
+    for (let i = 0; i < range + 1; i++) {
+      const hari = moment(tanggal_awal).add(i, "days").format("YYYY-MM-DD");
+      listHari.push(hari);
+    }
+
+    await Promise.all(
+      listHari.map(async (e, idx) => {
+        let worksheet = workbook.addWorksheet(`${idx + 1}. ${e}`);
+
+        worksheet.getCell(
+          "A5"
+        ).value = `Diunduh tanggal ${moment().format("YYYY-MM-DD")} oleh ${user.nama}`;
+        worksheet.addConditionalFormatting({
+          ref: `A1:H4`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 16,
+                  bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+              },
+            },
+          ],
+        });
+        worksheet.addConditionalFormatting({
+          ref: `A4:H4`,
+          rules: [
+            {
+              type: "expression",
+              formulae: ["MOD(ROW()+COLUMN(),1)=0"],
+              style: {
+                font: {
+                  name: "Times New Roman",
+                  family: 4,
+                  size: 12,
+                  bold: true,
+                },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "center",
+                },
+              },
+            },
+          ],
+        });
+        worksheet.getCell("B1").value = "Rekap Absen";
+        worksheet.getCell("B2").value = sekolah.nama;
+        worksheet.getCell("B3").value = rombels.toJSON().map((item) => item.nama).join(", ");
+        worksheet.getCell("B4").value = `${e}`;
+        worksheet.getColumn("B").width = 40;
+        worksheet.getColumn("C").width = 13;
+
+        const dataAbsen = await rekapAbsenSiswaTanggal(e);
+        let currentRowTanggal = 6;
+        rombels.toJSON().forEach((rombel, index) => {
+          // Tambahkan judul rombel di atas tabel
+          worksheet.mergeCells(`A${currentRowTanggal}:H${currentRowTanggal}`);
+          worksheet.getCell(`A${currentRowTanggal}`).value = `Rombel: ${rombel.nama}`;
+          worksheet.getCell(`A${currentRowTanggal}`).font = { bold: true, size: 14 };
+          worksheet.getCell(`A${currentRowTanggal}`).alignment = { horizontal: "center" };
+          currentRowTanggal += 2;
+
+          // Header tabel
+          const headers = ["No", "Nama", "Whatsapp", "Status", "Foto Masuk", "Waktu Masuk", "Foto Keluar", "Waktu Keluar"];
+          headers.forEach((header, colIndex) => {
+            const cell = worksheet.getCell(currentRowTanggal, colIndex + 1);
+            cell.value = header;
+            cell.font = { bold: true };
+            cell.alignment = { horizontal: "center" };
+            cell.fill = {
+              type: "pattern",
+              pattern: "solid",
+              fgColor: { argb: "C0C0C0" },
+              bgColor: { argb: "C0C0C0" },
+            };
+            cell.border = {
+              top: { style: "thin" },
+              left: { style: "thin" },
+              bottom: { style: "thin" },
+              right: { style: "thin" },
+            };
+          });
+          currentRowTanggal++;
+
+          // Data Siswa
+          const filteredData = dataAbsen.filter((d) => d.idRombel == rombel.id);
+
+          for (let nox = 0; nox < filteredData.length; nox++) {
+            const d = filteredData[nox];
+
+            const rowData = [
+              nox + 1,
+              d ? d.namaSiswa : "-",
+              d ? d.waSiswa : "-",
+              d?.status,
+              d?.fotoMasuk,
+              d?.waktuMasuk,
+              d?.fotoKeluar,
+              d?.waktuKeluar,
+            ];
+
+            rowData.forEach((value, colIndex) => {
+              const cell = worksheet.getCell(currentRowTanggal, colIndex + 1);
+              cell.value = value;
+              cell.alignment = { horizontal: "left" };
+              cell.border = {
+                top: { style: "thin" },
+                left: { style: "thin" },
+                bottom: { style: "thin" },
+                right: { style: "thin" },
+              };
+            });
+
+            currentRowTanggal++;
+          }
+
+          currentRowTanggal += 2;
+        })
+
+        worksheet.views = [
+          {
+            state: "frozen",
+            xSplit: 2,
+            ySplit: 6,
+            topLeftCell: "A6",
+            activeCell: "A6",
+          },
+        ];
+      })
+    );
 
     let namaFile = `/uploads/rekap-absen-siswa ${keluarantanggalseconds}.xlsx`;
 
@@ -55787,7 +56104,7 @@ class MainController {
     const akhir = moment(`${tanggal_akhir}`).format("DD-MM-YYYY");
     worksheet.getCell(
       "A5"
-    ).value = `Diunduh tanggal ${keluarantanggalseconds} oleh ${user.nama}`;
+    ).value = `Diunduh tanggal ${moment().format("YYYY-MM-DD ")} oleh ${user.nama}`;
     worksheet.addConditionalFormatting({
       ref: `A1:G4`,
       rules: [
@@ -55830,10 +56147,10 @@ class MainController {
         },
       ],
     });
-    worksheet.mergeCells(`A1:G1`);
-    worksheet.mergeCells(`A2:G2`);
-    worksheet.mergeCells(`A3:G3`);
-    worksheet.mergeCells(`A4:G4`);
+    // worksheet.mergeCells(`A1:G1`);
+    // worksheet.mergeCells(`A2:G2`);
+    // worksheet.mergeCells(`A3:G3`);
+    // worksheet.mergeCells(`A4:G4`);
     worksheet.addConditionalFormatting({
       ref: `A6:${colName(range + 2)}6`,
       rules: [
@@ -55952,9 +56269,7 @@ class MainController {
                 row.getCell([`${(nox + 1) * 1 + 2}`]).value = `Telat`;
               }
               row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${absen
-                  ? `${absen.absen} (${moment(absen?.created_at).format(
-                    "HH:mm:ss"
-                  )} - ${moment(absen?.waktu_pulang).format("HH:mm:ss")})`
+                  ? `${absen.absen} (${moment(absen?.created_at).format("HH:mm:ss")} - ${moment(absen?.waktu_pulang).format("HH:mm:ss")})`
                   : "-"
                 }`;
             } else {
@@ -55967,14 +56282,14 @@ class MainController {
               bottom: { style: "thin" },
               right: { style: "thin" },
             };
-            worksheet.getColumn([`${(nox + 1) * 1 + 2}`]).fill = {
-              type: "pattern",
-              pattern: "solid",
-              bgColor: {
-                argb: "C0C0C0",
-                fgColor: { argb: "C0C0C0" },
-              },
-            };
+            // worksheet.getColumn([`${(nox + 1) * 1 + 2}`]).fill = {
+            //   type: "pattern",
+            //   pattern: "solid",
+            //   bgColor: {
+            //     argb: "C0C0C0",
+            //     fgColor: { argb: "C0C0C0" },
+            //   },
+            // };
             // worksheet.getCell(`E${(nox + 1) * 1 + 8}`).value = e.nilai;
             // worksheet.columns = [
             //   { key: `tugas${nox+1}` },
@@ -56021,10 +56336,11 @@ class MainController {
       })
     );
 
-    worksheet.getCell("A1").value = "Rekap Absen";
-    worksheet.getCell("A2").value = sekolah.nama;
-    worksheet.getCell("A3").value = rombel.nama;
-    worksheet.getCell("A4").value = `${awal} sampai ${akhir}`;
+    worksheet.getCell("B1").value = "Rekap Absen";
+    worksheet.getCell("B2").value = sekolah.nama;
+    worksheet.getCell("B3").value = rombel.nama;
+    worksheet.getCell("B4").value = `${awal} sampai ${akhir}`;
+    worksheet.getColumn("B").width = 40;
 
     worksheet.views = [
       {

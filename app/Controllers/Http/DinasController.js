@@ -619,6 +619,11 @@ class DinasController {
       if (search) {
         absenUser.andWhere("nama", "like", `%${search}%`);
       }
+      if (rombel_id) {
+        absenUser.whereHas("anggotaRombel", (builder) => {
+          builder.where({ m_rombel_id: rombel_id })
+        });
+      }
       absenUser = await absenUser.paginate(page, 25);
       let absen;
       absen = MAbsen.query()
@@ -629,19 +634,27 @@ class DinasController {
       } else if (role == "gtk") {
         absen.whereIn("role", ["guru", "admin", "kepsek"]);
       }
+      if (rombel_id) {
+        absen.whereHas("user", (builder) => {
+          builder.whereHas("anggotaRombel", (builder) => {
+            builder.where({ m_rombel_id: rombel_id });
+          })
+        });
+      }
 
       absen = await absen.fetch();
 
-      let total;
-      total = User.query()
-        .where({ dihapus: 0 })
-        .andWhere({ m_sekolah_id: sekolah.id });
-      if (role == "siswa") {
-        total.andWhere({ role: role });
-      } else if (role == "gtk") {
-        total.whereIn("role", ["guru", "admin", "kepsek"]);
-      }
-      total = await total.getCount();
+      // let total;
+      // total = User.query()
+      //   .where({ dihapus: 0 })
+      //   .andWhere({ m_sekolah_id: sekolah.id });
+      // if (role == "siswa") {
+      //   total.andWhere({ role: role });
+      // } else if (role == "gtk") {
+      //   total.whereIn("role", ["guru", "admin", "kepsek"]);
+      // }
+
+      let total = parseInt(absenUser.pages.total);
       const hadir = absen.toJSON().filter((d) => d.absen == "hadir").length;
 
       const sakit = absen.toJSON().filter((d) => d.absen == "sakit").length;
