@@ -3327,21 +3327,34 @@ class PPDBController {
                           ) + 1,
                         `${gelombangUser?.length}`
                       )
-                    : namaGelombang?.includes("khusus")
-                    ? "00"
-                    : namaGelombang?.includes("reguler 1")
-                    ? "01"
-                    : namaGelombang?.includes("reguler 3")
-                    ? "02"
-                    : "03"
+                    : sekolah?.id == 70 
+                        ? (namaGelombang?.includes("khusus") || namaGelombang?.includes("suluh") 
+                            ? "00"
+                        : namaGelombang?.includes("prestasi") 
+                            ? "01"
+                        : namaGelombang?.includes("reguler 1")
+                            ? "02"
+                        : namaGelombang?.includes("reguler 3")
+                            ? "03"
+                        : "04")
+                    :
+                        (namaGelombang?.includes("khusus")
+                        ? "00"
+                        : namaGelombang?.includes("reguler 1")
+                        ? "01"
+                        : namaGelombang?.includes("reguler 3")
+                        ? "02"
+                        : "03")
+                
                 } - ${padNumber(
                   // gelombangAktif
                   //   .toJSON()
 
                  gelombang.toJSON()?.pendaftar.findIndex(
                     (r) => r.id == d?.id
-                  ) + 1,
-                  `${
+                  ) + 1, sekolah?.id == 70 
+                  ? 4 
+                  : `${
                     // gelombangAktif.toJSON()
                     gelombang?.diterima
                   }`.length
