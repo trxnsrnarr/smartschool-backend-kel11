@@ -2071,10 +2071,10 @@ class CDCController {
 
     const date1 = moment(`${tanggal_mulai}`);
     const date2 = moment(`${tanggal_selesai}`);
-    const diff = date2.diff(date1);
+    // const diff = date2.diff(date1);
 
     // return diff
-    const lama = moment(diff).format(`MM`);
+    const lama = date2.diff(date1, 'months');
 
     // return lama;
 
@@ -2128,9 +2128,9 @@ class CDCController {
 
     const date1 = moment(`${tanggal_mulai}`);
     const date2 = moment(`${tanggal_selesai}`);
-    const diff = date2.diff(date1);
+    // const diff = date2.diff(date1);
 
-    const lama = moment(diff).format(`MM`);
+    const lama = date2.diff(date1, 'months');
 
     const perusahaan = await MPenerimaanSiswa.query()
       .where({ id: siswa_id })
@@ -2560,9 +2560,9 @@ class CDCController {
     } = request.post();
     const date1 = moment(`${mulai_kerja}`);
     const date2 = moment(`${akhir_kerja}`);
-    const diff = date2.diff(date1);
+    // const diff = date2.diff(date1);
 
-    const lama = moment(diff).format(`MM`);
+    const lama = date2.diff(date1, 'months');
 
     const pekerjaan = await MPekerjaan.create({
       judul,
@@ -2717,9 +2717,9 @@ class CDCController {
 
     const date1 = moment(`${mulai_kerja}`);
     const date2 = moment(`${akhir_kerja}`);
-    const diff = date2.diff(date1);
+    // const diff = date2.diff(date1);
 
-    const lama = moment(diff).format(`MM`);
+    const lama = date2.diff(date1, 'months');
 
     const pekerjaan = await MPekerjaan.query()
       .where({ id: pekerjaan_id })
@@ -3553,7 +3553,7 @@ class CDCController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
-    let { search, jurusan_id, page, m_ta_id = ta.id } = request.get();
+    let { search, jurusan_id, page, m_ta_id } = request.get();
     const user = await auth.getUser();
 
     const semuaTA = await Mta.query()
@@ -3563,6 +3563,7 @@ class CDCController {
       .fetch();
 
     page = page ? parseInt(page) : 1;
+    m_ta_id = m_ta_id ? parseInt(m_ta_id) : ta.id;
 
     let penerimaanSiswa;
 
@@ -3740,9 +3741,9 @@ class CDCController {
 
     const date1 = moment(`${tanggal_mulai}`);
     const date2 = moment(`${tanggal_selesai}`);
-    const diff = date2.diff(date1);
+    // const diff = date2.diff(date1);
 
-    const lama = moment(diff).format(`MM`);
+    const lama = date2.diff(date1, 'months');
 
     const keteranganPkl = await MKeteranganPkl.create({
       namamitra,
@@ -3852,7 +3853,6 @@ class CDCController {
     const ta = await this.getTAAktif(sekolah);
 
     let {
-      m_perusahaan_id,
       m_user_id,
       tanggal_mulai,
       tanggal_selesai,
@@ -3868,15 +3868,15 @@ class CDCController {
     // if (validation.fails()) {
     //   return response.unprocessableEntity(validation.messages());
     // }
-
+    console.log(request.post());
     m_user_id = m_user_id.length ? m_user_id : [];
 
     const date1 = moment(`${tanggal_mulai}`);
     const date2 = moment(`${tanggal_selesai}`);
-    const diff = date2.diff(date1);
+    // const diff = date2.diff(date1);
 
     // return diff
-    const lama = moment(diff).format(`MM`);
+    const lama = date2.diff(date1, 'months');
 
     // return lama;
 
@@ -3947,10 +3947,10 @@ class CDCController {
 
     const date1 = moment(`${tanggal_mulai}`);
     const date2 = moment(`${tanggal_selesai}`);
-    const diff = date2.diff(date1);
+    // const diff = date2.diff(date1);
 
     // return diff
-    const lama = moment(diff).format(`MM`);
+    const lama = date2.diff(date1, 'months');
 
     // return lama;
 
@@ -6345,23 +6345,24 @@ class CDCController {
     return response.ok({ message: messageDeleteSuccess })
   }
 
-  async detailPerusahaan({ response, request, params: { id } }) {
-    const domain = request.headers().origin;
+  // async detailPerusahaan({ response, request, params: { id } }) {
+  //   const domain = request.headers().origin;
 
-    const sekolah = await this.getSekolahByDomain(domain);
+  //   const sekolah = await this.getSekolahByDomain(domain);
 
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
+  //   if (sekolah == "404") {
+  //     return response.notFound({ message: "Sekolah belum terdaftar" });
+  //   }
 
-    const perusahaan = await User.query().where({ id }).with("profil").first();
+  //   // const perusahaan = await User.query().where({ id }).with("profil").first();
+  //   const perusahaan = await MPerusahaaan.query().where({ id }).with("informasi").with('pekerjaan').with('acara').first();
 
-    if (!perusahaan) {
-      return response.notFound({ message: messageNotFound });
-    }
+  //   if (!perusahaan) {
+  //     return response.notFound({ message: messageNotFound });
+  //   }
 
-    return response.ok(perusahaan)
-  }
+  //   return response.ok(perusahaan)
+  // }
 
   async getPerusahaanLowongan({ response, request, params: { id } }) {
     const domain = request.headers().origin;
