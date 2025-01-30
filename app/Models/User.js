@@ -186,6 +186,10 @@ class User extends Model {
   ukkSiswa() {
     return this.belongsTo("App/Models/MUkkSiswa", "id", "m_user_id");
   }
+
+  messsage() {
+    return this.hasMany("App/Models/MMessage", 'id', "m_chatroom_id");
+  }
 }
 
 module.exports = User;
