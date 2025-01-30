@@ -1031,8 +1031,8 @@ Route.post(
   "MainController.downloadRekapAbsenSiswa11"
 );
 Route.post(
-  "/absen-siswa2/rekapdownload",
-  "MainController.downloadRekapAbsenSiswa2"
+  "/absen-seluruh-siswa/rekapdownload",
+  "MainController.downloadRekapAbsenSeluruhSiswa"
 );
 Route.post(
   "/absen-siswa/rekapdownload/dinas",
@@ -1275,7 +1275,7 @@ Route.get("/pkl/penerimaan", "CDCController.getPenerimaanPkl");
 Route.get("/pkl/penerimaan-31", "CDCController.getPenerimaanPkl31");
 Route.get("/rekrutmen/penerimaan-31", "CDCController.getPenerimaanRekrutmen31");
 Route.post(
-  "/penerimaan-siswa/:penerimaan_id",
+  "/penerimaan-siswa",
   "CDCController.postPenerimaanSiswa"
 );
 Route.post("/penerimaan-siswa-31", "CDCController.postPenerimaanSiswa31");
@@ -2085,6 +2085,8 @@ Route.delete("/chatrooms", "ChatbotController.deleteAllChatrooms");
 Route.delete("/chatrooms/:id", "ChatbotController.deleteChatroomById");
 Route.get("/messages/:chatroom_id", "ChatbotController.getMessagesByChatroomId");
 Route.post("/suggestions", "ChatbotController.getSuggestions");
+// Route.get("/templateSuggestions", "ChatbotController.getTemplateSuggestions");
+// Route.post("/langchain", "Chatbot2Controller.langchain");
 
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
