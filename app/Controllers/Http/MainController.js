@@ -20505,6 +20505,8 @@ class MainController {
       .andWhere({ m_user_id: user.id })
       .first();
 
+      console.log('ini check coy', check)
+
     if (check) {
       return response.forbidden({
         message: "Kamu sudah terdaftar pada gelombang ini",

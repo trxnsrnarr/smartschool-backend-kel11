@@ -795,20 +795,19 @@ class PPDBController {
       pesertaUjianData
         .sort((a, b) => ("" + a.nama).localeCompare("" + b.nama))
         .map(async (d, idx) => {
-          const nomorPeserta = `${moment().format("YYYY")} - ${
-            namaGelombang.includes("khusus")
-              ? "00"
-              : namaGelombang.includes("reguler 1")
+          const nomorPeserta = `${moment().format("YYYY")} - ${namaGelombang.includes("khusus")
+            ? "00"
+            : namaGelombang.includes("reguler 1")
               ? "01"
               : namaGelombang.includes("reguler 3")
-              ? "02"
-              : "03"
-          } - ${padNumber(
-            gelombang.pendaftar.findIndex((e) => {
-              return e.id == d.pendaftar.id;
-            }) + 1,
-            `${gelombang.diterima}`.length
-          )}`;
+                ? "02"
+                : "03"
+            } - ${padNumber(
+              gelombang.pendaftar.findIndex((e) => {
+                return e.id == d.pendaftar.id;
+              }) + 1,
+              `${gelombang.diterima}`.length
+            )}`;
           worksheet.addConditionalFormatting({
             ref: `A${(idx + 1) * 1 + 5}:A${(idx + 1) * 1 + 5}`,
             rules: [
@@ -1031,134 +1030,155 @@ class PPDBController {
   }
 
   async getGelombangPPDB({ response, request, auth }) {
-    const domain = request.headers().origin;
+    try {
+      const domain = request.headers().origin;
+      const sekolah = await this.getSekolahByDomain(domain);
 
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const ta = await this.getTAAktif(sekolah);
-
-    if (!ta) {
-      return response.notFound({
-        message: "Aktifkan tahun ajaran yg tersedia di menu kurikulum",
-      });
-    }
-    let jalurIds;
-
-    if (sekolah?.id == 14 || sekolah?.id == 13 || sekolah?.id == 121) {
-      jalurIds = await MJalurPpdb.query()
-        .where({ dihapus: 0 })
-        .where({ m_sekolah_id: sekolah.id })
-        .where({ tipe: "Pengembalian" })
-        .ids();
-    } else {
-      jalurIds = await MJalurPpdb.query()
-        .where({ dihapus: 0 })
-        .where({ m_sekolah_id: sekolah.id })
-        .ids();
-    }
-    const gelombangIds = await MGelombangPpdb.query()
-      .where({ dihapus: 0 })
-      .whereIn("m_jalur_ppdb_id", jalurIds)
-      .where({ m_ta_id: ta.id })
-      .ids();
-
-    let { is_public } = request.get();
-    is_public = is_public ? is_public : false;
-
-    const checkIds = await MGelombangPpdb.query()
-      .where(
-        "dibuka",
-        "<=",
-        moment().endOf("day").format("YYYY-MM-DD HH:mm:ss")
-      )
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .whereIn("id", gelombangIds)
-      .andWhere({ m_ta_id: ta.id })
-      .andWhere({ dihapus: 0 })
-      .ids();
-
-    let gelombangAktif;
-    let pendaftarIds;
-    let pendaftarIds1;
-    let terdaftar;
-    let terdaftarPembelian;
-    let gelombangPembelian;
-    let user;
-    let gelombang;
-
-    if (checkIds.length && is_public == false) {
-      try {
-        user = await auth.getUser();
-      } catch {
-        //
+      if (sekolah === "404") {
+        return response.notFound({ message: "Sekolah belum terdaftar" });
       }
-      if (user) {
-        gelombangAktif = await MPendaftarPpdb.query()
-          .with("gelombang", (builder) => {
-            builder
-              .with("jalur")
-              .with("pendaftar", (builder) => {
-                builder
-                  .select("id", "m_gelombang_ppdb_id")
-                  .where({ dihapus: 0 });
-              })
-              .with("informasi", (builder) => {
-                builder
-                  .where({ tipe: "ujian" })
-                  .with("ujian")
-                  .andWhere({ dihapus: 0 });
-              });
-          })
-          .with("diskon")
-          .where({ dihapus: 0 })
-          // .whereIn("m_gelombang_ppdb_id", gelombangIds)
-          .andWhere({ m_user_id: user.id })
-          .whereIn("m_gelombang_ppdb_id", checkIds)
-          .first();
 
-        pendaftarIds = await MPendaftarPpdb.query()
-          .where({ dihapus: 0 })
-          .whereIn("m_gelombang_ppdb_id", gelombangIds)
-          .andWhere({ m_user_id: user.id })
-          .pluck("m_gelombang_ppdb_id");
+      const ta = await this.getTAAktif(sekolah);
 
-        terdaftar = await MGelombangPpdb.query()
-          .with("pendaftar1", (builder) => {
-            builder.where({ m_user_id: user.id });
-          })
-          .with("jalur")
-          .whereIn("id", pendaftarIds)
-          .where({ dihapus: 0 })
-          .fetch();
+      if (!ta) {
+        return response.notFound({
+          message: "Aktifkan tahun ajaran yg tersedia di menu kurikulum",
+        });
       }
-    }
 
-    if (sekolah?.id == 14 || sekolah?.id == 13 || sekolah?.id == 121) {
-      const jalurIds1 = await MJalurPpdb.query()
-        .where({ dihapus: 0 })
-        .where({ m_sekolah_id: sekolah.id })
-        .ids();
+      let jalurIds;
+      if ([14, 13, 121].includes(sekolah.id)) {
+        jalurIds = await MJalurPpdb.query()
+          .where({ dihapus: 0, m_sekolah_id: sekolah.id, tipe: "Pengembalian" })
+          .ids();
+      } else {
+        jalurIds = await MJalurPpdb.query()
+          .where({ dihapus: 0, m_sekolah_id: sekolah.id })
+          .ids();
+      }
 
-      const gelombangIds1 = await MGelombangPpdb.query()
+      const gelombangIds = await MGelombangPpdb.query()
         .where({ dihapus: 0 })
-        .whereIn("m_jalur_ppdb_id", jalurIds1)
+        .whereIn("m_jalur_ppdb_id", jalurIds)
         .where({ m_ta_id: ta.id })
         .ids();
-      gelombang = await MGelombangPpdb.query()
-        .with("jalur")
-        .withCount("pendaftar as jumlahPendaftar", (builder) => {
-          builder.where({ dihapus: 0 });
-        })
-        .where({ m_sekolah_id: sekolah.id })
-        .whereIn("id", gelombangIds1)
+      // console.log("[INFO] Gelombang IDs: ", gelombangIds);
+
+      let { is_public } = request.get();
+      is_public = is_public || false;
+      let gelombangId = request.header("x-gelombang-id") || null;
+      // console.log("[DEBUG] gelombangId dari request: ", gelombangId);
+
+      //  Menentukan daftar gelombang yang sudah dibuka
+      const checkIds = await MGelombangPpdb.query()
+        .where("dibuka", "<=", moment().endOf("day").format("YYYY-MM-DD HH:mm:ss"))
+        .andWhere({ m_sekolah_id: sekolah.id })
+        .whereIn("id", gelombangIds)
         .andWhere({ m_ta_id: ta.id })
         .andWhere({ dihapus: 0 })
-        .fetch();
-    } else {
+        .ids();
+      // console.log("[INFO] Check IDs (Gelombang Dibuka): ", checkIds);
+
+      let user;
+      let gelombangAktif = null;
+      let terdaftar = null;
+      let gelombang = null;
+
+
+
+      if (checkIds.length && is_public === false) {
+        try {
+          user = await auth.getUser();
+        } catch {
+          console.warn("[WARN] User tidak terautentikasi.");
+        }
+
+        if (user) {
+          if (gelombangId) {
+            //  Ambil data Pendaftar PPDB berdasarkan `gelombangId` yang sekarang adalah `pendaftar1.id`
+            const pendaftar = await MPendaftarPpdb.query()
+              .where({ id: gelombangId, dihapus: 0 }) // Menggunakan ID dari pendaftar
+              .with("gelombang", (builder) => {
+                builder
+                  .with("jalur")
+                  .with("pendaftar", (builder) => {
+                    builder.select("id", "m_gelombang_ppdb_id").where({ dihapus: 0 });
+                  })
+                  .with("informasi", (builder) => {
+                    builder.where({ tipe: "ujian" }).with("ujian").andWhere({ dihapus: 0 });
+                  });
+              })
+              .with("diskon")
+              .first();
+
+            if (pendaftar) {
+              gelombangAktif = pendaftar;
+              console.log("[INFO] Gelombang Aktif ditemukan:", gelombangAktif.toJSON());
+            } else {
+              console.warn("[WARN] Gelombang Aktif tidak ditemukan, mencoba menggunakan default...");
+            }
+          }
+
+          //  Jika `gelombangAktif` tetap kosong, ambil default dari daftar yang sudah terdaftar
+          if (!gelombangAktif) {
+            // console.log("[INFO] Menggunakan gelombang default (jika tersedia)");
+
+            //  Ambil daftar gelombang yang telah didaftarkan oleh user
+            const gelombangTerdaftar = await MGelombangPpdb.query()
+              .with("pendaftar1", (builder) => {
+                builder.where({ m_user_id: user.id });
+              })
+              .with("jalur")
+              .whereIn("id", gelombangIds)
+              .where({ dihapus: 0 })
+              .fetch();
+
+            //  Cari gelombang default dari pendaftar1
+            const daftarGelombang = gelombangTerdaftar.toJSON();
+            const gelombangDefault = daftarGelombang.find((g) => g.pendaftar1 && g.pendaftar1.id);
+
+            if (gelombangDefault) {
+              gelombangAktif = await MPendaftarPpdb.query()
+                .where({ id: gelombangDefault.pendaftar1.id, dihapus: 0 }) // Menggunakan ID dari pendaftar1
+                .with("gelombang", (builder) => {
+                  builder
+                    .with("jalur")
+                    .with("pendaftar", (builder) => {
+                      builder.select("id", "m_gelombang_ppdb_id").where({ dihapus: 0 });
+                    })
+                    .with("informasi", (builder) => {
+                      builder.where({ tipe: "ujian" }).with("ujian").andWhere({ dihapus: 0 });
+                    });
+                })
+                .with("diskon")
+                .first();
+
+              // console.log("[INFO] Gelombang Default ditemukan:", gelombangAktif ? gelombangAktif.toJSON() : null);
+            } else {
+              console.warn("[WARN] Tidak ada gelombang yang bisa dijadikan default.");
+            }
+          }
+
+          //  Ambil daftar gelombang yang telah didaftarkan oleh user
+          const pendaftarIds = await MPendaftarPpdb.query()
+            .where({ dihapus: 0 })
+            .whereIn("m_gelombang_ppdb_id", gelombangIds)
+            .andWhere({ m_user_id: user.id })
+            .pluck("m_gelombang_ppdb_id");
+
+          terdaftar = await MGelombangPpdb.query()
+            .with("pendaftar1", (builder) => {
+              builder.where({ m_user_id: user.id });
+            })
+            .with("jalur")
+            .whereIn("id", pendaftarIds)
+            .where({ dihapus: 0 })
+            .fetch();
+        }
+
+      }
+
+      //  Ambil semua gelombang yang tersedia
       gelombang = await MGelombangPpdb.query()
         .with("jalur")
         .withCount("pendaftar as jumlahPendaftar", (builder) => {
@@ -1169,104 +1189,37 @@ class PPDBController {
         .andWhere({ m_ta_id: ta.id })
         .andWhere({ dihapus: 0 })
         .fetch();
-    }
 
-    const jumlahPeserta = await User.query()
-      .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ dihapus: 0 })
-      .andWhere({ role: "ppdb" })
-      .count("* as total");
-
-    if (sekolah?.id == 14 || sekolah?.id == 13 || sekolah?.id == 121) {
-      const jalurIds1 = await MJalurPpdb.query()
-        .where({ dihapus: 0 })
+      const jumlahPeserta = await User.query()
         .where({ m_sekolah_id: sekolah.id })
-        .andWhere({ tipe: "Pembelian" })
-        .ids();
-      const gelombangIds1 = await MGelombangPpdb.query()
-        .where({ dihapus: 0 })
-        .whereIn("m_jalur_ppdb_id", jalurIds1)
-        .where({ m_ta_id: ta.id })
-        .ids();
+        .andWhere({ dihapus: 0, role: "ppdb" })
+        .count("* as total");
 
-      const checkIds1 = await MGelombangPpdb.query()
-        .where(
-          "dibuka",
-          "<=",
-          moment().endOf("day").format("YYYY-MM-DD HH:mm:ss")
-        )
-        .andWhere({ m_sekolah_id: sekolah.id })
-        .whereIn("id", gelombangIds1)
-        .andWhere({ m_ta_id: ta.id })
-        .andWhere({ dihapus: 0 })
-        .ids();
-      if (checkIds1.length && is_public == false) {
-        try {
-          user = await auth.getUser();
-        } catch {
-          //
-        }
-        if (user) {
-          gelombangPembelian = await MPendaftarPpdb.query()
-            .with("gelombang", (builder) => {
-              builder
-                .with("jalur")
-                .with("pendaftar", (builder) => {
-                  builder
-                    .select("id", "m_gelombang_ppdb_id")
-                    .where({ dihapus: 0 });
-                })
-                .with("informasi", (builder) => {
-                  builder
-                    .where({ tipe: "ujian" })
-                    .with("ujian")
-                    .andWhere({ dihapus: 0 });
-                });
-            })
+      let semuaGelombangPengembalian = null;
+      if (gelombangAktif) {
+        const gelombangData = gelombangAktif.toJSON();
+        if (gelombangData.gelombang && gelombangData.gelombang.m_jalur_ppdb_id) {
+          semuaGelombangPengembalian = await MGelombangPpdb.query()
             .where({ dihapus: 0 })
-            // .whereIn("m_gelombang_ppdb_id", gelombangIds)
-            .andWhere({ m_user_id: user.id })
-            .whereIn("m_gelombang_ppdb_id", checkIds1)
-            .first();
-
-          pendaftarIds1 = await MPendaftarPpdb.query()
-            .where({ dihapus: 0 })
-            .whereIn("m_gelombang_ppdb_id", gelombangIds1)
-            .andWhere({ m_user_id: user.id })
-            .pluck("m_gelombang_ppdb_id");
-
-          terdaftarPembelian = await MGelombangPpdb.query()
-            .with("pendaftar1", (builder) => {
-              builder.where({ m_user_id: user.id });
-            })
-            .with("jalur")
-            .whereIn("id", pendaftarIds1)
-            .where({ dihapus: 0 })
-            .fetch();
+            .where({ m_jalur_ppdb_id: gelombangData.gelombang.m_jalur_ppdb_id })
+            .where({ m_ta_id: ta.id })
+            .ids();
         }
       }
-    }
 
-    let semuaGelombangPengembalian;
-    if (gelombangAktif) {
-      semuaGelombangPengembalian = await MGelombangPpdb.query()
-        .where({ dihapus: 0 })
-        .where({
-          m_jalur_ppdb_id: gelombangAktif.toJSON().gelombang.m_jalur_ppdb_id,
-        })
-        .where({ m_ta_id: ta.id })
-        .ids();
+      return response.ok({
+        gelombang,
+        terdaftar,
+        gelombangAktif,
+        jumlahPeserta: jumlahPeserta[0].total,
+        semuaGelombangPengembalian,
+      });
+    } catch (error) {
+      console.error("[ERROR] Terjadi kesalahan saat mengambil data PPDB:", error);
+      return response.internalServerError({
+        message: "Terjadi kesalahan saat mengambil data PPDB.",
+      });
     }
-
-    return response.ok({
-      gelombang: gelombang,
-      terdaftar: terdaftar,
-      gelombangAktif: gelombangAktif,
-      jumlahPeserta: jumlahPeserta[0].total,
-      gelombangPembelian,
-      terdaftarPembelian,
-      semuaGelombangPengembalian,
-    });
   }
 
   async detailGelombangPPDB({ response, params: { gelombang_ppdb_id } }) {
@@ -3214,7 +3167,7 @@ class PPDBController {
           //   .where({ dihapus: 0 })
           //   .fetch();
 
-          if (sekolah?.id == 14 || sekolah?.id == 13 ) {
+          if (sekolah?.id == 14 || sekolah?.id == 13) {
             const jalurIds1 = await MJalurPpdb.query()
               .where({ dihapus: 0 })
               .where({ m_sekolah_id: sekolah.id })
@@ -3261,11 +3214,11 @@ class PPDBController {
                 .whereIn("m_gelombang_ppdb_id", checkIds1)
                 .first();
 
-            //  const pendaftarIds1 = await MPendaftarPpdb.query()
-            //     .where({ dihapus: 0 })
-            //     .whereIn("m_gelombang_ppdb_id", gelombangIds1)
-            //     .andWhere({ m_user_id: d.user.id })
-            //     .pluck("m_gelombang_ppdb_id");
+              //  const pendaftarIds1 = await MPendaftarPpdb.query()
+              //     .where({ dihapus: 0 })
+              //     .whereIn("m_gelombang_ppdb_id", gelombangIds1)
+              //     .andWhere({ m_user_id: d.user.id })
+              //     .pluck("m_gelombang_ppdb_id");
 
               // terdaftarPembelian = await MGelombangPpdb.query()
               //   .with("pendaftar1", (builder) => {
@@ -3303,49 +3256,48 @@ class PPDBController {
           const nomorPeserta =
             sekolah?.id == 14
               ? `${moment().format("YYYY")} - ${padNumber(
-                  semuaGelombangPengembalian?.findIndex(
-                    (d) => d == gelombangAktif?.gelombang?.id
+                semuaGelombangPengembalian?.findIndex(
+                  (d) => d == gelombangAktif?.gelombang?.id
+                ) + 1,
+                `2`
+              )} ${"-"} ${padNumber(
+                gelombangPembelian
+                  .toJSON()
+                  .gelombang?.pendaftar.findIndex(
+                    (d) => d.id == gelombangPembelian?.id
                   ) + 1,
-                  `2`
-                )} ${"-"} ${padNumber(
-                  gelombangPembelian
+                gelombangPembelian.toJSON().gelombang?.diterima.length
+              )}`
+              : `${moment().format("YYYY")} - ${sekolah?.id == 13 || sekolah?.id == 121 || sekolah?.id == 14
+                ? padNumber(
+                  gelombangUser
                     .toJSON()
-                    .gelombang?.pendaftar.findIndex(
-                      (d) => d.id == gelombangPembelian?.id
+                    ?.findIndex(
+                      (d) => d.id ==
+                        // gelombangAktif.toJSON().
+                        gelombang?.id
                     ) + 1,
-                  gelombangPembelian.toJSON().gelombang?.diterima.length
-                )}`
-              : `${moment().format("YYYY")} - ${
-                  sekolah?.id == 13 || sekolah?.id == 121 || sekolah?.id == 14
-                    ? padNumber(
-                        gelombangUser
-                          .toJSON()
-                          ?.findIndex(
-                            (d) => d.id == 
-                            // gelombangAktif.toJSON().
-                            gelombang?.id
-                          ) + 1,
-                        `${gelombangUser?.length}`
-                      )
-                    : namaGelombang?.includes("khusus")
-                    ? "00"
-                    : namaGelombang?.includes("reguler 1")
+                  `${gelombangUser?.length}`
+                )
+                : namaGelombang?.includes("khusus")
+                  ? "00"
+                  : namaGelombang?.includes("reguler 1")
                     ? "01"
                     : namaGelombang?.includes("reguler 3")
-                    ? "02"
-                    : "03"
-                } - ${padNumber(
-                  // gelombangAktif
-                  //   .toJSON()
+                      ? "02"
+                      : "03"
+              } - ${padNumber(
+                // gelombangAktif
+                //   .toJSON()
 
-                 gelombang.toJSON()?.pendaftar.findIndex(
-                    (r) => r.id == d?.id
-                  ) + 1,
-                  `${
-                    // gelombangAktif.toJSON()
-                    gelombang?.diterima
+                gelombang.toJSON()?.pendaftar.findIndex(
+                  (r) => r.id == d?.id
+                ) + 1,
+                `${
+                  // gelombangAktif.toJSON()
+                  gelombang?.diterima
                   }`.length
-                )}
+              )}
           `;
 
           const pembayaran = JSON.parse(d?.pembayaran || "[]");
@@ -3753,19 +3705,18 @@ class PPDBController {
               style: "currency",
               currency: "IDR",
             }),
-            sisa: `${
-              parseInt(gelombang.toJSON().jalur.biaya) -
-                parseInt(totalPembayaran) <
+            sisa: `${parseInt(gelombang.toJSON().jalur.biaya) -
+              parseInt(totalPembayaran) <
               0
-                ? "+"
-                : ""
-            } ${Math.abs(
-              parseInt(gelombang.toJSON().jalur.biaya) -
+              ? "+"
+              : ""
+              } ${Math.abs(
+                parseInt(gelombang.toJSON().jalur.biaya) -
                 parseInt(totalPembayaran)
-            ).toLocaleString("id-ID", {
-              style: "currency",
-              currency: "IDR",
-            })}`,
+              ).toLocaleString("id-ID", {
+                style: "currency",
+                currency: "IDR",
+              })}`,
             alamat: d.user.profil ? d.user.profil.alamat : "-",
           });
         })
@@ -4084,33 +4035,31 @@ class PPDBController {
           // );
           const nomorPeserta =
             sekolah?.id == 9487 || sekolah?.id == 9489
-              ? `REG${
-                  gelombang?.nama?.indexOf("SD") !== -1 ? "SD" : "MI"
-                }${padNumber(
-                  urutan + 1,
-                  `${gelombangAktif.toJSON().gelombang?.diterima}`.length
-                )}`
-              : `${moment().format("YYYY")} - ${
-                  sekolah?.id == 13 || sekolah?.id == 121 || sekolah?.id == 14
-                    ? padNumber(
-                        gelombangUser
-                          .toJSON()
-                          ?.findIndex(
-                            (d) => d.id == gelombangAktif.toJSON().gelombang?.id
-                          ) + 1,
-                        `${gelombangUser?.length}`
-                      )
-                    : namaGelombang?.includes("khusus")
-                    ? "00"
-                    : namaGelombang?.includes("reguler 1")
+              ? `REG${gelombang?.nama?.indexOf("SD") !== -1 ? "SD" : "MI"
+              }${padNumber(
+                urutan + 1,
+                `${gelombangAktif.toJSON().gelombang?.diterima}`.length
+              )}`
+              : `${moment().format("YYYY")} - ${sekolah?.id == 13 || sekolah?.id == 121 || sekolah?.id == 14
+                ? padNumber(
+                  gelombangUser
+                    .toJSON()
+                    ?.findIndex(
+                      (d) => d.id == gelombangAktif.toJSON().gelombang?.id
+                    ) + 1,
+                  `${gelombangUser?.length}`
+                )
+                : namaGelombang?.includes("khusus")
+                  ? "00"
+                  : namaGelombang?.includes("reguler 1")
                     ? "01"
                     : namaGelombang?.includes("reguler 3")
-                    ? "02"
-                    : "03"
-                } - ${padNumber(
-                  urutan + 1,
-                  `${gelombangAktif.toJSON().gelombang?.diterima}`.length
-                )}
+                      ? "02"
+                      : "03"
+              } - ${padNumber(
+                urutan + 1,
+                `${gelombangAktif.toJSON().gelombang?.diterima}`.length
+              )}
             `;
 
           worksheet.addConditionalFormatting({
@@ -4387,7 +4336,7 @@ class PPDBController {
       ((pendaftar.toJSON().gelombang.biaya_pendaftaran ||
         pendaftar.toJSON().gelombang.jalur.biaya) *
         diskon) /
-        100;
+      100;
     if (diskonData) {
       const datas = await MDiskonPendaftar.query()
         .where({ m_pendaftar_ppdb_id: id })
