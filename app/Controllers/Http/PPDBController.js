@@ -1113,7 +1113,7 @@ class PPDBController {
 
             if (pendaftar) {
               gelombangAktif = pendaftar;
-              console.log("[INFO] Gelombang Aktif ditemukan:", gelombangAktif.toJSON());
+              // console.log("[INFO] Gelombang Aktif ditemukan:", gelombangAktif.toJSON());
             } else {
               console.warn("[WARN] Gelombang Aktif tidak ditemukan, mencoba menggunakan default...");
             }
@@ -1153,7 +1153,7 @@ class PPDBController {
                 .with("diskon")
                 .first();
 
-              // console.log("[INFO] Gelombang Default ditemukan:", gelombangAktif ? gelombangAktif.toJSON() : null);
+              console.log("[INFO] Gelombang Default ditemukan:", gelombangAktif ? gelombangAktif.toJSON() : null);
             } else {
               console.warn("[WARN] Tidak ada gelombang yang bisa dijadikan default.");
             }

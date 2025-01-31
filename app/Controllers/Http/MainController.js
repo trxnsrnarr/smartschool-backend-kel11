@@ -20481,7 +20481,6 @@ class MainController {
 
   async postPendaftarPPDB({ response, request, auth }) {
     const domain = request.headers().origin;
-
     const sekolah = await this.getSekolahByDomain(domain);
 
     if (sekolah == "404") {
@@ -20499,25 +20498,28 @@ class MainController {
 
     const { m_gelombang_ppdb_id } = request.post();
 
+    // Cek apakah user sudah terdaftar di gelombang ini
     const check = await MPendaftarPpdb.query()
       .where({ dihapus: 0 })
-      .andWhere({ m_gelombang_ppdb_id: m_gelombang_ppdb_id })
+      .andWhere({ m_gelombang_ppdb_id })
       .andWhere({ m_user_id: user.id })
       .first();
-
-      console.log('ini check coy', check)
 
     if (check) {
       return response.forbidden({
         message: "Kamu sudah terdaftar pada gelombang ini",
       });
     }
+
+    // sekolah punya id = 14, 13, atau 121
+
     if (sekolah?.id == 14 || sekolah?.id == 13 || sekolah?.id == 121) {
       const jalurIds1 = await MJalurPpdb.query()
         .where({ dihapus: 0 })
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ tipe: "Pembelian" })
         .ids();
+
       const gelombangIds1 = await MGelombangPpdb.query()
         .where({ dihapus: 0 })
         .whereIn("m_jalur_ppdb_id", jalurIds1)
@@ -20535,6 +20537,7 @@ class MainController {
         .andWhere({ m_ta_id: ta.id })
         .andWhere({ dihapus: 0 })
         .ids();
+
       const gelombangPembelian = await MPendaftarPpdb.query()
         .with("gelombang", (builder) => {
           builder
@@ -20550,88 +20553,93 @@ class MainController {
             });
         })
         .where({ dihapus: 0 })
-        // .whereIn("m_gelombang_ppdb_id", gelombangIds)
         .andWhere({ m_user_id: user.id })
         .whereIn("m_gelombang_ppdb_id", checkIds1)
         .first();
 
+      // Jika user sudah punya pendaftaran jalur 'Pembelian'
       if (gelombangPembelian) {
+        // Cek apakah di gelombang baru (m_gelombang_ppdb_id) dia sudah pernah mendaftar
         const check2 = await MPendaftarPpdb.query()
-          // .where({ dihapus: 0 })
-          .where({ m_gelombang_ppdb_id: m_gelombang_ppdb_id })
+          .where({ m_gelombang_ppdb_id })
           .andWhere({ m_user_id: user.id })
           .first();
 
         if (check2) {
-          await MPendaftarPpdb.query()
-            .where({ m_gelombang_ppdb_id: m_gelombang_ppdb_id })
-            .andWhere({ m_user_id: user.id })
-            .update({
-              m_gelombang_ppdb_id,
-              m_user_id: user.id,
-              status: "menungguKonfirmasiPembayaran",
-              dihapus: 0,
-              m_jurusan_1_id: gelombangPembelian?.m_jurusan_1_id,
-              m_jurusan_2_id: gelombangPembelian?.m_jurusan_2_id,
-              m_jurusan_3_id: gelombangPembelian?.m_jurusan_3_id,
-              m_jurusan_4_id: gelombangPembelian?.m_jurusan_4_id,
-              m_jurusan_5_id: gelombangPembelian?.m_jurusan_5_id,
-            });
+          // Kalau sudah ada, kita update
+          check2.merge({
+            m_gelombang_ppdb_id,
+            m_user_id: user.id,
+            status: "menungguKonfirmasiPembayaran",
+            dihapus: 0,
+            m_jurusan_1_id: gelombangPembelian?.m_jurusan_1_id,
+            m_jurusan_2_id: gelombangPembelian?.m_jurusan_2_id,
+            m_jurusan_3_id: gelombangPembelian?.m_jurusan_3_id,
+            m_jurusan_4_id: gelombangPembelian?.m_jurusan_4_id,
+            m_jurusan_5_id: gelombangPembelian?.m_jurusan_5_id,
+          });
+          await check2.save();
 
           return response.ok({
-            message: messagePostSuccess,
+            message: "Data berhasil diupdate",
+            pendaftarId: check2.id, // kembalikan ID pendaftar
+          });
+        } else {
+          // Kalau belum ada, kita create
+          const newPendaftar = await MPendaftarPpdb.create({
+            m_gelombang_ppdb_id,
+            m_user_id: user.id,
+            status: "menungguKonfirmasiPembayaran",
+            dihapus: 0,
+            m_jurusan_1_id: gelombangPembelian?.m_jurusan_1_id,
+            m_jurusan_2_id: gelombangPembelian?.m_jurusan_2_id,
+            m_jurusan_3_id: gelombangPembelian?.m_jurusan_3_id,
+            m_jurusan_4_id: gelombangPembelian?.m_jurusan_4_id,
+            m_jurusan_5_id: gelombangPembelian?.m_jurusan_5_id,
+          });
+
+          return response.ok({
+            message: "Data berhasil disimpan",
+            pendaftarId: newPendaftar.id, // kembalikan ID pendaftar
           });
         }
-        await MPendaftarPpdb.create({
-          m_gelombang_ppdb_id,
-          m_user_id: user.id,
-          status: "menungguKonfirmasiPembayaran",
-          m_jurusan_1_id: gelombangPembelian?.m_jurusan_1_id,
-          m_jurusan_2_id: gelombangPembelian?.m_jurusan_2_id,
-          m_jurusan_3_id: gelombangPembelian?.m_jurusan_3_id,
-          m_jurusan_4_id: gelombangPembelian?.m_jurusan_4_id,
-          m_jurusan_5_id: gelombangPembelian?.m_jurusan_5_id,
-          dihapus: 0,
-        });
-
-        return response.ok({
-          message: messagePostSuccess,
-        });
       }
     }
 
     const check2 = await MPendaftarPpdb.query()
-      // .where({ dihapus: 0 })
-      .where({ m_gelombang_ppdb_id: m_gelombang_ppdb_id })
+      .where({ m_gelombang_ppdb_id })
       .andWhere({ m_user_id: user.id })
       .first();
 
     if (check2) {
-      await MPendaftarPpdb.query()
-        .where({ m_gelombang_ppdb_id: m_gelombang_ppdb_id })
-        .andWhere({ m_user_id: user.id })
-        .update({
-          m_gelombang_ppdb_id,
-          m_user_id: user.id,
-          status: "menungguKonfirmasiPembayaran",
-          dihapus: 0,
-        });
+      // Kalau sudah ada, kita update
+      check2.merge({
+        m_gelombang_ppdb_id,
+        m_user_id: user.id,
+        status: "menungguKonfirmasiPembayaran",
+        dihapus: 0,
+      });
+      await check2.save();
 
       return response.ok({
-        message: messagePostSuccess,
+        message: "Data berhasil diupdate",
+        pendaftarId: check2.id, // kembalikan ID pendaftar
       });
     }
 
-    await MPendaftarPpdb.create({
+    // Kalau belum ada, kita create
+    const newPendaftar = await MPendaftarPpdb.create({
       m_gelombang_ppdb_id,
       m_user_id: user.id,
       status: "menungguKonfirmasiPembayaran",
     });
 
     return response.ok({
-      message: messagePostSuccess,
+      message: "Data berhasil disimpan",
+      pendaftarId: newPendaftar.id, // kembalikan ID pendaftar
     });
   }
+
 
   //belum validasi
   async putPendaftarPPDB({
@@ -21430,7 +21438,7 @@ class MainController {
         builder.where({ dihapus: 0 });
       });
 
-    switch (nav){
+    switch (nav) {
       case "buku-saya":
         queryPerpus.where({ m_sekolah_id: sekolah.id, m_user_id: user.id, dihapus: 0 });
         break;
@@ -22579,7 +22587,7 @@ class MainController {
       return response.ok({
         message: messagePostSuccess,
       });
-    } catch(error) {
+    } catch (error) {
       return response.fails({
         message: error.messages,
       });
@@ -24109,8 +24117,8 @@ class MainController {
     const mutasi = await MMutasi.create({
       tipe: "kredit",
       nama: `Pembayaran ${riwayat.toJSON().rombelPembayaran.pembayaran.nama} ${riwayat.toJSON().rombelPembayaran.pembayaran.jenis == "spp"
-          ? riwayat.toJSON().rombelPembayaran.pembayaran.bulan
-          : ""
+        ? riwayat.toJSON().rombelPembayaran.pembayaran.bulan
+        : ""
         }-${riwayat.toJSON().user.nama}`,
       kategori: `pembayaran ${riwayat.toJSON().rombelPembayaran.pembayaran.jenis
         }`,
@@ -51580,12 +51588,12 @@ class MainController {
                     return;
                   }
                   row.getCell([`${(total + 1) * 2 + 3}`]).value = `${r.mataPelajaran.nilaiIndividu
-                      ? r.mataPelajaran.nilaiIndividu.nilai
-                      : "-"
+                    ? r.mataPelajaran.nilaiIndividu.nilai
+                    : "-"
                     }`;
                   row.getCell([`${(total + 1) * 2 + 4}`]).value = `${r.mataPelajaran.nilaiIndividu
-                      ? r.mataPelajaran.nilaiIndividu.nilai_keterampilan
-                      : "-"
+                    ? r.mataPelajaran.nilaiIndividu.nilai_keterampilan
+                    : "-"
                     }`;
                   row.getCell([`${(total + 1) * 2 + 3}`]).border = {
                     top: { style: "thin" },
@@ -55506,17 +55514,17 @@ class MainController {
               user: d ? d.nama : "-",
               whatsapp: d ? d.whatsapp : "-",
               status: absen ? (() => {
-                        switch (absen.absen) {
-                          case "hadir":
-                            return "Hadir";
-                          case "sakit":
-                            return "Sakit";
-                          case "izin":
-                            return "Izin";
-                          default:
-                            return "Alpha";
-                        }
-                      })() : "Alpha",
+                switch (absen.absen) {
+                  case "hadir":
+                    return "Hadir";
+                  case "sakit":
+                    return "Sakit";
+                  case "izin":
+                    return "Izin";
+                  default:
+                    return "Alpha";
+                }
+              })() : "Alpha",
               foto_masuk: absen?.foto_masuk ?? "-",
               waktu_masuk: absen?.waktu_masuk ? moment(absen.waktu_masuk).format("YYYY-MM-DD HH:mm:ss") : "-",
               foto_keluar: absen?.foto_keluar ?? "-",
@@ -56276,8 +56284,8 @@ class MainController {
                 row.getCell([`${(nox + 1) * 1 + 2}`]).value = `Telat`;
               }
               row.getCell([`${(nox + 1) * 1 + 2}`]).value = `${absen
-                  ? `${absen.absen} (${moment(absen?.created_at).format("HH:mm:ss")} - ${moment(absen?.waktu_pulang).format("HH:mm:ss")})`
-                  : "-"
+                ? `${absen.absen} (${moment(absen?.created_at).format("HH:mm:ss")} - ${moment(absen?.waktu_pulang).format("HH:mm:ss")})`
+                : "-"
                 }`;
             } else {
               row.getCell([`${(nox + 1) * 1 + 2}`]).value = `Alpa`;
