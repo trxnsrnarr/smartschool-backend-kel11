@@ -1062,14 +1062,14 @@ class PPDBController {
         .whereIn("m_jalur_ppdb_id", jalurIds)
         .where({ m_ta_id: ta.id })
         .ids();
-      console.log("[INFO] Gelombang IDs: ", gelombangIds);
+      // console.log("[INFO] Gelombang IDs: ", gelombangIds);
 
       let { is_public } = request.get();
       is_public = is_public || false;
       let gelombangId = request.header("x-gelombang-id") || null;
-      console.log("[DEBUG] gelombangId dari request: ", gelombangId);
+      // console.log("[DEBUG] gelombangId dari request: ", gelombangId);
 
-      // ✅ Menentukan daftar gelombang yang sudah dibuka
+      //  Menentukan daftar gelombang yang sudah dibuka
       const checkIds = await MGelombangPpdb.query()
         .where("dibuka", "<=", moment().endOf("day").format("YYYY-MM-DD HH:mm:ss"))
         .andWhere({ m_sekolah_id: sekolah.id })
@@ -1077,7 +1077,7 @@ class PPDBController {
         .andWhere({ m_ta_id: ta.id })
         .andWhere({ dihapus: 0 })
         .ids();
-      console.log("[INFO] Check IDs (Gelombang Dibuka): ", checkIds);
+      // console.log("[INFO] Check IDs (Gelombang Dibuka): ", checkIds);
 
       let user;
       let gelombangAktif = null;
@@ -1095,7 +1095,7 @@ class PPDBController {
 
         if (user) {
           if (gelombangId) {
-            // 🔥 Ambil data Pendaftar PPDB berdasarkan `gelombangId` yang sekarang adalah `pendaftar1.id`
+            //  Ambil data Pendaftar PPDB berdasarkan `gelombangId` yang sekarang adalah `pendaftar1.id`
             const pendaftar = await MPendaftarPpdb.query()
               .where({ id: gelombangId, dihapus: 0 }) // Menggunakan ID dari pendaftar
               .with("gelombang", (builder) => {
@@ -1113,17 +1113,17 @@ class PPDBController {
 
             if (pendaftar) {
               gelombangAktif = pendaftar;
-              console.log("[INFO] Gelombang Aktif ditemukan:", gelombangAktif.toJSON());
+              // console.log("[INFO] Gelombang Aktif ditemukan:", gelombangAktif.toJSON());
             } else {
               console.warn("[WARN] Gelombang Aktif tidak ditemukan, mencoba menggunakan default...");
             }
           }
 
-          // 🔥 Jika `gelombangAktif` tetap kosong, ambil default dari daftar yang sudah terdaftar
+          //  Jika `gelombangAktif` tetap kosong, ambil default dari daftar yang sudah terdaftar
           if (!gelombangAktif) {
-            console.log("[INFO] Menggunakan gelombang default (jika tersedia)");
+            // console.log("[INFO] Menggunakan gelombang default (jika tersedia)");
 
-            // 🔥 Ambil daftar gelombang yang telah didaftarkan oleh user
+            //  Ambil daftar gelombang yang telah didaftarkan oleh user
             const gelombangTerdaftar = await MGelombangPpdb.query()
               .with("pendaftar1", (builder) => {
                 builder.where({ m_user_id: user.id });
@@ -1133,7 +1133,7 @@ class PPDBController {
               .where({ dihapus: 0 })
               .fetch();
 
-            // 🔥 Cari gelombang default dari pendaftar1
+            //  Cari gelombang default dari pendaftar1
             const daftarGelombang = gelombangTerdaftar.toJSON();
             const gelombangDefault = daftarGelombang.find((g) => g.pendaftar1 && g.pendaftar1.id);
 
@@ -1159,7 +1159,7 @@ class PPDBController {
             }
           }
 
-          // 🔥 Ambil daftar gelombang yang telah didaftarkan oleh user
+          //  Ambil daftar gelombang yang telah didaftarkan oleh user
           const pendaftarIds = await MPendaftarPpdb.query()
             .where({ dihapus: 0 })
             .whereIn("m_gelombang_ppdb_id", gelombangIds)
@@ -1178,7 +1178,7 @@ class PPDBController {
 
       }
 
-      // 🔥 Ambil semua gelombang yang tersedia
+      //  Ambil semua gelombang yang tersedia
       gelombang = await MGelombangPpdb.query()
         .with("jalur")
         .withCount("pendaftar as jumlahPendaftar", (builder) => {
