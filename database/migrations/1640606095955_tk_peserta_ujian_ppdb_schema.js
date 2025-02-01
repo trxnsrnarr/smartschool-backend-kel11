@@ -1,0 +1,41 @@
+'use strict'
+
+/** @type {import('@adonisjs/lucid/src/Schema')} */
+const Schema = use('Schema')
+
+class TkPesertaUjianPpdbSchema extends Schema {
+  up () {
+    this.create('tk_peserta_ujian_ppdb', (table) => {
+      table.increments();
+      table.text("doc_id");
+      table.datetime("waktu_mulai");
+      table.datetime("waktu_selesai");
+      table.integer("nilai");
+      table.boolean("selesai");
+      table.boolean("dinilai");
+      table.boolean("dihapus").defaultTo(0);
+      table.integer("m_user_id").unsigned().index("m_user_id");
+      table
+        .foreign("m_user_id")
+        .references("m_user.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
+      table
+        .integer("m_jadwal_ppdb_id")
+        .unsigned()
+        .index("m_jadwal_ppdb_id");
+      table
+        .foreign("m_jadwal_ppdb_id")
+        .references("m_jadwal_ppdb.id")
+        .onDelete("cascade")
+        .onUpdate("cascade");
+      table.timestamps();
+    })
+  }
+
+  down () {
+    this.drop('tk_peserta_ujian_ppdb')
+  }
+}
+
+module.exports = TkPesertaUjianPpdbSchema
