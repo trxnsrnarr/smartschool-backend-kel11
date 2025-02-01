@@ -3275,30 +3275,34 @@ class PPDBController {
                   gelombangUser
                     .toJSON()
                     ?.findIndex(
-                      (d) => d.id ==
-                        // gelombangAktif.toJSON().
-                        gelombang?.id
+                      (d) => d.id == gelombang?.id
                     ) + 1,
                   `${gelombangUser?.length}`
                 )
-                : namaGelombang?.includes("khusus")
-                  ? "00"
-                  : namaGelombang?.includes("reguler 1")
-                    ? "01"
-                    : namaGelombang?.includes("reguler 3")
-                      ? "02"
-                      : "03"
-              } - ${padNumber(
-                // gelombangAktif
-                //   .toJSON()
+                : sekolah?.id == 70
+                  ? (namaGelombang?.includes("khusus") || namaGelombang?.includes("suluh")
+                    ? "00"
+                    : namaGelombang?.includes("prestasi")
+                      ? "01"
+                      : namaGelombang?.includes("reguler 1")
+                        ? "02"
+                        : namaGelombang?.includes("reguler 3")
+                          ? "03"
+                          : "04")
+                  : (namaGelombang?.includes("khusus")
+                    ? "00"
+                    : namaGelombang?.includes("reguler 1")
+                      ? "01"
+                      : namaGelombang?.includes("reguler 3")
+                        ? "02"
+                        : "03")
 
+              } - ${padNumber(
                 gelombang.toJSON()?.pendaftar.findIndex(
                   (r) => r.id == d?.id
-                ) + 1,
-                `${
-                  // gelombangAktif.toJSON()
-                  gelombang?.diterima
-                  }`.length
+                ) + 1, sekolah?.id == 70
+                ? 4
+                : `${gelombang?.diterima}`.length
               )}
           `;
 

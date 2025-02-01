@@ -1,100 +1,30 @@
 "use strict";
 
-const Drive = use("Drive");
 const Province = use("App/Models/Province");
 const Regency = use("App/Models/Regency");
 const District = use("App/Models/District");
 const Village = use("App/Models/Village");
-const Sekolah = use("App/Models/Sekolah");
 const MSekolah = use("App/Models/MSekolah");
-const MSekolahIndustri = use("App/Models/MSekolahIndustri");
-const MSarpras = use("App/Models/MSarpras");
-const MKegiatanGaleri = use("App/Models/MKegiatanGaleri");
-const MProyek = use("App/Models/MProyek");
-const MPerpusKomen = use("App/Models/MPerpusKomen");
-const MRpp = use("App/Models/MRpp");
-const MSikapSiswa = use("App/Models/MSikapSiswa");
-const MSikapRombel = use("App/Models/MSikapRombel");
-const MRekap = use("App/Models/MRekap");
-const MPredikatNilai = use("App/Models/MPredikatNilai");
-const MKeteranganRapor = use("App/Models/MKeteranganRapor");
-const MCamera = use("App/Models/MCamera");
-const MAbsenBelumTerdaftar = use("App/Models/MAbsenBelumTerdaftar");
 const MKeteranganPkl = use("App/Models/MKeteranganPkl");
-const MRaporEkskul = use("App/Models/MRaporEkskul");
-const MRekapRombel = use("App/Models/MRekapRombel");
-const TkRekapNilai = use("App/Models/TkRekapNilai");
-const MGelombangPpdb = use("App/Models/MGelombangPpdb");
-const MPendaftarPpdb = use("App/Models/MPendaftarPpdb");
-const MAnggotaProyek = use("App/Models/MAnggotaProyek");
-const MAnggotaProyekRole = use("App/Models/MAnggotaProyekRole");
-const MKategoriPekerjaan = use("App/Models/MKategoriPekerjaan");
-const MPekerjaanProyek = use("App/Models/MPekerjaanProyek");
-const MDitugaskanPekerjaan = use("App/Models/MDitugaskanPekerjaan");
-const MProyekForum = use("App/Models/MProyekForum");
-const MProyekForumKomen = use("App/Models/MProyekForumKomen");
-const MAlurPPDB = use("App/Models/MAlurPpdb");
-const TkPerpusAktivitas = use("App/Models/TkPerpusAktivitas");
 const MJurusan = use("App/Models/MJurusan");
-const MRekSekolah = use("App/Models/MRekSekolah");
-const MIndustri = use("App/Models/MIndustri");
 const MLowongan = use("App/Models/MLowongan");
 const MHistoryJob = use("App/Models/MHistoryJob");
-const MPembayaran = use("App/Models/MPembayaran");
-const MPembayaranSiswa = use("App/Models/MPembayaranSiswa");
-const MMutasi = use("App/Models/MMutasi");
 const MAlumni = use("App/Models/MAlumni");
-const MProfilUser = use("App/Models/MProfilUser");
-const MRiwayatPembayaranSiswa = use("App/Models/MRiwayatPembayaranSiswa");
-const MPembayaranKategori = use("App/Models/MPembayaranKategori");
-const MSikapSiswaYadika = use("App/Models/MSikapSiswaYadika");
 const Mta = use("App/Models/Mta");
-const MSlider = use("App/Models/MSlider");
-const MTugas = use("App/Models/MTugas");
-const MKegiatan = use("App/Models/MKegiatan");
-const MInformasiSekolah = use("App/Models/MInformasiSekolah");
-const MInformasiJurusan = use("App/Models/MInformasiJurusan");
-const MGuruJurusan = use("App/Models/MGuruJurusan");
 const MRombel = use("App/Models/MRombel");
-const TkPembayaranRombel = use("App/Models/TkPembayaranRombel");
 const MJamMengajar = use("App/Models/MJamMengajar");
 const MJadwalMengajar = use("App/Models/MJadwalMengajar");
 const MMataPelajaran = use("App/Models/MMataPelajaran");
-const TkPost = use("App/Models/TkPost");
-const MPost = use("App/Models/MPost");
-const MKategori = use("App/Models/MKategori");
-const MTopik = use("App/Models/MTopik");
 const MAnggotaRombel = use("App/Models/MAnggotaRombel");
 const TkMateriRombel = use("App/Models/TkMateriRombel");
-const MBab = use("App/Models/MBab");
-const MPrestasi = use("App/Models/MPrestasi");
-const MAbsen = use("App/Models/MAbsen");
-const MSoalUjian = use("App/Models/MSoalUjian");
-const TkSoalUjian = use("App/Models/TkSoalUjian");
-const MJadwalUjian = use("App/Models/MJadwalUjian");
-const TkJadwalUjian = use("App/Models/TkJadwalUjian");
-const TkPesertaUjian = use("App/Models/TkPesertaUjian");
-const TkPesertaUjianPpdb = use("App/Models/TkPesertaUjianPpdb");
-const MJadwalPpdb = use("App/Models/MJadwalPpdb");
-const MUjian = use("App/Models/MUjian");
-const MUjianSiswa = use("App/Models/MUjianSiswa");
 const MMateri = use("App/Models/MMateri");
-const MSikapSosial = use("App/Models/MSikapSosial");
-const MSikapSpiritual = use("App/Models/MSikapSpiritual");
-const MSoalKuis = use("App/Models/MSoalKuis");
 const MTimeline = use("App/Models/MTimeline");
-const TkTimeline = use("App/Models/TkTimeline");
-const TkTimelineKomen = use("App/Models/TkTimelineKomen");
-const TkTimelineTopik = use("App/Models/TkTimelineTopik");
-const TkMateriKesimpulan = use("App/Models/TkMateriKesimpulan");
-const MTimelineKomen = use("App/Models/MTimelineKomen");
 const MPerusahaan = use("App/Models/MPerusahaan");
 const MPenerimaanPerusahaan = use("App/Models/MPenerimaanPerusahaan");
 const MPenerimaanSiswa = use("App/Models/MPenerimaanSiswa");
 const TkPerusahaanSekolah = use("App/Models/TkPerusahaanSekolah");
 const MPekerjaan = use("App/Models/MPekerjaan");
 const MInformasiPekerjaan = use("App/Models/MInformasiPekerjaan");
-const MPekerjaanPengumuman = use("App/Models/MPekerjaanPengumuman");
 const MAcaraPerusahaan = use("App/Models/MAcaraPerusahaan");
 const TkStatusPekerjaan = use("App/Models/TkStatusPekerjaan");
 const MMouPerusahaan = use("App/Models/MMouPerusahaan");
@@ -103,124 +33,50 @@ const MInformasiPerusahaan = use("App/Models/MInformasiPerusahaan");
 const MPrakerinSiswa = use("App/Models/MPrakerinSiswa");
 const MUkkSiswa = use("App/Models/MUkkSiswa");
 
-const MBuku = use("App/Models/MBuku");
-const MPerpus = use("App/Models/MPerpus");
-const MPraktikKerja = use("App/Models/MPraktikKerja");
-const MEkstrakurikuler = use("App/Models/MEkstrakurikuler");
-const TkPerpusMapel = use("App/Models/TkPerpusMapel");
-const TkSoalTugas = use("App/Models/TkSoalTugas");
-const MPerpusTag = use("App/Models/MPerpusTag");
-const TkPerpusTag = use("App/Models/TkPerpusTag");
-const MKontak = use("App/Models/MKontak");
-const TkJawabanUjianSiswa = use("App/Models/TkJawabanUjianSiswa");
 const User = use("App/Models/User");
 const { HitungNilaiAkhir } = use("App/Services/NilaiServices");
-const WhatsAppService = use("App/Services/WhatsAppService");
 const { shuffle } = require("../../../Utils/Global");
 
 const moment = require("moment");
 require("moment/locale/id");
 moment.locale("id");
-const PDFExtract = require("pdf.js-extract").PDFExtract;
 
 const Hash = use("Hash");
 const Helpers = use("Helpers");
 const axios = require("axios");
-const Mail = use("Mail");
 const { validate } = use("Validator");
-const slugify = require("slugify");
-const Excel = require("exceljs");
-const WordExtractor = require("word-extractor");
-const AdonisGCS = require("adonis-google-cloud-storage");
-const uuid = require("uuid-v4");
-const pdftohtml = require("pdftohtmljs");
-const http = require("http"); // or 'https' for https:// URLs
-const Downloader = require("nodejs-file-downloader");
-const cron = require("node-cron");
-var randomstring = require("randomstring");
 
-const PDFDocument = require("pdfkit");
-const fs = require("fs");
-const fetch = require("node-fetch");
-const pdf = require("pdf-parse");
-const htmlEscaper = require("html-escaper");
 
 // firestore
 const Firestore = use("App/Models/Firestore");
 const firestore = new Firestore();
 const db = firestore.db();
-const bucket = firestore.bucket();
-const FieldValue = firestore.FieldValue();
 var striptags = require("striptags");
 // reference to
-const jadwalUjianReference = db.collection("jadwal-ujian");
 
 const Env = use("Env");
 const Database = use("Database");
 
 const accountSid = "AC124e53d8cfb40a9f80ae98c59eba0980";
 const authToken = "04e5831e528fa131ad81400739e1022f";
-const client = require("twilio")(accountSid, authToken);
-const joinNotification = `http://wa.me/+14155238886?text=join additional-growth`;
 
 const messagePostSuccess = "Data berhasil ditambahkan";
-const messageSaveSuccess = "Data berhasil disimpan";
 const messagePutSuccess = "Data berhasil diubah";
 const messageDeleteSuccess = "Data berhasil dihapus";
 const messageNotFound = "Data tidak ditemukan";
 const messageForbidden = "Dilarang, anda bukan seorang admin";
-const messageEmailSuccess = "Data berhasil dikirim ke email";
 const pesanSudahDitambahkan = "Data sudah ditambahkan";
 
 // RULES
-const rulesUserPost = {
-  nama: "required",
-  password: "required",
-  whatsapp: "required",
-  gender: "required",
-};
 
-const rulesUserPut = {
-  nama: "required",
-  password: "required",
-  whatsapp: "required",
-  gender: "required",
-};
 
-const rulesAnggotaPost = {
-  proyek_id: "required",
-  user_id: "required",
-  status: "required",
-};
 
 const rulesAnggotaRombelPost = {
   rombel_id: "required",
   user_id: "required",
 };
 
-const messagesUser = {
-  "password.required": "Password harus diisi",
-  "nama.required": "Nama harus diisi",
-  "whatsapp.required": "Whatsapp harus diisi",
-  "gender.required": "Jenis Kelamin harus diisi",
-};
 
-const hari = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
-const romawi = [
-  "I",
-  "II",
-  "III",
-  "IV",
-  "V",
-  "VI",
-  "VII",
-  "VIII",
-  "IX",
-  "X",
-  "XI",
-  "XII",
-  "XIII",
-];
 
 const monthNames = [
   "January",
@@ -237,8 +93,6 @@ const monthNames = [
   "December",
 ];
 const dateObj = new Date();
-const month = monthNames[dateObj.getMonth()];
-const day = String(dateObj.getDate()).padStart(2, "0");
 
 // const hour = dateObj.getHours();
 // const minute = dateObj.getMinutes();
@@ -248,18 +102,6 @@ const day = String(dateObj.getDate()).padStart(2, "0");
 // const keluarantanggalseconds =
 //   keluarantanggalseconds1 + "-" + dateObj.getTime();
 
-function colName(n) {
-  var ordA = "a".charCodeAt(0);
-  var ordZ = "z".charCodeAt(0);
-  var len = ordZ - ordA + 1;
-
-  var s = "";
-  while (n >= 0) {
-    s = String.fromCharCode((n % len) + ordA) + s;
-    n = Math.floor(n / len) - 1;
-  }
-  return s.toUpperCase();
-}
 
 class CDCController {
   // UTILS
@@ -272,7 +114,7 @@ class CDCController {
     return striptags(html);
   }
 
-  async singleUpload({ request, response }) {
+  async singleUpload({ request }) {
     const fileUpload = request.file("file");
 
     const fname = `${Date.now()}.${fileUpload.extname}`;
@@ -289,7 +131,7 @@ class CDCController {
     return fname;
   }
 
-  async richEditorUpload({ request, response }) {
+  async richEditorUpload({ request }) {
     const fileUpload = request.file("file");
 
     const fname = `${Date.now()}.${fileUpload.extname}`;
@@ -306,7 +148,7 @@ class CDCController {
     return { link: `http://${request.headers().host}/uploads/${fname}` };
   }
 
-  async multipleUpload({ request, response }) {
+  async multipleUpload() {
     // const fileUpload = request.file("file");
     // const fname = `${Date.now()}.${fileUpload.extname}`;
     // await fileUpload.move(Helpers.publicPath("uploads/"), {
@@ -426,7 +268,7 @@ class CDCController {
     });
   }
 
-  async getCariPekerjaan({ response, request, auth }) {
+  async getCariPekerjaan({ response, request }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -435,7 +277,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
     const { search } = request.get();
 
     let pekerjaan;
@@ -464,7 +305,7 @@ class CDCController {
     });
   }
 
-  async getCariPerusahaan({ response, request, auth }) {
+  async getCariPerusahaan({ response, request }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -473,7 +314,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
     const { search } = request.get();
 
     let perusahaan;
@@ -494,7 +334,7 @@ class CDCController {
     });
   }
 
-  async getAcaraPerusahaan({ response, request, auth }) {
+  async getAcaraPerusahaan({ response, request }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -503,7 +343,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
     const { search } = request.get();
 
     let acara;
@@ -539,7 +378,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
     // const { rombel_id } = request.post();
     const pekerjaan = await MPekerjaan.query()
       .with("perusahaan")
@@ -554,7 +392,7 @@ class CDCController {
     });
   }
 
-  async detailPekerjaan({ response, request, auth, params: { pekerjaan_id } }) {
+  async detailPekerjaan({ response, request, params: { pekerjaan_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -563,7 +401,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
     // const { rombel_id } = request.post();
     const pekerjaan = await MPekerjaan.query()
       .with("perusahaan")
@@ -592,7 +429,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
     // const { rombel_id } = request.post();
     const perusahaan = await MPerusahaan.query()
       .with("acara", (builder) => {
@@ -623,7 +459,6 @@ class CDCController {
   async detailBerkasPerusahaan({
     response,
     request,
-    auth,
     params: { perusahaan_id },
   }) {
     const domain = request.headers().origin;
@@ -634,7 +469,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const { search } = request.get();
 
@@ -703,7 +537,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const perusahaanSekolah = await TkPerusahaanSekolah.query()
       .where({ m_sekolah_id: sekolah.id })
@@ -738,7 +571,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const perusahaanSekolah = await TkPerusahaanSekolah.query()
       .where({ m_sekolah_id: sekolah.id })
@@ -762,7 +594,6 @@ class CDCController {
   async detailAcaraPerusahaan({
     response,
     request,
-    auth,
     params: { acara_id },
   }) {
     const domain = request.headers().origin;
@@ -773,9 +604,7 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
-    // const { rombel_id } = request.post();
-    const acara = await MAcaraPerusahaan.query()
+    const perusahaan = await MAcaraPerusahaan.query()
       .with("perusahaan")
       .where({ id: acara_id })
       .first();
@@ -794,7 +623,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const {
       judul,
@@ -807,7 +635,7 @@ class CDCController {
       peserta,
     } = request.post();
 
-    const acara = await MAcaraPerusahaan.create({
+    await MAcaraPerusahaan.create({
       judul,
       foto,
       lokasi,
@@ -834,7 +662,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const {
       judul,
@@ -875,7 +702,6 @@ class CDCController {
   async deleteAcaraPerusahaan({
     response,
     request,
-    auth,
     params: { acara_id },
   }) {
     const domain = request.headers().origin;
@@ -887,7 +713,6 @@ class CDCController {
     }
 
     // mengambil data user
-    const user = await auth.getUser();
 
     const acara = await MAcaraPerusahaan.query()
       .where({ id: acara_id })
@@ -915,7 +740,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const {
       nama,
@@ -931,10 +755,6 @@ class CDCController {
       didirikan,
       alamat,
       telepon,
-      motto,
-      visi,
-      misi,
-      email,
       situs,
       jumlah_pekerja,
       tentang,
@@ -1031,7 +851,7 @@ class CDCController {
     });
   }
 
-  async putPerusahaan({ response, request, auth, params: { perusahaan_id } }) {
+  async putPerusahaan({ response, request, params: { perusahaan_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -1040,7 +860,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const {
       nama,
@@ -1050,32 +869,6 @@ class CDCController {
       regency_id,
       district_id,
       village_id,
-      didirikan,
-      alamat,
-      telepon,
-      situs,
-      jumlah_pekerja,
-      tentang,
-      budaya,
-      benefit_karyawan,
-      lingkungan_kerja,
-      busana,
-      budaya_kerja,
-      jam_kerja,
-      nama_pj,
-      telepon_pj,
-      email_pj,
-      registrasi_pj,
-      youtube,
-      twitter,
-      instagram,
-      facebook,
-      github,
-      linkedin,
-      behace,
-      dribble,
-      kodepos,
-      sampul,
     } = request.post();
 
     const perusahaan = await MPerusahaaan.query()
@@ -1136,7 +929,6 @@ class CDCController {
   async putInformasiPerusahaan({
     response,
     request,
-    auth,
     params: { perusahaan_id },
   }) {
     const domain = request.headers().origin;
@@ -1147,7 +939,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const {
       nama,
@@ -1200,7 +991,7 @@ class CDCController {
         dihapus: 0,
       });
 
-    const informasi = await MInformasiPerusahaan.query()
+    await MInformasiPerusahaan.query()
       .where({ m_perusahaan_id: perusahaan_id })
       .update({
         didirikan,
@@ -1244,7 +1035,7 @@ class CDCController {
     });
   }
 
-  async getPerusahaanSekolah({ response, request, auth }) {
+  async getPerusahaanSekolah({ response, request }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -1254,7 +1045,6 @@ class CDCController {
     }
 
     let { search } = request.get();
-    const user = await auth.getUser();
     let perusahaan;
     // const { rombel_id } = request.post();
     const perusahaanIds = await TkPerusahaanSekolah.query()
@@ -1276,7 +1066,7 @@ class CDCController {
           })
           .where({ dihapus: 0 });
       })
-      .with("perusahaan", (builder) => {
+      .with("perusahaan", () => {
         // builder.where({ dihapus: 0 });
         // if (search) {
         //   builder.andWhere("nama", "like", `%${search}%`);
@@ -1312,7 +1102,7 @@ class CDCController {
     });
   }
 
-  async getPerusahaanSekolah31({ response, request, auth }) {
+  async getPerusahaanSekolah31({ response, request }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -1322,7 +1112,6 @@ class CDCController {
     }
 
     let { search } = request.get();
-    const user = await auth.getUser();
     let perusahaan;
     // const { rombel_id } = request.post();
     const perusahaanIds = await TkPerusahaanSekolah.query()
@@ -1386,7 +1175,7 @@ class CDCController {
     });
   }
 
-  async getPenerimaanPkl({ response, request, auth }) {
+  async getPenerimaanPkl({ response, request }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -1400,7 +1189,6 @@ class CDCController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
     let { search, jurusan_id, page } = request.get();
-    const user = await auth.getUser();
     page = page ? parseInt(page) : 1;
 
     let penerimaanSiswa;
@@ -1437,9 +1225,6 @@ class CDCController {
       .where({ dihapus: 0 })
       .fetch();
 
-    const userTotal = await User.query()
-      .andWhere({ role: "siswa" })
-      .count("* as total");
     let userIds;
 
     userIds = User.query()
@@ -1516,7 +1301,7 @@ class CDCController {
       penerimaanSiswa,
     });
   }
-  async getSerapanPkl({ response, request, auth }) {
+  async getSerapanPkl({ response, request }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -1525,7 +1310,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const rombel = await MRombel.query()
       .withCount("penerimaanSiswa as total", (builder) => {
@@ -1605,7 +1389,7 @@ class CDCController {
     });
   }
 
-  async postPerusahaanSekolah({ response, request, auth }) {
+  async postPerusahaanSekolah({ response, request }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -1614,7 +1398,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const { nama, nama_pt, logo, bidang, perusahaan_id } = request.post();
 
@@ -1662,7 +1445,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const { nama, nama_pt, logo, bidang } = request.post();
 
@@ -1694,7 +1476,6 @@ class CDCController {
   async deletePerusahaanSekolah({
     response,
     request,
-    auth,
     params: { perusahaan_id },
   }) {
     const domain = request.headers().origin;
@@ -1705,7 +1486,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const perusahaan = await TkPerusahaanSekolah.query()
       .where({ id: perusahaan_id })
@@ -1726,7 +1506,6 @@ class CDCController {
   async getPenerimaanPerusahaan({
     response,
     request,
-    auth,
     params: { perusahaan_id },
   }) {
     const domain = request.headers().origin;
@@ -1740,7 +1519,6 @@ class CDCController {
     const ta = await this.getTAAktif(sekolah);
 
     let { search } = request.get();
-    const user = await auth.getUser();
     let penerimaan;
     // const { rombel_id } = request.post();
     const perusahaanTk = await TkPerusahaanSekolah.query()
@@ -1788,7 +1566,7 @@ class CDCController {
     });
   }
 
-  async postPenerimaanPerusahaan({ response, request, auth }) {
+  async postPenerimaanPerusahaan({ response, request }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -1797,7 +1575,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const ta = await this.getTAAktif(sekolah);
 
@@ -1806,7 +1583,6 @@ class CDCController {
       data_siswa,
       surat_tugas,
       mou,
-      tk_perusahaan_sekolah_id,
       m_perusahaan_id,
     } = request.post();
 
@@ -1846,7 +1622,6 @@ class CDCController {
   async putPenerimaanPerusahaan({
     response,
     request,
-    auth,
     params: { penerimaan_id },
   }) {
     const domain = request.headers().origin;
@@ -1857,7 +1632,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const { nama, data_siswa, surat_tugas, mou } = request.post();
 
@@ -1885,7 +1659,6 @@ class CDCController {
   async deletePenerimaanPerusahaan({
     response,
     request,
-    auth,
     params: { penerimaan_id },
   }) {
     const domain = request.headers().origin;
@@ -1896,7 +1669,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const perusahaan = await MPenerimaanPerusahaan.query()
       .where({ id: penerimaan_id })
@@ -1933,7 +1705,6 @@ class CDCController {
 
     let { search, jurusan_id, rombel_id, searchSiswa, page } = request.get();
     page = page ? parseInt(page) : 1;
-    const user = await auth.getUser();
     let penerimaan;
     // const { rombel_id } = request.post();
 
@@ -2037,7 +1808,7 @@ class CDCController {
     });
   }
 
-  async postPenerimaanSiswa({ response, request, auth }) {
+  async postPenerimaanSiswa({ response, request }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -2046,7 +1817,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const ta = await this.getTAAktif(sekolah);
 
@@ -2113,7 +1883,7 @@ class CDCController {
     });
   }
 
-  async putPenerimaanSiswa({ response, request, auth, params: { siswa_id } }) {
+  async putPenerimaanSiswa({ response, request, params: { siswa_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -2122,7 +1892,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const { tanggal_mulai, tanggal_selesai } = request.post();
 
@@ -2154,7 +1923,6 @@ class CDCController {
   async deletePenerimaanSiswa({
     response,
     request,
-    auth,
     params: { siswa_id },
   }) {
     const domain = request.headers().origin;
@@ -2165,7 +1933,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const perusahaan = await MPenerimaanSiswa.query()
       .where({ id: siswa_id })
@@ -2187,7 +1954,6 @@ class CDCController {
   async putProfilPerusahaan({
     response,
     request,
-    auth,
     params: { perusahaan_id },
   }) {
     const domain = request.headers().origin;
@@ -2198,7 +1964,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const { motto, visi, misi, tentang } = request.post();
 
@@ -2225,7 +1990,6 @@ class CDCController {
   async putBudayaPerusahaan({
     response,
     request,
-    auth,
     params: { perusahaan_id },
   }) {
     const domain = request.headers().origin;
@@ -2236,7 +2000,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const {
       lingkungan_kerja,
@@ -2272,7 +2035,6 @@ class CDCController {
   async putPenanggungJawabPerusahaan({
     response,
     request,
-    auth,
     params: { perusahaan_id },
   }) {
     const domain = request.headers().origin;
@@ -2283,7 +2045,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const { nama_pj, telepon_pj, email_pj, registrasi_pj } = request.post();
 
@@ -2310,7 +2071,6 @@ class CDCController {
   async putInformasiPerusahaanLite({
     response,
     request,
-    auth,
     params: { perusahaan_id },
   }) {
     const domain = request.headers().origin;
@@ -2321,7 +2081,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const {
       nama,
@@ -2341,7 +2100,7 @@ class CDCController {
       didirikan,
     } = request.post();
 
-    const perusahaan = await MPerusahaan.query()
+    await MPerusahaan.query()
       .where({ id: perusahaan_id })
       .update({
         nama,
@@ -2397,7 +2156,6 @@ class CDCController {
   async putTautanPerusahaan({
     response,
     request,
-    auth,
     params: { perusahaan_id },
   }) {
     const domain = request.headers().origin;
@@ -2408,7 +2166,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const {
       youtube,
@@ -2448,7 +2205,6 @@ class CDCController {
   async deletePerusahaan({
     response,
     request,
-    auth,
     params: { perusahaan_id },
   }) {
     const domain = request.headers().origin;
@@ -2460,7 +2216,6 @@ class CDCController {
     }
 
     // mengambil data user
-    const user = await auth.getUser();
 
     const perusahaan = await MPerusahaan.query()
       .where({ id: perusahaan_id })
@@ -2488,7 +2243,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const {
       m_perusahaan_id,
@@ -2532,28 +2286,24 @@ class CDCController {
       data_nilai,
       waktu_mulai_psikotes,
       waktu_akhir_psikotes,
-      media_tes_psikotes,
       keterangan_psikotes,
       lokasi_psikotes,
       link_psikotes,
 
       waktu_mulai_masuk,
       waktu_akhir_masuk,
-      media_tes_masuk,
       keterangan_masuk,
       lokasi_masuk,
       link_masuk,
 
       waktu_mulai_wawancara,
       waktu_akhir_wawancara,
-      media_tes_wawancara,
       keterangan_wawancara,
       lokasi_wawancara,
       link_wawancara,
 
       waktu_mulai_kesehatan,
       waktu_akhir_kesehatan,
-      media_tes_kesehatan,
       keterangan_kesehatan,
       lokasi_kesehatan,
       link_kesehatan,
@@ -2580,7 +2330,7 @@ class CDCController {
       dihapus: 0,
     });
 
-    const informasi = await MInformasiPekerjaan.create({
+    await MInformasiPekerjaan.create({
       m_pekerjaan_id: pekerjaan.id,
       pengalaman,
       batas_pengiriman,
@@ -2668,7 +2418,7 @@ class CDCController {
 
   // ============ POST Rekap Tugas =================
 
-  async putPekerjaan({ response, request, auth, params: { pekerjaan_id } }) {
+  async putPekerjaan({ response, request, params: { pekerjaan_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -2677,7 +2427,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const {
       judul,
@@ -2738,7 +2487,7 @@ class CDCController {
         dihapus: 0,
       });
 
-    const informasi = await MInformasiPekerjaan.query()
+    await MInformasiPekerjaan.query()
       .where({ m_pekerjaan_id: pekerjaan_id })
       .update({
         pengalaman,
@@ -2777,7 +2526,7 @@ class CDCController {
     });
   }
 
-  async deletePekerjaan({ response, request, auth, params: { pekerjaan_id } }) {
+  async deletePekerjaan({ response, request, params: { pekerjaan_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -2787,7 +2536,6 @@ class CDCController {
     }
 
     // mengambil data user
-    const user = await auth.getUser();
 
     const pekerjaan = await MPekerjaan.query()
       .where({ id: pekerjaan_id })
@@ -2815,8 +2563,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
-
     const {
       judul,
       foto,
@@ -2827,7 +2573,7 @@ class CDCController {
       lampiran,
     } = request.post();
 
-    const laporan = await MLaporanPrakerin.create({
+    await MLaporanPrakerin.create({
       judul,
       foto,
       lokasi,
@@ -2849,8 +2595,6 @@ class CDCController {
   async putLaporanPrakerin({
     response,
     request,
-    auth,
-    params: { laporan_id },
   }) {
     const domain = request.headers().origin;
 
@@ -2860,12 +2604,7 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
-
-    const { judul, foto, lokasi, deskripsi, waktu_awal, waktu_akhir } =
-      request.post();
-
-    const acara = await MAcaraPerusahaaan.query()
+    const acara = await MAcaraPerusahaan.query()
       .where({ id: acara_id })
       .update({
         judul,
@@ -2891,8 +2630,6 @@ class CDCController {
   async putLaporanPrakerin({
     response,
     request,
-    auth,
-    params: { laporan_id },
   }) {
     const domain = request.headers().origin;
 
@@ -2902,7 +2639,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const { judul, foto, lokasi, deskripsi, waktu_awal, waktu_akhir } =
       request.post();
@@ -2930,7 +2666,7 @@ class CDCController {
     });
   }
 
-  async getAlumniData({ response, request, auth }) {
+  async getAlumniData({ response, request }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -2951,9 +2687,6 @@ class CDCController {
       page,
       jurusan,
       status,
-      tingkat,
-      jurusan_id,
-      rombel_id,
       tahun_angkatan,
       tahun_masuk,
     } = request.get();
@@ -3083,7 +2816,7 @@ class CDCController {
     });
   }
 
-  async detailAlumniData({ response, request, auth, params: { alumni_id } }) {
+  async detailAlumniData({ response, request, params: { alumni_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -3099,15 +2832,8 @@ class CDCController {
     }
 
     let {
-      verifikasi,
-      search,
-      page,
       jurusan,
       status,
-      tingkat,
-      jurusan_id,
-      rombel_id,
-      tahun_angkatan,
       tahun_masuk,
     } = request.get();
     let alumni1 = await MAlumni.query()
@@ -3172,7 +2898,7 @@ class CDCController {
     });
   }
 
-  async putTerimaAlumni({ response, request, auth, params: { alumni_id } }) {
+  async putTerimaAlumni({ response, request, params: { alumni_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -3181,7 +2907,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const { verifikasi, dihapus } = request.post();
 
@@ -3201,7 +2926,7 @@ class CDCController {
     });
   }
 
-  async deleteAlumni({ response, request, auth, params: { alumni_id } }) {
+  async deleteAlumni({ response, request, params: { alumni_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -3225,7 +2950,7 @@ class CDCController {
     });
   }
 
-  async postBerkasMou({ response, request, auth }) {
+  async postBerkasMou({ response, request }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -3234,7 +2959,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const {
       nama,
@@ -3243,7 +2967,6 @@ class CDCController {
       kerjasama,
       fasilitas,
       lampiran,
-      tk_perusahaan_sekolah_id,
       m_perusahaan_id,
     } = request.post();
 
@@ -3290,9 +3013,8 @@ class CDCController {
     }
     if (checkRange1 || checkRange2) {
       return response.expectationFailed({
-        message: `Kontrak MoU bergesekan dengan MoU ${
-          (checkRange1 || checkRange2).nama
-        }`,
+        message: `Kontrak MoU bergesekan dengan MoU ${(checkRange1 || checkRange2).nama
+          }`,
       });
     }
 
@@ -3306,7 +3028,7 @@ class CDCController {
       status = 0;
     }
 
-    const mou = await MMouPerusahaan.create({
+    await MMouPerusahaan.create({
       nama,
       mulai_kontrak,
       akhir_kontrak,
@@ -3331,7 +3053,7 @@ class CDCController {
     });
   }
 
-  async putBerkasMou({ response, request, auth, params: { mou_id } }) {
+  async putBerkasMou({ response, request, params: { mou_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -3340,7 +3062,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const {
       nama,
@@ -3420,7 +3141,7 @@ class CDCController {
     });
   }
 
-  async deleteBerkasMou({ response, request, auth, params: { mou_id } }) {
+  async deleteBerkasMou({ response, request, params: { mou_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -3430,7 +3151,6 @@ class CDCController {
     }
 
     // mengambil data user
-    const user = await auth.getUser();
 
     const mou = await MMouPerusahaan.query().where({ id: mou_id }).update({
       dihapus: 1,
@@ -3447,7 +3167,7 @@ class CDCController {
     });
   }
 
-  async postBerkasSurat({ response, request, auth }) {
+  async postBerkasSurat({ response, request }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -3456,9 +3176,8 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
-    const { nama, lampiran, tk_perusahaan_sekolah_id, m_perusahaan_id } =
+    const { nama, lampiran, m_perusahaan_id } =
       request.post();
 
     const tkPerusahaan = await TkPerusahaanSekolah.query()
@@ -3466,7 +3185,7 @@ class CDCController {
       .andWhere({ m_sekolah_id: sekolah.id })
       .first();
 
-    const surat = await MSuratPerusahaan.create({
+    await MSuratPerusahaan.create({
       nama,
       lampiran,
       tk_perusahaan_sekolah_id: tkPerusahaan.id,
@@ -3478,7 +3197,7 @@ class CDCController {
     });
   }
 
-  async putBerkasSurat({ response, request, auth, params: { surat_id } }) {
+  async putBerkasSurat({ response, request, params: { surat_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -3487,7 +3206,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const { nama, lampiran, tk_perusahaan_sekolah_id } = request.post();
 
@@ -3511,7 +3229,7 @@ class CDCController {
     });
   }
 
-  async deleteBerkasSurat({ response, request, auth, params: { surat_id } }) {
+  async deleteBerkasSurat({ response, request, params: { surat_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -3521,7 +3239,6 @@ class CDCController {
     }
 
     // mengambil data user
-    const user = await auth.getUser();
 
     const surat = await MSuratPerusahaan.query()
       .where({ id: surat_id })
@@ -3540,7 +3257,7 @@ class CDCController {
     });
   }
 
-  async getPenerimaanPkl31({ response, request, auth }) {
+  async getPenerimaanPkl31({ response, request, }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -3553,8 +3270,7 @@ class CDCController {
     if (ta == "404") {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
-    let { search, jurusan_id, page, m_ta_id } = request.get();
-    const user = await auth.getUser();
+    let { search, jurusan_id, page, m_ta_id = ta.id } = request.get();
 
     const semuaTA = await Mta.query()
       .andWhere({ m_sekolah_id: sekolah.id })
@@ -3694,7 +3410,7 @@ class CDCController {
     });
   }
 
-  async postKeteranganPkl({ response, request, auth, params: { user_id } }) {
+  async postKeteranganPkl({ response, request, params: { user_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -3708,7 +3424,6 @@ class CDCController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const {
       namamitra,
@@ -3745,7 +3460,7 @@ class CDCController {
 
     const lama = date2.diff(date1, 'months');
 
-    const keteranganPkl = await MKeteranganPkl.create({
+    await MKeteranganPkl.create({
       namamitra,
       tanggal_mulai,
       tanggal_selesai,
@@ -3765,7 +3480,7 @@ class CDCController {
     });
   }
 
-  async putKeteranganPkl({ response, request, auth, params: { pkl_id } }) {
+  async putKeteranganPkl({ response, request, params: { pkl_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -3813,7 +3528,7 @@ class CDCController {
       message: messagePutSuccess,
     });
   }
-  async deleteKeteranganPkl({ response, request, auth, params: { pkl_id } }) {
+  async deleteKeteranganPkl({ response, request, params: { pkl_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -3839,7 +3554,7 @@ class CDCController {
     });
   }
 
-  async postPenerimaanSiswa31({ response, request, auth }) {
+  async postPenerimaanSiswa31({ response, request }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -3848,7 +3563,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const ta = await this.getTAAktif(sekolah);
 
@@ -3868,7 +3582,6 @@ class CDCController {
     // if (validation.fails()) {
     //   return response.unprocessableEntity(validation.messages());
     // }
-    console.log(request.post());
     m_user_id = m_user_id.length ? m_user_id : [];
 
     const date1 = moment(`${tanggal_mulai}`);
@@ -3923,7 +3636,7 @@ class CDCController {
     });
   }
 
-  async putPenerimaanSiswa31({ response, request, auth }) {
+  async putPenerimaanSiswa31({ response, request }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -3932,12 +3645,10 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const ta = await this.getTAAktif(sekolah);
 
     let {
-      m_perusahaan_id,
       m_user_id,
       tanggal_mulai,
       tanggal_selesai,
@@ -3976,7 +3687,7 @@ class CDCController {
     });
   }
 
-  async getTambahPenerimaanSiswa({ response, request, auth }) {
+  async getTambahPenerimaanSiswa({ response, request }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -3990,7 +3701,6 @@ class CDCController {
     let { search, jurusan_id, rombel_id, page, perusahaan_id, penerimaan_id } =
       request.get();
     page = page ? parseInt(page) : 1;
-    const user = await auth.getUser();
 
     // return perusahaanTk
     const perusahaanTkIds = await TkPerusahaanSekolah.query()
@@ -4100,7 +3810,6 @@ class CDCController {
 
     let { search, jurusan_id, rombel_id, searchSiswa, page } = request.get();
     page = page ? parseInt(page) : 1;
-    const user = await auth.getUser();
     let penerimaan;
     // const { rombel_id } = request.post();
 
@@ -4197,7 +3906,7 @@ class CDCController {
     });
   }
 
-  async putKeteranganPkl31({ response, request, auth }) {
+  async putKeteranganPkl31({ response, request }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -4250,7 +3959,7 @@ class CDCController {
     });
   }
 
-  async getPenerimaanRekrutmen31({ response, request, auth }) {
+  async getPenerimaanRekrutmen31({ response, request }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -4367,7 +4076,7 @@ class CDCController {
     });
   }
 
-  async getUKKSiswa({ response, request, auth }) {
+  async getUKKSiswa({ response, request }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -4482,7 +4191,7 @@ class CDCController {
     });
   }
 
-  async detailUKKSiswa({ response, request, auth, params: { siswa_id } }) {
+  async detailUKKSiswa({ response, request, params: { siswa_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -4535,7 +4244,7 @@ class CDCController {
     });
   }
 
-  async getPrakerinSiswa({ response, request, auth }) {
+  async getPrakerinSiswa({ response, request }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -4653,7 +4362,6 @@ class CDCController {
   async detailPrakerinSiswa({
     response,
     request,
-    auth,
     params: { prakerin_id },
   }) {
     const domain = request.headers().origin;
@@ -4717,7 +4425,7 @@ class CDCController {
     });
   }
 
-  async postPrakerinSiswa({ response, request, auth }) {
+  async postPrakerinSiswa({ response, request }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -4726,9 +4434,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
-
-    const ta = await this.getTAAktif(sekolah);
 
     let {
       m_user_id,
@@ -4789,7 +4494,7 @@ class CDCController {
     });
   }
 
-  async putPrakerinSiswa({ response, request, auth, params: { prakerin_id } }) {
+  async putPrakerinSiswa({ response, request, params: { prakerin_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -4798,10 +4503,8 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const {
-      m_user_id,
       tanggal_berangkat,
       tanggal_jemput,
       pembimbing,
@@ -4848,7 +4551,6 @@ class CDCController {
   async deletePrakerinSiswa({
     response,
     request,
-    auth,
     params: { prakerin_id },
   }) {
     const domain = request.headers().origin;
@@ -4859,7 +4561,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const perusahaan = await MPrakerinSiswa.query()
       .where({ id: prakerin_id })
@@ -4878,7 +4579,7 @@ class CDCController {
     });
   }
 
-  async putUKKSiswa({ response, request, auth, params: { siswa_id } }) {
+  async putUKKSiswa({ response, request, params: { siswa_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -4887,7 +4588,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const { tanggal, pembimbing, m_ta_id, keterangan, catatan } =
       request.post();
@@ -4927,7 +4627,7 @@ class CDCController {
     });
   }
 
-  async deleteUkkSiswa({ response, request, auth, params: { ukk_id } }) {
+  async deleteUkkSiswa({ response, request, params: { ukk_id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -4936,7 +4636,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const perusahaan = await MUkkSiswa.query().where({ id: ukk_id }).update({
       dihapus: 1,
@@ -4953,7 +4652,7 @@ class CDCController {
     });
   }
 
-  async getTambahPrakerinSiswa({ response, request, auth }) {
+  async getTambahPrakerinSiswa({ response, request }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -5107,16 +4806,13 @@ class CDCController {
   }
 
   async userToAlumni({ response, request }) {
-    // const domain = request.headers().origin;
-    let { domain } = request.get();
+    const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
 
     if (sekolah == "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
-
-    const ta = await this.getTAAktif(sekolah);
 
     const rombel = await MRombel.query()
       .with("anggotaRombel", (builder) => {
@@ -5127,14 +4823,14 @@ class CDCController {
       .andWhere({ m_ta_id: 7907 })
       .fetch();
 
-    const all = await Promise.all(
+    await Promise.all(
       rombel.toJSON().map(async (d) => {
         if (d?.tingkat == "XII") {
           const jurusan = await MJurusan.query()
             .where({ id: d?.m_jurusan_id })
             .first();
 
-          const data = await Promise.all(
+          await Promise.all(
             d.anggotaRombel.map(async (e, nox) => {
               await User.query()
                 .where({ id: e.m_user_id })
@@ -5296,8 +4992,6 @@ class CDCController {
 
     const {
       tingkat,
-      kode,
-
       m_user_id,
       kelompok,
       m_mata_pelajaran_id,
@@ -5420,7 +5114,7 @@ class CDCController {
       token,
     });
   }
-  async postAnggotRombel({ response, request, auth }) {
+  async postAnggotRombel({ response, request }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -5461,7 +5155,7 @@ class CDCController {
       message: messagePostSuccess,
     });
   }
-  async putAnggotRombel({ response, request, auth, params: { id } }) {
+  async putAnggotRombel({ response, request, params: { id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -5592,9 +5286,9 @@ class CDCController {
         jadwalMengajar.toJSON().map(async (d) => {
           if (
             moment(d.jamMengajar.jam_mulai, "HH:mm:ss").format("HH:mm") <=
-              jam_saat_ini &&
+            jam_saat_ini &&
             moment(d.jamMengajar.jam_selesai, "HH:mm:ss").format("HH:mm") >=
-              jam_saat_ini
+            jam_saat_ini
           ) {
             jadwalMengajarData.push({ ...d, aktif: true });
           } else {
@@ -5677,9 +5371,9 @@ class CDCController {
           if (jamMengajarIds.includes(d.m_jam_mengajar_id)) {
             if (
               moment(d.jamMengajar.jam_mulai, "HH:mm:ss").format("HH:mm") <=
-                jam_saat_ini &&
+              jam_saat_ini &&
               moment(d.jamMengajar.jam_selesai, "HH:mm:ss").format("HH:mm") >=
-                jam_saat_ini
+              jam_saat_ini
             ) {
               jadwalMengajarData.push({ ...d, aktif: true });
             } else {
@@ -5703,8 +5397,7 @@ class CDCController {
         )
         .whereBetween("tanggal_pembagian", [
           `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`,
-          `${today.getFullYear()}/${
-            today.getMonth() + 1
+          `${today.getFullYear()}/${today.getMonth() + 1
           }/${today.getDate()} ${jam_saat_ini}:00`,
         ])
         .fetch();
@@ -5787,9 +5480,9 @@ class CDCController {
         if (jamMengajarIds.includes(d.m_jam_mengajar_id)) {
           if (
             moment(d.jamMengajar.jam_mulai, "HH:mm:ss").format("HH:mm") <=
-              jam_saat_ini &&
+            jam_saat_ini &&
             moment(d.jamMengajar.jam_selesai, "HH:mm:ss").format("HH:mm") >=
-              jam_saat_ini
+            jam_saat_ini
           ) {
             jadwalMengajarData.push({ ...d, aktif: true });
           } else {
@@ -5808,17 +5501,17 @@ class CDCController {
     });
   }
 
-  async industri({ response, request, auth }) {
+  async industri({ response, request }) {
     const { page } = request.get();
 
-    const user = await User.query().where({ m_sekolah_id: 9059, role:"admin", dihapus:0 }).fetch();
+    const user = await User.query().where({ m_sekolah_id: 9059, role: "admin", dihapus: 0 }).fetch();
 
     return response.ok({
       user: user,
     });
   }
 
-  async detailIndustri({ response, request, auth, params: { id } }) {
+  async detailIndustri({ response, auth, params: { id } }) {
     const sekolah = await MSekolah.query().where({ id: 9059 }).first();
 
     if (sekolah == "404") {
@@ -5879,7 +5572,7 @@ class CDCController {
         if (jamMengajarIds.includes(d.m_jam_mengajar_id)) {
 
 
-            jadwalMengajarData.push({ ...d, aktif: false });
+          jadwalMengajarData.push({ ...d, aktif: false });
 
         }
       })
@@ -5966,7 +5659,7 @@ class CDCController {
       historyQuery = historyQuery
         .andWhere(function () {
           this.where("job_title", "like", `%${search}%`)
-              .orWhere("company_name", "like", `%${search}%`);
+            .orWhere("company_name", "like", `%${search}%`);
         });
     }
 
@@ -6002,7 +5695,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     let { search, abjad, waktu, page, limit = 25 } = request.get();
 
@@ -6014,7 +5706,7 @@ class CDCController {
       historyQuery = historyQuery
         .andWhere(function () {
           this.where("job_title", "like", `%${search}%`)
-              .orWhere("company_name", "like", `%${search}%`);
+            .orWhere("company_name", "like", `%${search}%`);
         });
     }
 
@@ -6041,7 +5733,7 @@ class CDCController {
     });
   }
 
-  async getUserHistory({ response, request, auth}) {
+  async getUserHistory({ response, request, auth }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -6050,20 +5742,19 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     let { search, page, limit = 25 } = request.get();
 
     let query = Database.connection()
-        .table("m_user")
-        .select('id', 'nama', 'username', 'whatsapp', 'email', 'm_sekolah_id')
-        .whereIn('id', function() {
-          this.select('m_user_id')
-            .from('m_history_jobs')
-            .distinct()
-            .where({ m_sekolah_id: sekolah.id })
-            .andWhere({ dihapus: 0 });
-        });
+      .table("m_user")
+      .select('id', 'nama', 'username', 'whatsapp', 'email', 'm_sekolah_id')
+      .whereIn('id', function () {
+        this.select('m_user_id')
+          .from('m_history_jobs')
+          .distinct()
+          .where({ m_sekolah_id: sekolah.id })
+          .andWhere({ dihapus: 0 });
+      });
 
     if (search) {
       query = query.where('nama', 'like', `%${search}%`);
@@ -6235,7 +5926,7 @@ class CDCController {
     });
   }
 
-  async detailLowongan({ response, request, auth, params: { id } }) {
+  async detailLowongan({ response, request, params: { id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -6244,7 +5935,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     const lowongan = await MLowongan.query().where({ id }).with("user").with("profil").first();
 
@@ -6327,7 +6017,7 @@ class CDCController {
     })
   }
 
-  async deleteLowongan({ response, request, auth, params: { id } }) {
+  async deleteLowongan({ response, request, params: { id } }) {
     const domain = request.headers().origin;
 
     const sekolah = await this.getSekolahByDomain(domain);
@@ -6336,7 +6026,6 @@ class CDCController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
 
     await MLowongan.query().where({ id }).update({
       dihapus: 1

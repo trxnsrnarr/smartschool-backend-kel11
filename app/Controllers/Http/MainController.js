@@ -10581,8 +10581,7 @@ class MainController {
           m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id,
           tipe: "tugas",
           dihapus: 0,
-          tanggal_pembagian: `${tanggal_pembagian} ${waktu_pembagian ? waktu_pembagian : `00:00:00`
-            }`,
+          tanggal_pembagian: `${tanggal_pembagian} ${waktu_pembagian ? waktu_pembagian : `00:00:00`}`,
         });
 
         const idsGuru = await User.query()
@@ -10620,8 +10619,7 @@ class MainController {
               m_mata_pelajaran_id: jadwalMengajar.m_mata_pelajaran_id,
               tipe: "tugas",
               dihapus: 0,
-              tanggal_pembagian: `${tanggal_pembagian} ${waktu_pembagian ? waktu_pembagian : `00:00:00`
-                }`,
+              tanggal_pembagian: `${tanggal_pembagian} ${waktu_pembagian ? waktu_pembagian : `00:00:00`}`,
             });
           })
         );
@@ -10918,12 +10916,9 @@ class MainController {
         draft,
       });
 
-    const tanggalLengkap = `${tanggal_pembagian} ${waktu_pembagian ? waktu_pembagian : "00:00:00"
-      }`;
-    const tanggalSebelumLengkap = `${moment(
-      tugasSebelum.tanggal_pembagian
-    ).format("YYYY-MM-DD HH:mm:ss")} ${tugasSebelum.waktu_pembagian ? tugasSebelum.waktu_pembagian : "00:00:00"
-      }`;
+    const tanggalLengkap = `${tanggal_pembagian} ${waktu_pembagian ? waktu_pembagian : "00:00:00"}`;
+    const tanggalSebelumLengkap = `${moment(tugasSebelum.tanggal_pembagian)
+      .format("YYYY-MM-DD HH:mm:ss")} ${tugasSebelum.waktu_pembagian ? tugasSebelum.waktu_pembagian : "00:00:00"}`;
     // return moment().format("YYYY-MM-DD HH:mm:ss")
     // return tanggalLengkap
     const tugasData = await MTugas.query()
@@ -11739,12 +11734,8 @@ class MainController {
       let sudah_lewat = false;
 
       if (
-        timeline.toJSON().tipe == "tugas" &&
-        moment(
-          `${timeline.toJSON().timeline.tugas.tanggal_pengumpulan} ${timeline.toJSON().timeline.tugas.waktu_pengumpulan
-          }`
-        ).format("YYYY-MM-DD HH:mm:ss") >=
-        moment().format("YYYY-MM-DD HH:mm:ss")
+        timeline.toJSON().tipe == "tugas" && moment(`${timeline.toJSON().timeline.tugas.tanggal_pengumpulan} ${timeline.toJSON().timeline.tugas.waktu_pengumpulan}`)
+          .format("YYYY-MM-DD HH:mm:ss") >= moment().format("YYYY-MM-DD HH:mm:ss")
       ) {
         sudah_lewat = true;
       }
@@ -14163,11 +14154,9 @@ class MainController {
 
       let workbook = new Excel.Workbook();
 
-      // let worksheet = workbook.addWorksheet(`${tanggal}`);
-
       await Promise.all(
         rombel.toJSON().map(async (d, idx) => {
-          let worksheet = workbook.addWorksheet(`${idx + 1}. ${d.nama}`);
+          let worksheet = workbook.addWorksheet(`${idx + 1}.${d.nama}`);
 
           await Promise.all(
             d.anggotaRombel
@@ -14267,8 +14256,7 @@ class MainController {
                     ? anggota.user.absen
                       ? anggota.user.absen.length
                         ? anggota.user.absen[0].foto_masuk_local
-                          ? "https://server1.smarteschool.net/camera/" +
-                          anggota.user.absen[0].foto_masuk_local
+                          ? "https://server1.smarteschool.net/camera/" + anggota.user.absen[0].foto_masuk_local
                           : "-"
                         : "-"
                       : "-"
@@ -14284,8 +14272,7 @@ class MainController {
                     ? anggota.user.absen
                       ? anggota.user.absen.length
                         ? anggota.user.absen[0].foto_pulang_local
-                          ? "https://server1.smarteschool.net/camera/" +
-                          anggota.user.absen[0].foto_pulang_local
+                          ? "https://server1.smarteschool.net/camera/" + anggota.user.absen[0].foto_pulang_local
                           : "-"
                         : "-"
                       : "-"
@@ -14780,7 +14767,6 @@ class MainController {
     }
 
     const { nav, tanggal, page } = request.get();
-
 
     const hari_ini = moment().format("YYYY-MM-DD HH:mm");
 
@@ -16330,8 +16316,6 @@ class MainController {
       .andWhere("waktu_ditutup", ">=", hari_ini)
       .count("* as total");
     const total = count[0].total;
-
-    // console.log(hari_ini, count, total)
 
     const userData = await User.query()
       .select("id", "nama")
@@ -24150,8 +24134,7 @@ class MainController {
     }
     if (riwayat.toJSON().rombelPembayaran?.pembayaran?.nama_transaksi) {
       const transaksi = await MKeuTransaksi.create({
-        nama: `${riwayat.toJSON().rombelPembayaran?.pembayaran?.nama_transaksi_siswa
-          } - ${riwayat.toJSON().user.nama}`,
+        nama: `${riwayat.toJSON().rombelPembayaran?.pembayaran?.nama_transaksi_siswa} - ${riwayat.toJSON().user.nama}`,
         // nomor,
         tanggal: moment().format("YYYY-MM-DD"),
         dihapus: 0,
@@ -24339,8 +24322,7 @@ class MainController {
 
     const mutasi = await MMutasi.create({
       tipe: "kredit",
-      nama: `Pembayaran ${pembayaranUtama.nama} ${pembayaranUtama.jenis == "spp" ? pembayaranUtama.bulan : ""
-        }-${riwayat.toJSON().user.nama}`,
+      nama: `Pembayaran ${pembayaranUtama.nama} ${pembayaranUtama.jenis == "spp" ? pembayaranUtama.bulan : ""}-${riwayat.toJSON().user.nama}`,
       kategori: `pembayaran ${pembayaranUtama.jenis}`,
       nominal: pembayaranUtama.nominal,
       dihapus: 0,
@@ -24358,8 +24340,7 @@ class MainController {
 
     if (pembayaranUtama.nama_transaksi) {
       const transaksi = await MKeuTransaksi.create({
-        nama: `${pembayaranUtama.nama_transaksi_siswa} - ${riwayat.toJSON().user.nama
-          }`,
+        nama: `${pembayaranUtama.nama_transaksi_siswa} - ${riwayat.toJSON().user.nama}`,
         // nomor,
         tanggal: moment().format("YYYY-MM-DD"),
         dihapus: 0,
@@ -30620,8 +30601,7 @@ class MainController {
         //   rombelall: explanation.getCell("B" + rowNumber).value,
         //   tingkat: `${rombelall.split(" ")[0]}`,
         // });
-        let rombelData = `${romawi[rombelall.split(" ")[0] - 1]} ${rombelall.split(" ")[1]
-          } ${rombelall.split(" ")[2]}`;
+        let rombelData = `${romawi[rombelall.split(" ")[0] - 1]} ${rombelall.split(" ")[1]} ${rombelall.split(" ")[2]}`;
 
         const rombelCheck = await MRombel.query()
           .where({ nama: rombelData })
@@ -41014,8 +40994,7 @@ class MainController {
               foto_masuk: anggota.user
                 ? anggota.user.absen
                   ? anggota.user.absen.length
-                    ? anggota.user.absen[0].foto_masuk_local ||
-                    anggota.user.absen[0].foto_masuk
+                    ? anggota.user.absen[0].foto_masuk_local || anggota.user.absen[0].foto_masuk
                     : "-"
                   : "-"
                 : "-",
@@ -41029,8 +41008,7 @@ class MainController {
               foto_pulang: anggota.user
                 ? anggota.user.absen
                   ? anggota.user.absen.length
-                    ? anggota.user.absen[0].foto_pulang_local ||
-                    anggota.user.absen[0].foto_pulang
+                    ? anggota.user.absen[0].foto_pulang_local || anggota.user.absen[0].foto_pulang
                     : "-"
                   : "-"
                 : "-",
@@ -44932,8 +44910,7 @@ class MainController {
       to: "D5",
     };
 
-    let namaFile = `/uploads/rekapan-nilai-${rekapan.toJSON().rekap.tipe
-      }-siswa-${keluarantanggalseconds}.xlsx`;
+    let namaFile = `/uploads/rekapan-nilai-${rekapan.toJSON().rekap.tipe}-siswa-${keluarantanggalseconds}.xlsx`;
 
     // save workbook to disk
     await workbook.xlsx.writeFile(`public${namaFile}`);
@@ -46823,8 +46800,7 @@ class MainController {
 
             const mutasi = await MMutasi.create({
               tipe: "kredit",
-              nama: `Pembayaran ${pembayaran.nama} ${pembayaran.jenis == "spp" ? pembayaran.bulan : ""
-                }-${user.nama}`,
+              nama: `Pembayaran ${pembayaran.nama} ${pembayaran.jenis == "spp" ? pembayaran.bulan : ""}-${user.nama}`,
               kategori: `pembayaran ${pembayaran.jenis}`,
               nominal: d.nominal,
               dihapus: 0,
@@ -48724,8 +48700,7 @@ class MainController {
             `B${(idx + 1) * 1 + 17}`
           ).value = `${ta.nama_kepsek}`;
 
-          worksheet.getCell(`G${(idx + 1) * 1 + 13}`).value = `${sekolah.kabupaten
-            }, ${moment().format("DD-MMM-YYYY")}`;
+          worksheet.getCell(`G${(idx + 1) * 1 + 13}`).value = `${sekolah.kabupaten}, ${moment().format("DD-MMM-YYYY")}`;
           worksheet.getCell(`G${(idx + 1) * 1 + 14}`).value = `Hubin`;
           worksheet.getCell(`G${(idx + 1) * 1 + 17}`).value = `{nama hubin}`;
         }
@@ -50904,8 +50879,7 @@ class MainController {
         })
     );
 
-    worksheet.getCell("A1").value = `LEGER PERNILAIAN TENGAH SEMESTER ${ta.semester == 1 ? "GANJIL" : "GENAP"
-      } DARING`;
+    worksheet.getCell("A1").value = `LEGER PERNILAIAN TENGAH SEMESTER ${ta.semester == 1 ? "GANJIL" : "GENAP"} DARING`;
     worksheet.getCell("A2").value = rombel.nama;
     worksheet.getCell("A3").value = sekolah.nama;
     worksheet.getCell("A4").value = `TAHUN PELAJARAN ${ta.tahun}`;
@@ -51293,8 +51267,7 @@ class MainController {
         })
     );
 
-    worksheet.getCell("A1").value = `LEGER PERNILAIAN AKHIR SEMESTER ${ta.semester == 1 ? "GANJIL" : "GENAP"
-      }  DARING`;
+    worksheet.getCell("A1").value = `LEGER PERNILAIAN AKHIR SEMESTER ${ta.semester == 1 ? "GANJIL" : "GENAP"}  DARING`;
     worksheet.getCell("A2").value = rombel.nama;
     worksheet.getCell("A3").value = sekolah.nama;
     worksheet.getCell("A4").value = `TAHUN PELAJARAN ${ta.tahun}`;
@@ -51726,8 +51699,7 @@ class MainController {
     //   return response.ok({ message: "Data untuk Leger Nilai Belum Lengkap" });
     // }
     // return result;
-    worksheet.getCell("A1").value = `LEGER PERNILAIAN AKHIR SEMESTER ${ta.semester == 1 ? "GANJIL" : "GENAP"
-      } DARING`;
+    worksheet.getCell("A1").value = `LEGER PERNILAIAN AKHIR SEMESTER ${ta.semester == 1 ? "GANJIL" : "GENAP"} DARING`;
     worksheet.getCell("A2").value = rombel.nama;
     worksheet.getCell("A3").value = sekolah.nama;
     worksheet.getCell("A4").value = `TAHUN PELAJARAN ${ta.tahun}`;
@@ -56162,10 +56134,7 @@ class MainController {
         },
       ],
     });
-    // worksheet.mergeCells(`A1:G1`);
-    // worksheet.mergeCells(`A2:G2`);
-    // worksheet.mergeCells(`A3:G3`);
-    // worksheet.mergeCells(`A4:G4`);
+    
     worksheet.addConditionalFormatting({
       ref: `A6:${colName(range + 2)}6`,
       rules: [
