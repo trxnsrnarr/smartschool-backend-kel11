@@ -7,20 +7,26 @@ const Env = use("Env");
 const OpenAI = require('openai');
 const openai = new OpenAI({ apiKey: Env.OPENAI_API_KEY });
 
-const fs = require('fs');
-const natural = require('natural');
-const PDFDocument = require('pdfkit');
-const classifier = new natural.BayesClassifier();
-
 // Langchain
 const { z } = require("zod");
 const { DataSource } = require("typeorm");
 const { SqlDatabase } = require("langchain/sql_db");
-const { ChatOpenAI } = require("@langchain/openai");
+const { ChatOpenAI, OpenAIEmbeddings } = require("@langchain/openai");
 const { createSqlQueryChain } = require("langchain/chains/sql_db");
 const { PromptTemplate, ChatPromptTemplate } = require("@langchain/core/prompts");
 const { StringOutputParser } = require("@langchain/core/output_parsers");
 const { RunnablePassthrough, RunnableSequence } = require("@langchain/core/runnables");
+const { MemoryVectorStore } = require('langchain/vectorstores/memory');
+
+const fs = require('fs');
+const PDFDocument = require('pdfkit');
+const { tool, DynamicTool, StructuredTool } = require('@langchain/core/tools');
+const { HumanMessage } = require('@langchain/core/messages');
+
+const embeddings = new OpenAIEmbeddings();
+const vectorStore = new MemoryVectorStore(embeddings);
+// const natural = require('natural');
+// const classifier = new natural.BayesClassifier();
 
 const llm = new ChatOpenAI({
   modelName: "gpt-4o",
@@ -45,24 +51,83 @@ function getBase64FromImgTag(content) {
   return match ? match[1] : null;
 }
 
-// Function untuk memuat data dari file JSON dan melatih classifier
-function trainClassifierFromJson(filePath) {
-  // Membaca file JSON
-  const rawData = fs.readFileSync(filePath);
-  const trainingData = JSON.parse(rawData);
+// FUNGSI INTENT 1.0
+// // Function untuk memuat data dari file JSON dan melatih classifier
+// function trainClassifierFromJson(filePath) {
+//   // Membaca file JSON
+//   const rawData = fs.readFileSync(filePath);
+//   const trainingData = JSON.parse(rawData);
 
-  // Menambahkan setiap item dalam JSON ke classifier
-  trainingData.forEach((item) => {
-    const { content, intent } = item;
-    classifier.addDocument(content, intent);
-  });
+//   // Menambahkan setiap item dalam JSON ke classifier
+//   trainingData.forEach((item) => {
+//     const { content, intent } = item;
+//     classifier.addDocument(content, intent);
+//   });
 
-  // Melatih classifier
-  classifier.train();
+//   // Melatih classifier
+//   classifier.train();
+// }
+
+// // Memanggil function untuk melatih classifier dengan file JSON
+// trainClassifierFromJson('./app/Data/nlp.json');
+
+// FUNGSI INTENT 2.0
+// Fungsi untuk melatih intent classifier
+async function trainIntentClassifier(filePath) {
+  try {
+    const rawData = fs.readFileSync(filePath, 'utf-8');
+    const trainingData = JSON.parse(rawData);
+
+    const docs = trainingData.map(item => ({
+      pageContent: item.content,
+      metadata: { intent: item.intent }
+    }));
+
+    await vectorStore.addDocuments(docs);
+  } catch (error) {
+    console.error("Gagal melatih classifier:", error);
+  }
 }
 
-// Memanggil function untuk melatih classifier dengan file JSON
-trainClassifierFromJson('./app/Data/nlp.json');
+// Fungsi untuk mengklasifikasikan intent
+async function classifyIntent(text) {
+  const results = await vectorStore.similaritySearch(text, 1);
+  return results[0]?.metadata?.intent || "text_question";
+}
+
+(async () => {
+  await trainIntentClassifier('./app/Data/nlp.json');
+})();
+
+class CreatePDFTool extends StructuredTool {
+  name = "createPdf";
+  description = "Create a PDF file with the given content";
+
+  // Definisikan skema input menggunakan Zod
+  schema = z.object({
+    content: z.string().describe("The content to include in the PDF"),
+  });
+
+  async _call({ content }) {
+    return new Promise((resolve, reject) => {
+      const doc = new PDFDocument();
+      const buffers = [];
+
+      doc.on('data', (chunk) => buffers.push(chunk));
+      doc.on('end', () => {
+        const pdfBuffer = Buffer.concat(buffers);
+        const base64 = pdfBuffer.toString('base64');
+        resolve(`<a href="data:application/pdf;base64,${base64}" download="file.pdf">Download File PDF</a>`);
+      });
+      doc.on('error', (err) => {
+        reject(new Error(`Error creating PDF: ${err.message}`));
+      });
+
+      doc.text(content);
+      doc.end();
+    });
+  }
+}
 
 class ChatbotController {
   async storeMessage(messages, chatroomId = null, userId = null, intent = "text_question") {
@@ -208,8 +273,10 @@ class ChatbotController {
     const tableChain = prompt.pipe(llm.withStructuredOutput(Table));
 
     const answerPrompt = PromptTemplate.fromTemplate(`
+      Anda adalah seorang Assistant Aplikasi SmartESchool yang berguna untuk menjawab pertanyaan - pertanyaan pengguna dalam mempertanyakan terhadap data di aplikasi ini.
+      Semisal hasil dari SQL Error maka berikanlah respon yang menjelaskan bahwa pertanyaan pengguna kurang memberikan informasi yang tepat. Dan jelaskan dengan bahasa yang bukan teknis agar orang awam mengerti.
+      Untuk Pengguna Chatbot kurang lebih seorang anggota sekolah seperti siswa, guru, kepala sekolah, admin, dll.
       Diberikan pertanyaan pengguna berikut, query SQL yang sesuai, dan hasil SQL, jawablah pertanyaan pengguna.
-      Semisal hasil dari SQL Error maka berikanlah respon yang menjelaskan bahwa pertanyaan pengguna kurang memberikan informasi yang tepat.
 
       Pertanyaan: {question}
       Query SQL: {query}
@@ -232,6 +299,9 @@ class ChatbotController {
       Memahami konteks pertanyaan dan memastikan query SQL yang dihasilkan relevan dengan data pengguna.
       Sebelum membuat query, Anda harus memahami struktur database terlebih dahulu.
 
+      Gunakan skema tabel berikut:
+      {table_info}
+
       **Langkah 1: Membaca Skema Database**
         - Pertama, tinjau informasi skema yang diberikan. Informasi ini mencakup daftar tabel, kolom-kolomnya, dan hubungan antar tabel (kunci asing dan cara penggabungan/join). Gunakan informasi ini untuk membuat query secara akurat.
         - Jika informasi skema tidak disediakan, Anda harus mengambil detail skema database secara dinamis melalui \`INFORMATION_SCHEMA\` (atau metadata database serupa). Secara spesifik, Anda perlu menemukan tabel dan hubungan antar tabelnya.
@@ -243,13 +313,12 @@ class ChatbotController {
         - Identifikasi peran spesifik atau kondisi penyaringan (misalnya, \`siswa\`, \`guru\`, \`admin\`) dan pastikan atribut ini digunakan untuk memfilter data secara benar.
 
       **Langkah 3: Membuat Query**
+        - Buat query hanya dengan menggunakan command SELECT (Jangan gunakan command CRETE, UPDATE, DELETE, ALTER, dll).
         - Buat query dengan memilih hanya kolom yang diperlukan untuk menjawab pertanyaan pengguna. Jangan sertakan data yang tidak diperlukan.
         - Kecuali pengguna menentukan jumlah data yang ingin diambil, gunakan batasan maksimal ({top_k} atau 5 hasil) dengan klausa LIMIT sesuai dengan standar {dialect}.
         - Jika pengguna tidak menentukan batas jumlah data, tambahkan klausa LIMIT dengan maksimum 5 baris. Jika pengguna meminta semua data secara eksplisit, jangan sertakan klausa LIMIT.
         - Gunakan penggabungan eksplisit (misalnya, \`INNER JOIN\`, \`LEFT JOIN\`, dll.) dan pastikan kondisinya benar.
         - Bungkus setiap nama kolom dengan tanda kutip balik (\`\`) untuk menandai bahwa itu adalah pengenal.
-        - Pastikan cek apakah ada kolom \'dihapus'\ pada tabel relevan yang diperlukan untuk membuat query kemudian pastikan nilainya adalah 0. Jika tidak ada kolom dihapus pada tabel relevan yang diperlukan maka tidak perlu menggunakan kondisi ini.
-        - Jika ada kondisi pencarian data nama di setiap tabel seperti "Berapa jumlah siswa SMAN 4 Cibinong?" gunakan opsi LIKE untuk mencari data nama yang paling mirip dari value yang di inputkan. contoh: LIKE '%smk%kampung%jawa%' dan  LIKE '%x%tkro%1%'
         - Tulis query dalam satu baris tanpa menggunakan karakter baris baru (\`\\n\`) atau penggabungan string (\`+\`).
         - Jika pertanyaan berkaitan dengan informasi pribadi pengguna, tambahkan kondisi filter berdasarkan id, role, atau m_sekolah_id.
 
@@ -283,13 +352,15 @@ class ChatbotController {
         - **Hari tertentu dalam minggu:** Gunakan \`DAYOFWEEK()\` atau \`WEEKDAY()\` untuk membandingkan hari tertentu.
         - Selalu pastikan query sesuai dengan struktur dan batasan tabel yang diberikan.
         - Untuk tabel \`m_user\`, kolom \`role\` membedakan antara siswa, guru, dan admin. Pastikan kolom ini digunakan dengan benar untuk memfilter data jika berlaku.
+        - Semisal pengguna meminta data jadwal ujian yang memerlukan relasi dengan sekolah gunakan perintah JOIN seperti ini:  JOIN m_user ON m_user.id = m_jadwal_ujian.m_user_id JOIN m_sekolah ON m_sekolah.id = m_user.m_sekolah_id.
+        - Semisal pengguna menanyakan data yang berkaitan dengan tahun akademik atau ta jangan sertakan kolom aktif pada table m_ta (ta yang digunakan saat ini) jika tidak dibahas.
+        - Saat membuat query, periksa setiap tabel yang digunakan apakah memiliki kolom \`dihapus\`.
+        - Jika sebuah tabel memiliki kolom \`dihapus\`, tambahkan kondisi \`AND <nama_tabel>.\`dihapus\` = 0\` di klausa WHERE untuk menyaring data yang tidak dihapus.
+        - Jika sebuah tabel tidak memiliki kolom \`dihapus\`, kondisi tersebut tidak perlu ditambahkan.
 
       **Pemetaan Relasional**
         - Untuk setiap hubungan antar tabel, pahami kolom kunci asing mana yang harus digunakan untuk penggabungan.
         - Pastikan query hanya mencakup penggabungan yang diperlukan dan menghindari data yang redundan.
-
-      Gunakan skema tabel berikut:
-      {table_info}
 
       Buat query berdasarkan input pengguna dan pastikan query sesuai dengan struktur database dan hubungan yang dijelaskan di atas. Periksa ulang query untuk ketepatan dan kebenaran logis sebelum menyelesaikannya. Setiap query yang dihasilkan harus mencakup klausa LIMIT dengan maksimal {top_k} atau 5 hasil, kecuali dinyatakan sebaliknya oleh pengguna:
         - Tambahkan klausa \`LIMIT\` dengan maksimal 5 baris jika pengguna tidak meminta semua data.
@@ -322,9 +393,6 @@ class ChatbotController {
       prompt: prompt2,
       dialect: "mysql"
     });
-    // console.log("ini query chain", queryChain);
-
-    // console.log("Generated SQL Query:", queryChain);
 
     const fullChain = RunnableSequence.from([
       // Langkah 1: Dapatkan nama tabel yang relevan
@@ -332,13 +400,19 @@ class ChatbotController {
         .assign({
           relevantTables: (i) => tableChain.invoke({ question: i.question }),
         })
+
+      // Langkah 2: Generate Query
         .assign({
-          query: (i) =>
-            queryChain.invoke({
+          query: (i) => {
+            console.log(i.relevantTables);
+            return queryChain.invoke({
               question: i.question,
               tableNamesToUse: i.relevantTables,
-            }),
+            })
+          }
         }),
+
+      // Langkah 3: Eksekusi untuk Query yang sudah dibuat lalu mendapatkan hasil Query nya
       RunnablePassthrough
         .assign({
           result: async (i) => {
@@ -348,20 +422,58 @@ class ChatbotController {
           }
         }),
 
-      // Langkah 2: Dapatkan jawaban dari pertanyaan sesuai format
+      // Langkah 4: Dapatkan jawaban dari pertanyaan sesuai format
       answerChain
     ]);
 
     try {
       const responseOpenAI = await fullChain.invoke({ question: question });
       return responseOpenAI;
-    } catch (err) {
-      console.error("Error in query response BE:", err);
-      // return err.message;
+    } catch (error) {
+      console.error("Error in query response BE:", error);
       return {
         status: 'error',
-        message: "Kesalahan dalam memproses permintaan. Silakan coba lagi nanti."
-    };
+        message: "Kesalahan dalam memproses permintaan. Silakan coba lagi nanti.",
+        error: error.message,
+      };
+    }
+  }
+
+  async fileRequest(question) {
+    try {
+      // Inisialisasi agent dengan tools
+      const createPDFTool = new CreatePDFTool();
+
+      const llmWithTools = llm.bindTools([createPDFTool]);
+
+      const messages = [new HumanMessage(question)];
+
+      const aiMessage = await llmWithTools.invoke(messages);
+
+      messages.push(aiMessage);
+      const toolsByName = {
+        createPdf: createPDFTool
+      };
+
+      let toolMessage;
+      for (const toolCall of aiMessage.tool_calls) {
+        const selectedTool = toolsByName[toolCall.name];
+        toolMessage = await selectedTool.invoke(toolCall);
+        messages.push(toolMessage);
+      }
+      return toolMessage;
+
+
+      // console.log("Messages :", messages);
+
+      // return await llmWithTools.invoke(messages);
+    } catch (error) {
+      console.error("Error in query response BE:", error);
+      return {
+        status: 'error',
+        message: "Kesalahan dalam memproses permintaan. Silakan coba lagi nanti.",
+        error: error.message,
+      };
     }
   }
 
@@ -440,39 +552,8 @@ class ChatbotController {
           const imageBase64 = response.data[0].b64_json;
           return `<img src="data:image/png;base64,${imageBase64}" alt="Generated Image" />`;
         case "file_request":
-          response = await openai.chat.completions.create({
-            model: "gpt-4o",
-            messages: [
-              ...previousChats,
-              { role: "system", content: "You are a helpful assistant that generates content without filler or explanation." },
-              { role: "user", content: userMessage + "\n The output should only contain the content of the file." }
-            ]
-          });
-
-          const content = response.choices[0].message.content;
-
-          // Create a PDF document
-          const doc = new PDFDocument();
-
-          // Create a stream to capture PDF data as a Buffer
-          const pdfBuffer = await new Promise((resolve, reject) => {
-            const buffers = [];
-            doc.on('data', (chunk) => buffers.push(chunk));
-            doc.on('end', () => resolve(Buffer.concat(buffers)));
-            doc.on('error', reject);
-
-            // Add content to the PDF
-            doc.text(content);
-
-            // Finalize PDF file
-            doc.end();
-          });
-
-          // Convert the buffer to Base64
-          const pdfBase64 = pdfBuffer.toString('base64');
-
-          // Return Base64 string of PDF
-          return `<a href="data:application/pdf;base64,${pdfBase64}" download="file.pdf">Download File PDF</a>`;
+          const responseFile = await this.fileRequest(userMessage);
+          return responseFile?.content;
         case "sql_request":
           const responseSQL = await this.sqlRequest(userMessage, user);
           console.log(responseSQL);
@@ -484,7 +565,6 @@ class ChatbotController {
       return {
         status: 'error',
         message: 'An error occurred while proccessing OpenAI',
-        intent,
         error: error.message,
       };
     }
@@ -496,10 +576,10 @@ class ChatbotController {
       // const typeOfAnalysisData = request.input("type_of_analysis_data");
       const chatroomId = request.input("chatroom_id");
       const user = await auth.getUser();
-      console.log(user);
       const userId = user.id;
 
-      const intent = classifier.classify(userMessage);
+      const intent = await classifyIntent(userMessage);
+      console.log(intent);
 
       const responseOpenAI = await this.processOpenAI(userMessage, user, chatroomId, intent);
       if (responseOpenAI.status === "error") {

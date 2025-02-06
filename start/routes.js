@@ -2086,7 +2086,7 @@ Route.delete("/chatrooms/:id", "ChatbotController.deleteChatroomById");
 Route.get("/messages/:chatroom_id", "ChatbotController.getMessagesByChatroomId");
 Route.post("/suggestions", "ChatbotController.getSuggestions");
 // Route.get("/templateSuggestions", "ChatbotController.getTemplateSuggestions");
-// Route.post("/langchain", "Chatbot2Controller.langchain");
+Route.post("/chatbot2", "Chatbot2Controller.openAIResponse");
 
 Route.get("/ip", "MainController.ip");
 // wildcard (DROP AT BOTTOM OF THE FILE)
