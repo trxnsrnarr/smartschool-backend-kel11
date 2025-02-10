@@ -784,7 +784,7 @@
     zod "^3.22.3"
     zod-to-json-schema "^3.22.5"
 
-"@langchain/core@^0.3.18", "@langchain/core@>=0.2.21 <0.4.0", "@langchain/core@>=0.2.26 <0.4.0":
+"@langchain/core@^0.3.18", "@langchain/core@>=0.2.21 <0.4.0", "@langchain/core@>=0.2.26 <0.4.0", "@langchain/core@>=0.3.7 <0.4.0":
   version "0.3.18"
   resolved "https://registry.npmjs.org/@langchain/core/-/core-0.3.18.tgz"
   integrity sha512-IEZCrFs1Xd0J2FTH1D3Lnm3/Yk2r8LSpwDeLYwcCom3rNAK5k4mKQ2rwIpNq3YuqBdrTNMKRO+PopjkP1SB17A==
@@ -800,6 +800,16 @@
     uuid "^10.0.0"
     zod "^3.22.4"
     zod-to-json-schema "^3.22.3"
+
+"@langchain/mistralai@*", "@langchain/mistralai@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.npmjs.org/@langchain/mistralai/-/mistralai-0.2.0.tgz"
+  integrity sha512-VdfbKZopAuSXf/vlXbriGWLK3c7j5s47DoB3S31xpprY2BMSKZZiX9vE9TsgxMfAPuIDPIYcfgU7p1upvTYt8g==
+  dependencies:
+    "@mistralai/mistralai" "^1.3.1"
+    uuid "^10.0.0"
+    zod "^3.23.8"
+    zod-to-json-schema "^3.22.4"
 
 "@langchain/ollama@*", "@langchain/ollama@^0.1.5":
   version "0.1.5"
@@ -825,6 +835,13 @@
   integrity sha512-djI4uw9rlkAb5iMhtLED+xJebDdAG935AdP4eRTB02R7OB/act55Bj9wsskhZsvuyQRpO4O1wQOp85s6T6GWmw==
   dependencies:
     js-tiktoken "^1.0.12"
+
+"@mistralai/mistralai@^1.3.1":
+  version "1.5.0"
+  resolved "https://registry.npmjs.org/@mistralai/mistralai/-/mistralai-1.5.0.tgz"
+  integrity sha512-AIn8pwAwA/fDvEUvmkt+40zH1ZmfaG3Q7oUWl17GUEC1tU7ZPwYz8Cv9P59lyS1SisHdDSu81oknO7f1ywkz8Q==
+  dependencies:
+    zod-to-json-schema "^3.24.1"
 
 "@mongodb-js/saslprep@^1.1.5":
   version "1.1.9"
@@ -9277,12 +9294,17 @@ zip-stream@^4.1.0:
     compress-commons "^4.1.2"
     readable-stream "^3.6.0"
 
-zod-to-json-schema@^3.22.3, zod-to-json-schema@^3.22.5, zod-to-json-schema@^3.23.5:
+zod-to-json-schema@^3.22.3, zod-to-json-schema@^3.22.4, zod-to-json-schema@^3.22.5, zod-to-json-schema@^3.23.5:
   version "3.23.5"
   resolved "https://registry.npmjs.org/zod-to-json-schema/-/zod-to-json-schema-3.23.5.tgz"
   integrity sha512-5wlSS0bXfF/BrL4jPAbz9da5hDlDptdEppYfe+x4eIJ7jioqKG9uUxOwPzqof09u/XeVdrgFu29lZi+8XNDJtA==
 
-zod@^3.22.3, zod@^3.22.4, zod@^3.23.3, zod@^3.23.8, zod@3.23.8:
+zod-to-json-schema@^3.24.1:
+  version "3.24.1"
+  resolved "https://registry.npmjs.org/zod-to-json-schema/-/zod-to-json-schema-3.24.1.tgz"
+  integrity sha512-3h08nf3Vw3Wl3PK+q3ow/lIil81IT2Oa7YpQyUUDsEWbXveMesdfK1xBd2RhCkynwZndAxixji/7SYJJowr62w==
+
+zod@^3.22.3, zod@^3.22.4, zod@^3.23.3, zod@^3.23.8, zod@^3.24.1, "zod@>= 3", zod@3.23.8:
   version "3.23.8"
   resolved "https://registry.npmjs.org/zod/-/zod-3.23.8.tgz"
   integrity sha512-XBx9AXhXktjUqnepgTiE5flcKIYWi/rme0Eaj+5Y0lftuGBq+jyRu/md4WnuxqgP1ubdpNCsYEYPxrzVHD8d6g==
