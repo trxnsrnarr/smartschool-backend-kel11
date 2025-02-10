@@ -13,10 +13,11 @@ const { DataSource } = require("typeorm");
 const { SqlDatabase } = require("langchain/sql_db");
 const { ChatMistralAI, MistralAIEmbeddings } = require("@langchain/mistralai");
 const { createSqlQueryChain } = require("langchain/chains/sql_db");
-const { PromptTemplate, ChatPromptTemplate } = require("@langchain/core/prompts");
+const { PromptTemplate, ChatPromptTemplate, FewShotPromptTemplate } = require("@langchain/core/prompts");
 const { StringOutputParser } = require("@langchain/core/output_parsers");
 const { RunnablePassthrough, RunnableSequence } = require("@langchain/core/runnables");
-const { MemoryVectorStore } = require('langchain/vectorstores/memory');
+const { MemoryVectorStore } = require("langchain/vectorstores/memory");
+const { SemanticSimilarityExampleSelector } = require("@langchain/core/example_selectors");
 
 const fs = require('fs');
 const PDFDocument = require('pdfkit');
@@ -26,9 +27,8 @@ const { HumanMessage } = require('@langchain/core/messages');
 const embeddings = new MistralAIEmbeddings({
   model: "mistral-embed"
 });
+
 const vectorStore = new MemoryVectorStore(embeddings);
-// const natural = require('natural');
-// const classifier = new natural.BayesClassifier();
 
 const llm = new ChatMistralAI({
   model: "mistral-large-latest",
@@ -52,26 +52,6 @@ function getBase64FromImgTag(content) {
   const match = content.match(/<img[^>]+src=["']([^"']+)["']/);
   return match ? match[1] : null;
 }
-
-// FUNGSI INTENT 1.0
-// // Function untuk memuat data dari file JSON dan melatih classifier
-// function trainClassifierFromJson(filePath) {
-//   // Membaca file JSON
-//   const rawData = fs.readFileSync(filePath);
-//   const trainingData = JSON.parse(rawData);
-
-//   // Menambahkan setiap item dalam JSON ke classifier
-//   trainingData.forEach((item) => {
-//     const { content, intent } = item;
-//     classifier.addDocument(content, intent);
-//   });
-
-//   // Melatih classifier
-//   classifier.train();
-// }
-
-// // Memanggil function untuk melatih classifier dengan file JSON
-// trainClassifierFromJson('./app/Data/nlp.json');
 
 // FUNGSI INTENT 2.0
 // Fungsi untuk melatih intent classifier
@@ -110,12 +90,8 @@ function saveNewIntent(content, intent, filePath = "./app/Data/nlp.json") {
 // Fungsi untuk mengklasifikasikan intent
 async function classifyIntent(text) {
   const results = await vectorStore.similaritySearch(text, 4);
-  return results[0]?.metadata?.intent;
+  return results[0]?.metadata?.intent || "text_question";
 }
-
-(async () => {
-  await trainIntentClassifier('./app/Data/nlp.json');
-})();
 
 class CreatePDFTool extends StructuredTool {
   name = "createPdf";
@@ -147,7 +123,7 @@ class CreatePDFTool extends StructuredTool {
   }
 }
 
-class ChatbotController {
+class ChatbotMistralAIController {
   async storeMessage(messages, chatroomId = null, userId = null, intent = "text_question") {
     try {
       if (!chatroomId || chatroomId === null) {
@@ -185,6 +161,68 @@ class ChatbotController {
       return {
         status: 'error',
         message: 'An error occurred while storing messages',
+        error: error.message,
+      };
+    }
+  }
+
+  async textQuestion(question, previousChats) {
+    const systemTemplate = "Anda adalah seorang Assistant Aplikasi SmartESchool yang berguna untuk menjawab pertanyaan - pertanyaan pengguna di aplikasi ini.";
+    const promptTemplate = ChatPromptTemplate.fromMessages([
+      ["system", systemTemplate],
+      ...previousChats,
+      ["user", "{question}"]
+    ]);
+    const promptValue = await promptTemplate.invoke({ question });
+    const response = await llm.invoke(promptValue);
+
+    return response?.content;
+  }
+
+  async imageRequest(question) {
+    const previousMessages = previousChats.map(chat => chat.content).join(' ');
+    const fullPrompt = previousMessages + ' ' + question;
+
+    response = await openai.images.generate({
+      model: "dall-e-3",
+      prompt: fullPrompt,
+      n: 1,
+      size: "1024x1024",
+      style: "natural",
+      response_format: "b64_json"
+    });
+    const imageBase64 = response.data[0].b64_json;
+    return `<img src="data:image/png;base64,${imageBase64}" alt="Generated Image" />`;
+  }
+
+  async fileRequest(question) {
+    try {
+      // Inisialisasi agent dengan tools
+      const createPDFTool = new CreatePDFTool();
+
+      const llmWithTools = llm.bindTools([createPDFTool]);
+
+      const messages = [new HumanMessage(question)];
+
+      const aiMessage = await llmWithTools.invoke(messages);
+
+      messages.push(aiMessage);
+      const toolsByName = {
+        createPdf: createPDFTool
+      };
+
+      let toolMessage;
+      for (const toolCall of aiMessage.tool_calls) {
+        const selectedTool = toolsByName[toolCall.name];
+        toolMessage = await selectedTool.invoke(toolCall);
+        messages.push(toolMessage);
+      }
+      return toolMessage?.content;
+    } catch (error) {
+      console.error("Error in query response BE:", error);
+      return {
+        status: 'error',
+        message: "Kesalahan dalam memproses permintaan File. Silakan coba lagi nanti.",
         error: error.message,
       };
     }
@@ -272,7 +310,7 @@ class ChatbotController {
 
     const tableNames = db.includesTables.map((t) => t).join("\n");
 
-    const system = `
+    const relavantTablePrompt = `
       Return the names of ALL the SQL tables that MIGHT be relevant to the user question.
       The tables are:
 
@@ -283,12 +321,60 @@ class ChatbotController {
       Relevant Tables:
     `;
 
-    const prompt = ChatPromptTemplate.fromMessages([
-      ["system", system],
+    const examples = [
+      {
+        input: "Hitung jumlah pengguna siswa di SMKN 26 Jakarta.",
+        query: "SELECT COUNT(m_user.id) AS jumlah_siswa FROM m_user INNER JOIN m_sekolah ON m_user.m_sekolah_id = m_sekolah.id WHERE m_user.role = 'siswa' AND m_sekolah.nama = 'SMKN 26 Jakarta';"
+      },
+      {
+        input: "Lihat data lokasi beserta total barang sarpas di Sekolah Demo Smarteschool.",
+        query: "SELECT m_lokasi.nama AS nama_lokasi, COUNT(m_barang.nama) AS total_barang FROM m_lokasi JOIN m_barang ON m_lokasi.id = m_barang.m_lokasi_id JOIN m_sekolah ON m_lokasi.m_sekolah_id = m_sekolah.id WHERE m_sekolah.nama = 'Sekolah Demo Smarteschool' AND m_lokasi.dihapus = 0 AND m_barang.dihapus = 0 GROUP BY m_lokasi.nama;"
+      },
+      {
+        input: "Lihat data ujian yang berlangsung hari ini di SMAN 8 Jakarta.",
+        query: "SELECT m_ujian.nama AS ujian_nama, m_jadwal_ujian.waktu_dibuka, m_user.nama AS pembuat_jadwal, m_sekolah.nama AS sekolah_nama FROM m_ujian JOIN m_jadwal_ujian ON m_jadwal_ujian.m_ujian_id = m_ujian.id JOIN m_user ON m_user.id = m_jadwal_ujian.m_user_id JOIN m_sekolah ON m_sekolah.id = m_user.m_sekolah_id WHERE date(m_jadwal_ujian.waktu_dibuka) = curdate() AND m_sekolah.nama = 'SMAN 8 Jakarta';"
+      },
+      {
+        input: "Lihat data ujian pada tanggal 2025-01-03 di SMAN 8 Jakarta.",
+        query: "SELECT m_ujian.nama AS ujian_nama, m_jadwal_ujian.waktu_dibuka, m_user.nama AS pembuat_jadwal, m_sekolah.nama AS sekolah_nama FROM m_ujian JOIN m_jadwal_ujian ON m_jadwal_ujian.m_ujian_id = m_ujian.id JOIN m_user ON m_user.id = m_jadwal_ujian.m_user_id JOIN m_sekolah ON m_sekolah.id = m_user.m_sekolah_id WHERE date(m_jadwal_ujian.waktu_dibuka) = '2025-01-03' AND m_sekolah.nama = 'SMAN 8 Jakarta';"
+      },
+      {
+        input: "Lihat data peserta ujian yang berlangsung hari ini di SMAN 8 Jakarta.",
+        query: "SELECT DISTINCT tk_peserta_ujian.id AS id_peserta, m_user.nama AS nama_peserta, m_jadwal_ujian.waktu_dibuka AS waktu_dibuka, m_ujian.nama AS nama_ujian, m_sekolah.nama AS nama_sekolah FROM tk_peserta_ujian JOIN m_user ON m_user.id = tk_peserta_ujian.m_user_id JOIN m_sekolah ON m_sekolah.id = m_user.m_sekolah_id JOIN tk_jadwal_ujian ON tk_jadwal_ujian.id = tk_peserta_ujian.tk_jadwal_ujian_id JOIN m_jadwal_ujian ON m_jadwal_ujian.id = tk_jadwal_ujian.m_jadwal_ujian_id JOIN m_ujian ON m_ujian.id = m_jadwal_ujian.m_ujian_id WHERE date(m_jadwal_ujian.waktu_dibuka) = curdate() AND m_sekolah.nama = 'SMAN 8 Jakarta';"
+      },
+      {
+        input: "Lihat data peserta ujian pada tanggal 2025-01-16 di SMAN 8 Jakarta.",
+        query: "SELECT DISTINCT tk_peserta_ujian.id AS id_peserta, m_user.nama AS nama_peserta, m_jadwal_ujian.waktu_dibuka AS waktu_dibuka, m_ujian.nama AS nama_ujian, m_sekolah.nama AS nama_sekolah FROM tk_peserta_ujian JOIN m_user ON m_user.id = tk_peserta_ujian.m_user_id JOIN m_sekolah ON m_sekolah.id = m_user.m_sekolah_id JOIN tk_jadwal_ujian ON tk_jadwal_ujian.id = tk_peserta_ujian.tk_jadwal_ujian_id JOIN m_jadwal_ujian ON m_jadwal_ujian.id = tk_jadwal_ujian.m_jadwal_ujian_id JOIN m_ujian ON m_ujian.id = m_jadwal_ujian.m_ujian_id WHERE date(m_jadwal_ujian.waktu_dibuka) = '2025-01-16' AND m_sekolah.nama = 'SMAN 8 Jakarta';"
+      },
+      {
+        input: "Lihat data surat keluar pada tanggal 2021-11-11 di SMK Bhakti Persada.",
+        query: "SELECT m_surat.nomor, m_surat.perihal, m_surat.asal, m_surat.tanggal FROM m_surat INNER JOIN m_sekolah ON m_surat.m_sekolah_id = m_sekolah.id WHERE m_surat.tipe = 'keluar' AND m_surat.tanggal = '2021-11-11' AND m_sekolah.nama = 'SMK Bhakti Persada' AND m_surat.dihapus = 0;"
+      },
+      {
+        input: "Tampilkan jadwal mengajar sesuai waktu saat ini di Sekolah Demo Smarteschool.",
+        query: "SELECT m_rombel.nama AS kelas, m_jam_mengajar.jam_mulai, m_jam_mengajar.jam_selesai, m_mata_pelajaran.nama AS mata_pelajaran, m_user.nama AS guru FROM m_jadwal_mengajar JOIN m_jam_mengajar ON m_jadwal_mengajar.m_jam_mengajar_id = m_jam_mengajar.id JOIN m_mata_pelajaran ON m_jadwal_mengajar.m_mata_pelajaran_id = m_mata_pelajaran.id JOIN m_rombel ON m_jadwal_mengajar.m_rombel_id = m_rombel.id JOIN m_user ON m_mata_pelajaran.m_user_id = m_user.id JOIN m_sekolah ON m_jadwal_mengajar.m_sekolah_id = m_sekolah.id JOIN m_ta ON m_jadwal_mengajar.m_ta_id = m_ta.id WHERE m_sekolah.nama = 'Sekolah Demo Smarteschool' AND m_ta.aktif = 1 AND m_jam_mengajar.kode_hari = DAYOFWEEK(CURDATE()) - 1 AND m_user.dihapus = 0 AND m_mata_pelajaran.dihapus = 0 AND m_rombel.dihapus = 0 AND m_ta.dihapus = 0;"
+      },
+      {
+        input: "Tampilkan nilai ujian siswa untuk DIAGNOSTIK MATEMATIKA 2425 atas nama HILMY MUZHAFFAR PASHA.",
+        query: "SELECT tk_peserta_ujian.nilai FROM tk_peserta_ujian JOIN m_user ON tk_peserta_ujian.m_user_id = m_user.id JOIN tk_jadwal_ujian ON tk_peserta_ujian.tk_jadwal_ujian_id = tk_jadwal_ujian.id JOIN m_jadwal_ujian ON tk_jadwal_ujian.m_jadwal_ujian_id = m_jadwal_ujian.id JOIN m_ujian ON m_jadwal_ujian.m_ujian_id = m_ujian.id WHERE m_ujian.nama = 'DIAGNOSTIK MATEMATIKA 2425' AND m_user.nama = 'HILMY MUZHAFFAR PASHA';"
+      },
+      {
+        input: "Berapa jumlah Alumni di sekolah SMKN 26 Jakarta",
+        query: "SELECT COUNT(*) AS jumlah_alumni FROM m_alumni JOIN m_user ON m_alumni.m_user_id = m_user.id JOIN m_sekolah ON m_user.m_sekolah_id = m_sekolah.id WHERE m_sekolah.nama = 'Sekolah Demo Smarteschool';"
+      }
+    ];
+
+    const exampleSelector = await SemanticSimilarityExampleSelector.fromExamples(examples, embeddings, MemoryVectorStore, {
+      k: 5,
+      inputKeys: ["input"],
+    });
+
+    const relavantTable = ChatPromptTemplate.fromMessages([
+      ["system", relavantTablePrompt],
       ["human", "{question}"],
     ]);
 
-    const tableChain = prompt.pipe(llm.withStructuredOutput(Table));
+    const tableChain = relavantTable.pipe(llm.withStructuredOutput(Table));
 
     const answerPrompt = PromptTemplate.fromTemplate(`
       Anda adalah seorang Assistant Aplikasi SmartESchool yang berguna untuk menjawab pertanyaan - pertanyaan pengguna dalam mempertanyakan terhadap data di aplikasi ini.
@@ -310,7 +396,7 @@ class ChatbotController {
       Buatlah query SQL berdasarkan informasi pengguna yang telah login. Informasi pengguna yang tersedia adalah sebagai berikut:
 
       ID Pengguna: ${user.id}
-      Role: ${user.role} (contoh: 'siswa', 'guru', atau 'admin')
+      Role: ${user.role} (contoh: 'siswa', 'guru', 'kepsek', atau 'admin')
       Nama: ${user.nama}
       ID Sekolah: ${user.m_sekolah_id}
       Saat pengguna memberikan pertanyaan, tugas Anda adalah:
@@ -328,7 +414,7 @@ class ChatbotController {
 
       **Langkah 2: Memahami Pertanyaan**
         - Setelah skema dimuat, analisis pertanyaan pengguna untuk menentukan tabel dan kolom mana yang dibutuhkan untuk query.
-        - Identifikasi peran spesifik atau kondisi penyaringan (misalnya, \`siswa\`, \`guru\`, \`admin\`) dan pastikan atribut ini digunakan untuk memfilter data secara benar.
+        - Identifikasi peran spesifik atau kondisi penyaringan (misalnya, \`siswa\`, \`guru\`, \`kepsek\`, \`admin\`) dan pastikan atribut ini digunakan untuk memfilter data secara benar.
 
       **Langkah 3: Membuat Query**
         - Buat query hanya dengan menggunakan command SELECT (Jangan gunakan command CRETE, UPDATE, DELETE, ALTER, dll).
@@ -399,16 +485,52 @@ class ChatbotController {
         - Query untuk mendapatkan data nama walikelas dari suatu rombel atau kelas seseorang: SELECT m_user.nama AS nama_walikelas FROM m_rombel INNER JOIN m_anggota_rombel ON m_anggota_rombel.m_rombel_id = m_rombel.id INNER JOIN m_user ON m_rombel.m_user_id = m_user.id WHERE m_anggota_rombel.m_user_id = 2912837 AND m_anggota_rombel.dihapus = 0 LIMIT 5;
     `;
 
-    const prompt2 = ChatPromptTemplate.fromMessages([
+    const examplePrompt = PromptTemplate.fromTemplate(
+      `User input: {input}\nSQL Query: {query}`
+    );
+
+    const validation2 = new FewShotPromptTemplate({
+      exampleSelector,
+      examplePrompt,
+      prefix: `
+        You are a SQLite expert. Given an input question, create a syntactically correct SQLite query to run.
+        Unless otherwise specified, do not return more than {top_k} rows.
+        Create a SQL query based on logged in user information. Available user information is as follows:
+
+        User's ID: ${user.id}
+        User's Role: ${user.role} (contoh: 'siswa', 'guru', 'kepsek', atau 'admin')
+        User's Name: ${user.nama}
+        User's School ID: ${user.m_sekolah_id}
+
+        Here is the relevant table info: {table_info}
+
+        Below are a number of examples of questions and their corresponding SQL queries.
+      `,
+      suffix: `
+        Only output raw SQL queries as output.
+        User input: {input}
+        SQL query:
+      `,
+      inputVariables: ["input", "top_k", "table_info"],
+    });
+
+    console.log(
+      await validation2.format({
+        input: question,
+        top_k: "5",
+        table_info: await tableChain.invoke({ question }),
+      })
+    );
+
+    const validation = ChatPromptTemplate.fromMessages([
       ["system", validationPrompt],
       ["human", "{input}"]
     ]);
 
-    // const executeQuery = new QuerySqlTool(db);
     const queryChain = await createSqlQueryChain({
       llm,
       db,
-      prompt: prompt2,
+      prompt: validation2,
       dialect: "mysql"
     });
 
@@ -419,10 +541,9 @@ class ChatbotController {
           relevantTables: (i) => tableChain.invoke({ question: i.question }),
         })
 
-      // Langkah 2: Generate Query
+        // Langkah 2: Generate Query
         .assign({
           query: (i) => {
-            console.log(i.relevantTables);
             return queryChain.invoke({
               question: i.question,
               tableNamesToUse: i.relevantTables,
@@ -451,45 +572,7 @@ class ChatbotController {
       console.error("Error in query response BE:", error);
       return {
         status: 'error',
-        message: "Kesalahan dalam memproses permintaan. Silakan coba lagi nanti.",
-        error: error.message,
-      };
-    }
-  }
-
-  async fileRequest(question) {
-    try {
-      // Inisialisasi agent dengan tools
-      const createPDFTool = new CreatePDFTool();
-
-      const llmWithTools = llm.bindTools([createPDFTool]);
-
-      const messages = [new HumanMessage(question)];
-
-      const aiMessage = await llmWithTools.invoke(messages);
-
-      messages.push(aiMessage);
-      const toolsByName = {
-        createPdf: createPDFTool
-      };
-
-      let toolMessage;
-      for (const toolCall of aiMessage.tool_calls) {
-        const selectedTool = toolsByName[toolCall.name];
-        toolMessage = await selectedTool.invoke(toolCall);
-        messages.push(toolMessage);
-      }
-      return toolMessage;
-
-
-      // console.log("Messages :", messages);
-
-      // return await llmWithTools.invoke(messages);
-    } catch (error) {
-      console.error("Error in query response BE:", error);
-      return {
-        status: 'error',
-        message: "Kesalahan dalam memproses permintaan. Silakan coba lagi nanti.",
+        message: "Kesalahan dalam memproses permintaan SQL. Silakan coba lagi nanti.",
         error: error.message,
       };
     }
@@ -497,7 +580,7 @@ class ChatbotController {
 
   async processOpenAI(userMessage, user, chatroomId, intent) {
     try {
-      let response;
+      await trainIntentClassifier('./app/Data/nlp.json');
 
       const previousChatsData = await MMessage.query()
         .where("m_chatroom_id", chatroomId || null)
@@ -508,74 +591,18 @@ class ChatbotController {
       // Mengonversi hasil query menjadi array of objects dengan struktur yang diinginkan
       const previousChats = previousChatsData.toJSON().map(message => ({
         role: message.role,
-        content: [
-          {
-            type: "text",
-            text: message.content
-          }
-        ]
+        content: message.content
       }));
 
       switch (intent) {
         case "text_question":
-          const imagesBase64 = await MMessage.query()
-            .where("m_chatroom_id", chatroomId || null)
-            .where("type_of_content", "image_request")
-            .where("role", "assistant")
-            .orderBy("created_at", "asc")
-            .fetch();
-
-          const images = imagesBase64.toJSON();
-
-          const imageBase64Urls = images
-            .map(image => getBase64FromImgTag(image.content))
-            .filter(url => url !== null);
-
-          const previousImage_urls = imageBase64Urls.length > 0
-            ? imageBase64Urls.map(url => ({
-              type: "image_url",
-              image_url: { url }
-            }))
-            : null;
-
-          response = await openai.chat.completions.create({
-            model: "gpt-4o",
-            messages: [
-              ...previousChats,
-              {
-                role: "user",
-                content: [
-                  {
-                    type: "text",
-                    text: userMessage
-                  },
-                  ...(previousImage_urls ? previousImage_urls : [])
-                ]
-              }
-            ]
-          });
-          return response.choices[0].message.content;
+          return await this.textQuestion(userMessage, previousChats);
         case "image_request":
-          const previousMessages = previousChats.map(chat => chat.content).join(' ');
-          const fullPrompt = previousMessages + ' ' + userMessage;
-
-          response = await openai.images.generate({
-            model: "dall-e-3",
-            prompt: fullPrompt,
-            n: 1,
-            size: "1024x1024",
-            style: "natural",
-            response_format: "b64_json"
-          });
-          const imageBase64 = response.data[0].b64_json;
-          return `<img src="data:image/png;base64,${imageBase64}" alt="Generated Image" />`;
+          return await this.imageRequest(userMessage);
         case "file_request":
-          const responseFile = await this.fileRequest(userMessage);
-          return responseFile?.content;
+          return await this.fileRequest(userMessage);
         case "sql_request":
-          const responseSQL = await this.sqlRequest(userMessage, user);
-          console.log(responseSQL);
-          return responseSQL;
+          return await this.sqlRequest(userMessage, user);
         default:
           return "Invalid intent";
       }
@@ -590,33 +617,30 @@ class ChatbotController {
 
   async openAIResponse({ auth, request, response }) {
     try {
-      const userMessage = request.input("message");
-      // const typeOfAnalysisData = request.input("type_of_analysis_data");
-      const chatroomId = request.input("chatroom_id");
+      const { message, chatroom_id: chatroomId } = request.post();
       const user = await auth.getUser();
-      const userId = user.id;
 
-      const intent = await classifyIntent(userMessage);
+      const intent = await classifyIntent(message);
       console.log(intent);
 
-      const responseOpenAI = await this.processOpenAI(userMessage, user, chatroomId, intent);
+      const responseOpenAI = await this.processOpenAI(message, user, chatroomId, intent);
       if (responseOpenAI.status === "error") {
         return response.status(500).json({
           status: responseOpenAI.status,
           message: responseOpenAI.message,
           intent: responseOpenAI.intent,
-          // error: responseOpenAI.error,
-          error: undefined,
+          error: responseOpenAI.error,
+          // error: undefined,
         });
       }
 
       const messages = [
-        { role: "user", content: userMessage },
+        { role: "user", content: message },
         { role: "assistant", content: responseOpenAI }
       ];
 
       // Ensure the message storing is awaited properly
-      const storeResult = await this.storeMessage(messages, chatroomId, userId, intent);
+      const storeResult = await this.storeMessage(messages, chatroomId, user.id, intent);
       if (storeResult.status === "error") {
         return response.status(500).json({
           status: storeResult.status,
@@ -633,7 +657,6 @@ class ChatbotController {
         chatroomId: storeResult.chatroomId,
         data: storeResult.data
       });
-
     } catch (error) {
       return response.status(500).json({
         status: 'error',
@@ -648,6 +671,7 @@ class ChatbotController {
     try {
       const { content, intent } = request.post();
       saveNewIntent(content, intent);
+      await trainIntentClassifier('./app/Data/nlp.json');
       return response.ok({
         status: 'success',
         message: 'Intent saved successfully'
@@ -846,4 +870,4 @@ class ChatbotController {
   }
 }
 
-module.exports = ChatbotController
+module.exports = ChatbotMistralAIController

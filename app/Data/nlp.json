@@ -1,37 +1,166 @@
 [
-  { "content": "benar", "intent": "text_question" },
-  { "content": "tidak", "intent": "text_question" },
-  { "content": "apa itu gambar?", "intent": "text_question" },
-  { "content": "jelaskan tentang desain grafis", "intent": "text_question" },
-  { "content": "apa yang dimaksud dengan sketsa?", "intent": "text_question" },
-  { "content": "Apakah AI bisa membuat gambar, audio, dan video?", "intent": "text_question" },
-  { "content": "apa yang saya bahas di percakapan sebelumnya?", "intent": "text_question" },
-  { "content": "buatkan gambar anjing", "intent": "image_request" },
-  { "content": "tolong visualisasikan grafik penjualan", "intent": "image_request" },
-  { "content": "saya ingin gambar pemandangan", "intent": "image_request" },
-  { "content": "berikan saya salah satu contoh lukisan dalam berupa gambar", "intent": "image_request" },
-  { "content": "tampilkan foto pemandangan yang indah", "intent": "image_request" },
-  { "content": "tunjukkan gambar sketsa dari kota", "intent": "image_request" },
-  { "content": "tolong kirimkan foto rumah modern", "intent": "image_request" },
-  { "content": "kirimkan file laporan dalam format PDF", "intent": "file_request" },
-  { "content": "kirimkan laporan penjualan dalam format PDF", "intent": "file_request" },
-  { "content": "saya butuh laporan dalam format PDF", "intent": "file_request" },
-  { "content": "tolong kirimkan file dokumen dalam format PDF", "intent": "file_request" },
-  { "content": "kirimkan laporan hasil kerja dalam format PDF", "intent": "file_request" },
-  { "content": "Buatkan saya file pdf yang berisi data Guru di sekolah SMKN 26 Jakarta!", "intent": "file_request" },
-  { "content": "siapakah nama saya?", "intent": "sql_request" },
-  { "content": "saya kelas berapa?", "intent": "sql_request" },
-  { "content": "siapa saja teman sekelas saya?", "intent": "sql_request" },
-  { "content": "Berapa jumlah pengguna di sekolah SMKN 26 Jakarta?", "intent": "sql_request" },
-  { "content": "Sebutkan 3 penghargaan yang dimiliki sekolah SMAN 4 Cibinong!", "intent": "sql_request" },
-  { "content": "Sebutkan 3 prestasi yang dimiliki sekolah SMKN 1 Cibinong", "intent": "sql_request" },
-  { "content": "Berapa jumlah anggota ekskul di sekolah SMAN 1 Cibinong?", "intent": "sql_request" },
-  { "content": "Sebutkan 3 anggota ekskul Osis yang dimiliki sekolah SMK Yaspia!", "intent": "sql_request" },
-  { "content": "Sebutkan 3 nama pengguna di sekolah SMKN 2 Cibinong!", "intent": "sql_request" },
-  { "content": "ada berapa jumlah ujian hari ini?", "intent": "sql_request" },
-  { "content": "ada berapa jumlah ujian hari ini di sekolah Sekolah Demo Smarteschool?", "intent": "sql_request" },
-  { "content": "ujian apa saja yang dilakukan hari ini?", "intent": "sql_request" },
-  { "content": "hari ini ada ujian apa di SMKN 26 Jakarta?", "intent": "sql_request" },
-  { "content": "buatkan saya 10 soal bahasa inggris kelas 9 smp dalam format PDF!", "intent": "file_request" },
-  { "content": "buatkan saya soal matematika kelas 12", "intent": "text_question" }
+  {
+    "content": "benar",
+    "intent": "text_question"
+  },
+  {
+    "content": "tidak",
+    "intent": "text_question"
+  },
+  {
+    "content": "apa itu gambar?",
+    "intent": "text_question"
+  },
+  {
+    "content": "jelaskan tentang desain grafis!",
+    "intent": "text_question"
+  },
+  {
+    "content": "apa yang dimaksud dengan sketsa?",
+    "intent": "text_question"
+  },
+  {
+    "content": "apakah AI bisa membuat gambar, audio, dan video?",
+    "intent": "text_question"
+  },
+  {
+    "content": "apa yang saya bahas di percakapan sebelumnya?",
+    "intent": "text_question"
+  },
+  {
+    "content": "buatkan gambar anjing!",
+    "intent": "image_request"
+  },
+  {
+    "content": "tolong visualisasikan grafik penjualan!",
+    "intent": "image_request"
+  },
+  {
+    "content": "saya ingin gambar pemandangan!",
+    "intent": "image_request"
+  },
+  {
+    "content": "berikan saya salah satu contoh lukisan dalam berupa gambar!",
+    "intent": "image_request"
+  },
+  {
+    "content": "tampilkan foto pemandangan yang indah!",
+    "intent": "image_request"
+  },
+  {
+    "content": "tunjukkan gambar sketsa dari kota!",
+    "intent": "image_request"
+  },
+  {
+    "content": "tolong kirimkan foto rumah modern!",
+    "intent": "image_request"
+  },
+  {
+    "content": "kirimkan file laporan dalam format PDF!",
+    "intent": "file_request"
+  },
+  {
+    "content": "kirimkan laporan penjualan dalam format PDF!",
+    "intent": "file_request"
+  },
+  {
+    "content": "saya butuh laporan dalam format PDF!",
+    "intent": "file_request"
+  },
+  {
+    "content": "tolong kirimkan file dokumen dalam format PDF!",
+    "intent": "file_request"
+  },
+  {
+    "content": "kirimkan laporan hasil kerja dalam format PDF!",
+    "intent": "file_request"
+  },
+  {
+    "content": "buatkan saya file pdf yang berisi data Guru di sekolah SMKN 26 Jakarta!",
+    "intent": "file_request"
+  },
+  {
+    "content": "siapakah nama saya?",
+    "intent": "sql_request"
+  },
+  {
+    "content": "saya kelas berapa?",
+    "intent": "sql_request"
+  },
+  {
+    "content": "siapa saja teman sekelas saya?",
+    "intent": "sql_request"
+  },
+  {
+    "content": "berapa jumlah pengguna di sekolah SMKN 26 Jakarta?",
+    "intent": "sql_request"
+  },
+  {
+    "content": "sebutkan 3 penghargaan yang dimiliki sekolah SMAN 4 Cibinong!",
+    "intent": "sql_request"
+  },
+  {
+    "content": "sebutkan 3 prestasi yang dimiliki sekolah SMKN 1 Cibinong!",
+    "intent": "sql_request"
+  },
+  {
+    "content": "berapa jumlah anggota ekskul di sekolah SMAN 1 Cibinong?",
+    "intent": "sql_request"
+  },
+  {
+    "content": "sebutkan 3 anggota ekskul Osis yang dimiliki sekolah SMK Yaspia!",
+    "intent": "sql_request"
+  },
+  {
+    "content": "sebutkan 3 nama pengguna di sekolah SMKN 2 Cibinong!",
+    "intent": "sql_request"
+  },
+  {
+    "content": "ada berapa jumlah ujian hari ini?",
+    "intent": "sql_request"
+  },
+  {
+    "content": "ada berapa jumlah ujian hari ini di sekolah Sekolah Demo Smarteschool?",
+    "intent": "sql_request"
+  },
+  {
+    "content": "ujian apa saja yang dilakukan hari ini?",
+    "intent": "sql_request"
+  },
+  {
+    "content": "hari ini ada ujian apa di SMKN 26 Jakarta?",
+    "intent": "sql_request"
+  },
+  {
+    "content": "buatkan saya 10 soal bahasa inggris kelas 9 smp dalam format PDF!",
+    "intent": "file_request"
+  },
+  {
+    "content": "buatkan saya soal matematika kelas 12!",
+    "intent": "text_question"
+  },
+  {
+    "content": "apakah saya seorang guru?",
+    "intent": "sql_request"
+  },
+  {
+    "content": "Pertanyaan apa yang baru saja saya tanyakan kepada anda?",
+    "intent": "text_question"
+  },
+  {
+    "content": "Sebutkan surat keluar pada tanggal 2021-11-11 di SMK Bhakti Persada!",
+    "intent": "sql_request"
+  },
+  {
+    "content": "Lihat data surat keluar pada tanggal 2021-11-11 di SMK Bhakti Persada!",
+    "intent": "sql_request"
+  },
+  {
+    "content": "apakah seorang siswa wajib rapih dalam berpakaian?",
+    "intent": "text_question"
+  },
+  {
+    "content": "Berapa jumlah Alumni di Sekolah SMKN 26 Jakarta\\?",
+    "intent": "sql_request"
+  }
 ]
