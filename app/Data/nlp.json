@@ -162,5 +162,17 @@
   {
     "content": "Berapa jumlah Alumni di Sekolah SMKN 26 Jakarta\\?",
     "intent": "sql_request"
+  },
+  {
+    "content": "berapa total siswa kelas x di smkn 26 jakarta?",
+    "intent": "sql_request"
+  },
+  {
+    "content": "berapa jumlah siswa di sma suluh jakarta selatan?",
+    "intent": "sql_request"
+  },
+  {
+    "content": "berapa jumlah siswa di smkn 26 jakarta?",
+    "intent": "sql_request"
   }
 ]

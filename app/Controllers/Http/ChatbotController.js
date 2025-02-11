@@ -11,12 +11,15 @@ const openai = new OpenAI({ apiKey: Env.OPENAI_API_KEY });
 const { z } = require("zod");
 const { DataSource } = require("typeorm");
 const { SqlDatabase } = require("langchain/sql_db");
+const { ChatOpenAI, OpenAIEmbeddings } = require("@langchain/openai");
 const { ChatMistralAI, MistralAIEmbeddings } = require("@langchain/mistralai");
 const { createSqlQueryChain } = require("langchain/chains/sql_db");
-const { PromptTemplate, ChatPromptTemplate } = require("@langchain/core/prompts");
+
 const { StringOutputParser } = require("@langchain/core/output_parsers");
 const { RunnablePassthrough, RunnableSequence } = require("@langchain/core/runnables");
 const { MemoryVectorStore } = require('langchain/vectorstores/memory');
+const { SemanticSimilarityExampleSelector } = require("@langchain/core/example_selectors");
+const { PromptTemplate, ChatPromptTemplate, FewShotPromptTemplate } = require("@langchain/core/prompts");
 
 const fs = require('fs');
 const PDFDocument = require('pdfkit');
@@ -26,14 +29,22 @@ const { HumanMessage } = require('@langchain/core/messages');
 const embeddings = new MistralAIEmbeddings({
   model: "mistral-embed"
 });
+// const embeddings = new OpenAIEmbeddings({
+//   model: "text-embedding-3-small"
+// });
 const vectorStore = new MemoryVectorStore(embeddings);
-// const natural = require('natural');
-// const classifier = new natural.BayesClassifier();
+const natural = require('natural');
+const classifier = new natural.BayesClassifier();
 
 const llm = new ChatMistralAI({
   model: "mistral-large-latest",
   temperature: 0,
 });
+
+// const llm = new ChatMistralAI({
+//   model: "mistral-large-latest",
+//   temperature: 0,
+// });
 
 const datasource = new DataSource({
   type: Env.get("DB_CONNECTION"),
@@ -55,41 +66,41 @@ function getBase64FromImgTag(content) {
 
 // FUNGSI INTENT 1.0
 // // Function untuk memuat data dari file JSON dan melatih classifier
-// function trainClassifierFromJson(filePath) {
-//   // Membaca file JSON
-//   const rawData = fs.readFileSync(filePath);
-//   const trainingData = JSON.parse(rawData);
+function trainClassifierFromJson(filePath) {
+  // Membaca file JSON
+  const rawData = fs.readFileSync(filePath);
+  const trainingData = JSON.parse(rawData);
 
-//   // Menambahkan setiap item dalam JSON ke classifier
-//   trainingData.forEach((item) => {
-//     const { content, intent } = item;
-//     classifier.addDocument(content, intent);
-//   });
+  // Menambahkan setiap item dalam JSON ke classifier
+  trainingData.forEach((item) => {
+    const { content, intent } = item;
+    classifier.addDocument(content, intent);
+  });
 
-//   // Melatih classifier
-//   classifier.train();
-// }
+  // Melatih classifier
+  classifier.train();
+}
 
 // // Memanggil function untuk melatih classifier dengan file JSON
-// trainClassifierFromJson('./app/Data/nlp.json');
+trainClassifierFromJson('./app/Data/nlp.json');
 
 // FUNGSI INTENT 2.0
 // Fungsi untuk melatih intent classifier
-async function trainIntentClassifier(filePath) {
-  try {
-    const rawData = fs.readFileSync(filePath, 'utf-8');
-    const trainingData = JSON.parse(rawData);
+// async function trainIntentClassifier(filePath) {
+//   try {
+//     const rawData = fs.readFileSync(filePath, 'utf-8');
+//     const trainingData = JSON.parse(rawData);
 
-    const docs = trainingData.map(item => ({
-      pageContent: item.content,
-      metadata: { intent: item.intent }
-    }));
+//     const docs = trainingData.map(item => ({
+//       pageContent: item.content,
+//       metadata: { intent: item.intent }
+//     }));
 
-    await vectorStore.addDocuments(docs);
-  } catch (error) {
-    console.error("Gagal melatih classifier:", error);
-  }
-}
+//     await vectorStore.addDocuments(docs);
+//   } catch (error) {
+//     console.error("Gagal melatih classifier:", error);
+//   }
+// }
 
 // Fungsi untuk menyimpan intent baru jika tidak ditemukan
 function saveNewIntent(content, intent, filePath = "./app/Data/nlp.json") {
@@ -108,14 +119,14 @@ function saveNewIntent(content, intent, filePath = "./app/Data/nlp.json") {
 }
 
 // Fungsi untuk mengklasifikasikan intent
-async function classifyIntent(text) {
-  const results = await vectorStore.similaritySearch(text, 4);
-  return results[0]?.metadata?.intent;
-}
+// async function classifyIntent(text) {
+//   const results = await vectorStore.similaritySearch(text, 4);
+//   return results[0]?.metadata?.intent;
+// }
 
-(async () => {
-  await trainIntentClassifier('./app/Data/nlp.json');
-})();
+// (async () => {
+//   await trainIntentClassifier('./app/Data/nlp.json');
+// })();
 
 class CreatePDFTool extends StructuredTool {
   name = "createPdf";
@@ -191,271 +202,470 @@ class ChatbotController {
   }
 
   async sqlRequest(question, user) {
-    const db = await SqlDatabase.fromDataSourceParams({
-      appDataSource: datasource,
-      includesTables: [
-        // Table Utama
-        "m_user",
-        "m_sekolah",
-        "m_ta",
-
-        // TU
-        "m_mata_pelajaran",
-        "m_profil_user",
-        "m_rombel",
-        "m_anggota_rombel",
-        "m_barang",
-        "m_lokasi",
-        "m_surat",
-        "m_disposisi",
-        "m_pelaporan_disposisi",
-
-        // PPDB
-        "m_alur_ppdb",
-        "m_jalur_ppdb",
-        "m_informasi_jalur_ppdb",
-        "m_pendaftar_ppdb",
-        "m_gelombang_ppdb",
-        "m_jadwal_ppdb",
-        "tk_peserta_ujian_ppdb",
-
-        // PKL
-        "m_penerimaan_siswa",
-        "m_penerimaan_perusahaan",
-        "tk_perusahaan_sekolah",
-        "m_perusahaan",
-
-        "m_penghargaan",
-        "m_sanksi_siswa",
-        "m_sikap_siswa",
-        "m_pelanggaran",
-        "m_kategori_pelanggaran",
-        "tk_siswa_pelanggaran",
-        "m_sanksi_pelanggaran",
-        "m_prestasi",
-        "m_anggota_ekskul",
-        "m_ekstrakurikuler",
-        "m_rapor_ekskul",
-        "m_sarpras",
-        "m_keterangan_pkl",
-        "m_mou_perusahaan",
-        "m_alumni",
-        "m_jurusan",
-        "m_jadwal_ujian",
-        "m_peringatan_ujian_siswa",
-        "m_soal_ujian",
-        "m_ujian",
-        "m_ujian_siswa",
-        "tk_jadwal_ujian",
-        "tk_jawaban_ujian_siswa",
-        "tk_peserta_ujian",
-        "tk_siswa_ujian",
-        "tk_soal_ujian",
-        "m_jam_mengajar",
-        "m_jadwal_mengajar",
-        "m_kategori",
-        "m_kategori_mapel",
-        "m_predikat_nilai",
-        "m_bobot_nilai",
-        "m_tugas",
-        "m_rekap",
-        "tk_rekap_nilai",
-        "m_rekap_rombel",
-        "tk_mapel_rapor"
-      ],
-      sampleRowsInTableInfo: 2,
-    });
-
-    const Table = z.object({
-      names: z.array(z.string()).describe("Names of tables in SQL database"),
-    });
-
-    const tableNames = db.includesTables.map((t) => t).join("\n");
-
-    const system = `
-      Return the names of ALL the SQL tables that MIGHT be relevant to the user question.
-      The tables are:
-
-      ${tableNames}
-
-      Remember to include ALL POTENTIALLY RELEVANT tables, even if you're not sure that they're needed.
-      Question: {question}
-      Relevant Tables:
-    `;
-
-    const prompt = ChatPromptTemplate.fromMessages([
-      ["system", system],
-      ["human", "{question}"],
-    ]);
-
-    const tableChain = prompt.pipe(llm.withStructuredOutput(Table));
-
-    const answerPrompt = PromptTemplate.fromTemplate(`
-      Anda adalah seorang Assistant Aplikasi SmartESchool yang berguna untuk menjawab pertanyaan - pertanyaan pengguna dalam mempertanyakan terhadap data di aplikasi ini.
-      Semisal hasil dari SQL Error maka berikanlah respon yang menjelaskan bahwa pertanyaan pengguna kurang memberikan informasi yang tepat. Dan jelaskan dengan bahasa yang bukan teknis agar orang awam mengerti.
-      Untuk Pengguna Chatbot kurang lebih seorang anggota sekolah seperti siswa, guru, kepala sekolah, admin, dll.
-      Diberikan pertanyaan pengguna berikut, query SQL yang sesuai, dan hasil SQL, jawablah pertanyaan pengguna.
-
-      Pertanyaan: {question}
-      Query SQL: {query}
-      Hasil SQL: {result}
-
-      Jawaban:
-    `);
-
-    const answerChain = answerPrompt.pipe(llm).pipe(new StringOutputParser());
-
-    const validationPrompt = `
-      Tugas Anda sebagai ahli SQL {dialect} adalah untuk menghasilkan query SQL yang sintaksisnya benar dan kontekstual sesuai dengan pertanyaan yang diberikan.
-      Buatlah query SQL berdasarkan informasi pengguna yang telah login. Informasi pengguna yang tersedia adalah sebagai berikut:
-
-      ID Pengguna: ${user.id}
-      Role: ${user.role} (contoh: 'siswa', 'guru', atau 'admin')
-      Nama: ${user.nama}
-      ID Sekolah: ${user.m_sekolah_id}
-      Saat pengguna memberikan pertanyaan, tugas Anda adalah:
-      Memahami konteks pertanyaan dan memastikan query SQL yang dihasilkan relevan dengan data pengguna.
-      Sebelum membuat query, Anda harus memahami struktur database terlebih dahulu.
-
-      Gunakan skema tabel berikut:
-      {table_info}
-
-      **Langkah 1: Membaca Skema Database**
-        - Pertama, tinjau informasi skema yang diberikan. Informasi ini mencakup daftar tabel, kolom-kolomnya, dan hubungan antar tabel (kunci asing dan cara penggabungan/join). Gunakan informasi ini untuk membuat query secara akurat.
-        - Jika informasi skema tidak disediakan, Anda harus mengambil detail skema database secara dinamis melalui \`INFORMATION_SCHEMA\` (atau metadata database serupa). Secara spesifik, Anda perlu menemukan tabel dan hubungan antar tabelnya.
-        - Periksa hubungan kunci asing antara tabel. Cari kolom yang dinamai dengan pola \`<related_table>_id\` yang menunjukkan kunci asing.
-        - Pastikan Anda memahami tabel mana yang berhubungan dan bagaimana mereka harus digabungkan. Pastikan juga Anda mengetahui jenis penggabungan (INNER JOIN, LEFT JOIN, dll.) berdasarkan skema dan pertanyaan pengguna.
-
-      **Langkah 2: Memahami Pertanyaan**
-        - Setelah skema dimuat, analisis pertanyaan pengguna untuk menentukan tabel dan kolom mana yang dibutuhkan untuk query.
-        - Identifikasi peran spesifik atau kondisi penyaringan (misalnya, \`siswa\`, \`guru\`, \`admin\`) dan pastikan atribut ini digunakan untuk memfilter data secara benar.
-
-      **Langkah 3: Membuat Query**
-        - Buat query hanya dengan menggunakan command SELECT (Jangan gunakan command CRETE, UPDATE, DELETE, ALTER, dll).
-        - Buat query dengan memilih hanya kolom yang diperlukan untuk menjawab pertanyaan pengguna. Jangan sertakan data yang tidak diperlukan.
-        - Kecuali pengguna menentukan jumlah data yang ingin diambil, gunakan batasan maksimal ({top_k} atau 5 hasil) dengan klausa LIMIT sesuai dengan standar {dialect}.
-        - Jika pengguna tidak menentukan batas jumlah data, tambahkan klausa LIMIT dengan maksimum 5 baris. Jika pengguna meminta semua data secara eksplisit, jangan sertakan klausa LIMIT.
-        - Gunakan penggabungan eksplisit (misalnya, \`INNER JOIN\`, \`LEFT JOIN\`, dll.) dan pastikan kondisinya benar.
-        - Bungkus setiap nama kolom dengan tanda kutip balik (\`\`) untuk menandai bahwa itu adalah pengenal.
-        - Tulis query dalam satu baris tanpa menggunakan karakter baris baru (\`\\n\`) atau penggabungan string (\`+\`).
-        - Jika pertanyaan berkaitan dengan informasi pribadi pengguna, tambahkan kondisi filter berdasarkan id, role, atau m_sekolah_id.
-
-      **Langkah 4: Verifikasi Ketepatan Query**
-        - Periksa ulang bahwa query menggunakan tabel dan kolom yang benar sesuai dengan skema.
-        - Pastikan semua kondisi JOIN didasarkan pada kunci asing dan bahwa hubungan antar tabel sudah benar.
-        - Pastikan query menangani penyaringan berdasarkan peran (misalnya, memfilter berdasarkan kolom role untuk siswa, guru, admin) jika disebutkan.
-
-      **Hindari Kesalahan Umum**
-      **Hindari kesalahan umum dalam SQL, seperti**:
-        - Menggunakan NOT IN dengan nilai NULL.
-        - Penggunaan UNION yang salah, seharusnya menggunakan UNION ALL.
-        - Ketidaksesuaian tipe data dalam klausa WHERE atau kondisi JOIN.
-        - Jumlah argumen yang salah dalam fungsi SQL.
-        - Penggunaan tanda kutip yang tidak benar pada pengenal.
-        - Menggunakan BETWEEN untuk rentang eksklusif kecuali diminta secara eksplisit.
-        - Gagal menangani nilai NULL dengan benar, terutama dalam JOIN atau klausa WHERE.
-        - Jangan menggunakan anotasi Markdown (seperti sql).
-        - Hanya kembalikan query SQL mentah.
-        - Pastikan query secara sintaksis dan kontekstual benar.
-        - Verifikasi penggabungan, filter, dan kondisi yang benar sesuai dengan skema database.
-
-      **Catatan Umum**
-        - Tambahkan logika untuk membaca data berdasarkan waktu tertentu. Gunakan:
-        - **Hari ini:** Gunakan \`CURDATE()\`.
-        - **Kemarin:** Gunakan \`DATE_SUB(CURDATE(), INTERVAL 1 DAY)\`.
-        - **Besok:** Gunakan \`DATE_ADD(CURDATE(), INTERVAL 1 DAY)\`.
-        - **Lusa:** Gunakan \`DATE_ADD(CURDATE(), INTERVAL 2 DAY)\`.
-        - **Dua hari lalu:** Gunakan \`DATE_SUB(CURDATE(), INTERVAL 2 DAY)\`.
-        - **Rentang waktu:** Gunakan format \`BETWEEN 'YYYY-MM-DD' AND 'YYYY-MM-DD'\`.
-        - **Hari tertentu dalam minggu:** Gunakan \`DAYOFWEEK()\` atau \`WEEKDAY()\` untuk membandingkan hari tertentu.
-        - Selalu pastikan query sesuai dengan struktur dan batasan tabel yang diberikan.
-        - Untuk tabel \`m_user\`, kolom \`role\` membedakan antara siswa, guru, dan admin. Pastikan kolom ini digunakan dengan benar untuk memfilter data jika berlaku.
-        - Semisal pengguna meminta data jadwal ujian yang memerlukan relasi dengan sekolah gunakan perintah JOIN seperti ini:  JOIN m_user ON m_user.id = m_jadwal_ujian.m_user_id JOIN m_sekolah ON m_sekolah.id = m_user.m_sekolah_id.
-        - Semisal pengguna menanyakan data yang berkaitan dengan tahun akademik atau ta jangan sertakan kolom aktif pada table m_ta (ta yang digunakan saat ini) jika tidak dibahas.
-        - Saat membuat query, periksa setiap tabel yang digunakan apakah memiliki kolom \`dihapus\`.
-        - Jika sebuah tabel memiliki kolom \`dihapus\`, tambahkan kondisi \`AND <nama_tabel>.\`dihapus\` = 0\` di klausa WHERE untuk menyaring data yang tidak dihapus.
-        - Jika sebuah tabel tidak memiliki kolom \`dihapus\`, kondisi tersebut tidak perlu ditambahkan.
-
-      **Pemetaan Relasional**
-        - Untuk setiap hubungan antar tabel, pahami kolom kunci asing mana yang harus digunakan untuk penggabungan.
-        - Pastikan query hanya mencakup penggabungan yang diperlukan dan menghindari data yang redundan.
-
-      Buat query berdasarkan input pengguna dan pastikan query sesuai dengan struktur database dan hubungan yang dijelaskan di atas. Periksa ulang query untuk ketepatan dan kebenaran logis sebelum menyelesaikannya. Setiap query yang dihasilkan harus mencakup klausa LIMIT dengan maksimal {top_k} atau 5 hasil, kecuali dinyatakan sebaliknya oleh pengguna:
-        - Tambahkan klausa \`LIMIT\` dengan maksimal 5 baris jika pengguna tidak meminta semua data.
-        - Jangan tambahkan klausa \`LIMIT\` jika pengguna secara eksplisit meminta semua data.
-
-      Hanya keluarkan query SQL mentah sebagai output.
-      Contoh output:
-        - Query untuk menghitung jumlah pengguna siswa: SELECT COUNT('m_user'.'id') AS jumlah_siswa FROM 'm_user' INNER JOIN 'm_sekolah' ON 'm_user'.'m_sekolah_id' = 'm_sekolah'.'id' WHERE 'm_user'.'role' = 'siswa' AND 'm_sekolah'.'nama' = 'SMKN 26 Jakarta';
-        - Query untuk melihat data lokasi berserta dengan total barang sarpas: SELECT m_lokasi.nama AS nama_lokasi, COUNT(m_barang.nama) AS total_barang FROM m_lokasi JOIN m_barang ON m_lokasi.id = m_barang.m_lokasi_id JOIN m_sekolah ON m_lokasi.m_sekolah_id = m_sekolah.id WHERE m_sekolah.nama = 'Sekolah Demo Smarteschool' AND m_lokasi.dihapus = 0 AND m_barang.dihapus = 0 GROUP BY m_lokasi.nama;
-        - Query untuk melihat data ujian hari ini: SELECT m_ujian.nama AS ujian_nama, m_jadwal_ujian.waktu_dibuka, m_user.nama AS pembuat_jadwal, m_sekolah.nama AS sekolah_nama FROM m_ujian JOIN m_jadwal_ujian ON m_jadwal_ujian.m_ujian_id = m_ujian.id JOIN m_user ON m_user.id = m_jadwal_ujian.m_user_id JOIN m_sekolah ON m_sekolah.id = m_user.m_sekolah_id WHERE date(m_jadwal_ujian.waktu_dibuka) = curdate() AND m_sekolah.nama = "SMAN 8 Jakarta";
-        - Query untuk melihat data ujian dengan tanggal tertentu: SELECT m_ujian.nama AS ujian_nama, m_jadwal_ujian.waktu_dibuka, m_user.nama AS pembuat_jadwal, m_sekolah.nama AS sekolah_nama FROM m_ujian JOIN m_jadwal_ujian ON m_jadwal_ujian.m_ujian_id = m_ujian.id JOIN m_user ON m_user.id = m_jadwal_ujian.m_user_id JOIN m_sekolah ON m_sekolah.id = m_user.m_sekolah_id WHERE date(m_jadwal_ujian.waktu_dibuka) = "2025-01-03" AND m_sekolah.nama = "SMAN 8 Jakarta";
-        - Query untuk melihat data peserta ujian hari ini: select distinct tk_peserta_ujian.id as id_peserta, m_user.nama as nama_peserta, m_jadwal_ujian.waktu_dibuka as waktu_dibuka, m_ujian.nama as nama_ujian, m_sekolah.nama as nama_sekolah from tk_peserta_ujian join m_user on m_user.id = tk_peserta_ujian.m_user_id join m_sekolah on m_sekolah.id = m_user.m_sekolah_id join tk_jadwal_ujian on tk_jadwal_ujian.id = tk_peserta_ujian.tk_jadwal_ujian_id join m_jadwal_ujian on m_jadwal_ujian.id = tk_jadwal_ujian.m_jadwal_ujian_id join m_ujian on m_ujian.id = m_jadwal_ujian.m_ujian_id where date(m_jadwal_ujian.waktu_dibuka) = curdate() and m_sekolah.nama = "sman 8 jakarta";
-        - Query untuk melihat data peserta ujian dengan tanggal tertentu: select distinct tk_peserta_ujian.id as id_peserta, m_user.nama as nama_peserta, m_jadwal_ujian.waktu_dibuka as waktu_dibuka, m_ujian.nama as nama_ujian, m_sekolah.nama as nama_sekolah from tk_peserta_ujian join m_user on m_user.id = tk_peserta_ujian.m_user_id join m_sekolah on m_sekolah.id = m_user.m_sekolah_id join tk_jadwal_ujian on tk_jadwal_ujian.id = tk_peserta_ujian.tk_jadwal_ujian_id join m_jadwal_ujian on m_jadwal_ujian.id = tk_jadwal_ujian.m_jadwal_ujian_id join m_ujian on m_ujian.id = m_jadwal_ujian.m_ujian_id where date(m_jadwal_ujian.waktu_dibuka) = "2025-01-16" and m_sekolah.nama = "sman 8 jakarta";
-        - Query untuk melihat data surat keluar pada tanggal yang ditentukan: SELECT m_surat.nomor, m_surat.perihal, m_surat.asal, m_surat.tanggal FROM m_surat INNER JOIN m_sekolah ON m_surat.m_sekolah_id = m_sekolah.id WHERE m_surat.tipe = 'keluar' AND m_surat.tanggal = '2021-11-11' AND m_sekolah.nama = 'SMK Bhakti Persada' AND m_surat.dihapus = 0;
-        - Query untuk menampilkan jadwal mengajar sesuai dengan waktu yang ditentukan: SELECT m_rombel.nama AS kelas, m_jam_mengajar.jam_mulai, m_jam_mengajar.jam_selesai, m_mata_pelajaran.nama AS mata_pelajaran, m_user.nama AS guru FROM m_jadwal_mengajar JOIN m_jam_mengajar ON m_jadwal_mengajar.m_jam_mengajar_id = m_jam_mengajar.id JOIN m_mata_pelajaran ON m_jadwal_mengajar.m_mata_pelajaran_id = m_mata_pelajaran.id JOIN m_rombel ON m_jadwal_mengajar.m_rombel_id = m_rombel.id JOIN m_user ON m_mata_pelajaran.m_user_id = m_user.id JOIN m_sekolah ON m_jadwal_mengajar.m_sekolah_id = m_sekolah.id JOIN m_ta ON m_jadwal_mengajar.m_ta_id = m_ta.id WHERE m_sekolah.nama = 'Sekolah Demo Smarteschool' AND m_ta.aktif = 1 AND m_jam_mengajar.kode_hari = DAYOFWEEK(CURDATE()) - 1 and m_user.dihapus = 0 and m_mata_pelajaran.dihapus = 0 and m_rombel.dihapus = 0 and m_ta.dihapus = 0;
-        - Query untuk menampilkan nilai ujian siswa: SELECT tk_peserta_ujian.nilai FROM tk_peserta_ujian JOIN m_user ON tk_peserta_ujian.m_user_id = m_user.id JOIN tk_jadwal_ujian ON tk_peserta_ujian.tk_jadwal_ujian_id = tk_jadwal_ujian.id join m_jadwal_ujian on tk_jadwal_ujian.m_jadwal_ujian_id = m_jadwal_ujian.id join m_ujian on m_jadwal_ujian.m_ujian_id = m_ujian.id WHERE m_ujian.nama = 'DIAGNOSTIK MATEMATIKA 2425' AND m_user.nama = 'HILMY MUZHAFFAR PASHA'
-        - Query untuk menampilkan nama siswa yang pkl di perusahaan PT. SmartSchool: SELECT m_user.nama AS nama_siswa FROM m_penerimaan_siswa INNER JOIN m_user ON m_penerimaan_siswa.m_user_id = m_user.id INNER JOIN m_penerimaan_perusahaan ON m_penerimaan_siswa.m_penerimaan_perusahaan_id = m_penerimaan_perusahaan.id INNER JOIN tk_perusahaan_sekolah ON m_penerimaan_perusahaan.tk_perusahaan_sekolah_id = tk_perusahaan_sekolah.id INNER JOIN m_perusahaan ON tk_perusahaan_sekolah.m_perusahaan_id = m_perusahaan.id WHERE m_perusahaan.nama = "PT. SmartSchool" AND m_perusahaan.dihapus = 0 AND m_penerimaan_siswa.dihapus = 0;
-        - Query untuk mendapatkan data nama walikelas dari suatu rombel atau kelas seseorang: SELECT m_user.nama AS nama_walikelas FROM m_rombel INNER JOIN m_anggota_rombel ON m_anggota_rombel.m_rombel_id = m_rombel.id INNER JOIN m_user ON m_rombel.m_user_id = m_user.id WHERE m_anggota_rombel.m_user_id = 2912837 AND m_anggota_rombel.dihapus = 0 LIMIT 5;
-    `;
-
-    const prompt2 = ChatPromptTemplate.fromMessages([
-      ["system", validationPrompt],
-      ["human", "{input}"]
-    ]);
-
-    // const executeQuery = new QuerySqlTool(db);
-    const queryChain = await createSqlQueryChain({
-      llm,
-      db,
-      prompt: prompt2,
-      dialect: "mysql"
-    });
-
-    const fullChain = RunnableSequence.from([
-      // Langkah 1: Dapatkan nama tabel yang relevan
-      RunnablePassthrough
-        .assign({
-          relevantTables: (i) => tableChain.invoke({ question: i.question }),
-        })
-
-      // Langkah 2: Generate Query
-        .assign({
-          query: (i) => {
-            console.log(i.relevantTables);
-            return queryChain.invoke({
-              question: i.question,
-              tableNamesToUse: i.relevantTables,
-            })
-          }
-        }),
-
-      // Langkah 3: Eksekusi untuk Query yang sudah dibuat lalu mendapatkan hasil Query nya
-      RunnablePassthrough
-        .assign({
-          result: async (i) => {
-            console.log("query yg di eksekusi:", i.query);
-            console.log("hasil query yg di eksekusi:", await db.run(i.query));
-            return await db.run(i.query)
-          }
-        }),
-
-      // Langkah 4: Dapatkan jawaban dari pertanyaan sesuai format
-      answerChain
-    ]);
-
     try {
-      const responseOpenAI = await fullChain.invoke({ question: question });
-      return responseOpenAI;
+        console.log("⚡ [SQL Request] Memproses pertanyaan:", question);
+        console.log("🔍 [User Info] ID:", user.id, "| Sekolah ID:", user.m_sekolah_id);
+
+        // 1️⃣ Ambil nama sekolah user dari tabel m_sekolah dengan .first()
+        const userSchool = await MChatroom.query()
+            .from("m_sekolah")
+            .where("id", user.m_sekolah_id)
+            .select("nama")
+            .first();
+
+        if (!userSchool || !userSchool.nama) {
+            console.error("❌ [ERROR] Sekolah tidak ditemukan untuk user:", user.id);
+            return {
+                status: 'error',
+                message: "Data sekolah tidak ditemukan.",
+                validationLog: {
+                    userSchoolId: user.m_sekolah_id,
+                    userSchoolName: null,
+                    mentionedSchool: "Tidak ada",
+                    accessAllowed: false
+                }
+            };
+        }
+
+        const userSchoolName = userSchool.nama.trim();
+        console.log("🏫 [User Sekolah] Nama:", userSchoolName);
+
+        // 2️⃣ Ambil semua nama sekolah untuk validasi dengan .fetch()
+        const allSchools = await MChatroom.query()
+            .from("m_sekolah")
+            .select("nama")
+            .fetch();
+
+        const schoolNames = allSchools.rows.map(school => school.nama.trim());
+
+        // 3️⃣ Buat regex untuk mendeteksi sekolah dalam pertanyaan
+        const regexSchoolName = new RegExp(`\\b(${schoolNames.join("|")})\\b`, "i");
+        const mentionedSchool = question.match(regexSchoolName)?.[0]?.trim();
+
+        console.log("📌 [Mentioned School]:", mentionedSchool || "Tidak ada sekolah disebut dalam pertanyaan");
+
+        // 4️⃣ VALIDASI AKSES: Jika user bertanya tentang sekolah lain, blokir akses SEBELUM lanjut ke SQL
+        if (mentionedSchool && mentionedSchool !== userSchoolName) {
+            console.error(`🔴 [ACCESS DENIED] User ${user.id} dari ${userSchoolName} mencoba mengakses ${mentionedSchool}`);
+            return `Anda tidak memiliki akses untuk melihat data dari ${mentionedSchool}.`;
+            // return {
+            //     status: 'error',
+            //     message: `Anda tidak memiliki akses untuk melihat data dari ${mentionedSchool}.`,
+            //     validationLog: {
+            //         userSchoolId: user.m_sekolah_id,
+            //         userSchoolName: userSchoolName,
+            //         mentionedSchool: mentionedSchool,
+            //         accessAllowed: false
+            //     }
+            // };
+        }
+
+        // ✅ VALIDASI SUKSES: Jika validasi berjalan lancar, lanjut ke pembuatan query
+        console.log(`✅ [ACCESS GRANTED] User ${user.id} diizinkan mengakses data sekolah: ${mentionedSchool || userSchoolName}`);
+
+        // 5️⃣ Pastikan query hanya mengambil data sekolah user
+        const db = await SqlDatabase.fromDataSourceParams({
+            appDataSource: datasource,
+            includesTables: [
+              // Table Utama
+              "m_user",
+              "m_sekolah",
+              "m_ta",
+      
+              // TU
+              "m_mata_pelajaran",
+              "m_profil_user",
+              "m_rombel",
+              "m_anggota_rombel",
+              "m_barang",
+              "m_lokasi",
+              "m_surat",
+              "m_disposisi",
+              "m_pelaporan_disposisi",
+      
+              // PPDB
+              "m_alur_ppdb",
+              "m_jalur_ppdb",
+              "m_informasi_jalur_ppdb",
+              "m_pendaftar_ppdb",
+              "m_gelombang_ppdb",
+              "m_jadwal_ppdb",
+              "tk_peserta_ujian_ppdb",
+      
+              // PKL
+              "m_penerimaan_siswa",
+              "m_penerimaan_perusahaan",
+              "tk_perusahaan_sekolah",
+              "m_perusahaan",
+      
+              "m_penghargaan",
+              "m_sanksi_siswa",
+              "m_sikap_siswa",
+              "m_pelanggaran",
+              "m_kategori_pelanggaran",
+              "tk_siswa_pelanggaran",
+              "m_sanksi_pelanggaran",
+              "m_prestasi",
+              "m_anggota_ekskul",
+              "m_ekstrakurikuler",
+              "m_rapor_ekskul",
+              "m_sarpras",
+              "m_keterangan_pkl",
+              "m_mou_perusahaan",
+              "m_alumni",
+              "m_jurusan",
+              "m_jadwal_ujian",
+              "m_peringatan_ujian_siswa",
+              "m_soal_ujian",
+              "m_ujian",
+              "m_ujian_siswa",
+              "tk_jadwal_ujian",
+              "tk_jawaban_ujian_siswa",
+              "tk_peserta_ujian",
+              "tk_siswa_ujian",
+              "tk_soal_ujian",
+              "m_jam_mengajar",
+              "m_jadwal_mengajar",
+              "m_kategori",
+              "m_kategori_mapel",
+              "m_predikat_nilai",
+              "m_bobot_nilai",
+              "m_tugas",
+              "m_rekap",
+              "tk_rekap_nilai",
+              "m_rekap_rombel",
+              "tk_mapel_rapor"
+            ],
+            sampleRowsInTableInfo: 2,
+        });
+
+        const Table = z.object({
+          names: z.array(z.string()).describe("Names of tables in SQL database"),
+        });
+    
+        const tableNames = db.includesTables.map((t) => t).join("\n");
+    
+        const relavantTablePrompt = `
+          Return the names of ALL the SQL tables that MIGHT be relevant to the user question.
+          The tables are:
+    
+          ${tableNames}
+    
+          Remember to include ALL POTENTIALLY RELEVANT tables, even if you're not sure that they're needed.
+          Question: {question}
+          Relevant Tables:
+        `;
+    
+        const examples = [
+          {
+            input: "Hitung jumlah pengguna siswa di SMKN 26 Jakarta.",
+            query: "SELECT COUNT(m_user.id) AS jumlah_siswa FROM m_user INNER JOIN m_sekolah ON m_user.m_sekolah_id = m_sekolah.id WHERE m_user.role = 'siswa' AND m_sekolah.nama = 'SMKN 26 Jakarta';"
+          },
+          {
+            input: "Lihat data lokasi beserta total barang sarpas di Sekolah Demo Smarteschool.",
+            query: "SELECT m_lokasi.nama AS nama_lokasi, COUNT(m_barang.nama) AS total_barang FROM m_lokasi JOIN m_barang ON m_lokasi.id = m_barang.m_lokasi_id JOIN m_sekolah ON m_lokasi.m_sekolah_id = m_sekolah.id WHERE m_sekolah.nama = 'Sekolah Demo Smarteschool' AND m_lokasi.dihapus = 0 AND m_barang.dihapus = 0 GROUP BY m_lokasi.nama;"
+          },
+          {
+            input: "Lihat data ujian yang berlangsung hari ini di SMAN 8 Jakarta.",
+            query: "SELECT m_ujian.nama AS ujian_nama, m_jadwal_ujian.waktu_dibuka, m_user.nama AS pembuat_jadwal, m_sekolah.nama AS sekolah_nama FROM m_ujian JOIN m_jadwal_ujian ON m_jadwal_ujian.m_ujian_id = m_ujian.id JOIN m_user ON m_user.id = m_jadwal_ujian.m_user_id JOIN m_sekolah ON m_sekolah.id = m_user.m_sekolah_id WHERE date(m_jadwal_ujian.waktu_dibuka) = curdate() AND m_sekolah.nama = 'SMAN 8 Jakarta';"
+          },
+          {
+            input: "Lihat data ujian pada tanggal 2025-01-03 di SMAN 8 Jakarta.",
+            query: "SELECT m_ujian.nama AS ujian_nama, m_jadwal_ujian.waktu_dibuka, m_user.nama AS pembuat_jadwal, m_sekolah.nama AS sekolah_nama FROM m_ujian JOIN m_jadwal_ujian ON m_jadwal_ujian.m_ujian_id = m_ujian.id JOIN m_user ON m_user.id = m_jadwal_ujian.m_user_id JOIN m_sekolah ON m_sekolah.id = m_user.m_sekolah_id WHERE date(m_jadwal_ujian.waktu_dibuka) = '2025-01-03' AND m_sekolah.nama = 'SMAN 8 Jakarta';"
+          },
+          {
+            input: "Lihat data peserta ujian yang berlangsung hari ini di SMAN 8 Jakarta.",
+            query: "SELECT DISTINCT tk_peserta_ujian.id AS id_peserta, m_user.nama AS nama_peserta, m_jadwal_ujian.waktu_dibuka AS waktu_dibuka, m_ujian.nama AS nama_ujian, m_sekolah.nama AS nama_sekolah FROM tk_peserta_ujian JOIN m_user ON m_user.id = tk_peserta_ujian.m_user_id JOIN m_sekolah ON m_sekolah.id = m_user.m_sekolah_id JOIN tk_jadwal_ujian ON tk_jadwal_ujian.id = tk_peserta_ujian.tk_jadwal_ujian_id JOIN m_jadwal_ujian ON m_jadwal_ujian.id = tk_jadwal_ujian.m_jadwal_ujian_id JOIN m_ujian ON m_ujian.id = m_jadwal_ujian.m_ujian_id WHERE date(m_jadwal_ujian.waktu_dibuka) = curdate() AND m_sekolah.nama = 'SMAN 8 Jakarta';"
+          },
+          {
+            input: "Lihat data peserta ujian pada tanggal 2025-01-16 di SMAN 8 Jakarta.",
+            query: "SELECT DISTINCT tk_peserta_ujian.id AS id_peserta, m_user.nama AS nama_peserta, m_jadwal_ujian.waktu_dibuka AS waktu_dibuka, m_ujian.nama AS nama_ujian, m_sekolah.nama AS nama_sekolah FROM tk_peserta_ujian JOIN m_user ON m_user.id = tk_peserta_ujian.m_user_id JOIN m_sekolah ON m_sekolah.id = m_user.m_sekolah_id JOIN tk_jadwal_ujian ON tk_jadwal_ujian.id = tk_peserta_ujian.tk_jadwal_ujian_id JOIN m_jadwal_ujian ON m_jadwal_ujian.id = tk_jadwal_ujian.m_jadwal_ujian_id JOIN m_ujian ON m_ujian.id = m_jadwal_ujian.m_ujian_id WHERE date(m_jadwal_ujian.waktu_dibuka) = '2025-01-16' AND m_sekolah.nama = 'SMAN 8 Jakarta';"
+          },
+          {
+            input: "Lihat data surat keluar pada tanggal 2021-11-11 di SMK Bhakti Persada.",
+            query: "SELECT m_surat.nomor, m_surat.perihal, m_surat.asal, m_surat.tanggal FROM m_surat INNER JOIN m_sekolah ON m_surat.m_sekolah_id = m_sekolah.id WHERE m_surat.tipe = 'keluar' AND m_surat.tanggal = '2021-11-11' AND m_sekolah.nama = 'SMK Bhakti Persada' AND m_surat.dihapus = 0;"
+          },
+          {
+            input: "Tampilkan jadwal mengajar sesuai waktu saat ini di Sekolah Demo Smarteschool.",
+            query: "SELECT m_rombel.nama AS kelas, m_jam_mengajar.jam_mulai, m_jam_mengajar.jam_selesai, m_mata_pelajaran.nama AS mata_pelajaran, m_user.nama AS guru FROM m_jadwal_mengajar JOIN m_jam_mengajar ON m_jadwal_mengajar.m_jam_mengajar_id = m_jam_mengajar.id JOIN m_mata_pelajaran ON m_jadwal_mengajar.m_mata_pelajaran_id = m_mata_pelajaran.id JOIN m_rombel ON m_jadwal_mengajar.m_rombel_id = m_rombel.id JOIN m_user ON m_mata_pelajaran.m_user_id = m_user.id JOIN m_sekolah ON m_jadwal_mengajar.m_sekolah_id = m_sekolah.id JOIN m_ta ON m_jadwal_mengajar.m_ta_id = m_ta.id WHERE m_sekolah.nama = 'Sekolah Demo Smarteschool' AND m_ta.aktif = 1 AND m_jam_mengajar.kode_hari = DAYOFWEEK(CURDATE()) - 1 AND m_user.dihapus = 0 AND m_mata_pelajaran.dihapus = 0 AND m_rombel.dihapus = 0 AND m_ta.dihapus = 0;"
+          },
+          {
+            input: "Tampilkan nilai ujian siswa untuk DIAGNOSTIK MATEMATIKA 2425 atas nama HILMY MUZHAFFAR PASHA.",
+            query: "SELECT tk_peserta_ujian.nilai FROM tk_peserta_ujian JOIN m_user ON tk_peserta_ujian.m_user_id = m_user.id JOIN tk_jadwal_ujian ON tk_peserta_ujian.tk_jadwal_ujian_id = tk_jadwal_ujian.id JOIN m_jadwal_ujian ON tk_jadwal_ujian.m_jadwal_ujian_id = m_jadwal_ujian.id JOIN m_ujian ON m_jadwal_ujian.m_ujian_id = m_ujian.id WHERE m_ujian.nama = 'DIAGNOSTIK MATEMATIKA 2425' AND m_user.nama = 'HILMY MUZHAFFAR PASHA';"
+          },
+          {
+            input: "Berapa jumlah Alumni di sekolah SMKN 26 Jakarta",
+            query: "SELECT COUNT(*) AS jumlah_alumni FROM m_alumni JOIN m_user ON m_alumni.m_user_id = m_user.id JOIN m_sekolah ON m_user.m_sekolah_id = m_sekolah.id WHERE m_sekolah.nama = 'Sekolah Demo Smarteschool';"
+          }
+        ];
+    
+        const exampleSelector = await SemanticSimilarityExampleSelector.fromExamples(examples, embeddings, MemoryVectorStore, {
+          k: 5,
+          inputKeys: ["input"],
+        });
+    
+        const relavantTable = ChatPromptTemplate.fromMessages([
+          ["system", relavantTablePrompt],
+          ["human", "{question}"],
+        ]);
+    
+        const tableChain = relavantTable.pipe(llm.withStructuredOutput(Table));
+    
+        const answerPrompt = PromptTemplate.fromTemplate(`
+          Anda adalah seorang Assistant Aplikasi SmartESchool yang berguna untuk menjawab pertanyaan - pertanyaan pengguna dalam mempertanyakan terhadap data di aplikasi ini.
+          Semisal hasil dari SQL Error maka berikanlah respon yang menjelaskan bahwa pertanyaan pengguna kurang memberikan informasi yang tepat. Dan jelaskan dengan bahasa yang bukan teknis agar orang awam mengerti.
+          Untuk Pengguna Chatbot kurang lebih seorang anggota sekolah seperti siswa, guru, kepala sekolah, admin, dll.
+          Diberikan pertanyaan pengguna berikut, query SQL yang sesuai, dan hasil SQL, jawablah pertanyaan pengguna.
+    
+          Pertanyaan: {question}
+          Query SQL: {query}
+          Hasil SQL: {result}
+    
+          Jawaban:
+        `);
+    
+        const answerChain = answerPrompt.pipe(llm).pipe(new StringOutputParser());
+    
+        const validationPrompt = `
+          Tugas Anda sebagai ahli SQL {dialect} adalah untuk menghasilkan query SQL yang sintaksisnya benar dan kontekstual sesuai dengan pertanyaan yang diberikan.
+          Buatlah query SQL berdasarkan informasi pengguna yang telah login. Informasi pengguna yang tersedia adalah sebagai berikut:
+    
+          ID Pengguna: ${user.id}
+          Role: ${user.role} (contoh: 'siswa', 'guru', 'kepsek', atau 'admin')
+          Nama: ${user.nama}
+          ID Sekolah: ${user.m_sekolah_id}
+          Saat pengguna memberikan pertanyaan, tugas Anda adalah:
+          Memahami konteks pertanyaan dan memastikan query SQL yang dihasilkan relevan dengan data pengguna.
+          Sebelum membuat query, Anda harus memahami struktur database terlebih dahulu.
+    
+          Gunakan skema tabel berikut:
+          {table_info}
+    
+          **Langkah 1: Membaca Skema Database**
+            - Pertama, tinjau informasi skema yang diberikan. Informasi ini mencakup daftar tabel, kolom-kolomnya, dan hubungan antar tabel (kunci asing dan cara penggabungan/join). Gunakan informasi ini untuk membuat query secara akurat.
+            - Jika informasi skema tidak disediakan, Anda harus mengambil detail skema database secara dinamis melalui \`INFORMATION_SCHEMA\` (atau metadata database serupa). Secara spesifik, Anda perlu menemukan tabel dan hubungan antar tabelnya.
+            - Periksa hubungan kunci asing antara tabel. Cari kolom yang dinamai dengan pola \`<related_table>_id\` yang menunjukkan kunci asing.
+            - Pastikan Anda memahami tabel mana yang berhubungan dan bagaimana mereka harus digabungkan. Pastikan juga Anda mengetahui jenis penggabungan (INNER JOIN, LEFT JOIN, dll.) berdasarkan skema dan pertanyaan pengguna.
+    
+          **Langkah 2: Memahami Pertanyaan**
+            - Setelah skema dimuat, analisis pertanyaan pengguna untuk menentukan tabel dan kolom mana yang dibutuhkan untuk query.
+            - Identifikasi peran spesifik atau kondisi penyaringan (misalnya, \`siswa\`, \`guru\`, \`kepsek\`, \`admin\`) dan pastikan atribut ini digunakan untuk memfilter data secara benar.
+    
+          **Langkah 3: Membuat Query**
+            - Buat query hanya dengan menggunakan command SELECT (Jangan gunakan command CRETE, UPDATE, DELETE, ALTER, dll).
+            - Buat query dengan memilih hanya kolom yang diperlukan untuk menjawab pertanyaan pengguna. Jangan sertakan data yang tidak diperlukan.
+            - Kecuali pengguna menentukan jumlah data yang ingin diambil, gunakan batasan maksimal ({top_k} atau 5 hasil) dengan klausa LIMIT sesuai dengan standar {dialect}.
+            - Jika pengguna tidak menentukan batas jumlah data, tambahkan klausa LIMIT dengan maksimum 5 baris. Jika pengguna meminta semua data secara eksplisit, jangan sertakan klausa LIMIT.
+            - Gunakan penggabungan eksplisit (misalnya, \`INNER JOIN\`, \`LEFT JOIN\`, dll.) dan pastikan kondisinya benar.
+            - Bungkus setiap nama kolom dengan tanda kutip balik (\`\`) untuk menandai bahwa itu adalah pengenal.
+            - Tulis query dalam satu baris tanpa menggunakan karakter baris baru (\`\\n\`) atau penggabungan string (\`+\`).
+            - Jika pertanyaan berkaitan dengan informasi pribadi pengguna, tambahkan kondisi filter berdasarkan id, role, atau m_sekolah_id.
+    
+          **Langkah 4: Verifikasi Ketepatan Query**
+            - Periksa ulang bahwa query menggunakan tabel dan kolom yang benar sesuai dengan skema.
+            - Pastikan semua kondisi JOIN didasarkan pada kunci asing dan bahwa hubungan antar tabel sudah benar.
+            - Pastikan query menangani penyaringan berdasarkan peran (misalnya, memfilter berdasarkan kolom role untuk siswa, guru, admin) jika disebutkan.
+    
+          **Hindari Kesalahan Umum**
+          **Hindari kesalahan umum dalam SQL, seperti**:
+            - Menggunakan NOT IN dengan nilai NULL.
+            - Penggunaan UNION yang salah, seharusnya menggunakan UNION ALL.
+            - Ketidaksesuaian tipe data dalam klausa WHERE atau kondisi JOIN.
+            - Jumlah argumen yang salah dalam fungsi SQL.
+            - Penggunaan tanda kutip yang tidak benar pada pengenal.
+            - Menggunakan BETWEEN untuk rentang eksklusif kecuali diminta secara eksplisit.
+            - Gagal menangani nilai NULL dengan benar, terutama dalam JOIN atau klausa WHERE.
+            - Jangan menggunakan anotasi Markdown (seperti sql).
+            - Hanya kembalikan query SQL mentah.
+            - Pastikan query secara sintaksis dan kontekstual benar.
+            - Verifikasi penggabungan, filter, dan kondisi yang benar sesuai dengan skema database.
+    
+          **Catatan Umum**
+            - Tambahkan logika untuk membaca data berdasarkan waktu tertentu. Gunakan:
+            - **Hari ini:** Gunakan \`CURDATE()\`.
+            - **Kemarin:** Gunakan \`DATE_SUB(CURDATE(), INTERVAL 1 DAY)\`.
+            - **Besok:** Gunakan \`DATE_ADD(CURDATE(), INTERVAL 1 DAY)\`.
+            - **Lusa:** Gunakan \`DATE_ADD(CURDATE(), INTERVAL 2 DAY)\`.
+            - **Dua hari lalu:** Gunakan \`DATE_SUB(CURDATE(), INTERVAL 2 DAY)\`.
+            - **Rentang waktu:** Gunakan format \`BETWEEN 'YYYY-MM-DD' AND 'YYYY-MM-DD'\`.
+            - **Hari tertentu dalam minggu:** Gunakan \`DAYOFWEEK()\` atau \`WEEKDAY()\` untuk membandingkan hari tertentu.
+            - Selalu pastikan query sesuai dengan struktur dan batasan tabel yang diberikan.
+            - Untuk tabel \`m_user\`, kolom \`role\` membedakan antara siswa, guru, dan admin. Pastikan kolom ini digunakan dengan benar untuk memfilter data jika berlaku.
+            - Semisal pengguna meminta data jadwal ujian yang memerlukan relasi dengan sekolah gunakan perintah JOIN seperti ini:  JOIN m_user ON m_user.id = m_jadwal_ujian.m_user_id JOIN m_sekolah ON m_sekolah.id = m_user.m_sekolah_id.
+            - Semisal pengguna menanyakan data yang berkaitan dengan tahun akademik atau ta jangan sertakan kolom aktif pada table m_ta (ta yang digunakan saat ini) jika tidak dibahas.
+            - Saat membuat query, periksa setiap tabel yang digunakan apakah memiliki kolom \`dihapus\`.
+            - Jika sebuah tabel memiliki kolom \`dihapus\`, tambahkan kondisi \`AND <nama_tabel>.\`dihapus\` = 0\` di klausa WHERE untuk menyaring data yang tidak dihapus.
+            - Jika sebuah tabel tidak memiliki kolom \`dihapus\`, kondisi tersebut tidak perlu ditambahkan.
+    
+          **Pemetaan Relasional**
+            - Untuk setiap hubungan antar tabel, pahami kolom kunci asing mana yang harus digunakan untuk penggabungan.
+            - Pastikan query hanya mencakup penggabungan yang diperlukan dan menghindari data yang redundan.
+    
+          Buat query berdasarkan input pengguna dan pastikan query sesuai dengan struktur database dan hubungan yang dijelaskan di atas. Periksa ulang query untuk ketepatan dan kebenaran logis sebelum menyelesaikannya. Setiap query yang dihasilkan harus mencakup klausa LIMIT dengan maksimal {top_k} atau 5 hasil, kecuali dinyatakan sebaliknya oleh pengguna:
+            - Tambahkan klausa \`LIMIT\` dengan maksimal 5 baris jika pengguna tidak meminta semua data.
+            - Jangan tambahkan klausa \`LIMIT\` jika pengguna secara eksplisit meminta semua data.
+    
+          Hanya keluarkan query SQL mentah sebagai output.
+          Contoh output:
+            - Query untuk menghitung jumlah pengguna siswa: SELECT COUNT('m_user'.'id') AS jumlah_siswa FROM 'm_user' INNER JOIN 'm_sekolah' ON 'm_user'.'m_sekolah_id' = 'm_sekolah'.'id' WHERE 'm_user'.'role' = 'siswa' AND 'm_sekolah'.'nama' = 'SMKN 26 Jakarta';
+            - Query untuk melihat data lokasi berserta dengan total barang sarpas: SELECT m_lokasi.nama AS nama_lokasi, COUNT(m_barang.nama) AS total_barang FROM m_lokasi JOIN m_barang ON m_lokasi.id = m_barang.m_lokasi_id JOIN m_sekolah ON m_lokasi.m_sekolah_id = m_sekolah.id WHERE m_sekolah.nama = 'Sekolah Demo Smarteschool' AND m_lokasi.dihapus = 0 AND m_barang.dihapus = 0 GROUP BY m_lokasi.nama;
+            - Query untuk melihat data ujian hari ini: SELECT m_ujian.nama AS ujian_nama, m_jadwal_ujian.waktu_dibuka, m_user.nama AS pembuat_jadwal, m_sekolah.nama AS sekolah_nama FROM m_ujian JOIN m_jadwal_ujian ON m_jadwal_ujian.m_ujian_id = m_ujian.id JOIN m_user ON m_user.id = m_jadwal_ujian.m_user_id JOIN m_sekolah ON m_sekolah.id = m_user.m_sekolah_id WHERE date(m_jadwal_ujian.waktu_dibuka) = curdate() AND m_sekolah.nama = "SMAN 8 Jakarta";
+            - Query untuk melihat data ujian dengan tanggal tertentu: SELECT m_ujian.nama AS ujian_nama, m_jadwal_ujian.waktu_dibuka, m_user.nama AS pembuat_jadwal, m_sekolah.nama AS sekolah_nama FROM m_ujian JOIN m_jadwal_ujian ON m_jadwal_ujian.m_ujian_id = m_ujian.id JOIN m_user ON m_user.id = m_jadwal_ujian.m_user_id JOIN m_sekolah ON m_sekolah.id = m_user.m_sekolah_id WHERE date(m_jadwal_ujian.waktu_dibuka) = "2025-01-03" AND m_sekolah.nama = "SMAN 8 Jakarta";
+            - Query untuk melihat data peserta ujian hari ini: select distinct tk_peserta_ujian.id as id_peserta, m_user.nama as nama_peserta, m_jadwal_ujian.waktu_dibuka as waktu_dibuka, m_ujian.nama as nama_ujian, m_sekolah.nama as nama_sekolah from tk_peserta_ujian join m_user on m_user.id = tk_peserta_ujian.m_user_id join m_sekolah on m_sekolah.id = m_user.m_sekolah_id join tk_jadwal_ujian on tk_jadwal_ujian.id = tk_peserta_ujian.tk_jadwal_ujian_id join m_jadwal_ujian on m_jadwal_ujian.id = tk_jadwal_ujian.m_jadwal_ujian_id join m_ujian on m_ujian.id = m_jadwal_ujian.m_ujian_id where date(m_jadwal_ujian.waktu_dibuka) = curdate() and m_sekolah.nama = "sman 8 jakarta";
+            - Query untuk melihat data peserta ujian dengan tanggal tertentu: select distinct tk_peserta_ujian.id as id_peserta, m_user.nama as nama_peserta, m_jadwal_ujian.waktu_dibuka as waktu_dibuka, m_ujian.nama as nama_ujian, m_sekolah.nama as nama_sekolah from tk_peserta_ujian join m_user on m_user.id = tk_peserta_ujian.m_user_id join m_sekolah on m_sekolah.id = m_user.m_sekolah_id join tk_jadwal_ujian on tk_jadwal_ujian.id = tk_peserta_ujian.tk_jadwal_ujian_id join m_jadwal_ujian on m_jadwal_ujian.id = tk_jadwal_ujian.m_jadwal_ujian_id join m_ujian on m_ujian.id = m_jadwal_ujian.m_ujian_id where date(m_jadwal_ujian.waktu_dibuka) = "2025-01-16" and m_sekolah.nama = "sman 8 jakarta";
+            - Query untuk melihat data surat keluar pada tanggal yang ditentukan: SELECT m_surat.nomor, m_surat.perihal, m_surat.asal, m_surat.tanggal FROM m_surat INNER JOIN m_sekolah ON m_surat.m_sekolah_id = m_sekolah.id WHERE m_surat.tipe = 'keluar' AND m_surat.tanggal = '2021-11-11' AND m_sekolah.nama = 'SMK Bhakti Persada' AND m_surat.dihapus = 0;
+            - Query untuk menampilkan jadwal mengajar sesuai dengan waktu yang ditentukan: SELECT m_rombel.nama AS kelas, m_jam_mengajar.jam_mulai, m_jam_mengajar.jam_selesai, m_mata_pelajaran.nama AS mata_pelajaran, m_user.nama AS guru FROM m_jadwal_mengajar JOIN m_jam_mengajar ON m_jadwal_mengajar.m_jam_mengajar_id = m_jam_mengajar.id JOIN m_mata_pelajaran ON m_jadwal_mengajar.m_mata_pelajaran_id = m_mata_pelajaran.id JOIN m_rombel ON m_jadwal_mengajar.m_rombel_id = m_rombel.id JOIN m_user ON m_mata_pelajaran.m_user_id = m_user.id JOIN m_sekolah ON m_jadwal_mengajar.m_sekolah_id = m_sekolah.id JOIN m_ta ON m_jadwal_mengajar.m_ta_id = m_ta.id WHERE m_sekolah.nama = 'Sekolah Demo Smarteschool' AND m_ta.aktif = 1 AND m_jam_mengajar.kode_hari = DAYOFWEEK(CURDATE()) - 1 and m_user.dihapus = 0 and m_mata_pelajaran.dihapus = 0 and m_rombel.dihapus = 0 and m_ta.dihapus = 0;
+            - Query untuk menampilkan nilai ujian siswa: SELECT tk_peserta_ujian.nilai FROM tk_peserta_ujian JOIN m_user ON tk_peserta_ujian.m_user_id = m_user.id JOIN tk_jadwal_ujian ON tk_peserta_ujian.tk_jadwal_ujian_id = tk_jadwal_ujian.id join m_jadwal_ujian on tk_jadwal_ujian.m_jadwal_ujian_id = m_jadwal_ujian.id join m_ujian on m_jadwal_ujian.m_ujian_id = m_ujian.id WHERE m_ujian.nama = 'DIAGNOSTIK MATEMATIKA 2425' AND m_user.nama = 'HILMY MUZHAFFAR PASHA'
+            - Query untuk menampilkan nama siswa yang pkl di perusahaan PT. SmartSchool: SELECT m_user.nama AS nama_siswa FROM m_penerimaan_siswa INNER JOIN m_user ON m_penerimaan_siswa.m_user_id = m_user.id INNER JOIN m_penerimaan_perusahaan ON m_penerimaan_siswa.m_penerimaan_perusahaan_id = m_penerimaan_perusahaan.id INNER JOIN tk_perusahaan_sekolah ON m_penerimaan_perusahaan.tk_perusahaan_sekolah_id = tk_perusahaan_sekolah.id INNER JOIN m_perusahaan ON tk_perusahaan_sekolah.m_perusahaan_id = m_perusahaan.id WHERE m_perusahaan.nama = "PT. SmartSchool" AND m_perusahaan.dihapus = 0 AND m_penerimaan_siswa.dihapus = 0;
+            - Query untuk mendapatkan data nama walikelas dari suatu rombel atau kelas seseorang: SELECT m_user.nama AS nama_walikelas FROM m_rombel INNER JOIN m_anggota_rombel ON m_anggota_rombel.m_rombel_id = m_rombel.id INNER JOIN m_user ON m_rombel.m_user_id = m_user.id WHERE m_anggota_rombel.m_user_id = 2912837 AND m_anggota_rombel.dihapus = 0 LIMIT 5;
+        `;
+    
+        const examplePrompt = PromptTemplate.fromTemplate(
+          `User input: {input}\nSQL Query: {query}`
+        );
+    
+        const validation2 = new FewShotPromptTemplate({
+          exampleSelector,
+          examplePrompt,
+          prefix: `
+            You are a MySQL expert. Given an input question, create a syntactically correct SQLite query to run.
+            Unless otherwise specified, do not return more than {top_k} rows.
+            Create a SQL query based on logged in user information. Available user information is as follows:
+    
+            User's ID: ${user.id}
+            User's Role: ${user.role} (contoh: 'siswa', 'guru', 'kepsek', atau 'admin')
+            User's Name: ${user.nama}
+            User's School ID: ${user.m_sekolah_id}
+    
+            You can only access school data that corresponds to the User's current School ID: ${user.m_school_id}.
+            
+            Here is the relevant table info: {table_info}
+    
+            Double check the user's mysql query for common mistakes, including:
+              - Using NOT IN with NULL values
+              - Using UNION when UNION ALL should have been used
+              - Using BETWEEN for exclusive ranges
+              - Data type mismatch in predicates
+              - Properly quoting identifiers
+              - Using the correct number of arguments for functions
+              - Casting to the correct data type
+              - Using the proper columns for joins
+    
+            If there are any of the above mistakes, rewrite the query. If there are no mistakes, just reproduce the original query.
+    
+            Below are a number of examples of questions and their corresponding SQL queries.
+          `,
+          suffix: `
+            Output the final SQL query only.
+            User input: {input}
+            SQL query:
+          `,
+          inputVariables: ["input", "top_k", "table_info"],
+        });
+    
+        // console.log(
+        //   await validation2.format({
+        //     input: question,
+        //     top_k: "5",
+        //     table_info: await tableChain.invoke({ question }),
+        //   })
+        // );
+    
+        const validation = ChatPromptTemplate.fromMessages([
+          ["system", validationPrompt],
+          ["human", "{input}"]
+        ]);
+    
+        const queryChain = await createSqlQueryChain({
+          llm,
+          db,
+          prompt: validation2,
+          dialect: "mysql"
+        });
+    
+        const fullChain = RunnableSequence.from([
+          // Langkah 1: Dapatkan nama tabel yang relevan
+          RunnablePassthrough
+            .assign({
+              relevantTables: (i) => tableChain.invoke({ question: i.question }),
+            })
+    
+            // Langkah 2: Generate Query
+            .assign({
+              query: (i) => {
+                return queryChain.invoke({
+                  question: i.question,
+                  tableNamesToUse: i.relevantTables,
+                })
+              }
+            }),
+    
+          // Langkah 3: Eksekusi untuk Query yang sudah dibuat lalu mendapatkan hasil Query nya
+          RunnablePassthrough
+            .assign({
+              result: async (i) => {
+                console.log("query yg di eksekusi:", i.query);
+                console.log("hasil query yg di eksekusi:", await db.run(i.query));
+                return await db.run(i.query)
+              }
+            }),
+    
+          // Langkah 4: Dapatkan jawaban dari pertanyaan sesuai format
+          answerChain
+        ]);
+    
+        console.log("📝 [SQL Execution] Query sedang dibuat...");
+
+        // 7️⃣ Jalankan query hanya jika validasi sukses
+        try {
+          const responseOpenAI = await fullChain.invoke({ question: question });
+            console.log("✅ [SQL SUCCESS] Query berhasil dieksekusi.");
+            console.log("📊 [SQL Result]:", responseOpenAI);
+
+            return responseOpenAI;
+            // return {
+            //     status: 'success',
+            //     message: "Query berhasil dieksekusi.",
+            //     sqlResponse: responseOpenAI,
+            //     validationLog: {
+            //         userSchoolId: user.m_sekolah_id,
+            //         userSchoolName: userSchoolName,
+            //         mentionedSchool: mentionedSchool || "Tidak ada sekolah disebut",
+            //         accessAllowed: true
+            //     }
+            // };
+        } catch (queryError) {
+            console.error("❌ [SQL QUERY ERROR]:", queryError);
+            return {
+                status: 'error',
+                message: "Kesalahan dalam eksekusi query. Silakan coba lagi nanti.",
+                validationLog: {
+                    userSchoolId: user.m_sekolah_id,
+                    userSchoolName: userSchoolName,
+                    mentionedSchool: mentionedSchool || "Tidak ada sekolah disebut",
+                    accessAllowed: false
+                }
+            };
+        }
+
     } catch (error) {
-      console.error("Error in query response BE:", error);
-      return {
-        status: 'error',
-        message: "Kesalahan dalam memproses permintaan. Silakan coba lagi nanti.",
-        error: error.message,
-      };
+        console.error("⚠️ [GENERAL SQL ERROR]:", error);
+        return {
+            status: 'error',
+            message: "Terjadi kesalahan dalam memproses permintaan.",
+            validationLog: {
+                userSchoolId: user.m_sekolah_id,
+                userSchoolName: null,
+                mentionedSchool: "Tidak ada",
+                accessAllowed: false
+            }
+        };
     }
-  }
+}
+
+
+
+
 
   async fileRequest(question) {
     try {
@@ -596,7 +806,8 @@ class ChatbotController {
       const user = await auth.getUser();
       const userId = user.id;
 
-      const intent = await classifyIntent(userMessage);
+      // const intent = await classifyIntent(userMessage);
+      const intent = classifier.classify(userMessage);
       console.log(intent);
 
       const responseOpenAI = await this.processOpenAI(userMessage, user, chatroomId, intent);
@@ -648,6 +859,7 @@ class ChatbotController {
     try {
       const { content, intent } = request.post();
       saveNewIntent(content, intent);
+      trainClassifierFromJson('./app/Data/nlp.json');
       return response.ok({
         status: 'success',
         message: 'Intent saved successfully'
@@ -660,6 +872,7 @@ class ChatbotController {
       });
     }
   }
+
 
   async getChatrooms({ auth, response }) {
     try {
