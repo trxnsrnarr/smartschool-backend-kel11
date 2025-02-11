@@ -2079,13 +2079,13 @@ Route.post("/regency/import", "DocsController.importKabupaten");
 Route.get("/sekolah-grade", "UserController.getSekolahGrade");
 
 // Chatbot Route
-Route.post("/chatbot", "ChatbotMistralAIController.openAIResponse");
-Route.get("/chatrooms", "ChatbotMistralAIController.getChatrooms");
-Route.delete("/chatrooms", "ChatbotMistralAIController.deleteAllChatrooms");
-Route.delete("/chatrooms/:id", "ChatbotMistralAIController.deleteChatroomById");
-Route.get("/messages/:chatroom_id", "ChatbotMistralAIController.getMessagesByChatroomId");
-Route.post("/suggestions", "ChatbotMistralAIController.getSuggestions");
-Route.post("/invalid-intent", "ChatbotMistralAIController.invalidIntent");
+Route.post("/chatbot", "ChatbotController.openAIResponse");
+Route.get("/chatrooms", "ChatbotController.getChatrooms");
+Route.delete("/chatrooms", "ChatbotController.deleteAllChatrooms");
+Route.delete("/chatrooms/:id", "ChatbotController.deleteChatroomById");
+Route.get("/messages/:chatroom_id", "ChatbotController.getMessagesByChatroomId");
+Route.post("/suggestions", "ChatbotController.getSuggestions");
+Route.post("/invalid-intent", "ChatbotController.invalidIntent");
 // Route.get("/templateSuggestions", "ChatbotController.getTemplateSuggestions");
 Route.post("/chatbot2", "Chatbot2Controller.openAIResponse");
 
