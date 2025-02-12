@@ -1,0 +1,46 @@
+[
+  {
+    "input": "Lihat data ekskul",
+    "query": "SELECT m_ekstrakurikuler.nama AS nama_ekskul FROM m_ekstrakurikuler WHERE m_ekstrakurikuler.m_sekolah_id = 13 AND m_ekstrakurikuler.dihapus = 0;"
+  },
+  {
+    "input": "Hitung jumlah pengguna siswa di SMKN 26 Jakarta.",
+    "query": "SELECT COUNT(m_user.id) AS jumlah_siswa FROM m_user INNER JOIN m_sekolah ON m_user.m_sekolah_id = m_sekolah.id WHERE m_user.role = 'siswa' AND m_sekolah.nama = 'SMKN 26 Jakarta';"
+  },
+  {
+    "input": "Lihat data lokasi beserta total barang sarpas di Sekolah Demo Smarteschool.",
+    "query": "SELECT m_lokasi.nama AS nama_lokasi, COUNT(m_barang.nama) AS total_barang FROM m_lokasi JOIN m_barang ON m_lokasi.id = m_barang.m_lokasi_id JOIN m_sekolah ON m_lokasi.m_sekolah_id = m_sekolah.id WHERE m_sekolah.nama = 'Sekolah Demo Smarteschool' AND m_lokasi.dihapus = 0 AND m_barang.dihapus = 0 GROUP BY m_lokasi.nama;"
+  },
+  {
+    "input": "Lihat data ujian yang berlangsung hari ini di SMAN 8 Jakarta.",
+    "query": "SELECT m_ujian.nama AS ujian_nama, m_jadwal_ujian.waktu_dibuka, m_user.nama AS pembuat_jadwal, m_sekolah.nama AS sekolah_nama FROM m_ujian JOIN m_jadwal_ujian ON m_jadwal_ujian.m_ujian_id = m_ujian.id JOIN m_user ON m_user.id = m_jadwal_ujian.m_user_id JOIN m_sekolah ON m_sekolah.id = m_user.m_sekolah_id WHERE date(m_jadwal_ujian.waktu_dibuka) = curdate() AND m_sekolah.nama = 'SMAN 8 Jakarta';"
+  },
+  {
+    "input": "Lihat data ujian pada tanggal 2025-01-03 di SMAN 8 Jakarta.",
+    "query": "SELECT m_ujian.nama AS ujian_nama, m_jadwal_ujian.waktu_dibuka, m_user.nama AS pembuat_jadwal, m_sekolah.nama AS sekolah_nama FROM m_ujian JOIN m_jadwal_ujian ON m_jadwal_ujian.m_ujian_id = m_ujian.id JOIN m_user ON m_user.id = m_jadwal_ujian.m_user_id JOIN m_sekolah ON m_sekolah.id = m_user.m_sekolah_id WHERE date(m_jadwal_ujian.waktu_dibuka) = '2025-01-03' AND m_sekolah.nama = 'SMAN 8 Jakarta';"
+  },
+  {
+    "input": "Lihat data peserta ujian yang berlangsung hari ini di SMAN 8 Jakarta.",
+    "query": "SELECT DISTINCT tk_peserta_ujian.id AS id_peserta, m_user.nama AS nama_peserta, m_jadwal_ujian.waktu_dibuka AS waktu_dibuka, m_ujian.nama AS nama_ujian, m_sekolah.nama AS nama_sekolah FROM tk_peserta_ujian JOIN m_user ON m_user.id = tk_peserta_ujian.m_user_id JOIN m_sekolah ON m_sekolah.id = m_user.m_sekolah_id JOIN tk_jadwal_ujian ON tk_jadwal_ujian.id = tk_peserta_ujian.tk_jadwal_ujian_id JOIN m_jadwal_ujian ON m_jadwal_ujian.id = tk_jadwal_ujian.m_jadwal_ujian_id JOIN m_ujian ON m_ujian.id = m_jadwal_ujian.m_ujian_id WHERE date(m_jadwal_ujian.waktu_dibuka) = curdate() AND m_sekolah.nama = 'SMAN 8 Jakarta';"
+  },
+  {
+    "input": "Lihat data peserta ujian pada tanggal 2025-01-16 di SMAN 8 Jakarta.",
+    "query": "SELECT DISTINCT tk_peserta_ujian.id AS id_peserta, m_user.nama AS nama_peserta, m_jadwal_ujian.waktu_dibuka AS waktu_dibuka, m_ujian.nama AS nama_ujian, m_sekolah.nama AS nama_sekolah FROM tk_peserta_ujian JOIN m_user ON m_user.id = tk_peserta_ujian.m_user_id JOIN m_sekolah ON m_sekolah.id = m_user.m_sekolah_id JOIN tk_jadwal_ujian ON tk_jadwal_ujian.id = tk_peserta_ujian.tk_jadwal_ujian_id JOIN m_jadwal_ujian ON m_jadwal_ujian.id = tk_jadwal_ujian.m_jadwal_ujian_id JOIN m_ujian ON m_ujian.id = m_jadwal_ujian.m_ujian_id WHERE date(m_jadwal_ujian.waktu_dibuka) = '2025-01-16' AND m_sekolah.nama = 'SMAN 8 Jakarta';"
+  },
+  {
+    "input": "Lihat data surat keluar pada tanggal 2021-11-11 di SMK Bhakti Persada.",
+    "query": "SELECT m_surat.nomor, m_surat.perihal, m_surat.asal, m_surat.tanggal FROM m_surat INNER JOIN m_sekolah ON m_surat.m_sekolah_id = m_sekolah.id WHERE m_surat.tipe = 'keluar' AND m_surat.tanggal = '2021-11-11' AND m_sekolah.nama = 'SMK Bhakti Persada' AND m_surat.dihapus = 0;"
+  },
+  {
+    "input": "Tampilkan jadwal mengajar sesuai waktu saat ini di Sekolah Demo Smarteschool.",
+    "query": "SELECT m_rombel.nama AS kelas, m_jam_mengajar.jam_mulai, m_jam_mengajar.jam_selesai, m_mata_pelajaran.nama AS mata_pelajaran, m_user.nama AS guru FROM m_jadwal_mengajar JOIN m_jam_mengajar ON m_jadwal_mengajar.m_jam_mengajar_id = m_jam_mengajar.id JOIN m_mata_pelajaran ON m_jadwal_mengajar.m_mata_pelajaran_id = m_mata_pelajaran.id JOIN m_rombel ON m_jadwal_mengajar.m_rombel_id = m_rombel.id JOIN m_user ON m_mata_pelajaran.m_user_id = m_user.id JOIN m_sekolah ON m_jadwal_mengajar.m_sekolah_id = m_sekolah.id JOIN m_ta ON m_jadwal_mengajar.m_ta_id = m_ta.id WHERE m_sekolah.nama = 'Sekolah Demo Smarteschool' AND m_ta.aktif = 1 AND m_jam_mengajar.kode_hari = DAYOFWEEK(CURDATE()) - 1 AND m_user.dihapus = 0 AND m_mata_pelajaran.dihapus = 0 AND m_rombel.dihapus = 0 AND m_ta.dihapus = 0;"
+  },
+  {
+    "input": "Tampilkan nilai ujian siswa untuk DIAGNOSTIK MATEMATIKA 2425 atas nama HILMY MUZHAFFAR PASHA.",
+    "query": "SELECT tk_peserta_ujian.nilai FROM tk_peserta_ujian JOIN m_user ON tk_peserta_ujian.m_user_id = m_user.id JOIN tk_jadwal_ujian ON tk_peserta_ujian.tk_jadwal_ujian_id = tk_jadwal_ujian.id JOIN m_jadwal_ujian ON tk_jadwal_ujian.m_jadwal_ujian_id = m_jadwal_ujian.id JOIN m_ujian ON m_jadwal_ujian.m_ujian_id = m_ujian.id WHERE m_ujian.nama = 'DIAGNOSTIK MATEMATIKA 2425' AND m_user.nama = 'HILMY MUZHAFFAR PASHA';"
+  },
+  {
+    "input": "Berapa jumlah Alumni di sekolah SMKN 26 Jakarta",
+    "query": "SELECT COUNT(*) AS jumlah_alumni FROM m_alumni JOIN m_user ON m_alumni.m_user_id = m_user.id JOIN m_sekolah ON m_user.m_sekolah_id = m_sekolah.id WHERE m_sekolah.nama = 'Sekolah Demo Smarteschool';"
+  }
+]
