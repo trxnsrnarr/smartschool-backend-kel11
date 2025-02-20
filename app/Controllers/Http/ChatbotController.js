@@ -6,6 +6,8 @@ const Env = use("Env");
 
 const OpenAI = require('openai');
 const openai = new OpenAI({ apiKey: Env.OPENAI_API_KEY });
+// data user 
+const User = use("App/Models/User");
 
 // Langchain
 const { z } = require("zod");
@@ -937,25 +939,53 @@ class ChatbotController {
 
   async getSuggestions({ auth, response, request }) {
     const user = await auth.getUser();
+
+    const userFetch = await User.query()
+      .where({ id: user.id })
+      .with("sekolah")
+      .first();
+
+    const userData = userFetch.toJSON()
+
     const userProfileTemplate = `
-      Analisa ini dalam membuat saran pencarian yang lebih akurat
-          Asal Sekolah : ${user?.sekolah?.nama}
-          Jabatan : ${user?.role}
+      Pengguna saat ini memiliki informasi berikut:
+            - Nama: ${userData.nama}
+            - Jabatan: ${userData.role}
+            - Asal Sekolah: ${userData.sekolah?.nama || "Tidak diketahui"}
+            - Tingkat: ${userData.sekolah?.tingkat}
       `;
     const inputValue = request.input("input_value");
+    // console.log('User Profile Template : ', userProfileTemplate)
     try {
       const responseOpenAI = await openai.chat.completions.create({
         model: "gpt-3.5-turbo",
         messages: [
           {
-            role: "system", content: `Kamu adalah asisten saran pencarian. ${userProfileTemplate}. Ketika pengguna mengetikkan sebagian kata atau frasa, berikan beberapa ide atau saran pencarian yang relevan. Gunakan bahasa Indonesia dan batasi jawaban hingga 50 token.`
+            role: "system", content: `Kamu adalah asisten saran pencarian yang cerdas. ${userProfileTemplate}.`
           },
           {
             role: "user",
-            content: `Berikan tiga saran pencarian terkait untuk: "${inputValue}". Tampilkan saran dalam bentuk teks yang langsung terhubung dengan kata/frasa tersebut, tanpa angka atau bullet, dipisahkan dengan garis baru. Format jawaban harus: "${inputValue} {saran}" dan gunakan tanda baca yang sesuai.`,
+            content: `
+          Berdasarkan informasi pengguna, buatlah tiga saran pencarian yang lebih luas dan mendalam untuk input: "${inputValue}".
+
+            Pastikan:
+            - Tidak hanya menambahkan 1 kata di akhir
+            - Menggunakan frasa yang umum dicari pengguna dengan latar belakang serupa
+            - Menyesuaikan dengan konteks sekolah dan jabatan pengguna
+            - Jawaban tidak perlu disertai tanda "" ataupun -
+            
+            **Contoh yang benar:**
+            - ${inputValue} cara meningkatkan fokus belajar
+            - ${inputValue} metode pembelajaran paling efektif
+            - ${inputValue} teknik belajar cepat untuk ujian
+
+            Jawaban formatnya:
+            ${inputValue} {saran_1}\n${inputValue} {saran_2}\n${inputValue} {saran_3}
+            `,
           }
         ],
-        max_tokens: 50,
+        temperature: 0.7,
+        max_tokens: 250,
       });
 
       const suggestionsList = responseOpenAI.choices[0].message.content.split('\n');
