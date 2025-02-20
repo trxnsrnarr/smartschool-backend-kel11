@@ -600,8 +600,8 @@ class DinasController {
 
     page = page ? parseInt(page) : 1;
 
-    const awal = moment().format("YYYY-MM-DD 00:00:00");
-    const akhir = moment().format("YYYY-MM-DD 23:59:59");
+    const awal = moment(tanggal).format("YYYY-MM-DD 00:00:00");
+    const akhir = moment(tanggal).format("YYYY-MM-DD 23:59:59");
 
     if (jenis == "kehadiran") {
       let absenUser;

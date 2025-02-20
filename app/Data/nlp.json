@@ -174,5 +174,25 @@
   {
     "content": "berapa jumlah siswa di smkn 26 jakarta?",
     "intent": "sql_request"
+  },
+  {
+    "content": "dimana kelas saya?",
+    "intent": "sql_request"
+  },
+  {
+    "content": "apakah saya sedang pkl?",
+    "intent": "sql_request"
+  },
+  {
+    "content": "apakah saya memiliki pelanggaran?",
+    "intent": "sql_request"
+  },
+  {
+    "content": "pelanggarannya apa?",
+    "intent": "sql_request"
+  },
+  {
+    "content": "apa saja jadwalnya",
+    "intent": "sql_request"
   }
 ]
