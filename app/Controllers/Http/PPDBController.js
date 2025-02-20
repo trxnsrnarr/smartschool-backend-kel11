@@ -1222,6 +1222,8 @@ class PPDBController {
     }
   }
 
+
+
   async detailGelombangPPDB({ response, params: { gelombang_ppdb_id } }) {
     const gelombang = await MGelombangPpdb.query()
       .with("pendaftar", (builder) => {

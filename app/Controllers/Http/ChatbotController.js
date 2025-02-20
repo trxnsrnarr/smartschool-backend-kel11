@@ -2,7 +2,10 @@
 
 const MChatroom = use("App/Models/MChatroom");
 const MMessage = use("App/Models/MMessage");
+const MSekolah = use("App/Models/MSekolah");
+const Mta = use("App/Models/Mta");
 const Env = use("Env");
+const Database = use("Database");
 
 const OpenAI = require('openai');
 const openai = new OpenAI({ apiKey: Env.OPENAI_API_KEY });
@@ -13,7 +16,7 @@ const User = use("App/Models/User");
 const { z } = require("zod");
 const { DataSource } = require("typeorm");
 const { SqlDatabase } = require("langchain/sql_db");
-// const { ChatOpenAI, OpenAIEmbeddings } = require("@langchain/openai");
+const { ChatOpenAI, OpenAIEmbeddings } = require("@langchain/openai");
 const { ChatMistralAI, MistralAIEmbeddings } = require("@langchain/mistralai");
 const { createSqlQueryChain } = require("langchain/chains/sql_db");
 
@@ -33,25 +36,25 @@ const classifier = new natural.BayesClassifier();
 const nlp = './app/Data/nlp.json';
 const sqlExamples = './app/Data/sql.json';
 
-const embeddings = new MistralAIEmbeddings({
-  model: "mistral-embed"
-});
-
-// const embeddings = new OpenAIEmbeddings({
-//   model: "text-embedding-3-small"
+// const embeddings = new MistralAIEmbeddings({
+//   model: "mistral-embed"
 // });
+
+const embeddings = new OpenAIEmbeddings({
+  model: "text-embedding-3-small"
+});
 
 const vectorStore = new MemoryVectorStore(embeddings);
 
-const llm = new ChatMistralAI({
-  model: "mistral-large-latest",
-  temperature: 0,
-});
-
-// const llm = new ChatOpenAI({
-//   model: "gpt-4o",
+// const llm = new ChatMistralAI({
+//   model: "mistral-large-latest",
 //   temperature: 0,
 // });
+
+const llm = new ChatOpenAI({
+  model: "gpt-4o",
+  temperature: 0,
+});
 
 const datasource = new DataSource({
   type: Env.get("DB_CONNECTION"),
@@ -129,6 +132,7 @@ function saveNewIntent(content, intent) {
     trainingData.push(newEntry);
 
     fs.writeFileSync(nlp, JSON.stringify(trainingData, null, 2));
+    trainClassifierFromJson();
     console.log("Intent baru ditambahkan ke nlp.json");
   } catch (error) {
     console.error("Gagal menyimpan intent baru:", error);
@@ -166,40 +170,86 @@ class CreatePDFTool extends StructuredTool {
 }
 
 class ChatbotController {
+  async getSekolahByDomain(domain) {
+    const sekolah = await MSekolah.query()
+      .with("informasi")
+      .with("fitur")
+      .where("domain", "like", `%${domain}%`)
+      .first();
+
+    if (!sekolah) {
+      return "404";
+    }
+
+    return sekolah;
+  }
+
+  async getTAAktif(sekolah) {
+    const ta = await Mta.query()
+      .select(
+        "id",
+        "tahun",
+        "semester",
+        "nama_kepsek",
+        "nip_kepsek",
+        "tingkat1",
+        "tingkat2",
+        "tingkat3",
+        "tingkat4"
+      )
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ aktif: 1 })
+      .andWhere({ dihapus: 0 })
+      .first();
+
+    if (!ta) {
+      return "404";
+    }
+
+    return ta;
+  }
+
   async storeMessage(messages, chatroomId = null, userId = null, intent = "text_question") {
+    const trx = await Database.beginTransaction();
+
     try {
-      if (!chatroomId || chatroomId === null) {
-        const storeChatroom = await MChatroom.create({
+      if (!chatroomId) {
+        const chatroom = await MChatroom.create({
           name: messages[0].content.split(" ").slice(0, 5).join(" "),
-          m_user_id: userId
+          m_user_id: userId,
         });
-        chatroomId = storeChatroom.id;
+
+        chatroomId = chatroom.id;
       }
 
-      const chatroom = await MChatroom.find(chatroomId);
+      const chatroom = await trx.table('m_chatrooms').where('id', chatroomId).first();
       if (!chatroom) {
+        await trx.rollback();
         return {
           status: 'error',
           message: 'Chatroom not found'
         };
       }
 
-      for (const message of messages) {
-        await MMessage.create({
-          role: message.role,
-          content: message.content,
-          type_of_content: intent,
-          m_chatroom_id: chatroomId,
-        });
-      }
+      const messageData = messages.map(message => ({
+        role: message.role,
+        content: message.content,
+        type_of_content: intent,
+        m_chatroom_id: chatroomId,
+      }));
+
+      await trx.insert(messageData).into('m_messages');
+
+      await trx.commit();
 
       return {
         status: 'success',
         message: 'Messages successfully stored',
-        chatroomId: chatroomId,
+        chatroomId,
         data: messages
       };
     } catch (error) {
+      await trx.rollback();
       return {
         status: 'error',
         message: 'An error occurred while storing messages',
@@ -270,7 +320,7 @@ class ChatbotController {
     }
   }
 
-  async sqlRequest(question, user) {
+  async sqlRequest(question, user, ta, previousChats) {
     try {
       console.log("⚡ [SQL Request] Memproses pertanyaan:", question);
       console.log("🔍 [User Info] ID:", user.id, "| Sekolah ID:", user.m_sekolah_id);
@@ -340,6 +390,7 @@ class ChatbotController {
           "m_user",
           "m_sekolah",
           "m_ta",
+          "m_absen",
 
           // TU
           "m_mata_pelajaran",
@@ -415,14 +466,27 @@ class ChatbotController {
       const tableNames = db.includesTables.map((t) => t).join("\n");
 
       const relavantTablePrompt = `
-          Return the names of ALL the SQL tables that MIGHT be relevant to the user question.
-          The tables are:
+        Identify ALL SQL tables that COULD BE RELATED to answering this question, following these rules:
 
-          ${tableNames}
+        1. MANDATORY INCLUSION: Always include these 3 tables:
+          - m_user
+          - m_sekolah
+          - m_ta
 
-          Remember to include ALL POTENTIALLY RELEVANT tables, even if you're not sure that they're needed.
-          Question: {question}
-          Relevant Tables:
+        2. RELEVANCE ANALYSIS: Consider these aspects of the question:
+          - Main entities mentioned (e.g., students, grades, payments)
+          - Actions described (e.g., filtering, counting, updating)
+          - Time-related aspects (semesters, years)
+          - Related concepts (e.g., "nilai" → scores/grades)
+          - Previous question context: {previousChats}
+
+        3. TABLES TO ANALYZE:
+        ${tableNames}
+
+        Return ONLY a comma-separated list of table names. When in doubt, INCLUDE the table.
+
+        Current Question: {question}
+        Relevant Tables:
       `;
 
       const relavantTable = ChatPromptTemplate.fromMessages([
@@ -431,7 +495,7 @@ class ChatbotController {
       ]);
 
       const tableChain = relavantTable.pipe(llm.withStructuredOutput(Table));
-      const relavantTables = await tableChain.invoke({ question });
+      const relavantTables = await tableChain.invoke({ question, previousChats });
       console.log(relavantTables.names);
 
       const db2 = await SqlDatabase.fromDataSourceParams({
@@ -453,16 +517,20 @@ class ChatbotController {
       );
 
       const answerPrompt = PromptTemplate.fromTemplate(`
-          Anda adalah seorang Assistant Aplikasi SmartESchool yang berguna untuk menjawab pertanyaan - pertanyaan pengguna dalam mempertanyakan terhadap data di aplikasi ini.
-          Semisal hasil dari SQL Error maka berikanlah respon yang menjelaskan bahwa pertanyaan pengguna kurang memberikan informasi yang tepat. Dan jelaskan dengan bahasa yang bukan teknis agar orang awam mengerti.
-          Untuk Pengguna Chatbot kurang lebih seorang anggota sekolah seperti siswa, guru, kepala sekolah, admin, dll.
-          Diberikan pertanyaan pengguna berikut, query SQL yang sesuai, dan hasil SQL, jawablah pertanyaan pengguna.
+        Anda adalah seorang Assistant Aplikasi SmartESchool yang berguna untuk menjawab pertanyaan pengguna dalam mempertanyakan terhadap data di Aplikasi SmartESchool dari SQL berikut.
+        Semisal hasil dari SQL Error maka berikanlah respon yang menjelaskan bahwa pertanyaan pengguna kurang memberikan informasi yang tepat.
+        Gunakan dengan bahasa yang bukan teknis agar orang mudah mengerti. Jangan pernah menampilkan id dari suatu record data.
+        Untuk Pengguna Chatbot adalah seorang anggota sekolah seperti siswa, guru, kepala sekolah, dan administrator.
+        Diberikan pertanyaan pengguna berikut, query SQL yang sesuai, dan hasil SQL, jawablah pertanyaan pengguna.
 
-          Pertanyaan: {question}
-          Query SQL: {query}
-          Hasil SQL: {result}
+        Berikut adalah riwayat percakapan sebelumnya:
+        {previousChats}
 
-          Jawaban:
+        Pertanyaan: {question}
+        Query SQL: {query}
+        Hasil SQL: {result}
+
+        Jawaban:
       `);
 
       const answerChain = answerPrompt.pipe(llm).pipe(new StringOutputParser());
@@ -577,6 +645,7 @@ class ChatbotController {
           Role: ${user.role} (contoh: 'siswa', 'guru', 'kepsek', atau 'admin')
           Nama: ${user.nama}
           ID Sekolah: ${user.m_sekolah_id}
+          ID Tahun Akademik yang aktif: ${ta.id}
 
           Anda hanya dapat mengakses data sekolah yang sesuai dengan ID Sekolah Pengguna saat ini: ${user.m_sekolah_id}.
           Jika pertanyaan terkait dengan sekolah lain, jangan buat query.
@@ -601,12 +670,21 @@ class ChatbotController {
           **Langkah 3: Membuat Query**
             - Buat query hanya dengan menggunakan command SELECT (Jangan gunakan command CRETE, UPDATE, DELETE, ALTER, dll).
             - Buat query dengan memilih hanya kolom yang diperlukan untuk menjawab pertanyaan pengguna. Jangan sertakan data yang tidak diperlukan.
-            - Kecuali pengguna menentukan jumlah data yang ingin diambil, gunakan batasan maksimal ({top_k} atau 5 hasil) dengan klausa LIMIT sesuai dengan standar {dialect}.
-            - Jika pengguna tidak menentukan batas jumlah data, tambahkan klausa LIMIT dengan maksimum 5 baris. Jika pengguna meminta semua data secara eksplisit, jangan sertakan klausa LIMIT.
+            - Kecuali pengguna menentukan jumlah data yang ingin diambil, gunakan batasan maksimal ({top_k} atau 40 hasil) dengan klausa LIMIT sesuai dengan standar {dialect}.
+            - Jika pengguna tidak menentukan batas jumlah data, tambahkan klausa LIMIT dengan maksimum 40 baris. Jika pengguna meminta semua data secara eksplisit, jangan sertakan klausa LIMIT.
             - Gunakan penggabungan eksplisit (misalnya, \`INNER JOIN\`, \`LEFT JOIN\`, dll.) dan pastikan kondisinya benar.
             - Bungkus setiap nama kolom dengan tanda kutip balik (\`\`) untuk menandai bahwa itu adalah pengenal.
             - Tulis query dalam satu baris tanpa menggunakan karakter baris baru (\`\\n\`) atau penggabungan string (\`+\`).
             - Jika pertanyaan berkaitan dengan informasi pribadi pengguna, tambahkan kondisi filter berdasarkan id, role, atau m_sekolah_id.
+            - Selalu pastikan query sesuai dengan struktur dan batasan tabel yang diberikan.
+            - Untuk tabel \`m_user\`, kolom \`role\` membedakan antara siswa, guru, dan admin. Pastikan kolom ini digunakan dengan benar untuk memfilter data jika berlaku.
+            - Semisal pengguna meminta data jadwal ujian yang memerlukan relasi dengan sekolah gunakan perintah JOIN seperti ini:  JOIN m_user ON m_user.id = m_jadwal_ujian.m_user_id JOIN m_sekolah ON m_sekolah.id = m_user.m_sekolah_id.
+            - Semisal pengguna menanyakan data yang berkaitan dengan tahun akademik atau ta jangan sertakan kolom aktif pada table m_ta (ta yang digunakan saat ini) jika tidak dibahas.
+            - Saat membuat query, periksa setiap tabel yang digunakan apakah memiliki kolom \`dihapus\`.
+            - Jika sebuah tabel tidak memiliki kolom \`dihapus\`, jangan tambahkan kondisi \`AND <nama_tabel>.\`dihapus\` = 0\` di klausa WHERE untuk menyaring data.
+            - Jika sebuah tabel memiliki kolom \`dihapus\`, tambahkan kondisi \`AND <nama_tabel>.\`dihapus\` = 0\` di klausa WHERE untuk menyaring data yang tidak dihapus.
+            - Jika sebuah tabel memiliki kolom \`aktif\`, tambahkan kondisi \`AND <nama_tabel>.\`aktif\` = 1\` di klausa WHERE untuk menyaring data yang aktif.
+            - Jika sebuah tabel memiliki kolom \`m_ta.id\` gunakan kondisi \`AND <nama_tabel>.\`m_ta_id = ${ta.id}\` di klausa WHERE untuk menyaring data yang sesuai dengan tahun akademik saat ini.
 
           **Langkah 4: Verifikasi Ketepatan Query**
             - Periksa ulang bahwa query menggunakan tabel dan kolom yang benar sesuai dengan skema.
@@ -628,6 +706,7 @@ class ChatbotController {
             - Verifikasi penggabungan, filter, dan kondisi yang benar sesuai dengan skema database.
 
           **Catatan Umum**
+            - Hanya buatkan SQL query mentah sebagai output.
             - Tambahkan logika untuk membaca data berdasarkan waktu tertentu. Gunakan:
             - **Hari ini:** Gunakan \`CURDATE()\`.
             - **Kemarin:** Gunakan \`DATE_SUB(CURDATE(), INTERVAL 1 DAY)\`.
@@ -636,37 +715,32 @@ class ChatbotController {
             - **Dua hari lalu:** Gunakan \`DATE_SUB(CURDATE(), INTERVAL 2 DAY)\`.
             - **Rentang waktu:** Gunakan format \`BETWEEN 'YYYY-MM-DD' AND 'YYYY-MM-DD'\`.
             - **Hari tertentu dalam minggu:** Gunakan \`DAYOFWEEK()\` atau \`WEEKDAY()\` untuk membandingkan hari tertentu.
-            - Selalu pastikan query sesuai dengan struktur dan batasan tabel yang diberikan.
-            - Untuk tabel \`m_user\`, kolom \`role\` membedakan antara siswa, guru, dan admin. Pastikan kolom ini digunakan dengan benar untuk memfilter data jika berlaku.
-            - Semisal pengguna meminta data jadwal ujian yang memerlukan relasi dengan sekolah gunakan perintah JOIN seperti ini:  JOIN m_user ON m_user.id = m_jadwal_ujian.m_user_id JOIN m_sekolah ON m_sekolah.id = m_user.m_sekolah_id.
-            - Semisal pengguna menanyakan data yang berkaitan dengan tahun akademik atau ta jangan sertakan kolom aktif pada table m_ta (ta yang digunakan saat ini) jika tidak dibahas.
-            - Saat membuat query, periksa setiap tabel yang digunakan apakah memiliki kolom \`dihapus\`.
-            - Jika sebuah tabel memiliki kolom \`dihapus\`, tambahkan kondisi \`AND <nama_tabel>.\`dihapus\` = 0\` di klausa WHERE untuk menyaring data yang tidak dihapus.
-            - Jika sebuah tabel tidak memiliki kolom \`dihapus\`, kondisi tersebut tidak perlu ditambahkan.
 
           **Pemetaan Relasional**
             - Untuk setiap hubungan antar tabel, pahami kolom kunci asing mana yang harus digunakan untuk penggabungan.
             - Pastikan query hanya mencakup penggabungan yang diperlukan dan menghindari data yang redundan.
 
-          Buat query berdasarkan input pengguna dan pastikan query sesuai dengan struktur database dan hubungan yang dijelaskan di atas. Periksa ulang query untuk ketepatan dan kebenaran logis sebelum menyelesaikannya. Setiap query yang dihasilkan harus mencakup klausa LIMIT dengan maksimal {top_k} atau 5 hasil, kecuali dinyatakan sebaliknya oleh pengguna:
-            - Tambahkan klausa \`LIMIT\` dengan maksimal 5 baris jika pengguna tidak meminta semua data.
+          Buat query berdasarkan input pengguna dan pastikan query sesuai dengan struktur database dan hubungan yang dijelaskan di atas. Periksa ulang query untuk ketepatan dan kebenaran logis sebelum menyelesaikannya. Setiap query yang dihasilkan harus mencakup klausa LIMIT dengan maksimal {top_k} atau 40 hasil, kecuali dinyatakan sebaliknya oleh pengguna:
+            - Tambahkan klausa \`LIMIT\` dengan maksimal 40 baris jika pengguna tidak meminta semua data.
             - Jangan tambahkan klausa \`LIMIT\` jika pengguna secara eksplisit meminta semua data.
 
           Di bawah ini adalah sejumlah contoh pertanyaan dan kueri SQL terkaitnya.
         `,
         suffix: `
-          Hanya keluarkan query SQL mentah sebagai output.
+          Hanya buatkan SQL query mentah sebagai output.
+          Pesan sebelumnya: {previousChats}
           User input: {input}
           SQL query:
         `,
-        inputVariables: ["input", "top_k", "table_info", "dialect"],
+        inputVariables: ["input", "top_k", "table_info", "dialect", "previousChats"],
       });
 
       await validation2.format({
         input: question,
-        top_k: 5,
+        top_k: 40,
         table_info: relavantTables.names,
         dialect: "mysql",
+        previousChats
       });
 
       const queryChain = await createSqlQueryChain({
@@ -677,45 +751,56 @@ class ChatbotController {
       });
 
       const fullChain = RunnableSequence.from([
-        // Langkah 1: Dapatkan nama tabel yang relevan
-        RunnablePassthrough
+        // Langkah 0: Bawa previousChats ke dalam context
+        RunnablePassthrough.assign({
+          previousChats: (i) => i.previousChats
+        })
+
+          // Langkah 1: Dapatkan nama tabel yang relevan dengan mempertimbangkan chat sebelumnya
           .assign({
-            relevantTables: (i) => tableChain.invoke({ question: i.question }),
+            relevantTables: (i) => tableChain.invoke({
+              question: i.question,
+              previousChats: i.previousChats
+            }),
           })
 
-          // Langkah 2: Generate Query
+          // Langkah 2: Generate Query dengan mempertimbangkan chat sebelumnya
           .assign({
-            query: (i) => {
-              return queryChain.invoke({
-                question: i.question,
-                tableNamesToUse: i.relevantTables,
-              })
-            }
+            query: (i) => queryChain.invoke({
+              question: i.question,
+              tableNamesToUse: i.relevantTables,
+              previousChats: i.previousChats
+            })
           }),
 
-        // Langkah 3: Eksekusi untuk Query yang sudah dibuat lalu mendapatkan hasil Query nya
-        RunnablePassthrough
-          .assign({
-            result: async (i) => {
-              console.log("query yg di eksekusi:", i.query);
-              console.log("hasil query yg di eksekusi:", await db.run(i.query));
-              return await db.run(i.query)
-            }
-          }),
+        // Langkah 3: Eksekusi Query
+        RunnablePassthrough.assign({
+          result: async (i) => {
+            console.log("query yg di eksekusi:", i.query);
+            return await db.run(i.query);
+          }
+        }),
 
-        // Langkah 4: Dapatkan jawaban dari pertanyaan sesuai format
-        answerChain
+        // Langkah 4: Format jawaban dengan mempertimbangkan percakapan sebelumnya
+        RunnablePassthrough.assign({
+          finalAnswer: (i) => answerChain.invoke({
+            question: i.question,
+            result: i.result,
+            query: i.query,
+            previousChats: i.previousChats
+          })
+        })
       ]);
 
-      console.log("📝 [SQL Execution] Query sedang dibuat...");
+      console.log("📝 [SQL Execution] Query sedang dibuat...", { question, previousChats });
 
       // 7️⃣ Jalankan query hanya jika validasi sukses
       try {
-        const responseOpenAI = await fullChain.invoke({ question: question });
+        const responseOpenAI = await fullChain.invoke({ question, previousChats });
         console.log("✅ [SQL SUCCESS] Query berhasil dieksekusi.");
         console.log("📊 [SQL Result]:", responseOpenAI);
 
-        return responseOpenAI;
+        return responseOpenAI.finalAnswer;
         // return {
         //     status: 'success',
         //     message: "Query berhasil dieksekusi.",
@@ -756,6 +841,16 @@ class ChatbotController {
   }
 
   async openAIResponse({ auth, request, response }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const ta = await this.getTAAktif(sekolah);
+
     try {
       const { message, chatroom_id: chatroomId } = request.post();
       const user = await auth.getUser();
@@ -767,7 +862,7 @@ class ChatbotController {
 
       const previousChatsData = await MMessage.query()
         .where("m_chatroom_id", chatroomId || null)
-        .where("type_of_content", "text_question")
+        .whereIn("type_of_content", ["text_question", "sql_request"])
         .orderBy("created_at", "asc")
         .fetch();
 
@@ -789,7 +884,7 @@ class ChatbotController {
           responseOpenAI = await this.fileRequest(message);
           break;
         case "sql_request":
-          responseOpenAI = await this.sqlRequest(message, user);
+          responseOpenAI = await this.sqlRequest(message, user, ta, previousChats);
           break;
         default:
           return response.status(500).json({
@@ -921,7 +1016,7 @@ class ChatbotController {
       const { chatroom_id } = params;
       const messages = await MMessage.query()
         .where('m_chatroom_id', chatroom_id)
-        .orderBy('created_at', 'asc')
+        .orderBy('id', 'asc')
         .fetch();
 
       return response.json({
