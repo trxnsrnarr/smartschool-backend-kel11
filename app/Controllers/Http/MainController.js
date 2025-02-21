@@ -13693,6 +13693,114 @@ class MainController {
   }
 
   // Belum Validasi
+  // async postAbsen({ response, request, auth }) {
+  //   const domain = request.headers().origin;
+
+  //   const sekolah = await this.getSekolahByDomain(domain);
+
+  //   if (sekolah == "404") {
+  //     return response.notFound({ message: "Sekolah belum terdaftar" });
+  //   }
+
+  //   const ta = await this.getTAAktif(sekolah);
+
+  //   if (ta == "404") {
+  //     return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+  //   }
+
+  //   const user = await auth.getUser();
+
+  //   let {
+  //     absen,
+  //     keterangan,
+  //     lampiran,
+  //     foto_masuk,
+  //     user_id,
+  //     lokasi_masuk,
+  //     lokasi_pulang,
+  //     waktu_masuk,
+  //   } = request.post();
+
+  //   lampiran = lampiran ? lampiran.toString() : null;
+
+  //   // const anggotaRombel = await MAnggotaRombel.query()
+  //   //   .with("rombel", (builder) => {
+  //   //     builder.with("user", (builder) => {
+  //   //       builder.select("id", "nama", "wa_real");
+  //   //     });
+  //   //   })
+  //   //   .where({ m_user_id: user.id })
+  //   //   .andWhere({ dihapus: 0 })
+  //   //   .first();
+
+  //   // const mapel = await MMataPelajaran.query()
+  //   //   .where({ m_user_id: anggotaRombel.rombel.m_user_id })
+  //   //   .andWhere({ m_ta_id: ta.id })
+  //   //   .andWhere({ dihapus: 0 })
+  //   //   .first();
+
+  //   // const jadwalMengajar = await MJadwalMengajar.query()
+  //   //   .where({ m_mata_pelajaran_id: mapel.id })
+  //   //   .andWhere({ m_rombel_id: anggotaRombel.m_rombel_id })
+  //   //   .first();
+
+  //   let data;
+  //   if (absen != "hadir") {
+  //     data = await MAbsen.create({
+  //       m_sekolah_id: sekolah.id,
+  //       m_user_id: user.id,
+  //       role: user.role,
+  //       absen,
+  //       keterangan,
+  //       lampiran: lampiran,
+  //     });
+  //     // if (absen == "izin") {
+  //     //   await WhatsAppService.sendMessage(
+  //     //     anggotaRombel.rombel.user.wa_real,
+  //     //     `Halo ${
+  //     //       anggotaRombel.rombel.user.nama
+  //     //     }, anak perwalian Anda atas nama *${
+  //     //       user.nama
+  //     //     }* izin hari ini. Silahkan menekan tautan berikut untuk melihat detail keterangan absensi siswa Anda. \n \n${domain}/smarteschool/kelas${
+  //     //       jadwalMengajar.id
+  //     //     }/absen-harian`
+  //     //   );
+  //     // } else if (absen == "sakit") {
+  //     //   await WhatsAppService.sendMessage(
+  //     //     anggotaRombel.rombel.user.wa_real,
+  //     //     `Halo ${
+  //     //       anggotaRombel.rombel.user.nama
+  //     //     }, anak perwalian Anda atas nama *${
+  //     //       user.nama
+  //     //     }* hari ini sakit. Silahkan menekan tautan berikut untuk melihat detail keterangan absensi siswa Anda. \n \n${domain}/smarteschool/kelas${
+  //     //       jadwalMengajar.id
+  //     //     }/absen-harian`
+  //     //   );
+  //     // }
+  //   } else {
+  //     data = await MAbsen.create({
+  //       m_sekolah_id: sekolah.id,
+  //       m_user_id: user_id ? user_id : user.id,
+  //       role: user.role,
+  //       absen,
+  //       keterangan,
+  //       waktu_masuk,
+  //       foto_masuk,
+  //       lokasi_masuk: JSON.stringify(lokasi_masuk),
+  //       lokasi_pulang: JSON.stringify(lokasi_pulang),
+  //     });
+  //   }
+
+  //   // await WhatsAppService.sendMessage(
+  //   //   user.whatsapp,
+  //   //   `Halo, absen anda sudah masuk. Anda masuk dengan keterangan *${absen}* \n ${keterangan ? keterangan : foto_masuk ? foto_masuk : null} \nPada pukul ${data.created_at}`
+  //   // );
+
+  //   return response.ok({
+  //     data: data,
+  //     message: messagePostSuccess,
+  //   });
+  // }
   async postAbsen({ response, request, auth }) {
     const domain = request.headers().origin;
 
@@ -13743,9 +13851,11 @@ class MainController {
     //   .where({ m_mata_pelajaran_id: mapel.id })
     //   .andWhere({ m_rombel_id: anggotaRombel.m_rombel_id })
     //   .first();
+    console.log('absen apasi?', absen)
 
     let data;
     if (absen != "hadir") {
+      console.log('ini hadir')
       data = await MAbsen.create({
         m_sekolah_id: sekolah.id,
         m_user_id: user.id,
@@ -13789,114 +13899,7 @@ class MainController {
         lokasi_masuk: JSON.stringify(lokasi_masuk),
         lokasi_pulang: JSON.stringify(lokasi_pulang),
       });
-    }
-
-    // await WhatsAppService.sendMessage(
-    //   user.whatsapp,
-    //   `Halo, absen anda sudah masuk. Anda masuk dengan keterangan *${absen}* \n ${keterangan ? keterangan : foto_masuk ? foto_masuk : null} \nPada pukul ${data.created_at}`
-    // );
-
-    return response.ok({
-      data: data,
-      message: messagePostSuccess,
-    });
-  }
-  async postAbsen({ response, request, auth }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const ta = await this.getTAAktif(sekolah);
-
-    if (ta == "404") {
-      return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
-    }
-
-    const user = await auth.getUser();
-
-    let {
-      absen,
-      keterangan,
-      lampiran,
-      foto_masuk,
-      user_id,
-      lokasi_masuk,
-      lokasi_pulang,
-      waktu_masuk,
-    } = request.post();
-
-    lampiran = lampiran ? lampiran.toString() : null;
-
-    // const anggotaRombel = await MAnggotaRombel.query()
-    //   .with("rombel", (builder) => {
-    //     builder.with("user", (builder) => {
-    //       builder.select("id", "nama", "wa_real");
-    //     });
-    //   })
-    //   .where({ m_user_id: user.id })
-    //   .andWhere({ dihapus: 0 })
-    //   .first();
-
-    // const mapel = await MMataPelajaran.query()
-    //   .where({ m_user_id: anggotaRombel.rombel.m_user_id })
-    //   .andWhere({ m_ta_id: ta.id })
-    //   .andWhere({ dihapus: 0 })
-    //   .first();
-
-    // const jadwalMengajar = await MJadwalMengajar.query()
-    //   .where({ m_mata_pelajaran_id: mapel.id })
-    //   .andWhere({ m_rombel_id: anggotaRombel.m_rombel_id })
-    //   .first();
-
-    let data;
-    if (absen != "hadir") {
-      data = await MAbsen.create({
-        m_sekolah_id: sekolah.id,
-        m_user_id: user.id,
-        role: user.role,
-        absen,
-        keterangan,
-        lampiran: lampiran,
-      });
-      // if (absen == "izin") {
-      //   await WhatsAppService.sendMessage(
-      //     anggotaRombel.rombel.user.wa_real,
-      //     `Halo ${
-      //       anggotaRombel.rombel.user.nama
-      //     }, anak perwalian Anda atas nama *${
-      //       user.nama
-      //     }* izin hari ini. Silahkan menekan tautan berikut untuk melihat detail keterangan absensi siswa Anda. \n \n${domain}/smarteschool/kelas${
-      //       jadwalMengajar.id
-      //     }/absen-harian`
-      //   );
-      // } else if (absen == "sakit") {
-      //   await WhatsAppService.sendMessage(
-      //     anggotaRombel.rombel.user.wa_real,
-      //     `Halo ${
-      //       anggotaRombel.rombel.user.nama
-      //     }, anak perwalian Anda atas nama *${
-      //       user.nama
-      //     }* hari ini sakit. Silahkan menekan tautan berikut untuk melihat detail keterangan absensi siswa Anda. \n \n${domain}/smarteschool/kelas${
-      //       jadwalMengajar.id
-      //     }/absen-harian`
-      //   );
-      // }
-    } else {
-      data = await MAbsen.create({
-        m_sekolah_id: sekolah.id,
-        m_user_id: user_id ? user_id : user.id,
-        role: user.role,
-        absen,
-        keterangan,
-        waktu_masuk,
-        foto_masuk,
-        lokasi_masuk: JSON.stringify(lokasi_masuk),
-        lokasi_pulang: JSON.stringify(lokasi_pulang),
-      });
+      console.log('ini pulang')
     }
 
     // await WhatsAppService.sendMessage(
@@ -13948,11 +13951,11 @@ class MainController {
           absen,
           foto_pulang,
           waktu_pulang,
-          lokasi_masuk: JSON.stringify(lokasi_masuk),
+          // lokasi_masuk: JSON.stringify(lokasi_masuk),
+          lokasi_masuk: lokasi_masuk,
           lokasi_pulang: JSON.stringify(lokasi_pulang),
         });
     }
-
     return response.ok({
       message: messagePutSuccess,
     });

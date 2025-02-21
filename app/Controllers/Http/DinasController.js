@@ -611,48 +611,36 @@ class DinasController {
         })
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ dihapus: 0 });
-      if (role == "siswa") {
-        absenUser.andWhere({ role: "siswa" });
-      } else if (role == "gtk") {
-        absenUser.whereIn("role", ["guru", "admin", "kepsek"]);
-      }
-      if (search) {
-        absenUser.andWhere("nama", "like", `%${search}%`);
-      }
-      if (rombel_id) {
-        absenUser.whereHas("anggotaRombel", (builder) => {
-          builder.where({ m_rombel_id: rombel_id })
-        });
-      }
-      absenUser = await absenUser.paginate(page, 25);
+
       let absen;
       absen = MAbsen.query()
         .andWhere({ m_sekolah_id: sekolah.id })
         .whereBetween("created_at", [awal, akhir]);
       if (role == "siswa") {
+        absenUser.andWhere({ role: "siswa" });
         absen.andWhere({ role: role });
       } else if (role == "gtk") {
+        absenUser.whereIn("role", ["guru", "admin", "kepsek"]);
         absen.whereIn("role", ["guru", "admin", "kepsek"]);
       }
+      if (search) {
+        absenUser.andWhere("nama", "like", `%${search}%`);
+        absen.whereHas("user", (builder) => {
+          builder.where("nama", "like", `%${search}%`)
+        });
+      }
       if (rombel_id) {
+        absenUser.whereHas("anggotaRombel", (builder) => {
+          builder.where({ m_rombel_id: rombel_id })
+        });
         absen.whereHas("user", (builder) => {
           builder.whereHas("anggotaRombel", (builder) => {
             builder.where({ m_rombel_id: rombel_id });
           })
         });
       }
-
+      absenUser = await absenUser.paginate(page, 25);
       absen = await absen.fetch();
-
-      // let total;
-      // total = User.query()
-      //   .where({ dihapus: 0 })
-      //   .andWhere({ m_sekolah_id: sekolah.id });
-      // if (role == "siswa") {
-      //   total.andWhere({ role: role });
-      // } else if (role == "gtk") {
-      //   total.whereIn("role", ["guru", "admin", "kepsek"]);
-      // }
 
       let total = parseInt(absenUser.pages.total);
       const hadir = absen.toJSON().filter((d) => d.absen == "hadir").length;
