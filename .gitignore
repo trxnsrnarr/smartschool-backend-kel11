@@ -12,4 +12,6 @@ database/*.sqlite
 
 public/uploads
 
+app/Data/nlp.json
+
 .vscode

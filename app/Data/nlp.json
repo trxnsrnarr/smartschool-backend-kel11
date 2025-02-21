@@ -194,5 +194,9 @@
   {
     "content": "apa saja jadwalnya",
     "intent": "sql_request"
+  },
+  {
+    "content": "hai dalam bahasa inggris",
+    "intent": "text_question"
   }
 ]
