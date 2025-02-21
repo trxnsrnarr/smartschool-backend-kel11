@@ -9603,11 +9603,82 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { search, page, tingkat, nama_siswa } = request.get();
+    let { search, page, tingkat } = request.get();
+    console.log(request.get());
 
     page = page ? parseInt(page) : 1;
 
+    // let prestasi;
+    // if (search) {
+    //   const userIds = await User.query()
+    //     .where("nama", "like", `%${search}%`)
+    //     .andWhere({ dihapus: 0 })
+    //     .andWhere({ m_sekolah_id: sekolah.id })
+    //     .limit(25)
+    //     .ids();
+
+    //   if (tingkat) {
+    //     prestasi = await MPrestasi.query()
+    //       .with("user", (builder) => {
+    //         builder.select("id", "nama");
+    //       })
+    //       .with("tingkatPrestasi")
+    //       .where({ m_sekolah_id: sekolah.id })
+    //       .andWhere({ dihapus: 0 })
+    //       .andWhere({ tingkat })
+    //       .whereIn("m_user_id", userIds)
+    //       .paginate(page, 25);
+    //   } else {
+    //     prestasi = await MPrestasi.query()
+    //       .with("user", (builder) => {
+    //         builder.select("id", "nama");
+    //       })
+    //       .with("tingkatPrestasi")
+    //       .where({ m_sekolah_id: sekolah.id })
+    //       .andWhere({ dihapus: 0 })
+    //       .whereIn("m_user_id", userIds)
+    //       .paginate(page, 25);
+    //   }
+    // } else {
+    //   if (tingkat) {
+    //     prestasi = await MPrestasi.query()
+    //       .with("user", (builder) => {
+    //         builder.select("id", "nama");
+    //       })
+    //       .with("tingkatPrestasi")
+    //       .where({ m_sekolah_id: sekolah.id })
+    //       .andWhere({ dihapus: 0 })
+    //       .andWhere({ tingkat })
+    //       .paginate(page, 25);
+    //   } else {
+    //     prestasi = await MPrestasi.query()
+    //       .with("user", (builder) => {
+    //         builder.select("id", "nama");
+    //       })
+    //       .with("tingkatPrestasi")
+    //       .where({ m_sekolah_id: sekolah.id })
+    //       .andWhere({ dihapus: 0 })
+    //       .paginate(page, 25);
+    //   }
+    // }
+
     let prestasi;
+    prestasi = MPrestasi.query()
+      .with("user", (builder) => {
+        builder.select("id", "nama");
+      })
+      .with("tingkatPrestasi", (builder) => {
+        builder.where({ dihapus: 0 })
+      })
+      .whereHas("tingkatPrestasi", (builder) => {
+        builder.where({ dihapus: 0 })
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 });
+
+    if (tingkat) {
+      prestasi.andWhere({ tingkat });
+    }
 
     if (search) {
       const userIds = await User.query()
@@ -9617,50 +9688,10 @@ class MainController {
         .limit(25)
         .ids();
 
-      if (tingkat) {
-        prestasi = await MPrestasi.query()
-          .with("user", (builder) => {
-            builder.select("id", "nama");
-          })
-          .with("tingkatPrestasi")
-          .where({ m_sekolah_id: sekolah.id })
-          .andWhere({ dihapus: 0 })
-          .andWhere({ tingkat })
-          .whereIn("m_user_id", userIds)
-          .paginate(page, 25);
-      } else {
-        prestasi = await MPrestasi.query()
-          .with("user", (builder) => {
-            builder.select("id", "nama");
-          })
-          .with("tingkatPrestasi")
-          .where({ m_sekolah_id: sekolah.id })
-          .andWhere({ dihapus: 0 })
-          .whereIn("m_user_id", userIds)
-          .paginate(page, 25);
-      }
-    } else {
-      if (tingkat) {
-        prestasi = await MPrestasi.query()
-          .with("user", (builder) => {
-            builder.select("id", "nama");
-          })
-          .with("tingkatPrestasi")
-          .where({ m_sekolah_id: sekolah.id })
-          .andWhere({ dihapus: 0 })
-          .andWhere({ tingkat })
-          .paginate(page, 25);
-      } else {
-        prestasi = await MPrestasi.query()
-          .with("user", (builder) => {
-            builder.select("id", "nama");
-          })
-          .with("tingkatPrestasi")
-          .where({ m_sekolah_id: sekolah.id })
-          .andWhere({ dihapus: 0 })
-          .paginate(page, 25);
-      }
+      prestasi.whereIn("m_user_id", userIds);
     }
+
+    prestasi = await prestasi.paginate(page, 25);
 
     const tingkatData = await MPenghargaan.query()
       .withCount("prestasi as total", (builder) => {
@@ -9670,29 +9701,9 @@ class MainController {
       .andWhere({ dihapus: 0 })
       .fetch();
 
-    let user;
-
-    if (nama_siswa) {
-      user = await User.query()
-        .select("id", "nama")
-        .where("nama", "like", `%${nama_siswa}%`)
-        .where({ dihapus: 0 })
-        .andWhere({ m_sekolah_id: sekolah.id })
-        .limit(25)
-        .fetch();
-    } else {
-      user = await User.query()
-        .select("id", "nama")
-        .where({ dihapus: 0 })
-        .andWhere({ m_sekolah_id: sekolah.id })
-        .limit(25)
-        .fetch();
-    }
-
     return response.ok({
       prestasi,
-      tingkat: tingkatData,
-      user: user,
+      tingkat: tingkatData
     });
   }
 
@@ -56134,7 +56145,7 @@ class MainController {
         },
       ],
     });
-    
+
     worksheet.addConditionalFormatting({
       ref: `A6:${colName(range + 2)}6`,
       rules: [
