@@ -56590,83 +56590,93 @@ class MainController {
     sekolah,
     m_ekstrakurikuler_id
   ) {
-    var workbook = new Excel.Workbook();
-
+    const workbook = new Excel.Workbook();
+    
     try {
-      workbook = await workbook.xlsx.readFile(filelocation);
+      await workbook.xlsx.readFile(filelocation);
     } catch (err) {
-      return "Format File Tidak Sesuai";
+      console.error("Error membaca file:", err);
+      return { message: "Gagal membaca file. Pastikan format file sesuai.", error: true };
     }
-
-    let explanation = workbook.getWorksheet("Sheet1");
-
-    if (!explanation) {
-      return "Format File Tidak Sesuai";
+  
+    const worksheet = workbook.getWorksheet("Sheet1");
+  
+    if (!worksheet) {
+      return { message: "Format file tidak sesuai. Pastikan sheet bernama 'Sheet1'.", error: true };
     }
-
-    let colComment = explanation.getColumn("A");
+  
+    const colComment = worksheet.getColumn("A");
+  
     if (!colComment) {
-      return "Format File Tidak Sesuai";
+      return { message: "Format file tidak sesuai. Pastikan kolom 'A' tersedia.", error: true };
     }
-
+  
     let data = [];
-
-    colComment.eachCell(async (cell, rowNumber) => {
-      if (rowNumber >= 6) {
-        data.push({
-          nama: explanation.getCell("B" + rowNumber).value,
-          whatsapp: explanation.getCell("C" + rowNumber).value,
-          // email:
-          //   explanation.getCell("D" + rowNumber).value == null
-          //     ? ""
-          //     : typeof explanation.getCell("D" + rowNumber).value == "object"
-          //     ? JSON.parse(explanation.getCell("D" + rowNumber).value).text
-          //     : explanation.getCell("D" + rowNumber).value,
-          role: explanation.getCell("D" + rowNumber).value,
-        });
-      }
-    });
-
-    const result = await Promise.all(
-      data.map(async (d) => {
+  
+    try {
+      worksheet.eachRow((row, rowNumber) => {
+        if (rowNumber >= 6) {
+          const nama = row.getCell(2).value;
+          const whatsapp = row.getCell(3).value;
+          const role = row.getCell(4).value;
+  
+          if (!nama || !whatsapp || !role) {
+            console.warn(`Data tidak valid pada baris ${rowNumber}, dilewati.`);
+            return;
+          }
+  
+          data.push({ nama, whatsapp, role });
+        }
+      });
+    } catch (err) {
+      console.error("Error saat membaca baris:", err);
+      return { message: "Terjadi kesalahan saat membaca data dari file.", error: true };
+    }
+  
+    try {
+      const results = [];
+  
+      for (const d of data) {
         const checkUser = await User.query()
           .where({ whatsapp: d.whatsapp })
           .andWhere({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
           .first();
-
+  
         if (!checkUser) {
-          return `${d.nama} belum terdaftar di Cazbox Edu`;
+          results.push({ message: `${d.nama} belum terdaftar di SmartESchool`, error: true });
+          continue;
         }
-
-        const checkAnggotaEksktrakurikuler = await MAnggotaEkskul.query()
+  
+        const checkAnggotaEkskul = await MAnggotaEkskul.query()
           .andWhere({ m_user_id: checkUser.toJSON().id })
           .andWhere({ m_ekstrakurikuler_id: m_ekstrakurikuler_id })
           .first();
-
-        if (checkAnggotaEksktrakurikuler) {
+  
+        if (checkAnggotaEkskul) {
           await MAnggotaEkskul.query()
             .andWhere({ m_user_id: checkUser.toJSON().id })
             .andWhere({ m_ekstrakurikuler_id: m_ekstrakurikuler_id })
             .update({ dihapus: 0, role: d.role });
-          return {
-            message: `${d.nama} sudah terdaftar`,
-            error: true,
-          };
+  
+          results.push({ message: `${d.nama} sudah terdaftar`, error: true });
+        } else {
+          await MAnggotaEkskul.create({
+            role: d.role,
+            dihapus: 0,
+            m_user_id: checkUser.toJSON().id,
+            m_ekstrakurikuler_id: m_ekstrakurikuler_id,
+          });
+  
+          results.push({ message: `${d.nama} berhasil ditambahkan`, error: false });
         }
-
-        await MAnggotaEkskul.create({
-          role: d.role,
-          dihapus: 0,
-          m_user_id: checkUser.toJSON().id,
-          m_ekstrakurikuler_id: m_ekstrakurikuler_id,
-        });
-
-        return;
-      })
-    );
-
-    return "import Siswa Berhasil";
+      }
+  
+      return { message: "Import selesai", data: results };
+    } catch (err) {
+      console.error("Error saat menyimpan ke database:", err);
+      return { message: "Terjadi kesalahan saat menyimpan data.", error: true };
+    }
   }
 
   async importAnggotaEkskul({ request, response }) {
@@ -56693,19 +56703,20 @@ class MainController {
       return fileUpload.error();
     }
 
-    const message = await this.importAnggotaEkskulServices(
+    const { message, error, data } = await this.importAnggotaEkskulServices(
       `tmp/uploads/${fname}`,
       sekolah,
       m_ekstrakurikuler_id
     );
 
-    if (message == "Format File Tidak Sesuai") {
+    if (error) {
       return response.notFound({
         message,
       });
     }
     return response.ok({
       message,
+      data
     });
   }
 
