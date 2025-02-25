@@ -4279,7 +4279,7 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    let { search, page, tingkat, jurusan_id, rombel_id, tingkat2 } =
+    let { search, page, tingkat, jurusan_id, rombel_id } =
       request.get();
 
     const userIds = await User.query()
@@ -4295,9 +4295,9 @@ class MainController {
             builder.where({ dihapus: 0 }).whereIn("m_user_id", userIds);
           })
           .where({ dihapus: 0 })
-          .andWhere({ m_ta_id: ta.id });
-        if (tingkat2) {
-          builder.where({ tingkat: tingkat2 });
+          // .andWhere({ m_ta_id: ta.id });
+        if (tingkat) {
+          builder.where({ tingkat: tingkat });
         }
       })
       .where({ m_sekolah_id: sekolah.id })
@@ -4307,7 +4307,7 @@ class MainController {
     const rombel = await MRombel.query()
       .where({ dihapus: 0 })
       .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta.id })
+      // .andWhere({ m_ta_id: ta.id })
       .fetch();
 
     let jurusanData = {};
@@ -4324,15 +4324,101 @@ class MainController {
       })
     );
 
+    page = page ? parseInt(page) : 1;
+    let siswa;
+    let jurusanDataIds = MJurusan.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 });
+    if (jurusan_id) {
+      jurusanDataIds.where({ id: jurusan_id });
+    }
+
+    jurusanDataIds = await jurusanDataIds.ids();
+
+    let rombelIds;
+    rombelIds = MRombel.query()
+      .where({ m_sekolah_id: sekolah.id })
+      // .andWhere({ m_ta_id: ta.id })
+      .andWhere({ dihapus: 0 })
+      .whereIn("m_jurusan_id", jurusanDataIds);
+
+    if (rombel_id) {
+      rombelIds.where({ id: rombel_id });
+    }
+    if (tingkat) {
+      rombelIds.where({ tingkat });
+    }
+    rombelIds = await rombelIds.ids();
+
+    if (search) {
+      siswa = await User.query()
+        .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
+        .whereHas("anggotaRombel", (builder) => {
+          builder
+            .whereIn("m_rombel_id", rombelIds)
+            .andWhere({ dihapus: 0 });
+        })
+        .with("anggotaRombel", (builder) => {
+          builder.with("rombel", (builder) => {
+            builder.select("id", "nama");
+          })
+            .whereIn("m_rombel_id", rombelIds)
+            .andWhere({ dihapus: 0 });
+        })
+        .where({ m_sekolah_id: sekolah.id })
+        .andWhere({ dihapus: 0 })
+        .andWhere({ role: "siswa" })
+        .andWhere("nama", "like", `%${search}%`)
+        .paginate(page, 25);
+    } else {
+      siswa = await User.query()
+        .select("id", "nama", "whatsapp", "avatar", "gender", "photos")
+        .where("role", "siswa")
+        .where("m_sekolah_id", sekolah.id)
+        .where("dihapus", 0)
+        .whereHas("anggotaRombel", (builder) => {
+          builder
+            .whereIn("m_rombel_id", rombelIds)
+        })
+        .with("anggotaRombel", (builder) => {
+          builder
+            .with("rombel", (builder) => {
+              builder.select("id", "nama");
+            })
+            .whereIn("m_rombel_id", rombelIds)
+            .andWhere({ dihapus: 0 });
+        })
+        .paginate(page, 25);
+      // siswa = await User.query()
+      //   .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
+      //   .whereHas("anggotaRombel", (builder) => {
+      //     builder
+      //       .whereIn("m_rombel_id", rombelIds)
+      //       .andWhere({ dihapus: 0 });
+      //   })
+      //   .with("anggotaRombel", (builder) => {
+      //     builder.with("rombel", (builder) => {
+      //       builder.select("id", "nama");
+      //     })
+      //       .whereIn("m_rombel_id", rombelIds)
+      //       .andWhere({ dihapus: 0 });
+      //   })
+      //   .where({ m_sekolah_id: sekolah.id })
+      //   .andWhere({ dihapus: 0 })
+      //   .andWhere({ role: "siswa" })
+      //   .paginate(page, 25);
+    }
+
     let jumlahLaki;
     let jumlahPerempuan;
 
-    if (tingkat2) {
+    if (tingkat) {
       const rombelDataIds = await MRombel.query()
         .where({ dihapus: 0 })
         .andWhere({ m_sekolah_id: sekolah.id })
-        .andWhere({ m_ta_id: ta.id })
-        .andWhere({ tingkat: tingkat2 })
+        // .andWhere({ m_ta_id: ta.id })
+        .andWhere({ tingkat: tingkat })
+        .whereIn("m_jurusan_id", jurusanDataIds)
         .ids();
       const anggotaRombelIds = await MAnggotaRombel.query()
         .where({ dihapus: 0 })
@@ -4355,11 +4441,23 @@ class MainController {
         .whereIn("id", anggotaRombelIds)
         .getCount();
     } else {
+      const rombelDataIds = await MRombel.query()
+        .where({ dihapus: 0 })
+        .andWhere({ m_sekolah_id: sekolah.id })
+        // .andWhere({ m_ta_id: ta.id })
+        .whereIn("m_jurusan_id", jurusanDataIds)
+        .ids();
+      const anggotaRombelIds = await MAnggotaRombel.query()
+        .where({ dihapus: 0 })
+        .whereIn("m_rombel_id", rombelDataIds)
+        .pluck("m_user_id");
+
       jumlahLaki = await User.query()
         .where({ m_sekolah_id: sekolah.id })
         .andWhere({ dihapus: 0 })
         .andWhere({ gender: "L" })
         .andWhere({ role: "siswa" })
+        .whereIn("id", anggotaRombelIds)
         .getCount();
 
       jumlahPerempuan = await User.query()
@@ -4367,66 +4465,8 @@ class MainController {
         .andWhere({ dihapus: 0 })
         .andWhere({ gender: "P" })
         .andWhere({ role: "siswa" })
+        .whereIn("id", anggotaRombelIds)
         .getCount();
-    }
-
-    page = page ? parseInt(page) : 1;
-    let siswa;
-    let jurusanDataIds = MJurusan.query()
-      .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ dihapus: 0 });
-    if (jurusan_id) {
-      jurusanDataIds.where({ id: jurusan_id });
-    }
-
-    jurusanDataIds = await jurusanDataIds.ids();
-
-    let rombelIds;
-    rombelIds = MRombel.query()
-      .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ m_ta_id: ta.id })
-      .andWhere({ dihapus: 0 })
-      .whereIn("m_jurusan_id", jurusanDataIds);
-
-    if (rombel_id) {
-      rombelIds.where({ id: rombel_id });
-    }
-    if (tingkat) {
-      rombelIds.where({ tingkat });
-    }
-    rombelIds = await rombelIds.ids();
-
-    if (search) {
-      siswa = await User.query()
-        .with("anggotaRombel", (builder) => {
-          builder
-            .with("rombel", (builder) => {
-              builder.select("id", "nama");
-            })
-            .whereIn("m_rombel_id", rombelIds)
-            .andWhere({ dihapus: 0 });
-        })
-        .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
-        .where({ m_sekolah_id: sekolah.id })
-        .andWhere({ dihapus: 0 })
-        .andWhere({ role: "siswa" })
-        .andWhere("nama", "like", `%${search}%`)
-        .paginate(page, 25);
-    } else {
-      siswa = await User.query()
-        .with("anggotaRombel", (builder) => {
-          builder
-            .with("rombel", (builder) => {
-              builder.select("id", "nama");
-            })
-            .whereIn("m_rombel_id", rombelIds)
-            .andWhere({ dihapus: 0 });
-        })
-        .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
-        .where({ m_sekolah_id: sekolah.id })
-        .andWhere({ dihapus: 0 })
-        .andWhere({ role: "siswa" })
-        .paginate(page, 25);
     }
 
     let tingkatData = [];
@@ -9603,64 +9643,9 @@ class MainController {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    let { search, page, tingkat } = request.get();
-    console.log(request.get());
+    let { search, page, tingkat, m_ta_id } = request.get();
 
     page = page ? parseInt(page) : 1;
-
-    // let prestasi;
-    // if (search) {
-    //   const userIds = await User.query()
-    //     .where("nama", "like", `%${search}%`)
-    //     .andWhere({ dihapus: 0 })
-    //     .andWhere({ m_sekolah_id: sekolah.id })
-    //     .limit(25)
-    //     .ids();
-
-    //   if (tingkat) {
-    //     prestasi = await MPrestasi.query()
-    //       .with("user", (builder) => {
-    //         builder.select("id", "nama");
-    //       })
-    //       .with("tingkatPrestasi")
-    //       .where({ m_sekolah_id: sekolah.id })
-    //       .andWhere({ dihapus: 0 })
-    //       .andWhere({ tingkat })
-    //       .whereIn("m_user_id", userIds)
-    //       .paginate(page, 25);
-    //   } else {
-    //     prestasi = await MPrestasi.query()
-    //       .with("user", (builder) => {
-    //         builder.select("id", "nama");
-    //       })
-    //       .with("tingkatPrestasi")
-    //       .where({ m_sekolah_id: sekolah.id })
-    //       .andWhere({ dihapus: 0 })
-    //       .whereIn("m_user_id", userIds)
-    //       .paginate(page, 25);
-    //   }
-    // } else {
-    //   if (tingkat) {
-    //     prestasi = await MPrestasi.query()
-    //       .with("user", (builder) => {
-    //         builder.select("id", "nama");
-    //       })
-    //       .with("tingkatPrestasi")
-    //       .where({ m_sekolah_id: sekolah.id })
-    //       .andWhere({ dihapus: 0 })
-    //       .andWhere({ tingkat })
-    //       .paginate(page, 25);
-    //   } else {
-    //     prestasi = await MPrestasi.query()
-    //       .with("user", (builder) => {
-    //         builder.select("id", "nama");
-    //       })
-    //       .with("tingkatPrestasi")
-    //       .where({ m_sekolah_id: sekolah.id })
-    //       .andWhere({ dihapus: 0 })
-    //       .paginate(page, 25);
-    //   }
-    // }
 
     let prestasi;
     prestasi = MPrestasi.query()
@@ -9674,10 +9659,14 @@ class MainController {
         builder.where({ dihapus: 0 })
       })
       .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ dihapus: 0 });
+      .andWhere({ dihapus: 0 })
 
     if (tingkat) {
       prestasi.andWhere({ tingkat });
+    }
+
+    if (m_ta_id) {
+      prestasi.andWhere({ m_ta_id });
     }
 
     if (search) {
@@ -9693,17 +9682,45 @@ class MainController {
 
     prestasi = await prestasi.paginate(page, 25);
 
-    const tingkatData = await MPenghargaan.query()
-      .withCount("prestasi as total", (builder) => {
-        builder.where({ dihapus: 0 });
-      })
+    let tingkatData;
+    tingkatData = MPenghargaan.query()
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 });
+    if (m_ta_id) {
+      tingkatData.withCount("prestasi as total", (builder) => {
+        builder
+          .where({ dihapus: 0 })
+          .andWhere({ m_ta_id });
+      });
+    } else {
+      tingkatData.withCount("prestasi as total", (builder) => {
+        builder
+          .where({ dihapus: 0 });
+      });
+    }
+    tingkatData = await tingkatData.fetch();
+
+    const semuaTa = await Mta.query()
+      .select(
+        "tahun",
+        "semester",
+        "nama_kepsek",
+        "nip_kepsek",
+        "aktif",
+        "id",
+        "tanggal_awal",
+        "tanggal_akhir",
+        "tanggal_rapor"
+      )
       .where({ m_sekolah_id: sekolah.id })
       .andWhere({ dihapus: 0 })
+      .orderBy("id", "desc")
       .fetch();
 
     return response.ok({
       prestasi,
-      tingkat: tingkatData
+      tingkat: tingkatData,
+      semuaTa
     });
   }
 
@@ -56591,40 +56608,40 @@ class MainController {
     m_ekstrakurikuler_id
   ) {
     const workbook = new Excel.Workbook();
-    
+
     try {
       await workbook.xlsx.readFile(filelocation);
     } catch (err) {
       console.error("Error membaca file:", err);
       return { message: "Gagal membaca file. Pastikan format file sesuai.", error: true };
     }
-  
+
     const worksheet = workbook.getWorksheet("Sheet1");
-  
+
     if (!worksheet) {
       return { message: "Format file tidak sesuai. Pastikan sheet bernama 'Sheet1'.", error: true };
     }
-  
+
     const colComment = worksheet.getColumn("A");
-  
+
     if (!colComment) {
       return { message: "Format file tidak sesuai. Pastikan kolom 'A' tersedia.", error: true };
     }
-  
+
     let data = [];
-  
+
     try {
       worksheet.eachRow((row, rowNumber) => {
         if (rowNumber >= 6) {
           const nama = row.getCell(2).value;
           const whatsapp = row.getCell(3).value;
           const role = row.getCell(4).value;
-  
+
           if (!nama || !whatsapp || !role) {
             console.warn(`Data tidak valid pada baris ${rowNumber}, dilewati.`);
             return;
           }
-  
+
           data.push({ nama, whatsapp, role });
         }
       });
@@ -56632,33 +56649,33 @@ class MainController {
       console.error("Error saat membaca baris:", err);
       return { message: "Terjadi kesalahan saat membaca data dari file.", error: true };
     }
-  
+
     try {
       const results = [];
-  
+
       for (const d of data) {
         const checkUser = await User.query()
           .where({ whatsapp: d.whatsapp })
           .andWhere({ m_sekolah_id: sekolah.id })
           .andWhere({ dihapus: 0 })
           .first();
-  
+
         if (!checkUser) {
           results.push({ message: `${d.nama} belum terdaftar di SmartESchool`, error: true });
           continue;
         }
-  
+
         const checkAnggotaEkskul = await MAnggotaEkskul.query()
           .andWhere({ m_user_id: checkUser.toJSON().id })
           .andWhere({ m_ekstrakurikuler_id: m_ekstrakurikuler_id })
           .first();
-  
+
         if (checkAnggotaEkskul) {
           await MAnggotaEkskul.query()
             .andWhere({ m_user_id: checkUser.toJSON().id })
             .andWhere({ m_ekstrakurikuler_id: m_ekstrakurikuler_id })
             .update({ dihapus: 0, role: d.role });
-  
+
           results.push({ message: `${d.nama} sudah terdaftar`, error: true });
         } else {
           await MAnggotaEkskul.create({
@@ -56667,11 +56684,11 @@ class MainController {
             m_user_id: checkUser.toJSON().id,
             m_ekstrakurikuler_id: m_ekstrakurikuler_id,
           });
-  
+
           results.push({ message: `${d.nama} berhasil ditambahkan`, error: false });
         }
       }
-  
+
       return { message: "Import selesai", data: results };
     } catch (err) {
       console.error("Error saat menyimpan ke database:", err);
