@@ -4263,7 +4263,7 @@ class MainController {
       message: messageDeleteSuccess,
     });
   }
-
+ 
   async getSiswa({ response, request, auth }) {
     const domain = request.headers().origin;
 
@@ -4279,195 +4279,87 @@ class MainController {
       return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
     }
 
-    let { search, page, tingkat, jurusan_id, rombel_id } =
-      request.get();
+    let { search, page, tingkat, jurusan_id, rombel_id, ta_id } = request.get();
 
-    const userIds = await User.query()
-      .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .andWhere({ role: "siswa" })
-      .ids();
-
-    const jurusan = await MJurusan.query()
-      .with("rombel", (builder) => {
-        builder
-          .withCount("anggotaRombel as jumlahAnggota", (builder) => {
-            builder.where({ dihapus: 0 }).whereIn("m_user_id", userIds);
-          })
-          .where({ dihapus: 0 })
-          // .andWhere({ m_ta_id: ta.id });
-        if (tingkat) {
-          builder.where({ tingkat: tingkat });
-        }
-      })
-      .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ dihapus: 0 })
-      .fetch();
-
-    const rombel = await MRombel.query()
-      .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      // .andWhere({ m_ta_id: ta.id })
-      .fetch();
-
-    let jurusanData = {};
-
-    await Promise.all(
-      jurusan.toJSON().map(async (d) => {
-        d.rombel.map((e) => {
-          if (d.id == e.m_jurusan_id) {
-            jurusanData[d.nama] = jurusanData[d.nama]
-              ? jurusanData[d.nama] + e.__meta__.jumlahAnggota
-              : e.__meta__.jumlahAnggota;
-          }
-        });
-      })
-    );
-
-    page = page ? parseInt(page) : 1;
+    let jurusan;
+    let rombel;
     let siswa;
-    let jurusanDataIds = MJurusan.query()
-      .where({ m_sekolah_id: sekolah.id })
-      .andWhere({ dihapus: 0 });
-    if (jurusan_id) {
-      jurusanDataIds.where({ id: jurusan_id });
-    }
-
-    jurusanDataIds = await jurusanDataIds.ids();
-
-    let rombelIds;
-    rombelIds = MRombel.query()
-      .where({ m_sekolah_id: sekolah.id })
-      // .andWhere({ m_ta_id: ta.id })
-      .andWhere({ dihapus: 0 })
-      .whereIn("m_jurusan_id", jurusanDataIds);
-
-    if (rombel_id) {
-      rombelIds.where({ id: rombel_id });
-    }
-    if (tingkat) {
-      rombelIds.where({ tingkat });
-    }
-    rombelIds = await rombelIds.ids();
-
-    if (search) {
-      siswa = await User.query()
-        .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
-        .whereHas("anggotaRombel", (builder) => {
-          builder
-            .whereIn("m_rombel_id", rombelIds)
-            .andWhere({ dihapus: 0 });
-        })
-        .with("anggotaRombel", (builder) => {
-          builder.with("rombel", (builder) => {
-            builder.select("id", "nama");
-          })
-            .whereIn("m_rombel_id", rombelIds)
-            .andWhere({ dihapus: 0 });
-        })
-        .where({ m_sekolah_id: sekolah.id })
-        .andWhere({ dihapus: 0 })
-        .andWhere({ role: "siswa" })
-        .andWhere("nama", "like", `%${search}%`)
-        .paginate(page, 25);
-    } else {
-      siswa = await User.query()
-        .select("id", "nama", "whatsapp", "avatar", "gender", "photos")
-        .where("role", "siswa")
-        .where("m_sekolah_id", sekolah.id)
-        .where("dihapus", 0)
-        .whereHas("anggotaRombel", (builder) => {
-          builder
-            .whereIn("m_rombel_id", rombelIds)
-        })
-        .with("anggotaRombel", (builder) => {
-          builder
-            .with("rombel", (builder) => {
-              builder.select("id", "nama");
-            })
-            .whereIn("m_rombel_id", rombelIds)
-            .andWhere({ dihapus: 0 });
-        })
-        .paginate(page, 25);
-      // siswa = await User.query()
-      //   .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
-      //   .whereHas("anggotaRombel", (builder) => {
-      //     builder
-      //       .whereIn("m_rombel_id", rombelIds)
-      //       .andWhere({ dihapus: 0 });
-      //   })
-      //   .with("anggotaRombel", (builder) => {
-      //     builder.with("rombel", (builder) => {
-      //       builder.select("id", "nama");
-      //     })
-      //       .whereIn("m_rombel_id", rombelIds)
-      //       .andWhere({ dihapus: 0 });
-      //   })
-      //   .where({ m_sekolah_id: sekolah.id })
-      //   .andWhere({ dihapus: 0 })
-      //   .andWhere({ role: "siswa" })
-      //   .paginate(page, 25);
-    }
-
     let jumlahLaki;
     let jumlahPerempuan;
 
-    if (tingkat) {
-      const rombelDataIds = await MRombel.query()
-        .where({ dihapus: 0 })
-        .andWhere({ m_sekolah_id: sekolah.id })
-        // .andWhere({ m_ta_id: ta.id })
-        .andWhere({ tingkat: tingkat })
-        .whereIn("m_jurusan_id", jurusanDataIds)
-        .ids();
-      const anggotaRombelIds = await MAnggotaRombel.query()
-        .where({ dihapus: 0 })
-        .whereIn("m_rombel_id", rombelDataIds)
-        .pluck("m_user_id");
+    jurusan = MJurusan.query()
+      .where({
+        m_sekolah_id: sekolah.id,
+        dihapus: 0
+      });
 
-      jumlahLaki = await User.query()
-        .where({ m_sekolah_id: sekolah.id })
-        .andWhere({ dihapus: 0 })
-        .andWhere({ gender: "L" })
-        .andWhere({ role: "siswa" })
-        .whereIn("id", anggotaRombelIds)
-        .getCount();
-
-      jumlahPerempuan = await User.query()
-        .where({ m_sekolah_id: sekolah.id })
-        .andWhere({ dihapus: 0 })
-        .andWhere({ gender: "P" })
-        .andWhere({ role: "siswa" })
-        .whereIn("id", anggotaRombelIds)
-        .getCount();
-    } else {
-      const rombelDataIds = await MRombel.query()
-        .where({ dihapus: 0 })
-        .andWhere({ m_sekolah_id: sekolah.id })
-        // .andWhere({ m_ta_id: ta.id })
-        .whereIn("m_jurusan_id", jurusanDataIds)
-        .ids();
-      const anggotaRombelIds = await MAnggotaRombel.query()
-        .where({ dihapus: 0 })
-        .whereIn("m_rombel_id", rombelDataIds)
-        .pluck("m_user_id");
-
-      jumlahLaki = await User.query()
-        .where({ m_sekolah_id: sekolah.id })
-        .andWhere({ dihapus: 0 })
-        .andWhere({ gender: "L" })
-        .andWhere({ role: "siswa" })
-        .whereIn("id", anggotaRombelIds)
-        .getCount();
-
-      jumlahPerempuan = await User.query()
-        .where({ m_sekolah_id: sekolah.id })
-        .andWhere({ dihapus: 0 })
-        .andWhere({ gender: "P" })
-        .andWhere({ role: "siswa" })
-        .whereIn("id", anggotaRombelIds)
-        .getCount();
+    if (jurusan_id) {
+      jurusan.where({ id: jurusan_id });
     }
+
+    rombel = MRombel.query()
+      .where({
+        m_sekolah_id: sekolah.id,
+        dihapus: 0
+      })
+      .whereIn("m_jurusan_id", await jurusan.clone().ids());
+
+    if (rombel_id) {
+      rombel.where({ id: rombel_id });
+    }
+
+    if (tingkat) {
+      rombel.where({ tingkat });
+    }
+
+    if (ta_id) {
+      rombel.where({ m_ta_id: ta_id });
+    }else{
+      rombel.where({ m_ta_id: ta.id });
+    }
+
+    const rombelIds = await rombel.clone().ids();
+
+    page = page ? parseInt(page) : 1;
+
+    siswa = User.query()
+      .where({
+        m_sekolah_id: sekolah.id,
+        dihapus: 0,
+        role: "siswa"
+      })
+      .whereHas("anggotaRombel", (builder) => {
+        builder
+          .whereIn("m_rombel_id", rombelIds)
+          .where({ dihapus: 0 });
+      })
+      .with("anggotaRombel", (builder) => {
+        builder
+          .with("rombel", (builder) => {
+            builder.select("id", "nama", "m_ta_id");
+          })
+          .whereIn("m_rombel_id", rombelIds)
+          .where({ dihapus: 0 });
+      });
+
+    if (search) {
+      siswa.where("nama", "like", `%${search}%`);
+    }
+
+    rombel = await rombel.fetch();
+    jurusan = await jurusan.fetch();
+    jumlahLaki = await siswa.clone().where({ gender: "L" }).getCount();
+    jumlahPerempuan = await siswa.clone().where({ gender: "P" }).getCount();
+    siswa = await siswa.paginate(page, 25);
+
+    const semuaTa = await Mta.query()
+      .select("id", "tahun", "semester", "aktif")
+      .where({ 
+        m_sekolah_id: sekolah.id,
+        dihapus: 0
+      })
+      .orderBy("id", "desc")
+      .fetch();
 
     let tingkatData = [];
 
@@ -4499,17 +4391,297 @@ class MainController {
       ];
     }
 
+    const userIds = await User.query()
+      .where({ dihapus: 0 })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .andWhere({ role: "siswa" })
+      .ids();
+      
+    const jurusans = await MJurusan.query()
+      .with("rombel", (builder) => {
+        builder
+          .withCount("anggotaRombel as jumlahAnggota", (builder) => {
+            builder.where({ dihapus: 0 }).whereIn("m_user_id", userIds);
+          })
+          .whereIn("id", rombelIds)
+      })
+      .where({ m_sekolah_id: sekolah.id })
+      .andWhere({ dihapus: 0 })
+      .fetch();
+    
+    let jurusanData = {};
+    
+    await Promise.all(
+      jurusans.toJSON().map(async (d) => {
+        d.rombel.map((e) => {
+          if (d.id == e.m_jurusan_id) {
+            jurusanData[d.nama] = jurusanData[d.nama]
+              ? jurusanData[d.nama] + e.__meta__.jumlahAnggota
+              : e.__meta__.jumlahAnggota;
+          }
+        });
+      })
+    );
+
     return response.ok({
-      siswa: siswa,
-      integrasi: sekolah.integrasi,
-      jumlahLaki: jumlahLaki,
-      jumlahPerempuan: jumlahPerempuan,
+      siswa,
+      jumlahLaki,
+      jumlahPerempuan,
       jurusanData: Object.entries(jurusanData),
-      jurusan,
-      rombel,
       tingkatData,
+      rombel,
+      jurusan,
+      ta: semuaTa,
+      integrasi: sekolah.integrasi,
     });
   }
+
+  // async getSiswa({ response, request, auth }) {
+  //   const domain = request.headers().origin;
+
+  //   const sekolah = await this.getSekolahByDomain(domain);
+
+  //   if (sekolah == "404") {
+  //     return response.notFound({ message: "Sekolah belum terdaftar" });
+  //   }
+
+  //   const ta = await this.getTAAktif(sekolah);
+
+  //   if (ta == "404") {
+  //     return response.notFound({ message: "Tahun Ajaran belum terdaftar" });
+  //   }
+
+  //   let { search, page, tingkat, jurusan_id, rombel_id } =
+  //     request.get();
+
+  //   const userIds = await User.query()
+  //     .where({ dihapus: 0 })
+  //     .andWhere({ m_sekolah_id: sekolah.id })
+  //     .andWhere({ role: "siswa" })
+  //     .ids();
+
+  //   const jurusan = await MJurusan.query()
+  //     .with("rombel", (builder) => {
+  //       builder
+  //         .withCount("anggotaRombel as jumlahAnggota", (builder) => {
+  //           builder.where({ dihapus: 0 }).whereIn("m_user_id", userIds);
+  //         })
+  //         .where({ dihapus: 0 })
+  //         // .andWhere({ m_ta_id: ta.id });
+  //       if (tingkat) {
+  //         builder.where({ tingkat: tingkat });
+  //       }
+  //     })
+  //     .where({ m_sekolah_id: sekolah.id })
+  //     .andWhere({ dihapus: 0 })
+  //     .fetch();
+
+  //   const rombel = await MRombel.query()
+  //     .where({ dihapus: 0 })
+  //     .andWhere({ m_sekolah_id: sekolah.id })
+  //     // .andWhere({ m_ta_id: ta.id })
+  //     .fetch();
+
+  //   let jurusanData = {};
+
+  //   await Promise.all(
+  //     jurusan.toJSON().map(async (d) => {
+  //       d.rombel.map((e) => {
+  //         if (d.id == e.m_jurusan_id) {
+  //           jurusanData[d.nama] = jurusanData[d.nama]
+  //             ? jurusanData[d.nama] + e.__meta__.jumlahAnggota
+  //             : e.__meta__.jumlahAnggota;
+  //         }
+  //       });
+  //     })
+  //   );
+
+  //   page = page ? parseInt(page) : 1;
+  //   let siswa;
+  //   let jurusanDataIds = MJurusan.query()
+  //     .where({ m_sekolah_id: sekolah.id })
+  //     .andWhere({ dihapus: 0 });
+  //   if (jurusan_id) {
+  //     jurusanDataIds.where({ id: jurusan_id });
+  //   }
+
+  //   jurusanDataIds = await jurusanDataIds.ids();
+
+  //   let rombelIds;
+  //   rombelIds = MRombel.query()
+  //     .where({ m_sekolah_id: sekolah.id })
+  //     // .andWhere({ m_ta_id: ta.id })
+  //     .andWhere({ dihapus: 0 })
+  //     .whereIn("m_jurusan_id", jurusanDataIds);
+
+  //   if (rombel_id) {
+  //     rombelIds.where({ id: rombel_id });
+  //   }
+  //   if (tingkat) {
+  //     rombelIds.where({ tingkat });
+  //   }
+  //   rombelIds = await rombelIds.ids();
+
+  //   if (search) {
+  //     siswa = await User.query()
+  //       .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
+  //       .whereHas("anggotaRombel", (builder) => {
+  //         builder
+  //           .whereIn("m_rombel_id", rombelIds)
+  //           .andWhere({ dihapus: 0 });
+  //       })
+  //       .with("anggotaRombel", (builder) => {
+  //         builder.with("rombel", (builder) => {
+  //           builder.select("id", "nama");
+  //         })
+  //           .whereIn("m_rombel_id", rombelIds)
+  //           .andWhere({ dihapus: 0 });
+  //       })
+  //       .where({ m_sekolah_id: sekolah.id })
+  //       .andWhere({ dihapus: 0 })
+  //       .andWhere({ role: "siswa" })
+  //       .andWhere("nama", "like", `%${search}%`)
+  //       .paginate(page, 25);
+  //   } else {
+  //     siswa = await User.query()
+  //       .select("id", "nama", "whatsapp", "avatar", "gender", "photos")
+  //       .where("role", "siswa")
+  //       .where("m_sekolah_id", sekolah.id)
+  //       .where("dihapus", 0)
+  //       .whereHas("anggotaRombel", (builder) => {
+  //         builder
+  //           .whereIn("m_rombel_id", rombelIds)
+  //       })
+  //       .with("anggotaRombel", (builder) => {
+  //         builder
+  //           .with("rombel", (builder) => {
+  //             builder.select("id", "nama");
+  //           })
+  //           .whereIn("m_rombel_id", rombelIds)
+  //           .andWhere({ dihapus: 0 });
+  //       })
+  //       .paginate(page, 25);
+  //     // siswa = await User.query()
+  //     //   .select("nama", "id", "whatsapp", "avatar", "gender", "photos")
+  //     //   .whereHas("anggotaRombel", (builder) => {
+  //     //     builder
+  //     //       .whereIn("m_rombel_id", rombelIds)
+  //     //       .andWhere({ dihapus: 0 });
+  //     //   })
+  //     //   .with("anggotaRombel", (builder) => {
+  //     //     builder.with("rombel", (builder) => {
+  //     //       builder.select("id", "nama");
+  //     //     })
+  //     //       .whereIn("m_rombel_id", rombelIds)
+  //     //       .andWhere({ dihapus: 0 });
+  //     //   })
+  //     //   .where({ m_sekolah_id: sekolah.id })
+  //     //   .andWhere({ dihapus: 0 })
+  //     //   .andWhere({ role: "siswa" })
+  //     //   .paginate(page, 25);
+  //   }
+
+  //   let jumlahLaki;
+  //   let jumlahPerempuan;
+
+  //   if (tingkat) {
+  //     const rombelDataIds = await MRombel.query()
+  //       .where({ dihapus: 0 })
+  //       .andWhere({ m_sekolah_id: sekolah.id })
+  //       // .andWhere({ m_ta_id: ta.id })
+  //       .andWhere({ tingkat: tingkat })
+  //       .whereIn("m_jurusan_id", jurusanDataIds)
+  //       .ids();
+  //     const anggotaRombelIds = await MAnggotaRombel.query()
+  //       .where({ dihapus: 0 })
+  //       .whereIn("m_rombel_id", rombelDataIds)
+  //       .pluck("m_user_id");
+
+  //     jumlahLaki = await User.query()
+  //       .where({ m_sekolah_id: sekolah.id })
+  //       .andWhere({ dihapus: 0 })
+  //       .andWhere({ gender: "L" })
+  //       .andWhere({ role: "siswa" })
+  //       .whereIn("id", anggotaRombelIds)
+  //       .getCount();
+
+  //     jumlahPerempuan = await User.query()
+  //       .where({ m_sekolah_id: sekolah.id })
+  //       .andWhere({ dihapus: 0 })
+  //       .andWhere({ gender: "P" })
+  //       .andWhere({ role: "siswa" })
+  //       .whereIn("id", anggotaRombelIds)
+  //       .getCount();
+  //   } else {
+  //     const rombelDataIds = await MRombel.query()
+  //       .where({ dihapus: 0 })
+  //       .andWhere({ m_sekolah_id: sekolah.id })
+  //       // .andWhere({ m_ta_id: ta.id })
+  //       .whereIn("m_jurusan_id", jurusanDataIds)
+  //       .ids();
+  //     const anggotaRombelIds = await MAnggotaRombel.query()
+  //       .where({ dihapus: 0 })
+  //       .whereIn("m_rombel_id", rombelDataIds)
+  //       .pluck("m_user_id");
+
+  //     jumlahLaki = await User.query()
+  //       .where({ m_sekolah_id: sekolah.id })
+  //       .andWhere({ dihapus: 0 })
+  //       .andWhere({ gender: "L" })
+  //       .andWhere({ role: "siswa" })
+  //       .whereIn("id", anggotaRombelIds)
+  //       .getCount();
+
+  //     jumlahPerempuan = await User.query()
+  //       .where({ m_sekolah_id: sekolah.id })
+  //       .andWhere({ dihapus: 0 })
+  //       .andWhere({ gender: "P" })
+  //       .andWhere({ role: "siswa" })
+  //       .whereIn("id", anggotaRombelIds)
+  //       .getCount();
+  //   }
+
+  //   let tingkatData = [];
+
+  //   if (
+  //     sekolah.tingkat == "SMK" ||
+  //     sekolah.tingkat == "SMA" ||
+  //     sekolah.tingkat == "MA" ||
+  //     sekolah.tingkat == "MAK"
+  //   ) {
+  //     tingkatData = ["X", "XI", "XII", "XIII"];
+  //   } else if (sekolah.tingkat == "SMP" || sekolah.tingkat == "MTS") {
+  //     tingkatData = ["VII", "VIII", "IX"];
+  //   } else if (sekolah.tingkat == "SD" || sekolah.tingkat == "MI") {
+  //     tingkatData = ["I", "II", "III", "IV", "V", "VI"];
+  //   } else if (sekolah.tingkat == "SLB" || sekolah.tingkat == "SUPER") {
+  //     tingkatData = [
+  //       "I",
+  //       "II",
+  //       "III",
+  //       "IV",
+  //       "V",
+  //       "VI",
+  //       "VII",
+  //       "VIII",
+  //       "IX",
+  //       "X",
+  //       "XI",
+  //       "XII",
+  //     ];
+  //   }
+
+  //   return response.ok({
+  //     siswa: siswa,
+  //     integrasi: sekolah.integrasi,
+  //     jumlahLaki: jumlahLaki,
+  //     jumlahPerempuan: jumlahPerempuan,
+  //     jurusanData: Object.entries(jurusanData),
+  //     jurusan,
+  //     rombel,
+  //     tingkatData,
+  //   });
+  // }
 
   async postSiswa({ response, request, auth }) {
     const domain = request.headers().origin;
