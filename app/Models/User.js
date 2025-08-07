@@ -15,6 +15,14 @@ class User extends Model {
     return this.belongsTo("App/Models/MSekolah");
   }
 
+  jurusan() {
+    return this.belongsTo("App/Models/MJurusan", "jurusan_id", "id");
+  }
+
+  jurusan_barang() {
+    return this.belongsTo('App/Models/MJurusanBarang', 'm_jurusan_barang_id', 'id');
+  }
+
   absen() {
     return this.hasMany("App/Models/MAbsen", "id", "m_user_id");
   }

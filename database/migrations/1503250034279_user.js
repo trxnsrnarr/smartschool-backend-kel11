@@ -19,6 +19,14 @@ class UserSchema extends Schema {
       table.string("email");
       table.string("agama");
       table.string("panggilan");
+      table.string("nama_jurusan");
+      table
+        .integer("jurusan_id")
+        .unsigned()
+        .references("id")
+        .inTable("jurusan_barang")
+        .onDelete("SET NULL")
+        .onUpdate("CASCADE");
 
       //====
       table.string("nip");

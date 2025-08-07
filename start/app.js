@@ -55,9 +55,13 @@ const aliases = {};
 | Here you store ace commands for your package
 |
 */
-const commands = [];
+const commands = []
+
+
 
 module.exports = {http: {
   // Konfigurasi HTTP server
   timeout: 600000, // timeout dalam milidetik (misalnya, 60 detik)
 }, providers, aceProviders, aliases, commands };
+
+

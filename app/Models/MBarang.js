@@ -1,20 +1,27 @@
-"use strict";
+'use strict'
 
-/** @type {typeof import('@adonisjs/lucid/src/Lucid/Model')} */
-const Model = use("Model");
+const Model = use('Model')
 
 class MBarang extends Model {
-  static get table() {
-    return "m_barang";
+  static get table () {
+    return 'm_barang'
+  }
+
+  kategori() {
+    return this.belongsTo('App/Models/MKategoriBarang', 'm_kategori_barang_id', 'id')
   }
 
   lokasi() {
-    return this.belongsTo("App/Models/MLokasi");
+    return this.belongsTo('App/Models/MLokasi', 'm_lokasi_id', 'id')
   }
 
-  getFoto(foto) {
-    return foto ? foto.split(",") : [];
+  sekolah() {
+    return this.belongsTo('App/Models/MSekolah', 'm_sekolah_id', 'id')
+  }
+
+  jurusan() {
+    return this.belongsTo('App/Models/MJurusanBarang', 'kategori_barang', 'id')
   }
 }
 
-module.exports = MBarang;
+module.exports = MBarang

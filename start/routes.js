@@ -99,6 +99,14 @@ Route.post("/jurusan", "MainController.postJurusan");
 Route.put("/jurusan/:jurusan_id", "MainController.putJurusan");
 Route.delete("/jurusan/:jurusan_id", "MainController.deleteJurusan");
 
+// jurusan barang
+Route.post('/jurusan-barang', 'MainController.postJurusanBarang')
+Route.get('/jurusan-barang/:id', 'MainController.getJurusanBarang')
+Route.get('/jurusan-barang', 'MainController.getJurusanBarang')
+Route.put('/jurusan-barang/:id', 'MainController.putJurusanBarang')
+Route.delete('/jurusan-barang/:id', 'MainController.deleteJurusanBarang')
+
+
 // guru
 Route.get("/guru", "MainController.getGuru");
 Route.get("/guru/:guru_id", "MainController.detailGuru");
@@ -1343,6 +1351,13 @@ Route.delete("/surel-arsip/:arsip_id", "MainController.deleteFolderArsip");
 Route.get("/surel-arsip/:arsip_id", "MainController.detailArsipSurel");
 
 // SARPRAS SERVICE
+// kategori barang 
+ Route.get("/kategori-barang/:id", "MainController.getKategoriBarang");
+ Route.get("/kategori-barang", "MainController.getKategoriBarang");
+  Route.post("/kategori-barang", "MainController.postKategoriBarang");
+  Route.put("/kategori-barang/:id", "MainController.putKategoriBarang");
+  Route.delete("/kategori-barang/:id", "MainController.deleteKategoriBarang"); 
+
 // barang Service
 Route.get("/barang", "MainController.getBarang");
 Route.get("/barang/:barang_id", "MainController.detailBarang");
@@ -1351,6 +1366,16 @@ Route.put("/barang/:barang_id", "MainController.putBarang");
 Route.delete("/barang/:barang_id", "MainController.deleteBarang");
 Route.post("/barang/import", "MainController.importBarang");
 Route.post("/barang/download", "MainController.downloadBarang");
+
+// --- Peminjaman ---
+Route.post('/peminjaman', 'MainController.postPeminjaman');
+Route.put('/peminjaman/:id/kembalikan', 'MainController.kembalikanPeminjaman');
+Route.get('/peminjaman', 'MainController.getPeminjaman');
+Route.get('/peminjaman/:id', 'MainController.detailPeminjaman');
+Route.delete('/peminjaman/:id', 'MainController.deletePeminjaman');
+Route.get('/peminjaman/kategori/:slug', 'MainController.getPeminjamanByKategori').middleware('auth');
+Route.get('/peminjaman/detail/:id', 'MainController.getDetailPeminjaman').middleware('auth');
+Route.get('/peminjaman/jurusan/:slug', 'MainController.getPeminjamanByJurusan').middleware('auth');
 
 // lokasi Service
 Route.get("/lokasi", "MainController.getLokasi");

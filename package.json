@@ -8,7 +8,8 @@
     "start": "node server.js",
     "test": "node ace test",
     "deploy": "gcloud app deploy",
-    "pm2": "ENV_SILENT=true node server.js"
+    "pm2": "ENV_SILENT=true node server.js",
+    "dev": "node server.js"
   },
   "keywords": [
     "adonisjs",
@@ -21,12 +22,13 @@
     "@adonisjs/ace": "^5.0.8",
     "@adonisjs/auth": "^3.0.7",
     "@adonisjs/bodyparser": "^2.0.5",
+    "@adonisjs/core": "^6.2.3",
     "@adonisjs/cors": "^1.0.7",
     "@adonisjs/drive": "^1.0.4",
     "@adonisjs/fold": "^4.0.9",
     "@adonisjs/framework": "^5.0.9",
     "@adonisjs/ignitor": "^2.0.8",
-    "@adonisjs/lucid": "^6.1.3",
+    "@adonisjs/lucid": "^6.3.0",
     "@adonisjs/mail": "^3.1.0",
     "@adonisjs/validator": "^5.0.6",
     "@google-cloud/storage": "^7.14.0",
@@ -68,6 +70,7 @@
     "pdftohtmljs": "^0.6.0",
     "puppeteer": "^23.7.1",
     "randomstring": "^1.2.1",
+    "sequelize": "^6.37.6",
     "slugify": "^1.4.6",
     "sqlite3": "^5.1.7",
     "string-strip-html": "^8.3.0",
@@ -79,7 +82,8 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "nodemon": "^2.0.8"
+    "nodemon": "^2.0.8",
+    "sequelize-cli": "^6.6.2"
   },
   "autoload": {
     "App": "./app"

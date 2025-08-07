@@ -141,6 +141,9 @@ const MHistoriAktivitas = use("App/Models/MHistoriAktivitas");
 const MKeuAkun = use("App/Models/MKeuAkun");
 const MKeuTransaksi = use("App/Models/MKeuTransaksi");
 const MKeuJurnal = use("App/Models/MKeuJurnal");
+const MPeminjaman = use("App/Models/MPeminjaman");
+const MKategoriBarang = use("App/Models/MKategoriBarang");
+const MJurusanBarang = use("App/Models/MJurusanBarang");
 
 const MBuku = use("App/Models/MBuku");
 const MPerpus = use("App/Models/MPerpus");
@@ -374,19 +377,30 @@ class MainController {
     // return "https://demoapi.smarteschool.id/uploads/" + fname;
   }
 
-  async getSekolahByDomain(domain) {
-    const sekolah = await MSekolah.query()
-      .with("informasi")
-      .with("fitur")
-      .where("domain", "like", `%${domain}%`)
-      .first();
+async getSekolahByDomain(origin = null) {
+  try {
+    let hostname;
 
-    if (!sekolah) {
-      return "404";
+    if (origin) {
+      const parsed = new URL(origin);
+      hostname = parsed.hostname;
     }
 
-    return sekolah;
+    const query = MSekolah.query();
+
+    if (hostname) {
+      query.where("domain", "like", `%${hostname}%`);
+    }
+
+    const sekolah = await query.first();
+    return sekolah || "404";
+  } catch (e) {
+    console.warn("❌ Error getSekolahByDomain:", e.message);
+
+    const sekolahFallback = await MSekolah.first();
+    return sekolahFallback || "404";
   }
+}
 
   async meSekolah({ request, response }) {
     const domain = request.headers().origin;
@@ -1464,6 +1478,7 @@ class MainController {
         .where({ id: user.id })
         .with("sekolah")
         .with("profil")
+        .with("jurusanBarang") // ⬅️ Tambahkan ini
         .first();
 
       const userData = await MProfilUser.query()
@@ -36669,57 +36684,7 @@ class MainController {
     });
   }
 
-  async getBarang({ response, request, auth }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    let { page, search, lokasi_id } = request.get();
-
-    page = page ? parseInt(page) : 1;
-
-    let barang;
-
-    barang = MBarang.query()
-      .with("lokasi")
-      .where({ dihapus: 0 })
-      .andWhere({ m_sekolah_id: sekolah.id });
-
-    if (search) {
-      barang.andWhere("nama", "like", `%${search}%`);
-    }
-    if (lokasi_id) {
-      barang.andWhere("m_lokasi_id", lokasi_id);
-    }
-
-    return response.ok({
-      barang: await barang.paginate(page, 25),
-    });
-  }
-
-  async detailBarang({ response, request, params: { barang_id } }) {
-    const domain = request.headers().origin;
-
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
-    const barang = await MBarang.query()
-      .with("lokasi")
-      .where({ id: barang_id })
-      .andWhere({ m_sekolah_id: sekolah.id })
-      .first();
-
-    return response.ok({
-      barang: barang,
-    });
-  }
+  
 
   async postLokasi({ response, request, auth }) {
     const domain = request.headers().origin;
@@ -36944,515 +36909,838 @@ class MainController {
     });
   }
 
-  async postBarang({ response, request, auth }) {
-    const domain = request.headers().origin;
+  // ============ Barang =================
 
-    const sekolah = await this.getSekolahByDomain(domain);
-
-    if (sekolah == "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-
+// ... existing code ...
+async postBarang({ request, response, auth }) {
+  try {
     const user = await auth.getUser();
+    const sekolah = await user.sekolah().first();
 
-    const {
-      foto,
-      nama,
-      merk,
-      kode_barang,
-      tahun_beli,
-      asal,
-      deskripsi,
-      jumlah,
-      harga,
-      kepemilikan,
-      nama_pemilik,
-      m_lokasi_id,
-      baik,
-      rusak,
-      nota,
-    } = request.post();
-
-    let foto1 = foto ? foto.toString() : null;
-
-    const fiturSekolah = await MFiturSekolah.query()
-      .where({ m_sekolah_id: sekolah.id })
-      .first();
-    const fitur = JSON.parse(fiturSekolah ? fiturSekolah.fitur : "{}");
-
+    // Validasi input
     const rules = {
       kode_barang: "required",
       nama: "required",
-      // foto1: "required",
       merk: "required",
-      tahun_beli: "required",
-      asal: "required",
-      harga: "required",
+      harga: "required|number",
       deskripsi: "required",
-      jumlah: "required",
-      kepemilikan: "required",
-      // nama_pemilik: "required",
-      m_lokasi_id: "required",
+      m_lokasi_id: "required|number",
+      foto: "required",
+      m_kategori_barang_id: "required|number",
+      waktu_peminjaman: "integer"
     };
-    const message = {
-      "kode_barang.required": "Jenis harus diisi",
-      "nama.required": "Nama harus diisi",
-      // "foto1.required": "Foto harus diisi",
-      "merk.required": "Nomor Registrasi harus diisi",
-      "tahun_beli.required": "Lebar harus diisi",
-      "asal.required": "Panjang harus diisi",
-      "harga.required": "Harga harus diisi",
-      "deskripsi.required": "Spesifikasi harus diisi",
-      "jumlah.required": "Jumlah harus diisi",
-      "kepemilikan.required": "Kepemilikan harus diisi",
-      // "nama_pemilik.required": "Nama Pemilik harus diisi",
-      "m_lokasi_id.required": "Lokasi harus diisi",
+
+    const messages = {
+      "required": "Field :field harus diisi",
+      "number": "Field :field harus berupa angka",
+      "integer": "Field :field harus berupa bilangan bulat"
     };
-    const validation = await validate(request.all(), rules, message);
+
+    const validation = await validate(request.all(), rules, messages);
     if (validation.fails()) {
       return response.unprocessableEntity(validation.messages());
     }
 
-    if (fitur) {
-      if (fitur.nota_barang == 1) {
-        const rules = {
-          nota: "required",
-        };
-        const message = {
-          "nota.required": "Nota harus diisi",
-        };
-        const validation = await validate(request.all(), rules, message);
-        if (validation.fails()) {
-          return response.unprocessableEntity(validation.messages());
-        }
-      }
-    }
+    // Ambil data dari inputan
+    const payload = request.only([
+      'kode_barang',
+      'nama',
+      'merk',
+      'spesifikasi',
+      'tanggal_dibeli',
+      'deskripsi',
+      'harga',
+      'status',
+      'waktu_peminjaman',
+      'sanksi',
+      'm_lokasi_id',
+      'foto',
+      'm_kategori_barang_id',
+      'kategori_barang'
+    ]);
 
-    const barang = await MBarang.create({
-      kode_barang,
-      nama,
-      merk,
-      tahun_beli,
-      asal,
-      harga,
-      jumlah,
-      deskripsi,
-      foto: foto1,
-      kepemilikan,
-      nama_pemilik,
-      m_lokasi_id,
-      dihapus: 0,
-      baik: baik || jumlah,
-      rusak: rusak || 0,
-      m_sekolah_id: sekolah.id,
-      nota,
-    });
+    // Set nilai default
+    payload.status = payload.status || 'tersedia';
+    payload.m_sekolah_id = sekolah.id;
 
+    // Simpan ke database
+    const barang = await MBarang.create(payload);
+
+    // Catat histori aktivitas
     await MHistoriAktivitas.create({
       jenis: "Buat Barang",
       tipe: "SarPras",
       m_user_id: user.id,
-      akhir: `${nama}`,
       m_sekolah_id: sekolah.id,
+      akhir: `Tambah barang: ${barang.nama}`,
     });
 
+    return response.created({
+      message: "Barang berhasil ditambahkan",
+      data: barang,
+    });
+
+  } catch (error) {
+    console.error("Error saat postBarang:", error);
+    return response.status(500).json({
+      message: "Terjadi kesalahan saat menambahkan barang",
+      error: error.message,
+    });
+  }
+}
+
+async getBarang({ response, request, auth }) {
+const user = await auth.getUser();
+console.log("👤 User:", user.toJSON());
+
+const sekolah = await user.sekolah().first();
+console.log("🏫 Sekolah:", sekolah ? sekolah.toJSON() : null);
+
+  if (!sekolah) {
+    return response.notFound({ message: "Sekolah belum terdaftar" });
+  }
+
+  let { page, search, lokasi_id } = request.get();
+  page = page ? parseInt(page) : 1;
+
+  const barang = MBarang.query()
+    .with("lokasi")
+    .with("jurusan") // ⬅️ ini WAJIB ditambah!
+    .where({ dihapus: 0 })
+    .andWhere({ m_sekolah_id: sekolah.id });
+
+  if (search) {
+    barang.andWhere("nama", "like", `%${search}%`);
+  }
+
+  if (lokasi_id) {
+    barang.andWhere("m_lokasi_id", lokasi_id);
+  }
+
+  return response.ok({
+    barang: await barang.paginate(page, 25),
+  });
+}
+
+  async detailBarang({ response, request, params: { barang_id } }) {
+    const domain = request.headers().origin;
+
+    const sekolah = await this.getSekolahByDomain(domain);
+
+    if (sekolah == "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const barang = await MBarang.query()
+      .with("lokasi")
+      .where({ id: barang_id })
+      .andWhere({ m_sekolah_id: sekolah.id })
+      .first();
+
     return response.ok({
-      message: messagePostSuccess,
+      barang: barang,
     });
   }
 
   async putBarang({ response, request, auth, params: { barang_id } }) {
-    const domain = request.headers().origin;
-
+  try {
+    const domain = request.headers().origin;  
+    const user = await auth.getUser();
     const sekolah = await this.getSekolahByDomain(domain);
 
-    if (sekolah == "404") {
+    if (sekolah === "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
-    const user = await auth.getUser();
-
     let {
-      foto,
+      kode_barang,
       nama,
       merk,
-      kode_barang,
-      tahun_beli,
-      asal,
+      spesifikasi,
+      tanggal_dibeli,
       deskripsi,
-      jumlah,
       harga,
-      kepemilikan,
-      nama_pemilik,
-      m_lokasi_id,
-      baik,
-      rusak,
+      status,
+      waktu_peminjaman,
+      sanksi,
+      foto,
       nota,
       verifikasi,
+      m_lokasi_id,
+      kategori_barang,
+      m_kategori_barang_id,
     } = request.post();
 
-    const foto1 = foto ? foto.toString() : null;
     const fiturSekolah = await MFiturSekolah.query()
       .where({ m_sekolah_id: sekolah.id })
       .first();
+
     const fitur = fiturSekolah ? JSON.parse(fiturSekolah.fitur) : {};
-    // const rules = {
-    //   kode_barang: "required",
-    //   nama: "required",
-    //   // foto: "required",
-    //   merk: "required",
-    //   tahun_beli: "required",
-    //   asal: "required",
-    //   harga: "required",
-    //   deskripsi: "required",
-    //   jumlah: "required",
-    //   kepemilikan: "required",
-    //   // nama_pemilik: "required",
-    //   m_lokasi_id: "required",
-    // };
-    // const message = {
-    //   "kode_barang.required": "Jenis harus diisi",
-    //   "nama.required": "Nama harus diisi",
-    //   // "foto.required": "Foto harus diisi",
-    //   "merk.required": "Nomor Registrasi harus diisi",
-    //   "tahun_beli.required": "Lebar harus diisi",
-    //   "asal.required": "Panjang harus diisi",
-    //   "harga.required": "Harga harus diisi",
-    //   "deskripsi.required": "Spesifikasi harus diisi",
-    //   "jumlah.required": "Jumlah harus diisi",
-    //   "kepemilikan.required": "Kepemilikan harus diisi",
-    //   // "nama_pemilik.required": "Nama Pemilik harus diisi",
-    //   "m_lokasi_id.required": "Lokasi harus diisi",
-    // };
-    // const validation = await validate(request.all(), rules, message);
-    // if (validation.fails()) {
-    //   return response.unprocessableEntity(validation.messages());
-    // }
-    // if (fitur.nota_barang == 1) {
-    //   const rules = {
-    //     nota: "required",
-    //   };
-    //   const message = {
-    //     "nota.required": "Nota harus diisi",
-    //   };
-    //   const validation = await validate(request.all(), rules, message);
-    //   if (validation.fails()) {
-    //     return response.unprocessableEntity(validation.messages());
-    //   }
-    // }
-    const barangSebelum = await MBarang.query()
-      .where({ id: barang_id })
-      .first();
-    const barang = await MBarang.query().where({ id: barang_id }).update({
+
+    if (fitur?.nota_barang === 1 && !nota) {
+      return response.unprocessableEntity([{ field: "nota", message: "Nota harus diisi" }]);
+    }
+
+    const barangSebelum = await MBarang.find(barang_id);
+    if (!barangSebelum) {
+      return response.notFound({ message: "Barang tidak ditemukan" });
+    }
+
+    await barangSebelum.merge({
       kode_barang,
       nama,
       merk,
-      tahun_beli,
-      asal,
-      harga,
-      jumlah,
+      spesifikasi,
+      tanggal_dibeli,
       deskripsi,
-      foto: foto1,
-      kepemilikan,
-      nama_pemilik,
-      m_lokasi_id,
-      baik,
-      rusak,
+      harga,
+      status,
+      waktu_peminjaman: waktu_peminjaman ? parseInt(waktu_peminjaman) : null,
+      sanksi,
       nota,
       verifikasi,
+      foto,
+      m_lokasi_id,
+      kategori_barang, // ✅ TAMBAH INI
+      m_kategori_barang_id
     });
-
-    if (!barang) {
-      return response.notFound({
-        message: messageNotFound,
-      });
-    }
-
-    if (verifikasi == 0) {
-      await MHistoriAktivitas.create({
-        jenis: "Proses Inventaris",
-        m_user_id: user.id,
-        awal: `Verifikasi Ditolak : `,
-        akhir: `"${barangSebelum.nama}"`,
-        bawah: `Aset Tertunda`,
-        m_sekolah_id: sekolah.id,
-        tipe: "SarPras",
-      });
-      await MHistoriAktivitas.create({
-        jenis: "Proses Inventaris",
-        m_user_id: user.id,
-        awal: `Verifikasi Ditolak : `,
-        akhir: `"${barangSebelum.nama}"`,
-        bawah: `Aset Tertunda`,
-        m_sekolah_id: sekolah.id,
-        tipe: "Realisasi",
-      });
-    }
-
-    if (barangSebelum.nota != nota) {
-      await MHistoriAktivitas.create({
-        jenis: "Ubah Barang",
-        m_user_id: user.id,
-        awal: `Nota Barang : File nota barang telah diubah`,
-        akhir: `"${nota
-          .split("?")[0]
-          .replace(
-            "https://firebasestorage.googleapis.com/v0/b/smart-school-300211.appspot.com/o/",
-            ""
-          )}"`,
-        bawah: `${barangSebelum.nama}`,
-        m_sekolah_id: sekolah.id,
-        tipe: "SarPras",
-      });
-    }
-
-    if (barangSebelum.m_lokasi_id != m_lokasi_id) {
-      const lokasiSebelum = await MLokasi.query()
-        .where({ id: barangSebelum.m_lokasi_id })
-        .first();
-      const lokasiSesudah = await MLokasi.query()
-        .where({ id: barangSebelum.m_lokasi_id })
-        .first();
-      await MHistoriAktivitas.create({
-        jenis: "Ubah Barang",
-        m_user_id: user.id,
-        awal: `Lokasi Barang : ${lokasiSebelum.nama} menjadi `,
-        akhir: `"${lokasiSesudah.nama}"`,
-        bawah: `${barangSebelum.nama}`,
-        m_sekolah_id: sekolah.id,
-        tipe: "SarPras",
-      });
-    }
-
-    if (barangSebelum.nama_pemilik != nama_pemilik) {
-      await MHistoriAktivitas.create({
-        jenis: "Ubah Barang",
-        m_user_id: user.id,
-        awal: `Kepemilikan - NamaP Pemilik/Peminjam : ${barangSebelum.nama_pemilik} menjadi `,
-        akhir: `"${nama_pemilik}"`,
-        bawah: `${barangSebelum.nama}`,
-        m_sekolah_id: sekolah.id,
-        tipe: "SarPras",
-      });
-    }
-
-    if (barangSebelum.kepemilikan != kepemilikan) {
-      await MHistoriAktivitas.create({
-        jenis: "Ubah Barang",
-        m_user_id: user.id,
-        awal: `Kepemilikan Barang : ${barangSebelum.kepemilikan} menjadi `,
-        akhir: `"${kepemilikan}"`,
-        bawah: `${barangSebelum.nama}`,
-        m_sekolah_id: sekolah.id,
-        tipe: "SarPras",
-      });
-    }
-
-    if (barangSebelum.rusak != rusak) {
-      await MHistoriAktivitas.create({
-        jenis: "Ubah Barang",
-        m_user_id: user.id,
-        awal: `Jumlah Barang dengan Kondisi Rusak : ${barangSebelum.rusak} menjadi `,
-        akhir: `"${rusak}"`,
-        bawah: `${barangSebelum.nama}`,
-        m_sekolah_id: sekolah.id,
-        tipe: "SarPras",
-      });
-    }
-
-    if (barangSebelum.baik != baik) {
-      await MHistoriAktivitas.create({
-        jenis: "Ubah Barang",
-        m_user_id: user.id,
-        awal: `Jumlah Barang dengan Kondisi Baik : ${barangSebelum.baik} menjadi `,
-        akhir: `"${baik}"`,
-        bawah: `${barangSebelum.nama}`,
-        m_sekolah_id: sekolah.id,
-        tipe: "SarPras",
-      });
-    }
-
-    if (barangSebelum.harga != harga) {
-      await MHistoriAktivitas.create({
-        jenis: "Ubah Barang",
-        m_user_id: user.id,
-        awal: `Harga Barang : ${barangSebelum.harga} menjadi `,
-        akhir: `"${harga}"`,
-        bawah: `${barangSebelum.nama}`,
-        m_sekolah_id: sekolah.id,
-        tipe: "SarPras",
-      });
-    }
-
-    if (barangSebelum.jumlah != jumlah) {
-      await MHistoriAktivitas.create({
-        jenis: "Ubah Barang",
-        m_user_id: user.id,
-        awal: `Jumlah Barang : ${barangSebelum.jumlah} menjadi `,
-        akhir: `"${jumlah}"`,
-        bawah: `${barangSebelum.nama}`,
-        m_sekolah_id: sekolah.id,
-        tipe: "SarPras",
-      });
-    }
-
-    if (barangSebelum.deskripsi != deskripsi) {
-      await MHistoriAktivitas.create({
-        jenis: "Ubah Barang",
-        m_user_id: user.id,
-        awal: `Spesifikasi Barang : ${barangSebelum.deskripsi} menjadi `,
-        akhir: `"${deskripsi}"`,
-        bawah: `${barangSebelum.nama}`,
-        m_sekolah_id: sekolah.id,
-        tipe: "SarPras",
-      });
-    }
-
-    if (barangSebelum.asal != asal) {
-      await MHistoriAktivitas.create({
-        jenis: "Ubah Barang",
-        m_user_id: user.id,
-        awal: `Asal Barang : ${barangSebelum.asal} menjadi `,
-        akhir: `"${asal}"`,
-        bawah: `${barangSebelum.nama}`,
-        m_sekolah_id: sekolah.id,
-        tipe: "SarPras",
-      });
-    }
-
-    if (barangSebelum.tahun_beli != tahun_beli) {
-      await MHistoriAktivitas.create({
-        jenis: "Ubah Barang",
-        m_user_id: user.id,
-        awal: `Tanggal Dibeli : ${moment(barangSebelum.tahun_beli).format(
-          "dddd, DD MMM YYYY"
-        )} menjadi `,
-        akhir: `"${moment(tahun_beli).format("dddd, DD MMM YYYY")}"`,
-        bawah: `${barangSebelum.nama}`,
-        m_sekolah_id: sekolah.id,
-        tipe: "SarPras",
-      });
-    }
-
-    if (barangSebelum.kode_barang != kode_barang) {
-      await MHistoriAktivitas.create({
-        jenis: "Ubah Barang",
-        m_user_id: user.id,
-        awal: `Kode Barang : ${barangSebelum.kode_barang} menjadi `,
-        akhir: `"${kode_barang}"`,
-        bawah: `${barangSebelum.nama}`,
-        m_sekolah_id: sekolah.id,
-        tipe: "SarPras",
-      });
-    }
-    if (barangSebelum.merk != merk) {
-      await MHistoriAktivitas.create({
-        jenis: "Ubah Barang",
-        m_user_id: user.id,
-        awal: `Merk Barang : ${barangSebelum.merk} menjadi `,
-        akhir: `"${merk}"`,
-        bawah: `${barangSebelum.nama}`,
-        m_sekolah_id: sekolah.id,
-        tipe: "SarPras",
-      });
-    }
-
-    if (barangSebelum.nama != nama) {
-      await MHistoriAktivitas.create({
-        jenis: "Ubah Barang",
-        m_user_id: user.id,
-        awal: `Nama Barang : ${barangSebelum.nama} menjadi `,
-        akhir: `"${nama}"`,
-        bawah: `${barangSebelum.nama}`,
-        m_sekolah_id: sekolah.id,
-        tipe: "SarPras",
-      });
-    }
-
-    if (barangSebelum.foto != foto) {
-      await MHistoriAktivitas.create({
-        jenis: "Ubah Barang",
-        m_user_id: user.id,
-        awal: `Foto Barang : File foto barang telah diubah`,
-        akhir: `"${foto
-          .split("?")[0]
-          .replace(
-            "https://firebasestorage.googleapis.com/v0/b/smart-school-300211.appspot.com/o/",
-            ""
-          )}"`,
-        bawah: `${barangSebelum.nama}`,
-        m_sekolah_id: sekolah.id,
-        tipe: "SarPras",
-      });
-    }
+    await barangSebelum.save();
 
     return response.ok({
-      message: messagePutSuccess,
+      message: "Barang berhasil diperbarui",
+      data: barangSebelum, // ini penting!
+    });
+
+  } catch (error) {
+    console.error("PUT BARANG ERROR:", error);
+    return response.status(500).json({
+      message: "Terjadi kesalahan saat update barang",
+      error: error.message,
     });
   }
+}
 
-  async deleteBarang({ response, request, auth, params: { barang_id } }) {
+
+ async deleteBarang({ response, request, auth, params: { barang_id } }) {
+  try {
     const domain = request.headers().origin;
-
     const sekolah = await this.getSekolahByDomain(domain);
 
-    if (sekolah == "404") {
+    if (sekolah === "404") {
       return response.notFound({ message: "Sekolah belum terdaftar" });
     }
 
+    
     const user = await auth.getUser();
-    const { verifikasi } = request.post();
-    if (
-      user.role != "admin" ||
-      user.role == "guru" ||
-      user.m_sekolah_id != sekolah.id
-    ) {
-      return response.forbidden({ message: messageForbidden });
-    }
-    const barangSebelum = await MBarang.query()
-      .where({ id: barang_id })
-      .first();
-    const barang = await MBarang.query().where({ id: barang_id }).update({
-      dihapus: 1,
-    });
 
-    if (!barang) {
-      return response.notFound({
-        message: messageNotFound,
-      });
+    // Cek akses
+    if (user.role !== "admin" || user.m_sekolah_id !== sekolah.id) {
+      return response.forbidden({ message: "Akses ditolak" });
     }
-    if (verifikasi) {
-      await MHistoriAktivitas.create({
-        jenis: "Proses Inventaris",
-        m_user_id: user.id,
-        awal: `Verifikasi Ditolak : `,
-        akhir: `"${barangSebelum.nama}"`,
-        bawah: `Aset Tertunda`,
-        m_sekolah_id: sekolah.id,
-        tipe: "SarPras",
-      });
-      await MHistoriAktivitas.create({
-        jenis: "Proses Inventaris",
-        m_user_id: user.id,
-        awal: `Verifikasi Ditolak : `,
-        akhir: `"${barangSebelum.nama}"`,
-        bawah: `Aset Tertunda`,
-        m_sekolah_id: sekolah.id,
-        tipe: "Realisasi",
-      });
+
+    const barang = await MBarang.find(barang_id);
+    if (!barang || barang.dihapus === 1) {
+      return response.notFound({ message: "Barang tidak ditemukan" });
     }
+
+    const namaBarang = barang.nama;
+
+    await MBarang.query().where("id", barang_id).delete();
+
+    // Histori penghapusan
     await MHistoriAktivitas.create({
       jenis: "Hapus Barang",
       tipe: "SarPras",
       m_user_id: user.id,
-      akhir: `${barangSebelum.nama}`,
+      akhir: namaBarang,
       m_sekolah_id: sekolah.id,
     });
 
-    return response.ok({
-      message: messageDeleteSuccess,
+    return response.ok({ message: "Barang berhasil dihapus" });
+
+  } catch (error) {
+    console.error("DELETE BARANG ERROR:", error);
+    return response.status(500).json({
+      message: "Terjadi kesalahan saat menghapus barang",
+      error: error.message,
     });
   }
+}
+
+
+ // ===== PEMINJAMAN =====
+
+async postPeminjaman({ request, response, auth }) {
+  try {
+    const user = await auth.getUser();
+    const sekolah = await user.sekolah().first();
+
+    if (!sekolah || sekolah === "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const {
+      m_kategori_barang_id,
+      m_jurusan_barang_id,
+      tanggal_peminjaman,
+      nama_barang,
+      merk,
+      spesifikasi,
+      kode_barang,
+      status = "dipinjam", // default status
+      sanksi,
+      foto_peminjaman,
+      foto_pengembalian,
+    } = request.only([
+      "m_kategori_barang_id",
+      "m_jurusan_barang_id", 
+      "tanggal_peminjaman",
+      "nama_barang",
+      "merk",
+      "spesifikasi",
+      "kode_barang",
+      "status",
+      "sanksi",
+      "foto_peminjaman",
+      "foto_pengembalian",
+    ]);
+
+    const barang = await Database
+      .from("m_barang")
+      .where("kode_barang", kode_barang)
+      .first();
+
+    if (!barang) {
+      return response.notFound({ message: "Barang tidak ditemukan" });
+    }
+
+    const durasiJam = barang.waktu_peminjaman || 72;
+
+    const tanggal_pengembalian = moment(tanggal_peminjaman)
+      .add(durasiJam, "hours")
+      .format("YYYY-MM-DD HH:mm:ss");
+
+    const data = {
+      m_kategori_barang_id,
+      m_jurusan_barang_id,
+      tanggal_peminjaman,
+      tanggal_pengembalian,
+      nama_barang,
+      merk,
+      spesifikasi,
+      kode_barang,
+      status,
+      sanksi,
+      foto_peminjaman: foto_peminjaman || null,
+      foto_pengembalian: foto_pengembalian || null,
+      m_user_id: user.id,
+    };
+
+    // Simpan data peminjaman
+    const [id] = await Database.table("m_peminjaman").insert(data);
+
+    // ✅ Update status barang jadi "Dipinjam"
+    await Database
+      .from("m_barang")
+      .where("kode_barang", kode_barang)
+      .update({ status: "Dipinjam" });
+
+    const peminjaman = await Database.table("m_peminjaman").where("id", id).first();
+
+    return response.status(201).json({
+      message: "Data peminjaman berhasil ditambahkan",
+      data: peminjaman,
+    });
+  } catch (error) {
+    console.error("postPeminjaman error:", error);
+    return response.status(500).json({
+      message: "Terjadi kesalahan saat menambahkan data peminjaman",
+      error: error.message,
+    });
+  }
+}
+
+async kembalikanPeminjaman({ request, response, auth, params }) {
+  try {
+    const user = await auth.getUser();
+    const sekolah = await user.sekolah().first();
+    if (sekolah === "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+
+    const peminjaman = await MPeminjaman.find(params.id);
+    if (!peminjaman) {
+      return response.notFound({ message: "Data peminjaman tidak ditemukan" });
+    }
+
+    const { tanggal_pengembalian, foto_pengembalian } = request.only([
+      "tanggal_pengembalian",
+      "foto_pengembalian",
+    ]);
+
+    // Update status peminjaman
+    peminjaman.merge({
+      tanggal_pengembalian,
+      foto_pengembalian,
+      status: "dikembalikan",
+    });
+    await peminjaman.save();
+
+    // ✅ Update status barang ke "tersedia"
+    await Database
+      .from("m_barang")
+      .where("kode_barang", peminjaman.kode_barang)
+      .update({ status: "tersedia" });
+
+    return response.ok({
+      message: "Peminjaman berhasil dikembalikan",
+      data: peminjaman,
+    });
+  } catch (error) {
+    console.error("kembalikanPeminjaman error:", error);
+    return response.status(500).json({
+      message: "Terjadi kesalahan saat mengembalikan peminjaman",
+      error: error.message,
+    });
+  }
+}
+
+  async getPeminjaman({ response, auth }) {
+    try {
+      const user = await auth.getUser();
+
+      const list = await Database
+        .table("m_peminjaman")
+        .where("m_user_id", user.id)
+        .orderBy("id", "desc");
+
+      return response.ok(list);
+    } catch (error) {
+      console.error("getPeminjaman error:", error);
+      return response.status(500).json({
+        message: "Gagal mengambil data peminjaman",
+        error: error.message,
+      });
+    }
+  }
+
+ 
+async detailPeminjaman({ response, params }) {
+  try {
+    const detail = await Database
+      .from("m_peminjaman")
+      .where("m_peminjaman.id", params.id)
+      .leftJoin("m_kategori_barang", "m_peminjaman.m_kategori_barang_id", "m_kategori_barang.id")
+      .leftJoin("m_jurusan_barang", "m_peminjaman.m_jurusan_barang_id", "m_jurusan_barang.id")
+      .select(
+        "m_peminjaman.*",
+        "m_kategori_barang.nama as nama_kategori",
+        "m_jurusan_barang.nama as nama_jurusan"
+      )
+      .first();
+
+    if (!detail) {
+      return response.notFound({ message: "Data peminjaman tidak ditemukan" });
+    }
+
+    return response.ok(detail);
+  } catch (error) {
+    console.error("detailPeminjaman error:", error);
+    return response.status(500).json({
+      message: "Gagal mengambil detail peminjaman",
+      error: error.message,
+    });
+  }
+}
+
+  async deletePeminjaman({ response, params }) {
+    try {
+      const peminjaman = await MPeminjaman.find(params.id);
+      if (!peminjaman) {
+        return response.notFound({ message: "Data peminjaman tidak ditemukan" });
+      }
+
+      await peminjaman.delete();
+      return response.ok({ message: "Data peminjaman berhasil dihapus" });
+    } catch (error) {
+      console.error("deletePeminjaman error:", error);
+      return response.status(500).json({
+        message: "Gagal menghapus data peminjaman",
+        error: error.message,
+      });
+    }
+  }
+
+
+// Ganti fungsi getPeminjamanBarangUmum dengan ini:
+async getPeminjamanByKategori({ params, response }) {
+  try {
+    const { slug } = params;
+    
+    // Cari kategori
+    const kategori = await Database.from('m_kategori_barang')
+      .where('slug', slug)
+      .first();
+
+    if (!kategori) {
+      return response.badRequest({ message: `Kategori ${slug} tidak ditemukan` });
+    }
+
+    // Ambil data peminjaman dengan join yang benar
+    const list = await Database
+      .from('m_peminjaman')
+      .leftJoin('m_user', 'm_user.id', 'm_peminjaman.m_user_id')
+      .select(
+        'm_peminjaman.*',
+        'm_user.nama as nama_peminjam', // Tambahkan ini
+        Database.raw(`CASE 
+          WHEN m_peminjaman.status = 'dipinjam' THEN 'Belum Dikembalikan'
+          WHEN m_peminjaman.status = 'dikembalikan' THEN 'Sudah Dikembalikan'
+          ELSE m_peminjaman.status 
+        END as status_text`)
+      )
+      .where('m_peminjaman.m_kategori_barang_id', kategori.id)
+      .whereNull('m_peminjaman.m_jurusan_barang_id')
+      .orderBy('m_peminjaman.id', 'desc');
+
+    return response.ok(list);
+  } catch (error) {
+    console.error(error);
+    return response.status(500).json({
+      message: 'Gagal mengambil data peminjaman',
+      error: error.message
+    });
+  }
+}
+
+// Di MainController.js
+async getDetailPeminjaman({ params, response }) {
+  try {
+    const { id } = params;
+    
+  const peminjaman = await Database
+    .from('m_peminjaman')
+    .leftJoin('m_user', 'm_user.id', 'm_peminjaman.m_user_id')
+    .leftJoin('m_kategori_barang', 'm_kategori_barang.id', 'm_peminjaman.m_kategori_barang_id')
+    .leftJoin('m_jurusan_barang', 'm_jurusan_barang.id', 'm_peminjaman.m_jurusan_barang_id')
+
+    .select(
+      'm_peminjaman.*',
+      'm_user.nama as nama_user',
+      'm_kategori_barang.nama as nama_kategori',
+      'm_jurusan_barang.nama as nama_jurusan',
+    )
+    .where('m_peminjaman.id', id)
+    .first();
+
+    if (!peminjaman) {
+      return response.notFound({ message: 'Data peminjaman tidak ditemukan' });
+    }
+
+    // Format response tanpa ID relasional
+    const responseData = {
+      id: peminjaman.id,
+      tanggal_peminjaman: peminjaman.tanggal_peminjaman,
+      tanggal_pengembalian: peminjaman.tanggal_pengembalian,
+      nama_siswa: peminjaman.nama_siswa || peminjaman.nama_user, // Gunakan nama_user jika nama_siswa kosong
+      kelas: peminjaman.kelas,
+      nama_barang: peminjaman.nama_barang,
+      merk: peminjaman.merk,
+      spesifikasi: peminjaman.spesifikasi,
+      kode_barang: peminjaman.kode_barang,
+      status: peminjaman.status,
+      sanksi: peminjaman.sanksi,
+      foto_peminjaman: peminjaman.foto_peminjaman,
+      foto_pengembalian: peminjaman.foto_pengembalian,
+      kategori: peminjaman.nama_kategori, // Tampilkan nama kategori
+      jurusan: peminjaman.nama_jurusan, // Tampilkan nama jurusan
+      created_at: peminjaman.created_at,
+      updated_at: peminjaman.updated_at
+    };
+
+    return response.ok(responseData);
+  } catch (error) {
+    console.error('Error getDetailPeminjaman:', error);
+    return response.status(500).json({
+      message: 'Gagal mengambil detail peminjaman',
+      error: error.message
+    });
+  }
+}
+
+async getPeminjamanByJurusan({ params, response }) {
+  try {
+    const { slug } = params;
+
+    // Ambil data jurusan berdasarkan slug
+    const jurusan = await Database
+      .from('m_jurusan_barang')
+      .where('slug', slug)
+      .first();
+
+    if (!jurusan) {
+      return response.badRequest({ message: `Jurusan dengan slug '${slug}' tidak ditemukan` });
+    }
+
+    const list = await Database
+      .from('m_peminjaman')
+      .leftJoin('m_user', 'm_user.id', 'm_peminjaman.m_user_id')
+      .select(
+        'm_peminjaman.*',
+        'm_user.nama as nama_peminjam', // Tambahkan ini
+        Database.raw(`CASE 
+          WHEN m_peminjaman.status = 'dipinjam' THEN 'Belum Dikembalikan'
+          WHEN m_peminjaman.status = 'dikembalikan' THEN 'Sudah Dikembalikan'
+          ELSE m_peminjaman.status 
+        END as status_text`)
+      )
+      .where('m_peminjaman.m_jurusan_barang_id', jurusan.id)
+      .orderBy('m_peminjaman.id', 'desc');
+
+    return response.ok({
+      jurusan: jurusan.nama,
+      data: list
+    });
+
+  } catch (error) {
+    console.error("Gagal mengambil data peminjaman jurusan:", error);
+    return response.status(500).json({
+      message: 'Gagal mengambil data peminjaman jurusan',
+      error: error.message,
+    });
+  }
+}
+
+
+ // =========== kategori barang ================
+
+async getKategoriBarang({ request, response, params }) {
+  try {
+  if (params.id) {
+  const kategori = await MKategoriBarang.find(params.id);
+  if (!kategori) {
+    console.log('Kategori tidak ditemukan untuk id:', params.id);
+    return response.status(404).json({ message: "Kategori tidak ditemukan" });
+  }
+
+      return response.ok(kategori);
+    } else if (request.get().m_sekolah_id) {
+      // Jika ada m_sekolah_id di query string, filter berdasarkan sekolah
+      const { m_sekolah_id } = request.get();
+      const kategori = await MKategoriBarang.query()
+        .where("m_sekolah_id", m_sekolah_id)
+        .fetch();
+
+      return response.ok(kategori.toJSON()); // ✅ Ini penting!
+    } else {
+      // Jika tidak ada filter, kembalikan semua data
+      const kategori = await MKategoriBarang.all();
+      return response.ok(kategori);
+    }
+  } catch (error) {
+    return response.status(500).json({
+      message: "Gagal mengambil data kategori barang",
+      error: error.message,
+    });
+  }
+}
+
+async postKategoriBarang({ request, response, auth }) {
+  const user = await auth.getUser();
+  const domain = request.headers().origin;
+  const sekolah = await this.getSekolahByDomain(domain);
+   if (sekolah === "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" });
+    }
+  const data = request.only([
+    "nama",
+    "slug",
+    "deskripsi",
+    "jenis_kolom",
+    "link",
+    "image",
+  ]);
+  data.m_sekolah_id = user.m_sekolah_id;
+
+  const validation = await validate(data, {
+    nama: "required|string",
+    slug: "required|string",
+    deskripsi: "required|string",
+    jenis_kolom: "required|string",
+    link: "required|string",
+    image: "required|string",
+    m_sekolah_id: "required|integer"
+  });
+
+if (validation.fails()) {
+  return response.badRequest(validation.messages());
+}
+
+    try {
+      const kategori = await MKategoriBarang.create(data);
+      return response.created(kategori);
+    } catch (error) {
+      return response.badRequest({
+        message: "Gagal menambah kategori",
+        error: error.message,
+      });
+    }
+    
+  }
+
+  async putKategoriBarang({ request, response, params }) {
+  try {
+    const data = request.only(["nama", "deskripsi", "m_sekolah_id"]);
+    const validation = await validate(data, {
+      nama: "required|string",
+      deskripsi: "string",
+      m_sekolah_id: "required|integer"
+    });
+
+    if (validation.fails()) {
+      return response.badRequest(validation.messages());
+    }
+
+    const kategori = await MKategoriBarang.findOrFail(params.id);
+    kategori.merge(data);
+    await kategori.save();
+
+    return response.ok(kategori);
+  } catch (error) {
+    return response.badRequest({
+      message: "Gagal mengubah kategori",
+      error: error.message,
+    });
+  }
+}
+
+  async deleteKategoriBarang({ params, response }) {
+    try {
+      const kategori = await MKategoriBarang.findOrFail(params.id);
+      await kategori.delete();
+
+      return response.ok({ message: "Kategori berhasil dihapus" });
+    } catch (error) {
+      return response.badRequest({
+        message: "Gagal menghapus kategori",
+        error: error.message,
+      });
+    }
+  }
+
+  //=========== jurusan barang ================
+  async postJurusanBarang({ request, response, auth }) {
+    const user = await auth.getUser()
+    const domain = request.headers().origin
+    const sekolah = await this.getSekolahByDomain(domain)
+
+    if (sekolah === "404") {
+      return response.notFound({ message: "Sekolah belum terdaftar" })
+    }
+
+    const data = request.only([
+      "nama", "slug", "deskripsi", "link", "image", "m_jurusan_id"
+    ])
+    data.m_sekolah_id = user.m_sekolah_id
+
+    const validation = await validate(data, {
+      nama: "required|string",
+      slug: "string",
+      deskripsi: "string",
+      link: "string",
+      image: "string",
+      m_jurusan_id: "integer",
+      m_sekolah_id: "required|integer",
+    })
+
+    if (validation.fails()) {
+      return response.badRequest(validation.messages())
+    }
+
+    try {
+      const jurusan = await MJurusanBarang.create(data)
+      return response.created(jurusan)
+    } catch (error) {
+      return response.badRequest({
+        message: "Gagal menambah jurusan barang",
+        error: error.message,
+      })
+    }
+  }
+
+ async getJurusanBarang({ request, response, params }) {
+  try {
+    if (params.id) {
+      // Jika ada params.id, ambil berdasarkan id
+      const jurusan = await MJurusanBarang.query().with('jurusan').where('id', params.id).first();
+      if (!jurusan) {
+        return response.status(404).json({ message: "Jurusan barang tidak ditemukan" });
+      }
+      return response.ok({ data: jurusan.toJSON() });
+    } else {
+      // Jika tidak ada params.id, filter by m_sekolah_id jika ada
+      const { m_sekolah_id } = request.get();
+      const query = MJurusanBarang.query().with('jurusan');
+      if (m_sekolah_id) {
+        query.where("m_sekolah_id", m_sekolah_id);
+      }
+      const jurusan = await query.fetch();
+      return response.ok({ data: jurusan.toJSON() });
+    }
+  } catch (error) {
+    return response.status(500).json({
+      message: "Gagal mengambil data jurusan barang",
+      error: error.message,
+    });
+  }
+}
+
+  async putJurusanBarang({ request, response, params }) {
+    try {
+      const data = request.only([
+        "nama", "slug", "deskripsi", "link", "image", "m_jurusan_id"
+      ])
+
+      const validation = await validate(data, {
+        nama: "required|string",
+        slug: "string",
+        deskripsi: "string",
+        link: "string",
+        image: "string",
+        m_jurusan_id: "integer"
+      })
+
+      if (validation.fails()) {
+        return response.badRequest(validation.messages())
+      }
+
+      const jurusan = await MJurusanBarang.findOrFail(params.id)
+      jurusan.merge(data)
+      await jurusan.save()
+      return response.ok(jurusan)
+    } catch (error) {
+      return response.badRequest({
+        message: "Gagal mengubah jurusan barang",
+        error: error.message,
+      })
+    }
+  }
+
+  async deleteJurusanBarang({ params, response }) {
+    try {
+      const jurusan = await MJurusanBarang.findOrFail(params.id)
+      await jurusan.delete()
+      return response.ok({ message: "Jurusan barang berhasil dihapus" })
+    } catch (error) {
+      return response.badRequest({
+        message: "Gagal menghapus jurusan barang",
+        error: error.message,
+      })
+    }
+  }
+
+
+
 
   // =========== IMPORT Alumni SERVICE ================
   async importLokasiServices(filelocation, sekolah) {
@@ -42042,6 +42330,7 @@ class MainController {
       });
     }
   }
+
 
   async gpdsUsername() {
     const sekolah = await MSekolah.query()
