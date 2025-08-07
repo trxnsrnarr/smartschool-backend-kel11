@@ -57,8 +57,8 @@ var striptags = require("striptags");
 const Env = use("Env");
 const Database = use("Database");
 
-const accountSid = "AC124e53d8cfb40a9f80ae98c59eba0980";
-const authToken = "04e5831e528fa131ad81400739e1022f";
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
 
 const messagePostSuccess = "Data berhasil ditambahkan";
 const messagePutSuccess = "Data berhasil diubah";
