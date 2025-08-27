@@ -37306,24 +37306,50 @@ async kembalikanPeminjaman({ request, response, auth, params }) {
   }
 }
 
-  async getPeminjaman({ response, auth }) {
-    try {
-      const user = await auth.getUser();
+async getPeminjaman({ response, auth }) {
+  try {
+    const user = await auth.getUser();
 
-      const list = await Database
-        .table("m_peminjaman")
-        .where("m_user_id", user.id)
-        .orderBy("id", "desc");
+    const list = await Database
+      .table("m_peminjaman")
+      .where("m_user_id", user.id)
+      .orderBy("id", "desc");
 
-      return response.ok(list);
-    } catch (error) {
-      console.error("getPeminjaman error:", error);
-      return response.status(500).json({
-        message: "Gagal mengambil data peminjaman",
-        error: error.message,
-      });
+    const now = new Date();
+
+    for (const item of list) {
+      const isTelat =
+        item.status === "dipinjam" &&
+        item.tanggal_pengembalian &&
+        new Date(item.tanggal_pengembalian) < now;
+
+      if (isTelat) {
+        // Update status peminjaman ke "telat"
+        await Database
+          .from("m_peminjaman")
+          .where("id", item.id)
+          .update({ status: "telat" });
+
+        // Update status barang ke "tersedia"
+        await Database
+          .from("m_barang")
+          .where("kode_barang", item.kode_barang)
+          .update({ status: "tersedia" });
+
+        // Update juga di list yang akan dikirim ke frontend
+        item.status = "telat";
+      }
     }
+
+    return response.ok(list);
+  } catch (error) {
+    console.error("getPeminjaman error:", error);
+    return response.status(500).json({
+      message: "Gagal mengambil data peminjaman",
+      error: error.message,
+    });
   }
+}
 
  
 async detailPeminjaman({ response, params }) {
