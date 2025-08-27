@@ -37225,6 +37225,7 @@ async postPeminjaman({ request, response, auth }) {
       m_jurusan_barang_id,
       tanggal_peminjaman,
       tanggal_pengembalian,
+      waktu_peminjaman: durasiJam, // ✅ tambahkan ini
       nama_barang,
       merk,
       spesifikasi,
@@ -37512,88 +37513,138 @@ async getPeminjamanByJurusan({ params, response }) {
 }
 
 
- // =========== kategori barang ================
+  // =========== kategori barang ================
+  async getKategoriBarang({ request, response, params }) {
+    try {
+      if (params.id) {
+        const kategori = await MKategoriBarang.find(params.id);
+        if (!kategori) {
+          console.log('Kategori tidak ditemukan untuk id:', params.id);
+          return response.status(404).json({ message: "Kategori tidak ditemukan" });
+        }
 
-async getKategoriBarang({ request, response, params }) {
-  try {
-  if (params.id) {
-  const kategori = await MKategoriBarang.find(params.id);
-  if (!kategori) {
-    console.log('Kategori tidak ditemukan untuk id:', params.id);
-    return response.status(404).json({ message: "Kategori tidak ditemukan" });
+        return response.ok(kategori);
+      } else if (request.get().m_sekolah_id) {
+        // Jika ada m_sekolah_id di query string, filter berdasarkan sekolah
+        const { m_sekolah_id } = request.get();
+        const kategori = await MKategoriBarang.query()
+          .where("m_sekolah_id", m_sekolah_id)
+          .fetch();
+
+        return response.ok(kategori.toJSON()); // ✅ Ini penting!
+      } else {
+        // Jika tidak ada filter, kembalikan semua data
+        const kategori = await MKategoriBarang.all();
+        return response.ok(kategori);
+      }
+    } catch (error) {
+      console.error('Error getKategoriBarang:', error);
+      return response.status(500).json({
+        message: "Gagal mengambil data kategori barang",
+        error: error.message,
+      });
+    }
   }
 
-      return response.ok(kategori);
-    } else if (request.get().m_sekolah_id) {
-      // Jika ada m_sekolah_id di query string, filter berdasarkan sekolah
-      const { m_sekolah_id } = request.get();
-      const kategori = await MKategoriBarang.query()
-        .where("m_sekolah_id", m_sekolah_id)
-        .fetch();
+async postKategoriBarang({ request, response, auth }) {
+  try {
+    console.log('=== POST KATEGORI BARANG START ===');
+    
+    const user = await auth.getUser();
+    console.log('User:', user);
+    
+    const data = request.only([
+      "nama",
+      "slug",
+      "deskripsi",
+      "jenis_kolom",
+      "link",
+      "image"
+    ]);
+    
+    // Ubah 'image' menjadi 'img' untuk match dengan database
+    const dataForDB = {
+      nama: data.nama,
+      slug: data.slug,
+      deskripsi: data.deskripsi,
+      jenis_kolom: data.jenis_kolom,
+      link: data.link,
+      img: data.image,
+      m_sekolah_id: user.m_sekolah_id
+    };
 
-      return response.ok(kategori.toJSON()); // ✅ Ini penting!
-    } else {
-      // Jika tidak ada filter, kembalikan semua data
-      const kategori = await MKategoriBarang.all();
-      return response.ok(kategori);
+    console.log('Data for DB:', dataForDB);
+
+    // Generate slug jika tidak disediakan
+    if (!dataForDB.slug && dataForDB.nama) {
+      dataForDB.slug = dataForDB.nama.toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)+/g, '');
+      console.log('Generated slug:', dataForDB.slug);
     }
+
+    const validation = await validate(dataForDB, {
+      nama: "required|string",
+      slug: "required|string",
+      deskripsi: "required|string",
+      jenis_kolom: "required|string",
+      link: "required|string",
+      img: "required|string",
+      m_sekolah_id: "required|integer"
+    });
+
+    if (validation.fails()) {
+      console.log('Validation failed:', validation.messages());
+      return response.status(400).json({
+        success: false,
+        message: "Validasi gagal",
+        errors: validation.messages()
+      });
+    }
+
+    console.log('Creating kategori...');
+    const kategori = await MKategoriBarang.create(dataForDB);
+    console.log('Kategori created:', kategori);
+
+    // Kembalikan response yang lengkap untuk frontend
+    return response.status(201).json({
+      success: true,
+      message: "Kategori berhasil ditambahkan",
+      data: kategori
+    });
+    
   } catch (error) {
+    console.error('ERROR postKategoriBarang:', error);
     return response.status(500).json({
-      message: "Gagal mengambil data kategori barang",
-      error: error.message,
+      success: false,
+      message: "Gagal menambah kategori",
+      error: error.message
     });
   }
 }
 
-async postKategoriBarang({ request, response, auth }) {
-  const user = await auth.getUser();
-  const domain = request.headers().origin;
-  const sekolah = await this.getSekolahByDomain(domain);
-   if (sekolah === "404") {
-      return response.notFound({ message: "Sekolah belum terdaftar" });
-    }
-  const data = request.only([
-    "nama",
-    "slug",
-    "deskripsi",
-    "jenis_kolom",
-    "link",
-    "image",
-  ]);
-  data.m_sekolah_id = user.m_sekolah_id;
-
-  const validation = await validate(data, {
-    nama: "required|string",
-    slug: "required|string",
-    deskripsi: "required|string",
-    jenis_kolom: "required|string",
-    link: "required|string",
-    image: "required|string",
-    m_sekolah_id: "required|integer"
-  });
-
-if (validation.fails()) {
-  return response.badRequest(validation.messages());
-}
-
-    try {
-      const kategori = await MKategoriBarang.create(data);
-      return response.created(kategori);
-    } catch (error) {
-      return response.badRequest({
-        message: "Gagal menambah kategori",
-        error: error.message,
-      });
-    }
-    
-  }
-
-  async putKategoriBarang({ request, response, params }) {
+async putKategoriBarang({ request, response, params, auth }) {
   try {
-    const data = request.only(["nama", "deskripsi", "m_sekolah_id"]);
-    const validation = await validate(data, {
+    const user = await auth.getUser();
+    
+    const data = request.only(["nama", "deskripsi", "jenis_kolom", "link", "image"]);
+    
+    // Ubah 'image' menjadi 'img'
+    const dataForDB = {
+      nama: data.nama,
+      deskripsi: data.deskripsi,
+      jenis_kolom: data.jenis_kolom,
+      link: data.link,
+      img: data.image, // <- PERBAIKAN DI SINI
+      m_sekolah_id: user.m_sekolah_id
+    };
+
+    const validation = await validate(dataForDB, {
       nama: "required|string",
       deskripsi: "string",
+      jenis_kolom: "string",
+      link: "string",
+      img: "string", // <- Validasi untuk 'img'
       m_sekolah_id: "required|integer"
     });
 
@@ -37602,11 +37653,16 @@ if (validation.fails()) {
     }
 
     const kategori = await MKategoriBarang.findOrFail(params.id);
-    kategori.merge(data);
+    
+    // Hapus m_sekolah_id dari data karena tidak perlu diupdate
+    delete dataForDB.m_sekolah_id;
+    
+    kategori.merge(dataForDB);
     await kategori.save();
 
     return response.ok(kategori);
   } catch (error) {
+    console.error('Error putKategoriBarang:', error);
     return response.badRequest({
       message: "Gagal mengubah kategori",
       error: error.message,
@@ -37621,6 +37677,7 @@ if (validation.fails()) {
 
       return response.ok({ message: "Kategori berhasil dihapus" });
     } catch (error) {
+      console.error('Error deleteKategoriBarang:', error);
       return response.badRequest({
         message: "Gagal menghapus kategori",
         error: error.message,
